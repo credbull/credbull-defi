@@ -1,3 +1,5 @@
+<img src="credbull-logo.jpg"/>
+
 # credbull-defi
 
 ## Structure
