@@ -17,7 +17,9 @@ jobs:
           version: nightly
 
       - name: Run tests
+        working-directory: ./packages/contracts
         run: forge test -vvv
                 
       - name: Format code
+        working-directory: ./packages/contracts
         run: forge fmt
