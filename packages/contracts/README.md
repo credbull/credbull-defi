@@ -19,7 +19,7 @@ source .env
 
 forge create --rpc-url $RPC_URL \
     --constructor-args 1000 \
-    --private-key  $PRIVATE_KEY \
+    --private-key $PRIVATE_KEY \
     --etherscan-api-key $BLOCKCHAIN_EXPLORER_API_KEY \
     --verify \
     src/CredbullToken.sol:CredbullToken
