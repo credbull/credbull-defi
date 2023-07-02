@@ -31,4 +31,9 @@ contract CredbullTokenTest is Test {
 
         assertEq(credbullToken.totalSupply(), baseTokenAmount + 1); // should should have added one
     }
+
+    function testFailsWhenMintCalledByAddressThatIsntOwner() public {
+        vm.prank(address(0x09)); // change msg sender to made up address
+        credbullToken.mint(msg.sender, 1); // mint should fail, as owner only call
+    }
 }
