@@ -1,6 +1,6 @@
 # credbull-defi
 
-This guide shows how to build, test, and deploy the Credbull Token smart contract.
+This guide shows how to build, test, and deploy the Credbull smart contracts using Foundry.
 
 ## Pre-requisites
 Install Foundry: https://book.getfoundry.sh/getting-started/installation
