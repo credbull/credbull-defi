@@ -1,6 +1,6 @@
 on: [push]
 
-name: test
+name: Run tests
 
 jobs:
   check:
@@ -18,3 +18,6 @@ jobs:
 
       - name: Run tests
         run: forge test -vvv
+                
+      - name: Format code
+        run: forge fmt
