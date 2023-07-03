@@ -20,6 +20,6 @@ jobs:
         working-directory: ./packages/contracts
         run: forge test -vvv
                 
-      - name: Format code
+      - name: Run coverage report
         working-directory: ./packages/contracts
-        run: forge fmt
+        run: forge coverage
