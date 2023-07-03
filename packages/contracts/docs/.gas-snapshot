@@ -1,7 +1,0 @@
-CounterTest:testIncrement() (gas: 28334)
-CounterTest:testSetNumber(uint256) (runs: 256, μ: 27320, ~: 28409)
-CredbullLedgerTest:testConstructor() (gas: 13029)
-CredbullTokenTest:testDeploymentReturnsToken() (gas: 1812368)
-CredbullTokenTest:testFailsWhenMintCalledByAddressThatIsntOwner() (gas: 10710)
-CredbullTokenTest:testMintIncreasesSupply() (gas: 26684)
-CredbullTokenTest:testOwnerIsMsgSender() (gas: 12638)

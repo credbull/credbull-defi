@@ -9,3 +9,6 @@ out/
 
 # Dotenv file
 .env
+
+# Gas fee baseline
+.gas-snapshot
