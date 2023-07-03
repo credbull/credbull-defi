@@ -16,6 +16,12 @@ contract CredbullTokenTest is Test {
         baseTokenAmount = deployCredbullToken.BASE_TOKEN_AMOUNT();
     }
 
+    function testDeploymentReturnsToken() public {
+        DeployCredbullToken deployCredbullToken = new DeployCredbullToken();
+
+        assertTrue(address(deployCredbullToken.run()) != address(0x00));
+    }
+
     function testOwnerIsMsgSender() public {
         console.log("1. Msg sender", msg.sender);
         console.log("2. Token Owner", credbullToken.owner());
