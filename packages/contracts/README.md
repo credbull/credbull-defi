@@ -20,8 +20,8 @@ forge test
 # Read the environment variables
 source .env
 
-#Deploy the contract
-forge script script/DeployCredbullToken.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+# Deploy the contract.  This will prompt for the sender's key.
+forge script script/DeployCredbullToken.s.sol --rpc-url $RPC_URL --sender $OWNER_ADDRESS --interactives 1 --broadcast
 ```
 
 ## Verify Contract on Mainnet (or Testnet)
@@ -29,11 +29,11 @@ forge script script/DeployCredbullToken.s.sol --rpc-url $RPC_URL --private-key $
 # Read the environment variables
 source .env
 
-# Verify the contract source
+# Verify the contract source.  This will prompt for the sender's key.
 # TODO: separate out Verification step.  This is using `forge create`, should use `forge script`
 forge create --rpc-url $RPC_URL \
     --constructor-args 1000 \
-    --private-key $PRIVATE_KEY \
+    --interactive \
     --etherscan-api-key $BLOCKCHAIN_EXPLORER_API_KEY \
     --verify \
     src/CredbullToken.sol:CredbullToken
