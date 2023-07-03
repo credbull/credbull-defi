@@ -6,7 +6,6 @@ import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC2
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract CredbullToken is ERC20, ERC20Burnable, Ownable {
-
     constructor(uint256 tokensToMint) ERC20("CredbullToken", "CBL") {
         _mint(msg.sender, tokensToMint);
     }

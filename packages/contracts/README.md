@@ -6,8 +6,7 @@ This guide shows how to build, test, and deploy the Credbull smart contracts usi
 Install Foundry: https://book.getfoundry.sh/getting-started/installation
 
 ---
-## Local Network
-### Build and Test Locally
+## Build and Test Locally
 ```bash
 # Build and compile
 forge build
@@ -16,38 +15,18 @@ forge build
 forge test
 ```
 
-### Forked Testing
-```bash
-#Read the environment variables
-source .env
-
-# Test against a Forked Network
-forge test --mt <TEST_NAME> -vvvv --fork-url $RPC_URL
-```
-
-### Code Formatting and Analysis
-```bash
-# Format the code
-forge fmt
-
-# Run the static analyzers, see: https://book.getfoundry.sh/config/static-analyzers
-myth analyze src/CredbullToken.sol --solc-json mythril.config.json --execution-timeout 60
-```
-
----
 ## Deploy to Mainnet (or Testnet)
-### Deploy Contract
 ```bash
-#Read the environment variables
+# Read the environment variables
 source .env
 
 #Deploy the contract
 forge script script/DeployCredbullToken.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
 ```
 
-### Verify Contract
+## Verify Contract on Mainnet (or Testnet)
 ```bash
-#Read the environment variables
+# Read the environment variables
 source .env
 
 # Verify the contract source

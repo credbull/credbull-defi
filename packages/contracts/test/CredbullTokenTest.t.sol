@@ -7,7 +7,7 @@ import {DeployCredbullToken} from "../script/DeployCredbullToken.s.sol";
 
 contract CredbullTokenTest is Test {
     CredbullToken public credbullToken;
-    uint baseTokenAmount;
+    uint256 baseTokenAmount;
 
     function setUp() public {
         DeployCredbullToken deployCredbullToken = new DeployCredbullToken();
