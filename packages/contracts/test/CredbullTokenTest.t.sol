@@ -5,6 +5,8 @@ import {Test, console} from "forge-std/Test.sol";
 import {CredbullToken} from "../src/CredbullToken.sol";
 import {DeployCredbullToken} from "../script/DeployCredbullToken.s.sol";
 
+// TODO for Credbull Token and TEst
+// 1. Make token Upgradeable
 contract CredbullTokenTest is Test {
     CredbullToken public credbullToken;
     uint256 baseTokenAmount;
@@ -23,9 +25,6 @@ contract CredbullTokenTest is Test {
     }
 
     function testOwnerIsMsgSender() public {
-        console.log("1. Msg sender", msg.sender);
-        console.log("2. Token Owner", credbullToken.owner());
-
         assertEq(credbullToken.owner(), msg.sender);
     }
 
@@ -42,4 +41,6 @@ contract CredbullTokenTest is Test {
         vm.prank(address(0x09)); // change msg sender to made up address
         credbullToken.mint(msg.sender, 1); // mint should fail, as owner only call
     }
+
+
 }

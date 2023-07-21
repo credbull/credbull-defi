@@ -20,7 +20,10 @@ forge test
 # Read the environment variables
 source .env
 
-# Deploy the contract.  This will prompt for the sender's key.
+# Deploy the contract (Option 1).  This reads the private key from the environment.
+forge script script/DeployCredbullToken.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+
+# Deploy the contract (Option 2).  This will prompt for the sender's key.
 forge script script/DeployCredbullToken.s.sol --rpc-url $RPC_URL --sender $OWNER_ADDRESS --interactives 1 --broadcast
 ```
 
