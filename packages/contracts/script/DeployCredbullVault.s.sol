@@ -5,22 +5,19 @@ import {Script} from "forge-std/Script.sol";
 import {CredbullVault} from "../src/CredbullVault.sol";
 import {DeployHelper, INetworkConfig} from "./DeployHelper.s.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+import {console} from "forge-std/Test.sol";
 
 contract DeployCredbullVault is Script {
-    string public constant VAULT_SHARE_NAME = "VAULT Token";
-    string public constant VAULT_SHARE_SYMBOL = "VAULT";
+    string private constant VAULT_SHARE_NAME = "VAULT Token";
+    string private constant VAULT_SHARE_SYMBOL = "VAULT";
 
-    function getCredbullVaultAsset() public returns (IERC20) {
-        DeployHelper deployHelper = new DeployHelper();
-        
-        INetworkConfig networkConfig = deployHelper.activeNetworkConfig();
-                
-        return networkConfig.getCredbullVaultAsset();
-    }
+    IERC20 public credbullVaultAsset;
 
     function run() public returns (CredbullVault) {
-        IERC20 credbullVaultAsset = getCredbullVaultAsset();
+        DeployHelper deployHelper = new DeployHelper();
+        INetworkConfig networkConfig = deployHelper.activeNetworkConfig();
+
+        credbullVaultAsset = networkConfig.getCredbullVaultAsset();
 
         vm.startBroadcast();
         CredbullVault credbullVault = new CredbullVault(
@@ -31,5 +28,13 @@ contract DeployCredbullVault is Script {
         vm.stopBroadcast();
 
         return credbullVault;
+    }
+
+    function getVaultShareSymbol() public pure returns (string memory) {
+        return VAULT_SHARE_SYMBOL;
+    }
+
+    function getCredbullVaultAsset() public view returns (IERC20) {
+        return credbullVaultAsset;
     }
 }

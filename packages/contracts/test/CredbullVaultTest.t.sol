@@ -4,46 +4,51 @@ pragma solidity ^0.8.19;
 import {Test, console} from "forge-std/Test.sol";
 import {CredbullVault} from "../src/CredbullVault.sol";
 import {DeployCredbullVault} from "../script/DeployCredbullVault.s.sol";
-
-interface IERC20 {
-    function symbol() external view returns (string memory);
-}
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract CredbullVaultTest is Test {
     CredbullVault public credbullVault;
-
-    // Vaults exchange Assets for Shares in the Vault
-    string public assetSymbol; 
-    string public shareSymbol;
+    DeployCredbullVault deployCredbullVault;
 
     function setUp() public {
-        DeployCredbullVault deployCredbullVault = new DeployCredbullVault();
+        deployCredbullVault = new DeployCredbullVault();
         credbullVault = deployCredbullVault.run();
-
-        assetSymbol = "USDT";
-        shareSymbol = deployCredbullVault.VAULT_SHARE_SYMBOL();
     }
 
     function testDeploymentReturnsToken() public {
-        DeployCredbullVault deployCredbullVault = new DeployCredbullVault();
-
         assertTrue(address(deployCredbullVault.run()) != address(0x00));
     }
 
     function testOwnerIsMsgSender() public {
-        console.log("1. Msg sender", msg.sender);
-        console.log("2. Token Owner", credbullVault.owner());
+        console.log("Token Owner", credbullVault.owner());
 
         assertEq(credbullVault.owner(), msg.sender);
     }
 
-    function testShareSymbolIsSetCorrectly() public {
-        assertEq(credbullVault.symbol(), shareSymbol);        
+    function testShareSymbolIsSetOnDeploy() public {
+        assertEq(credbullVault.symbol(), deployCredbullVault.getVaultShareSymbol());        
     }
 
-    function testAssetIsTetherToken() public {
-        IERC20 asset = IERC20(credbullVault.asset());        
-        assertEq(asset.symbol(), "USDT");
+    function testAssetIsSetOnDeployByAddress() public {
+        assertEq(credbullVault.asset(), address(deployCredbullVault.getCredbullVaultAsset()));
     }
 
+    function testAssetIsSetOnDeployByERC20MetaData() public {
+        IERC20Metadata asset = IERC20Metadata(credbullVault.asset());        
+        IERC20Metadata deployedAsset = IERC20Metadata(address(deployCredbullVault.getCredbullVaultAsset()));
+
+        assertEq(asset.symbol(), deployedAsset.symbol());
+        assertEq(asset.name(), deployedAsset.name());
+    }
+
+    // TODO!
+    function testDepositTetherGetShare() public {
+        address alice = makeAddr("alice");
+        vm.deal(alice, 50 ether);
+    }
+
+    // TODO!
+    function testDepositCredbullTokenGetNothing() public {
+    }
 }

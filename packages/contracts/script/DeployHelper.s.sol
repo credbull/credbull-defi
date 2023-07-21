@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {Script} from "forge-std/Script.sol";
 import {MockTetherToken} from "../test/mocks/MockTetherToken.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {console} from "forge-std/Test.sol";
 
 interface INetworkConfig {
     function getTetherToken() external view returns (IERC20);
@@ -16,7 +17,7 @@ contract DeployHelper is Script {
 
     INetworkConfig public activeNetworkConfig;
 
-        // For full chainLists see: https://chainlist.org/
+    // For full chainLists see: https://chainlist.org/
     constructor() {
         activeNetworkConfig = getOrCreateLocalConfig();
     }
@@ -27,15 +28,18 @@ contract DeployHelper is Script {
         }
 
         vm.startBroadcast();
-        // TODO: mock asset goes here        
-        MockTetherToken mockTetherToken = new MockTetherToken(BASE_TOKEN_AMOUNT);
+        MockTetherToken mockTetherToken = new MockTetherToken(
+            BASE_TOKEN_AMOUNT
+        );
         vm.stopBroadcast();
 
-        INetworkConfig networkConfig = new NetworkConfig (mockTetherToken, mockTetherToken);
+        INetworkConfig networkConfig = new NetworkConfig(
+            mockTetherToken,
+            mockTetherToken
+        );
 
         return networkConfig;
     }
-
 }
 
 contract NetworkConfig is INetworkConfig {
@@ -54,6 +58,4 @@ contract NetworkConfig is INetworkConfig {
     function getCredbullVaultAsset() public view override returns (IERC20) {
         return credbullVaultAsset;
     }
-   
 }
-
