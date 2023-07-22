@@ -54,9 +54,8 @@ contract CredbullVaultTest is Test {
     }
 
 
-    // TODO!
     function testDepositTetherGetShare() public {
-        // Setup Part 1, give alice some Assets
+        // ---- Setup Part 1, give alice some Assets ---- 
         IERC20 asset = IERC20(credbullVault.asset());    
 
         assertEq(asset.balanceOf(address(credbullVault)), 0, "Vault should start with no assets");
@@ -69,28 +68,27 @@ contract CredbullVaultTest is Test {
         uint256 transferAmount = 10;
         transfer(asset, alice, transferAmount);
 
-        // Setup Part 2 - alice transfers assets for shares
+        // ---- Setup Part 2 - Alice transfers assets for shares ---- 
 
-        assertEq(credbullVault.balanceOf(alice), 0);            
-        // transfer(credbullVault, ownerAddress, alice, transferAmount);
+        assertEq(credbullVault.balanceOf(alice), 0, "User should start with no Shares");            
         
-        // need to set the approve amount first
+        // first, approve the deposit
         vm.prank(alice);
         asset.approve(address(credbullVault), transferAmount);
 
+        // now we can deposit, alice is the caller and receiver
         vm.prank(alice);
-        uint256 aliceShares1 = credbullVault.deposit(transferAmount, alice);
+        uint256 sharesAmount = credbullVault.deposit(transferAmount, alice);
 
-        // Assert - Vault gets the Assets, Alice gets Shares
+        // ---- Assert - Vault gets the Assets, Alice gets Shares ---- 
 
         // Vault should have the assets
         assertEq(credbullVault.totalAssets(), transferAmount, "Vault should now have the assets");
-        // TODO: assert on the asset.balanceOf(vaultAddress) == transferAmount
+        assertEq(asset.balanceOf(address(credbullVault)), transferAmount, "Vault should now have the assets");
         
         // Alice should have the shares
-        assertEq(aliceShares1, transferAmount);   // Alice has the Shares
-        // TODO: assert on the shares.balanceOf(alice) == transferAmount
-
+        assertEq(sharesAmount, transferAmount, "User should now have the Shares"); 
+        assertEq(credbullVault.balanceOf(alice), transferAmount, "User should now have the Shares");          
     }
 
 
