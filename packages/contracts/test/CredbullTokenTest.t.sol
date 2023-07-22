@@ -28,10 +28,18 @@ contract CredbullTokenTest is Test {
         assertEq(credbullToken.owner(), msg.sender);
     }
 
+    function testOwnerOwnsAllTokens() public {
+        address ownerAddress = msg.sender;
+        assertEq(credbullToken.owner(), ownerAddress);
+
+        uint256 totalSupply = credbullToken.totalSupply();
+        assertEq(credbullToken.balanceOf(ownerAddress), totalSupply);
+    }
+
     function testMintIncreasesSupply() public {
         assertEq(credbullToken.totalSupply(), baseTokenAmount); // start with the base amount
 
-        vm.prank(msg.sender); // owner only call.  owner is  msg.sender (see testOwnerIsCredbullTokenTest())
+        vm.prank(msg.sender); // owner only call.  owner is  msg.sender.
         credbullToken.mint(msg.sender, 1); // mint another 1
 
         assertEq(credbullToken.totalSupply(), baseTokenAmount + 1); // should should have added one
@@ -42,5 +50,18 @@ contract CredbullTokenTest is Test {
         credbullToken.mint(msg.sender, 1); // mint should fail, as owner only call
     }
 
+    function testTransferToAliceAndWithdraw() public {
+        address ownerAddress = msg.sender;
+        assertEq(credbullToken.owner(), ownerAddress);
+
+        address alice = makeAddr("alice");
+        assertEq(credbullToken.balanceOf(alice), 0);
+
+        uint256 transferAmount = 10;
+
+        vm.prank(ownerAddress);
+        credbullToken.transfer(alice, transferAmount);
+        assertEq(credbullToken.balanceOf(alice), transferAmount);
+    }
 
 }
