@@ -15,15 +15,13 @@ npm install --save-dev hardhat
 npx hardhat node
 ```
 
-## (Optional) Deploy to custom network
+## Configure custom network (e.g. for Foundry)
 ```bash
 # set up the custom network Environment variables
+cd lib/safe-contracts-1.3.0
 cp .env.sample .env
 sed -i 's|^NODE_URL=.*|NODE_URL="http://127.0.0.1:8545"|' .env
 echo -e '\nPK=<ENTER_KEY>' >> .env
-
-# deploy to the network
-npx hardhat deploy-contracts --network custom
 ```
 
 # Run the app or tests
@@ -34,8 +32,11 @@ yarn install
 # run with typescript
 yarn dev
 
-# Run local network in own shell (see One-Time setup above)
+# Option 1: Start Hardhat in own shell
 yarn hardhat
+
+# Option 2: Start Anvil (Foundry) in own shell 
+yarn anvil-run-deploy
 
 # run tests
 yarn test
