@@ -56,7 +56,7 @@ yarn install
 # yarn add @yarnpkg/pnpify --dev
 ```
 
-# Safe Contracts v.1.4.1 (not yet supported on Avalanche)
+# Safe Contracts v.1.4.1 (contracts not yet deployed to Avalanche)
 ```bash
 git submodule add https://github.com/gnosis/safe-contracts/ lib/safe-contracts-1.4.1
 cd lib/safe-contracts-1.4.1
