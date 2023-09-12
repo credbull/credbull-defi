@@ -1,5 +1,5 @@
-# hello-world with Typescript and Yarn
-Uses yarn to initialize a basic typscript project.
+# vault-services
+Vault interfaces via the Safe SDK
 
 # One-Time Setup of local safe-contracts 
 ```bash
