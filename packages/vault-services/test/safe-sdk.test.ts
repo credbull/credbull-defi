@@ -42,7 +42,10 @@ async function deployTreasury(threshold: number): Promise<Safe> {
     });
 
     const safeAccountConfig: SafeAccountConfig = await allSigners.createSafeAccountConfig(threshold);
+
+    // TODO: review nonce behaviour, see const nonce = await safeService.getNextNonce(safeAddress) https://docs.safe.global/reference/api-kit
     const saltNonce: string = Date.now().toString(); // using a salt, otherwise fails on multiple calls (all other params the same)
+
     const safeSdk: Safe = await safeFactory.deploySafe({safeAccountConfig, saltNonce})
 
     return safeSdk;
@@ -70,11 +73,65 @@ describe("Test the Safe SDK", () => {
     // create a multi-sign safe
     it("Deploy a multi-sig safe", async function () {
         // create and deploy a safe
-        const treasury = await deployTreasury(3);
+        const treasury: Safe = await deployTreasury(3);
         const treasuryAddress = await treasury.getAddress();
 
         assert.notEqual(treasuryAddress, "0x0");
         assert.equal((await treasury.getBalance()).toNumber(), 0);
+    });
+
+    // create a multi-sig safe with a Strategy module
+    // TODO: add this test (deploy module and associate to safe)
+    it.skip("Deploy a multi-sig safe and associate Allowance module", async function () {
+        // create and deploy a safe
+        const treasury: Safe = await deployTreasury(3);
+        const treasuryAddress = await treasury.getAddress();
+
+        assert.notEqual(treasuryAddress, "0x0");
+        assert.equal((await treasury.getBalance()).toNumber(), 0);
+
+        // check that depositing works
+        // ============= investor deposits 10
+        const investorAddress: string = await allSigners.investorSigner.getAddress();
+        const depositValue: string = toEtherHex("10");
+
+        // create and authorize a transaction
+        const params = [{
+            from: investorAddress,
+            to: treasuryAddress,
+            value: depositValue,
+        }];
+
+        let depositResult1 = await provider.send("eth_sendTransaction", params);
+        assert.equal((await treasury.getBalance()).toHexString(), depositValue);
+
+
+        // associate a module to the vault
+        // e.g. allowance module
+
+        // The ModuleManager.sol contract handles the admin actions regarding modules, like enable/disable modules, executing transactions via a module, checking if a module is enabled, etc.
+        //
+        // These are the steps you need to follow to enable a module:
+        // 1. Call the enableModule function. It has the modifier authorized so you need to call it by executing a transaction from your Safe.
+        // 2. Optionally you can check if the module is already enabled by calling isModuleEnabled function.
+        // 3. The module is ready to call the execTransactionFromModule function. Because now the module is enabled, this condition will pass.
+
+        const moduleAddress = "0x0";  // TODO: use the real module address
+
+        const safeTransaction = await treasury.createEnableModuleTx(moduleAddress)
+        const txResponse = await treasury.executeTransaction(safeTransaction)
+        await txResponse.transactionResponse?.wait()
+
+        const moduleAddresses: string[] = await treasury.getModules()
+        assert.isTrue(moduleAddresses.length > 0);
+
+//        const isEnabled = await treasury.isModuleEnabled(moduleAddress)
+
+
+        let depositResult2 = await provider.send("eth_sendTransaction", params); // this should fail
+        assert.equal((await treasury.getBalance()).toHexString(), toEtherHex("10"));
+
+        // check that deposits no longer allowed
     });
 
     // sign with multi-sig safe

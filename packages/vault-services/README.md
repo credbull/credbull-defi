@@ -55,8 +55,33 @@ yarn install
 # if having compiler issues, workaround with pnpify (see: https://yarnpkg.com/advanced/pnpify)
 # yarn add @yarnpkg/pnpify --dev
 ```
+---
+# Future Features
 
-# Safe Contracts v.1.4.1 (contracts not yet deployed to Avalanche)
+# One-Time Setup of Safe Allowances Plugin
+```bash
+# v1.3.0
+git submodule add git@github.com:safe-global/safe-modules.git lib/safe-modules-master
+cd lib/safe-modules-master/allowances
+
+# install dependencies
+yarn
+
+# add missing dependencies 
+# TODO: check if we can change these to dev dependencies only (yarn add --dev ...)
+yarn add --dev @ethersproject/hash @ethersproject/web eth-gas-reporter @nomicfoundation/ethereumjs-trie @nomicfoundation/ethereumjs-util
+
+#fix typo
+sed -i 's/AlowanceModule\.sol/AllowanceModule.sol/' test/test-helpers/artifacts.ts
+
+
+# run the tests
+yarn test
+```
+# Safe Contracts v.1.4.1
+Safe have only deployed their v1.4.1 contracts to a few chains (incl. Ethereum, Gnosis).  The official version remains v.1.3.0.
+(see https://github.com/safe-global/safe-deployments/blob/main/src/assets/v1.4.1/safe.json).  The singleton is deployed on Avalanche,
+so it is still possible to use Safe v.1.4.1, but requires deploying your own contracts. 
 ```bash
 git submodule add https://github.com/gnosis/safe-contracts/ lib/safe-contracts-1.4.1
 cd lib/safe-contracts-1.4.1
