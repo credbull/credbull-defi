@@ -5,10 +5,9 @@ import {ethers, Wallet} from 'ethers';
 
 import Safe, {EthersAdapter, SafeAccountConfig} from "@safe-global/protocol-kit";
 
-import {MySigner} from "../src/my-signer";
 import {SafeTransaction, SafeTransactionDataPartial, TransactionResult} from "@safe-global/safe-core-sdk-types";
 import {deployVault, toEtherHex} from "../src/utils/vault-utils";
-import {OWNER_PUBLIC_KEY_LOCAL, SAFE_VERSION, TestSigners} from "./test-fixture";
+import {OWNER_PUBLIC_KEY_LOCAL, SAFE_VERSION, TestSigner, TestSigners} from "./test-signer";
 import {approveTransaction} from "../src/utils/transaction-utils";
 
 var provider: ethers.providers.JsonRpcProvider;
@@ -29,7 +28,7 @@ before(async () => {
 describe("Test the Safe SDK", () => {
 
     it("Create a signer from the first account", async () => {
-        const owner = new MySigner(0, provider).getDelegate();
+        const owner = new TestSigner(0, provider).getDelegate();
 
         assert.equal(await owner.getAddress(), OWNER_PUBLIC_KEY_LOCAL);
     });
@@ -88,7 +87,7 @@ describe("Test the Safe SDK", () => {
         const safeTransaction: SafeTransaction = await vault.createTransaction({safeTransactionData})
 
         // sign the transaction
-        const approvers: MySigner[] = [testSigners.ceoSigner, testSigners.cfoSigner, testSigners.ctoSigner];
+        const approvers: TestSigner[] = [testSigners.ceoSigner, testSigners.cfoSigner, testSigners.ctoSigner];
         for (const approver of approvers) {
             const approvalTxnResult: TransactionResult = await approveTransaction(await approver.getDelegate(), vault, safeTransaction);
             assert.equal(1, (await approvalTxnResult.transactionResponse?.wait())?.status) // 1 is success, (0 is failure)
