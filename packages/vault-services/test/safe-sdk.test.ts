@@ -3,19 +3,21 @@ import {assert} from 'chai';
 
 import {ethers, Wallet} from 'ethers';
 
-import Safe, {
-    ContractNetworksConfig,
-    EthersAdapter,
-    SafeAccountConfig,
-    SafeFactory
-} from "@safe-global/protocol-kit";
+import Safe, {ContractNetworksConfig, EthersAdapter, SafeAccountConfig, SafeFactory} from "@safe-global/protocol-kit";
 
 import {AllSigners, MySigner} from "../src/my-signer";
 import {createContractNetworks, SAFE_V130} from "../src/network-config";
-import {SafeTransaction, SafeTransactionDataPartial, SafeVersion, TransactionResult} from "@safe-global/safe-core-sdk-types";
+import {
+    SafeTransaction,
+    SafeTransactionDataPartial,
+    SafeVersion,
+    TransactionResult
+} from "@safe-global/safe-core-sdk-types";
 import {JsonRpcSigner} from "@ethersproject/providers";
 
-const OWNER_PUBLIC_KEY: string = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+const OWNER_PUBLIC_KEY_LOCAL: string = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+const ALLOWANCE_MODULE_ADDRESS_LOCAL="0xE46FE78DBfCa5E835667Ba9dCd3F3315E7623F8a";
+
 const SAFE_VERSION: SafeVersion = SAFE_V130;
 
 var provider: ethers.providers.JsonRpcProvider;
@@ -63,11 +65,11 @@ describe("Test the Safe SDK", () => {
     it("Create a signer from the first account", async () => {
         const owner = new MySigner(0, provider).getDelegate();
 
-        assert.equal(await owner.getAddress(), OWNER_PUBLIC_KEY);
+        assert.equal(await owner.getAddress(), OWNER_PUBLIC_KEY_LOCAL);
     });
 
     it("EthersAdapter signer address should be the first account", async () => {
-        assert.equal(await ethAdapter.getSignerAddress(), OWNER_PUBLIC_KEY);
+        assert.equal(await ethAdapter.getSignerAddress(), OWNER_PUBLIC_KEY_LOCAL);
     });
 
     // create a multi-sign safe
@@ -80,58 +82,34 @@ describe("Test the Safe SDK", () => {
         assert.equal((await treasury.getBalance()).toNumber(), 0);
     });
 
-    // create a multi-sig safe with a Strategy module
-    // TODO: add this test (deploy module and associate to safe)
-    it.skip("Deploy a multi-sig safe and associate Allowance module", async function () {
-        // create and deploy a safe
-        const treasury: Safe = await deployTreasury(3);
-        const treasuryAddress = await treasury.getAddress();
+    // create a multi-sig safe with a module
+    it("Deploy a multi-sig safe and associate Allowance module", async function () {
+        // setup - create and deploy a safe
+        const treasury: Safe = await deployTreasury(2);
 
-        assert.notEqual(treasuryAddress, "0x0");
-        assert.equal((await treasury.getBalance()).toNumber(), 0);
+        // no modules should be associated to the vault (yet)
+        assert.equal(0, (await treasury.getModules()).length);
+        const moduleAddress: string = ALLOWANCE_MODULE_ADDRESS_LOCAL;
+        assert.isNotTrue(await treasury.isModuleEnabled(moduleAddress))
 
-        // check that depositing works
-        // ============= investor deposits 10
-        const investorAddress: string = await allSigners.investorSigner.getAddress();
-        const depositValue: string = toEtherHex("10");
+        // setup - associate the module
+        const safeTransaction: SafeTransaction = await treasury.createEnableModuleTx(moduleAddress)
 
-        // create and authorize a transaction
-        const params = [{
-            from: investorAddress,
-            to: treasuryAddress,
-            value: depositValue,
-        }];
+        // sign and execute the createEnableModule transaction
+        const approvers: MySigner[] = [allSigners.ceoSigner, allSigners.cfoSigner];
+        for (const approver of approvers) {
+            await approveTransaction(await approver.getDelegate(), treasury, safeTransaction);
+        }
+        await treasury.executeTransaction(safeTransaction)
 
-        let depositResult1 = await provider.send("eth_sendTransaction", params);
-        assert.equal((await treasury.getBalance()).toHexString(), depositValue);
-
-
-        // associate a module to the vault
-        // e.g. allowance module
-
-        // The ModuleManager.sol contract handles the admin actions regarding modules, like enable/disable modules, executing transactions via a module, checking if a module is enabled, etc.
-        //
-        // These are the steps you need to follow to enable a module:
-        // 1. Call the enableModule function. It has the modifier authorized so you need to call it by executing a transaction from your Safe.
-        // 2. Optionally you can check if the module is already enabled by calling isModuleEnabled function.
-        // 3. The module is ready to call the execTransactionFromModule function. Because now the module is enabled, this condition will pass.
-
-        const moduleAddress = "0x0";  // TODO: use the real module address
-
-        const safeTransaction = await treasury.createEnableModuleTx(moduleAddress)
-        const txResponse = await treasury.executeTransaction(safeTransaction)
-        await txResponse.transactionResponse?.wait()
-
+        // assert - verify the module is now enabled on the vault
+        assert.isTrue(await treasury.isModuleEnabled(moduleAddress))
         const moduleAddresses: string[] = await treasury.getModules()
-        assert.isTrue(moduleAddresses.length > 0);
-
-//        const isEnabled = await treasury.isModuleEnabled(moduleAddress)
+        assert.equal(1, moduleAddresses.length);
 
 
-        let depositResult2 = await provider.send("eth_sendTransaction", params); // this should fail
-        assert.equal((await treasury.getBalance()).toHexString(), toEtherHex("10"));
-
-        // check that deposits no longer allowed
+        // TODO: now we can execute the module
+        // 3. The module is ready to call the execTransactionFromModule function. Because now the module is enabled, this condition will pass.
     });
 
     // sign with multi-sig safe
@@ -171,24 +149,15 @@ describe("Test the Safe SDK", () => {
 
         const safeTransaction: SafeTransaction = await treasury.createTransaction({safeTransactionData})
 
-        // approver 1
-        const approver1Result: TransactionResult = await approveTransaction(await allSigners.ceoSigner.getDelegate(), treasury, safeTransaction);
-        // TODO: add assert  on this result
+        // sign the transaction
+        const approvers: MySigner[] = [allSigners.ceoSigner, allSigners.cfoSigner, allSigners.ctoSigner];
+        for (const approver of approvers) {
+            const approvalTxnResult: TransactionResult = await approveTransaction(await approver.getDelegate(), treasury, safeTransaction);
+            assert.equal(1, (await approvalTxnResult.transactionResponse?.wait())?.status) // 1 is success, (0 is failure)
+        }
 
-        // approver 2
-        const approver2Result: TransactionResult = await approveTransaction(await allSigners.cfoSigner.getDelegate(), treasury, safeTransaction);
-        // TODO: add assert  on this result
-
-        // approver 3 - and execute
-        const ethAdapterOwner3 = new EthersAdapter({
-            ethers,
-            signerOrProvider: (await allSigners.ctoSigner.getDelegate())
-        })
-
-        // const safeSdk3 = await safeSdk2.connect({ ethAdapter: ethAdapterOwner3})
-        const safeSdk3 = await treasury.connect({ethAdapter: ethAdapterOwner3})
-
-        const executeTxResponse = await safeSdk3.executeTransaction(safeTransaction)
+        // execute the transaction
+        const executeTxResponse = await treasury.executeTransaction(safeTransaction)
         await executeTxResponse.transactionResponse?.wait()
 
         assert.equal((await provider.getBalance(receivingWallet.address)).toHexString(), transferValue);

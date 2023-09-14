@@ -68,16 +68,36 @@ cd lib/safe-modules-master/allowances
 yarn
 
 # add missing dependencies 
-# TODO: check if we can change these to dev dependencies only (yarn add --dev ...)
 yarn add --dev @ethersproject/hash @ethersproject/web eth-gas-reporter @nomicfoundation/ethereumjs-trie @nomicfoundation/ethereumjs-util
 
 #fix typo
 sed -i 's/AlowanceModule\.sol/AllowanceModule.sol/' test/test-helpers/artifacts.ts
 
-
 # run the tests
 yarn test
 ```
+
+## One-Time Setup to Deploy Allowances Plugin to Anvil local network
+```bash
+cd lib/safe-modules-master/allowances
+
+#add anvil as a network in the hardhat.config.ts
+sed -i '/gnosis: {/i \
+    anvil: {\
+      ...sharedNetworkConfig,\
+      url: `http://127.0.0.1:8545`,\
+    },
+' hardhat.config.ts
+
+# set up the custom network Environment variables
+cp .env.sample .env
+sed -i 's|^MNEMONIC=.*|MNEMONIC="test test test test test test test test test test test junk"|' .env
+
+# deploy to anvil (anvil must be running)
+yarn deploy anvil
+```
+
+
 # Safe Contracts v.1.4.1
 Safe have only deployed their v1.4.1 contracts to a few chains (incl. Ethereum, Gnosis).  The official version remains v.1.3.0.
 (see https://github.com/safe-global/safe-deployments/blob/main/src/assets/v1.4.1/safe.json).  The singleton is deployed on Avalanche,
@@ -95,7 +115,12 @@ yarn
 # set up the custom network Environment variables
 cp .env.sample .env
 sed -i 's|^NODE_URL=.*|NODE_URL="http://127.0.0.1:8545"|' .env
-echo -e '\nPK=<ENTER_KEY>' >> .env
+
+# Optional 1 - Try this
+sed -i 's|^MNEMONIC=.*|MNEMONIC="test test test test test test test test test test test junk"|' .env
+
+# Optional 2 - Enter PK
+# echo -e '\nPK=<ENTER_KEY>' >> .env
 
 # deploy to the network
 yarn deploy custom
