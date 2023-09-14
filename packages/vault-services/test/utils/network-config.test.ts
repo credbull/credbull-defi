@@ -1,7 +1,7 @@
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {MyNetworkConfig, SAFE_V130, SEPOLIA_CHAINID} from "../src/network-config";
+import {MyNetworkConfig, SAFE_V130, SEPOLIA_CHAINID} from "../../src/utils/network-config";
 import {SafeVersion} from "@safe-global/safe-core-sdk-types";
 import {SingletonDeployment} from "@safe-global/safe-deployments";
 import {ContractNetworksConfig} from "@safe-global/protocol-kit";
