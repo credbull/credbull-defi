@@ -4,14 +4,13 @@ import {assert} from 'chai';
 import {Contract, ethers, providers, Signer} from 'ethers';
 import {LogDescription} from "ethers/lib/utils";
 
-import Safe, {EthersAdapter, SafeAccountConfig} from "@safe-global/protocol-kit";
+import Safe, {EthersAdapter} from "@safe-global/protocol-kit";
 
 import {SafeTransaction, TransactionResult} from "@safe-global/safe-core-sdk-types";
 import {deployVault} from "../src/utils/vault-utils";
 import {SAFE_VERSION, TestSigner, TestSigners} from "./test-signer";
-import {approveTransaction, signAndExecute} from "../src/utils/transaction-utils";
+import {signAndExecute} from "../src/utils/transaction-utils";
 import {AllowanceModule__factory,} from "../lib/safe-modules-master/allowances/typechain-types";
-import {token} from "../lib/safe-modules-master/allowances/typechain-types/@openzeppelin/contracts";
 
 const {Interface} = require("ethers").utils;
 
@@ -36,7 +35,7 @@ const ALLOWANCE_CONTRACT_INTERFACE = new Interface(ABI_ALLOWANCE_MODULE);
 var provider: ethers.providers.JsonRpcProvider;
 var ethAdapter: EthersAdapter;
 var testSigners: TestSigners;
-var allowanceContract : Contract;
+var allowanceContract: Contract;
 
 before(async () => {
     provider = new ethers.providers.JsonRpcProvider(); // no url, defaults to ``http:/\/localhost:8545`
@@ -117,10 +116,6 @@ describe("Test a Vault with the Allowance module", () => {
         const moduleAddresses: string[] = await safe.getModules()
         assert.equal(1, moduleAddresses.length);
 
-        // TODO: now we can execute the module
-        // 3. The module is ready to call the execTransactionFromModule function. Because now the module is enabled, this condition will pass.
-
-        // both the safe and the allowance work by signature
 
         // add a delegate // "function addDelegate(address delegate)",
         let delegateAddress: string = await new TestSigner(8, provider).getAddress(); // delegate to a signer with funds, but isn't a safe owner or allowance spender
@@ -130,6 +125,11 @@ describe("Test a Vault with the Allowance module", () => {
         const tokenAddress: string = "0x0000000000000000000000000000000000000000"; // native token address
         const allowanceParams = new AllowanceParams(delegateAddress, tokenAddress, 100)
         await setTokenAllowanceAndVerify(safe, allowanceAddress, allowanceParams, approvers);
+
+        // TODO: now we can execute the module
+        // 3. The module is ready to call the execTransactionFromModule function. Because now the module is enabled, this condition will pass.
+        // both the safe and the allowance work by signature
+
     });
 });
 
@@ -153,7 +153,7 @@ async function logTransactionEvents(transactionResult: TransactionResult, contra
 }
 
 
-async function addDelegateAndVerify(safe: Safe, allowanceAddress: string, delegateAddress:string, approvers: Signer[]) {
+async function addDelegateAndVerify(safe: Safe, allowanceAddress: string, delegateAddress: string, approvers: Signer[]) {
     const addDelegateTransaction = await safe.createTransaction({
         safeTransactionData: {
             to: allowanceAddress,
@@ -173,7 +173,7 @@ async function addDelegateAndVerify(safe: Safe, allowanceAddress: string, delega
 }
 
 
-async function setTokenAllowanceAndVerify(safe: Safe, allowanceAddress: string, allowanceParams:AllowanceParams, approvers: Signer[]) {
+async function setTokenAllowanceAndVerify(safe: Safe, allowanceAddress: string, allowanceParams: AllowanceParams, approvers: Signer[]) {
     // set up a token allowance
     const safeAddress: string = await safe.getAddress();
 
