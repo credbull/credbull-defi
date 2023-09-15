@@ -1,34 +1,21 @@
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {Contract, ethers} from 'ethers';
+import {Contract, ethers, providers, Signer} from 'ethers';
+import {LogDescription} from "ethers/lib/utils";
 
 import Safe, {EthersAdapter, SafeAccountConfig} from "@safe-global/protocol-kit";
 
 import {SafeTransaction, TransactionResult} from "@safe-global/safe-core-sdk-types";
 import {deployVault} from "../src/utils/vault-utils";
 import {SAFE_VERSION, TestSigner, TestSigners} from "./test-signer";
-import {approveTransaction} from "../src/utils/transaction-utils";
+import {approveTransaction, signAndExecute} from "../src/utils/transaction-utils";
 import {AllowanceModule__factory,} from "../lib/safe-modules-master/allowances/typechain-types";
+import {token} from "../lib/safe-modules-master/allowances/typechain-types/@openzeppelin/contracts";
 
 const {Interface} = require("ethers").utils;
 
 const ALLOWANCE_MODULE_ADDRESS_LOCAL = "0xE46FE78DBfCa5E835667Ba9dCd3F3315E7623F8a";
-
-var provider: ethers.providers.JsonRpcProvider;
-var ethAdapter: EthersAdapter;
-var testSigners: TestSigners;
-
-before(async () => {
-    provider = new ethers.providers.JsonRpcProvider(); // no url, defaults to ``http:/\/localhost:8545`
-    testSigners = new TestSigners(provider);
-
-    ethAdapter = new EthersAdapter({
-        ethers,
-        signerOrProvider: testSigners.ceoSigner.getDelegate()
-    })
-})
-
 
 const ABI_ALLOWANCE_MODULE = [
     "function addDelegate(address delegate)",
@@ -44,35 +31,61 @@ const ABI_ALLOWANCE_MODULE = [
     "event DeleteAllowance(address indexed safe, address delegate, address token)",
 ];
 
+const ALLOWANCE_CONTRACT_INTERFACE = new Interface(ABI_ALLOWANCE_MODULE);
+
+var provider: ethers.providers.JsonRpcProvider;
+var ethAdapter: EthersAdapter;
+var testSigners: TestSigners;
+var allowanceContract : Contract;
+
+before(async () => {
+    provider = new ethers.providers.JsonRpcProvider(); // no url, defaults to ``http:/\/localhost:8545`
+    testSigners = new TestSigners(provider);
+
+    ethAdapter = new EthersAdapter({
+        ethers,
+        signerOrProvider: testSigners.ceoSigner.getDelegate()
+    })
+
+    allowanceContract = new ethers.Contract(ALLOWANCE_MODULE_ADDRESS_LOCAL, ABI_ALLOWANCE_MODULE, provider);
+
+})
+
+class AllowanceParams {
+    delegateAddress: string
+    tokenAddress: string
+    tokenAllowance: number
+
+    constructor(delegateAddress: string, tokenAddress: string, tokenAllowance: number) {
+        this.delegateAddress = delegateAddress;
+        this.tokenAddress = tokenAddress;
+        this.tokenAllowance = tokenAllowance;
+    }
+}
 
 // See Safe Allowance Module: https://github.com/safe-global/safe-modules/tree/master/allowances
 describe("Test a Vault with the Allowance module", () => {
 
     it("Parse the ABI of the Allowance addDelegate function", async function () {
-        const contractInterface = new Interface(ABI_ALLOWANCE_MODULE);
         let delegateAddress = await testSigners.cfoSigner.getAddress();
 
         // two different ways of getting the txnDataFromABI for the transaction
 
         // Option 1 - get the txnDataFromABI from the ABI
         const delegateMethodName = "addDelegate";
-        const txnDataFromABI: string = contractInterface.encodeFunctionData(delegateMethodName, [delegateAddress]);
+        const txnDataFromABI: string = ALLOWANCE_CONTRACT_INTERFACE.encodeFunctionData(delegateMethodName, [delegateAddress]);
 
         // Option 2 - get the txnDataFromABI from the Allowance Module utils
         const allowanceModule = AllowanceModule__factory.connect(ALLOWANCE_MODULE_ADDRESS_LOCAL)
         const txnFromAllowanceUtils = await allowanceModule.addDelegate.populateTransaction(delegateAddress);
-        let txnDataFromAllowanceUtils = txnFromAllowanceUtils.data;
-
-        console.log(`Allowance Addr ${ALLOWANCE_MODULE_ADDRESS_LOCAL}`)
-        console.log(`Delegate Addr ${delegateAddress}`)
 
         assert.equal(ALLOWANCE_MODULE_ADDRESS_LOCAL, txnFromAllowanceUtils.to)
 
         // option 1 and 2 should be equivalent
-        assert.equal(txnDataFromAllowanceUtils, txnDataFromABI)
+        assert.equal(txnFromAllowanceUtils.data, txnDataFromABI)
 
         // use the ABI to decode the txnDataFromABI
-        const parsedData = contractInterface.parseTransaction({
+        const parsedData = ALLOWANCE_CONTRACT_INTERFACE.parseTransaction({
             data: txnDataFromABI,
         });
 
@@ -82,26 +95,22 @@ describe("Test a Vault with the Allowance module", () => {
 
     });
 
+
     // create a multi-sig safe with a module
-    it("Deploy a multi-sig safe and associate Allowance module", async function () {
-        // setup - create and deploy a safe
-        const safeAccountConfig: SafeAccountConfig = await testSigners.createSafeAccountConfig(2);
-        const safe: Safe = await deployVault(safeAccountConfig, ethAdapter, SAFE_VERSION)
+    it("Test granting a Token Allowance to a someone not an owner of the Safe", async function () {
+        const allowanceAddress = ALLOWANCE_MODULE_ADDRESS_LOCAL;
+        const safe: Safe = await deployVault(await testSigners.createSafeAccountConfig(2), ethAdapter, SAFE_VERSION)
 
         // no modules should be associated to the vault (yet)
         assert.equal(0, (await safe.getModules()).length);
-        const allowanceAddress: string = ALLOWANCE_MODULE_ADDRESS_LOCAL;
         assert.isNotTrue(await safe.isModuleEnabled(allowanceAddress))
 
         // setup - associate the module
         const safeTransaction: SafeTransaction = await safe.createEnableModuleTx(allowanceAddress)
 
         // sign and execute the createEnableModule transaction
-        const approvers: TestSigner[] = [testSigners.ceoSigner, testSigners.cfoSigner];
-        for (const approver of approvers) {
-            await approveTransaction(await approver.getDelegate(), safe, safeTransaction);
-        }
-        await safe.executeTransaction(safeTransaction)
+        const approvers: Signer[] = [testSigners.ceoSigner.getDelegate(), testSigners.cfoSigner.getDelegate()];
+        await signAndExecute(safe, safeTransaction, approvers);
 
         // assert - verify the module is now enabled on the vault
         assert.isTrue(await safe.isModuleEnabled(allowanceAddress))
@@ -113,53 +122,81 @@ describe("Test a Vault with the Allowance module", () => {
 
         // both the safe and the allowance work by signature
 
-        const contractInterface = new Interface(ABI_ALLOWANCE_MODULE);
-
         // add a delegate // "function addDelegate(address delegate)",
-        let aliceAsDelegateAddress: string = await new TestSigner(8, provider).getAddress(); // delegate to a signer with funds, but isn't a safe owner or allowance spender
+        let delegateAddress: string = await new TestSigner(8, provider).getAddress(); // delegate to a signer with funds, but isn't a safe owner or allowance spender
+        await addDelegateAndVerify(safe, allowanceAddress, delegateAddress, approvers);
 
-        const addDelegateTransactionData: string = contractInterface.encodeFunctionData("addDelegate", [aliceAsDelegateAddress]);
-        const addDelegateTxnResult = await signAndExecuteTransaction(safe, allowanceAddress, addDelegateTransactionData, approvers);
-        assert.equal(1, (await addDelegateTxnResult.transactionResponse?.wait())?.status) // 1 is success, (0 is failure)
-
-        // TODO: add assert that the delegate is set
-
-        const safeAddress: string = await safe.getAddress();
+        // grant delegate an allowance on a token
         const tokenAddress: string = "0x0000000000000000000000000000000000000000"; // native token address
-
-        // using ethers.js in order to read the returns value.  SafeSDK only returning the transactional data.
-        const contract = new ethers.Contract(allowanceAddress, ABI_ALLOWANCE_MODULE, provider);
-
-        const tokenAllowanceBefore = await contract.getTokenAllowance(safeAddress, aliceAsDelegateAddress, tokenAddress);
-        console.log(`Token Allowance Before = ${tokenAllowanceBefore}`)
-        assert.equal(tokenAllowanceBefore[0].toNumber(), 0)
-
-        // set the token allowance
-        const tokenAllowance = 100;
-        const setAllowance: string = contractInterface.encodeFunctionData("setAllowance", [aliceAsDelegateAddress, tokenAddress, tokenAllowance, 0, 0]);
-        const setAllowanceTxnResult = await signAndExecuteTransaction(safe, allowanceAddress, setAllowance, approvers); // aliceAsDelegateAddress looks suspicious.  should this be safe or module address instead?
-        assert.equal(1, (await setAllowanceTxnResult.transactionResponse?.wait())?.status) // 1 is success, (0 is failure)
-
-        // check the token allowance
-        const tokenAllowanceAfter = await contract.getTokenAllowance(safeAddress, aliceAsDelegateAddress, tokenAddress);
-        console.log(`Token Allowance After = ${tokenAllowanceAfter}`)
-        assert.equal(tokenAllowanceAfter[0].toNumber(), tokenAllowance)
+        const allowanceParams = new AllowanceParams(delegateAddress, tokenAddress, 100)
+        await setTokenAllowanceAndVerify(safe, allowanceAddress, allowanceParams, approvers);
     });
 });
 
-async function signAndExecuteTransaction(safe: Safe, toAddress: string, txnData: string, approvers: TestSigner[]) {
 
-    const safeTransaction = await safe.createTransaction({
+async function logTransactionEvents(transactionResult: TransactionResult, contract: Contract) {
+    const setAllowanceTxnReceipt = await transactionResult.transactionResponse?.wait();
+
+    if (!setAllowanceTxnReceipt) throw new Error("No receipt")
+
+    return setAllowanceTxnReceipt.logs
+        .filter(log => log.address.toLowerCase() === contract.address.toLowerCase())
+        .map(log => {
+            try {
+                return contract.interface.parseLog(log as providers.Log);
+            } catch (error) {
+                console.error("Failed to parse log:", log);
+                return null;
+            }
+        })
+        .filter((parsedLog): parsedLog is LogDescription => parsedLog !== null);
+}
+
+
+async function addDelegateAndVerify(safe: Safe, allowanceAddress: string, delegateAddress:string, approvers: Signer[]) {
+    const addDelegateTransaction = await safe.createTransaction({
         safeTransactionData: {
-            to: toAddress,
+            to: allowanceAddress,
             value: "0",
-            data: txnData,
+            data: ALLOWANCE_CONTRACT_INTERFACE.encodeFunctionData("addDelegate", [delegateAddress]),
+        }
+    })
+    const addDelegateTxnResult = await signAndExecute(safe, addDelegateTransaction, approvers);//await signAndExecuteTransaction(safe, allowanceAddress, addDelegateTransactionData, approvers);
+    assert.equal(1, (await addDelegateTxnResult.executeTransactionResult.transactionResponse?.wait())?.status) // 1 is success, (0 is failure)
+
+    // verify the Add Delegate transaction was success by checking the Event logs
+    const addDelegateLog = await logTransactionEvents(addDelegateTxnResult.executeTransactionResult, allowanceContract);
+    assert.equal(1, addDelegateLog.length)
+    assert.equal("AddDelegate", addDelegateLog[0].name)
+
+    return addDelegateTxnResult;
+}
+
+
+async function setTokenAllowanceAndVerify(safe: Safe, allowanceAddress: string, allowanceParams:AllowanceParams, approvers: Signer[]) {
+    // set up a token allowance
+    const safeAddress: string = await safe.getAddress();
+
+    // using ethers.js in order to read the returns value.  SafeSDK only returning the transactional data.
+    const tokenAllowanceBefore = await allowanceContract.getTokenAllowance(safeAddress, allowanceParams.delegateAddress, allowanceParams.tokenAddress);
+    assert.equal(tokenAllowanceBefore[0].toNumber(), 0)
+
+    // set the token allowance
+    const tokenAllowance = 100;
+    const setAllowanceTransaction = await safe.createTransaction({
+        safeTransactionData: {
+            to: allowanceAddress,
+            value: "0",
+            data: ALLOWANCE_CONTRACT_INTERFACE.encodeFunctionData("setAllowance", [allowanceParams.delegateAddress, allowanceParams.tokenAddress, allowanceParams.tokenAllowance, 0, 0])
         }
     })
 
-    for (const approver of approvers) {
-        await approveTransaction(await approver.getDelegate(), safe, safeTransaction);
-    }
+    const setAllowanceTxnResult = await signAndExecute(safe, setAllowanceTransaction, approvers)
+    assert.equal(1, (await setAllowanceTxnResult.executeTransactionResult.transactionResponse?.wait())?.status) // 1 is success, (0 is failure)
 
-    return await safe.executeTransaction(safeTransaction)
+    // check the token allowance
+    const tokenAllowanceAfter = await allowanceContract.getTokenAllowance(safeAddress, allowanceParams.delegateAddress, allowanceParams.tokenAddress);
+    assert.equal(tokenAllowanceAfter[0].toNumber(), tokenAllowance)
+
+    return setAllowanceTxnResult
 }

@@ -122,9 +122,7 @@ export class MyNetworkConfig {
     networkAddressForChain(singletonDeployment: SingletonDeployment): string {
         if (this.isLocalChain()) {
             let defaultAddress: string = singletonDeployment.defaultAddress;
-
-            console.log(`Local chain of id=${this.chainId}, using default address for ${singletonDeployment.contractName} of ${defaultAddress}`)
-
+            //console.debug(`Local chain of id=${this.chainId}, using default address for ${singletonDeployment.contractName} of ${defaultAddress}`)
             return defaultAddress;
         } else {
             return singletonDeployment.networkAddresses[this.chainId];

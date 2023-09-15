@@ -5,10 +5,10 @@ import {ethers, Wallet} from 'ethers';
 
 import Safe, {EthersAdapter, SafeAccountConfig} from "@safe-global/protocol-kit";
 
-import {SafeTransaction, SafeTransactionDataPartial, TransactionResult} from "@safe-global/safe-core-sdk-types";
+import {SafeTransaction, SafeTransactionDataPartial} from "@safe-global/safe-core-sdk-types";
 import {deployVault, toEtherHex} from "../src/utils/vault-utils";
 import {OWNER_PUBLIC_KEY_LOCAL, SAFE_VERSION, TestSigner, TestSigners} from "./test-signer";
-import {approveTransaction} from "../src/utils/transaction-utils";
+import {signAndExecute} from "../src/utils/transaction-utils";
 
 var provider: ethers.providers.JsonRpcProvider;
 var ethAdapter: EthersAdapter;
@@ -23,6 +23,8 @@ before(async () => {
         signerOrProvider: testSigners.ceoSigner.getDelegate()
     })
 })
+
+
 
 // See: https://github.com/safe-global/safe-core-sdk/tree/main/packages/protocol-kit
 describe("Test the Safe SDK", () => {
@@ -85,17 +87,7 @@ describe("Test the Safe SDK", () => {
         }
 
         const safeTransaction: SafeTransaction = await vault.createTransaction({safeTransactionData})
-
-        // sign the transaction
-        const approvers: TestSigner[] = [testSigners.ceoSigner, testSigners.cfoSigner, testSigners.ctoSigner];
-        for (const approver of approvers) {
-            const approvalTxnResult: TransactionResult = await approveTransaction(await approver.getDelegate(), vault, safeTransaction);
-            assert.equal(1, (await approvalTxnResult.transactionResponse?.wait())?.status) // 1 is success, (0 is failure)
-        }
-
-        // execute the transaction
-        const executeTxResponse = await vault.executeTransaction(safeTransaction)
-        await executeTxResponse.transactionResponse?.wait()
+        const transactionResults = await signAndExecute(vault, safeTransaction, [testSigners.ceoSigner.getDelegate(), testSigners.cfoSigner.getDelegate(), testSigners.ctoSigner.getDelegate()]);
 
         assert.equal((await provider.getBalance(receivingWallet.address)).toHexString(), transferValue);
         assert.equal((await vault.getBalance()).toHexString(), toEtherHex("7")); // todo: don't hardcode (but 10 - 3)
@@ -105,4 +97,3 @@ describe("Test the Safe SDK", () => {
     // const safeSdk = await Safe.create({ethAdapter, safeAddress})
 
 });
-

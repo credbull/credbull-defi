@@ -1,4 +1,4 @@
-import {providers} from "ethers";
+import {providers, Signer} from "ethers";
 import {SafeAccountConfig} from "@safe-global/protocol-kit";
 import {SafeVersion} from "@safe-global/safe-core-sdk-types";
 import {SAFE_V130} from "../src/utils/network-config";
@@ -22,7 +22,7 @@ export class TestSigner {
     }
 
 
-    getDelegate(): providers.JsonRpcSigner {
+    getDelegate(): Signer {
         return this._delegate;
     }
 }
