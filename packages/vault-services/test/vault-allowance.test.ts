@@ -1,18 +1,17 @@
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {ethers} from 'ethers';
+import {Contract, ethers} from 'ethers';
 
 import Safe, {EthersAdapter, SafeAccountConfig} from "@safe-global/protocol-kit";
 
-import {SafeTransaction, SafeTransactionDataPartial, TransactionResult} from "@safe-global/safe-core-sdk-types";
+import {SafeTransaction, TransactionResult} from "@safe-global/safe-core-sdk-types";
 import {deployVault} from "../src/utils/vault-utils";
 import {SAFE_VERSION, TestSigner, TestSigners} from "./test-signer";
 import {approveTransaction} from "../src/utils/transaction-utils";
 import {AllowanceModule__factory,} from "../lib/safe-modules-master/allowances/typechain-types";
-import execSafeTransaction from "../lib/safe-modules-master/allowances/test/test-helpers/execSafeTransaction";
 
-const { Interface } = require("ethers").utils;
+const {Interface} = require("ethers").utils;
 
 const ALLOWANCE_MODULE_ADDRESS_LOCAL = "0xE46FE78DBfCa5E835667Ba9dCd3F3315E7623F8a";
 
@@ -30,36 +29,44 @@ before(async () => {
     })
 })
 
-/// @dev Allows to update the allowance for a specified token. This can only be done via a Safe transaction.
-/// @param delegate Delegate whose allowance should be updated.
-/// @param token Token contract address.
-/// @param allowanceAmount allowance in smallest token unit.
-/// @param resetTimeMin Time after which the allowance should reset
-/// @param resetBaseMin Time based on which the reset time should be increased
-// function setAllowance(address delegate, address token, uint96 allowanceAmount, uint16 resetTimeMin, uint32 resetBaseMin) public {
 
-const ABI_ADD_DELEGATE = [
+const ABI_ALLOWANCE_MODULE = [
     "function addDelegate(address delegate)",
-    "function getAllowance(address safe, address delegate, address token)",
+    "function getTokenAllowance(address safe, address delegate, address token) public view returns (uint256[5] memory)",
     "function setAllowance(address delegate, address token, uint96 allowanceAmount, uint16 resetTimeMin, uint32 resetBaseMin)",
-    "function getTokens(address safe, address delegate)", // public view returns (address[] memory)
+    "function getTokens(address safe, address delegate) public view returns (address[] memory)",
+    "event AddDelegate(address indexed safe, address delegate)",
+    "event RemoveDelegate(address indexed safe, address delegate)",
+    "event ExecuteAllowanceTransfer(address indexed safe, address delegate, address token, address to, uint96 value, uint16 nonce)",
+    "event PayAllowanceTransfer(address indexed safe, address delegate, address paymentToken, address paymentReceiver, uint96 payment)",
+    "event SetAllowance(address indexed safe, address delegate, address token, uint96 allowanceAmount, uint16 resetTime)",
+    "event ResetAllowance(address indexed safe, address delegate, address token)",
+    "event DeleteAllowance(address indexed safe, address delegate, address token)",
 ];
 
-// See: https://github.com/safe-global/safe-core-sdk/tree/main/packages/protocol-kit
+
+// See Safe Allowance Module: https://github.com/safe-global/safe-modules/tree/master/allowances
 describe("Test a Vault with the Allowance module", () => {
 
     it("Parse the ABI of the Allowance addDelegate function", async function () {
-        const contractInterface = new Interface(ABI_ADD_DELEGATE);
+        const contractInterface = new Interface(ABI_ALLOWANCE_MODULE);
         let delegateAddress = await testSigners.cfoSigner.getAddress();
 
         // two different ways of getting the txnDataFromABI for the transaction
 
         // Option 1 - get the txnDataFromABI from the ABI
-        const txnDataFromABI: string = contractInterface.encodeFunctionData("addDelegate", [delegateAddress]);
+        const delegateMethodName = "addDelegate";
+        const txnDataFromABI: string = contractInterface.encodeFunctionData(delegateMethodName, [delegateAddress]);
 
         // Option 2 - get the txnDataFromABI from the Allowance Module utils
         const allowanceModule = AllowanceModule__factory.connect(ALLOWANCE_MODULE_ADDRESS_LOCAL)
-        let txnDataFromAllowanceUtils = (await allowanceModule.addDelegate.populateTransaction(delegateAddress)).data;
+        const txnFromAllowanceUtils = await allowanceModule.addDelegate.populateTransaction(delegateAddress);
+        let txnDataFromAllowanceUtils = txnFromAllowanceUtils.data;
+
+        console.log(`Allowance Addr ${ALLOWANCE_MODULE_ADDRESS_LOCAL}`)
+        console.log(`Delegate Addr ${delegateAddress}`)
+
+        assert.equal(ALLOWANCE_MODULE_ADDRESS_LOCAL, txnFromAllowanceUtils.to)
 
         // option 1 and 2 should be equivalent
         assert.equal(txnDataFromAllowanceUtils, txnDataFromABI)
@@ -69,7 +76,7 @@ describe("Test a Vault with the Allowance module", () => {
             data: txnDataFromABI,
         });
 
-        assert.equal("addDelegate", parsedData.name)
+        assert.equal(delegateMethodName, parsedData.name)
         assert.equal(1, parsedData.args.length)
         assert.equal(delegateAddress, parsedData.args[0])
 
@@ -106,86 +113,53 @@ describe("Test a Vault with the Allowance module", () => {
 
         // both the safe and the allowance work by signature
 
-        const contractInterface = new Interface(ABI_ADD_DELEGATE);
+        const contractInterface = new Interface(ABI_ALLOWANCE_MODULE);
 
         // add a delegate // "function addDelegate(address delegate)",
         let aliceAsDelegateAddress: string = await new TestSigner(8, provider).getAddress(); // delegate to a signer with funds, but isn't a safe owner or allowance spender
 
         const addDelegateTransactionData: string = contractInterface.encodeFunctionData("addDelegate", [aliceAsDelegateAddress]);
-        await executeSafeTransaction(safe, aliceAsDelegateAddress, addDelegateTransactionData, approvers);
+        const addDelegateTxnResult = await signAndExecuteTransaction(safe, allowanceAddress, addDelegateTransactionData, approvers);
+        assert.equal(1, (await addDelegateTxnResult.transactionResponse?.wait())?.status) // 1 is success, (0 is failure)
 
+        // TODO: add assert that the delegate is set
 
-        // get the delegate allowance // "function getAllowance(address safe, address delegate, address token)",
-        // TODO: change to "call" the function to get the return valu.  Not available on the executeTransaction
-        const safeAddress = await safe.getAddress();
+        const safeAddress: string = await safe.getAddress();
         const tokenAddress: string = "0x0000000000000000000000000000000000000000"; // native token address
 
-        const getDelegateAllowance: string = contractInterface.encodeFunctionData("getAllowance", [safeAddress, aliceAsDelegateAddress, tokenAddress]);
-        const delegateAllowanceResult = await executeSafeTransaction(safe, aliceAsDelegateAddress, addDelegateTransactionData, approvers);
+        // using ethers.js in order to read the returns value.  SafeSDK only returning the transactional data.
+        const contract = new ethers.Contract(allowanceAddress, ABI_ALLOWANCE_MODULE, provider);
 
-        let delegateAllowanceTxnReceipt = await delegateAllowanceResult.transactionResponse?.wait();
-        assert.equal(1, delegateAllowanceTxnReceipt?.status) // 1 is success, (0 is failure)
+        const tokenAllowanceBefore = await contract.getTokenAllowance(safeAddress, aliceAsDelegateAddress, tokenAddress);
+        console.log(`Token Allowance Before = ${tokenAllowanceBefore}`)
+        assert.equal(tokenAllowanceBefore[0].toNumber(), 0)
 
+        // set the token allowance
+        const tokenAllowance = 100;
+        const setAllowance: string = contractInterface.encodeFunctionData("setAllowance", [aliceAsDelegateAddress, tokenAddress, tokenAllowance, 0, 0]);
+        const setAllowanceTxnResult = await signAndExecuteTransaction(safe, allowanceAddress, setAllowance, approvers); // aliceAsDelegateAddress looks suspicious.  should this be safe or module address instead?
+        assert.equal(1, (await setAllowanceTxnResult.transactionResponse?.wait())?.status) // 1 is success, (0 is failure)
+
+        // check the token allowance
+        const tokenAllowanceAfter = await contract.getTokenAllowance(safeAddress, aliceAsDelegateAddress, tokenAddress);
+        console.log(`Token Allowance After = ${tokenAllowanceAfter}`)
+        assert.equal(tokenAllowanceAfter[0].toNumber(), tokenAllowance)
     });
-
-
-    // add alice as delegate
-
-    // create an allowance for alice
-    // await execSafeTransaction(
-    //     safe,
-    //     await allowanceModule.setAllowance.populateTransaction(
-    //         alice.address,
-    //         tokenAddress,
-    //         100,
-    //         0,
-    //         0
-    //     ),
-    //     owner
-    // )
-    /*
-    // create an allowance for alice
-    await execSafeTransaction(
-      safe,
-      await allowanceModule.setAllowance.populateTransaction(
-        alice.address,
-        tokenAddress,
-        100,
-        0,
-        0
-      ),
-      owner
-    )
-     */
-
-    // TODO: test against previously deployed safe
-    // const safeSdk = await Safe.create({ethAdapter, safeAddress})
-
 });
 
-/// @dev Allows to update the allowance for a specified token. This can only be done via a Safe transaction.
-/// @param delegate Delegate whose allowance should be updated.
-/// @param token Token contract address.
-/// @param allowanceAmount allowance in smallest token unit.
-/// @param resetTimeMin Time after which the allowance should reset
-/// @param resetBaseMin Time based on which the reset time should be increased
-// function setAllowance(address delegate, address token, uint96 allowanceAmount, uint16 resetTimeMin, uint32 resetBaseMin) public {
+async function signAndExecuteTransaction(safe: Safe, toAddress: string, txnData: string, approvers: TestSigner[]) {
 
-async function executeSafeTransaction(safe: Safe, delegateAddress: string, txnData: string, approvers: TestSigner[]) {
-
-    const addDelegateTransaction = await safe.createTransaction({
+    const safeTransaction = await safe.createTransaction({
         safeTransactionData: {
-            to: delegateAddress,
+            to: toAddress,
             value: "0",
             data: txnData,
         }
     })
 
-    // TODO: confirm which approvers are required.  should the transaction relate to the safe or the module?
     for (const approver of approvers) {
-        await approveTransaction(await approver.getDelegate(), safe, addDelegateTransaction);
+        await approveTransaction(await approver.getDelegate(), safe, safeTransaction);
     }
 
-    return await safe.executeTransaction(addDelegateTransaction)
+    return await safe.executeTransaction(safeTransaction)
 }
-
