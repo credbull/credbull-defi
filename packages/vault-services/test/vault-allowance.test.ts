@@ -7,7 +7,7 @@ import {LogDescription} from "ethers/lib/utils";
 import Safe, {EthersAdapter} from "@safe-global/protocol-kit";
 
 import {SafeTransaction, TransactionResult} from "@safe-global/safe-core-sdk-types";
-import {deployVault} from "../src/utils/vault-utils";
+import {deployVault, depositToSafe, toWei} from "../src/utils/vault-utils";
 import {SAFE_VERSION, TestSigner, TestSigners} from "./test-signer";
 import {signAndExecute} from "../src/utils/transaction-utils";
 import {AllowanceModule__factory,} from "../lib/safe-modules-master/allowances/typechain-types";
@@ -118,7 +118,8 @@ describe("Test a Vault with the Allowance module", () => {
 
 
         // add a delegate // "function addDelegate(address delegate)",
-        let delegateAddress: string = await new TestSigner(8, provider).getAddress(); // delegate to a signer with funds, but isn't a safe owner or allowance spender
+        let delegateSigner: TestSigner = await new TestSigner(8, provider); // delegate to a signer with funds, but isn't a safe owner or allowance spender
+        let delegateAddress: string = await delegateSigner.getAddress();
         await addDelegateAndVerify(safe, allowanceAddress, delegateAddress, approvers);
 
         // grant delegate an allowance on a token
@@ -126,10 +127,36 @@ describe("Test a Vault with the Allowance module", () => {
         const allowanceParams = new AllowanceParams(delegateAddress, tokenAddress, 100)
         await setTokenAllowanceAndVerify(safe, allowanceAddress, allowanceParams, approvers);
 
+        // top up the safe with some precious ducats
+        assert.equal((await safe.getBalance()).toNumber(), 0);
+        const depositAmountInEther: number = 10;
+        await depositToSafe(provider, await safe.getAddress(), await testSigners.investorSigner.getAddress(), depositAmountInEther);
+        assert.equal((await safe.getBalance()).toBigInt(), toWei(depositAmountInEther));
+
+        // console.log(`Ceo balance: ${await testSigners.ceoSigner.getBalance()}`)
+        // console.log(`Del balance: ${await delegateSigner.getBalance()}`)
+
         // TODO: now we can execute the module
         // 3. The module is ready to call the execTransactionFromModule function. Because now the module is enabled, this condition will pass.
         // both the safe and the allowance work by signature
 
+        /*
+        expect(1000).to.equal(await token.balanceOf(safeAddress))
+        expect(0).to.equal(await token.balanceOf(alice.address))
+        expect(0).to.equal(await token.balanceOf(bob.address))
+
+        await execAllowanceTransfer(allowanceModule, {
+          safe: safeAddress,
+          token: tokenAddress,
+          to: bob.address,
+          amount: 60,
+          spender: alice,
+        })
+
+        expect(940).to.equal(await token.balanceOf(safeAddress))
+        expect(0).to.equal(await token.balanceOf(alice.address))
+        expect(60).to.equal(await token.balanceOf(bob.address))
+         */
     });
 });
 

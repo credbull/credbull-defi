@@ -25,6 +25,16 @@ export class TestSigner {
     getDelegate(): Signer {
         return this._delegate;
     }
+
+    async getBalance() {
+        const balance = this._delegate.getBalance();
+
+        return (await balance).toBigInt();
+    }
+
+    async logBalance() {
+        console.log(await this.getBalance())
+    }
 }
 
 export class TestSigners {
@@ -39,7 +49,6 @@ export class TestSigners {
         this._ctoSigner = new TestSigner(2, provider);
         this._investorSigner = new TestSigner(3, provider);
     }
-
 
     get ceoSigner(): TestSigner {
         return this._ceoSigner;

@@ -23,3 +23,18 @@ export async function deployVault(safeAccountConfig: SafeAccountConfig, ethAdapt
 export function toEtherHex(value: string) {
     return ethers.utils.parseUnits(value, "ether").toHexString();
 }
+
+export function toWei(depositAmountInEther: number): bigint {
+    return ethers.BigNumber.from(depositAmountInEther).mul(ethers.constants.WeiPerEther).toBigInt();
+}
+
+export async function depositToSafe(provider: ethers.providers.JsonRpcProvider, vaultAddress: string, fromAddress: string, depositValueInEther: number) {
+    // create and authorize a transaction
+    const params = [{
+        from: fromAddress,
+        to: vaultAddress,
+        value: toEtherHex(depositValueInEther.toString()),
+    }];
+
+    return await provider.send("eth_sendTransaction", params);
+}

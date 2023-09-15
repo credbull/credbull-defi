@@ -6,7 +6,7 @@ import {ethers, Wallet} from 'ethers';
 import Safe, {EthersAdapter, SafeAccountConfig} from "@safe-global/protocol-kit";
 
 import {SafeTransaction, SafeTransactionDataPartial} from "@safe-global/safe-core-sdk-types";
-import {deployVault, toEtherHex} from "../src/utils/vault-utils";
+import {deployVault, depositToSafe, toEtherHex, toWei} from "../src/utils/vault-utils";
 import {OWNER_PUBLIC_KEY_LOCAL, SAFE_VERSION, TestSigner, TestSigners} from "./test-signer";
 import {signAndExecute} from "../src/utils/transaction-utils";
 
@@ -23,7 +23,6 @@ before(async () => {
         signerOrProvider: testSigners.ceoSigner.getDelegate()
     })
 })
-
 
 
 // See: https://github.com/safe-global/safe-core-sdk/tree/main/packages/protocol-kit
@@ -57,21 +56,12 @@ describe("Test the Safe SDK", () => {
         const vault: Safe = await deployVault(safeAccountConfig, ethAdapter, SAFE_VERSION)
         const vaultAddress: string = await vault.getAddress();
 
-
         // ============= investor deposits 10
         const investorAddress: string = await testSigners.investorSigner.getAddress();
-        const depositValue: string = toEtherHex("10");
 
-        // create and authorize a transaction
-        const params = [{
-            from: investorAddress,
-            to: vaultAddress,
-            value: depositValue,
-        }];
-
-        let result = await provider.send("eth_sendTransaction", params);
-
-        assert.equal((await vault.getBalance()).toHexString(), depositValue);
+        const depositAmountInEther: number = 10;
+        await depositToSafe(provider, vaultAddress, investorAddress, depositAmountInEther);
+        assert.equal((await vault.getBalance()).toBigInt(), toWei(depositAmountInEther));
 
         // ===== transfer using multi-sig approvals  =====
 
@@ -95,5 +85,6 @@ describe("Test the Safe SDK", () => {
 
     // TODO: test against previously deployed safe
     // const safeSdk = await Safe.create({ethAdapter, safeAddress})
+
 
 });
