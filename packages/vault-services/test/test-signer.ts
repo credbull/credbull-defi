@@ -26,14 +26,10 @@ export class TestSigner {
         return this._delegate;
     }
 
-    async getBalance() {
+    async getBalance(): Promise<bigint> {
         const balance = this._delegate.getBalance();
 
         return (await balance).toBigInt();
-    }
-
-    async logBalance() {
-        console.log(await this.getBalance())
     }
 }
 
