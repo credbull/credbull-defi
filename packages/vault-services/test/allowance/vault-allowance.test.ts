@@ -253,36 +253,27 @@ async function execAllocationAndVerify(safe: Safe, allowanceAddress: string, del
     // Sign the message using the EIP-712 format
     const {domain, types, message} = paramsToSign(allowanceAddress, BigInt((await safe.getChainId())), paramsToSignParams, nonce)
 
-
-
-
-    function isSignTypedDataSupport(obj: any): obj is SignTypedDataSupport {
-        return '_signTypedData' in obj;
-    }
-
-    if (isSignTypedDataSupport(delegateAllowanceParams.spender)) {
-
-        const signatureFromSignTypedData = await delegateAllowanceParams.spender._signTypedData(domain, types, message);
-
-        // execute the allowance transfer
-        const executeAllowanceTxn = await allowanceContract.populateTransaction.executeAllowanceTransfer(
-            (await safe.getAddress()), // OK - safe
-            delegateAllowanceParams.tokenAddress, // OK - token address
-            (await bobSigner.getAddress()), // OK - payable to
-            delegateAllowanceParams.allowanceAmount, // OK - amount
-            TOKEN_ADDRESS, // OK - payment token
-            0, // OK - payment
-            delegateAddress, // OK - spender address
-            signatureFromSignTypedData // signature bytes ??? // ??? signature : SignerWithAddress
-        )
-
-        const executeAllowanceTxnResponse = await delegateAllowanceParams.spender.sendTransaction(executeAllowanceTxn);
-        const executeAllowanceTxnReceipt = await executeAllowanceTxnResponse.wait();
-        assert.equal(1, executeAllowanceTxnReceipt.status)
-
-    } else {
+    // _signTypeData not exposed on Signer interface
+    if (!isSignTypedDataSupport(delegateAllowanceParams.spender)) {
         throw new Error(`Signer does not support _signTypedData(). ${delegateAllowanceParams.spender}`)
     }
+    const signatureFromSignTypedData: string = await delegateAllowanceParams.spender._signTypedData(domain, types, message);
+
+    // prepare the allowance transfer
+    const executeAllowanceTxn = await allowanceContract.populateTransaction.executeAllowanceTransfer(
+        (await safe.getAddress()), // OK - safe
+        delegateAllowanceParams.tokenAddress, // OK - token address
+        (await bobSigner.getAddress()), // OK - payable to
+        delegateAllowanceParams.allowanceAmount, // OK - amount
+        TOKEN_ADDRESS, // OK - payment token
+        0, // OK - payment
+        delegateAddress, // OK - spender address
+        signatureFromSignTypedData // OK - signature bytes
+    )
+
+    // execute the transfer
+    const executeAllowanceTxnResponse = await delegateAllowanceParams.spender.sendTransaction(executeAllowanceTxn);
+    assert.equal(1, (await executeAllowanceTxnResponse.wait()).status)
 
     // verify after
     const bobBalanceAfter: bigint = await bobSigner.getBalance();
