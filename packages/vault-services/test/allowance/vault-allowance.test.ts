@@ -57,15 +57,19 @@ before(async () => {
 })
 
 class AllowanceParams {
-    delegateAddress: string
+    spender: Signer // spender / delegate
     tokenAddress: string
     allowanceAmount: number
 
-    constructor(delegateAddress: string, tokenAddress: string, allowanceAmount: number) {
-        this.delegateAddress = delegateAddress;
+    constructor(spender: Signer, tokenAddress: string, allowanceAmount: number) {
+        this.spender = spender;
         this.tokenAddress = tokenAddress;
         this.allowanceAmount = allowanceAmount;
     }
+}
+
+interface SignTypedDataSupport {
+    _signTypedData(domain: any, types: any, message: any): Promise<string>;
 }
 
 // See Safe Allowance Module: https://github.com/safe-global/safe-modules/tree/master/allowances
@@ -131,7 +135,7 @@ describe("Test a Vault with the Allowance module", () => {
         await addDelegateAndVerify(safe, allowanceAddress, delegateAddress, approvers);
 
         // grant delegate an allowance on a token
-        const delegateAllowanceParams = new AllowanceParams(delegateAddress, TOKEN_ADDRESS, 100)
+        const delegateAllowanceParams = new AllowanceParams(delegateSigner.getDelegate(), TOKEN_ADDRESS, 100)
         await setTokenAllowanceAndVerify(safe, allowanceAddress, delegateAllowanceParams, approvers);
 
         // delegate has an allowance, but no tokens
@@ -140,7 +144,7 @@ describe("Test a Vault with the Allowance module", () => {
 
 
         // okay - lets actually do transfers!
-        const execAllowanceParams = new AllowanceParams(delegateAddress, TOKEN_ADDRESS, 1)
+        const execAllowanceParams = new AllowanceParams(delegateSigner.getDelegate(), TOKEN_ADDRESS, 1)
         await execAllocationAndVerify(safe, allowanceAddress, execAllowanceParams);
     });
 });
@@ -186,7 +190,7 @@ async function addDelegateAndVerify(safe: Safe, allowanceAddress: string, delega
 
 
 async function verifyAllowance(safeAddress: string, allowanceParams: AllowanceParams, expectedAllowance: number) {
-    const tokenAllowance = await allowanceContract.getTokenAllowance(safeAddress, allowanceParams.delegateAddress, allowanceParams.tokenAddress);
+    const tokenAllowance = await allowanceContract.getTokenAllowance(safeAddress, allowanceParams.spender.getAddress(), allowanceParams.tokenAddress);
 
     assert.equal(tokenAllowance[0].toNumber(), expectedAllowance)
 }
@@ -201,16 +205,17 @@ async function getTokens(safeAddress: string, delegateAddress: string) {
 async function setTokenAllowanceAndVerify(safe: Safe, allowanceAddress: string, allowanceParams: AllowanceParams, approvers: Signer[]) {
     // set up a token allowance
     const safeAddress: string = await safe.getAddress();
+    const spenderAddress: string = await allowanceParams.spender.getAddress();
 
     // using ethers.js in order to read the returns value.  SafeSDK only returning the transactional data.
-    const tokenAllowanceBefore = await allowanceContract.getTokenAllowance(safeAddress, allowanceParams.delegateAddress, allowanceParams.tokenAddress);
+    const tokenAllowanceBefore = await allowanceContract.getTokenAllowance(safeAddress, spenderAddress, allowanceParams.tokenAddress);
     assert.equal(tokenAllowanceBefore[0].toNumber(), 0)
 
     const setAllowanceTransaction = await safe.createTransaction({
         safeTransactionData: {
             to: allowanceAddress,
             value: "0",
-            data: ALLOWANCE_CONTRACT_INTERFACE.encodeFunctionData("setAllowance", [allowanceParams.delegateAddress, allowanceParams.tokenAddress, allowanceParams.allowanceAmount, 0, 0])
+            data: ALLOWANCE_CONTRACT_INTERFACE.encodeFunctionData("setAllowance", [spenderAddress, allowanceParams.tokenAddress, allowanceParams.allowanceAmount, 0, 0])
         }
     })
 
@@ -224,7 +229,7 @@ async function setTokenAllowanceAndVerify(safe: Safe, allowanceAddress: string, 
 }
 
 async function execAllocationAndVerify(safe: Safe, allowanceAddress: string, delegateAllowanceParams: AllowanceParams) {
-    const delegateAddress: string = delegateAllowanceParams.delegateAddress
+    const delegateAddress: string = await delegateAllowanceParams.spender.getAddress();
 
     // top up the safe with some precious ducats
     assert.equal((await safe.getBalance()).toNumber(), 0);
@@ -237,14 +242,7 @@ async function execAllocationAndVerify(safe: Safe, allowanceAddress: string, del
 
     const bobBalanceBefore: bigint = await bobSigner.getBalance();
 
-    // check before
-    const delegateWalletPK = "0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97";
-    const delegateWallet = new ethers.Wallet(delegateWalletPK, provider) // TODO - temporary, try to remove this.
-    assert.equal(delegateWallet.address, delegateAddress)
-
-    const chainId = BigInt(31337); // TODO - temp, remove this if possible
     const [, , , , nonce] = await allowanceContract.getTokenAllowance((await safe.getAddress()), delegateAddress, TOKEN_ADDRESS)
-
     const paramsToSignParams = {
         safe: (await safe.getAddress()),
         token: delegateAllowanceParams.tokenAddress,
@@ -253,28 +251,44 @@ async function execAllocationAndVerify(safe: Safe, allowanceAddress: string, del
     }
 
     // Sign the message using the EIP-712 format
-    const {domain, types, message} = paramsToSign(allowanceAddress, BigInt(chainId), paramsToSignParams, nonce)
-    const signatureFromSignTypedData = await delegateWallet._signTypedData(domain, types, message);
+    const {domain, types, message} = paramsToSign(allowanceAddress, BigInt((await safe.getChainId())), paramsToSignParams, nonce)
 
-    // execute the allowance transfer
-    const executeAllowanceTxn = await allowanceContract.populateTransaction.executeAllowanceTransfer(
-        (await safe.getAddress()), // OK - safe
-        delegateAllowanceParams.tokenAddress, // OK - token address
-        (await bobSigner.getAddress()), // OK - payable to
-        delegateAllowanceParams.allowanceAmount, // OK - amount
-        TOKEN_ADDRESS, // OK - payment token
-        0, // OK - payment
-        delegateAddress, // OK - spender address
-        signatureFromSignTypedData // signature bytes ??? // ??? signature : SignerWithAddress
-    )
 
-    const executeAllowanceTxnResponse = await delegateWallet.sendTransaction(executeAllowanceTxn);
-    const executeAllowanceTxnReceipt = await executeAllowanceTxnResponse.wait();
-    assert.equal(1, executeAllowanceTxnReceipt.status)
+
+
+    function isSignTypedDataSupport(obj: any): obj is SignTypedDataSupport {
+        return '_signTypedData' in obj;
+    }
+
+    if (isSignTypedDataSupport(delegateAllowanceParams.spender)) {
+
+        const signatureFromSignTypedData = await delegateAllowanceParams.spender._signTypedData(domain, types, message);
+
+        // execute the allowance transfer
+        const executeAllowanceTxn = await allowanceContract.populateTransaction.executeAllowanceTransfer(
+            (await safe.getAddress()), // OK - safe
+            delegateAllowanceParams.tokenAddress, // OK - token address
+            (await bobSigner.getAddress()), // OK - payable to
+            delegateAllowanceParams.allowanceAmount, // OK - amount
+            TOKEN_ADDRESS, // OK - payment token
+            0, // OK - payment
+            delegateAddress, // OK - spender address
+            signatureFromSignTypedData // signature bytes ??? // ??? signature : SignerWithAddress
+        )
+
+        const executeAllowanceTxnResponse = await delegateAllowanceParams.spender.sendTransaction(executeAllowanceTxn);
+        const executeAllowanceTxnReceipt = await executeAllowanceTxnResponse.wait();
+        assert.equal(1, executeAllowanceTxnReceipt.status)
+
+    } else {
+        throw new Error(`Signer does not support _signTypedData(). ${delegateAllowanceParams.spender}`)
+    }
 
     // verify after
     const bobBalanceAfter: bigint = await bobSigner.getBalance();
     assert.equal(bobBalanceAfter, (bobBalanceBefore + BigInt(delegateAllowanceParams.allowanceAmount)))
 }
 
-
+function isSignTypedDataSupport(obj: any): obj is SignTypedDataSupport {
+    return '_signTypedData' in obj;
+}
