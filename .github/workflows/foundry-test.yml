@@ -17,9 +17,9 @@ jobs:
           version: nightly
 
       - name: Run tests
-        working-directory: ./packages/contracts
+        working-directory: ./packages/foundry
         run: forge test -vvv
                 
       - name: Run coverage report
-        working-directory: ./packages/contracts
+        working-directory: ./packages/foundry
         run: forge coverage
