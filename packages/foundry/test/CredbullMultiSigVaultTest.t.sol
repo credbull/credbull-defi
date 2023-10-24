@@ -31,6 +31,7 @@ contract CredbullMultiSigVault is ERC4626, Ownable {
     constructor(IERC20 _asset, string memory _shareName, string memory _shareSymbol)
         ERC4626(_asset)
         ERC20(_shareName, _shareSymbol)
+        Ownable(msg.sender)
     {}
 }
 

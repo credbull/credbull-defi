@@ -13,3 +13,6 @@ docs/
 # Dotenv file
 .env
 localhost.json
+
+# Gas fee baseline
+.gas-snapshot

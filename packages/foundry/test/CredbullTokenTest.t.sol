@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Test, console} from "forge-std/Test.sol";
-import {CredbullToken} from "../src/CredbullToken.sol";
+import {CredbullToken} from "../contracts/CredbullToken.sol";
 import {DeployCredbullToken} from "../script/DeployCredbullToken.s.sol";
 
 // TODO for Credbull Token and TEst

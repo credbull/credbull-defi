@@ -10,6 +10,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract MyContract is Ownable {
     uint256 public number;
 
+    constructor() Ownable(msg.sender) {}
+
     function setNumber(uint256 newNumber) public onlyOwner {
         number = newNumber;
     }
@@ -66,5 +68,4 @@ contract CredbullMultiSigVaultTest is Test {
         vm.expectRevert();
         myContract.setNumber(0);
     }
-
 }

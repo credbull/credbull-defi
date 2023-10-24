@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Script} from "forge-std/Script.sol";
-import {CredbullToken} from "../src/CredbullToken.sol";
+import {CredbullToken} from "../contracts/CredbullToken.sol";
 
 contract DeployCredbullToken is Script {
     uint256 public constant BASE_TOKEN_AMOUNT = 1000;
