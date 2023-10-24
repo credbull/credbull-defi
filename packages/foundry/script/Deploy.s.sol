@@ -2,9 +2,13 @@
 pragma solidity ^0.8.19;
 
 import "../contracts/YourContract.sol";
+import {CredbullToken} from "../contracts/CredbullToken.sol";
+
 import "./DeployHelpers.s.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
+    uint256 public constant BASE_TOKEN_AMOUNT = 1000;
+
     error InvalidPrivateKey(string);
 
     function run() external {
@@ -15,10 +19,15 @@ contract DeployScript is ScaffoldETHDeploy {
             );
         }
         vm.startBroadcast(deployerPrivateKey);
+
         YourContract yourContract = new YourContract(
             vm.addr(deployerPrivateKey)
         );
         console.logString(string.concat("YourContract deployed at: ", vm.toString(address(yourContract))));
+
+        CredbullToken credbullToken = new CredbullToken(BASE_TOKEN_AMOUNT);
+        console.logString(string.concat("CredbullToken deployed at: ", vm.toString(address(credbullToken))));
+
         vm.stopBroadcast();
 
         /**
