@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {Test, console} from "forge-std/Test.sol";
 import {CredbullVault} from "../contracts/CredbullVault.sol";
 import {DeployCredbullVault} from "../script/DeployCredbullVault.s.sol";
-import {DeployNetworkConfig, INetworkConfig} from "../script/NetworkConfig.s.sol";
+import {NetworkConfigFactory, INetworkConfig} from "../script/NetworkConfig.s.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -15,21 +15,24 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 contract CredbullVaultTest is Test {
     DeployCredbullVault deployCredbullVault;
     CredbullVault public credbullVault;
+    address contractOwnerAddr;
     
     function setUp() public {
-        INetworkConfig networkConfig = new DeployNetworkConfig().getOrCreateLocalConfig();
+        contractOwnerAddr = msg.sender;
+
+        INetworkConfig networkConfig = new NetworkConfigFactory().getNetworkConfig();
         deployCredbullVault = new DeployCredbullVault(networkConfig);
-        credbullVault = deployCredbullVault.deployCredbullVault();
+        credbullVault = deployCredbullVault.run(contractOwnerAddr);
     }
 
     function testDeploymentReturnsToken() public {
-        assertTrue(address(deployCredbullVault.deployCredbullVault()) != address(0x00));
+        assertTrue(address(deployCredbullVault.run()) != address(0x00));
     }
 
     function testOwnerIsMsgSender() public {
         console.log("Token Owner", credbullVault.owner());
 
-        assertEq(credbullVault.owner(), msg.sender);
+        assertEq(credbullVault.owner(), contractOwnerAddr);
     }
 
     function testShareSymbolIsSetOnDeploy() public {
@@ -51,8 +54,7 @@ contract CredbullVaultTest is Test {
     function testOwnerHasAssetTotalSupply() public {
         IERC20 asset = IERC20(credbullVault.asset());        
 
-        address ownerAddress = msg.sender;
-        assertEq(asset.balanceOf(ownerAddress), asset.totalSupply());
+        assertEq(asset.balanceOf(contractOwnerAddr), asset.totalSupply());
     }
 
     function testTotalAssetsIsZero() public {
@@ -67,8 +69,7 @@ contract CredbullVaultTest is Test {
         assertEq(asset.balanceOf(address(credbullVault)), 0, "Vault should start with no assets");
         assertEq(credbullVault.totalAssets(), 0, "Vault should start with no assets");
 
-        address ownerAddress = msg.sender;
-        assertEq(asset.balanceOf(ownerAddress), asset.totalSupply());
+        assertEq(asset.balanceOf(contractOwnerAddr), asset.totalSupply());
 
         address alice = makeAddr("alice");
         uint256 transferAmount = 10;
@@ -100,7 +101,7 @@ contract CredbullVaultTest is Test {
 
     // ========== Utility functions ========== 
     function transfer(IERC20 erc20token, address to, uint256 transferAmount) public {
-        transfer(erc20token, msg.sender, to, transferAmount);
+        transfer(erc20token, contractOwnerAddr, to, transferAmount);
     }
 
     function transfer(IERC20 erc20token, address from, address to, uint256 transferAmount) public {

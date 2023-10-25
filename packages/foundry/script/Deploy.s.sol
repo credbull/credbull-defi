@@ -6,35 +6,52 @@ import "../contracts/YourContract.sol";
 import {DeployCredbullToken} from "./DeployCredbullToken.s.sol";
 import {CredbullToken} from "../contracts/CredbullToken.sol";
 
-import {DeployNetworkConfig, INetworkConfig} from "./NetworkConfig.s.sol";
+import {NetworkConfigFactory, INetworkConfig} from "./NetworkConfig.s.sol";
 import {DeployCredbullVault} from "./DeployCredbullVault.s.sol";
 import {CredbullVault} from "../contracts/CredbullVault.sol";
 
-import "./DeployHelpers.s.sol";
+import {ScaffoldETHDeploy} from "./DeployHelpers.s.sol";
 
-contract DeployScript is ScaffoldETHDeploy, DeployCredbullToken, DeployCredbullVault {
+contract DeployScript is ScaffoldETHDeploy {
     error InvalidPrivateKey(string);
 
+    NetworkConfigFactory private networkConfigFactory;
+    DeployCredbullToken private deployCredbullToken;
+    DeployCredbullVault private deployCredbullVault;
+
     constructor()
-    DeployCredbullVault(new DeployNetworkConfig().getOrCreateLocalConfig())
-    {}
+    {
+        networkConfigFactory = new NetworkConfigFactory();
+        deployCredbullToken = new DeployCredbullToken();
+        deployCredbullVault = new DeployCredbullVault(networkConfigFactory.getNetworkConfig());
+
+    }
 
     function run() external {
         uint256 deployerPrivateKey = setupLocalhostEnv();
+        address deployerAddress = vm.addr(deployerPrivateKey);
+
         if (deployerPrivateKey == 0) {
             revert InvalidPrivateKey(
                 "You don't have a deployer account. Make sure you have set DEPLOYER_PRIVATE_KEY in .env or use `yarn generate` to generate a new random account"
             );
         }
+
+        deployCredbullToken.run(deployerAddress);
+        deployCredbullVault.run(deployerAddress);
+        deployYourContract(deployerPrivateKey);
+    }
+
+    // using PK here.  Address results in error: "No associated wallet for addresses..."
+    function deployYourContract(uint256 deployerPrivateKey) public returns (YourContract) {
+        address deployerAddress = vm.addr(deployerPrivateKey);
+
         vm.startBroadcast(deployerPrivateKey);
 
         YourContract yourContract = new YourContract(
-            vm.addr(deployerPrivateKey)
+            deployerAddress
         );
         console.logString(string.concat("YourContract deployed at: ", vm.toString(address(yourContract))));
-
-        createCredbullToken();
-        createCredbullVault();
 
         vm.stopBroadcast();
 
@@ -44,6 +61,8 @@ contract DeployScript is ScaffoldETHDeploy, DeployCredbullToken, DeployCredbullV
          * This function should be called last.
          */
         exportDeployments();
+
+        return yourContract;
     }
 
     function test() public {}

@@ -3,12 +3,14 @@ pragma solidity ^0.8.19;
 
 import {Script} from "forge-std/Script.sol";
 import {CredbullVault} from "../contracts/CredbullVault.sol";
-import {DeployNetworkConfig, INetworkConfig} from "./NetworkConfig.s.sol";
+import {NetworkConfigFactory, INetworkConfig} from "./NetworkConfig.s.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import {ScaffoldETHDeploy} from "./DeployHelpers.s.sol";
 
 import {console} from "forge-std/console.sol";
 
-contract DeployCredbullVault is Script {
+contract DeployCredbullVault is ScaffoldETHDeploy {
     string private constant VAULT_SHARE_NAME = "VAULT Token";
     string private constant VAULT_SHARE_SYMBOL = "VAULT";
 
@@ -18,10 +20,17 @@ contract DeployCredbullVault is Script {
         networkConfig = _networkConfig;
     }
 
-    function createCredbullVault() public returns (CredbullVault) {
+    function run() public returns (CredbullVault) {
+        return run(msg.sender);
+    }
+
+    function run(address contractOwnerAddress) public returns (CredbullVault) {
+        vm.startBroadcast(contractOwnerAddress);
+
         IERC20 credbullVaultAsset = getCredbullVaultAsset();
 
         CredbullVault credbullVault = new CredbullVault(
+            contractOwnerAddress,
             credbullVaultAsset,
             VAULT_SHARE_NAME,
             VAULT_SHARE_SYMBOL
@@ -29,15 +38,9 @@ contract DeployCredbullVault is Script {
 
         console.logString(string.concat("CredbullVault deployed at: ", vm.toString(address(credbullVault))));
 
-        return credbullVault;
-    }
-
-    function deployCredbullVault() public returns (CredbullVault) {
-        vm.startBroadcast();
-
-        CredbullVault credbullVault = createCredbullVault();
-
         vm.stopBroadcast();
+
+        exportDeployments(); // generates file with Abi's.  call this last.
 
         return credbullVault;
     }

@@ -10,12 +10,13 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 // see: https://eips.ethereum.org/EIPS/eip-4626
 contract CredbullVault is ERC4626, Ownable {
     constructor(
+        address _owner,
         IERC20 _asset,
         string memory _shareName,
         string memory _shareSymbol
     )
     ERC4626(_asset)
     ERC20(_shareName, _shareSymbol)
-    Ownable(msg.sender)
+    Ownable(_owner)
     {}
 }
