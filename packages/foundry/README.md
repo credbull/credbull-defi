@@ -21,10 +21,10 @@ forge test
 source .env
 
 # Deploy the contracts (Option 1).  This reads the private key from the environment.
-forge script script/DeployCredbullToken.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+forge script script/DeployCredbullToken.s.sol --sig "deployCredbullToken()" --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
 
 # Deploy the contracts (Option 2).  This will prompt for the sender's key.
-forge script script/DeployCredbullToken.s.sol --rpc-url $RPC_URL --sender $OWNER_ADDRESS --interactives 1 --broadcast
+forge script script/DeployCredbullToken.s.sol --sig "deployCredbullToken()" --rpc-url $RPC_URL --sender $OWNER_ADDRESS --interactives 1 --broadcast
 ```
 
 ## Verify Contract on Mainnet (or Testnet)
