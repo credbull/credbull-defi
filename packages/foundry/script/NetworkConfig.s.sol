@@ -12,7 +12,7 @@ interface INetworkConfig {
     function getCredbullVaultAsset() external view returns (IERC20);
 }
 
-contract DeployHelper is Script {
+contract DeployNetworkConfig is Script {
     uint256 public constant BASE_TOKEN_AMOUNT = 50000;
 
     INetworkConfig public activeNetworkConfig;
@@ -31,6 +31,9 @@ contract DeployHelper is Script {
         MockTetherToken mockTetherToken = new MockTetherToken(
             BASE_TOKEN_AMOUNT
         );
+
+        console.logString(string.concat("MockTetherToken deployed at: ", vm.toString(address(mockTetherToken))));
+
         vm.stopBroadcast();
 
         INetworkConfig networkConfig = new NetworkConfig(

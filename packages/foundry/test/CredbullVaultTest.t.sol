@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {Test, console} from "forge-std/Test.sol";
 import {CredbullVault} from "../contracts/CredbullVault.sol";
 import {DeployCredbullVault} from "../script/DeployCredbullVault.s.sol";
+import {DeployNetworkConfig, INetworkConfig} from "../script/NetworkConfig.s.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -16,12 +17,13 @@ contract CredbullVaultTest is Test {
     CredbullVault public credbullVault;
     
     function setUp() public {
-        deployCredbullVault = new DeployCredbullVault();
-        credbullVault = deployCredbullVault.run();
+        INetworkConfig networkConfig = new DeployNetworkConfig().getOrCreateLocalConfig();
+        deployCredbullVault = new DeployCredbullVault(networkConfig);
+        credbullVault = deployCredbullVault.deployCredbullVault();
     }
 
     function testDeploymentReturnsToken() public {
-        assertTrue(address(deployCredbullVault.run()) != address(0x00));
+        assertTrue(address(deployCredbullVault.deployCredbullVault()) != address(0x00));
     }
 
     function testOwnerIsMsgSender() public {
@@ -51,6 +53,10 @@ contract CredbullVaultTest is Test {
 
         address ownerAddress = msg.sender;
         assertEq(asset.balanceOf(ownerAddress), asset.totalSupply());
+    }
+
+    function testTotalAssetsIsZero() public {
+        assertEq(0, credbullVault.totalAssets());
     }
 
 

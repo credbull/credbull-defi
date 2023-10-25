@@ -2,12 +2,6 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/packages/contracts/lib/forge-std" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/packages/contracts/lib/forge-std/lib/ds-test" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/packages/contracts/lib/openzeppelin-contracts" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/packages/contracts/lib/openzeppelin-contracts/lib/erc4626-tests" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/packages/contracts/lib/openzeppelin-contracts/lib/forge-std" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/packages/contracts/lib/openzeppelin-contracts/lib/forge-std/lib/ds-test" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/packages/vault-services/lib/safe-contracts-1.3.0" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/packages/vault-services/lib/safe-modules-master" vcs="Git" />
   </component>

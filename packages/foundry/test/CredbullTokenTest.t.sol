@@ -13,7 +13,7 @@ contract CredbullTokenTest is Test {
 
     function setUp() public {
         DeployCredbullToken deployCredbullToken = new DeployCredbullToken();
-        credbullToken = deployCredbullToken.run();
+        credbullToken = deployCredbullToken.deployCredbullToken();
 
         baseTokenAmount = deployCredbullToken.BASE_TOKEN_AMOUNT();
     }
@@ -21,7 +21,7 @@ contract CredbullTokenTest is Test {
     function testDeploymentReturnsToken() public {
         DeployCredbullToken deployCredbullToken = new DeployCredbullToken();
 
-        assertTrue(address(deployCredbullToken.run()) != address(0x00));
+        assertTrue(address(deployCredbullToken.deployCredbullToken()) != address(0x00));
     }
 
     function testOwnerIsMsgSender() public {
