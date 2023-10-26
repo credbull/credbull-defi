@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Script} from "forge-std/Script.sol";
-import {MockTetherToken} from "../test/mocks/MockTetherToken.sol";
+import {MockStablecoin} from "../test/mocks/MockStablecoin.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -41,7 +41,7 @@ contract NetworkConfigFactory is Script {
         initialized = true;
 
         DeployMockStablecoin deployStablecoin = new DeployMockStablecoin();
-        MockTetherToken mockTetherToken = deployStablecoin.run(contractOwnerAddress);
+        MockStablecoin mockTetherToken = deployStablecoin.run(contractOwnerAddress);
 
         INetworkConfig networkConfig = new NetworkConfig(mockTetherToken, mockTetherToken);
 
@@ -76,23 +76,23 @@ contract NetworkConfig is INetworkConfig {
 contract DeployMockStablecoin is ScaffoldETHDeploy {
     uint256 public constant BASE_TOKEN_AMOUNT = 50000;
 
-    function run() public returns (MockTetherToken) {
+    function run() public returns (MockStablecoin) {
         return run(msg.sender);
     }
 
-    function run(address contractOwnerAddress) public returns (MockTetherToken) {
+    function run(address contractOwnerAddress) public returns (MockStablecoin) {
         vm.startBroadcast(contractOwnerAddress);
 
-        MockTetherToken mockTetherToken = new MockTetherToken(
+        MockStablecoin mockStablecoin = new MockStablecoin(
             BASE_TOKEN_AMOUNT
         );
 
-        console.logString(string.concat("MockTetherToken deployed at: ", vm.toString(address(mockTetherToken))));
+        console.logString(string.concat("MockStablecoin deployed at: ", vm.toString(address(mockStablecoin))));
 
         vm.stopBroadcast();
 
         exportDeployments(); // generates file with Abi's.  call this last.
 
-        return mockTetherToken;
+        return mockStablecoin;
     }
 }

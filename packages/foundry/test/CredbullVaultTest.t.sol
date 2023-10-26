@@ -11,7 +11,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 // Test Cases to add:
 // -- Test out the withdraw flow - single party
 // -- Test out the withdraw flow - multi party
-// -- Depositing a Token that isn't the Asset should fail.  E.g. Asset is Tether, trying to deposit USDC should fail.
+// -- Depositing a Token that isn't the Asset should fail.  E.g. Asset is USDC, trying to deposit Tether should fail.
 contract CredbullVaultTest is Test {
     DeployCredbullVault deployCredbullVault;
     CredbullVault public credbullVault;
@@ -62,7 +62,7 @@ contract CredbullVaultTest is Test {
     }
 
 
-    function testDepositTetherGetShare() public {
+    function testDepositAssetGetShares() public {
         // ---- Setup Part 1, give alice some Assets ---- 
         IERC20 asset = IERC20(credbullVault.asset());    
 
