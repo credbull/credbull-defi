@@ -15,6 +15,7 @@ import {
 import { Address, Balance } from "~~/components/scaffold-eth";
 import deployedContracts from "~~/generated/deployedContracts";
 import { useFetchBlocks } from "~~/hooks/scaffold-eth";
+import { foundryCustom } from "~~/scaffold.config";
 import { getTargetNetwork } from "~~/utils/scaffold-eth";
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
@@ -29,7 +30,7 @@ type PageProps = {
 };
 
 const publicClient = createPublicClient({
-  chain: hardhat,
+  chain: foundryCustom,
   transport: http(),
 });
 

@@ -9,9 +9,30 @@ export type ScaffoldConfig = {
   walletAutoConnect: boolean;
 };
 
+export const foundryCustom = /*#__PURE__*/ {
+  id: 31_337,
+  name: "foundry-custom",
+  network: "foundry-custom",
+  nativeCurrency: {
+    decimals: 18,
+    name: "Ether",
+    symbol: "ETH",
+  },
+  rpcUrls: {
+    default: {
+      http: ["http://54.159.181.80:8545"],
+      webSocket: ["ws://54.159.181.80:8545"],
+    },
+    public: {
+      http: ["http://54.159.181.80:8545"],
+      webSocket: ["ws://54.159.181.80:8545"],
+    },
+  },
+};
+
 const scaffoldConfig = {
   // The network where your DApp lives in
-  targetNetwork: chains.foundry,
+  targetNetwork: foundryCustom,
 
   // The interval at which your front-end polls the RPC servers for new data
   // it has no effect on the local network

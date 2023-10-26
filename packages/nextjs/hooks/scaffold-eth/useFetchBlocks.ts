@@ -9,15 +9,16 @@ import {
   walletActions,
   webSocket,
 } from "viem";
-import { hardhat } from "viem/chains";
+import { foundryCustom } from "~~/scaffold.config";
+//import { hardhat } from "viem/chains";
 import { decodeTransactionData } from "~~/utils/scaffold-eth";
 
 const BLOCKS_PER_PAGE = 20;
 
 export const testClient = createTestClient({
-  chain: hardhat,
+  chain: foundryCustom,
   mode: "hardhat",
-  transport: webSocket("ws://127.0.0.1:8545"),
+  transport: webSocket("ws://54.159.181.80:8545"),
 })
   .extend(publicActions)
   .extend(walletActions);

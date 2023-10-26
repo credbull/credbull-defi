@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { createPublicClient, http, toHex } from "viem";
-import { hardhat } from "viem/chains";
+//import { hardhat } from "viem/chains";
+import { foundryCustom } from "~~/scaffold.config";
 
 const publicClient = createPublicClient({
-  chain: hardhat,
+  chain: foundryCustom,
   transport: http(),
 });
 

@@ -5,13 +5,16 @@ import { useNetwork } from "wagmi";
 import { BanknotesIcon } from "@heroicons/react/24/outline";
 import { Address, AddressInput, Balance, EtherInput, getParsedError } from "~~/components/scaffold-eth";
 import { useTransactor } from "~~/hooks/scaffold-eth";
+import { foundryCustom } from "~~/scaffold.config";
 import { notification } from "~~/utils/scaffold-eth";
+
+//
 
 // Account index to use from generated hardhat accounts.
 const FAUCET_ACCOUNT_INDEX = 0;
 
 const localWalletClient = createWalletClient({
-  chain: hardhat,
+  chain: foundryCustom,
   transport: http(),
 });
 
@@ -62,7 +65,7 @@ export const Faucet = () => {
         to: inputAddress,
         value: parseEther(sendValue as `${number}`),
         account: faucetAddress,
-        chain: hardhat,
+        chain: foundryCustom,
       });
       setLoading(false);
       setInputAddress(undefined);
