@@ -5,7 +5,7 @@ const contracts = {
       chainId: "31337",
       contracts: {
         CredbullToken: {
-          address: "0x851356ae760d987E095750cCeb3bC6014560891C",
+          address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
           abi: [
             {
               inputs: [
@@ -456,8 +456,8 @@ const contracts = {
             },
           ],
         },
-        MockTetherToken: {
-          address: "0xf5059a5D33d5853360D16C683c16e67980206f36",
+        MockStablecoin: {
+          address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
           abi: [
             {
               inputs: [
@@ -873,7 +873,7 @@ const contracts = {
           ],
         },
         CredbullVault: {
-          address: "0x95401dc811bb5740090279Ba06cfA8fcF6113778",
+          address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
           abi: [
             {
               inputs: [
@@ -1803,7 +1803,7 @@ const contracts = {
           ],
         },
         YourContract: {
-          address: "0x998abeb3E57409262aE5b751f60747921B33613E",
+          address: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
           abi: [
             {
               inputs: [

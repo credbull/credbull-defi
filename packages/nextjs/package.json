@@ -6,6 +6,7 @@
     "build": "next build",
     "check-types": "tsc --noEmit --incremental",
     "dev": "next dev",
+    "dev-host": "next dev -H 172.23.82.152",
     "format": "prettier --write . '!(node_modules|.next|contracts)/**/*'",
     "lint": "next lint",
     "serve": "next start",
