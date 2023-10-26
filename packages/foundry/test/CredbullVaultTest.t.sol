@@ -20,13 +20,13 @@ contract CredbullVaultTest is Test {
     function setUp() public {
         contractOwnerAddr = msg.sender;
 
-        INetworkConfig networkConfig = new NetworkConfigFactory().getNetworkConfig();
+        INetworkConfig networkConfig = new NetworkConfigFactory().createLocalNetwork(contractOwnerAddr);
         deployCredbullVault = new DeployCredbullVault(networkConfig);
         credbullVault = deployCredbullVault.run(contractOwnerAddr);
     }
 
     function testDeploymentReturnsToken() public {
-        assertTrue(address(deployCredbullVault.run()) != address(0x00));
+        assertTrue(address(deployCredbullVault.run()) != address(0));
     }
 
     function testOwnerIsMsgSender() public {

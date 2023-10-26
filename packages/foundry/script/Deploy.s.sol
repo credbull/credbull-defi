@@ -15,18 +15,6 @@ import {ScaffoldETHDeploy} from "./DeployHelpers.s.sol";
 contract DeployScript is ScaffoldETHDeploy {
     error InvalidPrivateKey(string);
 
-    NetworkConfigFactory private networkConfigFactory;
-    DeployCredbullToken private deployCredbullToken;
-    DeployCredbullVault private deployCredbullVault;
-
-    constructor()
-    {
-        networkConfigFactory = new NetworkConfigFactory();
-        deployCredbullToken = new DeployCredbullToken();
-        deployCredbullVault = new DeployCredbullVault(networkConfigFactory.getNetworkConfig());
-
-    }
-
     function run() external {
         uint256 deployerPrivateKey = setupLocalhostEnv();
         address deployerAddress = vm.addr(deployerPrivateKey);
@@ -37,8 +25,14 @@ contract DeployScript is ScaffoldETHDeploy {
             );
         }
 
+        DeployCredbullToken deployCredbullToken = new DeployCredbullToken();
         deployCredbullToken.run(deployerAddress);
+
+        NetworkConfigFactory networkConfigFactory = new NetworkConfigFactory();
+        INetworkConfig networkConfig = networkConfigFactory.createLocalNetwork(deployerAddress);
+        DeployCredbullVault deployCredbullVault = new DeployCredbullVault(networkConfig);
         deployCredbullVault.run(deployerAddress);
+
         deployYourContract(deployerPrivateKey);
     }
 

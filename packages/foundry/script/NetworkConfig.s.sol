@@ -4,7 +4,11 @@ pragma solidity ^0.8.19;
 import {Script} from "forge-std/Script.sol";
 import {MockTetherToken} from "../test/mocks/MockTetherToken.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {console} from "forge-std/Test.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+
+import {console} from "forge-std/console.sol";
+
+import {ScaffoldETHDeploy} from "./DeployHelpers.s.sol";
 
 interface INetworkConfig {
     function getTetherToken() external view returns (IERC20);
@@ -13,14 +17,37 @@ interface INetworkConfig {
 }
 
 contract NetworkConfigFactory is Script {
+    uint256 public constant CHAINID_LOCAL = 31337;
+
     INetworkConfig private activeNetworkConfig;
     bool private initialized;
 
+    error UnsupportedChainError(string msg, uint chainid);
+
     // For full chainLists see: https://chainlist.org/
     constructor() {
-        require(!initialized, "NetworkConfigFactory already initialized");
+        // todo - list out the chains that are fine
+        if (block.chainid == CHAINID_LOCAL) {
+            // okay
+        } else {
+            revert UnsupportedChainError(string.concat("Unsupported chain: ", Strings.toString(block.chainid)), block.chainid);
+        }
+    }
+
+    function createLocalNetwork(address contractOwnerAddress) public returns (INetworkConfig) {
+        // TODO: change these to errors and add tests
+        require((block.chainid == CHAINID_LOCAL), string.concat("Expected local network, but was ", Strings.toString(block.chainid)));
+        require(!initialized, "NetworkConfig already initialized");
         initialized = true;
-        activeNetworkConfig = new LocalNetworkConfig();
+
+        DeployMockStablecoin deployStablecoin = new DeployMockStablecoin();
+        MockTetherToken mockTetherToken = deployStablecoin.run(contractOwnerAddress);
+
+        INetworkConfig networkConfig = new NetworkConfig(mockTetherToken, mockTetherToken);
+
+        activeNetworkConfig = networkConfig;
+
+        return networkConfig;
     }
 
     function getNetworkConfig() public view returns (INetworkConfig) {
@@ -46,20 +73,15 @@ contract NetworkConfig is INetworkConfig {
     }
 }
 
-
-contract LocalNetworkConfig is INetworkConfig, Script {
+contract DeployMockStablecoin is ScaffoldETHDeploy {
     uint256 public constant BASE_TOKEN_AMOUNT = 50000;
 
-    IERC20 public tetherToken;
-    IERC20 public credbullVaultAsset;
-
-    constructor()  {
-        MockTetherToken mockTetherToken = deployMockStablecoin();
-        tetherToken = mockTetherToken;
-        credbullVaultAsset = mockTetherToken;
+    function run() public returns (MockTetherToken) {
+        return run(msg.sender);
     }
 
-    function createMockStablecoin() public returns (MockTetherToken) {
+    function run(address contractOwnerAddress) public returns (MockTetherToken) {
+        vm.startBroadcast(contractOwnerAddress);
 
         MockTetherToken mockTetherToken = new MockTetherToken(
             BASE_TOKEN_AMOUNT
@@ -67,24 +89,10 @@ contract LocalNetworkConfig is INetworkConfig, Script {
 
         console.logString(string.concat("MockTetherToken deployed at: ", vm.toString(address(mockTetherToken))));
 
-        return mockTetherToken;
-    }
-
-    function deployMockStablecoin() public returns (MockTetherToken) {
-        vm.startBroadcast();
-
-        MockTetherToken mockTetherToken = createMockStablecoin();
-
         vm.stopBroadcast();
 
+        exportDeployments(); // generates file with Abi's.  call this last.
+
         return mockTetherToken;
-    }
-
-    function getTetherToken() public view override returns (IERC20) {
-        return tetherToken;
-    }
-
-    function getCredbullVaultAsset() public view override returns (IERC20) {
-        return credbullVaultAsset;
     }
 }

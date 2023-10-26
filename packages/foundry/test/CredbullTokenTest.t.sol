@@ -24,7 +24,7 @@ contract CredbullTokenTest is Test {
     function testDeploymentReturnsToken() public {
         DeployCredbullToken deployCredbullToken = new DeployCredbullToken();
 
-        assertTrue(address(deployCredbullToken.run(contractOwnerAddr)) != address(0x00));
+        assertTrue(address(deployCredbullToken.run(contractOwnerAddr)) != address(0));
     }
 
     function testOwnerIsMsgSender() public {
@@ -48,7 +48,7 @@ contract CredbullTokenTest is Test {
     }
 
     function testFailsWhenMintCalledByAddressThatIsntOwner() public {
-        vm.prank(address(0x09)); // change msg sender to made up address
+        vm.prank(address(9)); // change msg sender to made up address
         credbullToken.mint(contractOwnerAddr, 1); // mint should fail, as owner only call
     }
 
