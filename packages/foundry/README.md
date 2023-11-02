@@ -11,8 +11,11 @@ Install Foundry: https://book.getfoundry.sh/getting-started/installation
 # Build and compile
 forge build
 
-# Run the tests
+# Run all tests
 forge test
+
+# Run a specific test named <testname>
+forge test <testname>
 ```
 
 ## Deploy to Mainnet (or Testnet)
