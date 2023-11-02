@@ -21,7 +21,7 @@ contract CredbullTokenTest is Test {
         baseTokenAmount = deployCredbullToken.BASE_TOKEN_AMOUNT();
     }
 
-    function testDeploymentReturnsToken() public {
+    function testDeployTokenReturnsToken() public {
         DeployCredbullToken deployCredbullToken = new DeployCredbullToken();
 
         assertTrue(address(deployCredbullToken.run(contractOwnerAddr)) != address(0));
