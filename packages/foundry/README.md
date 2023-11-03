@@ -35,12 +35,13 @@ forge script script/Deploy.s.sol --rpc-url $RPC_URL --sender $OWNER_ADDRESS --in
 # Read the environment variables
 source .env
 
-# Verify the contract source.  This will prompt for the sender's key.
+# Verify the contract source.  
+# Replace <OwnerAddress> with the desired contract owner.  Will prompt for the owner's key.
 # TODO: separate out Verification step.  This is using `forge create`, should use `forge script`
 forge create --rpc-url $RPC_URL \
-    --constructor-args 1000 \
+    --constructor-args "<OwnerAddress>" "1000" \
     --interactive \
-    --etherscan-api-key $BLOCKCHAIN_EXPLORER_API_KEY \
+    --etherscan-api-key $ETHERSCAN_API_KEY \
     --verify \
-    src/CredbullToken.sol:CredbullToken
+    contracts/CredbullToken.sol:CredbullToken
 ```
