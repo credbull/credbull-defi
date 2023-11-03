@@ -9,4 +9,4 @@
 	url = https://github.com/gnosis/safe-contracts/
 [submodule "packages/vault-services/lib/safe-modules-master"]
 	path = packages/vault-services/lib/safe-modules-master
-	url = git@github.com:safe-global/safe-modules.git
+	url = https://github.com/safe-global/safe-modules.git
