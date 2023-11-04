@@ -11,15 +11,24 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
 
+      - name: Install dependencies
+        run: yarn install
+
       - name: Run tests
         working-directory: ./packages/foundry
         run: forge test -vvv
-                
+
       - name: Run coverage report
         working-directory: ./packages/foundry
         run: forge coverage
