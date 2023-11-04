@@ -8,3 +8,6 @@ broadcast
 
 # Dotenv file
 *.env
+
+# IDE files
+.idea
