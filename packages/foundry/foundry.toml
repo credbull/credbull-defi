@@ -3,7 +3,13 @@ src = 'contracts'
 out = 'out'
 libs = ['lib']
 fs_permissions = [{ access = "read-write", path = "./"}]
-remappings = ["@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"]
+allow_paths = ["*", "/"]
+remappings = [
+    "forge-std/=node_modules/forge-std/src/",
+    "ds-test/=node_modules/ds-test/src/",
+    "solidity-bytes-utils/=node_modules/solidity-bytes-utils/contracts/",
+    "@openzeppelin/contracts/=node_modules/openzeppelin-solidity/contracts/",
+]
 
 [rpc_endpoints]
 default_network = "http://127.0.0.1:8545"

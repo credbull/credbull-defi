@@ -1,12 +1,18 @@
-[submodule "packages/contracts/lib/forge-std"]
-	path = packages/contracts/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "packages/contracts/lib/openzeppelin-contracts"]
-	path = packages/contracts/lib/openzeppelin-contracts
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts
 [submodule "packages/vault-services/lib/safe-contracts-1.3.0"]
 	path = packages/vault-services/lib/safe-contracts-1.3.0
 	url = https://github.com/gnosis/safe-contracts/
 [submodule "packages/vault-services/lib/safe-modules-master"]
 	path = packages/vault-services/lib/safe-modules-master
 	url = git@github.com:safe-global/safe-modules.git
+[submodule "externals/forge-std"]
+	path = externals/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "externals/ds-test"]
+	path = externals/ds-test
+	url = https://github.com/dapphub/ds-test
+[submodule "externals/openzeppelin-contracts"]
+	path = externals/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "externals/solidity-bytes-utils"]
+	path = externals/solidity-bytes-utils
+	url = https://github.com/GNSPS/solidity-bytes-utils

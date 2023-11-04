@@ -15,10 +15,14 @@
   },
   "dependencies": {
     "dotenv": "~16.3.1",
+    "ds-test": "workspace:*",
     "envfile": "~6.18.0",
     "ethers": "~5.7.1",
+    "forge-std": "workspace:*",
+    "openzeppelin-solidity": "workspace:*",
     "prettier": "~2.8.8",
     "qrcode": "~1.5.3",
+    "solidity-bytes-utils": "workspace:*",
     "toml": "~3.0.0"
   },
   "devDependencies": {
