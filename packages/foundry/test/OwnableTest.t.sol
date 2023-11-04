@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Test, console} from "forge-std/Test.sol";
+import { Test, console } from "forge-std/Test.sol";
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 // Vaults exchange Assets for Shares in the Vault
 // see: https://eips.ethereum.org/EIPS/eip-4626
 contract MyContract is Ownable {
     uint256 public number;
 
-    constructor() Ownable(msg.sender) {}
+    constructor() Ownable(msg.sender) { }
 
     function setNumber(uint256 newNumber) public onlyOwner {
         number = newNumber;

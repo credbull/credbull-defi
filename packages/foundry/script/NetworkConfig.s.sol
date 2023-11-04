@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Script} from "forge-std/Script.sol";
-import {MockStablecoin} from "../test/mocks/MockStablecoin.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import { Script } from "forge-std/Script.sol";
+import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-import {console} from "forge-std/console.sol";
+import { console } from "forge-std/console.sol";
 
-import {ScaffoldETHDeploy} from "./DeployHelpers.s.sol";
+import { ScaffoldETHDeploy } from "./DeployHelpers.s.sol";
 
 interface INetworkConfig {
     function getTetherToken() external view returns (IERC20);
@@ -22,7 +22,7 @@ contract NetworkConfigFactory is Script {
     INetworkConfig private activeNetworkConfig;
     bool private initialized;
 
-    error UnsupportedChainError(string msg, uint chainid);
+    error UnsupportedChainError(string msg, uint256 chainid);
 
     // For full chainLists see: https://chainlist.org/
     constructor() {
@@ -30,13 +30,18 @@ contract NetworkConfigFactory is Script {
         if (block.chainid == CHAINID_LOCAL) {
             // okay
         } else {
-            revert UnsupportedChainError(string.concat("Unsupported chain: ", Strings.toString(block.chainid)), block.chainid);
+            revert UnsupportedChainError(
+                string.concat("Unsupported chain: ", Strings.toString(block.chainid)), block.chainid
+            );
         }
     }
 
     function createLocalNetwork(address contractOwnerAddress) public returns (INetworkConfig) {
         // TODO: change these to errors and add tests
-        require((block.chainid == CHAINID_LOCAL), string.concat("Expected local network, but was ", Strings.toString(block.chainid)));
+        require(
+            (block.chainid == CHAINID_LOCAL),
+            string.concat("Expected local network, but was ", Strings.toString(block.chainid))
+        );
         require(!initialized, "NetworkConfig already initialized");
         initialized = true;
 

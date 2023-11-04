@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Script} from "forge-std/Script.sol";
-import {CredbullVault} from "../contracts/CredbullVault.sol";
-import {NetworkConfigFactory, INetworkConfig} from "./NetworkConfig.s.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Script } from "forge-std/Script.sol";
+import { CredbullVault } from "../contracts/CredbullVault.sol";
+import { NetworkConfigFactory, INetworkConfig } from "./NetworkConfig.s.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {ScaffoldETHDeploy} from "./DeployHelpers.s.sol";
+import { ScaffoldETHDeploy } from "./DeployHelpers.s.sol";
 
-import {console} from "forge-std/console.sol";
+import { console } from "forge-std/console.sol";
 
 contract DeployCredbullVault is ScaffoldETHDeploy {
     string private constant VAULT_SHARE_NAME = "VAULT Token";

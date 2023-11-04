@@ -40,4 +40,8 @@ scroll = "https://rpc.scroll.io"
 polygonMumbai = { key = "${ETHERSCAN_API_KEY}" }
 goerli = { key = "${ETHERSCAN_API_KEY}" }
 
+[fmt]
+bracket_spacing = true
+
+
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

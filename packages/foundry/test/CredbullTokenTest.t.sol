@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Test, console} from "forge-std/Test.sol";
-import {CredbullToken} from "../contracts/CredbullToken.sol";
-import {DeployCredbullToken} from "../script/DeployCredbullToken.s.sol";
+import { Test, console } from "forge-std/Test.sol";
+import { CredbullToken } from "../contracts/CredbullToken.sol";
+import { DeployCredbullToken } from "../script/DeployCredbullToken.s.sol";
 
 // TODO for Credbull Token and Test
 // 1. Make token Upgradeable
@@ -64,5 +64,4 @@ contract CredbullTokenTest is Test {
         credbullToken.transfer(alice, transferAmount);
         assertEq(credbullToken.balanceOf(alice), transferAmount);
     }
-
 }
