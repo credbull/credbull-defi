@@ -21469,6 +21469,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"spikes-share-multiplier@workspace:spikes/share-muliplier":
+  version: 0.0.0-use.local
+  resolution: "spikes-share-multiplier@workspace:spikes/share-muliplier"
+  dependencies:
+    ds-test: "workspace:*"
+    forge-std: "workspace:*"
+    openzeppelin-solidity: "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "spikes-timelock@workspace:spikes/timelock":
   version: 0.0.0-use.local
   resolution: "spikes-timelock@workspace:spikes/timelock"

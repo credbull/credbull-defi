@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "../contracts/SimpleTokenVesting.sol";
 import "../contracts/SimpleToken.sol";
 
-contract YourContractTest is Test {
+contract SimpleTokenVestingTest is Test {
   SimpleToken public token;
   SimpleTokenVesting public lock;
 
