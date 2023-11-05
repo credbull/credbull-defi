@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "scripts": {
     "format": "forge fmt",
-    "test": "forge test"
+    "test": "forge test",
+    "postinstall": "forge remappings > remappings.txt"
   },
   "dependencies": {
     "ds-test": "workspace:*",

@@ -19,3 +19,5 @@ broadcast
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+remappings.txt
