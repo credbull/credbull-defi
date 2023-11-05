@@ -21469,9 +21469,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"spikes-share-multiplier@workspace:spikes/share-muliplier":
+"spikes-share-multiplier@workspace:spikes/share-multiplier":
   version: 0.0.0-use.local
-  resolution: "spikes-share-multiplier@workspace:spikes/share-muliplier"
+  resolution: "spikes-share-multiplier@workspace:spikes/share-multiplier"
   dependencies:
     ds-test: "workspace:*"
     forge-std: "workspace:*"
