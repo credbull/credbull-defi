@@ -28,3 +28,6 @@
 [submodule "spikes/share-multiplier/lib/openzeppelin-contracts"]
 	path = spikes/share-multiplier/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "packages/foundry/lib/forge-std"]
+	path = packages/foundry/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
