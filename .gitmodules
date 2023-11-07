@@ -4,18 +4,6 @@
 [submodule "packages/vault-services/lib/safe-modules-master"]
 	path = packages/vault-services/lib/safe-modules-master
 	url = https://github.com/safe-global/safe-modules.git
-[submodule "externals/forge-std"]
-	path = externals/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "externals/ds-test"]
-	path = externals/ds-test
-	url = https://github.com/dapphub/ds-test
-[submodule "externals/openzeppelin-contracts"]
-	path = externals/openzeppelin-contracts
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts
-[submodule "externals/solidity-bytes-utils"]
-	path = externals/solidity-bytes-utils
-	url = https://github.com/GNSPS/solidity-bytes-utils
 [submodule "spikes/timelock/lib/forge-std"]
 	path = spikes/timelock/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std

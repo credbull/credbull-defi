@@ -5,10 +5,5 @@
     "format": "forge fmt",
     "test": "forge test -vv",
     "postinstall": "forge remappings > remappings.txt"
-  },
-  "dependencies": {
-    "ds-test": "workspace:*",
-    "forge-std": "workspace:*",
-    "openzeppelin-solidity": "workspace:*"
   }
 }

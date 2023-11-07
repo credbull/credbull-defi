@@ -2,13 +2,7 @@
 src = 'contracts'
 out = 'out'
 libs = ['lib']
-allow_paths = ["*", "/"]
 fs_permissions = [{ access = "read-write", path = "./"}]
-remappings = [
-    "forge-std/=node_modules/forge-std/src/",
-    "ds-test/=node_modules/ds-test/src/",
-    "@openzeppelin/contracts/=node_modules/openzeppelin-solidity/contracts/",
-]
 
 [fmt]
 line_length = 100
