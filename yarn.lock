@@ -14523,15 +14523,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"spikes-share-multiplier@workspace:spikes/share-multiplier":
+"spikes-share-multiplier@workspace:packages/share-multiplier":
   version: 0.0.0-use.local
-  resolution: "spikes-share-multiplier@workspace:spikes/share-multiplier"
+  resolution: "spikes-share-multiplier@workspace:packages/share-multiplier"
   languageName: unknown
   linkType: soft
 
-"spikes-timelock@workspace:spikes/timelock":
+"spikes-timelock@workspace:packages/timelock":
   version: 0.0.0-use.local
-  resolution: "spikes-timelock@workspace:spikes/timelock"
+  resolution: "spikes-timelock@workspace:packages/timelock"
   languageName: unknown
   linkType: soft
 
