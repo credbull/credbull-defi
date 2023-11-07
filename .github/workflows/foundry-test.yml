@@ -16,9 +16,6 @@ jobs:
         with:
           version: nightly
 
-      - name: Install dependencies
-        run: yarn install
-
       - name: Run tests
         working-directory: ./packages/foundry
         run: forge test -vvv
