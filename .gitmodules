@@ -16,3 +16,6 @@
 [submodule "externals/solidity-bytes-utils"]
 	path = externals/solidity-bytes-utils
 	url = https://github.com/GNSPS/solidity-bytes-utils
+[submodule "spikes/timelock/lib/forge-std"]
+	path = spikes/timelock/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
