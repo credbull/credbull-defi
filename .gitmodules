@@ -19,3 +19,6 @@
 [submodule "spikes/timelock/lib/forge-std"]
 	path = spikes/timelock/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "spikes/timelock/lib/openzeppelin-contracts"]
+	path = spikes/timelock/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
