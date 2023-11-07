@@ -22,3 +22,6 @@
 [submodule "spikes/timelock/lib/openzeppelin-contracts"]
 	path = spikes/timelock/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "spikes/share-multiplier/lib/forge-std"]
+	path = spikes/share-multiplier/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
