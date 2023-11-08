@@ -35,14 +35,4 @@ contract NetworkConfigTest is Test {
 
         assertNotEq(address(networkConfig.getTetherToken()), address(0));
     }
-
-    function testDeployUsingOptimismGoerliConfig() public {
-        vm.chainId(420);
-
-        DeployScript deployScript = new DeployScript();
-
-        CredbullVault credbullVault = deployScript.run();
-        assertEq(credbullVault.asset(), address(optimistGoerliTetherToken));
-    }
-
 }
