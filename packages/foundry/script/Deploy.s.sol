@@ -15,7 +15,7 @@ import { ScaffoldETHDeploy } from "./DeployHelpers.s.sol";
 contract DeployScript is ScaffoldETHDeploy {
     error InvalidPrivateKey(string);
 
-    function run() external {
+    function run() external returns (CredbullVault) {
         uint256 deployerPrivateKey = setupLocalhostEnv();
         address deployerAddress = vm.addr(deployerPrivateKey);
 
@@ -28,15 +28,24 @@ contract DeployScript is ScaffoldETHDeploy {
         DeployCredbullToken deployCredbullToken = new DeployCredbullToken();
         deployCredbullToken.run(deployerAddress);
 
-        NetworkConfigFactory networkConfigFactory = new NetworkConfigFactory();
-        INetworkConfig networkConfig = networkConfigFactory.createLocalNetwork(deployerAddress);
-        DeployCredbullVault deployCredbullVault = new DeployCredbullVault(networkConfig);
-        deployCredbullVault.run(deployerAddress);
+        CredbullVault credbullVault = doDeployCredbullVault(deployerAddress);
 
         deployYourContract(deployerPrivateKey);
+
+        return credbullVault;
     }
 
-    // using PK here.  Address results in error: "No associated wallet for addresses..."
+    function doDeployCredbullVault(address deployerAddress) public returns (CredbullVault) {
+        NetworkConfigFactory networkConfigFactory = new NetworkConfigFactory(deployerAddress);
+        INetworkConfig networkConfig = networkConfigFactory.getNetworkConfig();
+
+        DeployCredbullVault deployCredbullVault = new DeployCredbullVault(networkConfig);
+        CredbullVault credbullVault = deployCredbullVault.run(deployerAddress);
+
+        return credbullVault;
+    }
+
+        // using PK here.  Address results in error: "No associated wallet for addresses..."
     function deployYourContract(uint256 deployerPrivateKey) public returns (YourContract) {
         address deployerAddress = vm.addr(deployerPrivateKey);
 

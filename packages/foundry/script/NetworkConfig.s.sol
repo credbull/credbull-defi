@@ -16,27 +16,56 @@ interface INetworkConfig {
     function getCredbullVaultAsset() external view returns (IERC20);
 }
 
+library Addresses {
+    address constant ZERO_ADDRESS = address(0);
+    address constant TETHER_OPTIMISM_GOERLI_ADDRESS = address(0xe05606174bac4A6364B31bd0eCA4bf4dD368f8C6);
+}
+
 contract NetworkConfigFactory is Script {
     uint256 public constant CHAINID_LOCAL = 31337;
+    uint256 public constant CHAINID_OPTIMISM_GOERLI = 420;
+
+    IERC20 public TETHER_OPTIMISM_GOERLI = IERC20(Addresses.TETHER_OPTIMISM_GOERLI_ADDRESS);
 
     INetworkConfig private activeNetworkConfig;
     bool private initialized;
 
     error UnsupportedChainError(string msg, uint256 chainid);
 
+    // TODO: clean this up.  if/else not nice.  constructor arg only needed for localNetwork.
     // For full chainLists see: https://chainlist.org/
-    constructor() {
-        // todo - list out the chains that are fine
+    constructor(address contractOwnerAddress) {
+        console.log("hello 1");
+
+        // TODO: turn this into a mapping of name to supported chains
         if (block.chainid == CHAINID_LOCAL) {
-            // okay
+            createLocalNetwork(contractOwnerAddress);
+        } else if (block.chainid == CHAINID_OPTIMISM_GOERLI)  {
+            console.log("hello 2");
+
+            createOptimismGoerli();
+
+            console.log("hello 2.end");
         } else {
             revert UnsupportedChainError(
-                string.concat("Unsupported chain: ", Strings.toString(block.chainid)), block.chainid
+                string.concat("NetworkConfigFactory::constructor() - Unsupported chain: ", Strings.toString(block.chainid)), block.chainid
             );
         }
     }
 
-    function createLocalNetwork(address contractOwnerAddress) public returns (INetworkConfig) {
+    function createOptimismGoerli() internal returns (INetworkConfig) {
+        console.log("hello 3");
+
+        INetworkConfig networkConfig = new NetworkConfig(TETHER_OPTIMISM_GOERLI, TETHER_OPTIMISM_GOERLI);
+
+        activeNetworkConfig = networkConfig;
+
+        console.log("hello 4");
+
+        return networkConfig;
+    }
+
+    function createLocalNetwork(address contractOwnerAddress) internal returns (INetworkConfig) {
         // TODO: change these to errors and add tests
         require(
             (block.chainid == CHAINID_LOCAL),

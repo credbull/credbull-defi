@@ -15,7 +15,7 @@ forge build
 forge test
 
 # Run a specific test named <testname>
-forge test <testname>
+forge test --match-test <testname>
 ```
 
 ## Deploy to Mainnet (or Testnet)
@@ -24,7 +24,7 @@ forge test <testname>
 source .env
 
 # Deploy the contracts (Option 1).  This reads the private key from the environment.
-forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $DEPLOYER_PRIVATE_KEY --broadcast
 
 # Deploy the contracts (Option 2).  This will prompt for the sender's key.
 forge script script/Deploy.s.sol --rpc-url $RPC_URL --sender $OWNER_ADDRESS --interactives 1 --broadcast

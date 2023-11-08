@@ -20,7 +20,7 @@ contract CredbullVaultTest is Test {
     function setUp() public {
         contractOwnerAddr = msg.sender;
 
-        INetworkConfig networkConfig = new NetworkConfigFactory().createLocalNetwork(contractOwnerAddr);
+        INetworkConfig networkConfig = new NetworkConfigFactory(contractOwnerAddr).getNetworkConfig();
         deployCredbullVault = new DeployCredbullVault(networkConfig);
         credbullVault = deployCredbullVault.run(contractOwnerAddr);
     }
