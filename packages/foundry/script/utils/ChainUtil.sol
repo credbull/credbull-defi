@@ -12,6 +12,10 @@ contract ChainUtil is StdChains {
         return getChainByChainId(31337); // anvil / local chain
     }
 
+    function setChainByAlias(string memory chainAlias, Chain memory chain) public {
+        setChain(chainAlias, chain);
+    }
+
     function getOptimismGoerliChain() public returns (Chain memory chain) {
         return getChainByChainId(420); // optimism goerli
     }
@@ -20,7 +24,7 @@ contract ChainUtil is StdChains {
         return chainsAreSame(chain, getAnvilChain());
     }
 
-    function chainsAreSame(Chain memory chain, Chain memory otherChain) public returns (bool) {
+    function chainsAreSame(Chain memory chain, Chain memory otherChain) public pure returns (bool) {
         return chain.chainId == otherChain.chainId;
     }
 
