@@ -1,29 +1,32 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {ChainUtil} from "./ChainUtil.sol";
-import { NetworkConfigs, INetworkConfig} from "./NetworkConfig.s.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {INetworkConfig} from "./NetworkConfig.s.sol";
 import { DeployMockStablecoin } from "../mocks/DeployMockStablecoin.s.sol";
 import { MockStablecoin } from "../../test/mocks/MockStablecoin.sol";
-import {NetworkConfig} from "./NetworkConfig.s.sol";
 
-contract LocalNetworkConfigs is NetworkConfigs {
-    ChainUtil private chainUtil;
+contract LocalNetworkConfig is INetworkConfig {
+    IERC20 mockStablecoin;
 
     constructor(address contractOwnerAddress) {
-        chainUtil = new ChainUtil();
-
-        INetworkConfig localNetworkConfig = createLocalNetwork(contractOwnerAddress);
-        registerNetworkConfig(chainUtil.getAnvilChain(), localNetworkConfig);
+        mockStablecoin = createStablecoin(contractOwnerAddress);
     }
 
-    function createLocalNetwork(address contractOwnerAddress) internal returns (INetworkConfig) {
+    function createStablecoin(address contractOwnerAddress) internal returns (IERC20) {
         DeployMockStablecoin deployStablecoin = new DeployMockStablecoin();
-        MockStablecoin mockStablecoin = deployStablecoin.run(contractOwnerAddress);
 
-        INetworkConfig networkConfig = new NetworkConfig(mockStablecoin, mockStablecoin);
+        MockStablecoin _mockStablecoin = deployStablecoin.run(contractOwnerAddress);
 
-        return networkConfig;
+        return _mockStablecoin;
+    }
+
+    function getUSDC() public view override returns (IERC20) {
+        return mockStablecoin;
+    }
+
+    function getCredbullVaultAsset() public view override returns (IERC20) {
+        return mockStablecoin;
     }
 }

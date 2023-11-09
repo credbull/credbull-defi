@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
 import { CredbullVault } from "../contracts/CredbullVault.sol";
-import {NetworkConfigs, INetworkConfig } from "./utils/NetworkConfig.s.sol";
+import {INetworkConfig } from "./utils/NetworkConfig.s.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { ScaffoldETHDeploy } from "./DeployHelpers.s.sol";

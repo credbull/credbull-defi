@@ -15,49 +15,7 @@ interface INetworkConfig {
     function getCredbullVaultAsset() external view returns (IERC20);
 }
 
-contract NetworkConfigs is Script {
-    mapping(uint256 => INetworkConfig) networkConfigs; // map from chainid to networkConfigs
-
-    error NetworkConfigNotFound(string msg, uint256 chainid);
-
-    // For full chainLists see: https://chainlist.org/
-
-    function registerNetworkConfig(Chain memory chain, INetworkConfig networkConfig) public returns (INetworkConfig) {
-        networkConfigs[chain.chainId] = networkConfig;
-
-        return networkConfig;
-    }
-
-    function getNetworkConfig() public view returns (INetworkConfig) {
-        uint256 chainId = block.chainid;
-
-        return getNetworkConfigByChainId(chainId);
-    }
-
-    function getNetworkConfigByChain(Chain memory chain) public view returns (INetworkConfig) {
-        return getNetworkConfigByChainId(chain.chainId);
-    }
-
-    function getNetworkConfigByChainId(uint256 chainId) internal view returns (INetworkConfig) {
-        INetworkConfig networkConfig = networkConfigs[chainId];
-
-        if (address(networkConfig) == address(0)) {
-            revert NetworkConfigNotFound("NetworkConfig mapping not found!", chainId);
-        }
-
-        return networkConfig;
-    }
-
-    function getAddressFromEnvironment(string memory envKey) public view returns (address) {
-        string memory value = vm.envString(envKey);
-
-        address valueAddress = vm.parseAddress(value);
-
-        return valueAddress;
-    }
-}
-
-contract NetworkConfig is INetworkConfig {
+contract NetworkConfig is INetworkConfig, Script {
     IERC20 public usdc;
     IERC20 public credbullVaultAsset;
 

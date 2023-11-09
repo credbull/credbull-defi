@@ -6,8 +6,8 @@ import "../contracts/YourContract.sol";
 import {DeployCredbullToken} from "./DeployCredbullToken.s.sol";
 import {CredbullToken} from "../contracts/CredbullToken.sol";
 
-import {NetworkConfigs, INetworkConfig, NetworkConfig} from "./utils/NetworkConfig.s.sol";
-import {LocalNetworkConfigs} from "./utils/LocalNetworkConfig.s.sol";
+import {INetworkConfig, NetworkConfig} from "./utils/NetworkConfig.s.sol";
+import {LocalNetworkConfig} from "./utils/LocalNetworkConfig.s.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {DeployCredbullVault} from "./DeployCredbullVault.s.sol";
@@ -16,6 +16,7 @@ import {CredbullVault} from "../contracts/CredbullVault.sol";
 import {ChainUtil} from "./utils/ChainUtil.sol";
 
 import {ScaffoldETHDeploy} from "./DeployHelpers.s.sol";
+import {EnvUtil} from "./utils/EnvUtil.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
     ChainUtil private chaintUtil = new ChainUtil();
@@ -49,14 +50,12 @@ contract DeployScript is ScaffoldETHDeploy {
     function createNetworkConfig(address deployerAddress) internal returns (INetworkConfig) {
         // ---------- create for local chain ----------
         if (chaintUtil.isLocalChain()) {
-            return new LocalNetworkConfigs(deployerAddress).getNetworkConfig();
+            return new LocalNetworkConfig(deployerAddress);
         }
 
         // ---------- create for remote chain ----------
-        NetworkConfigs networkConfigs = new NetworkConfigs();
-
         // grab the contract addresses from the environment
-        address usdcAddress = networkConfigs.getAddressFromEnvironment("USDC_CONTRACT_ADDRESS");
+        address usdcAddress = new EnvUtil().getAddressFromEnvironment("USDC_CONTRACT_ADDRESS");
 
         IERC20 usdc = IERC20(usdcAddress);
 
