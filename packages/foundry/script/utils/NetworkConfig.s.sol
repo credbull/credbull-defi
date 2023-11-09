@@ -3,19 +3,16 @@ pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
+import "forge-std/Vm.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+
 
 interface INetworkConfig {
     function getUSDC() external view returns (IERC20);
 
     function getCredbullVaultAsset() external view returns (IERC20);
-}
-
-library Addresses {
-    address constant ZERO_ADDRESS = address(0);
-    address constant USDC_OPTIMISM_GOERLI_ADDRESS = address(0xe05606174bac4A6364B31bd0eCA4bf4dD368f8C6);
 }
 
 contract NetworkConfigs is Script {
@@ -49,6 +46,14 @@ contract NetworkConfigs is Script {
         }
 
         return networkConfig;
+    }
+
+    function getAddressFromEnvironment(string memory envKey) public view returns (address) {
+        string memory value = vm.envString(envKey);
+
+        address valueAddress = vm.parseAddress(value);
+
+        return valueAddress;
     }
 }
 

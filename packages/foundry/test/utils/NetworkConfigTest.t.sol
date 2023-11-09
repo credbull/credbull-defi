@@ -2,15 +2,16 @@
 pragma solidity ^0.8.19;
 
 import { Test, console } from "forge-std/Test.sol";
-import {NetworkConfigs, INetworkConfig, NetworkConfig, Addresses} from "../../script/utils/NetworkConfig.s.sol";
+import {NetworkConfigs, INetworkConfig, NetworkConfig} from "../../script/utils/NetworkConfig.s.sol";
 import {LocalNetworkConfigs} from "../../script/utils/LocalNetworkConfig.s.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ChainUtil} from "../../script/utils/ChainUtil.sol";
 
-contract NetworkConfigTest is Test {
-    IERC20 usdcOptimismGoerli = IERC20(Addresses.USDC_OPTIMISM_GOERLI_ADDRESS);
+import { console } from "forge-std/console.sol";
 
+
+contract NetworkConfigTest is Test {
     address contractOwnerAddr;
 
     function testCreateNetworkConfigForLocalChain() public {
@@ -53,5 +54,16 @@ contract NetworkConfigTest is Test {
 
         vm.expectRevert();
         networkConfigs.getNetworkConfig();
+    }
+
+    function testFetchConfigFromEnvironment() public {
+        string memory key = "RANDOM_ENVIRONMENT_KEY";
+        address valueAsAddr = address(9823095); // any value
+        string memory value = vm.toString(valueAsAddr);
+
+        vm.setEnv(key, value); // set the value
+        address envAddress = new NetworkConfigs().getAddressFromEnvironment(key);
+
+        assertEq(valueAsAddr, envAddress);
     }
 }

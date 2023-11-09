@@ -6,16 +6,16 @@ import "../contracts/YourContract.sol";
 import {DeployCredbullToken} from "./DeployCredbullToken.s.sol";
 import {CredbullToken} from "../contracts/CredbullToken.sol";
 
-import {NetworkConfigs, INetworkConfig} from "./utils/NetworkConfig.s.sol";
+import {NetworkConfigs, INetworkConfig, NetworkConfig} from "./utils/NetworkConfig.s.sol";
 import {LocalNetworkConfigs} from "./utils/LocalNetworkConfig.s.sol";
 
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {DeployCredbullVault} from "./DeployCredbullVault.s.sol";
 import {CredbullVault} from "../contracts/CredbullVault.sol";
 
 import {ChainUtil} from "./utils/ChainUtil.sol";
 
 import {ScaffoldETHDeploy} from "./DeployHelpers.s.sol";
-import "./utils/LocalNetworkConfig.s.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
     ChainUtil private chaintUtil = new ChainUtil();
@@ -36,9 +36,9 @@ contract DeployScript is ScaffoldETHDeploy {
         deployCredbullToken.run(deployerAddress);
 
 
-        NetworkConfigs networkConfigs = getNetworkConfigs(deployerAddress);
+        INetworkConfig networkConfig = createNetworkConfig(deployerAddress);
 
-        DeployCredbullVault deployCredbullVault = new DeployCredbullVault(networkConfigs.getNetworkConfig());
+        DeployCredbullVault deployCredbullVault = new DeployCredbullVault(networkConfig);
         CredbullVault credbullVault = deployCredbullVault.run(deployerAddress);
 
         deployYourContract(deployerPrivateKey);
@@ -46,8 +46,23 @@ contract DeployScript is ScaffoldETHDeploy {
         return credbullVault;
     }
 
-    function getNetworkConfigs(address deployerAddress) internal returns (NetworkConfigs) {
-        return chaintUtil.isLocalChain() ? new LocalNetworkConfigs(deployerAddress) : new NetworkConfigs();
+    function createNetworkConfig(address deployerAddress) internal returns (INetworkConfig) {
+        // ---------- create for local chain ----------
+        if (chaintUtil.isLocalChain()) {
+            return new LocalNetworkConfigs(deployerAddress).getNetworkConfig();
+        }
+
+        // ---------- create for remote chain ----------
+        NetworkConfigs networkConfigs = new NetworkConfigs();
+
+        // grab the contract addresses from the environment
+        address usdcAddress = networkConfigs.getAddressFromEnvironment("USDC_CONTRACT_ADDRESS");
+
+        IERC20 usdc = IERC20(usdcAddress);
+
+        INetworkConfig networkConfig = new NetworkConfig(usdc, usdc);
+
+        return networkConfig;
     }
 
     // using PK here.  Address results in error: "No associated wallet for addresses..."

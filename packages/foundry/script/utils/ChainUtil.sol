@@ -30,6 +30,10 @@ contract ChainUtil is StdChains {
         return chain.chainId == otherChain.chainId;
     }
 
+    function getCurrentChain() public returns (Chain memory chain) {
+        return getChain(block.chainid);
+    }
+
     function getChainByChainId(uint256 chainId) public returns (Chain memory chain) {
         return getChain(chainId);
     }
