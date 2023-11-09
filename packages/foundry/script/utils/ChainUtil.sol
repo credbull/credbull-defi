@@ -7,7 +7,7 @@ import {StdChains} from "forge-std/StdChains.sol";
  * ChainsUtil exploses chain utility functions from StdChains.sol for scripts/tests.
  * FYI - these methods will not work from within other contracts.
 */
-contract ChainsUtil is StdChains {
+contract ChainUtil is StdChains {
     function getAnvilChain() public returns (Chain memory chain) {
         return getChainByChainId(31337); // anvil / local chain
     }
