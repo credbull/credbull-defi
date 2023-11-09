@@ -1,0 +1,16 @@
+{
+  "name": "reward-vault",
+  "packageManager": "yarn@3.2.3",
+  "scripts": {
+    "test": "hardhat test",
+    "format": "prettier . --write"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "@types/lodash": "^4",
+    "hardhat": "^2.19.0",
+    "lodash": "^4.17.21",
+    "prettier": "^3.0.3"
+  }
+}
