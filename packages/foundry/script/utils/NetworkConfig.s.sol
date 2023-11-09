@@ -7,12 +7,6 @@ import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-import { MockStablecoin } from "../../test/mocks/MockStablecoin.sol";
-
-import { ScaffoldETHDeploy } from "../DeployHelpers.s.sol";
-import { DeployMockStablecoin } from "../mocks/DeployMockStablecoin.s.sol";
-
-
 interface INetworkConfig {
     function getUSDC() external view returns (IERC20);
 
@@ -24,61 +18,37 @@ library Addresses {
     address constant USDC_OPTIMISM_GOERLI_ADDRESS = address(0xe05606174bac4A6364B31bd0eCA4bf4dD368f8C6);
 }
 
-contract NetworkConfigFactory is Script {
-    uint256 public constant CHAINID_LOCAL = 31337;
-    uint256 public constant CHAINID_OPTIMISM_GOERLI = 420;
+contract NetworkConfigs is Script {
+    mapping(uint256 => INetworkConfig) networkConfigs; // map from chainid to networkConfigs
 
-    IERC20 public USDC_OPTIMISM_GOERLI = IERC20(Addresses.USDC_OPTIMISM_GOERLI_ADDRESS);
+    error NetworkConfigNotFound(string msg, uint256 chainid);
 
-    INetworkConfig private activeNetworkConfig;
-    bool private initialized;
-
-    error UnsupportedChainError(string msg, uint256 chainid);
-
-    // TODO: clean this up.  if/else not nice.  constructor arg only needed for localNetwork.
     // For full chainLists see: https://chainlist.org/
-    constructor(address contractOwnerAddress) {
-        // TODO: turn this into a mapping of name to supported chains
-        if (block.chainid == CHAINID_LOCAL) {
-            createLocalNetwork(contractOwnerAddress);
-        } else if (block.chainid == CHAINID_OPTIMISM_GOERLI)  {
-            createOptimismGoerli();
-        } else {
-            revert UnsupportedChainError(
-                string.concat("NetworkConfigFactory::constructor() - Unsupported chain: ", Strings.toString(block.chainid)), block.chainid
-            );
-        }
-    }
 
-    function createOptimismGoerli() internal returns (INetworkConfig) {
-        INetworkConfig networkConfig = new NetworkConfig(USDC_OPTIMISM_GOERLI, USDC_OPTIMISM_GOERLI);
-
-        activeNetworkConfig = networkConfig;
-
-        return networkConfig;
-    }
-
-    function createLocalNetwork(address contractOwnerAddress) internal returns (INetworkConfig) {
-        // TODO: change these to errors and add tests
-        require(
-            (block.chainid == CHAINID_LOCAL),
-            string.concat("Expected local network, but was ", Strings.toString(block.chainid))
-        );
-        require(!initialized, "NetworkConfig already initialized");
-        initialized = true;
-
-        DeployMockStablecoin deployStablecoin = new DeployMockStablecoin();
-        MockStablecoin mockStablecoin = deployStablecoin.run(contractOwnerAddress);
-
-        INetworkConfig networkConfig = new NetworkConfig(mockStablecoin, mockStablecoin);
-
-        activeNetworkConfig = networkConfig;
+    function registerNetworkConfig(Chain memory chain, INetworkConfig networkConfig) public returns (INetworkConfig) {
+        networkConfigs[chain.chainId] = networkConfig;
 
         return networkConfig;
     }
 
     function getNetworkConfig() public view returns (INetworkConfig) {
-        return activeNetworkConfig;
+        uint256 chainId = block.chainid;
+
+        return getNetworkConfigByChainId(chainId);
+    }
+
+    function getNetworkConfigByChain(Chain memory chain) public view returns (INetworkConfig) {
+        return getNetworkConfigByChainId(chain.chainId);
+    }
+
+    function getNetworkConfigByChainId(uint256 chainId) internal view returns (INetworkConfig) {
+        INetworkConfig networkConfig = networkConfigs[chainId];
+
+        if (address(networkConfig) == address(0)) {
+            revert NetworkConfigNotFound("NetworkConfig mapping not found!", chainId);
+        }
+
+        return networkConfig;
     }
 }
 

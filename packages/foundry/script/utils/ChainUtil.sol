@@ -8,8 +8,10 @@ import {StdChains} from "forge-std/StdChains.sol";
  * FYI - these methods will not work from within other contracts.
 */
 contract ChainUtil is StdChains {
+    uint256 private localChainId = 31337;
+
     function getAnvilChain() public returns (Chain memory chain) {
-        return getChainByChainId(31337); // anvil / local chain
+        return getChainByChainId(localChainId); // anvil / local chain
     }
 
     function setChainByAlias(string memory chainAlias, Chain memory chain) public {
@@ -20,8 +22,8 @@ contract ChainUtil is StdChains {
         return getChainByChainId(420); // optimism goerli
     }
 
-    function isLocalChain(Chain memory chain) public returns (bool) {
-        return chainsAreSame(chain, getAnvilChain());
+    function isLocalChain() public view returns (bool) {
+        return localChainId == block.chainid;
     }
 
     function chainsAreSame(Chain memory chain, Chain memory otherChain) public pure returns (bool) {

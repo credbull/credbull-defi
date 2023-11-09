@@ -3,16 +3,23 @@ pragma solidity ^0.8.19;
 
 import "../contracts/YourContract.sol";
 
-import { DeployCredbullToken } from "./DeployCredbullToken.s.sol";
-import { CredbullToken } from "../contracts/CredbullToken.sol";
+import {DeployCredbullToken} from "./DeployCredbullToken.s.sol";
+import {CredbullToken} from "../contracts/CredbullToken.sol";
 
-import { NetworkConfigFactory, INetworkConfig } from "./utils/NetworkConfig.s.sol";
-import { DeployCredbullVault } from "./DeployCredbullVault.s.sol";
-import { CredbullVault } from "../contracts/CredbullVault.sol";
+import {NetworkConfigs, INetworkConfig} from "./utils/NetworkConfig.s.sol";
+import {LocalNetworkConfigs} from "./utils/LocalNetworkConfig.s.sol";
 
-import { ScaffoldETHDeploy } from "./DeployHelpers.s.sol";
+import {DeployCredbullVault} from "./DeployCredbullVault.s.sol";
+import {CredbullVault} from "../contracts/CredbullVault.sol";
+
+import {ChainUtil} from "./utils/ChainUtil.sol";
+
+import {ScaffoldETHDeploy} from "./DeployHelpers.s.sol";
+import "./utils/LocalNetworkConfig.s.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
+    ChainUtil private chaintUtil = new ChainUtil();
+
     error InvalidPrivateKey(string);
 
     function run() external returns (CredbullVault) {
@@ -28,24 +35,22 @@ contract DeployScript is ScaffoldETHDeploy {
         DeployCredbullToken deployCredbullToken = new DeployCredbullToken();
         deployCredbullToken.run(deployerAddress);
 
-        CredbullVault credbullVault = doDeployCredbullVault(deployerAddress);
+
+        NetworkConfigs networkConfigs = getNetworkConfigs(deployerAddress);
+
+        DeployCredbullVault deployCredbullVault = new DeployCredbullVault(networkConfigs.getNetworkConfig());
+        CredbullVault credbullVault = deployCredbullVault.run(deployerAddress);
 
         deployYourContract(deployerPrivateKey);
 
         return credbullVault;
     }
 
-    function doDeployCredbullVault(address deployerAddress) public returns (CredbullVault) {
-        NetworkConfigFactory networkConfigFactory = new NetworkConfigFactory(deployerAddress);
-        INetworkConfig networkConfig = networkConfigFactory.getNetworkConfig();
-
-        DeployCredbullVault deployCredbullVault = new DeployCredbullVault(networkConfig);
-        CredbullVault credbullVault = deployCredbullVault.run(deployerAddress);
-
-        return credbullVault;
+    function getNetworkConfigs(address deployerAddress) internal returns (NetworkConfigs) {
+        return chaintUtil.isLocalChain() ? new LocalNetworkConfigs(deployerAddress) : new NetworkConfigs();
     }
 
-        // using PK here.  Address results in error: "No associated wallet for addresses..."
+    // using PK here.  Address results in error: "No associated wallet for addresses..."
     function deployYourContract(uint256 deployerPrivateKey) public returns (YourContract) {
         address deployerAddress = vm.addr(deployerPrivateKey);
 
@@ -68,5 +73,5 @@ contract DeployScript is ScaffoldETHDeploy {
         return yourContract;
     }
 
-    function test() public { }
+    function test() public {}
 }
