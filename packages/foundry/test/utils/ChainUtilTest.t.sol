@@ -13,7 +13,7 @@ contract ChainUtilTest is Test {
     string private testChainAlias = "awesomeTestChain";
     Chain private testChain = Chain ({name: testChainAlias, chainId: testChainId, chainAlias: testChainAlias, rpcUrl:"http://localhost:3000"});
 
-    function testSetAndGetChain() public {
+    function testSetAndGetChainByAlias() public {
         ChainUtil chainUtil = new ChainUtil();
 
         chainUtil.setChainByAlias(testChainAlias, testChain);

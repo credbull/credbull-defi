@@ -6,7 +6,7 @@ import "../contracts/YourContract.sol";
 import { DeployCredbullToken } from "./DeployCredbullToken.s.sol";
 import { CredbullToken } from "../contracts/CredbullToken.sol";
 
-import { NetworkConfigFactory, INetworkConfig } from "./NetworkConfig.s.sol";
+import { NetworkConfigFactory, INetworkConfig } from "./utils/NetworkConfig.s.sol";
 import { DeployCredbullVault } from "./DeployCredbullVault.s.sol";
 import { CredbullVault } from "../contracts/CredbullVault.sol";
 
