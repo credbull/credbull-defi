@@ -7,16 +7,25 @@ import { INetworkConfig } from "./NetworkConfig.s.sol";
 import { DeployMockStablecoin } from "../mocks/DeployMockStablecoin.s.sol";
 import { MockStablecoin } from "../../test/mocks/MockStablecoin.sol";
 
+/**
+* Represents a Local Network for scripts and testing purposes.
+*
+* NB - this is not a "global" Singleton.  Nothing  prevents multiple LocalNetworkConfigs from being created,
+* each at different addresses and with different associated stablecoins.
+*/
 contract LocalNetworkConfig is INetworkConfig {
     IERC20 mockStablecoin;
+    bool private initialized;
 
     constructor(address contractOwnerAddress) {
-        mockStablecoin = createStablecoin(contractOwnerAddress);
+        mockStablecoin = initializeNetworkConfig(contractOwnerAddress);
     }
 
-    function createStablecoin(address contractOwnerAddress) internal returns (IERC20) {
-        DeployMockStablecoin deployStablecoin = new DeployMockStablecoin();
+    function initializeNetworkConfig(address contractOwnerAddress) internal returns (IERC20) {
+        require(!initialized, "LocalNetworkConfig already initialized.");
+        initialized = true;
 
+        DeployMockStablecoin deployStablecoin = new DeployMockStablecoin();
         MockStablecoin _mockStablecoin = deployStablecoin.run(contractOwnerAddress);
 
         return _mockStablecoin;
