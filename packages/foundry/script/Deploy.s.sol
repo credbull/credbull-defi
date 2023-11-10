@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "../contracts/YourContract.sol";
+import { console } from "forge-std/console.sol";
 
 import { DeployCredbullToken } from "./DeployCredbullToken.s.sol";
 import { CredbullToken } from "../contracts/CredbullToken.sol";
@@ -33,6 +33,9 @@ contract DeployScript is ScaffoldETHDeploy {
             );
         }
 
+        // open the wallet first in order to use the address (not the private key) in subsequent calls.
+        unlockWallet(deployerPrivateKey);
+
         DeployCredbullToken deployCredbullToken = new DeployCredbullToken();
         deployCredbullToken.run(deployerAddress);
 
@@ -41,9 +44,14 @@ contract DeployScript is ScaffoldETHDeploy {
         DeployCredbullVault deployCredbullVault = new DeployCredbullVault(networkConfig);
         CredbullVault credbullVault = deployCredbullVault.run(deployerAddress);
 
-        deployYourContract(deployerPrivateKey);
-
         return credbullVault;
+    }
+
+    // unlock wallet by starting a transaction.
+    function unlockWallet(uint256 deployerPrivateKey) internal {
+        vm.startBroadcast(deployerPrivateKey);
+        // we don't have to do anything, just start and stop the broadcast with the private key.
+        vm.stopBroadcast();
     }
 
     function createNetworkConfig(address deployerAddress) internal returns (INetworkConfig) {
@@ -61,29 +69,6 @@ contract DeployScript is ScaffoldETHDeploy {
         INetworkConfig networkConfig = new NetworkConfig(usdc, usdc);
 
         return networkConfig;
-    }
-
-    // using PK here.  Address results in error: "No associated wallet for addresses..."
-    function deployYourContract(uint256 deployerPrivateKey) public returns (YourContract) {
-        address deployerAddress = vm.addr(deployerPrivateKey);
-
-        vm.startBroadcast(deployerPrivateKey);
-
-        YourContract yourContract = new YourContract(
-            deployerAddress
-        );
-        console.logString(string.concat("YourContract deployed at: ", vm.toString(address(yourContract))));
-
-        vm.stopBroadcast();
-
-        /**
-         * This function generates the file containing the contracts Abi definitions.
-         * These definitions are used to derive the types needed in the custom scaffold-eth hooks, for example.
-         * This function should be called last.
-         */
-        exportDeployments();
-
-        return yourContract;
     }
 
     function test() public { }
