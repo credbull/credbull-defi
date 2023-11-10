@@ -70,8 +70,6 @@ Deploy UI to Vercel.  deployed UI will connect to the specified network, e.g. op
 
 targetNetwork: chains.foundry, // - replace this line
 targetNetwork: chains.optimismGoerli, // + with this line
-
-
 ```
 
 ```bash

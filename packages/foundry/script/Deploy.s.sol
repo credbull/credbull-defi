@@ -16,7 +16,6 @@ import { CredbullVault } from "../contracts/CredbullVault.sol";
 import { ChainUtil } from "./utils/ChainUtil.sol";
 
 import { ScaffoldETHDeploy } from "./DeployHelpers.s.sol";
-import { EnvUtil } from "./utils/EnvUtil.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
     ChainUtil private chaintUtil = new ChainUtil();
@@ -37,9 +36,9 @@ contract DeployScript is ScaffoldETHDeploy {
         unlockWallet(deployerPrivateKey);
 
         DeployCredbullToken deployCredbullToken = new DeployCredbullToken();
-        deployCredbullToken.run(deployerAddress);
+        CredbullToken credbullToken = deployCredbullToken.run(deployerAddress);
 
-        INetworkConfig networkConfig = createNetworkConfig(deployerAddress);
+        INetworkConfig networkConfig = createNetworkConfig(deployerAddress, credbullToken);
 
         DeployCredbullVault deployCredbullVault = new DeployCredbullVault(networkConfig);
         CredbullVault credbullVault = deployCredbullVault.run(deployerAddress);
@@ -54,19 +53,21 @@ contract DeployScript is ScaffoldETHDeploy {
         vm.stopBroadcast();
     }
 
-    function createNetworkConfig(address deployerAddress) internal returns (INetworkConfig) {
+    function createNetworkConfig(address deployerAddress, IERC20 defaultVaultToken) internal returns (INetworkConfig) {
         // ---------- create for local chain ----------
         if (chaintUtil.isLocalChain()) {
             return new LocalNetworkConfig(deployerAddress);
         }
 
         // ---------- create for remote chain ----------
-        // grab contract addresses from the environment
-        address usdcAddress = new EnvUtil().getAddressFromEnvironment("USDC_CONTRACT_ADDRESS");
+        address usdcAddress = vm.envAddress("USDC_CONTRACT_ADDRESS");
 
-        IERC20 usdc = IERC20(usdcAddress);
+        address vaultAssetAddress = vm.envOr("CREDBULL_VAULT_ASSET_ADDRESS", address(defaultVaultToken));
+        if (vaultAssetAddress == address(defaultVaultToken)) {
+            console.log("CREDBULL_VAULT_ASSET_ADDRESS not found in Environment.  Using default of: ", vaultAssetAddress);
+        }
 
-        INetworkConfig networkConfig = new NetworkConfig(usdc, usdc);
+        INetworkConfig networkConfig = new NetworkConfig(IERC20(usdcAddress), IERC20(vaultAssetAddress));
 
         return networkConfig;
     }
