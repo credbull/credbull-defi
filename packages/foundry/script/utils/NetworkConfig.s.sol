@@ -8,14 +8,13 @@ import "forge-std/Vm.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-
 interface INetworkConfig {
     function getUSDC() external view returns (IERC20);
 
     function getCredbullVaultAsset() external view returns (IERC20);
 }
 
-contract NetworkConfig is INetworkConfig, Script {
+contract NetworkConfig is INetworkConfig {
     IERC20 public usdc;
     IERC20 public credbullVaultAsset;
 

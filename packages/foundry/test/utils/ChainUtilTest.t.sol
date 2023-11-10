@@ -2,16 +2,21 @@
 pragma solidity ^0.8.19;
 
 import { Test, console } from "forge-std/Test.sol";
-import {ChainUtil} from "../../script/utils/ChainUtil.sol";
+import { ChainUtil } from "../../script/utils/ChainUtil.sol";
 import "forge-std/StdChains.sol";
 
 contract ChainUtilTest is Test {
-    uint constant private localChainId = 31337;
-    uint constant private optimismGoerliChainId = 420;
+    uint256 private constant localChainId = 31337;
+    uint256 private constant optimismGoerliChainId = 420;
 
-    uint private testChainId = 987654;
+    uint256 private testChainId = 987654;
     string private testChainAlias = "awesomeTestChain";
-    Chain private testChain = Chain ({name: testChainAlias, chainId: testChainId, chainAlias: testChainAlias, rpcUrl:"http://localhost:3000"});
+    Chain private testChain = Chain({
+        name: testChainAlias,
+        chainId: testChainId,
+        chainAlias: testChainAlias,
+        rpcUrl: "http://localhost:3000"
+    });
 
     function testSetAndGetChainByAlias() public {
         ChainUtil chainUtil = new ChainUtil();
@@ -28,7 +33,6 @@ contract ChainUtilTest is Test {
         // expect revert for a random chain
         vm.expectRevert();
         chainUtil.getChainByChainId(901498);
-
 
         // expect revert for a random chain
         vm.expectRevert();
@@ -48,5 +52,4 @@ contract ChainUtilTest is Test {
         assert(chainUtil.chainsAreSame(testChain, testChain));
         assertFalse(chainUtil.chainsAreSame(testChain, chainUtil.getAnvilChain()));
     }
-
 }

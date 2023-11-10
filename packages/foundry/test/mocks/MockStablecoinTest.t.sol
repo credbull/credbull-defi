@@ -2,11 +2,10 @@
 pragma solidity ^0.8.19;
 
 import { Test, console } from "forge-std/Test.sol";
-import {MockStablecoin} from "./MockStablecoin.sol";
-import {DeployMockStablecoin} from "../../script/mocks/DeployMockStablecoin.s.sol";
+import { MockStablecoin } from "./MockStablecoin.sol";
+import { DeployMockStablecoin } from "../../script/mocks/DeployMockStablecoin.s.sol";
 
 contract MockStablecoinTest is Test {
-
     function testMockStablecoinOwnerOwnsAllTokens() public {
         address contractOwnerAddr = address(92385);
 

@@ -4,10 +4,9 @@ pragma solidity ^0.8.19;
 import { Test, console } from "forge-std/Test.sol";
 
 import { console } from "forge-std/console.sol";
-import {EnvUtil} from "../../script/utils/EnvUtil.sol";
+import { EnvUtil } from "../../script/utils/EnvUtil.sol";
 
 contract EnvUtilTest is Test {
-
     function testFetchConfigFromEnvironment() public {
         string memory key = "RANDOM_ENVIRONMENT_KEY";
         address valueAsAddr = address(9823095); // any value

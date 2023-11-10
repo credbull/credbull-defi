@@ -3,20 +3,20 @@ pragma solidity ^0.8.19;
 
 import "../contracts/YourContract.sol";
 
-import {DeployCredbullToken} from "./DeployCredbullToken.s.sol";
-import {CredbullToken} from "../contracts/CredbullToken.sol";
+import { DeployCredbullToken } from "./DeployCredbullToken.s.sol";
+import { CredbullToken } from "../contracts/CredbullToken.sol";
 
-import {INetworkConfig, NetworkConfig} from "./utils/NetworkConfig.s.sol";
-import {LocalNetworkConfig} from "./utils/LocalNetworkConfig.s.sol";
+import { INetworkConfig, NetworkConfig } from "./utils/NetworkConfig.s.sol";
+import { LocalNetworkConfig } from "./utils/LocalNetworkConfig.s.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {DeployCredbullVault} from "./DeployCredbullVault.s.sol";
-import {CredbullVault} from "../contracts/CredbullVault.sol";
+import { DeployCredbullVault } from "./DeployCredbullVault.s.sol";
+import { CredbullVault } from "../contracts/CredbullVault.sol";
 
-import {ChainUtil} from "./utils/ChainUtil.sol";
+import { ChainUtil } from "./utils/ChainUtil.sol";
 
-import {ScaffoldETHDeploy} from "./DeployHelpers.s.sol";
-import {EnvUtil} from "./utils/EnvUtil.sol";
+import { ScaffoldETHDeploy } from "./DeployHelpers.s.sol";
+import { EnvUtil } from "./utils/EnvUtil.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
     ChainUtil private chaintUtil = new ChainUtil();
@@ -36,7 +36,6 @@ contract DeployScript is ScaffoldETHDeploy {
         DeployCredbullToken deployCredbullToken = new DeployCredbullToken();
         deployCredbullToken.run(deployerAddress);
 
-
         INetworkConfig networkConfig = createNetworkConfig(deployerAddress);
 
         DeployCredbullVault deployCredbullVault = new DeployCredbullVault(networkConfig);
@@ -54,7 +53,7 @@ contract DeployScript is ScaffoldETHDeploy {
         }
 
         // ---------- create for remote chain ----------
-        // grab the contract addresses from the environment
+        // grab contract addresses from the environment
         address usdcAddress = new EnvUtil().getAddressFromEnvironment("USDC_CONTRACT_ADDRESS");
 
         IERC20 usdc = IERC20(usdcAddress);
@@ -87,5 +86,5 @@ contract DeployScript is ScaffoldETHDeploy {
         return yourContract;
     }
 
-    function test() public {}
+    function test() public { }
 }
