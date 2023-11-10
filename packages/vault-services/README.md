@@ -5,6 +5,8 @@ Vault interfaces via the Safe SDK
 ```bash
 # v1.3.0
 git submodule add https://github.com/gnosis/safe-contracts/ lib/safe-contracts-1.3.0
+git submodule update --init --recursive
+
 cd lib/safe-contracts-1.3.0
 git checkout v1.3.0-libs.0
 
@@ -21,6 +23,8 @@ npx hardhat node
 cd lib/safe-contracts-1.3.0
 cp .env.sample .env
 sed -i 's|^NODE_URL=.*|NODE_URL="http://127.0.0.1:8545"|' .env
+
+# replace <ENTER_KEY> with private key on network
 echo -e '\nPK=<ENTER_KEY>' >> .env
 ```
 
@@ -65,7 +69,7 @@ git submodule add git@github.com:safe-global/safe-modules.git lib/safe-modules-m
 cd lib/safe-modules-master/allowances
 
 # install dependencies
-yarn
+yarn install
 
 # add missing dependencies 
 yarn add --dev @ethersproject/hash @ethersproject/web eth-gas-reporter @nomicfoundation/ethereumjs-trie @nomicfoundation/ethereumjs-util
