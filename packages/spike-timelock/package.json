@@ -1,5 +1,5 @@
 {
-  "name": "spikes-gnosis-timelock",
+  "name": "spike-timelock",
   "version": "0.0.1",
   "scripts": {
     "format": "forge fmt",

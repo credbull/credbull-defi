@@ -16980,21 +16980,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"spikes-gnosis-timelock@workspace:packages/gnosis-timelock":
+"spike-timelock@workspace:packages/spike-timelock":
   version: 0.0.0-use.local
-  resolution: "spikes-gnosis-timelock@workspace:packages/gnosis-timelock"
+  resolution: "spike-timelock@workspace:packages/spike-timelock"
   languageName: unknown
   linkType: soft
 
 "spikes-share-multiplier@workspace:packages/share-multiplier":
   version: 0.0.0-use.local
   resolution: "spikes-share-multiplier@workspace:packages/share-multiplier"
-  languageName: unknown
-  linkType: soft
-
-"spikes-timelock@workspace:packages/timelock":
-  version: 0.0.0-use.local
-  resolution: "spikes-timelock@workspace:packages/timelock"
   languageName: unknown
   linkType: soft
 
