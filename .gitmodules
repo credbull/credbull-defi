@@ -31,3 +31,6 @@
 [submodule "packages/gnosis-timelock/lib/zodiac-modifier-delay"]
 	path = packages/gnosis-timelock/lib/zodiac-modifier-delay
 	url = https://github.com/gnosis/zodiac-modifier-delay
+[submodule "packages/gnosis-timelock/lib/openzeppelin-contracts"]
+	path = packages/gnosis-timelock/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
