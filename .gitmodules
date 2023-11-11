@@ -31,3 +31,6 @@
 [submodule "packages/spike-timelock/lib/zodiac"]
 	path = packages/spike-timelock/lib/zodiac
 	url = https://github.com/gnosis/zodiac
+[submodule "packages/spike-timelock/lib/safe-contracts"]
+	path = packages/spike-timelock/lib/safe-contracts
+	url = https://github.com/gnosis/safe-contracts
