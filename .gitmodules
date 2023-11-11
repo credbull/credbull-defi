@@ -34,3 +34,6 @@
 [submodule "packages/gnosis-timelock/lib/openzeppelin-contracts"]
 	path = packages/gnosis-timelock/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "packages/gnosis-timelock/lib/zodiac"]
+	path = packages/gnosis-timelock/lib/zodiac
+	url = https://github.com/gnosis/zodiac
