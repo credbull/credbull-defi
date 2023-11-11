@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.9;
 
-import "zodiac-delay-modifier/contracts/Delay.sol";
+import "zodiac-delay-modifier/Delay.sol";
 
 contract TimelockModifier is Delay {
     constructor(

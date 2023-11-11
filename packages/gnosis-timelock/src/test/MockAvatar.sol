@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import "@gnosis.pm/zodiac/contracts/test/TestAvatar.sol";
+import "zodiac/test/TestAvatar.sol";
 
 contract MockAvatar is TestAvatar {
     function exec(address payable to, uint256 value, bytes calldata data) external {

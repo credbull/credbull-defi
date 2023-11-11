@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.9;
 
-import "@gnosis.pm/zodiac/contracts/core/Module.sol";
-import "hardhat/console.sol";
+import "zodiac/core/Module.sol";
 
 contract ButtonPushModule is Module {
     address public button;
