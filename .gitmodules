@@ -37,3 +37,6 @@
 [submodule "packages/gnosis-timelock/lib/zodiac"]
 	path = packages/gnosis-timelock/lib/zodiac
 	url = https://github.com/gnosis/zodiac
+[submodule "packages/gnosis-timelock/lib/safe-contracts"]
+	path = packages/gnosis-timelock/lib/safe-contracts
+	url = https://github.com/gnosis/safe-contracts
