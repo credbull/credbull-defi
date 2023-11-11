@@ -40,3 +40,6 @@
 [submodule "packages/gnosis-timelock/lib/safe-contracts"]
 	path = packages/gnosis-timelock/lib/safe-contracts
 	url = https://github.com/gnosis/safe-contracts
+[submodule "packages/gnosis-timelock/lib/openzeppelin-contracts-upgradeable"]
+	path = packages/gnosis-timelock/lib/openzeppelin-contracts-upgradeable
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
