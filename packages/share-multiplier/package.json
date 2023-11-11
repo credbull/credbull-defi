@@ -1,9 +1,0 @@
-{
-  "name": "spikes-share-multiplier",
-  "version": "0.0.1",
-  "scripts": {
-    "format": "forge fmt",
-    "test": "forge test -vv",
-    "postinstall": "forge remappings > remappings.txt"
-  }
-}
