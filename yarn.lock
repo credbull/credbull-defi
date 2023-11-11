@@ -20837,6 +20837,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"spikes-gnosis-timelock@workspace:packages/gnosis-timelock":
+  version: 0.0.0-use.local
+  resolution: "spikes-gnosis-timelock@workspace:packages/gnosis-timelock"
+  languageName: unknown
+  linkType: soft
+
 "spikes-share-multiplier@workspace:packages/share-multiplier":
   version: 0.0.0-use.local
   resolution: "spikes-share-multiplier@workspace:packages/share-multiplier"
