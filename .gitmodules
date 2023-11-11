@@ -25,3 +25,6 @@
 [submodule "packages/spike-timelock/lib/zodiac-modifier-delay"]
 	path = packages/spike-timelock/lib/zodiac-modifier-delay
 	url = https://github.com/gnosis/zodiac-modifier-delay
+[submodule "packages/spike-timelock/lib/openzeppelin-contracts"]
+	path = packages/spike-timelock/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
