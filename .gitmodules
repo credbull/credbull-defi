@@ -19,3 +19,6 @@
 [submodule "packages/share-multiplier/lib/forge-std"]
 	path = packages/share-multiplier/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "packages/spike-timelock/lib/forge-std"]
+	path = packages/spike-timelock/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
