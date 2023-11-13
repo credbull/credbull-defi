@@ -34,3 +34,6 @@
 [submodule "packages/spike-granular-roles/lib/forge-std"]
 	path = packages/spike-granular-roles/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "packages/spike-granular-roles/lib/openzeppelin-contracts"]
+	path = packages/spike-granular-roles/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
