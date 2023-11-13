@@ -12,7 +12,7 @@ contract ButtonPushModule is Module {
     }
 
     function setUp(bytes memory initializeParams) public override initializer {
-        __Ownable_init(_msgSender());
+        __Ownable_init();
 
         (address _owner, address _button) = abi.decode(initializeParams, (address, address));
 
@@ -24,5 +24,10 @@ contract ButtonPushModule is Module {
 
     function pushButton() external {
         exec(button, 0, abi.encodePacked(bytes4(keccak256("pushButton()"))), Enum.Operation.Call);
+    }
+
+    function pushes() public returns (uint256 count) {
+        (,bytes memory data) = execAndReturnData(button, 0, abi.encodePacked(bytes4(keccak256("pushes()"))), Enum.Operation.Call);
+        return abi.decode(data, (uint256));
     }
 }

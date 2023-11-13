@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Button is Ownable {
-    constructor() Ownable(_msgSender()) {}
+    constructor() Ownable() {}
 
     event ButtonPushed(address pusher, uint256 pushes);
 
