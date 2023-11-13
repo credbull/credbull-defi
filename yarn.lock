@@ -16952,6 +16952,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"spike-granular-roles@workspace:packages/spike-granular-roles":
+  version: 0.0.0-use.local
+  resolution: "spike-granular-roles@workspace:packages/spike-granular-roles"
+  languageName: unknown
+  linkType: soft
+
 "spike-reward-vault@workspace:packages/spike-reward-vault":
   version: 0.0.0-use.local
   resolution: "spike-reward-vault@workspace:packages/spike-reward-vault"
