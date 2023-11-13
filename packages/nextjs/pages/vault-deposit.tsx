@@ -7,20 +7,11 @@ import { ReadOnlyFunctionForm, WriteOnlyFunctionForm, getFunctionInputKey } from
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 
 const Debug: NextPage = () => {
-  const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo("MockStablecoin");
   const { data: deployedStable, isLoading: isLoadingStable } = useDeployedContractInfo("MockStablecoin");
-  const { data: deployedSVault, isLoading: isLoadingVault } = useDeployedContractInfo("CredbullVault");
+  const { data: deployedVault, isLoading: isLoadingVault } = useDeployedContractInfo("CredbullVault");
   const { address } = useAccount();
 
-  if (
-    deployedContractLoading ||
-    !deployedContractData ||
-    isLoadingStable ||
-    !deployedStable ||
-    isLoadingVault ||
-    !deployedSVault ||
-    !address
-  ) {
+  if (isLoadingStable || !deployedStable || isLoadingVault || !deployedVault || !address) {
     return (
       <div className="mt-14">
         <Spinner width="50px" height="50px" />
@@ -28,7 +19,7 @@ const Debug: NextPage = () => {
     );
   }
 
-  const give = (deployedContractData.abi as Abi).find(
+  const give = (deployedStable.abi as Abi).find(
     part => part.type === "function" && part.name === "give",
   ) as AbiFunction;
 
@@ -36,11 +27,11 @@ const Debug: NextPage = () => {
     part => part.type === "function" && part.name === "approve",
   ) as AbiFunction;
 
-  const deposit = (deployedSVault.abi as Abi).find(
+  const deposit = (deployedVault.abi as Abi).find(
     part => part.type === "function" && part.name === "deposit",
   ) as AbiFunction;
 
-  const balanceOf = (deployedSVault.abi as Abi).find(
+  const balanceOf = (deployedVault.abi as Abi).find(
     part => part.type === "function" && part.name === "balanceOf",
   ) as AbiFunction;
 
@@ -62,7 +53,7 @@ const Debug: NextPage = () => {
               <WriteOnlyFunctionForm
                 abiFunction={give}
                 onChange={() => ({})}
-                contractAddress={deployedContractData.address}
+                contractAddress={deployedStable.address}
               />
 
               <WriteOnlyFunctionForm
@@ -70,20 +61,20 @@ const Debug: NextPage = () => {
                 onChange={() => ({})}
                 contractAddress={deployedStable.address}
                 inputs={{
-                  [getFunctionInputKey(approve.name, approve.inputs[0], 0)]: deployedSVault.address,
+                  [getFunctionInputKey(approve.name, approve.inputs[0], 0)]: deployedVault.address,
                 }}
               />
               <WriteOnlyFunctionForm
                 abiFunction={deposit}
                 onChange={() => ({})}
-                contractAddress={deployedSVault.address}
+                contractAddress={deployedVault.address}
                 inputs={{
                   [getFunctionInputKey(deposit.name, deposit.inputs[1], 1)]: address,
                 }}
               />
               <ReadOnlyFunctionForm
                 abiFunction={balanceOf}
-                contractAddress={deployedSVault.address}
+                contractAddress={deployedVault.address}
                 inputs={{
                   [getFunctionInputKey(balanceOf.name, balanceOf.inputs[0], 0)]: address,
                 }}
