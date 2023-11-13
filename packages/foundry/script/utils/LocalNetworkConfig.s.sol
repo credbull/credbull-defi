@@ -15,6 +15,7 @@ import { MockStablecoin } from "../../test/mocks/MockStablecoin.sol";
 */
 contract LocalNetworkConfig is INetworkConfig {
     IERC20 mockStablecoin;
+
     bool private initialized;
 
     constructor(address contractOwnerAddress) {

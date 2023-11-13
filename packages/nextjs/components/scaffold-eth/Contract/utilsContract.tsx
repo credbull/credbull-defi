@@ -68,12 +68,13 @@ const getParsedContractFunctionArgs = (form: Record<string, any>) => {
   return parsedArguments;
 };
 
-const getInitialFormState = (abiFunction: AbiFunction) => {
+const getInitialFormState = (abiFunction: AbiFunction, inputs: Record<string, string>) => {
   const initialForm: Record<string, any> = {};
+  const values = inputs || {};
   if (!abiFunction.inputs) return initialForm;
   abiFunction.inputs.forEach((input, inputIndex) => {
     const key = getFunctionInputKey(abiFunction.name, input, inputIndex);
-    initialForm[key] = "";
+    initialForm[key] = values[key] || "";
   });
   return initialForm;
 };

@@ -18,10 +18,16 @@ type WriteOnlyFunctionFormProps = {
   abiFunction: AbiFunction;
   onChange: () => void;
   contractAddress: Address;
+  inputs?: Record<string, string>;
 };
 
-export const WriteOnlyFunctionForm = ({ abiFunction, onChange, contractAddress }: WriteOnlyFunctionFormProps) => {
-  const [form, setForm] = useState<Record<string, any>>(() => getInitialFormState(abiFunction));
+export const WriteOnlyFunctionForm = ({
+  abiFunction,
+  onChange,
+  contractAddress,
+  ...props
+}: WriteOnlyFunctionFormProps) => {
+  const [form, setForm] = useState<Record<string, any>>(() => getInitialFormState(abiFunction, props.inputs ?? {}));
   const [txValue, setTxValue] = useState<string | bigint>("");
   const { chain } = useNetwork();
   const writeTxn = useTransactor();

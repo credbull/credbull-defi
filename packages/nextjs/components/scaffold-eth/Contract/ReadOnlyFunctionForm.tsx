@@ -14,10 +14,11 @@ import { notification } from "~~/utils/scaffold-eth";
 type TReadOnlyFunctionFormProps = {
   contractAddress: Address;
   abiFunction: AbiFunction;
+  inputs?: Record<string, string>;
 };
 
-export const ReadOnlyFunctionForm = ({ contractAddress, abiFunction }: TReadOnlyFunctionFormProps) => {
-  const [form, setForm] = useState<Record<string, any>>(() => getInitialFormState(abiFunction));
+export const ReadOnlyFunctionForm = ({ contractAddress, abiFunction, ...props }: TReadOnlyFunctionFormProps) => {
+  const [form, setForm] = useState<Record<string, any>>(() => getInitialFormState(abiFunction, props.inputs ?? {}));
   const [result, setResult] = useState<unknown>();
 
   const { isFetching, refetch } = useContractRead({
