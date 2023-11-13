@@ -56,7 +56,7 @@ contract DeployScript is ScaffoldETHDeploy {
     function createNetworkConfig(address deployerAddress, IERC20 defaultVaultToken) internal returns (INetworkConfig) {
         // ---------- create for local chain ----------
         if (chaintUtil.isLocalChain()) {
-            return new LocalNetworkConfig(deployerAddress);
+            return new LocalNetworkConfig(deployerAddress, true);
         }
 
         // ---------- create for remote chain ----------

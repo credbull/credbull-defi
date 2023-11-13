@@ -5,6 +5,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { INetworkConfig } from "./NetworkConfig.s.sol";
 import { DeployMockStablecoin } from "../mocks/DeployMockStablecoin.s.sol";
+import { DeployMockStablecoinFaucet } from "../mocks/DeployMockStablecoinFaucet.s.sol";
 import { MockStablecoin } from "../../test/mocks/MockStablecoin.sol";
 
 /**
@@ -15,18 +16,24 @@ import { MockStablecoin } from "../../test/mocks/MockStablecoin.sol";
 */
 contract LocalNetworkConfig is INetworkConfig {
     IERC20 mockStablecoin;
+
     bool private initialized;
 
-    constructor(address contractOwnerAddress) {
-        mockStablecoin = initializeNetworkConfig(contractOwnerAddress);
+    constructor(address contractOwnerAddress, bool hasFaucet) {
+        mockStablecoin = initializeNetworkConfig(contractOwnerAddress, hasFaucet);
     }
 
-    function initializeNetworkConfig(address contractOwnerAddress) internal returns (IERC20) {
+    function initializeNetworkConfig(address contractOwnerAddress, bool hasFaucet) internal returns (IERC20) {
         require(!initialized, "LocalNetworkConfig already initialized.");
         initialized = true;
 
         DeployMockStablecoin deployStablecoin = new DeployMockStablecoin();
         MockStablecoin _mockStablecoin = deployStablecoin.run(contractOwnerAddress);
+
+        if(hasFaucet) {
+            DeployMockStablecoinFaucet deployFaucet = new DeployMockStablecoinFaucet();
+            deployFaucet.run(contractOwnerAddress, _mockStablecoin);
+        }
 
         return _mockStablecoin;
     }

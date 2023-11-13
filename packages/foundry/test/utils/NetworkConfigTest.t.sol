@@ -17,7 +17,7 @@ contract NetworkConfigTest is Test {
     function testCreateLocalNetworkConfig() public {
         address randOwnerAddress = address(4902385); // address can be anything
 
-        INetworkConfig networkConfig = new LocalNetworkConfig(randOwnerAddress);
+        INetworkConfig networkConfig = new LocalNetworkConfig(randOwnerAddress, false);
 
         assertNotEq(address(networkConfig.getUSDC()), address(0)); // zero address would mean not created
     }
