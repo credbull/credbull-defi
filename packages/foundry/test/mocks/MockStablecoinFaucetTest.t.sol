@@ -4,12 +4,10 @@ pragma solidity ^0.8.19;
 import { Test, console } from "forge-std/Test.sol";
 import { MockStablecoin } from "./MockStablecoin.sol";
 import { DeployMockStablecoin } from "../../script/mocks/DeployMockStablecoin.s.sol";
-import "../../script/mocks/DeployMockStablecoinFaucet.s.sol";
 
 contract MockStablecoinFaucetTest is Test {
 
     MockStablecoin public mockStablecoin;
-    MockStablecoinFaucet public faucet;
 
     address public contractOwnerAddr;
 
@@ -18,19 +16,22 @@ contract MockStablecoinFaucetTest is Test {
 
         DeployMockStablecoin deployStablecoin = new DeployMockStablecoin();
         mockStablecoin = deployStablecoin.run(contractOwnerAddr);
-
-        DeployMockStablecoinFaucet deployFaucet = new DeployMockStablecoinFaucet();
-        faucet = deployFaucet.run(contractOwnerAddr, mockStablecoin);
     }
 
 
     function testFaucetCanGiveTokens() public {
+        uint amountToGive = 100;
         address john = makeAddr("john");
 
+        uint totalSupplyBefore = mockStablecoin.totalSupply();
+
         vm.startPrank(john);
-        faucet.give(100);
+        mockStablecoin.give(amountToGive);
         vm.stopPrank();
 
-        assertEq(mockStablecoin.balanceOf(john), 100);
+        uint totalSupplyAfter = mockStablecoin.totalSupply();
+
+        assertEq(mockStablecoin.balanceOf(john), amountToGive);
+        assertEq(totalSupplyAfter, totalSupplyBefore + amountToGive);
     }
 }

@@ -7,8 +7,7 @@ import { ReadOnlyFunctionForm, WriteOnlyFunctionForm, getFunctionInputKey } from
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 
 const Debug: NextPage = () => {
-  const { data: deployedContractData, isLoading: deployedContractLoading } =
-    useDeployedContractInfo("MockStablecoinFaucet");
+  const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo("MockStablecoin");
   const { data: deployedStable, isLoading: isLoadingStable } = useDeployedContractInfo("MockStablecoin");
   const { data: deployedSVault, isLoading: isLoadingVault } = useDeployedContractInfo("CredbullVault");
   const { address } = useAccount();

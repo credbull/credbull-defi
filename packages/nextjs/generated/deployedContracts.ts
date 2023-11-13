@@ -5,7 +5,7 @@ const contracts = {
       chainId: "31337",
       contracts: {
         CredbullToken: {
-          address: "0x8f86403A4DE0BB5791fa46B8e795C547942fE4Cf",
+          address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
           abi: [
             {
               inputs: [
@@ -457,7 +457,7 @@ const contracts = {
           ],
         },
         MockStablecoin: {
-          address: "0x9d4454B023096f34B160D6B654540c56A1F81688",
+          address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
           abi: [
             {
               inputs: [
@@ -730,6 +730,19 @@ const contracts = {
             {
               inputs: [
                 {
+                  internalType: "uint256",
+                  name: "amount",
+                  type: "uint256",
+                },
+              ],
+              name: "give",
+              outputs: [],
+              stateMutability: "nonpayable",
+              type: "function",
+            },
+            {
+              inputs: [
+                {
                   internalType: "address",
                   name: "to",
                   type: "address",
@@ -872,50 +885,8 @@ const contracts = {
             },
           ],
         },
-        MockStablecoinFaucet: {
-          address: "0x5eb3Bc0a489C5A8288765d2336659EbCA68FCd00",
-          abi: [
-            {
-              inputs: [
-                {
-                  internalType: "contract IERC20",
-                  name: "_asset",
-                  type: "address",
-                },
-              ],
-              stateMutability: "nonpayable",
-              type: "constructor",
-            },
-            {
-              inputs: [],
-              name: "asset",
-              outputs: [
-                {
-                  internalType: "contract IERC20",
-                  name: "",
-                  type: "address",
-                },
-              ],
-              stateMutability: "view",
-              type: "function",
-            },
-            {
-              inputs: [
-                {
-                  internalType: "uint256",
-                  name: "amount",
-                  type: "uint256",
-                },
-              ],
-              name: "give",
-              outputs: [],
-              stateMutability: "nonpayable",
-              type: "function",
-            },
-          ],
-        },
         CredbullVault: {
-          address: "0x809d550fca64d94Bd9F66E60752A544199cfAC3D",
+          address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
           abi: [
             {
               inputs: [
