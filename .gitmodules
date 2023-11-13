@@ -40,3 +40,6 @@
 [submodule "packages/spike-granular-roles/lib/zodiac"]
 	path = packages/spike-granular-roles/lib/zodiac
 	url = https://github.com/gnosis/zodiac
+[submodule "packages/spike-granular-roles/lib/safe-contracts"]
+	path = packages/spike-granular-roles/lib/safe-contracts
+	url = https://github.com/gnosis/safe-contracts
