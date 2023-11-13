@@ -37,3 +37,6 @@
 [submodule "packages/spike-granular-roles/lib/openzeppelin-contracts"]
 	path = packages/spike-granular-roles/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "packages/spike-granular-roles/lib/zodiac"]
+	path = packages/spike-granular-roles/lib/zodiac
+	url = https://github.com/gnosis/zodiac
