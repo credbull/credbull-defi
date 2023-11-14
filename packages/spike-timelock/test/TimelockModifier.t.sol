@@ -5,27 +5,30 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "../src/TimelockModifier.sol";
 import "../src/test/MockSafe.sol";
-import "../src/test/Button.sol";
-import "../src/test/ButtonPushModule.sol";
+import "../src/test/Vault.sol";
+import "../src/test/VaultModule.sol";
+import "../src/test/SimpleToken.sol";
 import { Enum, Modifier } from "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract TimelockModifierTest is Test {
     uint64 private cooldown = 180;
 
+    SimpleToken public token;
     MockSafe private safe;
-    Button private button;
-    ButtonPushModule private module;
+    Vault private vault;
+    VaultModule private module;
     TimelockModifier private timelock;
 
     function setUp() public {
+        token = new SimpleToken(1000);
         safe = new MockSafe();
         timelock = new TimelockModifier(
             address(safe), address(safe), address(safe), uint64(block.timestamp), uint64(block.timestamp) + cooldown
         );
 
-        button = new Button();
-        button.transferOwnership(address(safe));
-        module = new ButtonPushModule(address(timelock), address(button));
+        vault = new Vault(token, "Vault", "xVault");
+        vault.transferOwnership(address(safe));
+        module = new VaultModule(address(timelock), address(vault));
 
         safe.enableModule(address(timelock));
         safe.exec(
@@ -33,23 +36,40 @@ contract TimelockModifierTest is Test {
         );
     }
 
-    function testShouldNotExecutePush() public {
-        vm.expectRevert(TimelockModifier.TransactionsTimelocked.selector);
-        module.pushButton();
+    function testShouldNotExecuteWithdraw() public {
+        address john = makeAddr("John");
+        token.mint(john, 1000);
 
-        assertEq(button.pushes(), 0);
+        vm.startPrank(john);
+        token.approve(address(vault), 1000);
+        vault.deposit(1000, john);
+
+        vm.expectRevert(TimelockModifier.TransactionsTimelocked.selector);
+        module.withdraw(1000, john, john);
+        vm.stopPrank();
+
+        assertEq(token.balanceOf(address(vault)), 1000);
+        assertEq(token.balanceOf(address(john)), 0);
+        assertEq(vault.balanceOf(address(john)), 1000);
     }
 
-    function testShouldExecutePush() public {
-        vm.expectRevert(TimelockModifier.TransactionsTimelocked.selector);
-        module.pushButton();
-        assertEq(button.pushes(), 0);
+    function testShouldExecuteWithdraw() public {
+        address john = makeAddr("John");
+        token.mint(john, 1000);
+
+        vm.startPrank(john);
+        token.approve(address(vault), 1000);
+        vault.deposit(1000, john);
 
         // warping past cooldown
         vm.warp(block.timestamp + cooldown + 1);
 
-        // transaction correctly executed
-        module.pushButton();
-        assertEq(button.pushes(), 1);
+        vault.approve(address(safe), 1000);
+        module.withdraw(1000, john, john);
+        vm.stopPrank();
+
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(token.balanceOf(address(john)), 1000);
+        assertEq(vault.balanceOf(address(john)), 0);
     }
 }
