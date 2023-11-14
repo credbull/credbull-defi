@@ -25,6 +25,7 @@
     "prepare": "install-self-peers -- --ignore-scripts",
     "start": "yarn workspace @se-2/nextjs dev",
     "test": "yarn foundry:test",
+    "vercel-build": "bash vercel-build.sh",
     "vercel": "yarn workspace @se-2/nextjs vercel",
     "vercel:yolo": "yarn workspace @se-2/nextjs vercel:yolo",
     "verify": "yarn workspace @se-2/foundry verify"
