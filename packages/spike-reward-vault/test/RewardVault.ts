@@ -106,7 +106,7 @@ describe("RewardVault", function () {
         communityToken,
         tier3,
         buyBackYield,
-        percentage2,
+        percentage3,
       );
 
       // The reward vault has 300 community tokens and 300 reward shares ot distribute
