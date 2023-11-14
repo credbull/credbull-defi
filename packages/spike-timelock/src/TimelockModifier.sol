@@ -9,16 +9,16 @@ contract TimelockModifier is Modifier {
     uint64 private startTimestamp;
     uint64 private durationSeconds;
 
-    constructor(address _owner, address _avatar, address _target, uint64 _start, uint64 _duration) {
-        bytes memory initParams = abi.encode(_owner, _avatar, _target, _start, _duration);
+    constructor(address _avatar, address _target, uint64 _start, uint64 _duration) {
+        bytes memory initParams = abi.encode(_avatar, _target, _start, _duration);
         setUp(initParams);
     }
 
     function setUp(bytes memory initParams) public override initializer {
-        (address _owner, address _avatar, address _target, uint64 _start, uint64 _duration) =
-            abi.decode(initParams, (address, address, address, uint64, uint64));
+        __Ownable_init(_msgSender());
 
-        _transferOwnership(_owner);
+        (address _avatar, address _target, uint64 _start, uint64 _duration) =
+            abi.decode(initParams, (address, address, uint64, uint64));
 
         avatar = _avatar;
         target = _target;

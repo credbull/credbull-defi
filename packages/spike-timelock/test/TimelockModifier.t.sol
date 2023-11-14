@@ -4,36 +4,36 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "../src/TimelockModifier.sol";
-import "../src/test/MockSafe.sol";
 import "../src/test/Vault.sol";
 import "../src/test/VaultModule.sol";
 import "../src/test/SimpleToken.sol";
-import { Enum, Modifier } from "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
+import { TestAvatar } from "zodiac/test/TestAvatar.sol";
+import { Enum } from "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
 
 contract TimelockModifierTest is Test {
     uint64 private cooldown = 180;
 
     SimpleToken public token;
-    MockSafe private safe;
+    TestAvatar private safe;
     Vault private vault;
     VaultModule private module;
     TimelockModifier private timelock;
 
     function setUp() public {
         token = new SimpleToken(1000);
-        safe = new MockSafe();
-        timelock = new TimelockModifier(
-            address(safe), address(safe), address(safe), uint64(block.timestamp), uint64(block.timestamp) + cooldown
-        );
+        safe = new TestAvatar();
 
         vault = new Vault(token, "Vault", "xVault");
         vault.transferOwnership(address(safe));
-        module = new VaultModule(address(timelock), address(vault));
 
-        safe.enableModule(address(timelock));
-        safe.exec(
-            payable(address(timelock)), 0, abi.encodeWithSelector(Modifier.enableModule.selector, address(module))
+        timelock = new TimelockModifier(
+            address(safe), address(safe), uint64(block.timestamp), uint64(block.timestamp) + cooldown
         );
+        safe.enableModule(address(timelock));
+
+        module = new VaultModule(address(timelock), address(vault));
+        timelock.enableModule(address(module));
+        timelock.transferOwnership(address(safe));
     }
 
     function testShouldNotExecuteWithdraw() public {

@@ -24,12 +24,16 @@ contract VaultModule is Module {
     }
 
     function withdraw(uint256 assets, address receiver, address owner) external returns (uint256) {
-        (,bytes memory data) = execAndReturnData(vault, 0, abi.encodeWithSignature("withdraw(uint256,address,address)", assets, receiver, owner), Enum.Operation.Call);
+        (, bytes memory data) = execAndReturnData(
+            vault, 0, abi.encodeWithSelector(ERC4626.withdraw.selector, assets, receiver, owner), Enum.Operation.Call
+        );
         return abi.decode(data, (uint256));
     }
 
     function redeem(uint256 shares, address receiver, address owner) external returns (uint256) {
-        (,bytes memory data) = execAndReturnData(vault, 0, abi.encodeWithSignature("redeem(uint256,address,address)", shares, receiver, owner), Enum.Operation.Call);
+        (, bytes memory data) = execAndReturnData(
+            vault, 0, abi.encodeWithSelector(ERC4626.redeem.selector, shares, receiver, owner), Enum.Operation.Call
+        );
         return abi.decode(data, (uint256));
     }
 }
