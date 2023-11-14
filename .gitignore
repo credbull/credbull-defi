@@ -11,6 +11,7 @@ broadcast
 
 # IDE files
 .idea
+*.iml
 
 # yarn files
 .yarn/*
