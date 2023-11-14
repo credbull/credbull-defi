@@ -16,9 +16,6 @@
 [submodule "packages/spike-timelock/lib/forge-std"]
 	path = packages/spike-timelock/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-[submodule "packages/spike-timelock/lib/zodiac-modifier-delay"]
-	path = packages/spike-timelock/lib/zodiac-modifier-delay
-	url = https://github.com/gnosis/zodiac-modifier-delay
 [submodule "packages/spike-timelock/lib/openzeppelin-contracts"]
 	path = packages/spike-timelock/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts

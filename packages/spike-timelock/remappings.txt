@@ -7,6 +7,5 @@ openzeppelin-contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/
 openzeppelin-contracts/=lib/openzeppelin-contracts/
 safe-contracts/=lib/safe-contracts/contracts/
 @gnosis.pm/safe-contracts/=lib/safe-contracts/
-zodiac-modifier-delay/=lib/zodiac-modifier-delay/contracts/
 zodiac/=lib/zodiac/contracts/
 @gnosis.pm/zodiac/=lib/zodiac/
