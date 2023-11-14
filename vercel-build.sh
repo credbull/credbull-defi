@@ -1,5 +1,11 @@
 #!/bin/bash
-cd packages/nextjs  # Change this path to the actual path of your @se-2/nextjs workspace
-yarn install        # Install dependencies only for this workspace
-yarn build          # Replace with your actual build command if different
+
+# Navigate to the Next.js workspace directory
+cd packages/nextjs
+
+# Install dependencies in the workspace
+yarn install
+
+# Run the Next.js development server
+yarn next dev
 
