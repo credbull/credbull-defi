@@ -50,28 +50,10 @@ yarn deploy --network optimismGoerli
 yarn deploy:verify --network optimismGoerli
 ```
 ---
-## Deploy UI to Vercel.  Connect to a Local Network.
-Deploy UI to Vercel.  deployed UI will connect to your local network, e.g. localhost.
+## Deploy UI to Vercel
+Deploy UI to Vercel.  Deployed UI will connect to a specified network or default to the local network. 
 ```bash
-# no flag will deploy to a preview URL.
-yarn vercel
-
-# add --prod flag to update the prod URL.  
-# yarn vercel --prod
-```
-
-## Deploy UI to Vercel.  Connect to a Mainnet (or Testnet).
-Deploy UI to Vercel.  deployed UI will connect to the specified network, e.g. optimismGoerli.
-```bash
-# no flag will deploy to a preview URL.
-#yarn vercel
-
-# add --prod flag to update the prod URL.  
-yarn vercel --prod
-```
-
-### To run the Client, set Enviornment variable. (Nextjs bundles this for the client).
-```bash
-# specify target network in the Env (e.g. optimismGoerli)
-export export NEXT_PUBLIC_TARGET_NETWORK=optimismGoerli
+# --prod : update the prod URL. (updates a preview URL if --prod not set)
+# --build-env NEXT_PUBLIC_TARGET_NETWORK=optimismGoerli : e.g. specify the network (defaults to foundry if not set) 
+yarn vercel --build-env NEXT_PUBLIC_TARGET_NETWORK=optimismGoerli --prod
 ```
