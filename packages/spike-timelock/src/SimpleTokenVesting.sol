@@ -7,15 +7,14 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
 contract SimpleTokenVesting is ERC4626, VestingWallet {
-
     error SharesInVestingPeriod();
 
     IERC20 private immutable _asset;
 
     constructor(IERC20 asset, string memory name, string memory symbol, uint64 startTimestamp, uint64 durationSeconds)
-    ERC4626(asset)
-    ERC20(name, symbol)
-    VestingWallet(address(this), startTimestamp, durationSeconds)
+        ERC4626(asset)
+        ERC20(name, symbol)
+        VestingWallet(address(this), startTimestamp, durationSeconds)
     {
         _asset = asset;
     }
@@ -31,7 +30,11 @@ contract SimpleTokenVesting is ERC4626, VestingWallet {
         emit Deposit(caller, receiver, assets, shares);
     }
 
-    function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares) internal virtual override {
+    function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
+        internal
+        virtual
+        override
+    {
         if (assets > releasable(address(_asset))) {
             revert SharesInVestingPeriod();
         }
