@@ -3,12 +3,12 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import "../src/TimelockModifier.sol";
+
+import { TestAvatar } from "zodiac/test/TestAvatar.sol";
 import "../src/test/Vault.sol";
 import "../src/test/VaultModule.sol";
 import "../src/test/SimpleToken.sol";
-import { TestAvatar } from "zodiac/test/TestAvatar.sol";
-import { Enum } from "@gnosis.pm/zodiac/contracts/core/Modifier.sol";
+import "../src/TimelockModifier.sol";
 
 contract TimelockModifierTest is Test {
     uint64 private cooldown = 180;
