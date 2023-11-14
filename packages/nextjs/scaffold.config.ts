@@ -1,5 +1,4 @@
 import * as chains from "viem/chains";
-import { readEnvOrUrlParam } from "~~/utils/read-param";
 
 export type ScaffoldConfig = {
   targetNetwork: chains.Chain;
@@ -10,22 +9,9 @@ export type ScaffoldConfig = {
   walletAutoConnect: boolean;
 };
 
-const getChainFromEnvOrUrlParam = (envKey: string, urlParamKey: string) => {
-  const chainName = readEnvOrUrlParam(envKey, urlParamKey);
-
-  if (chainName && chains[chainName as keyof typeof chains]) {
-    return chains[chainName as keyof typeof chains];
-  }
-  console.log("No Chain set in the Env or URL Params, defaulting to foundry");
-
-  return chains.foundry;
-};
-
-const targetChain = getChainFromEnvOrUrlParam("TARGET_NETWORK", "targetNetwork");
-
 const scaffoldConfig = {
   // The network where your DApp lives in
-  targetNetwork: targetChain,
+  targetNetwork: chains[process.env.NEXT_PUBLIC_TARGET_NETWORK as keyof typeof chains] || chains.foundry,
 
   // The interval at which your front-end polls the RPC servers for new data
   // it has no effect on the local network

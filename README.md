@@ -70,13 +70,8 @@ Deploy UI to Vercel.  deployed UI will connect to the specified network, e.g. op
 yarn vercel --prod
 ```
 
-### To run the Client, set BOTH the Enviornment (server-side) and URL Param (browser-based)
+### To run the Client, set Enviornment variable. (Nextjs bundles this for the client).
 ```bash
 # specify target network in the Env (e.g. optimismGoerli)
-export export TARGET_NETWORK=optimismGoerli
-```
-
-```html
-# specify target network in the URL (e.g. optimismGoerli)
-http://localhost:3000/?targetNetwork=optimismGoerli
+export export NEXT_PUBLIC_TARGET_NETWORK=optimismGoerli
 ```
