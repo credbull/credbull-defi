@@ -62,20 +62,21 @@ yarn vercel
 
 ## Deploy UI to Vercel.  Connect to a Mainnet (or Testnet).
 Deploy UI to Vercel.  deployed UI will connect to the specified network, e.g. optimismGoerli.
-```typescript
-// DANGER ZONE - Don't check this modification in!!!
-// Edit the config file (manual or via sed): packages/nextjs/scaffold.config.ts
-// sed -i 's/targetNetwork: chains\.foundry,/targetNetwork: chains.optimismGoerli,/' packages/nextjs/scaffold.config.ts
-// Revert the change before check-in!!!
-
-targetNetwork: chains.foundry, // - replace this line
-targetNetwork: chains.optimismGoerli, // + with this line
-```
-
 ```bash
 # no flag will deploy to a preview URL.
 #yarn vercel
 
 # add --prod flag to update the prod URL.  
 yarn vercel --prod
+```
+
+### To run the Client, set BOTH the Enviornment (server-side) and URL Param (browser-based)
+```bash
+# specify target network in the Env (e.g. optimismGoerli)
+export export TARGET_NETWORK=optimismGoerli
+```
+
+```html
+# specify target network in the URL (e.g. optimismGoerli)
+http://localhost:3000/?targetNetwork=optimismGoerli
 ```
