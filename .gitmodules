@@ -46,3 +46,6 @@
 [submodule "packages/spike-granular-roles/lib/zodiac-modifier-roles"]
 	path = packages/spike-granular-roles/lib/zodiac-modifier-roles
 	url = https://github.com/gnosis/zodiac-modifier-roles
+[submodule "packages/vault-services/lib/safe-contracts-1.4.1"]
+	path = packages/vault-services/lib/safe-contracts-1.4.1
+	url = https://github.com/gnosis/safe-contracts/

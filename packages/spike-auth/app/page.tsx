@@ -13,7 +13,7 @@ import Web3 from "web3";
 
 // IMP START - SDK Initialization
 // IMP START - Dashboard Registration
-const clientId = '<WEB3_CLIENT_ID>'; // get from https://dashboard.web3auth.io
+const clientId = 'BIPZr3cjbtXnmAWfrsqbXuq7UtrReDlnfgYMa_IJ7B-mTx4KCKI2syldDMQ34_rQEjl9IR3medzULpsOSua2ybI'; // get from https://dashboard.web3auth.io
 
 console.log(clientId)
 // IMP END - Dashboard Registration
