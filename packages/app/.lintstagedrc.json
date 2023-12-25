@@ -1,0 +1,4 @@
+{
+  "*.{ts,tsx}": ["yarn format", "yarn lint:precommit", "yarn test:precommit"],
+  "*.css": ["yarn format"]
+}
