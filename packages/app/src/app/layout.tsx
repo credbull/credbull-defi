@@ -1,3 +1,4 @@
+import '@rainbow-me/rainbowkit/styles.css';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -5,6 +6,7 @@ import { ReactNode } from 'react';
 
 import { createClient } from '@/clients/supabase.server';
 
+import { RainbowkitProvider } from '@/components/rainbowkit.provider';
 import { RefineProvider } from '@/components/refine.provider';
 import { StyleProvider } from '@/components/style.provider';
 
@@ -28,7 +30,9 @@ export default async function RootLayout(props: { children: ReactNode }) {
     <html lang="en">
       <body>
         <StyleProvider>
-          <RefineProvider>{props.children}</RefineProvider>
+          <RefineProvider>
+            <RainbowkitProvider>{props.children}</RainbowkitProvider>
+          </RefineProvider>
         </StyleProvider>
       </body>
     </html>

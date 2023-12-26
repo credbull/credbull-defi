@@ -26,10 +26,8 @@ async function login(ctx: ProviderContext, params: LoginParams) {
   const { providerName } = params;
 
   if (providerName) {
-    const { data, error } = await client.auth.signInWithOAuth({
-      provider: providerName,
-      options: { redirectTo: `${origin()}${Routes.CODE_CALLBACK}` },
-    });
+    const redirectTo = `${origin()}${Routes.CODE_CALLBACK}`;
+    const { data, error } = await client.auth.signInWithOAuth({ provider: providerName, options: { redirectTo } });
 
     if (error) return { success: false, error };
     if (data?.url) return { success: true, redirectTo: data?.url };
@@ -52,10 +50,8 @@ async function register(ctx: ProviderContext, params: RegisterParams) {
   const { client, origin } = ctx;
 
   try {
-    const { data, error } = await client.auth.signUp({
-      ...params,
-      options: { emailRedirectTo: `${origin()}${Routes.CODE_CALLBACK}` },
-    });
+    const emailRedirectTo = `${origin()}${Routes.CODE_CALLBACK}`;
+    const { data, error } = await client.auth.signUp({ ...params, options: { emailRedirectTo } });
 
     if (error) return { success: false, error };
     if (data) return { success: true, redirectTo: Routes.LOGIN };
@@ -76,9 +72,8 @@ async function forgotPassword(ctx: ProviderContext, params: ForgotPasswordParams
   const { client, origin } = ctx;
 
   try {
-    const { data, error } = await client.auth.resetPasswordForEmail(params.email, {
-      redirectTo: `${origin()}${Routes.UPDATE_PASSWORD}`,
-    });
+    const redirectTo = `${origin()}${Routes.UPDATE_PASSWORD}`;
+    const { data, error } = await client.auth.resetPasswordForEmail(params.email, { redirectTo });
 
     if (error) return { success: false, error };
     if (data) return { success: true };
