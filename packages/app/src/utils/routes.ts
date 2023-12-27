@@ -4,6 +4,7 @@ export const Routes = {
   FORGOT_PASSWORD: '/forgot-password',
   UPDATE_PASSWORD: '/update-password',
   CODE_CALLBACK: '/code/callback',
+  MAGIC_LINK: '/magic-link',
   DASHBOARD: '/dashboard',
   HOME: '/',
 } as const;

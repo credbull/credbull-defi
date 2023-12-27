@@ -13,8 +13,8 @@ export const ProviderContext = z.object({
 type ProviderContext = z.infer<typeof ProviderContext>;
 
 const AuthParams = z.object({
-  email: z.string().email(),
   password: z.string(),
+  email: z.string().email().optional(),
   providerName: z.custom<Provider>((v) => typeof v === 'string').optional(),
 });
 
@@ -22,16 +22,57 @@ export const LoginParams = AuthParams;
 type LoginParams = z.infer<typeof LoginParams>;
 
 async function login(ctx: ProviderContext, params: LoginParams) {
+  const { providerName, email } = params;
+
+  if (providerName && !email) return loginWithSocial(ctx, LoginWithSocialParams.parse(params));
+  if (providerName && email) return loginWithMagicLink(ctx, LoginWithMagicLinkParams.parse(params));
+  return loginWithPassword(ctx, LoginWithPasswordParams.parse(params));
+}
+
+export const LoginWithSocialParams = LoginParams.pick({ providerName: true }).required();
+type LoginWithSocialParams = z.infer<typeof LoginWithSocialParams>;
+
+async function loginWithSocial(ctx: ProviderContext, params: LoginWithSocialParams) {
   const { client, origin } = ctx;
   const { providerName } = params;
 
-  if (providerName) {
-    const redirectTo = `${origin()}${Routes.CODE_CALLBACK}`;
-    const { data, error } = await client.auth.signInWithOAuth({ provider: providerName, options: { redirectTo } });
+  const redirectTo = `${origin()}${Routes.CODE_CALLBACK}`;
+  const { data, error } = await client.auth.signInWithOAuth({ provider: providerName, options: { redirectTo } });
 
-    if (error) return { success: false, error };
-    if (data?.url) return { success: true, redirectTo: data?.url };
-  }
+  if (error) return { success: false, error };
+  if (data?.url) return { success: true, redirectTo: data?.url };
+  return {
+    success: false,
+    error: { name: 'Login failed', message: `Cannot login with ${providerName}` },
+  };
+}
+
+export const LoginWithMagicLinkParams = LoginParams.omit({ password: true })
+  .extend({
+    providerName: z.literal('link'),
+  })
+  .required();
+
+type LoginWithMagicLinkParams = z.infer<typeof LoginWithMagicLinkParams>;
+
+async function loginWithMagicLink(ctx: ProviderContext, params: LoginWithMagicLinkParams) {
+  const { client, origin } = ctx;
+
+  const emailRedirectTo = `${origin()}${Routes.MAGIC_LINK}`;
+  const { error } = await client.auth.signInWithOtp({
+    email: params.email,
+    options: { shouldCreateUser: false, emailRedirectTo },
+  });
+
+  if (error) return { success: false, error };
+  return { success: true };
+}
+
+export const LoginWithPasswordParams = LoginParams.pick({ password: true, email: true }).required();
+type LoginWithPasswordParams = z.infer<typeof LoginWithPasswordParams>;
+
+async function loginWithPassword(ctx: ProviderContext, params: LoginWithPasswordParams) {
+  const { client } = ctx;
 
   const { data, error } = await client.auth.signInWithPassword(params);
 
@@ -43,7 +84,7 @@ async function login(ctx: ProviderContext, params: LoginParams) {
   };
 }
 
-export const RegisterParams = AuthParams.omit({ providerName: true });
+export const RegisterParams = AuthParams.omit({ providerName: true }).required();
 type RegisterParams = z.infer<typeof RegisterParams>;
 
 async function register(ctx: ProviderContext, params: RegisterParams) {
@@ -65,7 +106,7 @@ async function register(ctx: ProviderContext, params: RegisterParams) {
   };
 }
 
-export const ForgotPasswordParams = AuthParams.pick({ email: true });
+export const ForgotPasswordParams = AuthParams.pick({ email: true }).required();
 type ForgotPasswordParams = z.infer<typeof ForgotPasswordParams>;
 
 async function forgotPassword(ctx: ProviderContext, params: ForgotPasswordParams) {
