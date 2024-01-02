@@ -1,29 +1,35 @@
-import { BadRequestException, Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { SupabaseService } from '../../clients/supabase/supabase.service';
+import { SupabaseGuard } from '../../clients/supabase/auth/supabase.guard';
 
-import { AccountStatusDto } from './account-status.dto';
+import { AccountStatusDto, KYCStatus } from './account-status.dto';
 import { KycService } from './kyc.service';
+import { WhitelistAccountDto } from './whitelist-account.dto';
 
 @Controller('accounts')
-@ApiBearerAuth()
 @ApiTags('Accounts')
 export class AccountsController {
-  constructor(
-    private readonly kyc: KycService,
-    private readonly supabase: SupabaseService,
-  ) {}
+  constructor(private readonly kyc: KycService) {}
 
   @Get('status')
+  @UseGuards(SupabaseGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Returns users account status' })
-  @ApiResponse({ status: 400, description: 'Bad Request: no user wallet' })
   @ApiResponse({ status: 200, description: 'Success', type: AccountStatusDto })
   async status(): Promise<AccountStatusDto> {
-    const { data } = await this.supabase.client().from('user_wallets').select().single();
-    if (!data?.address) throw new BadRequestException();
+    const status = await this.kyc.status();
 
-    const status = await this.kyc.status(data.address);
     return new AccountStatusDto({ status });
+  }
+
+  @Post('whitelist')
+  @ApiOperation({ summary: 'Whitelists a give address' })
+  @ApiResponse({ status: 400, description: 'Incorrect user data' })
+  @ApiResponse({ status: 200, description: 'Success', type: AccountStatusDto })
+  async whitelist(@Body() data: WhitelistAccountDto): Promise<AccountStatusDto> {
+    const success = await this.kyc.whitelist(data.address);
+
+    return new AccountStatusDto({ status: success ? KYCStatus.ACTIVE : KYCStatus.REJECTED });
   }
 }

@@ -3,6 +3,30 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
+      kyc_events: {
+        Row: {
+          address: string;
+          created_at: string;
+          event_name: Database['public']['Enums']['kyc_event'];
+          id: number;
+          user_id: string;
+        };
+        Insert: {
+          address: string;
+          created_at?: string;
+          event_name: Database['public']['Enums']['kyc_event'];
+          id?: number;
+          user_id: string;
+        };
+        Update: {
+          address?: string;
+          created_at?: string;
+          event_name?: Database['public']['Enums']['kyc_event'];
+          id?: number;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       user_wallets: {
         Row: {
           address: string;
@@ -40,7 +64,7 @@ export interface Database {
       [_ in never]: never;
     };
     Enums: {
-      [_ in never]: never;
+      kyc_event: 'processing' | 'accepted' | 'rejected';
     };
     CompositeTypes: {
       [_ in never]: never;
