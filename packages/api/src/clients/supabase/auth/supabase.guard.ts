@@ -20,14 +20,15 @@ export class SupabaseGuard extends AuthGuard('jwt') {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isLoggedIn = await (super.canActivate(context) as Promise<boolean>);
+    if (!isLoggedIn) return false;
 
     const assignedRoles = this.reflector.get(SupabaseRoles, context.getHandler());
-    if (!assignedRoles) return isLoggedIn;
+    if (!assignedRoles) return true;
 
     const request = context.switchToHttp().getRequest();
     const userRoles = await this.getUserRoles(request);
 
-    return this.matchRoles(assignedRoles, userRoles) && isLoggedIn;
+    return this.matchRoles(assignedRoles, userRoles);
   }
 
   private async getUserRoles(request: Request): Promise<string[]> {
