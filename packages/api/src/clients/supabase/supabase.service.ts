@@ -17,21 +17,26 @@ export class SupabaseService {
     @Inject(REQUEST) private readonly request: Request,
   ) {}
 
+  static createClientFromToken(publicUrl: string, privateKey: string, token: string | null) {
+    return createClient<Database, 'public'>(publicUrl, privateKey, {
+      auth: { persistSession: false },
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    });
+  }
+
   client() {
     if (this.supabase) return this.supabase;
 
-    this.supabase = createClient<Database, 'public'>(
+    this.supabase = SupabaseService.createClientFromToken(
       this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_URL'),
       this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
-      {
-        auth: { persistSession: false },
-        global: {
-          headers: {
-            Authorization: `Bearer ${ExtractJwt.fromAuthHeaderAsBearerToken()(this.request)}`,
-          },
-        },
-      },
+      ExtractJwt.fromAuthHeaderAsBearerToken()(this.request),
     );
+
     return this.supabase;
   }
 

@@ -1,20 +1,19 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { SupabaseGuard } from '../../clients/supabase/auth/supabase.guard';
+import { SupabaseRoles } from '../../clients/supabase/auth/supabase.guard';
 
 import { AccountStatusDto, KYCStatus } from './account-status.dto';
 import { KycService } from './kyc.service';
 import { WhitelistAccountDto } from './whitelist-account.dto';
 
 @Controller('accounts')
+@ApiBearerAuth()
 @ApiTags('Accounts')
 export class AccountsController {
   constructor(private readonly kyc: KycService) {}
 
   @Get('status')
-  @UseGuards(SupabaseGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Returns users account status' })
   @ApiResponse({ status: 200, description: 'Success', type: AccountStatusDto })
   async status(): Promise<AccountStatusDto> {
@@ -24,6 +23,7 @@ export class AccountsController {
   }
 
   @Post('whitelist')
+  @SupabaseRoles(['admin'])
   @ApiOperation({ summary: 'Whitelists a give address' })
   @ApiResponse({ status: 400, description: 'Incorrect user data' })
   @ApiResponse({ status: 200, description: 'Success', type: AccountStatusDto })
