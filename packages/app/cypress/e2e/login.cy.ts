@@ -2,9 +2,10 @@ import login from '../fixtures/login.json';
 
 describe('Login', () => {
   const NEXT_PUBLIC_SUPABASE_URL = Cypress.env('NEXT_PUBLIC_SUPABASE_URL');
+  const APP_BASE_URL = Cypress.env('APP_BASE_URL');
 
   it('should successfully sign up', () => {
-    cy.visit('http://localhost:3000/login');
+    cy.visit(`${APP_BASE_URL}/login`);
 
     const signUpLink = cy.get('a[href="/register"]').click();
     signUpLink.should('exist');
@@ -25,7 +26,7 @@ describe('Login', () => {
   });
 
   it('should successfully sign in with valid credentials', () => {
-    cy.visit('http://localhost:3000/login');
+    cy.visit(`${APP_BASE_URL}/login`);
 
     const emailIn = cy.get('input[name="email"]').click();
     emailIn.type(login.validEmail).invoke('val').should('eq', login.validEmail);
@@ -43,7 +44,7 @@ describe('Login', () => {
   });
 
   it('should fail sign in with inValid credentials', () => {
-    cy.visit('http://localhost:3000/login');
+    cy.visit(`${APP_BASE_URL}/login`);
 
     const emailInput = cy.get('input[name="email"]').click();
     emailInput.type(login.validEmail).invoke('val').should('eq', login.validEmail);
