@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { SupabaseRoles } from '../../clients/supabase/auth/supabase.guard';
+import { SupabaseGuard, SupabaseRoles } from '../../clients/supabase/auth/supabase.guard';
 
 import { AccountStatusDto, KYCStatus } from './account-status.dto';
 import { KycService } from './kyc.service';
@@ -9,6 +9,7 @@ import { WhitelistAccountDto } from './whitelist-account.dto';
 
 @Controller('accounts')
 @ApiBearerAuth()
+@UseGuards(SupabaseGuard)
 @ApiTags('Accounts')
 export class AccountsController {
   constructor(private readonly kyc: KycService) {}

@@ -1,9 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller()
-@ApiBearerAuth()
 @ApiTags('Version')
 export class AppController {
   constructor(private readonly config: ConfigService) {}
