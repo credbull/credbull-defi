@@ -3,7 +3,6 @@ import { defineConfig } from 'cypress';
 
 const { combinedEnv } = loadEnvConfig(process.cwd());
 
-console.log(combinedEnv);
 export default defineConfig({
   env: combinedEnv,
   e2e: {

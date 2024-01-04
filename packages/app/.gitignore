@@ -48,3 +48,5 @@ next-env.d.ts
 .yarn/cache
 
 .local
+
+cypress/screenshots
