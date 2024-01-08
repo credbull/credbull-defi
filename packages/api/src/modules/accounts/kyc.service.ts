@@ -15,7 +15,7 @@ export class KycService {
   async status(): Promise<KYCStatus> {
     const { data } = await this.supabase.client().from('kyc_events').select().eq('event_name', 'accepted').single();
 
-    if (!data?.address) return KYCStatus.REJECTED;
+    if (!data?.address) return KYCStatus.PENDING;
 
     return (await this.checkOnChain(data?.address)) //
       ? KYCStatus.ACTIVE
