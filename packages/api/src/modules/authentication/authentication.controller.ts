@@ -6,7 +6,7 @@ import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { CreateAccessTokenDto, RefreshTokenDto } from './refresh-token.dto';
 
 @Controller('auth')
-@ApiTags('authentication')
+@ApiTags('Authentication')
 export class AuthenticationController {
   constructor(private readonly supabase: SupabaseService) {}
 
