@@ -8,11 +8,11 @@ import { DeployMockStablecoin } from "../mocks/DeployMockStablecoin.s.sol";
 import { MockStablecoin } from "../../test/mocks/MockStablecoin.sol";
 
 /**
-* Represents a Local Network for scripts and testing purposes.
-*
-* NB - this is not a "global" Singleton.  Nothing  prevents multiple LocalNetworkConfigs from being created,
-* each at different addresses and with different associated stablecoins.
-*/
+ * Represents a Local Network for scripts and testing purposes.
+ *
+ * NB - this is not a "global" Singleton.  Nothing  prevents multiple LocalNetworkConfigs from being created,
+ * each at different addresses and with different associated stablecoins.
+ */
 contract LocalNetworkConfig is INetworkConfig {
     IERC20 mockStablecoin;
 

@@ -6,7 +6,6 @@ import { MockStablecoin } from "./MockStablecoin.sol";
 import { DeployMockStablecoin } from "../../script/mocks/DeployMockStablecoin.s.sol";
 
 contract MockStablecoinFaucetTest is Test {
-
     MockStablecoin public mockStablecoin;
 
     address public contractOwnerAddr;
@@ -18,18 +17,17 @@ contract MockStablecoinFaucetTest is Test {
         mockStablecoin = deployStablecoin.run(contractOwnerAddr);
     }
 
-
     function testFaucetCanGiveTokens() public {
-        uint amountToGive = 100;
+        uint256 amountToGive = 100;
         address john = makeAddr("john");
 
-        uint totalSupplyBefore = mockStablecoin.totalSupply();
+        uint256 totalSupplyBefore = mockStablecoin.totalSupply();
 
         vm.startPrank(john);
         mockStablecoin.give(amountToGive);
         vm.stopPrank();
 
-        uint totalSupplyAfter = mockStablecoin.totalSupply();
+        uint256 totalSupplyAfter = mockStablecoin.totalSupply();
 
         assertEq(mockStablecoin.balanceOf(john), amountToGive);
         assertEq(totalSupplyAfter, totalSupplyBefore + amountToGive);

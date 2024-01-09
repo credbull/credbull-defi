@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Test, console} from "forge-std/Test.sol";
+import { Test, console } from "forge-std/Test.sol";
 
-import {console} from "forge-std/console.sol";
+import { console } from "forge-std/console.sol";
 
 contract EnvTest is Test {
-
     function testGetAddressFromEnv() public {
         string memory key = "SOME_ENVIRONMENT_KEY";
         address valueAsAddr = address(9823095); // any value
