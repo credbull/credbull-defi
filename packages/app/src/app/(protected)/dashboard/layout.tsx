@@ -1,18 +1,6 @@
 'use client';
 
-import {
-  AppShell,
-  Box,
-  Burger,
-  Button,
-  Footer,
-  Group,
-  Header,
-  MediaQuery,
-  Navbar,
-  ScrollArea,
-  Text,
-} from '@mantine/core';
+import { AppShell, Burger, Button, Footer, Group, Header, MediaQuery, Navbar, ScrollArea, Text } from '@mantine/core';
 import { Dispatch, ReactNode, SetStateAction, useState, useTransition } from 'react';
 
 import { signOut } from '@/app/(auth)/actions';
@@ -46,8 +34,7 @@ const AppNavbar = ({ opened }: { opened: boolean }) => {
       </Navbar.Section>
 
       <Navbar.Section grow component={ScrollArea} mx="-xs" px="xs">
-        <Text>Dashboard</Text>
-        <Text>Settings</Text>
+        <Text>Lending</Text>
       </Navbar.Section>
       <Navbar.Section>
         <Button onClick={() => startTransition(() => signOut())}>Logout</Button>

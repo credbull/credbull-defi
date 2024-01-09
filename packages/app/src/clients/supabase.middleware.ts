@@ -1,4 +1,4 @@
-import { Database } from '@/types/supabase';
+import { Database } from '@credbull/api';
 import { type CookieOptions, createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 

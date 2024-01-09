@@ -1,6 +1,6 @@
 'use client';
 
-import { Database } from '@/types/supabase';
+import { Database } from '@credbull/api';
 import { createBrowserClient } from '@supabase/ssr';
 
 export const createClient = () =>
