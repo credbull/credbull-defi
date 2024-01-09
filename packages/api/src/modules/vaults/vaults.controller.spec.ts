@@ -1,0 +1,90 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DeepMockProxy, mockDeep } from 'vitest-mock-extended';
+
+import { SupabaseService } from '../../clients/supabase/supabase.service';
+import { Config } from '../../utils/module';
+
+import { VaultsController } from './vaults.controller';
+import { VaultsModule } from './vaults.module';
+
+describe('VaultsController', () => {
+  let controller: VaultsController;
+  let client: DeepMockProxy<SupabaseClient>;
+
+  beforeEach(async () => {
+    client = mockDeep<SupabaseClient>();
+
+    const service = { admin: () => ({}), client: () => client };
+
+    const module: TestingModule = await Test.createTestingModule({
+      imports: [Config.module(), VaultsModule],
+    })
+      .overrideProvider(SupabaseService)
+      .useValue(service)
+      .compile();
+
+    controller = await module.resolve<VaultsController>(VaultsController);
+  });
+
+  it('should return all current open vaults', async () => {
+    const vault = {
+      id: 1,
+      type: 'fixed_yield',
+      status: 'ready',
+      address: '0x6E12D8C87503D4287c294f2Fdef96ACd9DFf6bd2',
+      strategy_address: '0xF62849F9A0B5Bf2913b396098F7c7019b51A820a',
+      opened_at: '2024-01-07T03:00:01+00:00',
+      closed_at: '2024-01-14T02:59:59+00:00',
+      owner: null,
+      created_at: '2024-01-09T18:58:27.328262+00:00',
+    };
+
+    const builder = { select: vi.fn(), eq: vi.fn(), lt: vi.fn(), gt: vi.fn() };
+    builder.select.mockReturnValueOnce(builder as any);
+    builder.eq.mockReturnValueOnce(builder as any);
+    builder.lt.mockReturnValueOnce(builder as any);
+    builder.gt.mockReturnValueOnce({ data: [vault] } as any);
+
+    client.from.mockReturnValue(builder as any);
+
+    const { data } = await controller.current();
+
+    expect(data.length).toBe(1);
+  });
+
+  it('should throw when there is an error', async () => {
+    const builder = { select: vi.fn(), eq: vi.fn(), lt: vi.fn(), gt: vi.fn() };
+    builder.select.mockReturnValueOnce(builder as any);
+    builder.eq.mockReturnValueOnce(builder as any);
+    builder.lt.mockReturnValueOnce(builder as any);
+    builder.gt.mockReturnValueOnce({ error: 1 } as any);
+
+    client.from.mockReturnValue(builder as any);
+
+    try {
+      await controller.current();
+    } catch (e) {
+      expect(e.message).toBe('Bad Request Exception');
+      expect(e.status).toBe(400);
+    }
+  });
+
+  it('should throw when data is null', async () => {
+    const builder = { select: vi.fn(), eq: vi.fn(), lt: vi.fn(), gt: vi.fn() };
+    builder.select.mockReturnValueOnce(builder as any);
+    builder.eq.mockReturnValueOnce(builder as any);
+    builder.lt.mockReturnValueOnce(builder as any);
+    builder.gt.mockReturnValueOnce({ data: null } as any);
+
+    client.from.mockReturnValue(builder as any);
+
+    try {
+      await controller.current();
+    } catch (e) {
+      expect(e.message).toBe('Not Found');
+      expect(e.status).toBe(404);
+    }
+  });
+});

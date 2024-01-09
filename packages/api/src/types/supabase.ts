@@ -25,7 +25,15 @@ export interface Database {
           id?: number;
           user_id?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'kyc_events_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       user_wallets: {
         Row: {
@@ -56,6 +64,50 @@ export interface Database {
           },
         ];
       };
+      vaults: {
+        Row: {
+          address: string;
+          closed_at: string;
+          created_at: string;
+          id: number;
+          opened_at: string;
+          owner: string | null;
+          status: Database['public']['Enums']['vault_status'];
+          strategy_address: string;
+          type: Database['public']['Enums']['vault_type'] | null;
+        };
+        Insert: {
+          address: string;
+          closed_at: string;
+          created_at?: string;
+          id?: number;
+          opened_at: string;
+          owner?: string | null;
+          status?: Database['public']['Enums']['vault_status'];
+          strategy_address: string;
+          type?: Database['public']['Enums']['vault_type'] | null;
+        };
+        Update: {
+          address?: string;
+          closed_at?: string;
+          created_at?: string;
+          id?: number;
+          opened_at?: string;
+          owner?: string | null;
+          status?: Database['public']['Enums']['vault_status'];
+          strategy_address?: string;
+          type?: Database['public']['Enums']['vault_type'] | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'vaults_owner_fkey';
+            columns: ['owner'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -65,6 +117,8 @@ export interface Database {
     };
     Enums: {
       kyc_event: 'processing' | 'accepted' | 'rejected';
+      vault_status: 'created' | 'ready';
+      vault_type: 'fixed_yield';
     };
     CompositeTypes: {
       [_ in never]: never;

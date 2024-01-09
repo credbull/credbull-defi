@@ -7,4 +7,4 @@ import { MetaTxService } from './metatx.service';
   controllers: [MetaTxController],
   providers: [MetaTxService],
 })
-export class MetaTx {}
+export class MetaTxModule {}

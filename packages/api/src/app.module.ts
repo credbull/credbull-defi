@@ -5,11 +5,12 @@ import { AppController } from './app.controller';
 import { SupabaseModule } from './clients/supabase/supabase.module';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { AuthenticationModule } from './modules/authentication/authentication.module';
-import { MetaTx } from './modules/metatx/metatx.module';
+import { MetaTxModule } from './modules/metatx/metatx.module';
+import { VaultsModule } from './modules/vaults/vaults.module';
 import { Config } from './utils/module';
 
 @Module({
-  imports: [Config.module(), AccountsModule, SupabaseModule, AuthenticationModule, MetaTx],
+  imports: [Config.module(), AccountsModule, SupabaseModule, AuthenticationModule, VaultsModule, MetaTxModule],
   controllers: [AppController],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
