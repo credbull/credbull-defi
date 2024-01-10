@@ -51,4 +51,42 @@ describe('AccountsController', () => {
     expect(insert.mock.calls[0][0]).toStrictEqual({ address, user_id, event_name: 'accepted' });
     expect(status).toBe(KYCStatus.ACTIVE);
   });
+
+  it('should verify the signature and link the wallet', async () => {
+    const user_id = '1';
+    const dto = {
+      message:
+        'localhost:3000 wants you to sign in with your Ethereum account:\n0xA57FCEE8db30A62b1FE8Fab0431Ac2d2A6aBbAfB\n\nBy connecting your wallet, you agree to the Terms of Service and Privacy Policy.\n\nURI: http://localhost:3000\nVersion: 1\nChain ID: 10\nNonce: zIok3D7zIKBu3VAnl\nIssued At: 2024-01-10T09:22:45.985Z',
+      signature:
+        '0x9bc8fd1dd2c25bead1582e3ecd4a949ee6093ef47d3d1bcd82c5cf08e71f7fc33979d365cddcb3c1172b4e72fab0775b53ab60af990b23f0fa0bdc8cca03059c1b',
+    };
+
+    const insert = vi.fn();
+    insert.mockResolvedValueOnce({ data: { user_id } } as any);
+
+    client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: user_id } } } as any);
+    client.from.mockReturnValue({ insert } as any);
+
+    const data = await controller.linkWallet(dto);
+
+    expect(data.user_id).toBe(user_id);
+  });
+
+  it('should not verify the signature and throw an error', async () => {
+    const user_id = '1';
+    const dto = {
+      message:
+        'localhost:3000 wants you to sign in with your Ethereum account:\n0xA57FCEE8db30A62b1FE8Fab0431Ac2d2A6aBbAfB\n\nBy connecting your wallet, you agree to the Terms of Service and Privacy Policy.\n\nURI: http://localhost:3000\nVersion: 1\nChain ID: 10\nNonce: zIok3D7zIKBu3VAnl\nIssued At: 2024-01-10T09:22:45.985Z',
+      signature:
+        '0xd4a949ee6093ef47d3d1bcd82c5cf08e71f7fc33979d365cddcb3c1172b4e72fab0775b53ab60af990b23f0fa0bdc8cca03059c1b',
+    };
+
+    client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: user_id } } } as any);
+
+    try {
+      await controller.linkWallet(dto);
+    } catch (e) {
+      expect(e.error.type).toBe('Signature does not match address of the message.');
+    }
+  });
 });
