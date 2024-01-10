@@ -42,7 +42,7 @@ describe('AccountsController', () => {
     single.mockResolvedValueOnce({ data: { user_id } } as any);
 
     const insert = vi.fn();
-    insert.mockResolvedValueOnce({ statusText: 'OK' } as any);
+    insert.mockResolvedValueOnce({ data: {} } as any);
 
     admin.from.mockReturnValue({ select, insert } as any);
 

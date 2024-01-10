@@ -15,7 +15,7 @@ export class VaultsController {
 
   @Get('/current')
   @ApiOperation({ summary: 'Returns current open vaults' })
-  @ApiResponse({ status: 200, description: 'Success' })
+  @ApiResponse({ status: 200, description: 'Success', type: VaultsDto })
   async current(): Promise<VaultsDto> {
     const { data, error } = await this.supabase
       .client()

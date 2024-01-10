@@ -24,9 +24,12 @@ export class AccountsController {
   @ApiOperation({ summary: 'Returns users account status' })
   @ApiResponse({ status: 200, description: 'Success', type: AccountStatusDto })
   async status(): Promise<AccountStatusDto> {
-    const status = await this.kyc.status();
+    const { data, error } = await this.kyc.status();
 
-    return new AccountStatusDto({ status });
+    if (error) throw new BadRequestException(error);
+    if (!data) throw new NotFoundException();
+
+    return new AccountStatusDto({ status: data });
   }
 
   @Post('whitelist')
@@ -34,10 +37,13 @@ export class AccountsController {
   @ApiOperation({ summary: 'Whitelists a give address' })
   @ApiResponse({ status: 400, description: 'Incorrect user data' })
   @ApiResponse({ status: 200, description: 'Success', type: AccountStatusDto })
-  async whitelist(@Body() data: WhitelistAccountDto): Promise<AccountStatusDto> {
-    const success = await this.kyc.whitelist(data.address);
+  async whitelist(@Body() dtp: WhitelistAccountDto): Promise<AccountStatusDto> {
+    const { data, error } = await this.kyc.whitelist(dtp);
 
-    return new AccountStatusDto({ status: success ? KYCStatus.ACTIVE : KYCStatus.REJECTED });
+    if (error) throw new BadRequestException(error);
+    if (!data) throw new NotFoundException();
+
+    return new AccountStatusDto({ status: KYCStatus.ACTIVE });
   }
 
   @Post('link-wallet')
