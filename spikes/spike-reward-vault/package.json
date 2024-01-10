@@ -1,5 +1,5 @@
 {
-  "name": "spike-reward-vault",
+  "name": "@credbull/spike-reward-vault",
   "packageManager": "yarn@3.2.3",
   "scripts": {
     "test": "hardhat test",

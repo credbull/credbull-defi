@@ -1,5 +1,5 @@
 {
-  "name": "spike-granular-roles",
+  "name": "@credbull/spike-granular-roles",
   "version": "0.0.1",
   "scripts": {
     "format": "forge fmt",

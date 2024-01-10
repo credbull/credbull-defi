@@ -1,5 +1,5 @@
 {
-  "name": "vault-services",
+  "name": "@credbull/spike-vault-services",
   "packageManager": "yarn@3.6.1",
   "dependencies": {
     "@ethersproject/abi": "^5.7.0",
