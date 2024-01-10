@@ -8,7 +8,7 @@ import { useTransition } from 'react';
 import { SiweMessage, generateNonce } from 'siwe';
 import { useAccount, useSignMessage } from 'wagmi';
 
-import { linkWallet } from '@/app/(protected)/dashboard/link-wallet.action';
+import { linkWallet } from '@/app/(protected)/dashboard/actions';
 
 export function LinkWallet() {
   const { refetch } = useList<Tables<'user_wallets'>>({ resource: 'user_wallets' });

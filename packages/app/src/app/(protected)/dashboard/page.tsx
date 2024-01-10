@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 
 import { createClient } from '@/clients/supabase.server';
 
-import { accountStatus } from '@/app/(protected)/dashboard/account-status.action';
+import { accountStatus } from '@/app/(protected)/dashboard/actions';
 import { Lending } from '@/app/(protected)/dashboard/lending';
 
 export default async function Dashboard() {
