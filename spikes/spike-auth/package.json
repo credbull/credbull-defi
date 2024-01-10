@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "spike:dev": "next dev",
+    "spike:build": "next build",
+    "spike:start": "next start",
+    "spike:lint": "next lint"
   },
   "//IMP START": "IMP START - Web3Auth Installation",
   "dependencies": {

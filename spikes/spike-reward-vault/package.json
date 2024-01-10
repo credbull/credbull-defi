@@ -2,8 +2,8 @@
   "name": "@credbull/spike-reward-vault",
   "packageManager": "yarn@3.2.3",
   "scripts": {
-    "test": "hardhat test",
-    "format": "prettier . --write"
+    "spike:test": "hardhat test",
+    "spike:format": "prettier . --write"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",

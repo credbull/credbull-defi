@@ -24,14 +24,14 @@
     "web3-eth-contract": "^4.0.3"
   },
   "scripts": {
-    "build": "tsc",
-    "start": "tsc && node ./out/src/app.js",
-    "dev": "ts-node ./src/app.ts",
-    "test": "mocha -r ts-node/register 'test/**/*.ts'",
-    "anvil": "cd ../contracts && anvil",
-    "hardhat": "cd lib/safe-contracts-1.3.0/ && npx hardhat node",
-    "deploy": "cd lib/safe-contracts-1.3.0/ && npx hardhat deploy-contracts --network custom",
-    "anvil-run-deploy": "yarn run anvil & yarn deploy"
+    "spike:build": "tsc",
+    "spike:start": "tsc && node ./out/src/app.js",
+    "spike:dev": "ts-node ./src/app.ts",
+    "spike:test": "mocha -r ts-node/register 'test/**/*.ts'",
+    "spike:anvil": "cd ../contracts && anvil",
+    "spike:hardhat": "cd lib/safe-contracts-1.3.0/ && npx hardhat node",
+    "spike:deploy": "cd lib/safe-contracts-1.3.0/ && npx hardhat deploy-contracts --network custom",
+    "spike:anvil-run-deploy": "yarn run anvil & yarn deploy"
   },
   "devDependencies": {
     "@types/chai": "^4.3.5",

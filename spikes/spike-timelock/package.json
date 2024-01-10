@@ -2,7 +2,7 @@
   "name": "@credbull/spike-timelock",
   "version": "0.0.1",
   "scripts": {
-    "format": "forge fmt",
-    "test": "forge test -vv"
+    "spike:format": "forge fmt",
+    "spike:test": "forge test -vv"
   }
 }
