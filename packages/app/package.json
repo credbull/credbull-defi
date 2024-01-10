@@ -41,7 +41,6 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "siwe": "^2.1.4",
-    "start-server-and-test": "^2.0.3",
     "viem": "^1.21.0",
     "wagmi": "^1.4.12",
     "zod": "^3.22.4"
@@ -64,6 +63,7 @@
     "jsdom": "^23.0.1",
     "lint-staged": "^15.2.0",
     "prettier": "3.1.1",
+    "start-server-and-test": "^2.0.3",
     "typescript": "4.9.5",
     "vite-tsconfig-paths": "^4.2.2",
     "vitest": "^1.1.0",

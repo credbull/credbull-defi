@@ -1,4 +1,4 @@
-import { AccountStatusDto } from '@credbull/api';
+import { AccountStatusDto, LinkWalletDto } from '@credbull/api';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 const buildURL = (path: string) => {
@@ -16,7 +16,20 @@ export const createClient = (supabase: SupabaseClient) => {
     accountStatus: async (): Promise<AccountStatusDto> => {
       const headers = await authHeaders(supabase);
 
-      return fetch(buildURL('/accounts/status'), headers).then((res) => res.json());
+      const response = await fetch(buildURL('/accounts/status'), headers);
+      return response.json();
+    },
+    linkWallet: async (message: string, signature: string): Promise<LinkWalletDto> => {
+      const { headers } = await authHeaders(supabase);
+      const body = JSON.stringify({ message, signature });
+
+      const response = await fetch(buildURL('/accounts/link-wallet'), {
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        method: 'POST',
+        body,
+      });
+
+      return response.json();
     },
   };
 };

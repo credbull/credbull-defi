@@ -5,10 +5,11 @@ import { SupabaseModule } from '../../clients/supabase/supabase.module';
 
 import { AccountsController } from './accounts.controller';
 import { KycService } from './kyc.service';
+import { WalletService } from './wallet.service';
 
 @Module({
   imports: [SupabaseModule, EthersModule],
-  providers: [KycService],
+  providers: [KycService, WalletService],
   controllers: [AccountsController],
   exports: [KycService],
 })
