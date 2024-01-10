@@ -3,7 +3,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 
-import { CreateAccessTokenDto, RefreshTokenDto } from './refresh-token.dto';
+import { CreateAccessTokenDto, RefreshTokenDto } from './authentication.dto';
 
 @Controller('auth')
 @ApiTags('Authentication')
