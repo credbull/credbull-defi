@@ -13,3 +13,5 @@ localhost.json
 
 # Gas fee baseline
 .gas-snapshot
+
+index.ts

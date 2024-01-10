@@ -9,11 +9,13 @@ function getDirectories(path) {
     return fs.statSync(path + "/" + file).isDirectory();
   });
 }
+
 function getFiles(path) {
   return fs.readdirSync(path).filter(function (file) {
     return fs.statSync(path + "/" + file).isFile();
   });
 }
+
 function getAbiOfContract(contractName) {
   const current_path_to_artifacts = path.join(
     __dirname,
@@ -75,7 +77,7 @@ function main() {
     });
   });
 
-  const TARGET_DIR = "../nextjs/generated/";
+  const TARGET_DIR = "./";
 
   const fileContent = Object.entries(allGeneratedContracts).reduce(
     (content, [chainId, chainConfig]) => {
@@ -92,7 +94,7 @@ function main() {
     fs.mkdirSync(TARGET_DIR);
   }
   fs.writeFileSync(
-    `${TARGET_DIR}deployedContracts.ts`,
+    `${TARGET_DIR}index.ts`,
     prettier.format(
       `const contracts = {${fileContent}} as const; \n\n export default contracts`,
       {

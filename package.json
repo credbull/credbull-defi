@@ -15,8 +15,6 @@
     "deploy": "yarn workspace @credbull/foundry deploy",
     "deploy:verify": "yarn workspace @credbull/foundry deploy:verify",
     "fork": "yarn workspace @credbull/foundry fork",
-    "foundry:lint": "yarn workspace @credbull/foundry lint",
-    "foundry:test": "yarn workspace @credbull/foundry test",
     "generate": "yarn workspace @credbull/foundry generate",
     "build": "turbo build",
     "lint": "turbo lint",
@@ -24,9 +22,6 @@
     "format": "turbo format",
     "dev": "turbo dev",
     "postinstall": "husky install"
-  },
-  "resolutions": {
-    "usehooks-ts@^2.7.2": "patch:usehooks-ts@npm:^2.7.2#./.yarn/patches/usehooks-ts-npm-2.7.2-fceffe0e43.patch"
   },
   "devDependencies": {
     "husky": "~8.0.3",

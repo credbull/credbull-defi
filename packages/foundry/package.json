@@ -1,6 +1,8 @@
 {
   "name": "@credbull/foundry",
   "version": "0.0.1",
+  "types": "index.ts",
+  "main": "index.ts",
   "scripts": {
     "account": "node script/ListAccount.js",
     "chain": "anvil --config-out localhost.json",
