@@ -37,8 +37,8 @@ export class AccountsController {
   @ApiOperation({ summary: 'Whitelists a give address' })
   @ApiResponse({ status: 400, description: 'Incorrect user data' })
   @ApiResponse({ status: 200, description: 'Success', type: AccountStatusDto })
-  async whitelist(@Body() dtp: WhitelistAccountDto): Promise<AccountStatusDto> {
-    const { data, error } = await this.kyc.whitelist(dtp);
+  async whitelist(@Body() dto: WhitelistAccountDto): Promise<AccountStatusDto> {
+    const { data, error } = await this.kyc.whitelist(dto);
 
     if (error) throw new BadRequestException(error);
     if (!data) throw new NotFoundException();
@@ -50,7 +50,7 @@ export class AccountsController {
   @ApiOperation({ summary: 'Links a wallet with a user' })
   @ApiResponse({ status: 200, description: 'Success', type: UserWalletDto })
   async linkWallet(@Body() dto: WalletDto): Promise<UserWalletDto> {
-    const { error, data } = await this.wallets.link(dto);
+    const { data, error } = await this.wallets.link(dto);
 
     if (error) throw new BadRequestException(error);
     if (!data) throw new NotFoundException();
