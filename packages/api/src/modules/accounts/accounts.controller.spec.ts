@@ -30,6 +30,21 @@ describe('AccountsController', () => {
     controller = await module.resolve<AccountsController>(AccountsController);
   });
 
+  it('should return pending status if there is no kyc event', async () => {
+    const select = vi.fn();
+    const eq = vi.fn();
+    const single = vi.fn();
+    select.mockReturnValueOnce({ eq } as any);
+    eq.mockReturnValueOnce({ single } as any);
+    single.mockResolvedValueOnce({ data: null } as any);
+
+    client.from.mockReturnValue({ select } as any);
+
+    const { status } = await controller.status();
+
+    expect(status).toBe(KYCStatus.PENDING);
+  });
+
   it('should whitelist an existing account', async () => {
     const user_id = '1';
     const address = '0x0000000000';
