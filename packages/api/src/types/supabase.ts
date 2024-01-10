@@ -71,9 +71,9 @@ export interface Database {
           created_at: string;
           id: number;
           opened_at: string;
-          owner: string | null;
           status: Database['public']['Enums']['vault_status'];
           strategy_address: string;
+          tenant: string | null;
           type: Database['public']['Enums']['vault_type'];
         };
         Insert: {
@@ -82,9 +82,9 @@ export interface Database {
           created_at?: string;
           id?: number;
           opened_at: string;
-          owner?: string | null;
           status?: Database['public']['Enums']['vault_status'];
           strategy_address: string;
+          tenant?: string | null;
           type?: Database['public']['Enums']['vault_type'];
         };
         Update: {
@@ -93,15 +93,15 @@ export interface Database {
           created_at?: string;
           id?: number;
           opened_at?: string;
-          owner?: string | null;
           status?: Database['public']['Enums']['vault_status'];
           strategy_address?: string;
+          tenant?: string | null;
           type?: Database['public']['Enums']['vault_type'];
         };
         Relationships: [
           {
-            foreignKeyName: 'vaults_owner_fkey';
-            columns: ['owner'];
+            foreignKeyName: 'vaults_tenant_fkey';
+            columns: ['tenant'];
             isOneToOne: false;
             referencedRelation: 'users';
             referencedColumns: ['id'];
