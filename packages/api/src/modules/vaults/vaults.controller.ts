@@ -28,6 +28,6 @@ export class VaultsController {
     if (error) throw new BadRequestException(error);
     if (!data) throw new NotFoundException();
 
-    return new VaultsDto(data);
+    return new VaultsDto({ data });
   }
 }

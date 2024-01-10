@@ -3,7 +3,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 
-import { KYCStatus } from './account-status.dto';
+import { KYCStatus } from './kyc.dto';
 
 @Injectable()
 export class KycService {

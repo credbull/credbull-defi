@@ -2,12 +2,13 @@ import { BadRequestException, Body, Controller, Get, NotFoundException, Post, Us
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { SupabaseGuard, SupabaseRoles } from '../../clients/supabase/auth/supabase.guard';
+import { UserWalletDto } from '../../types/db.dto';
 
-import { AccountStatusDto, KYCStatus } from './account-status.dto';
+import { AccountStatusDto } from './accounts.dto';
+import { KYCStatus, WhitelistAccountDto } from './kyc.dto';
 import { KycService } from './kyc.service';
-import { LinkWalletDto, UserWalletDto } from './link-wallet.dto';
-import { WalletService } from './wallet.service';
-import { WhitelistAccountDto } from './whitelist-account.dto';
+import { WalletDto } from './wallets.dto';
+import { WalletsService } from './wallets.service';
 
 @Controller('accounts')
 @ApiBearerAuth()
@@ -16,7 +17,7 @@ import { WhitelistAccountDto } from './whitelist-account.dto';
 export class AccountsController {
   constructor(
     private readonly kyc: KycService,
-    private readonly wallets: WalletService,
+    private readonly wallets: WalletsService,
   ) {}
 
   @Get('status')
@@ -42,7 +43,7 @@ export class AccountsController {
   @Post('link-wallet')
   @ApiOperation({ summary: 'Links a wallet with a user' })
   @ApiResponse({ status: 200, description: 'Success', type: UserWalletDto })
-  async linkWallet(@Body() dto: LinkWalletDto): Promise<UserWalletDto> {
+  async linkWallet(@Body() dto: WalletDto): Promise<UserWalletDto> {
     const { error, data } = await this.wallets.link(dto);
 
     if (error) throw new BadRequestException(error);

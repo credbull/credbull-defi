@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 
+export enum KYCStatus {
+  ACTIVE = 'active',
+  PENDING = 'pending',
+  REJECTED = 'rejected',
+  SUSPENDED = 'suspended',
+}
+
 export class WhitelistAccountDto {
   @IsString()
   @ApiProperty({

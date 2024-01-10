@@ -6,9 +6,9 @@ import { DeepMockProxy, mockDeep } from 'vitest-mock-extended';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { Config } from '../../utils/module';
 
-import { KYCStatus } from './account-status.dto';
 import { AccountsController } from './accounts.controller';
 import { AccountsModule } from './accounts.module';
+import { KYCStatus } from './kyc.dto';
 
 describe('AccountsController', () => {
   let controller: AccountsController;

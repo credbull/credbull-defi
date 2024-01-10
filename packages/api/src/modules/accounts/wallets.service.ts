@@ -3,13 +3,13 @@ import { SiweMessage } from 'siwe';
 
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 
-import { LinkWalletDto } from './link-wallet.dto';
+import { WalletDto } from './wallets.dto';
 
 @Injectable()
-export class WalletService {
+export class WalletsService {
   constructor(private readonly supabase: SupabaseService) {}
 
-  async link(dto: LinkWalletDto) {
+  async link(dto: WalletDto) {
     const { message, signature } = dto;
 
     const supabase = this.supabase.client();

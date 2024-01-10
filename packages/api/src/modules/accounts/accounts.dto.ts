@@ -1,12 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
 
-export enum KYCStatus {
-  ACTIVE = 'active',
-  PENDING = 'pending',
-  REJECTED = 'rejected',
-  SUSPENDED = 'suspended',
-}
+import { KYCStatus } from './kyc.dto';
 
 export class AccountStatusDto {
   @IsEnum(KYCStatus)
