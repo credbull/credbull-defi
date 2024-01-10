@@ -74,7 +74,7 @@ export interface Database {
           owner: string | null;
           status: Database['public']['Enums']['vault_status'];
           strategy_address: string;
-          type: Database['public']['Enums']['vault_type'] | null;
+          type: Database['public']['Enums']['vault_type'];
         };
         Insert: {
           address: string;
@@ -85,7 +85,7 @@ export interface Database {
           owner?: string | null;
           status?: Database['public']['Enums']['vault_status'];
           strategy_address: string;
-          type?: Database['public']['Enums']['vault_type'] | null;
+          type?: Database['public']['Enums']['vault_type'];
         };
         Update: {
           address?: string;
@@ -96,7 +96,7 @@ export interface Database {
           owner?: string | null;
           status?: Database['public']['Enums']['vault_status'];
           strategy_address?: string;
-          type?: Database['public']['Enums']['vault_type'] | null;
+          type?: Database['public']['Enums']['vault_type'];
         };
         Relationships: [
           {
