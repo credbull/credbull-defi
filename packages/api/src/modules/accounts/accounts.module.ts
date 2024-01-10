@@ -11,6 +11,6 @@ import { WalletsService } from './wallets.service';
   imports: [SupabaseModule, EthersModule],
   providers: [KycService, WalletsService],
   controllers: [AccountsController],
-  exports: [KycService],
+  exports: [KycService, WalletsService],
 })
 export class AccountsModule {}
