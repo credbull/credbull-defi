@@ -5,10 +5,11 @@ import { VaultDto } from '../../types/db.dto';
 import { Tables } from '../../types/supabase';
 
 export const DISTRIBUTION_CONFIG = [
-  { entity: 'vault', percentage: 1.1, order: 0 },
-  { entity: 'treasury', percentage: 0.8, order: 1 },
-  { entity: 'activity', percentage: 1, order: 2 },
+  { entity: 'treasury', percentage: 0.8, order: 0 },
+  { entity: 'activity', percentage: 1, order: 1 },
 ] as const;
+
+export type DistributionConfig = typeof DISTRIBUTION_CONFIG;
 
 export class VaultsDto {
   @IsArray()

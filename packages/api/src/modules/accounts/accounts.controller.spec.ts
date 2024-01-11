@@ -57,7 +57,8 @@ describe('AccountsController', () => {
     single.mockResolvedValueOnce({ data: { user_id } } as any);
 
     const insert = vi.fn();
-    insert.mockResolvedValueOnce({ data: {} } as any);
+    insert.mockReturnValueOnce({ select } as any);
+    select.mockResolvedValueOnce({ data: [] } as any);
 
     admin.from.mockReturnValue({ select, insert } as any);
 
@@ -76,8 +77,10 @@ describe('AccountsController', () => {
         '0x9bc8fd1dd2c25bead1582e3ecd4a949ee6093ef47d3d1bcd82c5cf08e71f7fc33979d365cddcb3c1172b4e72fab0775b53ab60af990b23f0fa0bdc8cca03059c1b',
     };
 
+    const select = vi.fn();
     const insert = vi.fn();
-    insert.mockResolvedValueOnce({ data: { user_id } } as any);
+    insert.mockReturnValueOnce({ select } as any);
+    select.mockResolvedValueOnce({ data: [{ user_id }] } as any);
 
     client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: user_id } } } as any);
     client.from.mockReturnValue({ insert } as any);

@@ -64,6 +64,80 @@ export interface Database {
           },
         ];
       };
+      vault_distribution_configs: {
+        Row: {
+          created_at: string;
+          entity_id: number;
+          id: number;
+          order: number;
+          percentage: number;
+          vault_id: number;
+        };
+        Insert: {
+          created_at?: string;
+          entity_id: number;
+          id?: number;
+          order: number;
+          percentage: number;
+          vault_id: number;
+        };
+        Update: {
+          created_at?: string;
+          entity_id?: number;
+          id?: number;
+          order?: number;
+          percentage?: number;
+          vault_id?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'vault_distribution_configs_entity_id_fkey';
+            columns: ['entity_id'];
+            isOneToOne: false;
+            referencedRelation: 'vault_distribution_entities';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'vault_distribution_configs_vault_id_fkey';
+            columns: ['vault_id'];
+            isOneToOne: false;
+            referencedRelation: 'vaults';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      vault_distribution_entities: {
+        Row: {
+          address: string;
+          created_at: string;
+          id: number;
+          type: Database['public']['Enums']['vault_distribution_entity_types'];
+          vault_id: number;
+        };
+        Insert: {
+          address: string;
+          created_at?: string;
+          id?: number;
+          type: Database['public']['Enums']['vault_distribution_entity_types'];
+          vault_id: number;
+        };
+        Update: {
+          address?: string;
+          created_at?: string;
+          id?: number;
+          type?: Database['public']['Enums']['vault_distribution_entity_types'];
+          vault_id?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'vault_distribution_entities_vault_id_fkey';
+            columns: ['vault_id'];
+            isOneToOne: false;
+            referencedRelation: 'vaults';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       vaults: {
         Row: {
           address: string;
@@ -117,7 +191,8 @@ export interface Database {
     };
     Enums: {
       kyc_event: 'processing' | 'accepted' | 'rejected';
-      vault_status: 'created' | 'ready';
+      vault_distribution_entity_types: 'activity_reward' | 'treasury' | 'vault' | 'custodian';
+      vault_status: 'created' | 'ready' | 'matured';
       vault_type: 'fixed_yield';
     };
     CompositeTypes: {

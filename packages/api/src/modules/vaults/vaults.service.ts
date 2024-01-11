@@ -5,13 +5,14 @@ import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
 
-import { DISTRIBUTION_CONFIG } from './vaults.dto';
+import { CustodianService } from './custodian.service';
 
 @Injectable()
 export class VaultsService {
   constructor(
     private readonly ethers: EthersService,
     private readonly supabase: SupabaseService,
+    private readonly custodian: CustodianService,
   ) {}
 
   async current(): Promise<ServiceResponse<Tables<'vaults'>[]>> {
@@ -25,6 +26,8 @@ export class VaultsService {
   }
 
   async matureOutstanding(): Promise<ServiceResponse<Tables<'vaults'>[]>> {
+    const errors = [];
+
     const { data } = await this.supabase
       .admin()
       .from('vaults')
@@ -35,36 +38,84 @@ export class VaultsService {
     if (!data) return { data: [] };
 
     for (const vault of data) {
-      // get final total assets from vault contract
-      const totalAssets = 1000;
-      // get final total returns from custodian (circle)
-      let totalReturns = 1200;
+      const assets = await Promise.all([
+        this.expectedAssetsOnMaturity(),
+        this.custodian.totalAssets(),
+        this.distributionConfig(vault),
+      ]);
+      for (const call of assets) if ('error' in call) errors.push(call.error);
+      if (assets.filter(({ error }) => error).length > 0) continue;
 
-      const splits = [];
-      for (const { entity, percentage } of this.distributionConfig()) {
-        const amount =
-          entity === 'vault' //
-            ? totalAssets * percentage
-            : totalReturns * percentage;
+      const [{ data: expectedAssetsOnMaturity }, { data: custodianTotalAssets }, { data: distributionConfig }] = assets;
 
-        splits.push({ entity, amount });
-        totalReturns -= amount;
-      }
-
-      // distribute returns
-      // api call with idempotency key to circle
+      const transfers = await this.transferDistribution(
+        vault,
+        expectedAssetsOnMaturity!,
+        custodianTotalAssets!,
+        distributionConfig!,
+      );
+      for (const call of transfers) if ('error' in call) errors.push(call.error);
+      if (transfers.filter(({ error }) => error).length > 0) continue;
 
       // set vault as matured in the blockchain and Supabase
-      await Promise.all([
+      const maturing = await Promise.all([
         this.supabase.admin().from('vaults').update({ status: 'created' }).eq('id', vault.id),
         this.ethers.deployer().sendTransaction({}),
       ]);
+      for (const call of maturing) if ('error' in call) errors.push(call.error);
     }
 
-    return { data };
+    return errors.length > 0 //
+      ? { error: new AggregateError(errors) }
+      : { data };
   }
 
-  private distributionConfig() {
-    return DISTRIBUTION_CONFIG;
+  async expectedAssetsOnMaturity(): Promise<ServiceResponse<number>> {
+    // get final total yield + principal from vault contract
+    return { data: 1100 };
+  }
+
+  private async transferDistribution(
+    vault: Tables<'vaults'>,
+    expectedAssetsOnMaturity: number,
+    custodianTotalAssets: number,
+    distributionConfig: NonNullable<Awaited<ReturnType<typeof this.distributionConfig>>['data']>,
+  ) {
+    const splits = this.calculateDistribution(
+      vault,
+      expectedAssetsOnMaturity,
+      custodianTotalAssets,
+      distributionConfig,
+    );
+
+    return Promise.all(splits.map(async (split) => this.custodian.transfer(split)));
+  }
+
+  private calculateDistribution(
+    vault: Tables<'vaults'>,
+    expectedAssetsOnMaturity: number,
+    custodianTotalAssets: number,
+    distributionConfig: NonNullable<Awaited<ReturnType<typeof this.distributionConfig>>['data']>,
+  ) {
+    let totalReturns = custodianTotalAssets - expectedAssetsOnMaturity;
+    const splits = [{ address: vault.address, amount: expectedAssetsOnMaturity }];
+
+    for (const { vault_distribution_entities, percentage } of distributionConfig) {
+      const amount = totalReturns * percentage;
+
+      splits.push({ address: vault_distribution_entities!.address, amount });
+      totalReturns -= amount;
+    }
+
+    return splits;
+  }
+
+  private async distributionConfig(vault: Tables<'vaults'>) {
+    return this.supabase
+      .admin()
+      .from('vault_distribution_configs')
+      .select('*, vault_distribution_entities (type, address)')
+      .eq('vault_id', vault.id)
+      .order('order');
   }
 }

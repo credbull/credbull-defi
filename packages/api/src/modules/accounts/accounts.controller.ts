@@ -55,6 +55,7 @@ export class AccountsController {
     if (error) throw new BadRequestException(error);
     if (!data) throw new NotFoundException();
 
-    return new UserWalletDto(data);
+    const [wallet] = data;
+    return new UserWalletDto(wallet);
   }
 }
