@@ -55,9 +55,20 @@ contract MetaTxTest is Test {
         return bytes.concat(r, s, bytes1(v));
     }
 
+    // function forwarderDomainSeparator() internal view returns (bytes32) {
+    //     return keccak256(
+    //         abi.encode(_TYPE_HASH, keccak256(bytes("Cred")), keccak256(bytes("1")), block.chainid, address(forwarder))
+    //     );
+    // }
+
     function forwarderDomainSeparator() internal view returns (bytes32) {
+        console2.logBytes32(_TYPE_HASH);
+        console2.logBytes(bytes("Cred"));
+        console2.log('start domain hash');
+        console2.logBytes( abi.encode(_TYPE_HASH, keccak256(bytes("Cred")), keccak256(bytes("1")), 5777, "0x5e3f195cf47218222d50296b79785c8d2F693204"));
+        console2.log('end hash');
         return keccak256(
-            abi.encode(_TYPE_HASH, keccak256(bytes("Cred")), keccak256(bytes("1")), block.chainid, address(forwarder))
+            abi.encode(_TYPE_HASH, keccak256(bytes("Cred")), keccak256(bytes("1")), 5777, "0x5e3f195cf47218222d50296b79785c8d2F693204")
         );
     }
 
@@ -76,6 +87,8 @@ contract MetaTxTest is Test {
         uint256 amount = 100 ether;
         bytes memory data = abi.encodeWithSelector(IERC4626.deposit.selector, amount, signer.addr);
 
+        // console2.logBytes(data);
+
         ERC2771Forwarder.ForwardRequestData memory request = ERC2771Forwarder.ForwardRequestData({
             from: signer.addr,
             to: address(vault),
@@ -87,7 +100,7 @@ contract MetaTxTest is Test {
         });
 
         request.signature = getForwardRequestDataSignature(
-            request, forwarder.nonces(sender.addr), signer.key, forwarderDomainSeparator()
+            request, forwarder.nonces(signer.addr), signer.key, forwarderDomainSeparator()
         );
 
         vm.prank(signer.addr);
