@@ -24,18 +24,21 @@ export class KycService {
       : { data: KYCStatus.REJECTED };
   }
 
-  async whitelist(dto: WhitelistAccountDto): Promise<ServiceResponse<Tables<'kyc_events'>>> {
+  async whitelist(dto: WhitelistAccountDto): Promise<ServiceResponse<Tables<'kyc_events'>[]>> {
     const { address } = dto;
     const client = this.supabase.admin();
 
     const wallet = await client.from('user_wallets').select().eq('address', address).single();
     if (wallet.error) return wallet;
 
-    return client.from('kyc_events').insert({
-      address,
-      user_id: wallet.data.user_id,
-      event_name: 'accepted',
-    });
+    return client
+      .from('kyc_events')
+      .insert({
+        address,
+        user_id: wallet.data.user_id,
+        event_name: 'accepted',
+      })
+      .select();
   }
 
   private async checkOnChain(address: string): Promise<boolean> {

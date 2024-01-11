@@ -11,7 +11,7 @@ import { WalletDto } from './wallets.dto';
 export class WalletsService {
   constructor(private readonly supabase: SupabaseService) {}
 
-  async link(dto: WalletDto): Promise<ServiceResponse<Tables<'user_wallets'>>> {
+  async link(dto: WalletDto): Promise<ServiceResponse<Tables<'user_wallets'>[]>> {
     const { message, signature } = dto;
     const supabase = this.supabase.client();
 
@@ -21,9 +21,12 @@ export class WalletsService {
     const { error: verifyError, data } = await new SiweMessage(message).verify({ signature });
     if (verifyError) return { error: verifyError };
 
-    return supabase.from('user_wallets').insert({
-      user_id: auth.user?.id,
-      address: data.address,
-    });
+    return supabase
+      .from('user_wallets')
+      .insert({
+        user_id: auth.user?.id,
+        address: data.address,
+      })
+      .select();
   }
 }
