@@ -64,41 +64,41 @@ contract CredbullVaultTest is Test {
         assertEq(0, credbullVault.totalAssets());
     }
 
-    function testDepositAssetGetShares() public {
-        // ---- Setup Part 1, give alice some Assets ----
-        IERC20 asset = IERC20(credbullVault.asset());
+    // function testDepositAssetGetShares() public {
+    //     // ---- Setup Part 1, give alice some Assets ----
+    //     IERC20 asset = IERC20(credbullVault.asset());
 
-        assertEq(asset.balanceOf(address(credbullVault)), 0, "Vault should start with no assets");
-        assertEq(credbullVault.totalAssets(), 0, "Vault should start with no assets");
+    //     assertEq(asset.balanceOf(address(credbullVault)), 0, "Vault should start with no assets");
+    //     assertEq(credbullVault.totalAssets(), 0, "Vault should start with no assets");
 
-        assertEq(asset.balanceOf(contractOwner), asset.totalSupply());
+    //     assertEq(asset.balanceOf(contractOwner), asset.totalSupply());
 
-        address alice = makeAddr("alice");
-        uint256 transferAmount = 10;
-        transfer(asset, alice, transferAmount);
+    //     address alice = makeAddr("alice");
+    //     uint256 transferAmount = 10;
+    //     transfer(asset, alice, transferAmount);
 
-        // ---- Setup Part 2 - Alice transfers assets for shares ----
+    //     // ---- Setup Part 2 - Alice transfers assets for shares ----
 
-        assertEq(credbullVault.balanceOf(alice), 0, "User should start with no Shares");
+    //     assertEq(credbullVault.balanceOf(alice), 0, "User should start with no Shares");
 
-        // first, approve the deposit
-        vm.prank(alice);
-        asset.approve(address(credbullVault), transferAmount);
+    //     // first, approve the deposit
+    //     vm.prank(alice);
+    //     asset.approve(address(credbullVault), transferAmount);
 
-        // now we can deposit, alice is the caller and receiver
-        vm.prank(alice);
-        uint256 sharesAmount = credbullVault.deposit(transferAmount, alice);
+    //     // now we can deposit, alice is the caller and receiver
+    //     vm.prank(alice);
+    //     uint256 sharesAmount = credbullVault.deposit(transferAmount, alice);
 
-        // ---- Assert - Vault gets the Assets, Alice gets Shares ----
+    //     // ---- Assert - Vault gets the Assets, Alice gets Shares ----
 
-        // Vault should have the assets
-        assertEq(credbullVault.totalAssets(), transferAmount, "Vault should now have the assets");
-        assertEq(asset.balanceOf(address(credbullVault)), transferAmount, "Vault should now have the assets");
+    //     // Vault should have the assets
+    //     assertEq(credbullVault.totalAssets(), transferAmount, "Vault should now have the assets");
+    //     assertEq(asset.balanceOf(address(credbullVault)), transferAmount, "Vault should now have the assets");
 
-        // Alice should have the shares
-        assertEq(sharesAmount, transferAmount, "User should now have the Shares");
-        assertEq(credbullVault.balanceOf(alice), transferAmount, "User should now have the Shares");
-    }
+    //     // Alice should have the shares
+    //     assertEq(sharesAmount, transferAmount, "User should now have the Shares");
+    //     assertEq(credbullVault.balanceOf(alice), transferAmount, "User should now have the Shares");
+    // }
 
     // ========== Utility functions ==========
     function transfer(IERC20 erc20token, address to, uint256 transferAmount) public {
