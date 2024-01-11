@@ -4,6 +4,7 @@ import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
+import { anyCallHasFailed } from '../../utils/errors';
 
 import { CustodianService } from './custodian.service';
 
@@ -44,7 +45,7 @@ export class VaultsService {
         this.distributionConfig(vault),
       ]);
       for (const call of assets) if ('error' in call) errors.push(call.error);
-      if (assets.filter(({ error }) => error).length > 0) continue;
+      if (anyCallHasFailed(assets)) continue;
 
       const [{ data: expectedAssetsOnMaturity }, { data: custodianTotalAssets }, { data: distributionConfig }] = assets;
 
@@ -55,7 +56,7 @@ export class VaultsService {
         distributionConfig!,
       );
       for (const call of transfers) if ('error' in call) errors.push(call.error);
-      if (transfers.filter(({ error }) => error).length > 0) continue;
+      if (anyCallHasFailed(transfers)) continue;
 
       // set vault as matured in the blockchain and Supabase
       const maturing = await Promise.all([
