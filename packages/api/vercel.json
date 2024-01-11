@@ -10,7 +10,21 @@
     {
       "src": "/(.*)",
       "dest": "/src/main.ts",
-      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "HEAD",
+        "OPTIONS"
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/vaults/mature-outstanding",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
