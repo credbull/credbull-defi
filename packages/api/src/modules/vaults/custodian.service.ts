@@ -14,12 +14,12 @@ export class CustodianService {
   ) {}
 
   async totalAssets(): Promise<ServiceResponse<number>> {
-    // get final total returns from custodian (circle)
+    // TODO: get final total returns from custodian (circle)
     return { data: 1200 };
   }
 
   async transfer(dto: CustodianTransferDto): Promise<ServiceResponse<CustodianTransferDto>> {
-    // transfer funds from custodian to address
+    // TODO: create call to custodian (circle) to transfer assets; mock custodian for now
     return { data: dto };
   }
 }

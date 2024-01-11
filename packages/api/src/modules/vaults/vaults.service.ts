@@ -58,7 +58,7 @@ export class VaultsService {
       for (const call of transfers) if ('error' in call) errors.push(call.error);
       if (anyCallHasFailed(transfers)) continue;
 
-      // set vault as matured in the blockchain and Supabase
+      // TODO: create call to mature vault in vault contract; normalize ethers service returns
       const maturing = await Promise.all([
         this.supabase.admin().from('vaults').update({ status: 'created' }).eq('id', vault.id),
         this.ethers.deployer().sendTransaction({}),
@@ -66,13 +66,11 @@ export class VaultsService {
       for (const call of maturing) if ('error' in call) errors.push(call.error);
     }
 
-    return errors.length > 0 //
-      ? { error: new AggregateError(errors) }
-      : { data };
+    return errors.length > 0 ? { error: new AggregateError(errors) } : { data };
   }
 
   async expectedAssetsOnMaturity(): Promise<ServiceResponse<number>> {
-    // get final total yield + principal from vault contract
+    // TODO: get final total yield + principal from vault contract
     return { data: 1100 };
   }
 
