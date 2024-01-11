@@ -19,18 +19,16 @@ contract VaultTest is Test {
     address custodian;
     address asset;
 
-
-    address alice = makeAddr('alice');
-    address bob = makeAddr('bob');
+    address alice = makeAddr("alice");
+    address bob = makeAddr("bob");
 
     uint256 private constant INITIAL_BALANCE = 1000 ether;
-
 
     function setUp() public {
         deployer = new DeployVault();
         (vault, config) = deployer.run();
 
-        (owner, asset ,,,custodian) = config.activeNetworkConfig();
+        (owner, asset,,, custodian) = config.activeNetworkConfig();
 
         MockStablecoin(asset).mint(alice, INITIAL_BALANCE);
         MockStablecoin(asset).mint(bob, INITIAL_BALANCE);
@@ -41,7 +39,7 @@ contract VaultTest is Test {
     }
 
     function test__ShareNameAndSymbol() public {
-        (,, string memory shareName, string memory shareSymbol, ) = config.activeNetworkConfig();
+        (,, string memory shareName, string memory shareSymbol,) = config.activeNetworkConfig();
         assertEq(vault.name(), shareName);
         assertEq(vault.symbol(), shareSymbol);
     }
@@ -55,7 +53,6 @@ contract VaultTest is Test {
         assertEq(IERC20(asset).balanceOf(address(vault)), 0, "Vault should start with no assets");
         assertEq(vault.totalAssets(), 0, "Vault should start with no assets");
         assertEq(vault.balanceOf(alice), 0, "User should start with no Shares");
-
 
         // ---- Setup Part 2 - Alice Deposit and Receives shares ----
         uint256 depositAmount = 10 ether;
@@ -78,7 +75,6 @@ contract VaultTest is Test {
         uint256 depositAmount = 10 ether;
         //Call internal deposit function
         uint256 shares = deposit(alice, depositAmount);
-
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
         uint256 finalBalance = 11 ether;
@@ -118,7 +114,7 @@ contract VaultTest is Test {
         vm.stopPrank();
     }
 
-    function deposit(address user, uint256 assets) internal returns(uint256 shares) {
+    function deposit(address user, uint256 assets) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
         IERC20(asset).approve(address(vault), assets);

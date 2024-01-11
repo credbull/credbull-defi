@@ -19,9 +19,7 @@ contract DeployMockStablecoin is ScaffoldETHDeploy {
     function run(address contractOwnerAddress) public returns (MockStablecoin) {
         vm.startBroadcast(contractOwnerAddress);
 
-        MockStablecoin mockStablecoin = new MockStablecoin(
-            BASE_TOKEN_AMOUNT
-        );
+        MockStablecoin mockStablecoin = new MockStablecoin(BASE_TOKEN_AMOUNT);
 
         console.logString(string.concat("MockStablecoin deployed at: ", vm.toString(address(mockStablecoin))));
 

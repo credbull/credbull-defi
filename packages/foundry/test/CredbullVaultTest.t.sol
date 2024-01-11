@@ -18,9 +18,8 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 contract CredbullVaultTest is Test {
     DeployCredbullVault deployCredbullVault;
     CredbullVault public credbullVault;
-    address contractOwner = makeAddr('contractOwner');
-    address custodian = makeAddr('custodian');
-
+    address contractOwner = makeAddr("contractOwner");
+    address custodian = makeAddr("custodian");
 
     function setUp() public {
         INetworkConfig networkConfig = new LocalNetworkConfig(contractOwner);

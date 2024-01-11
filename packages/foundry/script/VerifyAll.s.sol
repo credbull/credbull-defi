@@ -10,7 +10,6 @@ import "solidity-bytes-utils/BytesLib.sol";
  * @notice calls the tryffi function on the Vm contract
  * @notice will be deleted once the forge/std is updated
  */
-
 struct FfiResult {
     int32 exit_code;
     bytes stdout;
