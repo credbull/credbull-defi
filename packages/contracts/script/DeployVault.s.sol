@@ -3,9 +3,10 @@
 pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
-import { CredbullVault } from "../contracts/CredbullVault.sol";
+import { CredbullVault } from "../src/CredbullVault.sol";
 import { HelperConfig } from "./HelperConfig.s.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { Exporter } from "./DeployerExporter.s.sol";
 
 contract DeployVault is Script {
     CredbullVault vault;

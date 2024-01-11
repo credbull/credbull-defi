@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
 import { HelperConfig } from "../script/HelperConfig.s.sol";
-import { CredbullVault } from "../contracts/CredbullVault.sol";
+import { CredbullVault } from "../src/CredbullVault.sol";
 import { DeployVault } from "../script/DeployVault.s.sol";
 import { console2 } from "forge-std/console2.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
