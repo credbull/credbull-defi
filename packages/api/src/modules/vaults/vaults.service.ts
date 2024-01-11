@@ -27,18 +27,18 @@ export class VaultsService {
   }
 
   async matureOutstanding(): Promise<ServiceResponse<Tables<'vaults'>[]>> {
-    const errors = [];
-
-    const { data } = await this.supabase
+    const vaults = await this.supabase
       .admin()
       .from('vaults')
       .select('*')
       .eq('status', 'ready')
       .lte('closed_at', 'now()');
 
-    if (!data) return { data: [] };
+    if (vaults.error) return vaults;
+    if (!vaults.data) return { data: [] };
 
-    for (const vault of data) {
+    const errors = [];
+    for (const vault of vaults.data) {
       const assets = await Promise.all([
         this.expectedAssetsOnMaturity(),
         this.custodian.totalAssets(),
@@ -66,7 +66,7 @@ export class VaultsService {
       for (const call of maturing) if ('error' in call) errors.push(call.error);
     }
 
-    return errors.length > 0 ? { error: new AggregateError(errors) } : { data };
+    return errors.length > 0 ? { error: new AggregateError(errors) } : vaults;
   }
 
   async expectedAssetsOnMaturity(): Promise<ServiceResponse<number>> {
