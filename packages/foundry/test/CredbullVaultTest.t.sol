@@ -18,14 +18,15 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 contract CredbullVaultTest is Test {
     DeployCredbullVault deployCredbullVault;
     CredbullVault public credbullVault;
-    address contractOwnerAddr;
+    address contractOwner = makeAddr('contractOwner');
+    address custodian = makeAddr('custodian');
+
 
     function setUp() public {
-        contractOwnerAddr = msg.sender;
-
-        INetworkConfig networkConfig = new LocalNetworkConfig(contractOwnerAddr);
+        INetworkConfig networkConfig = new LocalNetworkConfig(contractOwner);
+        vm.prank(contractOwner);
         deployCredbullVault = new DeployCredbullVault(networkConfig);
-        credbullVault = deployCredbullVault.run(contractOwnerAddr);
+        credbullVault = deployCredbullVault.run(contractOwner);
     }
 
     function testDeploymentReturnsToken() public {
@@ -35,7 +36,7 @@ contract CredbullVaultTest is Test {
     function testOwnerIsMsgSender() public {
         console.log("Token Owner", credbullVault.owner());
 
-        assertEq(credbullVault.owner(), contractOwnerAddr);
+        assertEq(credbullVault.owner(), contractOwner);
     }
 
     function testShareSymbolIsSetOnDeploy() public {
@@ -57,7 +58,7 @@ contract CredbullVaultTest is Test {
     function testOwnerHasAssetTotalSupply() public {
         IERC20 asset = IERC20(credbullVault.asset());
 
-        assertEq(asset.balanceOf(contractOwnerAddr), asset.totalSupply());
+        assertEq(asset.balanceOf(contractOwner), asset.totalSupply());
     }
 
     function testTotalAssetsIsZero() public {
@@ -71,7 +72,7 @@ contract CredbullVaultTest is Test {
         assertEq(asset.balanceOf(address(credbullVault)), 0, "Vault should start with no assets");
         assertEq(credbullVault.totalAssets(), 0, "Vault should start with no assets");
 
-        assertEq(asset.balanceOf(contractOwnerAddr), asset.totalSupply());
+        assertEq(asset.balanceOf(contractOwner), asset.totalSupply());
 
         address alice = makeAddr("alice");
         uint256 transferAmount = 10;
@@ -102,7 +103,7 @@ contract CredbullVaultTest is Test {
 
     // ========== Utility functions ==========
     function transfer(IERC20 erc20token, address to, uint256 transferAmount) public {
-        transfer(erc20token, contractOwnerAddr, to, transferAmount);
+        transfer(erc20token, contractOwner, to, transferAmount);
     }
 
     function transfer(IERC20 erc20token, address from, address to, uint256 transferAmount) public {

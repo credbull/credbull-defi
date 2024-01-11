@@ -33,7 +33,8 @@ contract DeployCredbullVault is ScaffoldETHDeploy {
             contractOwnerAddress,
             credbullVaultAsset,
             VAULT_SHARE_NAME,
-            VAULT_SHARE_SYMBOL
+            VAULT_SHARE_SYMBOL,
+            0xA98308F10b7850bDBEBcE707E70dD3A3aE832cc6
         );
 
         console.logString(string.concat("CredbullVault deployed at: ", vm.toString(address(credbullVault))));
