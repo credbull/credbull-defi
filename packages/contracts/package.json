@@ -2,7 +2,7 @@
   "name": "@credbull/contracts",
   "private": true,
   "scripts": {
-    "dev": "anvil --config-out localhost.json",
+    "dev": "anvil --config-out localhost.json & make deploy-local",
     "build": "forge build",
     "test": "forge test",
     "format": "forge fmt",
