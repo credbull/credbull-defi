@@ -11,6 +11,10 @@ import { anyCallHasFailed } from '../../utils/errors';
 
 import { CustodianService } from './custodian.service';
 
+type DistributionConfig = Tables<'vault_distribution_configs'> & {
+  vault_distribution_entities: Pick<Tables<'vault_distribution_entities'>, 'type' | 'address'>;
+};
+
 @Injectable()
 export class VaultsService {
   constructor(
@@ -83,7 +87,7 @@ export class VaultsService {
     vault: Tables<'vaults'>,
     expectedAssetsOnMaturity: BigNumber,
     custodianTotalAssets: BigNumber,
-    distributionConfig: NonNullable<Awaited<ReturnType<typeof this.distributionConfig>>['data']>,
+    distributionConfig: DistributionConfig[],
   ) {
     const splits = this.calculateDistribution(
       vault,
@@ -99,7 +103,7 @@ export class VaultsService {
     vault: Tables<'vaults'>,
     expectedAssetsOnMaturity: BigNumber,
     custodianTotalAssets: BigNumber,
-    distributionConfig: NonNullable<Awaited<ReturnType<typeof this.distributionConfig>>['data']>,
+    distributionConfig: DistributionConfig[],
   ) {
     let totalReturns = custodianTotalAssets.sub(expectedAssetsOnMaturity);
     const splits = [{ address: vault.address, amount: expectedAssetsOnMaturity }];
@@ -114,12 +118,13 @@ export class VaultsService {
     return splits;
   }
 
-  private async distributionConfig(vault: Tables<'vaults'>) {
+  private async distributionConfig(vault: Tables<'vaults'>): Promise<ServiceResponse<DistributionConfig[]>> {
     return this.supabase
       .admin()
       .from('vault_distribution_configs')
       .select('*, vault_distribution_entities (type, address)')
       .eq('vault_id', vault.id)
-      .order('order');
+      .order('order')
+      .returns<DistributionConfig[]>();
   }
 }
