@@ -6,15 +6,20 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { console2 } from "forge-std/console2.sol";
 
 // Vaults exchange Assets for Shares in the Vault
 // see: https://eips.ethereum.org/EIPS/eip-4626
 contract CredbullVault is ERC4626, Ownable {
-    //Error to revert on withdraw if Rebase is not completed
-    error CredbullVault__RebaseNotCompleted();
+    using Math for uint256;
 
-    //Address of the custodian to recieve the assets on deposit and mint
+    //Error to revert on withdraw if vault is not matured
+    error CredbullVault__NotMatured();
+    //Error to revert mature if there is not enough balance to mature
+    error CredbullVault__NotEnoughBalanceToMature();
+
+    //Address of the custodian to receive the assets on deposit and mint
     address public custodian;
 
     /**
@@ -24,16 +29,24 @@ contract CredbullVault is ERC4626, Ownable {
      */
     uint256 private _totalAssetDeposited;
 
-    //A variable to track status of rebase
-    bool private isRebaseCompleted;
+    /**
+     * @dev
+     * The fixed yield that's promised to the users on deposit.
+     */
+    uint256 private _fixedYield;
 
     /**
-     * @notice - Modifier to check for rebase status.
-     * @dev - Used on internal withdraw method to check for rebase status
+     * @notice - Track if vault is matured
      */
-    modifier onlyAfterRebase() {
-        if (!isRebaseCompleted) {
-            revert CredbullVault__RebaseNotCompleted();
+    bool public isMatured;
+
+    /**
+     * @notice - Modifier to check for maturity status.
+     * @dev - Used on internal withdraw method to check for maturity status
+     */
+    modifier onlyAfterMaturity() {
+        if (!isMatured) {
+            revert CredbullVault__NotMatured();
         }
 
         _;
@@ -43,15 +56,20 @@ contract CredbullVault is ERC4626, Ownable {
      * @param _owner - The owner of this contract
      * @param _asset - The address of the asset to be deposited to this vault
      * @param _shareName - The name for the share token of the vault
-     * @param _shareSymbol - The symbol for the share tokenn of the vault
+     * @param _shareSymbol - The symbol for the share token of the vault
      * @param _custodian - The custodian wallet address to transfer asset.
+     * @param _promisedYield - The fixed yield that's promised to the users on deposit.
      */
-    constructor(address _owner, IERC20 _asset, string memory _shareName, string memory _shareSymbol, address _custodian)
-        ERC4626(_asset)
-        ERC20(_shareName, _shareSymbol)
-        Ownable(_owner)
-    {
+    constructor(
+        address _owner,
+        IERC20 _asset,
+        string memory _shareName,
+        string memory _shareSymbol,
+        address _custodian,
+        uint256 _promisedYield
+    ) ERC4626(_asset) ERC20(_shareName, _shareSymbol) Ownable(_owner) {
         custodian = _custodian;
+        _fixedYield = _promisedYield;
     }
 
     /**
@@ -73,7 +91,7 @@ contract CredbullVault is ERC4626, Ownable {
     function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         internal
         override
-        onlyAfterRebase
+        onlyAfterMaturity
     {
         if (caller != owner) {
             _spendAllowance(owner, caller, shares);
@@ -88,27 +106,31 @@ contract CredbullVault is ERC4626, Ownable {
 
     /**
      * @notice - Returns the total assets deposited into the vault
-     * @dev - The function is overriden to return the _totalAssetDeposited value to calculate shares.
+     * @dev - The function is overridden to return the _totalAssetDeposited value to calculate shares.
      */
     function totalAssets() public view override returns (uint256) {
         return _totalAssetDeposited;
     }
 
     /**
-     * @notice - Rebase method to deposit back the assets that was sent to custodian wallet with addition yeild earned.
-     * @dev - _totalAssetDeposited to be updated to calculate the right amount of asset with yeild in proportion to the shares received.
-     *
-     * @custom:audit - The logic used in the function is based on the assumption that the 'amount' will always be currect with additional 10% yield.
-     * Any valut less than the '_totalAssetDeposited' will result in unexpected behaviour, where users might get less asset than they deposited and
-     * also possiblility of early withdraw since rebaseCompleted is set to true.
-     *
-     * TODO: Finalize on the logic on updating the _totalAssetDeposited value
-     *
-     * @param amount - The total number of asset to be deposited back.
+     * @notice - Returns expected assets on maturity
      */
-    function rebase(uint256 amount) external onlyOwner {
-        isRebaseCompleted = true;
-        SafeERC20.safeTransferFrom(IERC20(asset()), msg.sender, address(this), amount);
-        _totalAssetDeposited = IERC20(asset()).balanceOf(address(this));
+    function expectedAssetsOnMaturity() public view returns (uint256) {
+        return _totalAssetDeposited.mulDiv(100 /* 100% + */ + _fixedYield, 100);
+    }
+
+    /**
+     * @notice - mature method to mature the vault after the assets that was deposited from the custodian wallet with addition yield earned.
+     * @dev - _totalAssetDeposited to be updated to calculate the right amount of asset with yield in proportion to the shares received.
+     */
+    function mature() external onlyOwner {
+        uint256 currentBalance = IERC20(asset()).balanceOf(address(this));
+
+        if (this.expectedAssetsOnMaturity() > currentBalance) {
+            revert CredbullVault__NotEnoughBalanceToMature();
+        }
+
+        _totalAssetDeposited = currentBalance;
+        isMatured = true;
     }
 }

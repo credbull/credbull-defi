@@ -49,8 +49,8 @@ contract HelperConfig is Script {
             asset: address(usdc),
             shareName: "Share_anv",
             shareSymbol: "SYM_anv",
-            owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-            custodian: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+            owner: makeAddr("owner"),
+            custodian: makeAddr("custodian")
         });
 
         return anvilConfig;

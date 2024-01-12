@@ -10,17 +10,17 @@ import { console2 } from "forge-std/console2.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { MockStablecoin } from "./mocks/MockStablecoin.sol";
 
-contract VaultTest is Test {
-    CredbullVault vault;
-    DeployVault deployer;
-    HelperConfig config;
+contract CredbullVaultTest is Test {
+    CredbullVault private vault;
+    DeployVault private deployer;
+    HelperConfig private config;
 
-    address owner;
-    address custodian;
-    address asset;
+    address private owner;
+    address private custodian;
+    address private asset;
 
-    address alice = makeAddr("alice");
-    address bob = makeAddr("bob");
+    address private alice = makeAddr("alice");
+    address private bob = makeAddr("bob");
 
     uint256 private constant INITIAL_BALANCE = 1000 ether;
 
@@ -77,17 +77,16 @@ contract VaultTest is Test {
         uint256 shares = deposit(alice, depositAmount);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        uint256 finalBalance = 11 ether;
-        vm.prank(custodian);
-        IERC20(asset).transfer(owner, depositAmount);
+        MockStablecoin(asset).mint(custodian, 1 ether);
+        uint256 finalBalance = MockStablecoin(asset).balanceOf(custodian);
 
-        MockStablecoin(asset).mint(owner, 1 ether);
-        assertEq(IERC20(asset).balanceOf(owner), finalBalance);
-
-        vm.startPrank(owner);
-        IERC20(asset).approve(address(vault), finalBalance);
-        vault.rebase(finalBalance);
+        vm.startPrank(custodian);
+        IERC20(asset).approve(address(custodian), finalBalance);
+        IERC20(asset).transferFrom(custodian, address(vault), finalBalance);
         vm.stopPrank();
+
+        vm.prank(owner);
+        vault.mature();
 
         // ---- Assert Vault burns shares and Alice receive asset with additional 10% ---
         uint256 balanceBeforeRedeem = IERC20(asset).balanceOf(alice);
@@ -100,7 +99,25 @@ contract VaultTest is Test {
         assertEq(balanceAfterRedeem, balanceBeforeRedeem + assets, "Alice should recieve finalBalance with 10% yeild");
     }
 
-    function test__RevertIfRebaseIsNotCompletedOnWithdraw() public {
+    function test_NotEnoughBalanceToMatureVault() public {
+        // ---- Setup Part 1 - Deposit Assets to the vault ---- //
+        uint256 depositAmount = 10 ether;
+        deposit(alice, depositAmount);
+        uint256 finalBalance = depositAmount;
+
+        // ---- Transfer assets to vault ---
+        vm.startPrank(custodian);
+        IERC20(asset).approve(address(custodian), finalBalance);
+        IERC20(asset).transferFrom(custodian, address(vault), finalBalance);
+        vm.stopPrank();
+
+        // ---- Assert it can't be matured yet ---
+        vm.prank(owner);
+        vm.expectRevert(CredbullVault.CredbullVault__NotEnoughBalanceToMature.selector);
+        vault.mature();
+    }
+
+    function test__RevertOnWithdrawIfVaultNotMatured() public {
         // ---- Setup Part 1 - Deposit Assets to the vault ---- //
         uint256 depositAmount = 10 ether;
         //Call internal deposit function
@@ -109,7 +126,7 @@ contract VaultTest is Test {
         vm.startPrank(alice);
         vault.approve(address(vault), shares);
 
-        vm.expectRevert(CredbullVault.CredbullVault__RebaseNotCompleted.selector);
+        vm.expectRevert(CredbullVault.CredbullVault__NotMatured.selector);
         vault.redeem(shares, alice, alice);
         vm.stopPrank();
     }
