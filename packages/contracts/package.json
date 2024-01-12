@@ -5,7 +5,8 @@
     "dev": "anvil --config-out localhost.json",
     "build": "forge build",
     "test": "forge test",
-    "format": "forge fmt"
+    "format": "forge fmt",
+    "deploy": "make deploy-local"
   },
   "packageManager": "yarn@3.2.3"
 }

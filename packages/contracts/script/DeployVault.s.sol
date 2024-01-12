@@ -6,7 +6,6 @@ import { Script } from "forge-std/Script.sol";
 import { CredbullVault } from "../src/CredbullVault.sol";
 import { HelperConfig } from "./HelperConfig.s.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { Exporter } from "./DeployerExporter.s.sol";
 
 contract DeployVault is Script {
     CredbullVault vault;
@@ -19,6 +18,7 @@ contract DeployVault is Script {
         vm.startBroadcast();
         vault = new CredbullVault(owner, IERC20(asset), shareName, shareSymbol, custodian);
         vm.stopBroadcast();
+
         return (vault, helperConfig);
     }
 }
