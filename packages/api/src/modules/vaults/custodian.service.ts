@@ -4,7 +4,7 @@ import { Contract } from 'ethers';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
-import { ServiceResponse } from '../../types/responses';
+import { ServiceResponse, fromPromiseToReceipt, fromPromiseToResponse } from '../../types/responses';
 
 import { CustodianTransferDto } from './custodian.dto';
 
@@ -16,28 +16,31 @@ export class CustodianService {
   ) {}
 
   async totalAssets(): Promise<ServiceResponse<number>> {
-    const coin = this.mockStablecoin();
-    const address = await this.ethers.deployer().getAddress();
+    const asset = this.asset();
+    const address = await this.address();
 
-    const data = await coin.balanceOf(address);
-    return { data };
+    return fromPromiseToResponse(asset.balanceOf(address));
   }
 
   async transfer(dto: CustodianTransferDto): Promise<ServiceResponse<CustodianTransferDto>> {
-    const coin = this.mockStablecoin();
+    const asset = this.asset();
+    const address = await this.address();
 
-    try {
-      const address = await this.ethers.deployer().getAddress();
+    const approve = await fromPromiseToReceipt(await asset.approve(address, dto.amount));
+    if (approve.error) return approve;
 
-      await coin.approve(address, dto.amount);
-      await coin.transferFrom(address, dto.address, dto.amount);
-      return { data: dto };
-    } catch (error) {
-      return { error };
-    }
+    const transfer = await fromPromiseToReceipt(await asset.transferFrom(address, dto.address, dto.amount));
+    if (transfer.error) return transfer;
+
+    return { data: dto };
   }
 
-  private mockStablecoin(): Contract {
+  private asset(): Contract {
     return new Contract(deployments.local.MockStablecoin.address, abis.MockStablecoin.abi, this.ethers.deployer());
+  }
+
+  private address(): Promise<string> {
+    // TODO: for now custodian address and deployer address need to match
+    return this.ethers.deployer().getAddress();
   }
 }

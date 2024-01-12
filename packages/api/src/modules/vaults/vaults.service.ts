@@ -4,7 +4,7 @@ import { Contract } from 'ethers';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
-import { ServiceResponse } from '../../types/responses';
+import { ServiceResponse, fromPromiseToReceipt, fromPromiseToResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
 import { anyCallHasFailed } from '../../utils/errors';
 
@@ -61,9 +61,8 @@ export class VaultsService {
       if (anyCallHasFailed(transfers)) continue;
 
       const maturing = await Promise.all([
-        this.supabase.admin().from('vaults').update({ status: 'created' }).eq('id', vault.id),
-        // TODO: normalize ethers service returns
-        await this.vaultContract(vault).mature(),
+        this.supabase.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id),
+        fromPromiseToReceipt(this.vaultContract(vault).mature()),
       ]);
       for (const call of maturing) if ('error' in call) errors.push(call.error);
     }
@@ -72,12 +71,7 @@ export class VaultsService {
   }
 
   async expectedAssetsOnMaturity(vault: Tables<'vaults'>): Promise<ServiceResponse<number>> {
-    try {
-      const data = await this.vaultContract(vault).expectedAssetsOnMaturity();
-      return { data };
-    } catch (error) {
-      return { error };
-    }
+    return fromPromiseToResponse(this.vaultContract(vault).expectedAssetsOnMaturity());
   }
 
   private vaultContract(vault: Tables<'vaults'>) {
