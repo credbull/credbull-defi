@@ -4,8 +4,9 @@ import { BigNumber } from 'ethers';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
-import { ServiceResponse, fromPromiseToReceipt, fromPromiseToResponse } from '../../types/responses';
+import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
+import { responseFromRead, responseFromWrite } from '../../utils/contracts';
 import { anyCallHasFailed } from '../../utils/errors';
 
 import { CustodianService } from './custodian.service';
@@ -62,7 +63,7 @@ export class VaultsService {
 
       const maturing = await Promise.all([
         this.supabase.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id),
-        fromPromiseToReceipt(this.vaultContract(vault).mature()),
+        responseFromWrite(this.vaultContract(vault).mature()),
       ]);
       for (const call of maturing) if ('error' in call) errors.push(call.error);
     }
@@ -71,7 +72,7 @@ export class VaultsService {
   }
 
   async expectedAssetsOnMaturity(vault: Tables<'vaults'>): Promise<ServiceResponse<BigNumber>> {
-    return fromPromiseToResponse(this.vaultContract(vault).expectedAssetsOnMaturity());
+    return responseFromRead(this.vaultContract(vault).expectedAssetsOnMaturity());
   }
 
   private vaultContract(vault: Tables<'vaults'>) {

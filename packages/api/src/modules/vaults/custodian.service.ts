@@ -5,7 +5,8 @@ import { BigNumber } from 'ethers';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
-import { ServiceResponse, fromPromiseToReceipt, fromPromiseToResponse } from '../../types/responses';
+import { ServiceResponse } from '../../types/responses';
+import { responseFromRead, responseFromWrite } from '../../utils/contracts';
 
 import { CustodianTransferDto } from './custodian.dto';
 
@@ -25,17 +26,17 @@ export class CustodianService {
     const asset = this.asset();
     const address = await this.address();
 
-    return fromPromiseToResponse(asset.balanceOf(address));
+    return responseFromRead(asset.balanceOf(address));
   }
 
   async transfer(dto: CustodianTransferDto): Promise<ServiceResponse<CustodianTransferDto>> {
     const asset = this.asset();
     const address = await this.address();
 
-    const approve = await fromPromiseToReceipt(asset.approve(address, dto.amount));
+    const approve = await responseFromWrite(asset.approve(address, dto.amount));
     if (approve.error) return approve;
 
-    const transfer = await fromPromiseToReceipt(asset.transferFrom(address, dto.address, dto.amount));
+    const transfer = await responseFromWrite(asset.transferFrom(address, dto.address, dto.amount));
     if (transfer.error) return transfer;
 
     return { data: dto };
