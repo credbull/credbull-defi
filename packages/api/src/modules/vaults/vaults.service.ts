@@ -1,4 +1,4 @@
-import { CredbullVault__factory } from '@credbull/contracts';
+import { CredbullVault, CredbullVault__factory } from '@credbull/contracts';
 import { Injectable } from '@nestjs/common';
 import { BigNumber } from 'ethers';
 
@@ -9,6 +9,7 @@ import { Tables } from '../../types/supabase';
 import { responseFromRead, responseFromWrite } from '../../utils/contracts';
 import { anyCallHasFailed } from '../../utils/errors';
 
+import { CustodianTransferDto } from './custodian.dto';
 import { CustodianService } from './custodian.service';
 
 type DistributionConfig = Tables<'vault_distribution_configs'> & {
@@ -46,41 +47,49 @@ export class VaultsService {
 
     const errors = [];
     for (const vault of vaults.data) {
+      const contract = this.contract(vault);
+
+      // gather all the data we need to calculate the asset distribution
       const assets = await Promise.all([
-        this.expectedAssetsOnMaturity(vault),
+        this.expectedAssetsOnMaturity(contract),
         this.custodian.totalAssets(),
         this.distributionConfig(vault),
       ]);
-      for (const call of assets) if ('error' in call) errors.push(call.error);
+      for (const call of assets) if (call.error) errors.push(call.error);
       if (anyCallHasFailed(assets)) continue;
 
       const [{ data: expectedAssetsOnMaturity }, { data: custodianTotalAssets }, { data: distributionConfig }] = assets;
 
+      // calculate the distribution and transfer the assets
       const transfers = await this.transferDistribution(
         vault,
         expectedAssetsOnMaturity!,
         custodianTotalAssets!,
         distributionConfig!,
       );
-      for (const call of transfers) if ('error' in call) errors.push(call.error);
+      for (const call of transfers) if (call.error) errors.push(call.error);
       if (anyCallHasFailed(transfers)) continue;
 
-      const maturing = await Promise.all([
-        this.supabase.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id),
-        responseFromWrite(this.vaultContract(vault).mature()),
-      ]);
-      for (const call of maturing) if ('error' in call) errors.push(call.error);
+      // mature the vault on and off chain
+      const matured = await this.mature(vault, contract);
+      if (matured.error) errors.push(matured.error);
     }
 
     return errors.length > 0 ? { error: new AggregateError(errors) } : vaults;
   }
 
-  async expectedAssetsOnMaturity(vault: Tables<'vaults'>): Promise<ServiceResponse<BigNumber>> {
-    return responseFromRead(this.vaultContract(vault).expectedAssetsOnMaturity());
+  private async expectedAssetsOnMaturity(contract: CredbullVault): Promise<ServiceResponse<BigNumber>> {
+    return responseFromRead(contract.expectedAssetsOnMaturity());
   }
 
-  private vaultContract(vault: Tables<'vaults'>) {
-    return CredbullVault__factory.connect(vault.address, this.ethers.deployer());
+  private async distributionConfig(vault: Tables<'vaults'>): Promise<ServiceResponse<DistributionConfig[]>> {
+    return this.supabase
+      .admin()
+      .from('vault_distribution_configs')
+      .select('*, vault_distribution_entities (type, address)')
+      .eq('vault_id', vault.id)
+      .order('order')
+      .returns<DistributionConfig[]>();
   }
 
   private async transferDistribution(
@@ -88,7 +97,7 @@ export class VaultsService {
     expectedAssetsOnMaturity: BigNumber,
     custodianTotalAssets: BigNumber,
     distributionConfig: DistributionConfig[],
-  ) {
+  ): Promise<ServiceResponse<CustodianTransferDto>[]> {
     const splits = this.calculateDistribution(
       vault,
       expectedAssetsOnMaturity,
@@ -118,13 +127,14 @@ export class VaultsService {
     return splits;
   }
 
-  private async distributionConfig(vault: Tables<'vaults'>): Promise<ServiceResponse<DistributionConfig[]>> {
-    return this.supabase
-      .admin()
-      .from('vault_distribution_configs')
-      .select('*, vault_distribution_entities (type, address)')
-      .eq('vault_id', vault.id)
-      .order('order')
-      .returns<DistributionConfig[]>();
+  private async mature(vault: Tables<'vaults'>, contract: CredbullVault) {
+    const maturedOnChain = await responseFromWrite(contract.mature());
+    if (maturedOnChain.error) return maturedOnChain;
+
+    return this.supabase.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id);
+  }
+
+  private contract(vault: Tables<'vaults'>): CredbullVault {
+    return CredbullVault__factory.connect(vault.address, this.ethers.deployer());
   }
 }
