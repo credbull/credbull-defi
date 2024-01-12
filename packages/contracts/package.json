@@ -1,17 +1,27 @@
 {
   "name": "@credbull/contracts",
   "private": true,
-  "main": "index.ts",
+  "main": "index.js",
   "types": "index.ts",
   "scripts": {
     "dev": "anvil --config-out localhost.json & make deploy-local",
     "build": "forge build",
     "test": "forge test",
     "format": "forge fmt",
-    "deploy": "make deploy-local"
+    "deploy": "make deploy-local",
+    "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/**/*.json && tsc",
+    "postinstall": "yarn build && yarn gen-types"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
+    "@typechain/ethers-v5": "^11.1.2",
+    "@types/node": "^20.11.0",
+    "typechain": "^8.3.2",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/providers": "^5.7.2",
+    "ethers": "^5.7.2"
   }
 }

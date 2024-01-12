@@ -1,6 +1,6 @@
-import { abis } from '@credbull/contracts';
+import { CredbullVault__factory } from '@credbull/contracts';
 import { Injectable } from '@nestjs/common';
-import { Contract } from 'ethers';
+import { BigNumber } from 'ethers';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
@@ -70,18 +70,18 @@ export class VaultsService {
     return errors.length > 0 ? { error: new AggregateError(errors) } : vaults;
   }
 
-  async expectedAssetsOnMaturity(vault: Tables<'vaults'>): Promise<ServiceResponse<number>> {
+  async expectedAssetsOnMaturity(vault: Tables<'vaults'>): Promise<ServiceResponse<BigNumber>> {
     return fromPromiseToResponse(this.vaultContract(vault).expectedAssetsOnMaturity());
   }
 
   private vaultContract(vault: Tables<'vaults'>) {
-    return new Contract(vault.address, abis.CredbullVault, this.ethers.deployer());
+    return CredbullVault__factory.connect(vault.address, this.ethers.deployer());
   }
 
   private async transferDistribution(
     vault: Tables<'vaults'>,
-    expectedAssetsOnMaturity: number,
-    custodianTotalAssets: number,
+    expectedAssetsOnMaturity: BigNumber,
+    custodianTotalAssets: BigNumber,
     distributionConfig: NonNullable<Awaited<ReturnType<typeof this.distributionConfig>>['data']>,
   ) {
     const splits = this.calculateDistribution(
@@ -96,18 +96,18 @@ export class VaultsService {
 
   private calculateDistribution(
     vault: Tables<'vaults'>,
-    expectedAssetsOnMaturity: number,
-    custodianTotalAssets: number,
+    expectedAssetsOnMaturity: BigNumber,
+    custodianTotalAssets: BigNumber,
     distributionConfig: NonNullable<Awaited<ReturnType<typeof this.distributionConfig>>['data']>,
   ) {
-    let totalReturns = custodianTotalAssets - expectedAssetsOnMaturity;
+    let totalReturns = custodianTotalAssets.sub(expectedAssetsOnMaturity);
     const splits = [{ address: vault.address, amount: expectedAssetsOnMaturity }];
 
     for (const { vault_distribution_entities, percentage } of distributionConfig) {
-      const amount = totalReturns * percentage;
+      const amount = totalReturns.mul(percentage);
 
       splits.push({ address: vault_distribution_entities!.address, amount });
-      totalReturns -= amount;
+      totalReturns = totalReturns.sub(amount);
     }
 
     return splits;

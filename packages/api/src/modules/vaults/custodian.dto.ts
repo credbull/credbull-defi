@@ -1,13 +1,15 @@
 import { IsNumber, IsString } from 'class-validator';
+import { BigNumber } from 'ethers';
 
 export class CustodianTransferDto {
   @IsString()
   address: string;
 
   @IsNumber()
-  amount: number;
+  amount: BigNumber;
 
   constructor(partial: Partial<CustodianTransferDto>) {
-    Object.assign(this, partial);
+    this.amount = BigNumber.from(partial.amount);
+    this.address = partial.address!;
   }
 }
