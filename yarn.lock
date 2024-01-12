@@ -553,6 +553,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@credbull/api@workspace:packages/api"
   dependencies:
+    "@credbull/contracts": "workspace:^"
     "@nestjs/cli": ^10.2.1
     "@nestjs/common": ^10.3.0
     "@nestjs/config": ^3.1.1
@@ -653,9 +654,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@credbull/contracts@workspace:packages/contracts":
+"@credbull/contracts@workspace:^, @credbull/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@credbull/contracts@workspace:packages/contracts"
+  dependencies:
+    typescript: ^5.3.3
   languageName: unknown
   linkType: soft
 
@@ -19684,7 +19687,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.3.3, typescript@npm:^5.1.6, typescript@npm:^5.2.2":
+"typescript@npm:5.3.3, typescript@npm:^5.1.6, typescript@npm:^5.2.2, typescript@npm:^5.3.3":
   version: 5.3.3
   resolution: "typescript@npm:5.3.3"
   bin:
@@ -19724,7 +19727,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@5.3.3#~builtin<compat/typescript>, typescript@patch:typescript@^5.1.6#~builtin<compat/typescript>, typescript@patch:typescript@^5.2.2#~builtin<compat/typescript>":
+"typescript@patch:typescript@5.3.3#~builtin<compat/typescript>, typescript@patch:typescript@^5.1.6#~builtin<compat/typescript>, typescript@patch:typescript@^5.2.2#~builtin<compat/typescript>, typescript@patch:typescript@^5.3.3#~builtin<compat/typescript>":
   version: 5.3.3
   resolution: "typescript@patch:typescript@npm%3A5.3.3#~builtin<compat/typescript>::version=5.3.3&hash=a1c5e5"
   bin:

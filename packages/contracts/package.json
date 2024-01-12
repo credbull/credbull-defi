@@ -1,6 +1,8 @@
 {
   "name": "@credbull/contracts",
   "private": true,
+  "main": "index.ts",
+  "types": "index.ts",
   "scripts": {
     "dev": "anvil --config-out localhost.json & make deploy-local",
     "build": "forge build",
@@ -8,5 +10,8 @@
     "format": "forge fmt",
     "deploy": "make deploy-local"
   },
-  "packageManager": "yarn@3.2.3"
+  "packageManager": "yarn@3.2.3",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
 }

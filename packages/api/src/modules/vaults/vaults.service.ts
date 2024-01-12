@@ -1,4 +1,6 @@
+import { abis } from '@credbull/contracts';
 import { Injectable } from '@nestjs/common';
+import { Contract } from 'ethers';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
@@ -40,7 +42,7 @@ export class VaultsService {
     const errors = [];
     for (const vault of vaults.data) {
       const assets = await Promise.all([
-        this.expectedAssetsOnMaturity(),
+        this.expectedAssetsOnMaturity(vault),
         this.custodian.totalAssets(),
         this.distributionConfig(vault),
       ]);
@@ -58,10 +60,10 @@ export class VaultsService {
       for (const call of transfers) if ('error' in call) errors.push(call.error);
       if (anyCallHasFailed(transfers)) continue;
 
-      // TODO: create call to mature vault in vault contract; normalize ethers service returns
       const maturing = await Promise.all([
         this.supabase.admin().from('vaults').update({ status: 'created' }).eq('id', vault.id),
-        this.ethers.deployer().sendTransaction({}),
+        // TODO: normalize ethers service returns
+        await this.vaultContract(vault).mature(),
       ]);
       for (const call of maturing) if ('error' in call) errors.push(call.error);
     }
@@ -69,9 +71,17 @@ export class VaultsService {
     return errors.length > 0 ? { error: new AggregateError(errors) } : vaults;
   }
 
-  async expectedAssetsOnMaturity(): Promise<ServiceResponse<number>> {
-    // TODO: get final total yield + principal from vault contract
-    return { data: 1100 };
+  async expectedAssetsOnMaturity(vault: Tables<'vaults'>): Promise<ServiceResponse<number>> {
+    try {
+      const data = await this.vaultContract(vault).expectedAssetsOnMaturity();
+      return { data };
+    } catch (error) {
+      return { error };
+    }
+  }
+
+  private vaultContract(vault: Tables<'vaults'>) {
+    return new Contract(vault.address, abis.CredbullVault, this.ethers.deployer());
   }
 
   private async transferDistribution(
