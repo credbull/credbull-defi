@@ -653,6 +653,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@credbull/contracts@workspace:packages/contracts":
+  version: 0.0.0-use.local
+  resolution: "@credbull/contracts@workspace:packages/contracts"
+  languageName: unknown
+  linkType: soft
+
 "@credbull/repo@workspace:.":
   version: 0.0.0-use.local
   resolution: "@credbull/repo@workspace:."

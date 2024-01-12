@@ -6,7 +6,6 @@ import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/Console.sol";
 
 contract Exporter is Script {
-
     struct Deployment {
         string name;
         address addr;
@@ -16,7 +15,7 @@ contract Exporter is Script {
     string path;
     Deployment[] public deployments;
 
-        function exportDeployments(string memory contractName, address contractAddress) internal {
+    function exportDeployments(string memory contractName, address contractAddress) internal {
         // fetch already existing contracts
         root = vm.projectRoot();
         path = string.concat(root, "/deployments/");
@@ -24,7 +23,6 @@ contract Exporter is Script {
         path = string.concat(path, string.concat(chainIdStr, ".json"));
 
         string memory jsonWrite;
-
 
         jsonWrite = vm.serializeString(jsonWrite, contractName, vm.toString(contractAddress));
         vm.writeJson(jsonWrite, path);
