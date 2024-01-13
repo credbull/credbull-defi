@@ -10,13 +10,15 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 contract DeployVault is Script {
     uint256 private constant PROMISED_FIXED_YIELD = 10;
 
-    CredbullVault private vault;
-
-    function run() external returns (CredbullVault, HelperConfig) {
+    function run() external returns (CredbullVault[] memory, HelperConfig) {
         HelperConfig helperConfig = new HelperConfig();
-        vault = this.deployFixedYieldVault(helperConfig, PROMISED_FIXED_YIELD);
 
-        return (vault, helperConfig);
+        CredbullVault[] memory vaults = new CredbullVault[](3);
+        vaults[0] = this.deployFixedYieldVault(helperConfig, PROMISED_FIXED_YIELD);
+        vaults[1] = this.deployFixedYieldVault(helperConfig, PROMISED_FIXED_YIELD);
+        vaults[2] = this.deployFixedYieldVault(helperConfig, PROMISED_FIXED_YIELD);
+
+        return (vaults, helperConfig);
     }
 
     function deployFixedYieldVault(HelperConfig helperConfig, uint256 promisedYield) external returns (CredbullVault) {
@@ -24,7 +26,7 @@ contract DeployVault is Script {
             helperConfig.activeNetworkConfig();
 
         vm.startBroadcast();
-        vault = new CredbullVault(owner, IERC20(asset), shareName, shareSymbol, custodian, promisedYield);
+        CredbullVault vault = new CredbullVault(owner, IERC20(asset), shareName, shareSymbol, custodian, promisedYield);
         vm.stopBroadcast();
 
         return vault;

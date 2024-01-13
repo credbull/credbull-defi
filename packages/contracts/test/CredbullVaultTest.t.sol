@@ -26,7 +26,9 @@ contract CredbullVaultTest is Test {
 
     function setUp() public {
         deployer = new DeployVault();
-        (vault, config) = deployer.run();
+        (CredbullVault[] memory _vaults, HelperConfig _config) = deployer.run();
+        vault = _vaults[0];
+        config = _config;
 
         (owner, asset,,, custodian) = config.activeNetworkConfig();
 
