@@ -1,15 +1,15 @@
-name: ci-app
+name: ci-dev-api
 
 defaults:
   run:
-    working-directory: packages/app
+    working-directory: packages/api
 
 on:
   workflow_dispatch:
   push:
     branches: [ "main*" ]
     paths:
-      - "packages/app/**"
+      - "packages/api/**"
 
 jobs:
   test:
@@ -36,9 +36,14 @@ jobs:
         run: yarn run test
         env:
           # the environment variables below should be removed when we configure the secrets in github
-          NEXT_PUBLIC_SUPABASE_URL: your_supabase_project_url
+          APP_PORT: 3001
+          APP_VERSION: 0.0.1
+          NEXT_PUBLIC_SUPABASE_URL: your_supabase_url
           NEXT_PUBLIC_SUPABASE_ANON_KEY: your_supabase_anon_key
-          NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: your_wallet_connect_project_id
           SUPABASE_SERVICE_ROLE_KEY: your_supabase_service_role_key
-          API_BASE_URL: http://localhost:3001
-          APP_BASE_URL: http://localhost:3000
+          SUPABASE_JWT_SECRET: your_supabase_jwt_secret
+          NEXT_PUBLIC_TARGET_NETWORK: your_target_network
+          ETHERS_DEPLOYER_PRIVATE_KEY: your_deployer_private_key
+          ETHERS_INFURA_API_KEY: your_infura_api_key
+          CRON_SECRET: any_string_will_do
+          USDC_CONTRACT_ADDRESS: for_dev_use_local_mock_usdc_contract_address

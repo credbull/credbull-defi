@@ -1,4 +1,4 @@
-name: ci-contracts
+name: ci-dev-contracts
 
 defaults:
   run:
