@@ -1,11 +1,21 @@
-on: [push]
+name: ci-contracts
 
-name: Run tests
+defaults:
+  run:
+    working-directory: packages/contracts
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main*" ]
+    paths:
+      - "packages/contracts/**"
 
 jobs:
-  check:
-    name: Foundry project
+  test:
     runs-on: ubuntu-latest
+    environment: dev
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -17,9 +27,7 @@ jobs:
           version: nightly
 
       - name: Run tests
-        working-directory: ./packages/foundry
         run: forge test -vvv
 
       - name: Run coverage report
-        working-directory: ./packages/foundry
         run: forge coverage
