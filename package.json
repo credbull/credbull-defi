@@ -28,8 +28,5 @@
     "lint-staged": "^15.2.0",
     "turbo": "^1.11.2"
   },
-  "packageManager": "yarn@3.2.3",
-  "dependencies": {
-    "bigint-buffer": "^1.1.5"
-  }
+  "packageManager": "yarn@3.2.3"
 }
