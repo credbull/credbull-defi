@@ -116,7 +116,7 @@ contract CredbullVault is ERC4626, Ownable {
      * @notice - Returns expected assets on maturity
      */
     function expectedAssetsOnMaturity() public view returns (uint256) {
-        return _totalAssetDeposited.mulDiv(100 /* 100% + */ + _fixedYield, 100);
+        return _totalAssetDeposited.mulDiv(100 + _fixedYield, 100);
     }
 
     /**
