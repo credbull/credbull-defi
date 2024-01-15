@@ -30,7 +30,7 @@ contract CredbullVaultTest is Test {
         vault = _vaults[0];
         config = _config;
 
-        (owner, asset,,, custodian) = config.activeNetworkConfig();
+        (owner, asset,,, custodian,,) = config.activeNetworkConfig();
 
         MockStablecoin(asset).mint(alice, INITIAL_BALANCE);
         MockStablecoin(asset).mint(bob, INITIAL_BALANCE);
@@ -41,7 +41,7 @@ contract CredbullVaultTest is Test {
     }
 
     function test__ShareNameAndSymbol() public {
-        (,, string memory shareName, string memory shareSymbol,) = config.activeNetworkConfig();
+        (,, string memory shareName, string memory shareSymbol,,,) = config.activeNetworkConfig();
         assertEq(vault.name(), shareName);
         assertEq(vault.symbol(), shareSymbol);
     }

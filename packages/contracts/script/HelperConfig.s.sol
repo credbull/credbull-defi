@@ -14,6 +14,8 @@ contract HelperConfig is Script {
         string shareName;
         string shareSymbol;
         address custodian;
+        address treasury;
+        address activityReward;
     }
 
     constructor() {
@@ -30,7 +32,9 @@ contract HelperConfig is Script {
             shareName: "Share_sep",
             shareSymbol: "SYM_sep",
             owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-            custodian: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+            custodian: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
+            treasury: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
+            activityReward: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
         });
 
         return sepoliaConfig;
@@ -50,7 +54,9 @@ contract HelperConfig is Script {
             shareName: "Share_anv",
             shareSymbol: "SYM_anv",
             owner: makeAddr("owner"),
-            custodian: makeAddr("custodian")
+            custodian: makeAddr("custodian"),
+            treasury: makeAddr("treasury"),
+            activityReward: makeAddr("activityReward")
         });
 
         return anvilConfig;

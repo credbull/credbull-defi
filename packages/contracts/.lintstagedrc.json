@@ -1,5 +1,5 @@
 {
   "*.sol": [
-    "yarn format"
+    "forge fmt"
   ]
 }

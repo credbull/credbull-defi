@@ -36,6 +36,18 @@ contract CredbullVault is ERC4626, Ownable {
     uint256 private _fixedYield;
 
     /**
+     * @dev
+     * The timestamp when the vault opens for deposit.
+     */
+    uint256 private opensAtTimestamp;
+
+    /**
+     * @dev
+     * The timestamp when the vault closes for deposit.
+     */
+    uint256 private closesAtTimestamp;
+
+    /**
      * @notice - Track if vault is matured
      */
     bool public isMatured;
@@ -65,11 +77,15 @@ contract CredbullVault is ERC4626, Ownable {
         IERC20 _asset,
         string memory _shareName,
         string memory _shareSymbol,
-        address _custodian,
-        uint256 _promisedYield
+        uint256 _promisedYield,
+        uint256 _opensAtTimestamp,
+        uint256 _closesAtTimestamp,
+        address _custodian
     ) ERC4626(_asset) ERC20(_shareName, _shareSymbol) Ownable(_owner) {
         custodian = _custodian;
         _fixedYield = _promisedYield;
+        opensAtTimestamp = _opensAtTimestamp;
+        closesAtTimestamp = _closesAtTimestamp;
     }
 
     /**
