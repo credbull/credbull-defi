@@ -5,7 +5,7 @@ import { BigNumber } from 'ethers';
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
-import { Tables } from '../../types/supabase';
+import { Enums, Tables } from '../../types/supabase';
 import { responseFromRead, responseFromWrite } from '../../utils/contracts';
 import { anyCallHasFailed } from '../../utils/errors';
 
@@ -75,7 +75,8 @@ export class VaultsService {
       if (matured.error) errors.push(matured.error);
     }
 
-    return errors.length > 0 ? { error: new AggregateError(errors) } : vaults;
+    const maturedVaults = vaults.data.map((v) => ({ ...v, status: 'matured' as Enums<'vault_status'> }));
+    return errors.length > 0 ? { error: new AggregateError(errors) } : { data: maturedVaults };
   }
 
   private async expectedAssetsOnMaturity(contract: CredbullVault): Promise<ServiceResponse<BigNumber>> {
