@@ -31,9 +31,11 @@ jobs:
         env:
           # the environment variables below should be removed when we configure the secrets in github
           VAULT_OPENS_AT_TIMESTAMP: 1705276800
+          VAULT_CLOSES_DURATION_TIMESTAMP: 60
 
       - name: Run coverage report
         run: forge coverage
         env:
           # the environment variables below should be removed when we configure the secrets in github
           VAULT_OPENS_AT_TIMESTAMP: 1705276800
+          VAULT_CLOSES_DURATION_TIMESTAMP: 60

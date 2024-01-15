@@ -17,19 +17,27 @@ contract DeployVault is Script {
         this.deployCredbullEntities(helperConfig);
 
         uint256 firstVaultOpensAt = vm.envUint("VAULT_OPENS_AT_TIMESTAMP");
+        uint256 vaultClosesDuration = vm.envUint("VAULT_CLOSES_DURATION_TIMESTAMP");
 
         CredbullVault[] memory vaults = new CredbullVault[](3);
-        vaults[0] = this.deployFixedYieldVault(helperConfig, PROMISED_FIXED_YIELD, firstVaultOpensAt);
-        vaults[1] = this.deployFixedYieldVault(helperConfig, PROMISED_FIXED_YIELD, firstVaultOpensAt + 1 weeks);
-        vaults[2] = this.deployFixedYieldVault(helperConfig, PROMISED_FIXED_YIELD, firstVaultOpensAt + 2 weeks);
+        vaults[0] =
+            this.deployFixedYieldVault(helperConfig, PROMISED_FIXED_YIELD, firstVaultOpensAt, vaultClosesDuration);
+        vaults[1] = this.deployFixedYieldVault(
+            helperConfig, PROMISED_FIXED_YIELD, firstVaultOpensAt + 1 * vaultClosesDuration, vaultClosesDuration
+        );
+        vaults[2] = this.deployFixedYieldVault(
+            helperConfig, PROMISED_FIXED_YIELD, firstVaultOpensAt + 2 * vaultClosesDuration, vaultClosesDuration
+        );
 
         return (vaults, helperConfig);
     }
 
-    function deployFixedYieldVault(HelperConfig helperConfig, uint256 promisedYield, uint256 opensAt)
-        external
-        returns (CredbullVault)
-    {
+    function deployFixedYieldVault(
+        HelperConfig helperConfig,
+        uint256 promisedYield,
+        uint256 opensAt,
+        uint256 closesDuration
+    ) external returns (CredbullVault) {
         (address owner, address asset, string memory shareName, string memory shareSymbol, address custodian,,) =
             helperConfig.activeNetworkConfig();
 
@@ -41,7 +49,7 @@ contract DeployVault is Script {
             shareSymbol,
             promisedYield,
             opensAt,
-            opensAt + 1 minutes,
+            opensAt + closesDuration,
             custodian
         );
         vm.stopBroadcast();
