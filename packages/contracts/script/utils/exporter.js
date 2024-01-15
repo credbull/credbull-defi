@@ -50,7 +50,7 @@ async function exportConfigsToSupabase(client, entities) {
     const activityReward = { order: 1, percentage: 1 };
     const config = e.type === 'treasury' ? treasury : activityReward;
 
-    return [{ vault_id: e.vault_id, entity_id: e.id, ...config }];
+    return [{ entity_id: e.id, ...config }];
   };
 
   return client.from('vault_distribution_configs').insert(entities.data.flatMap(makeConfig)).select();

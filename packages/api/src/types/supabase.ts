@@ -71,7 +71,6 @@ export interface Database {
           id: number;
           order: number;
           percentage: number;
-          vault_id: number;
         };
         Insert: {
           created_at?: string;
@@ -79,7 +78,6 @@ export interface Database {
           id?: number;
           order: number;
           percentage: number;
-          vault_id: number;
         };
         Update: {
           created_at?: string;
@@ -87,7 +85,6 @@ export interface Database {
           id?: number;
           order?: number;
           percentage?: number;
-          vault_id?: number;
         };
         Relationships: [
           {
@@ -95,13 +92,6 @@ export interface Database {
             columns: ['entity_id'];
             isOneToOne: false;
             referencedRelation: 'vault_distribution_entities';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'vault_distribution_configs_vault_id_fkey';
-            columns: ['vault_id'];
-            isOneToOne: false;
-            referencedRelation: 'vaults';
             referencedColumns: ['id'];
           },
         ];

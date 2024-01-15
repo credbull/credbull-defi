@@ -13,7 +13,7 @@ import { CustodianTransferDto } from './custodian.dto';
 import { CustodianService } from './custodian.service';
 
 type DistributionConfig = Tables<'vault_distribution_configs'> & {
-  vault_distribution_entities: Pick<Tables<'vault_distribution_entities'>, 'type' | 'address'>;
+  vault_distribution_entities: Pick<Tables<'vault_distribution_entities'>, 'type' | 'address'> | null;
 };
 
 @Injectable()
@@ -86,10 +86,9 @@ export class VaultsService {
     return this.supabase
       .admin()
       .from('vault_distribution_configs')
-      .select('*, vault_distribution_entities (type, address)')
-      .eq('vault_id', vault.id)
-      .order('order')
-      .returns<DistributionConfig[]>();
+      .select('*, vault_distribution_entities!inner (type, address)')
+      .eq('vault_distribution_entities.vault_id', vault.id)
+      .order('order');
   }
 
   private async transferDistribution(
