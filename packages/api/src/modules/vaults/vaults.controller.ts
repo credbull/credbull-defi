@@ -15,7 +15,7 @@ export class VaultsController {
 
   @Get('/current')
   @UseGuards(SupabaseGuard)
-  @ApiOperation({ summary: 'Returns current open vaults' })
+  @ApiOperation({ summary: 'Returns current active and matured vaults' })
   @ApiResponse({
     status: 200,
     description: 'Success',

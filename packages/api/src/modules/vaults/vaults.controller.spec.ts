@@ -28,7 +28,7 @@ describe('VaultsController', () => {
     controller = await module.resolve<VaultsController>(VaultsController);
   });
 
-  it('should return all current open vaults', async () => {
+  it('should return all current ready/matured vaults', async () => {
     const vault = {
       id: 1,
       type: 'fixed_yield',
@@ -41,11 +41,10 @@ describe('VaultsController', () => {
       created_at: '2024-01-09T18:58:27.328262+00:00',
     };
 
-    const builder = { select: vi.fn(), eq: vi.fn(), lt: vi.fn(), gt: vi.fn() };
+    const builder = { select: vi.fn(), neq: vi.fn(), lt: vi.fn() };
     builder.select.mockReturnValueOnce(builder as any);
-    builder.eq.mockReturnValueOnce(builder as any);
-    builder.lt.mockReturnValueOnce(builder as any);
-    builder.gt.mockReturnValueOnce({ data: [vault] } as any);
+    builder.neq.mockReturnValueOnce(builder as any);
+    builder.lt.mockReturnValueOnce({ data: [vault] } as any);
 
     client.from.mockReturnValue(builder as any);
 
@@ -55,11 +54,10 @@ describe('VaultsController', () => {
   });
 
   it('should throw when there is an error', async () => {
-    const builder = { select: vi.fn(), eq: vi.fn(), lt: vi.fn(), gt: vi.fn() };
+    const builder = { select: vi.fn(), neq: vi.fn(), lt: vi.fn() };
     builder.select.mockReturnValueOnce(builder as any);
-    builder.eq.mockReturnValueOnce(builder as any);
-    builder.lt.mockReturnValueOnce(builder as any);
-    builder.gt.mockReturnValueOnce({ error: 1 } as any);
+    builder.neq.mockReturnValueOnce(builder as any);
+    builder.lt.mockReturnValueOnce({ error: 1 } as any);
 
     client.from.mockReturnValue(builder as any);
 
@@ -72,11 +70,10 @@ describe('VaultsController', () => {
   });
 
   it('should throw when data is null', async () => {
-    const builder = { select: vi.fn(), eq: vi.fn(), lt: vi.fn(), gt: vi.fn() };
+    const builder = { select: vi.fn(), neq: vi.fn(), lt: vi.fn() };
     builder.select.mockReturnValueOnce(builder as any);
-    builder.eq.mockReturnValueOnce(builder as any);
-    builder.lt.mockReturnValueOnce(builder as any);
-    builder.gt.mockReturnValueOnce({ data: null } as any);
+    builder.neq.mockReturnValueOnce(builder as any);
+    builder.lt.mockReturnValueOnce({ data: null } as any);
 
     client.from.mockReturnValue(builder as any);
 

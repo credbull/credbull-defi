@@ -22,13 +22,7 @@ export class VaultsService {
   ) {}
 
   async current(): Promise<ServiceResponse<Tables<'vaults'>[]>> {
-    return this.supabase
-      .client()
-      .from('vaults')
-      .select('*')
-      .eq('status', 'ready')
-      .lt('opened_at', 'now()')
-      .gt('closed_at', 'now()');
+    return this.supabase.client().from('vaults').select('*').neq('status', 'created').lt('opened_at', 'now()');
   }
 
   async matureOutstanding(): Promise<ServiceResponse<Tables<'vaults'>[]>> {
