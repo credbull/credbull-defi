@@ -116,22 +116,24 @@ async function exportToSupabase(onChainEntities, onChainVaults) {
 (async () => {
   const contracts = await exportAddress();
 
-  const chain = process.env.NEXT_PUBLIC_TARGET_NETWORK;
-  const vaults = contracts[chain].CredbullVault.map((v) => {
-    return {
-      address: v.address,
-      openedAt: v.arguments[5],
-      closedAt: v.arguments[6],
+  if (process.env.EXPORT_TO_SUPABASE) {
+    const chain = process.env.NEXT_PUBLIC_TARGET_NETWORK;
+    const vaults = contracts[chain].CredbullVault.map((v) => {
+      return {
+        address: v.address,
+        openedAt: v.arguments[5],
+        closedAt: v.arguments[6],
+      };
+    });
+    const configDeployment = contracts[chain].CredbullEntities[0].arguments;
+    const entities = {
+      custodian: configDeployment[0],
+      treasury: configDeployment[1],
+      activityReward: configDeployment[2],
     };
-  });
-  const configDeployment = contracts[chain].CredbullEntities[0].arguments;
-  const entities = {
-    custodian: configDeployment[0],
-    treasury: configDeployment[1],
-    activityReward: configDeployment[2],
-  };
 
-  await exportToSupabase(entities, vaults);
+    await exportToSupabase(entities, vaults);
+  }
 
   console.log(`Finished exporting contracts`);
 })();
