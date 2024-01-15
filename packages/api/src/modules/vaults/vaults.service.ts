@@ -47,15 +47,12 @@ export class VaultsService {
       const contract = this.contract(vault);
 
       // gather all the data we need to calculate the asset distribution
-      const assets = await Promise.all([
-        this.expectedAssetsOnMaturity(contract),
-        this.custodian.totalAssets(vault),
-        this.distributionConfig(vault),
-      ]);
-      for (const call of assets) if (call.error) errors.push(call.error);
-      if (anyCallHasFailed(assets)) continue;
+      const requiredData = await this.requiredData(contract, vault);
+      for (const call of requiredData) if (call.error) errors.push(call.error);
+      if (anyCallHasFailed(requiredData)) continue;
 
-      const [{ data: expectedAssetsOnMaturity }, { data: custodianTotalAssets }, { data: distributionConfig }] = assets;
+      const [{ data: expectedAssetsOnMaturity }, { data: custodianTotalAssets }, { data: distributionConfig }] =
+        requiredData;
 
       // calculate the distribution and transfer the assets
       const transfers = await this.transferDistribution(
@@ -74,6 +71,14 @@ export class VaultsService {
 
     const maturedVaults = vaults.data.map((v) => ({ ...v, status: 'matured' as Enums<'vault_status'> }));
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: maturedVaults };
+  }
+
+  private async requiredData(contract: CredbullVault, vault: Tables<'vaults'>) {
+    return Promise.all([
+      this.expectedAssetsOnMaturity(contract),
+      this.custodian.totalAssets(vault),
+      this.distributionConfig(vault),
+    ]);
   }
 
   private async expectedAssetsOnMaturity(contract: CredbullVault): Promise<ServiceResponse<BigNumber>> {
