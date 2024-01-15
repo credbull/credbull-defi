@@ -11,10 +11,7 @@ import { anyCallHasFailed } from '../../utils/errors';
 
 import { CustodianTransferDto } from './custodian.dto';
 import { CustodianService } from './custodian.service';
-
-type DistributionConfig = Tables<'vault_distribution_configs'> & {
-  vault_distribution_entities: Pick<Tables<'vault_distribution_entities'>, 'type' | 'address'> | null;
-};
+import { DistributionConfig, calculateDistribution } from './vaults.domain';
 
 @Injectable()
 export class VaultsService {
@@ -98,7 +95,7 @@ export class VaultsService {
     custodianTotalAssets: BigNumber,
     distributionConfig: DistributionConfig[],
   ): Promise<ServiceResponse<CustodianTransferDto>[]> {
-    const { error, data: splits } = this.calculateDistribution(
+    const { error, data: splits } = calculateDistribution(
       vault,
       expectedAssetsOnMaturity,
       custodianTotalAssets,
@@ -114,28 +111,6 @@ export class VaultsService {
     }
 
     return calls;
-  }
-
-  private calculateDistribution(
-    vault: Tables<'vaults'>,
-    expectedAssetsOnMaturity: BigNumber,
-    custodianTotalAssets: BigNumber,
-    distributionConfig: DistributionConfig[],
-  ): ServiceResponse<{ address: string; amount: BigNumber }[]> {
-    try {
-      let totalReturns = custodianTotalAssets.sub(expectedAssetsOnMaturity);
-      const splits = [{ address: vault.address, amount: expectedAssetsOnMaturity }];
-
-      for (const { vault_distribution_entities, percentage } of distributionConfig) {
-        const amount = totalReturns.mul(percentage * 100).div(100);
-
-        splits.push({ address: vault_distribution_entities!.address, amount });
-        totalReturns = totalReturns.sub(amount);
-      }
-      return { data: splits };
-    } catch (e) {
-      return { error: e };
-    }
   }
 
   private async mature(vault: Tables<'vaults'>, contract: CredbullVault) {
