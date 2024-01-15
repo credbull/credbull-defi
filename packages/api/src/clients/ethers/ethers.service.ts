@@ -1,7 +1,7 @@
 import { Signer } from '@ethersproject/abstract-signer';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Wallet, providers } from 'ethers';
+import { Overrides, Wallet, providers } from 'ethers';
 
 @Injectable()
 export class EthersService {
@@ -14,13 +14,24 @@ export class EthersService {
   }
 
   deployer(): Signer {
+    return new Wallet(this.deployerKey, this.provider());
+  }
+
+  // TODO: this is only needed while we dont have a real custodian
+  custodian(): Signer {
+    const custodianKey = this.config.getOrThrow('ETHERS_CUSTODIAN_PRIVATE_KEY');
+    return new Wallet(custodianKey, this.provider());
+  }
+
+  overrides(): Overrides {
     const env = this.config.getOrThrow('NODE_ENV');
+    return env === 'development' ? { gasLimit: 1000000 } : {};
+  }
 
-    const provider =
-      env === 'development'
-        ? new providers.JsonRpcProvider(this.network)
-        : new providers.InfuraProvider(this.network, this.config.getOrThrow('ETHERS_INFURA_API_KEY'));
-
-    return new Wallet(this.deployerKey, provider);
+  private provider(): providers.Provider {
+    const env = this.config.getOrThrow('NODE_ENV');
+    return env === 'development'
+      ? new providers.JsonRpcProvider(this.network)
+      : new providers.InfuraProvider(this.network, this.config.getOrThrow('ETHERS_INFURA_API_KEY'));
   }
 }

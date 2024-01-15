@@ -51,6 +51,8 @@ contract CredbullVaultTest is Test {
     }
 
     function test__DepositAssetsAndGetShares() public {
+        uint256 custodiansBalance = IERC20(asset).balanceOf(custodian);
+
         // ---- Setup Part 1, Check balance before deposit ----
         assertEq(IERC20(asset).balanceOf(address(vault)), 0, "Vault should start with no assets");
         assertEq(vault.totalAssets(), 0, "Vault should start with no assets");
@@ -65,7 +67,11 @@ contract CredbullVaultTest is Test {
 
         // Vault should have the assets
         assertEq(vault.totalAssets(), depositAmount, "Vault should now have the assets");
-        assertEq(IERC20(asset).balanceOf(custodian), depositAmount, "Custodian should have received the assets");
+        assertEq(
+            IERC20(asset).balanceOf(custodian),
+            depositAmount + custodiansBalance,
+            "Custodian should have received the assets"
+        );
 
         // Alice should have the shares
         assertEq(shares, depositAmount, "User should now have the Shares");

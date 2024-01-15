@@ -52,7 +52,7 @@ export class VaultsService {
       // gather all the data we need to calculate the asset distribution
       const assets = await Promise.all([
         this.expectedAssetsOnMaturity(contract),
-        this.custodian.totalAssets(),
+        this.custodian.totalAssets(vault),
         this.distributionConfig(vault),
       ]);
       for (const call of assets) if (call.error) errors.push(call.error);
@@ -97,14 +97,22 @@ export class VaultsService {
     custodianTotalAssets: BigNumber,
     distributionConfig: DistributionConfig[],
   ): Promise<ServiceResponse<CustodianTransferDto>[]> {
-    const splits = this.calculateDistribution(
+    const { error, data: splits } = this.calculateDistribution(
       vault,
       expectedAssetsOnMaturity,
       custodianTotalAssets,
       distributionConfig,
     );
 
-    return Promise.all(splits.map(async (split) => this.custodian.transfer(split)));
+    if (error) return [{ error }];
+
+    const calls: ServiceResponse<CustodianTransferDto>[] = [];
+    for (const split of splits!) {
+      const call = await this.custodian.transfer({ ...split, vaultId: vault.id });
+      calls.push(call);
+    }
+
+    return calls;
   }
 
   private calculateDistribution(
@@ -112,22 +120,25 @@ export class VaultsService {
     expectedAssetsOnMaturity: BigNumber,
     custodianTotalAssets: BigNumber,
     distributionConfig: DistributionConfig[],
-  ) {
-    let totalReturns = custodianTotalAssets.sub(expectedAssetsOnMaturity);
-    const splits = [{ address: vault.address, amount: expectedAssetsOnMaturity }];
+  ): ServiceResponse<{ address: string; amount: BigNumber }[]> {
+    try {
+      let totalReturns = custodianTotalAssets.sub(expectedAssetsOnMaturity);
+      const splits = [{ address: vault.address, amount: expectedAssetsOnMaturity }];
 
-    for (const { vault_distribution_entities, percentage } of distributionConfig) {
-      const amount = totalReturns.mul(percentage);
+      for (const { vault_distribution_entities, percentage } of distributionConfig) {
+        const amount = totalReturns.mul(percentage * 100).div(100);
 
-      splits.push({ address: vault_distribution_entities!.address, amount });
-      totalReturns = totalReturns.sub(amount);
+        splits.push({ address: vault_distribution_entities!.address, amount });
+        totalReturns = totalReturns.sub(amount);
+      }
+      return { data: splits };
+    } catch (e) {
+      return { error: e };
     }
-
-    return splits;
   }
 
   private async mature(vault: Tables<'vaults'>, contract: CredbullVault) {
-    const maturedOnChain = await responseFromWrite(contract.mature());
+    const maturedOnChain = await responseFromWrite(contract.mature(this.ethers.overrides()));
     if (maturedOnChain.error) return maturedOnChain;
 
     return this.supabase.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id);

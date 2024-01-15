@@ -45,8 +45,12 @@ contract HelperConfig is Script {
             return activeNetworkConfig;
         }
 
+        // TODO: because we dont have a real custodian, we need to fix one that we have a private key for testing.
+        address custodian = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+
         vm.startBroadcast();
         MockStablecoin usdc = new MockStablecoin(type(uint128).max);
+        usdc.mint(custodian, 200);
         vm.stopBroadcast();
 
         NetworkConfig memory anvilConfig = NetworkConfig({
@@ -54,7 +58,7 @@ contract HelperConfig is Script {
             shareName: "Share_anv",
             shareSymbol: "SYM_anv",
             owner: makeAddr("owner"),
-            custodian: makeAddr("custodian"),
+            custodian: custodian,
             treasury: makeAddr("treasury"),
             activityReward: makeAddr("activityReward")
         });
