@@ -41,7 +41,7 @@ contract DeployVault is Script {
             shareSymbol,
             promisedYield,
             opensAt,
-            opensAt + 1 weeks,
+            opensAt + 1 minutes,
             custodian
         );
         vm.stopBroadcast();

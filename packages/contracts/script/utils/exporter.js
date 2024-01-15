@@ -117,7 +117,7 @@ async function exportToSupabase(onChainEntities, onChainVaults) {
   const contracts = await exportAddress();
 
   if (process.env.EXPORT_TO_SUPABASE) {
-    const chain = process.env.NEXT_PUBLIC_TARGET_NETWORK;
+    const chain = process.env.NEXT_PUBLIC_TARGET_NETWORK_ID;
     const vaults = contracts[chain].CredbullVault.map((v) => {
       return {
         address: v.address,

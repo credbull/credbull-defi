@@ -28,9 +28,8 @@ export function Lending(props: { email?: string; status?: string }) {
   const { data: list, isLoading } = useList<Tables<'vaults'>>({
     resource: 'vaults',
     filters: [
-      { field: 'status', operator: 'eq', value: 'ready' },
+      { field: 'status', operator: 'ne', value: 'created' },
       { field: 'opened_at', operator: 'lt', value: 'now()' },
-      { field: 'closed_at', operator: 'gt', value: 'now()' },
     ],
   });
 
