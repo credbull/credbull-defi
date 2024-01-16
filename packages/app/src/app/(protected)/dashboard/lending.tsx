@@ -39,8 +39,6 @@ function Vault(props: VaultProps) {
     args: [props.data.address as Address, parseEther((form.values.amount ?? 0).toString())],
   });
 
-  console.log(props.data.address);
-
   const { writeAsync: depositAsync } = useContractWrite({
     address: props.data.address as Address,
     abi: ERC4626__factory.abi,
@@ -48,9 +46,20 @@ function Vault(props: VaultProps) {
     args: [parseEther((form.values.amount ?? 0).toString()), props.address],
   });
 
+  const { writeAsync: claimAsync } = useContractWrite({
+    address: props.data.address as Address,
+    abi: ERC4626__factory.abi,
+    functionName: 'withdraw',
+    args: [parseEther((form.values.amount ?? 0).toString()), props.address, props.address],
+  });
+
   const onDeposit = async () => {
     await approveAsync();
     await depositAsync();
+  };
+
+  const onWithdraw = async () => {
+    await claimAsync();
   };
 
   const name = props.data.type === 'fixed_yield' ? 'Fixed Yield Vault' : 'Structured Yield Vault';
@@ -58,12 +67,13 @@ function Vault(props: VaultProps) {
   const closes = parseISO(props.data.closed_at);
   const opens = parseISO(props.data.opened_at);
   const opened = isAfter(new Date(), opens) && isBefore(new Date(), closes);
+  const isMatured = props.data.status === 'matured';
   return (
     <Card shadow="sm" p="xl" radius="md" withBorder>
       <Group position="apart" mt="md" mb="xs">
         <Text weight={500}>{name}</Text>
         <Badge color="pink" variant="light">
-          {props.data.status === 'matured' ? 'Claimable' : opened ? 'Open' : 'Closed'}
+          {isMatured ? 'Claimable' : opened ? 'Open' : 'Closed'}
         </Badge>
       </Group>
 
@@ -99,12 +109,12 @@ function Vault(props: VaultProps) {
         </Text>
       </Group>
 
-      <form onSubmit={form.onSubmit(() => onDeposit())}>
+      <form onSubmit={form.onSubmit(() => (isMatured ? onWithdraw() : onDeposit()))}>
         <Group mt="xl">
           <NumberInput
-            label="Deposit Amount"
+            label={isMatured ? 'Claim Amount' : 'Deposit Amount'}
             {...form.getInputProps('amount')}
-            disabled={!props.isConnected || !opened}
+            disabled={!props.isConnected || (isMatured ? false : !opened)}
           />
 
           <Button
@@ -113,9 +123,9 @@ function Vault(props: VaultProps) {
             color="blue"
             mt="md"
             radius="md"
-            disabled={!props.isConnected || !opened}
+            disabled={!props.isConnected || (isMatured ? false : !opened)}
           >
-            Lend
+            {isMatured ? 'Claim' : 'Deposit'}
           </Button>
         </Group>
       </form>
@@ -130,7 +140,7 @@ type EntitiesBalancesProps = {
 };
 const EntityBalance = ({ entity, erc20Address, name }: EntitiesBalancesProps) => {
   return (
-    <Flex direction="column" p="md" mr="md">
+    <Flex direction="column" p="md" mr="md" justify="center" align="center">
       <Text size="sm" color="gray" mt="sm">
         {name}
       </Text>
@@ -165,6 +175,7 @@ export function Lending(props: { email?: string; status?: string }) {
   return (
     <Flex justify="space-around" direction="column" gap="60px">
       <Flex justify="center" align="center" direction="row">
+        <EntityBalance entity={{ address: address! }} erc20Address={erc20Address} name="You" />
         <EntityBalance entity={treasury} erc20Address={erc20Address} name="Treasury" />
         <EntityBalance entity={activity} erc20Address={erc20Address} name="Activity Reward" />
         <EntityBalance entity={custodian} erc20Address={erc20Address} name="Custodian" />

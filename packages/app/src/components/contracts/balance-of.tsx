@@ -19,5 +19,6 @@ export function BalanceOf(props: BalanceOfProps) {
     enabled: props.enabled,
   });
 
-  return <>{formatEther(data ?? BigInt(0))}</>;
+  const value = formatEther(data ?? BigInt(0));
+  return <>{parseFloat(value).toFixed(value.includes('.') ? 3 : 0)}</>;
 }
