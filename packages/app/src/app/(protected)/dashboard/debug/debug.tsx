@@ -14,21 +14,7 @@ import { z } from 'zod';
 
 import { BalanceOf } from '@/components/contracts/balance-of';
 
-const mintSchema = z.object({
-  amount: z.number().positive(),
-});
-
-const depositSchema = z.object({
-  address: z.string().min(42).max(42),
-  amount: z.number().positive(),
-});
-
-const FAUCET_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
-
-const localWalletClient = createWalletClient({
-  chain: foundry,
-  transport: http(),
-});
+const mintSchema = z.object({ amount: z.number().positive() });
 
 const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
   const { isConnected, address } = useAccount();
@@ -53,31 +39,36 @@ const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
 
   return (
     <Card shadow="sm" p="xl" radius="md" withBorder>
-      <Group position="apart" mt="md" mb="xs">
-        <Text weight={500}>Mint &quot;USDC&quot;</Text>
-      </Group>
-
-      <Group position="apart" mt="md" mb="xs">
-        <Text size="sm" color="gray">
-          Total Balance
-        </Text>
-        <Text size="sm" color="gray">
-          <BalanceOf enabled={!!erc20Address && !!address} erc20Address={erc20Address ?? ''} address={address} /> USDC
-        </Text>
-      </Group>
-
-      <form onSubmit={form.onSubmit(() => onMint())}>
-        <Group mt="xl">
-          <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected} />
-
-          <Button type="submit" variant="light" color="blue" mt="md" radius="md" disabled={!isConnected}>
-            Mint
-          </Button>
+      <Flex direction="column" h="100%">
+        <Group position="apart" mt="md" mb="xs">
+          <Text weight={500}>Mint &quot;USDC&quot;</Text>
         </Group>
-      </form>
+
+        <Group position="apart" mt="md" mb="xs">
+          <Text size="sm" color="gray">
+            Total Balance
+          </Text>
+          <Text size="sm" color="gray">
+            <BalanceOf enabled={!!erc20Address && !!address} erc20Address={erc20Address ?? ''} address={address} /> USDC
+          </Text>
+        </Group>
+        <form onSubmit={form.onSubmit(() => onMint())} style={{ marginTop: 'auto' }}>
+          <Group>
+            <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected} />
+          </Group>
+          <Group grow>
+            <Button type="submit" variant="light" color="blue" mt="md" radius="md" disabled={!isConnected}>
+              Mint
+            </Button>
+          </Group>
+        </form>
+      </Flex>
     </Card>
   );
 };
+
+const FAUCET_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+const localWalletClient = createWalletClient({ chain: foundry, transport: http() });
 
 const SendEth = () => {
   const { isConnected, address } = useAccount();
@@ -104,27 +95,34 @@ const SendEth = () => {
 
   return (
     <Card shadow="sm" p="xl" radius="md" withBorder>
-      <Group position="apart" mt="md" mb="xs">
-        <Text weight={500}>Send ETH</Text>
-      </Group>
+      <Flex direction="column" h="100%">
+        <Group position="apart" mt="md" mb="xs">
+          <Text weight={500}>Send ETH</Text>
+        </Group>
 
-      <Group position="apart" mt="md" mb="xs">
-        <Text size="sm" color="gray">
-          Total Balance
-        </Text>
-        <Text size="sm" color="gray">
-          {parseFloat(ethBalance?.formatted ?? '0').toFixed(3)} ETH
-        </Text>
-      </Group>
+        <Group position="apart" mt="md" mb="xs">
+          <Text size="sm" color="gray">
+            Total Balance
+          </Text>
+          <Text size="sm" color="gray">
+            {parseFloat(ethBalance?.formatted ?? '0').toFixed(3)} ETH
+          </Text>
+        </Group>
 
-      <Group mt="xl" position="apart" grow>
-        <Button onClick={() => sendETH()} variant="light" color="blue" mt="md" radius="md" disabled={!isConnected}>
-          Send
-        </Button>
-      </Group>
+        <Group position="apart" grow mt="auto">
+          <Button onClick={() => sendETH()} variant="light" color="blue" mt="md" radius="md" disabled={!isConnected}>
+            Send
+          </Button>
+        </Group>
+      </Flex>
     </Card>
   );
 };
+
+const depositSchema = z.object({
+  address: z.string().min(42).max(42),
+  amount: z.number().positive(),
+});
 
 const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   const { isConnected, address } = useAccount();
@@ -155,23 +153,25 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
 
   return (
     <Card shadow="sm" p="xl" radius="md" withBorder>
-      <Group position="apart" mt="md" mb="xs">
-        <Text weight={500}>Deposit Closed Vault</Text>
-      </Group>
-
-      <form onSubmit={form.onSubmit(() => onDeposit())}>
-        <Group>
-          <TextInput label="Address" {...form.getInputProps('address')} disabled={!isConnected} />
+      <Flex direction="column" h="100%">
+        <Group position="apart" mt="md" mb="xs">
+          <Text weight={500}>Deposit Closed Vault</Text>
         </Group>
 
-        <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected} />
+        <form onSubmit={form.onSubmit(() => onDeposit())} style={{ marginTop: 'auto' }}>
+          <Group>
+            <TextInput label="Address" {...form.getInputProps('address')} disabled={!isConnected} />
+          </Group>
 
-        <Group mt="xl" grow>
-          <Button type="submit" variant="light" color="blue" mt="md" radius="md" disabled={!isConnected}>
-            Deposit
-          </Button>
-        </Group>
-      </form>
+          <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected} />
+
+          <Group grow>
+            <Button type="submit" variant="light" color="blue" mt="md" radius="md" disabled={!isConnected}>
+              Deposit
+            </Button>
+          </Group>
+        </form>
+      </Flex>
     </Card>
   );
 };

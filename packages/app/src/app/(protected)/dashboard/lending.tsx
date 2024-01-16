@@ -58,7 +58,7 @@ function Vault(props: VaultProps) {
     await depositAsync();
   };
 
-  const onWithdraw = async () => {
+  const onRedeem = async () => {
     await claimAsync();
   };
 
@@ -123,7 +123,7 @@ function Vault(props: VaultProps) {
         </Text>
       </Group>
 
-      <form onSubmit={form.onSubmit(() => (isMatured ? onWithdraw() : onDeposit()))}>
+      <form onSubmit={form.onSubmit(() => (isMatured ? onRedeem() : onDeposit()))}>
         <Group mt="xl">
           <NumberInput
             label={isMatured ? 'Claim Amount' : 'Deposit Amount'}
