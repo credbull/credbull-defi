@@ -1,7 +1,21 @@
 'use client';
 
-import { AppShell, Burger, Button, Footer, Group, Header, MediaQuery, Navbar, ScrollArea, Text } from '@mantine/core';
+import {
+  AppShell,
+  Burger,
+  Footer,
+  Group,
+  Header,
+  MediaQuery,
+  NavLink,
+  Navbar,
+  ScrollArea,
+  Text,
+  Title,
+} from '@mantine/core';
+import { IconBug, IconBusinessplan, IconChevronRight, IconLogout } from '@tabler/icons';
 import Link from 'next/link';
+import { useSelectedLayoutSegment } from 'next/navigation';
 import { Dispatch, ReactNode, SetStateAction, useState, useTransition } from 'react';
 
 import { signOut } from '@/app/(auth)/actions';
@@ -16,8 +30,7 @@ const AppHeader = ({ opened, setOpened }: { opened: boolean; setOpened: Dispatch
         </MediaQuery>
 
         <Group position="apart" grow w="100%">
-          <Text>Credbull</Text>
-
+          <Title order={1}>Credbull DeFI</Title>
           <LinkWallet />
         </Group>
       </div>
@@ -27,26 +40,45 @@ const AppHeader = ({ opened, setOpened }: { opened: boolean; setOpened: Dispatch
 
 const AppNavbar = ({ opened }: { opened: boolean }) => {
   const [, startTransition] = useTransition();
+  const segment = useSelectedLayoutSegment();
 
   return (
     <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
       <Navbar.Section mt="xs">
-        <Text>Menu</Text>
+        <Title order={3}>Menu</Title>
       </Navbar.Section>
 
       <Navbar.Section mx="-xs" px="xs">
-        <Text>
-          <Link href="/dashboard">Lending</Link>
-        </Text>
+        <NavLink
+          component={Link}
+          href="/dashboard"
+          label="Lend"
+          icon={<IconBusinessplan size={16} stroke={1.5} />}
+          rightSection={<IconChevronRight size={12} stroke={1.5} />}
+          variant="subtle"
+          active={segment === null}
+        />
+
+        <Text></Text>
       </Navbar.Section>
       <Navbar.Section grow component={ScrollArea} mx="-xs" px="xs">
-        <Text>
-          <Link href="/dashboard/debug">Debug</Link>
-        </Text>
+        <NavLink
+          component={Link}
+          href="/dashboard/debug"
+          label="Debug"
+          icon={<IconBug size={16} stroke={1.5} />}
+          rightSection={<IconChevronRight size={12} stroke={1.5} />}
+          variant="subtle"
+          active={segment === 'debug'}
+        />
       </Navbar.Section>
 
       <Navbar.Section>
-        <Button onClick={() => startTransition(() => signOut())}>Logout</Button>
+        <NavLink
+          onClick={() => startTransition(() => signOut())}
+          label="Logout"
+          icon={<IconLogout size={16} stroke={1.5} />}
+        />
       </Navbar.Section>
     </Navbar>
   );
@@ -55,7 +87,11 @@ const AppNavbar = ({ opened }: { opened: boolean }) => {
 const AppFooter = () => {
   return (
     <Footer height={60} p="md">
-      Footer
+      <Group position="center" spacing="xs">
+        <Text size="xs" color="gray" weight={500}>
+          © 2024 Credbull DeFI
+        </Text>
+      </Group>
     </Footer>
   );
 };
