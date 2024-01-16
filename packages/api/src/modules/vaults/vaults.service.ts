@@ -5,7 +5,7 @@ import { BigNumber } from 'ethers';
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
-import { Enums, Tables } from '../../types/supabase';
+import { Tables } from '../../types/supabase';
 import { responseFromRead, responseFromWrite } from '../../utils/contracts';
 import { anyCallHasFailed } from '../../utils/errors';
 
@@ -37,6 +37,7 @@ export class VaultsService {
     if (!vaults.data) return { data: [] };
 
     const errors = [];
+    const maturedVaults = [];
     for (const vault of vaults.data) {
       // gather all the data we need to calculate the asset distribution
       const requiredData = await this.requiredData(vault);
@@ -59,9 +60,9 @@ export class VaultsService {
       // mature the vault on and off chain
       const matured = await this.mature(vault);
       if (matured.error) errors.push(matured.error);
+      if (matured.data) maturedVaults.push(...matured.data);
     }
 
-    const maturedVaults = vaults.data.map((v) => ({ ...v, status: 'matured' as Enums<'vault_status'> }));
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: maturedVaults };
   }
 
@@ -111,13 +112,13 @@ export class VaultsService {
     return calls;
   }
 
-  private async mature(vault: Tables<'vaults'>) {
+  private async mature(vault: Tables<'vaults'>): Promise<ServiceResponse<Tables<'vaults'>[]>> {
     const strategy = this.strategy(vault);
 
     const maturedOnChain = await responseFromWrite(strategy.mature(this.ethers.overrides()));
     if (maturedOnChain.error) return maturedOnChain;
 
-    return this.supabase.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id);
+    return this.supabase.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id).select();
   }
 
   private contract(vault: Tables<'vaults'>): CredbullVault {
