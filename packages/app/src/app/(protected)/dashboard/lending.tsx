@@ -89,8 +89,6 @@ function Vault(props: VaultProps) {
     setLoading(false);
   };
 
-  console.log(userBalance);
-
   const name = props.data.type === 'fixed_yield' ? 'Fixed Yield Vault' : 'Structured Yield Vault';
 
   const closes = parseISO(props.data.closed_at);
