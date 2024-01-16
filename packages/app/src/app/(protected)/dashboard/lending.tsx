@@ -49,7 +49,7 @@ function Vault(props: VaultProps) {
   const { writeAsync: claimAsync } = useContractWrite({
     address: props.data.address as Address,
     abi: ERC4626__factory.abi,
-    functionName: 'withdraw',
+    functionName: 'redeem',
     args: [parseEther((form.values.amount ?? 0).toString()), props.address, props.address],
   });
 
@@ -98,6 +98,20 @@ function Vault(props: VaultProps) {
       <Group position="apart" mt="md" mb="xs">
         <Text size="sm" color="gray">
           Total Deposited
+        </Text>
+        <Text size="sm" color="gray">
+          <BalanceOf
+            enabled={!!props.data.asset_address && !!props.data.address}
+            erc20Address={props.data.asset_address}
+            address={props.data.address}
+          />{' '}
+          USDC
+        </Text>
+      </Group>
+
+      <Group position="apart" mt="md" mb="xs">
+        <Text size="sm" color="gray">
+          Your Deposit
         </Text>
         <Text size="sm" color="gray">
           <BalanceOf
