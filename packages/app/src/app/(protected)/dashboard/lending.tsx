@@ -111,7 +111,7 @@ function Vault(props: VaultProps) {
     <Card shadow="sm" p="xl" radius="md" withBorder>
       <Group position="apart" mt="md" mb="xs">
         <Text weight={500}>{name}</Text>
-        <Badge color="pink" variant="light">
+        <Badge color={isMatured ? 'orange' : opened ? 'green' : 'pink'} variant="light">
           {isMatured ? 'Claimable' : opened ? 'Open' : 'Closed'}
         </Badge>
       </Group>
