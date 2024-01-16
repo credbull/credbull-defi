@@ -150,7 +150,7 @@ function Vault(props: VaultProps) {
 
       <Group position="apart" mt="md" mb="xs">
         <Text size="sm" color="gray">
-          Your Deposit
+          Your Shares
         </Text>
         <Text size="sm" color="gray">
           <BalanceOf
