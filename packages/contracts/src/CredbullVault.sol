@@ -18,6 +18,8 @@ contract CredbullVault is ERC4626, Ownable {
     error CredbullVault__NotMatured();
     //Error to revert mature if there is not enough balance to mature
     error CredbullVault__NotEnoughBalanceToMature();
+    //Error to revert deposit if the valut is not opened yet
+    error CredbullVault__VaultNotOpened();
 
     //Address of the custodian to receive the assets on deposit and mint
     address public custodian;
@@ -39,13 +41,13 @@ contract CredbullVault is ERC4626, Ownable {
      * @dev
      * The timestamp when the vault opens for deposit.
      */
-    uint256 private opensAtTimestamp;
+    uint256 public opensAtTimestamp;
 
     /**
      * @dev
      * The timestamp when the vault closes for deposit.
      */
-    uint256 private closesAtTimestamp;
+    uint256 public closesAtTimestamp;
 
     /**
      * @notice - Track if vault is matured
@@ -61,6 +63,13 @@ contract CredbullVault is ERC4626, Ownable {
             revert CredbullVault__NotMatured();
         }
 
+        _;
+    }
+
+    modifier onlyWhenOpened() {
+        if (block.timestamp < opensAtTimestamp) {
+            revert CredbullVault__VaultNotOpened();
+        }
         _;
     }
 
@@ -92,7 +101,9 @@ contract CredbullVault is ERC4626, Ownable {
      * @dev - The internal deposit function of ERC4626 overridden to transfer the asset to custodian wallet
      * and update the _totalAssetDeposited on deposit/mint
      */
-    function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
+    function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override 
+    // onlyWhenOpened
+    {
         SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
         _totalAssetDeposited += assets;
 

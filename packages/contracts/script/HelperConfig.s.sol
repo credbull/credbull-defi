@@ -7,6 +7,7 @@ import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
 
 contract HelperConfig is Script {
     NetworkConfig public activeNetworkConfig;
+    TimeConfig public activeTimeConfig;
 
     struct NetworkConfig {
         address owner;
@@ -18,11 +19,17 @@ contract HelperConfig is Script {
         address activityReward;
     }
 
+    struct TimeConfig {
+        uint256 firstVaultOpensAt;
+        uint256 vaultClosesDuration;
+    }
+
     constructor() {
         if (block.chainid == 11155111) {
             activeNetworkConfig = getSepoliaEthConfig();
         } else {
             activeNetworkConfig = getAnvilEthConfig();
+            activeTimeConfig = getAnvilTimeConfig();
         }
     }
 
@@ -66,5 +73,16 @@ contract HelperConfig is Script {
         });
 
         return anvilConfig;
+    }
+
+    function getAnvilTimeConfig() public pure returns (TimeConfig memory) {
+        return TimeConfig({ firstVaultOpensAt: 1641070800, vaultClosesDuration: 86400 });
+    }
+
+    function getSepoliaTimeConfig() public view returns (TimeConfig memory) {
+        return TimeConfig({
+            firstVaultOpensAt: vm.envUint("VAULT_OPENS_AT_TIMESTAMP"),
+            vaultClosesDuration: vm.envUint("VAULT_CLOSES_DURATION_TIMESTAMP")
+        });
     }
 }

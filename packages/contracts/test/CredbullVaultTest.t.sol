@@ -22,6 +22,8 @@ contract CredbullVaultTest is Test {
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
 
+    uint256 vaultOpenTime;
+
     uint256 private constant INITIAL_BALANCE = 1000 ether;
 
     function setUp() public {
@@ -31,6 +33,7 @@ contract CredbullVaultTest is Test {
         config = _config;
 
         (owner, asset,,, custodian,,) = config.activeNetworkConfig();
+        (vaultOpenTime,) = config.activeTimeConfig();
 
         MockStablecoin(asset).mint(alice, INITIAL_BALANCE);
         MockStablecoin(asset).mint(bob, INITIAL_BALANCE);
@@ -139,12 +142,18 @@ contract CredbullVaultTest is Test {
         vm.stopPrank();
     }
 
+    // function test__RevertDepositIfVaultNotOpened() public {
+    //     vm.expectRevert(CredbullVault.CredbullVault__VaultNotOpened.selector);
+    //     vault.deposit(10 ether, alice);
+    // }
+
     function deposit(address user, uint256 assets) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
         IERC20(asset).approve(address(vault), assets);
 
         // now we can deposit, alice is the caller and receiver
+        vm.warp(vaultOpenTime);
         shares = vault.deposit(assets, alice);
         vm.stopPrank();
     }

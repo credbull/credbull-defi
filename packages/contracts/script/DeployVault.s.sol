@@ -16,8 +16,7 @@ contract DeployVault is Script {
 
         this.deployCredbullEntities(helperConfig);
 
-        uint256 firstVaultOpensAt = vm.envUint("VAULT_OPENS_AT_TIMESTAMP");
-        uint256 vaultClosesDuration = vm.envUint("VAULT_CLOSES_DURATION_TIMESTAMP");
+        (uint256 firstVaultOpensAt, uint256 vaultClosesDuration) = helperConfig.activeTimeConfig();
 
         CredbullVault[] memory vaults = new CredbullVault[](3);
         vaults[0] =
@@ -43,14 +42,7 @@ contract DeployVault is Script {
 
         vm.startBroadcast();
         CredbullVault vault = new CredbullVault(
-            owner,
-            IERC20(asset),
-            shareName,
-            shareSymbol,
-            promisedYield,
-            opensAt,
-            opensAt + closesDuration,
-            custodian
+            owner, IERC20(asset), shareName, shareSymbol, promisedYield, opensAt, opensAt + closesDuration, custodian
         );
         vm.stopBroadcast();
 
