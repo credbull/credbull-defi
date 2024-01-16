@@ -106,7 +106,7 @@ const SendEth = () => {
     } catch (error) {
       console.error('⚡️ ~ file: FaucetButton.tsx:sendETH ~ error', error);
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 1000);
     }
   };
 

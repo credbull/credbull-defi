@@ -225,6 +225,7 @@ export function Lending(props: { email?: string; status?: string }) {
     queryOptions: {
       refetchOnWindowFocus: 'always',
     },
+    sorters: [{ field: 'opened_at', order: 'asc' }],
   });
 
   const erc20Address = list?.data[0].asset_address;
