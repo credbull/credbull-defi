@@ -8,13 +8,14 @@ import { useList } from '@refinedev/core';
 import { useForm } from '@refinedev/mantine';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import _ from 'lodash';
+import { parseEther } from 'viem';
 import { Address, useAccount, useContractWrite } from 'wagmi';
 import { z } from 'zod';
 
 import { BalanceOf } from '@/components/contracts/balance-of';
 
 const schema = z.object({
-  amount: z.bigint().positive(),
+  amount: z.number().positive(),
 });
 
 type VaultProps = {
@@ -27,19 +28,29 @@ function Vault(props: VaultProps) {
   const form = useForm({
     validate: zodResolver(schema),
     initialValues: {
-      amount: BigInt(0),
+      amount: 0,
     },
   });
 
-  const { writeAsync } = useContractWrite({
+  const { writeAsync: approveAsync } = useContractWrite({
+    address: props.data.asset_address as Address,
+    abi: ERC4626__factory.abi,
+    functionName: 'approve',
+    args: [props.data.address as Address, parseEther((form.values.amount ?? 0).toString())],
+  });
+
+  console.log(props.data.address);
+
+  const { writeAsync: depositAsync } = useContractWrite({
     address: props.data.address as Address,
     abi: ERC4626__factory.abi,
     functionName: 'deposit',
-    args: [form.values.amount, props.address],
+    args: [parseEther((form.values.amount ?? 0).toString()), props.address],
   });
 
   const onDeposit = async () => {
-    await writeAsync();
+    await approveAsync();
+    await depositAsync();
   };
 
   const name = props.data.type === 'fixed_yield' ? 'Fixed Yield Vault' : 'Structured Yield Vault';
@@ -71,6 +82,20 @@ function Vault(props: VaultProps) {
         </Text>
         <Text size="sm" color="gray">
           {format(closes, 'MM/dd/yyyy HH:mm')}
+        </Text>
+      </Group>
+
+      <Group position="apart" mt="md" mb="xs">
+        <Text size="sm" color="gray">
+          Total Deposited
+        </Text>
+        <Text size="sm" color="gray">
+          <BalanceOf
+            enabled={!!props.data.address && !!props.address}
+            erc20Address={props.data.address}
+            address={props.address}
+          />{' '}
+          USDC
         </Text>
       </Group>
 

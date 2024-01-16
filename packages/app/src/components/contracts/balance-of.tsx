@@ -1,5 +1,6 @@
 import { ERC20__factory } from '@credbull/contracts';
 import { Address } from 'abitype/src/abi';
+import { formatEther } from 'viem';
 import { useContractRead } from 'wagmi';
 
 export type BalanceOfProps = {
@@ -9,7 +10,7 @@ export type BalanceOfProps = {
 };
 
 export function BalanceOf(props: BalanceOfProps) {
-  const { data, error } = useContractRead({
+  const { data } = useContractRead({
     address: props.erc20Address as Address,
     abi: ERC20__factory.abi,
     functionName: 'balanceOf',
@@ -18,9 +19,5 @@ export function BalanceOf(props: BalanceOfProps) {
     enabled: props.enabled,
   });
 
-  console.log(props.enabled);
-  console.log(error);
-  console.log(data);
-
-  return <>{data?.toString()}</>;
+  return <>{formatEther(data ?? BigInt(0))}</>;
 }

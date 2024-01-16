@@ -52,7 +52,7 @@ contract HelperConfig is Script {
 
         vm.startBroadcast();
         MockStablecoin usdc = new MockStablecoin(type(uint128).max);
-        usdc.mint(custodian, 200);
+        usdc.mint(custodian, 200 ether);
         vm.stopBroadcast();
 
         NetworkConfig memory anvilConfig = NetworkConfig({
