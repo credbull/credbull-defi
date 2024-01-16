@@ -9,7 +9,7 @@ import { useForm } from '@refinedev/mantine';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import _ from 'lodash';
 import { useState } from 'react';
-import { parseEther } from 'viem';
+import { formatEther, parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
 import { Address, useAccount, useContractRead, useContractWrite, useWalletClient } from 'wagmi';
 import { z } from 'zod';
@@ -29,13 +29,7 @@ type VaultProps = {
 function Vault(props: VaultProps) {
   const [isLoading, setLoading] = useState(false);
   const { data: client } = useWalletClient();
-
-  const form = useForm({
-    validate: zodResolver(schema),
-    initialValues: {
-      amount: 0,
-    },
-  });
+  const isMatured = props.data.status === 'matured';
 
   const { data: userBalance } = useContractRead({
     address: props.data.address as Address,
@@ -44,6 +38,13 @@ function Vault(props: VaultProps) {
     watch: true,
     args: [props.address as Address],
     enabled: !!props.data.address && !!props.address,
+  });
+
+  const form = useForm({
+    validate: zodResolver(schema),
+    initialValues: {
+      amount: isMatured ? parseFloat(formatEther(userBalance ?? BigInt(0))) : 0,
+    },
   });
 
   const { writeAsync: approveAsync } = useContractWrite({
@@ -88,12 +89,14 @@ function Vault(props: VaultProps) {
     setLoading(false);
   };
 
+  console.log(userBalance);
+
   const name = props.data.type === 'fixed_yield' ? 'Fixed Yield Vault' : 'Structured Yield Vault';
 
   const closes = parseISO(props.data.closed_at);
   const opens = parseISO(props.data.opened_at);
   const opened = isAfter(new Date(), opens) && isBefore(new Date(), closes);
-  const isMatured = props.data.status === 'matured';
+
   return (
     <Card shadow="sm" p="xl" radius="md" withBorder>
       <Group position="apart" mt="md" mb="xs">
@@ -145,7 +148,7 @@ function Vault(props: VaultProps) {
             erc20Address={props.data.address}
             address={props.address}
           />{' '}
-          USDC
+          SHARES
         </Text>
       </Group>
 
@@ -154,7 +157,7 @@ function Vault(props: VaultProps) {
           <NumberInput
             label={isMatured ? 'Claim Amount' : 'Deposit Amount'}
             {...form.getInputProps('amount')}
-            disabled={!props.isConnected || (isMatured ? Number(userBalance) === 0 : !opened) || isLoading}
+            disabled
           />
 
           <Button
