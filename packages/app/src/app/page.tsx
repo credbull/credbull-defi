@@ -1,7 +1,5 @@
-import Link from 'next/link';
-
-import { Routes } from '@/utils/routes';
+import { Landing } from '@/app/landing';
 
 export default function Index() {
-  return <Link href={Routes.LOGIN}>Login</Link>;
+  return <Landing />;
 }

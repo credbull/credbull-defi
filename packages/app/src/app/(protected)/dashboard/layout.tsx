@@ -18,6 +18,8 @@ import Link from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
 import { Dispatch, ReactNode, SetStateAction, useState, useTransition } from 'react';
 
+import { Routes } from '@/utils/routes';
+
 import { signOut } from '@/app/(auth)/actions';
 import { LinkWallet } from '@/app/(protected)/dashboard/link-wallet';
 
@@ -51,7 +53,7 @@ const AppNavbar = ({ opened }: { opened: boolean }) => {
       <Navbar.Section mx="-xs" px="xs">
         <NavLink
           component={Link}
-          href="/dashboard"
+          href={Routes.DASHBOARD}
           label="Lend"
           icon={<IconBusinessplan size={16} stroke={1.5} />}
           rightSection={<IconChevronRight size={12} stroke={1.5} />}
@@ -64,7 +66,7 @@ const AppNavbar = ({ opened }: { opened: boolean }) => {
       <Navbar.Section grow component={ScrollArea} mx="-xs" px="xs">
         <NavLink
           component={Link}
-          href="/dashboard/debug"
+          href={Routes.DEBUG}
           label="Debug"
           icon={<IconBug size={16} stroke={1.5} />}
           rightSection={<IconChevronRight size={12} stroke={1.5} />}

@@ -28,7 +28,7 @@ export default async function RootLayout(props: { children: ReactNode }) {
 
   return (
     <html lang="en">
-      <body>
+      <body style={{ height: '100vh' }}>
         <StyleProvider>
           <RefineProvider>
             <RainbowkitProvider>{props.children}</RainbowkitProvider>
