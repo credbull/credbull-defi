@@ -131,6 +131,7 @@ export interface Database {
       vaults: {
         Row: {
           address: string;
+          asset_address: string;
           closed_at: string;
           created_at: string;
           id: number;
@@ -142,6 +143,7 @@ export interface Database {
         };
         Insert: {
           address: string;
+          asset_address: string;
           closed_at: string;
           created_at?: string;
           id?: number;
@@ -153,6 +155,7 @@ export interface Database {
         };
         Update: {
           address?: string;
+          asset_address?: string;
           closed_at?: string;
           created_at?: string;
           id?: number;

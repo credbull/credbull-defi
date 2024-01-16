@@ -46,4 +46,3 @@ jobs:
           ETHERS_DEPLOYER_PRIVATE_KEY: your_deployer_private_key
           ETHERS_INFURA_API_KEY: your_infura_api_key
           CRON_SECRET: any_string_will_do
-          USDC_CONTRACT_ADDRESS: for_dev_use_local_mock_usdc_contract_address

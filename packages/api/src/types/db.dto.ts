@@ -22,6 +22,9 @@ export class VaultDto implements Tables<'vaults'> {
   @ApiProperty({ description: 'vault strategy address' })
   strategy_address: string;
 
+  @ApiProperty({ description: 'vault asset address' })
+  asset_address: string;
+
   @ApiProperty({ description: 'vault tenant' })
   tenant: string;
 

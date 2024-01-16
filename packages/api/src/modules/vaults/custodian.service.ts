@@ -1,6 +1,5 @@
-import { MockStablecoin__factory } from '@credbull/contracts';
+import { ERC20__factory } from '@credbull/contracts';
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { BigNumber } from 'ethers';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
@@ -13,18 +12,13 @@ import { CustodianTransferDto } from './custodian.dto';
 
 @Injectable()
 export class CustodianService {
-  private readonly usdcAddress: string;
-
   constructor(
     private readonly ethers: EthersService,
     private readonly supabase: SupabaseService,
-    private readonly config: ConfigService,
-  ) {
-    this.usdcAddress = this.config.getOrThrow('USDC_CONTRACT_ADDRESS');
-  }
+  ) {}
 
   async totalAssets(vault: Tables<'vaults'>): Promise<ServiceResponse<BigNumber>> {
-    const asset = this.asset();
+    const asset = this.asset(vault);
     const address = await this.address(vault);
     if (address.error) return address;
 
@@ -32,9 +26,9 @@ export class CustodianService {
   }
 
   async transfer(dto: CustodianTransferDto): Promise<ServiceResponse<CustodianTransferDto>> {
-    const asset = this.asset();
+    const asset = this.asset(dto);
 
-    const address = await this.address({ id: dto.vaultId });
+    const address = await this.address({ id: dto.vault_id });
     if (address.error) return address;
 
     const approve = await responseFromWrite(asset.approve(address.data, dto.amount));
@@ -48,8 +42,8 @@ export class CustodianService {
     return { data: dto };
   }
 
-  private asset() {
-    return MockStablecoin__factory.connect(this.usdcAddress, this.ethers.custodian());
+  private asset(vault: Pick<Tables<'vaults'>, 'asset_address'>) {
+    return ERC20__factory.connect(vault.asset_address, this.ethers.custodian());
   }
 
   private async address(vault: Pick<Tables<'vaults'>, 'id'>): Promise<ServiceResponse<string>> {

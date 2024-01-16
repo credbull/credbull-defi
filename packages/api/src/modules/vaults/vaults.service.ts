@@ -105,7 +105,7 @@ export class VaultsService {
 
     const calls: ServiceResponse<CustodianTransferDto>[] = [];
     for (const split of splits!) {
-      const call = await this.custodian.transfer({ ...split, vaultId: vault.id });
+      const call = await this.custodian.transfer({ ...split, ...vault, vault_id: vault.id });
       calls.push(call);
     }
 

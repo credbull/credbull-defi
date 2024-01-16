@@ -74,10 +74,10 @@ async function exportVaultsToSupabase(client, onChainVaults) {
 
   const makeVault = (v) => {
     const opened_at = new Date();
-    opened_at.setTime(v.openedAt * 1000);
+    opened_at.setTime(v.opened_at * 1000);
 
     const closed_at = new Date();
-    closed_at.setTime(v.closedAt * 1000);
+    closed_at.setTime(v.closed_at * 1000);
 
     return {
       type: 'fixed_yield',
@@ -86,6 +86,7 @@ async function exportVaultsToSupabase(client, onChainVaults) {
       closed_at,
       address: v.address,
       strategy_address: v.address,
+      asset_address: v.asset_address,
     };
   };
 
@@ -121,8 +122,9 @@ async function exportToSupabase(onChainEntities, onChainVaults) {
     const vaults = contracts[chain].CredbullVault.map((v) => {
       return {
         address: v.address,
-        openedAt: v.arguments[5],
-        closedAt: v.arguments[6],
+        asset_address: v.arguments[1],
+        opened_at: v.arguments[5],
+        closed_at: v.arguments[6],
       };
     });
     const configDeployment = contracts[chain].CredbullEntities[0].arguments;

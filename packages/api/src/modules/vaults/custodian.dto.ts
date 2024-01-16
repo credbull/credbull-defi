@@ -3,17 +3,21 @@ import { BigNumber } from 'ethers';
 
 export class CustodianTransferDto {
   @IsNumber()
-  vaultId: number;
+  vault_id: number;
 
   @IsString()
   address: string;
+
+  @IsString()
+  asset_address: string;
 
   @IsNumber()
   amount: BigNumber;
 
   constructor(partial: Partial<CustodianTransferDto>) {
     this.amount = BigNumber.from(partial.amount);
-    this.vaultId = partial.vaultId!;
+    this.vault_id = partial.vault_id!;
     this.address = partial.address!;
+    this.asset_address = partial.asset_address!;
   }
 }
