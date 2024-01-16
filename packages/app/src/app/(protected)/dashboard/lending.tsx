@@ -164,6 +164,7 @@ function Vault(props: VaultProps) {
             mt="md"
             radius="md"
             disabled={!props.isConnected || (isMatured ? Number(userBalance) === 0 : !opened) || isLoading}
+            loading={isLoading}
           >
             {isMatured ? 'Claim' : 'Deposit'}
           </Button>

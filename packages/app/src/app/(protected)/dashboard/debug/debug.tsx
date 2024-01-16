@@ -65,7 +65,15 @@ const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
             <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected || isLoading} />
           </Group>
           <Group grow>
-            <Button type="submit" variant="light" color="blue" mt="md" radius="md" disabled={!isConnected || isLoading}>
+            <Button
+              type="submit"
+              variant="light"
+              color="blue"
+              mt="md"
+              radius="md"
+              disabled={!isConnected || isLoading}
+              loading={isLoading}
+            >
               Mint
             </Button>
           </Group>
@@ -126,6 +134,7 @@ const SendEth = () => {
             mt="md"
             radius="md"
             disabled={!isConnected || isLoading}
+            loading={isLoading}
           >
             Send
           </Button>
@@ -192,7 +201,15 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
           <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected || isLoading} />
 
           <Group grow>
-            <Button type="submit" variant="light" color="blue" mt="md" radius="md" disabled={!isConnected || isLoading}>
+            <Button
+              type="submit"
+              variant="light"
+              color="blue"
+              mt="md"
+              radius="md"
+              disabled={!isConnected || isLoading}
+              loading={isLoading}
+            >
               Deposit
             </Button>
           </Group>
