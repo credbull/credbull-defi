@@ -4,7 +4,7 @@ import { Tables } from '@credbull/api';
 import { ERC4626__factory, MockStablecoin__factory } from '@credbull/contracts';
 import { Button, Card, Flex, Group, NumberInput, Text, TextInput } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
-import { useList } from '@refinedev/core';
+import { useList, useNotification } from '@refinedev/core';
 import { useForm } from '@refinedev/mantine';
 import { getPublicClient } from '@wagmi/core';
 import { useState } from 'react';
@@ -19,6 +19,7 @@ import { BalanceOf } from '@/components/contracts/balance-of';
 const mintSchema = z.object({ amount: z.number().positive() });
 
 const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
+  const { open } = useNotification();
   const { isConnected, address } = useAccount();
   const { data: client } = useWalletClient();
   const [isLoading, setLoading] = useState(false);
@@ -38,11 +39,17 @@ const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
   });
 
   const onMint = async () => {
-    setLoading(true);
-    const mintTx = await writeAsync();
-    await waitForTransactionReceipt(client!, mintTx);
-    form.reset();
-    setLoading(false);
+    try {
+      setLoading(true);
+      const mintTx = await writeAsync();
+      await waitForTransactionReceipt(client!, mintTx);
+      form.reset();
+      open?.({ type: 'success', message: 'Mint successful' });
+    } catch (e) {
+      open?.({ type: 'error', message: 'Mint failed', description: e?.toString() });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,6 +94,7 @@ const FAUCET_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const localWalletClient = createWalletClient({ chain: foundry, transport: http() });
 
 const SendEth = () => {
+  const { open } = useNotification();
   const { isConnected, address } = useAccount();
   const { data: ethBalance } = useBalance({ address, watch: true });
   const [isLoading, setLoading] = useState(false);
@@ -103,8 +111,9 @@ const SendEth = () => {
 
       const publicClient = getPublicClient();
       await publicClient.waitForTransactionReceipt({ hash });
-    } catch (error) {
-      console.error('⚡️ ~ file: FaucetButton.tsx:sendETH ~ error', error);
+      open?.({ type: 'success', message: 'Send ETH successful' });
+    } catch (e) {
+      open?.({ type: 'error', message: 'Send Eth failed', description: e?.toString() });
     } finally {
       setTimeout(() => setLoading(false), 1000);
     }
@@ -150,6 +159,7 @@ const depositSchema = z.object({
 });
 
 const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
+  const { open } = useNotification();
   const { isConnected, address } = useAccount();
   const { data: client } = useWalletClient();
   const [isLoading, setLoading] = useState(false);
@@ -175,15 +185,21 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
 
   const onDeposit = async () => {
     setLoading(true);
-    const approveTx = await approveAsync();
+    try {
+      const approveTx = await approveAsync();
 
-    if (client && approveTx.hash) {
-      await waitForTransactionReceipt(client!, approveTx);
-      const depositTx = await depositAsync();
-      await waitForTransactionReceipt(client!, depositTx);
-      form.reset();
+      if (client && approveTx.hash) {
+        await waitForTransactionReceipt(client!, approveTx);
+        const depositTx = await depositAsync();
+        await waitForTransactionReceipt(client!, depositTx);
+        form.reset();
+      }
+      open?.({ type: 'success', message: 'Deposit successful' });
+    } catch (e) {
+      open?.({ type: 'error', message: 'Deposit failed', description: e?.toString() });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

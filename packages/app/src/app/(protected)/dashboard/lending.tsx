@@ -4,7 +4,7 @@ import { Tables } from '@credbull/api';
 import { ERC20__factory, ERC4626__factory } from '@credbull/contracts';
 import { Badge, Button, Card, Flex, Group, NumberInput, Text } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
-import { useList } from '@refinedev/core';
+import { useList, useNotification } from '@refinedev/core';
 import { useForm } from '@refinedev/mantine';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import _ from 'lodash';
@@ -27,6 +27,7 @@ type VaultProps = {
 };
 
 function Vault(props: VaultProps) {
+  const { open } = useNotification();
   const [isLoading, setLoading] = useState(false);
   const { data: client } = useWalletClient();
   const isMatured = props.data.status === 'matured';
@@ -70,22 +71,34 @@ function Vault(props: VaultProps) {
 
   const onDeposit = async () => {
     setLoading(true);
-    const approveTx = await approveAsync();
+    try {
+      const approveTx = await approveAsync();
 
-    if (client && approveTx.hash) {
-      await waitForTransactionReceipt(client!, approveTx);
-      const depositTx = await depositAsync();
-      await waitForTransactionReceipt(client!, depositTx);
-      form.reset();
+      if (client && approveTx.hash) {
+        await waitForTransactionReceipt(client!, approveTx);
+        const depositTx = await depositAsync();
+        await waitForTransactionReceipt(client!, depositTx);
+        form.reset();
+        open?.({ type: 'success', message: 'Deposit successful' });
+      }
+    } catch (e) {
+      open?.({ type: 'error', message: 'Deposit failed', description: e?.toString() });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const onRedeem = async () => {
     setLoading(true);
-    const claimTx = await claimAsync();
-    await waitForTransactionReceipt(client!, claimTx);
-    setLoading(false);
+    try {
+      const claimTx = await claimAsync();
+      await waitForTransactionReceipt(client!, claimTx);
+      open?.({ type: 'success', message: 'Claim successful' });
+    } catch (e) {
+      open?.({ type: 'error', message: 'Claim failed', description: e?.toString() });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const name = props.data.type === 'fixed_yield' ? 'Fixed Yield Vault' : 'Structured Yield Vault';
