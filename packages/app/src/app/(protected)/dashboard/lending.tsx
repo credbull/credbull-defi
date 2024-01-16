@@ -9,7 +9,7 @@ import { useForm } from '@refinedev/mantine';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import _ from 'lodash';
 import { useState } from 'react';
-import { formatEther, parseEther } from 'viem';
+import { parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
 import { Address, useAccount, useContractRead, useContractWrite, useWalletClient } from 'wagmi';
 import { z } from 'zod';
@@ -43,7 +43,7 @@ function Vault(props: VaultProps) {
   const form = useForm({
     validate: zodResolver(schema),
     initialValues: {
-      amount: isMatured ? parseFloat(formatEther(userBalance ?? BigInt(0))) : 0,
+      amount: 0,
     },
   });
 
@@ -65,7 +65,7 @@ function Vault(props: VaultProps) {
     address: props.data.address as Address,
     abi: ERC4626__factory.abi,
     functionName: 'redeem',
-    args: [parseEther((form.values.amount ?? 0).toString()), props.address, props.address],
+    args: [userBalance!, props.address, props.address],
   });
 
   const onDeposit = async () => {
@@ -85,7 +85,6 @@ function Vault(props: VaultProps) {
     setLoading(true);
     const claimTx = await claimAsync();
     await waitForTransactionReceipt(client!, claimTx);
-    form.reset();
     setLoading(false);
   };
 
@@ -150,27 +149,43 @@ function Vault(props: VaultProps) {
         </Text>
       </Group>
 
-      <form onSubmit={form.onSubmit(() => (isMatured ? onRedeem() : onDeposit()))}>
-        <Group mt="xl">
-          <NumberInput
-            label={isMatured ? 'Claim Amount' : 'Deposit Amount'}
-            {...form.getInputProps('amount')}
-            disabled
-          />
-
+      {isMatured ? (
+        <Group mt="xl" grow>
           <Button
-            type="submit"
+            onClick={() => onRedeem()}
             variant="light"
             color="blue"
             mt="md"
             radius="md"
-            disabled={!props.isConnected || (isMatured ? Number(userBalance) === 0 : !opened) || isLoading}
+            disabled={!props.isConnected || Number(userBalance) === 0 || isLoading}
             loading={isLoading}
           >
-            {isMatured ? 'Claim' : 'Deposit'}
+            Claim
           </Button>
         </Group>
-      </form>
+      ) : (
+        <form onSubmit={form.onSubmit(() => onDeposit())}>
+          <Group mt="xl">
+            <NumberInput
+              label="Deposit Amount"
+              {...form.getInputProps('amount')}
+              disabled={!props.isConnected || !opened || isLoading}
+            />
+
+            <Button
+              type="submit"
+              variant="light"
+              color="blue"
+              mt="md"
+              radius="md"
+              disabled={!props.isConnected || !opened || isLoading}
+              loading={isLoading}
+            >
+              Deposit
+            </Button>
+          </Group>
+        </form>
+      )}
     </Card>
   );
 }
