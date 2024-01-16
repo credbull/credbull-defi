@@ -16,7 +16,10 @@ import { z } from 'zod';
 
 import { BalanceOf } from '@/components/contracts/balance-of';
 
-const mintSchema = z.object({ amount: z.number().positive() });
+const mintSchema = z.object({
+  address: z.string().min(42).max(42),
+  amount: z.number().positive(),
+});
 
 const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
   const { open } = useNotification();
@@ -26,16 +29,14 @@ const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
 
   const form = useForm({
     validate: zodResolver(mintSchema),
-    initialValues: {
-      amount: 0,
-    },
+    initialValues: { amount: 0, address: '' },
   });
 
   const { writeAsync } = useContractWrite({
     address: erc20Address as Address,
     abi: MockStablecoin__factory.abi,
     functionName: 'mint',
-    args: [address as Address, parseEther((form.values.amount ?? 0).toString())],
+    args: [form.values.address as Address, parseEther((form.values.amount ?? 0).toString())],
   });
 
   const onMint = async () => {
@@ -57,20 +58,15 @@ const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
       <Flex direction="column" h="100%">
         <Group position="apart" mt="md" mb="xs">
           <Text weight={500}>Mint &quot;USDC&quot;</Text>
-        </Group>
-
-        <Group position="apart" mt="md" mb="xs">
-          <Text size="sm" color="gray">
-            Total Balance
-          </Text>
           <Text size="sm" color="gray">
             <BalanceOf enabled={!!erc20Address && !!address} erc20Address={erc20Address ?? ''} address={address} /> USDC
           </Text>
         </Group>
+
         <form onSubmit={form.onSubmit(() => onMint())} style={{ marginTop: 'auto' }}>
-          <Group>
-            <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected || isLoading} />
-          </Group>
+          <TextInput label="Address" {...form.getInputProps('address')} disabled={!isConnected || isLoading} />
+          <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected || isLoading} />
+
           <Group grow>
             <Button
               type="submit"
@@ -119,19 +115,14 @@ const SendEth = () => {
     }
   };
 
+  const balance = parseFloat(ethBalance?.formatted ?? '0');
   return (
     <Card shadow="sm" p="xl" radius="md" withBorder>
       <Flex direction="column" h="100%">
         <Group position="apart" mt="md" mb="xs">
           <Text weight={500}>Send ETH</Text>
-        </Group>
-
-        <Group position="apart" mt="md" mb="xs">
           <Text size="sm" color="gray">
-            Total Balance
-          </Text>
-          <Text size="sm" color="gray">
-            {parseFloat(ethBalance?.formatted ?? '0').toFixed(3)} ETH
+            {balance.toFixed(ethBalance?.formatted.includes('.') ? 3 : 0)} ETH
           </Text>
         </Group>
 
@@ -207,13 +198,18 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
       <Flex direction="column" h="100%">
         <Group position="apart" mt="md" mb="xs">
           <Text weight={500}>Deposit Closed Vault</Text>
+          <Text size="sm" color="gray">
+            <BalanceOf
+              enabled={!!form.values.address && !!address}
+              erc20Address={form.values.address ?? ''}
+              address={address}
+            />{' '}
+            SHARES
+          </Text>
         </Group>
 
         <form onSubmit={form.onSubmit(() => onDeposit())} style={{ marginTop: 'auto' }}>
-          <Group>
-            <TextInput label="Address" {...form.getInputProps('address')} disabled={!isConnected || isLoading} />
-          </Group>
-
+          <TextInput label="Address" {...form.getInputProps('address')} disabled={!isConnected || isLoading} />
           <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected || isLoading} />
 
           <Group grow>

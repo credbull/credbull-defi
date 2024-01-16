@@ -4,8 +4,10 @@ import { Tables } from '@credbull/api';
 import { ERC20__factory, ERC4626__factory } from '@credbull/contracts';
 import { Badge, Button, Card, Flex, Group, NumberInput, Text } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
+import { useClipboard } from '@mantine/hooks';
 import { useList, useNotification } from '@refinedev/core';
 import { useForm } from '@refinedev/mantine';
+import { IconCopy } from '@tabler/icons';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import _ from 'lodash';
 import { useState } from 'react';
@@ -27,6 +29,7 @@ type VaultProps = {
 };
 
 function Vault(props: VaultProps) {
+  const clipboard = useClipboard();
   const { open } = useNotification();
   const [isLoading, setLoading] = useState(false);
   const { data: client } = useWalletClient();
@@ -110,7 +113,9 @@ function Vault(props: VaultProps) {
   return (
     <Card shadow="sm" p="xl" radius="md" withBorder>
       <Group position="apart" mt="md" mb="xs">
-        <Text weight={500}>{name}</Text>
+        <Text weight={500} onClick={() => clipboard.copy(props.data?.address)} style={{ cursor: 'pointer' }}>
+          {name} <IconCopy size={12} />
+        </Text>
         <Badge color={isMatured ? 'orange' : opened ? 'green' : 'pink'} variant="light">
           {isMatured ? 'Claimable' : opened ? 'Open' : 'Closed'}
         </Badge>
@@ -209,10 +214,18 @@ type EntitiesBalancesProps = {
   erc20Address?: string;
 };
 const EntityBalance = ({ entity, erc20Address, name }: EntitiesBalancesProps) => {
+  const clipboard = useClipboard();
+
   return (
     <Flex direction="column" p="md" mr="md" justify="center" align="center">
-      <Text size="sm" color="gray" mt="sm">
-        {name}
+      <Text
+        size="sm"
+        color="gray"
+        mt="sm"
+        onClick={() => clipboard.copy(entity?.address)}
+        style={{ cursor: 'pointer' }}
+      >
+        {name} <IconCopy size={12} />
       </Text>
       <Text size="lg" weight={500}>
         <BalanceOf enabled={!!erc20Address && !!entity} erc20Address={erc20Address!} address={entity?.address} /> USDC

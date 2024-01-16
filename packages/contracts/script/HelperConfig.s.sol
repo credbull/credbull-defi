@@ -29,8 +29,8 @@ contract HelperConfig is Script {
             activeNetworkConfig = getSepoliaEthConfig();
         } else {
             activeNetworkConfig = getAnvilEthConfig();
-            activeTimeConfig = getAnvilTimeConfig();
         }
+        activeTimeConfig = getTimeConfig();
     }
 
     function getSepoliaEthConfig() public pure returns (NetworkConfig memory) {
@@ -54,19 +54,16 @@ contract HelperConfig is Script {
 
         // TODO: because we dont have a real custodian, we need to fix one that we have a private key for testing.
         address custodian = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
-        // use a owner that we have a private key for testing
-        address owner = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
         vm.startBroadcast();
         MockStablecoin usdc = new MockStablecoin(type(uint128).max);
-        usdc.mint(custodian, 200 ether);
         vm.stopBroadcast();
 
         NetworkConfig memory anvilConfig = NetworkConfig({
             asset: address(usdc),
             shareName: "Share_anv",
             shareSymbol: "SYM_anv",
-            owner: owner,
+            owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266, // use a owner that we have a private key for testing
             custodian: custodian,
             treasury: makeAddr("treasury"),
             activityReward: makeAddr("activityReward")
@@ -75,11 +72,7 @@ contract HelperConfig is Script {
         return anvilConfig;
     }
 
-    function getAnvilTimeConfig() public pure returns (TimeConfig memory) {
-        return TimeConfig({ firstVaultOpensAt: 1641070800, vaultClosesDuration: 86400 });
-    }
-
-    function getSepoliaTimeConfig() public view returns (TimeConfig memory) {
+    function getTimeConfig() public view returns (TimeConfig memory) {
         return TimeConfig({
             firstVaultOpensAt: vm.envUint("VAULT_OPENS_AT_TIMESTAMP"),
             vaultClosesDuration: vm.envUint("VAULT_CLOSES_DURATION_TIMESTAMP")
