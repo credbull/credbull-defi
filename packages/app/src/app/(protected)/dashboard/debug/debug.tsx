@@ -8,7 +8,8 @@ import { useList } from '@refinedev/core';
 import { useForm } from '@refinedev/mantine';
 import { getPublicClient } from '@wagmi/core';
 import { createWalletClient, http, parseEther } from 'viem';
-import { Address, useAccount, useBalance, useContractWrite } from 'wagmi';
+import { waitForTransactionReceipt } from 'viem/actions';
+import { Address, useAccount, useBalance, useContractWrite, useWalletClient } from 'wagmi';
 import { foundry } from 'wagmi/chains';
 import { z } from 'zod';
 
@@ -18,6 +19,7 @@ const mintSchema = z.object({ amount: z.number().positive() });
 
 const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
   const { isConnected, address } = useAccount();
+  const { data: client } = useWalletClient();
 
   const form = useForm({
     validate: zodResolver(mintSchema),
@@ -34,7 +36,8 @@ const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
   });
 
   const onMint = async () => {
-    await writeAsync();
+    const mintTx = await writeAsync();
+    await waitForTransactionReceipt(client!, mintTx);
   };
 
   return (
@@ -76,7 +79,7 @@ const SendEth = () => {
 
   const sendETH = async () => {
     try {
-      const transactionHash = await localWalletClient.sendTransaction({
+      const hash = await localWalletClient.sendTransaction({
         chain: foundry,
         account: FAUCET_ADDRESS,
         to: address,
@@ -84,10 +87,7 @@ const SendEth = () => {
       });
 
       const publicClient = getPublicClient();
-      await publicClient.waitForTransactionReceipt({
-        hash: transactionHash,
-        confirmations: 2,
-      });
+      await publicClient.waitForTransactionReceipt({ hash });
     } catch (error) {
       console.error('⚡️ ~ file: FaucetButton.tsx:sendETH ~ error', error);
     }
@@ -126,6 +126,7 @@ const depositSchema = z.object({
 
 const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   const { isConnected, address } = useAccount();
+  const { data: client } = useWalletClient();
 
   const form = useForm({
     validate: zodResolver(depositSchema),
@@ -147,8 +148,12 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   });
 
   const onDeposit = async () => {
-    await approveAsync();
-    await depositAsync();
+    const approveTx = await approveAsync();
+    if (client && approveTx.hash) {
+      await waitForTransactionReceipt(client!, approveTx);
+      const depositTx = await depositAsync();
+      await waitForTransactionReceipt(client!, depositTx);
+    }
   };
 
   return (

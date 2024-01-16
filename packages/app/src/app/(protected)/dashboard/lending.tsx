@@ -9,7 +9,8 @@ import { useForm } from '@refinedev/mantine';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import _ from 'lodash';
 import { parseEther } from 'viem';
-import { Address, useAccount, useContractWrite } from 'wagmi';
+import { waitForTransactionReceipt } from 'viem/actions';
+import { Address, useAccount, useContractWrite, useWalletClient } from 'wagmi';
 import { z } from 'zod';
 
 import { BalanceOf } from '@/components/contracts/balance-of';
@@ -25,6 +26,8 @@ type VaultProps = {
 };
 
 function Vault(props: VaultProps) {
+  const { data: client } = useWalletClient();
+
   const form = useForm({
     validate: zodResolver(schema),
     initialValues: {
@@ -54,12 +57,18 @@ function Vault(props: VaultProps) {
   });
 
   const onDeposit = async () => {
-    await approveAsync();
-    await depositAsync();
+    const approveTx = await approveAsync();
+
+    if (client && approveTx.hash) {
+      await waitForTransactionReceipt(client!, approveTx);
+      const depositTx = await depositAsync();
+      await waitForTransactionReceipt(client!, depositTx);
+    }
   };
 
   const onRedeem = async () => {
-    await claimAsync();
+    const claimTx = await claimAsync();
+    await waitForTransactionReceipt(client!, claimTx);
   };
 
   const name = props.data.type === 'fixed_yield' ? 'Fixed Yield Vault' : 'Structured Yield Vault';
@@ -179,6 +188,9 @@ export function Lending(props: { email?: string; status?: string }) {
       { field: 'status', operator: 'ne', value: 'created' },
       { field: 'opened_at', operator: 'lt', value: 'now()' },
     ],
+    queryOptions: {
+      refetchOnWindowFocus: 'always',
+    },
   });
 
   const erc20Address = list?.data[0].asset_address;
