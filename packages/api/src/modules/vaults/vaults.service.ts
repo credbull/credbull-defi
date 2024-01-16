@@ -38,10 +38,8 @@ export class VaultsService {
 
     const errors = [];
     for (const vault of vaults.data) {
-      const contract = this.contract(vault);
-
       // gather all the data we need to calculate the asset distribution
-      const requiredData = await this.requiredData(contract, vault);
+      const requiredData = await this.requiredData(vault);
       for (const call of requiredData) if (call.error) errors.push(call.error);
       if (anyCallHasFailed(requiredData)) continue;
 
@@ -59,7 +57,7 @@ export class VaultsService {
       if (anyCallHasFailed(transfers)) continue;
 
       // mature the vault on and off chain
-      const matured = await this.mature(vault, contract);
+      const matured = await this.mature(vault);
       if (matured.error) errors.push(matured.error);
     }
 
@@ -67,15 +65,16 @@ export class VaultsService {
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: maturedVaults };
   }
 
-  private async requiredData(contract: CredbullVault, vault: Tables<'vaults'>) {
+  private async requiredData(vault: Tables<'vaults'>) {
     return Promise.all([
-      this.expectedAssetsOnMaturity(contract),
+      this.expectedAssetsOnMaturity(vault),
       this.custodian.totalAssets(vault),
       this.distributionConfig(vault),
     ]);
   }
 
-  private async expectedAssetsOnMaturity(contract: CredbullVault): Promise<ServiceResponse<BigNumber>> {
+  private async expectedAssetsOnMaturity(vault: Tables<'vaults'>): Promise<ServiceResponse<BigNumber>> {
+    const contract = this.contract(vault);
     return responseFromRead(contract.expectedAssetsOnMaturity());
   }
 
@@ -112,8 +111,10 @@ export class VaultsService {
     return calls;
   }
 
-  private async mature(vault: Tables<'vaults'>, contract: CredbullVault) {
-    const maturedOnChain = await responseFromWrite(contract.mature(this.ethers.overrides()));
+  private async mature(vault: Tables<'vaults'>) {
+    const strategy = this.strategy(vault);
+
+    const maturedOnChain = await responseFromWrite(strategy.mature(this.ethers.overrides()));
     if (maturedOnChain.error) return maturedOnChain;
 
     return this.supabase.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id);
@@ -121,5 +122,9 @@ export class VaultsService {
 
   private contract(vault: Tables<'vaults'>): CredbullVault {
     return CredbullVault__factory.connect(vault.address, this.ethers.deployer());
+  }
+
+  private strategy(vault: Tables<'vaults'>): CredbullVault {
+    return CredbullVault__factory.connect(vault.strategy_address, this.ethers.deployer());
   }
 }
