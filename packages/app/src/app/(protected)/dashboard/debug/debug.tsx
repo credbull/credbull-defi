@@ -7,6 +7,7 @@ import { zodResolver } from '@mantine/form';
 import { useList } from '@refinedev/core';
 import { useForm } from '@refinedev/mantine';
 import { getPublicClient } from '@wagmi/core';
+import { useState } from 'react';
 import { createWalletClient, http, parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
 import { Address, useAccount, useBalance, useContractWrite, useWalletClient } from 'wagmi';
@@ -20,6 +21,7 @@ const mintSchema = z.object({ amount: z.number().positive() });
 const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
   const { isConnected, address } = useAccount();
   const { data: client } = useWalletClient();
+  const [isLoading, setLoading] = useState(false);
 
   const form = useForm({
     validate: zodResolver(mintSchema),
@@ -36,8 +38,11 @@ const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
   });
 
   const onMint = async () => {
+    setLoading(true);
     const mintTx = await writeAsync();
     await waitForTransactionReceipt(client!, mintTx);
+    form.reset();
+    setLoading(false);
   };
 
   return (
@@ -57,10 +62,10 @@ const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
         </Group>
         <form onSubmit={form.onSubmit(() => onMint())} style={{ marginTop: 'auto' }}>
           <Group>
-            <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected} />
+            <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected || isLoading} />
           </Group>
           <Group grow>
-            <Button type="submit" variant="light" color="blue" mt="md" radius="md" disabled={!isConnected}>
+            <Button type="submit" variant="light" color="blue" mt="md" radius="md" disabled={!isConnected || isLoading}>
               Mint
             </Button>
           </Group>
@@ -76,8 +81,10 @@ const localWalletClient = createWalletClient({ chain: foundry, transport: http()
 const SendEth = () => {
   const { isConnected, address } = useAccount();
   const { data: ethBalance } = useBalance({ address, watch: true });
+  const [isLoading, setLoading] = useState(false);
 
   const sendETH = async () => {
+    setLoading(true);
     try {
       const hash = await localWalletClient.sendTransaction({
         chain: foundry,
@@ -90,6 +97,8 @@ const SendEth = () => {
       await publicClient.waitForTransactionReceipt({ hash });
     } catch (error) {
       console.error('⚡️ ~ file: FaucetButton.tsx:sendETH ~ error', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -110,7 +119,14 @@ const SendEth = () => {
         </Group>
 
         <Group position="apart" grow mt="auto">
-          <Button onClick={() => sendETH()} variant="light" color="blue" mt="md" radius="md" disabled={!isConnected}>
+          <Button
+            onClick={() => sendETH()}
+            variant="light"
+            color="blue"
+            mt="md"
+            radius="md"
+            disabled={!isConnected || isLoading}
+          >
             Send
           </Button>
         </Group>
@@ -127,6 +143,7 @@ const depositSchema = z.object({
 const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   const { isConnected, address } = useAccount();
   const { data: client } = useWalletClient();
+  const [isLoading, setLoading] = useState(false);
 
   const form = useForm({
     validate: zodResolver(depositSchema),
@@ -148,12 +165,16 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   });
 
   const onDeposit = async () => {
+    setLoading(true);
     const approveTx = await approveAsync();
+
     if (client && approveTx.hash) {
       await waitForTransactionReceipt(client!, approveTx);
       const depositTx = await depositAsync();
       await waitForTransactionReceipt(client!, depositTx);
+      form.reset();
     }
+    setLoading(false);
   };
 
   return (
@@ -165,13 +186,13 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
 
         <form onSubmit={form.onSubmit(() => onDeposit())} style={{ marginTop: 'auto' }}>
           <Group>
-            <TextInput label="Address" {...form.getInputProps('address')} disabled={!isConnected} />
+            <TextInput label="Address" {...form.getInputProps('address')} disabled={!isConnected || isLoading} />
           </Group>
 
-          <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected} />
+          <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected || isLoading} />
 
           <Group grow>
-            <Button type="submit" variant="light" color="blue" mt="md" radius="md" disabled={!isConnected}>
+            <Button type="submit" variant="light" color="blue" mt="md" radius="md" disabled={!isConnected || isLoading}>
               Deposit
             </Button>
           </Group>

@@ -1,16 +1,17 @@
 'use client';
 
 import { Tables } from '@credbull/api';
-import { ERC4626__factory } from '@credbull/contracts';
+import { ERC20__factory, ERC4626__factory } from '@credbull/contracts';
 import { Badge, Button, Card, Flex, Group, NumberInput, Text } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useList } from '@refinedev/core';
 import { useForm } from '@refinedev/mantine';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import _ from 'lodash';
+import { useState } from 'react';
 import { parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
-import { Address, useAccount, useContractWrite, useWalletClient } from 'wagmi';
+import { Address, useAccount, useContractRead, useContractWrite, useWalletClient } from 'wagmi';
 import { z } from 'zod';
 
 import { BalanceOf } from '@/components/contracts/balance-of';
@@ -26,6 +27,7 @@ type VaultProps = {
 };
 
 function Vault(props: VaultProps) {
+  const [isLoading, setLoading] = useState(false);
   const { data: client } = useWalletClient();
 
   const form = useForm({
@@ -33,6 +35,15 @@ function Vault(props: VaultProps) {
     initialValues: {
       amount: 0,
     },
+  });
+
+  const { data: userBalance } = useContractRead({
+    address: props.data.address as Address,
+    abi: ERC20__factory.abi,
+    functionName: 'balanceOf',
+    watch: true,
+    args: [props.address as Address],
+    enabled: !!props.data.address && !!props.address,
   });
 
   const { writeAsync: approveAsync } = useContractWrite({
@@ -57,18 +68,24 @@ function Vault(props: VaultProps) {
   });
 
   const onDeposit = async () => {
+    setLoading(true);
     const approveTx = await approveAsync();
 
     if (client && approveTx.hash) {
       await waitForTransactionReceipt(client!, approveTx);
       const depositTx = await depositAsync();
       await waitForTransactionReceipt(client!, depositTx);
+      form.reset();
     }
+    setLoading(false);
   };
 
   const onRedeem = async () => {
+    setLoading(true);
     const claimTx = await claimAsync();
     await waitForTransactionReceipt(client!, claimTx);
+    form.reset();
+    setLoading(false);
   };
 
   const name = props.data.type === 'fixed_yield' ? 'Fixed Yield Vault' : 'Structured Yield Vault';
@@ -137,7 +154,7 @@ function Vault(props: VaultProps) {
           <NumberInput
             label={isMatured ? 'Claim Amount' : 'Deposit Amount'}
             {...form.getInputProps('amount')}
-            disabled={!props.isConnected || (isMatured ? false : !opened)}
+            disabled={!props.isConnected || (isMatured ? Number(userBalance) === 0 : !opened) || isLoading}
           />
 
           <Button
@@ -146,7 +163,7 @@ function Vault(props: VaultProps) {
             color="blue"
             mt="md"
             radius="md"
-            disabled={!props.isConnected || (isMatured ? false : !opened)}
+            disabled={!props.isConnected || (isMatured ? Number(userBalance) === 0 : !opened) || isLoading}
           >
             {isMatured ? 'Claim' : 'Deposit'}
           </Button>
