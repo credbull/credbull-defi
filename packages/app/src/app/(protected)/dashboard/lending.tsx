@@ -1,29 +1,128 @@
 'use client';
 
 import { Tables } from '@credbull/api';
-import { Badge, Box, Button, Card, Flex, Group, Text } from '@mantine/core';
+import { ERC4626__factory } from '@credbull/contracts';
+import { Badge, Button, Card, Flex, Group, NumberInput, Text } from '@mantine/core';
+import { zodResolver } from '@mantine/form';
 import { useList } from '@refinedev/core';
-import { useAccount } from 'wagmi';
+import { useForm } from '@refinedev/mantine';
+import { format, isAfter, isBefore, parseISO } from 'date-fns';
+import _ from 'lodash';
+import { Address, useAccount, useContractWrite } from 'wagmi';
+import { z } from 'zod';
 
-function Vault(props: { data: Tables<'vaults'>; isConnected: boolean }) {
+import { BalanceOf } from '@/components/contracts/balance-of';
+
+const schema = z.object({
+  amount: z.bigint().positive(),
+});
+
+type VaultProps = {
+  data: Tables<'vaults'>;
+  isConnected: boolean;
+  address: Address;
+};
+
+function Vault(props: VaultProps) {
+  const form = useForm({
+    validate: zodResolver(schema),
+    initialValues: {
+      amount: BigInt(0),
+    },
+  });
+
+  const { writeAsync } = useContractWrite({
+    address: props.data.address as Address,
+    abi: ERC4626__factory.abi,
+    functionName: 'deposit',
+    args: [form.values.amount, props.address],
+  });
+
+  const onDeposit = async () => {
+    await writeAsync();
+  };
+
+  const name = props.data.type === 'fixed_yield' ? 'Fixed Yield Vault' : 'Structured Yield Vault';
+
+  const closes = parseISO(props.data.closed_at);
+  const opens = parseISO(props.data.opened_at);
+  const opened = isAfter(new Date(), opens) && isBefore(new Date(), closes);
   return (
-    <Card shadow="sm" p="lg" radius="md" withBorder>
+    <Card shadow="sm" p="xl" radius="md" withBorder>
       <Group position="apart" mt="md" mb="xs">
-        <Text weight={500}>{props.data.type}</Text>
+        <Text weight={500}>{name}</Text>
         <Badge color="pink" variant="light">
-          {props.data.status}
+          {props.data.status === 'matured' ? 'Claimable' : opened ? 'Open' : 'Closed'}
         </Badge>
       </Group>
 
-      <Button variant="light" color="blue" fullWidth mt="md" radius="md" disabled={!props.isConnected}>
-        Lend
-      </Button>
+      <Group position="apart" mt="xl" mb="xs">
+        <Text size="sm" color="gray">
+          Opens
+        </Text>
+        <Text size="sm" color="gray">
+          {format(opens, 'MM/dd/yyyy HH:mm')}
+        </Text>
+      </Group>
+
+      <Group position="apart" mt="md" mb="xs">
+        <Text size="sm" color="gray">
+          Closes
+        </Text>
+        <Text size="sm" color="gray">
+          {format(closes, 'MM/dd/yyyy HH:mm')}
+        </Text>
+      </Group>
+
+      <form onSubmit={form.onSubmit(() => onDeposit())}>
+        <Group mt="xl">
+          <NumberInput
+            label="Deposit Amount"
+            {...form.getInputProps('amount')}
+            disabled={!props.isConnected || !opened}
+          />
+
+          <Button
+            type="submit"
+            variant="light"
+            color="blue"
+            mt="md"
+            radius="md"
+            disabled={!props.isConnected || !opened}
+          >
+            Lend
+          </Button>
+        </Group>
+      </form>
     </Card>
   );
 }
 
+type EntitiesBalancesProps = {
+  name: string;
+  entity?: Pick<Tables<'vault_distribution_entities'>, 'address'>;
+  erc20Address?: string;
+};
+const EntityBalance = ({ entity, erc20Address, name }: EntitiesBalancesProps) => {
+  return (
+    <Flex direction="column" p="md" mr="md">
+      <Text size="sm" color="gray" mt="sm">
+        {name}
+      </Text>
+      <Text size="lg" weight={500}>
+        <BalanceOf enabled={!!erc20Address && !!entity} erc20Address={erc20Address!} address={entity?.address} /> USDC
+      </Text>
+    </Flex>
+  );
+};
+
 export function Lending(props: { email?: string; status?: string }) {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+
+  const { data: entities } = useList<Tables<'vault_distribution_entities'>>({
+    resource: 'vault_distribution_entities',
+    meta: { select: 'type, address' },
+  });
 
   const { data: list, isLoading } = useList<Tables<'vaults'>>({
     resource: 'vaults',
@@ -33,17 +132,24 @@ export function Lending(props: { email?: string; status?: string }) {
     ],
   });
 
+  const erc20Address = list?.data[0].asset_address;
+  const custodian = _.find(entities?.data, { type: 'custodian' });
+  const treasury = _.find(entities?.data, { type: 'treasury' });
+  const activity = _.find(entities?.data, { type: 'activity_reward' });
+
   return (
     <Flex justify="space-around" direction="column" gap="60px">
-      <Box>
-        Hey, {props.email}! You are {props.status}
-      </Box>
+      <Flex justify="center" align="center" direction="row">
+        <EntityBalance entity={treasury} erc20Address={erc20Address} name="Treasury" />
+        <EntityBalance entity={activity} erc20Address={erc20Address} name="Activity Reward" />
+        <EntityBalance entity={custodian} erc20Address={erc20Address} name="Custodian" />
+      </Flex>
 
-      <Flex justify="center">
+      <Flex justify="center" gap="30px">
         {isLoading || !list ? (
           <>Loading...</>
         ) : (
-          list.data.map((val) => <Vault key={val.id} data={val} isConnected={isConnected} />)
+          list.data.map((val) => <Vault key={val.id} data={val} isConnected={isConnected} address={address!} />)
         )}
       </Flex>
     </Flex>
