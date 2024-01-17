@@ -151,12 +151,8 @@ export class VaultsService {
   }
 
   private requiredDataForVaults(vault: Tables<'vaults'>, custodianAddress: string) {
-    return [this.expectedAssetsOnMaturity(vault), this.custodian.totalAssets(vault, custodianAddress)];
-  }
-
-  private async expectedAssetsOnMaturity(vault: Tables<'vaults'>): Promise<ServiceResponse<BigNumber>> {
     const contract = this.contract(vault);
-    return responseFromRead(contract.expectedAssetsOnMaturity());
+    return [responseFromRead(contract.expectedAssetsOnMaturity()), this.custodian.totalAssets(vault, custodianAddress)];
   }
 
   private async distributionConfig(vault: Tables<'vaults'>): Promise<ServiceResponse<DistributionConfig[]>> {
