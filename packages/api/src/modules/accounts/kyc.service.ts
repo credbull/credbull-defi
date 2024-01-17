@@ -37,8 +37,7 @@ export class KycService {
 
     if (vaults.data) {
       for (const vault of vaults.data) {
-        const vaultInstance = CredbullVault__factory.connect(vault.address, this.ethers.deployer());
-
+        const vaultInstance = this.getVaultInstance(vault.address);
         const { data } = await responseFromRead(vaultInstance.isWhitelisted(address));
 
         if (!data) {
@@ -59,5 +58,9 @@ export class KycService {
 
   private async checkOnChain(address: string): Promise<boolean> {
     return Boolean(address);
+  }
+
+  private getVaultInstance(address: string) {
+    return CredbullVault__factory.connect(address, this.ethers.deployer());
   }
 }
