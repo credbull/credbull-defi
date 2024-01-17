@@ -2,7 +2,7 @@
 
 import { Tables } from '@credbull/api';
 import { ERC20__factory, ERC4626__factory } from '@credbull/contracts';
-import { Badge, Button, Card, Flex, Group, NumberInput, Text } from '@mantine/core';
+import { Badge, Button, Card, Flex, Group, NumberInput, SimpleGrid, Text } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useClipboard } from '@mantine/hooks';
 import { useList, useNotification } from '@refinedev/core';
@@ -251,7 +251,7 @@ export function Lending(props: { email?: string; status?: string }) {
     queryOptions: {
       refetchOnWindowFocus: 'always',
     },
-    sorters: [{ field: 'opened_at', order: 'asc' }],
+    sorters: [{ field: 'opened_at', order: 'desc' }],
   });
 
   const erc20Address = list?.data[0].asset_address;
@@ -268,13 +268,13 @@ export function Lending(props: { email?: string; status?: string }) {
         <EntityBalance entity={custodian} erc20Address={erc20Address} name="Custodian" />
       </Flex>
 
-      <Flex justify="center" gap="30px">
+      <SimpleGrid cols={4}>
         {isLoading || !list ? (
           <>Loading...</>
         ) : (
           list.data.map((val) => <Vault key={val.id} data={val} isConnected={isConnected} address={address!} />)
         )}
-      </Flex>
+      </SimpleGrid>
     </Flex>
   );
 }

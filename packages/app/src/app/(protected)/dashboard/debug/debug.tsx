@@ -2,7 +2,7 @@
 
 import { Tables } from '@credbull/api';
 import { ERC4626__factory, MockStablecoin__factory } from '@credbull/contracts';
-import { Button, Card, Flex, Group, NumberInput, Text, TextInput } from '@mantine/core';
+import { Button, Card, Flex, Group, NumberInput, SimpleGrid, Text, TextInput } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useList, useNotification } from '@refinedev/core';
 import { useForm } from '@refinedev/mantine';
@@ -243,11 +243,11 @@ export function Debug() {
     <>Loading...</>
   ) : (
     <Flex justify="space-around" direction="column" gap="60px">
-      <Flex justify="center" gap="30px">
+      <SimpleGrid cols={4}>
         <MintUSDC erc20Address={erc20Address ?? ''} />
         <SendEth />
         <VaultDeposit erc20Address={erc20Address ?? ''} />
-      </Flex>
+      </SimpleGrid>
     </Flex>
   );
 }
