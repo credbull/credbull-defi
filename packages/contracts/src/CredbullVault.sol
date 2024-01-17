@@ -6,7 +6,8 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import { console2 } from "forge-std/console2.sol";
 
 // Vaults exchange Assets for Shares in the Vault
@@ -20,6 +21,12 @@ contract CredbullVault is ERC4626, Ownable {
     error CredbullVault__NotEnoughBalanceToMature();
     //Error to revert deposit if the valut is not opened yet
     error CredbullVault__VaultNotOpened();
+
+    error CredbullVault__NotAWhitelistedAddress();
+
+    error CredbullVault__OnlyInternal();
+
+    mapping(address => bool) whitelist;
 
     //Address of the custodian to receive the assets on deposit and mint
     address public custodian;
@@ -54,6 +61,8 @@ contract CredbullVault is ERC4626, Ownable {
      */
     bool public isMatured;
 
+    bytes32 public whitelistRoot;
+
     /**
      * @notice - Modifier to check for maturity status.
      * @dev - Used on internal withdraw method to check for maturity status
@@ -70,6 +79,14 @@ contract CredbullVault is ERC4626, Ownable {
         if (block.timestamp < opensAtTimestamp) {
             revert CredbullVault__VaultNotOpened();
         }
+        _;
+    }
+
+    modifier onlyWhitelistedAddress(bytes32[] calldata _proof) {
+        if (MerkleProof.verify(_proof, whitelistRoot, toBytes32(msg.sender)) != true) {
+            revert CredbullVault__NotAWhitelistedAddress();
+        }
+
         _;
     }
 
@@ -159,5 +176,33 @@ contract CredbullVault is ERC4626, Ownable {
 
         _totalAssetDeposited = currentBalance;
         isMatured = true;
+    }
+
+    function deposit(uint256 assets, address receiver, bytes32[] calldata _proof)
+        public
+        onlyWhitelistedAddress(_proof)
+        returns (uint256)
+    {
+        uint256 maxAssets = maxDeposit(receiver);
+        if (assets > maxAssets) {
+            revert ERC4626ExceededMaxDeposit(receiver, assets, maxAssets);
+        }
+
+        uint256 shares = previewDeposit(assets);
+        _deposit(_msgSender(), receiver, assets, shares);
+
+        return shares;
+    }
+
+    function deposit(uint256 assets, address receiver) public override onlyOwner returns (uint256) {
+        return super.deposit(assets, receiver);
+    }
+
+    function updateWhitelistRoot(bytes32 _root) external onlyOwner {
+        whitelistRoot = _root;
+    }
+
+    function toBytes32(address addr) internal pure returns (bytes32) {
+        return bytes32(uint256(uint160(addr)));
     }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { EthersService } from '../../clients/ethers/ethers.service';
+import { MerkleTreeService } from '../../clients/merkletree/merkletree.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
@@ -9,9 +9,10 @@ import { KYCStatus, WhitelistAccountDto } from './kyc.dto';
 
 @Injectable()
 export class KycService {
+  // private tree: MerkleTreeService;
   constructor(
-    private readonly ethers: EthersService,
     private readonly supabase: SupabaseService,
+    private readonly tree: MerkleTreeService,
   ) {}
 
   async status(): Promise<ServiceResponse<KYCStatus>> {
@@ -31,6 +32,8 @@ export class KycService {
     const wallet = await client.from('user_wallets').select().eq('address', address).single();
     if (wallet.error) return wallet;
 
+    //this.tree.addLeaves([wallet.data.address]);
+
     return client
       .from('kyc_events')
       .insert({
@@ -43,5 +46,13 @@ export class KycService {
 
   private async checkOnChain(address: string): Promise<boolean> {
     return Boolean(address);
+  }
+
+  async getProof(address: string): Promise<string[]> {
+    return await this.tree.getProof(address);
+  }
+
+  async getRoot(): Promise<string> {
+    return await this.tree.getRoot();
   }
 }

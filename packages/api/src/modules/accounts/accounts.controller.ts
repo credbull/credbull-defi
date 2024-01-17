@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, NotFoundException, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { SupabaseGuard, SupabaseRoles } from '../../clients/supabase/auth/supabase.guard';
@@ -57,5 +57,19 @@ export class AccountsController {
 
     const [wallet] = data;
     return new UserWalletDto(wallet);
+  }
+
+  @Get('get-proof/:address')
+  // @ApiOperation({ summary: 'Returns the proof for the whitelisted address})
+  // @ApiResponse({ status: 200, description: 'Success', type: string[]})
+  async getProofForAddress(@Param('address') address: string): Promise<string[]> {
+    return this.kyc.getProof(address);
+  }
+
+  @Get('get-root')
+  // @ApiOperation({ summary: 'Returns the proof for the whitelisted address})
+  // @ApiResponse({ status: 200, description: 'Success', type: string[]})
+  async getWhitelistRoot(): Promise<string> {
+    return this.kyc.getRoot();
   }
 }
