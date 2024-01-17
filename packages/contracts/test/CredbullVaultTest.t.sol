@@ -35,6 +35,17 @@ contract CredbullVaultTest is Test {
         (owner, asset,,, custodian,,) = config.activeNetworkConfig();
         (vaultOpenTime,) = config.activeTimeConfig();
 
+        address[] memory whitelistAddresses = new address[](2);
+        whitelistAddresses[0] = alice;
+        whitelistAddresses[1] = bob;
+
+        bool[] memory statuses = new bool[](2);
+        statuses[0] = true;
+        statuses[1] = true;
+
+        vm.prank(owner);
+        vault.updateWhitelistStatus(whitelistAddresses, statuses);
+
         MockStablecoin(asset).mint(alice, INITIAL_BALANCE);
         MockStablecoin(asset).mint(bob, INITIAL_BALANCE);
     }
@@ -140,6 +151,20 @@ contract CredbullVaultTest is Test {
         vm.expectRevert(CredbullVault.CredbullVault__NotMatured.selector);
         vault.redeem(shares, alice, alice);
         vm.stopPrank();
+    }
+
+    function test__RevertDepositIfReceiverNotWhitelisted() public {
+        address[] memory whitelistAddresses = new address[](1);
+        whitelistAddresses[0] = alice;
+
+        bool[] memory statuses = new bool[](1);
+        statuses[0] = false;
+
+        vm.prank(owner);
+        vault.updateWhitelistStatus(whitelistAddresses, statuses);
+
+        vm.expectRevert(CredbullVault.CredbullVault__NotAWhitelistedAddress.selector);
+        vault.deposit(20 ether, alice);
     }
 
     // function test__RevertDepositIfVaultNotOpened() public {

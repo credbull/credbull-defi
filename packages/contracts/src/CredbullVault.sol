@@ -20,6 +20,8 @@ contract CredbullVault is ERC4626, Ownable {
     error CredbullVault__NotEnoughBalanceToMature();
     //Error to revert deposit if the valut is not opened yet
     error CredbullVault__VaultNotOpened();
+    //Error to revert if the address is not whitelisted
+    error CredbullVault__NotAWhitelistedAddress();
 
     //Address of the custodian to receive the assets on deposit and mint
     address public custodian;
@@ -55,6 +57,11 @@ contract CredbullVault is ERC4626, Ownable {
     bool public isMatured;
 
     /**
+     * @notice - Track whitelisted addreses
+     */
+    mapping(address => bool) public isWhitelisted;
+
+    /**
      * @notice - Modifier to check for maturity status.
      * @dev - Used on internal withdraw method to check for maturity status
      */
@@ -66,10 +73,25 @@ contract CredbullVault is ERC4626, Ownable {
         _;
     }
 
+    /**
+     * @notice - Modifier to check for vault open status.
+     * @dev - Used on internal deposit method to check for open status
+     */
     modifier onlyWhenOpened() {
         if (block.timestamp < opensAtTimestamp) {
             revert CredbullVault__VaultNotOpened();
         }
+        _;
+    }
+
+    /**
+     * @notice - Modifier to check for whitelist status of an address
+     */
+    modifier onlyWhitelistAddress(address receiver) {
+        if (!isWhitelisted[receiver]) {
+            revert CredbullVault__NotAWhitelistedAddress();
+        }
+
         _;
     }
 
@@ -101,8 +123,11 @@ contract CredbullVault is ERC4626, Ownable {
      * @dev - The internal deposit function of ERC4626 overridden to transfer the asset to custodian wallet
      * and update the _totalAssetDeposited on deposit/mint
      */
-    function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override 
-    // onlyWhenOpened
+    function _deposit(address caller, address receiver, uint256 assets, uint256 shares)
+        internal
+        override
+        // onlyWhenOpened
+        onlyWhitelistAddress(receiver)
     {
         SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
         _totalAssetDeposited += assets;
@@ -159,5 +184,18 @@ contract CredbullVault is ERC4626, Ownable {
 
         _totalAssetDeposited = currentBalance;
         isMatured = true;
+    }
+
+    function updateWhitelistStatus(address[] calldata _addresses, bool[] calldata _statuses) external onlyOwner {
+        require(_addresses.length == _statuses.length, "Length mismatch");
+        uint256 length = _addresses.length;
+
+        for (uint256 i; i < length;) {
+            isWhitelisted[_addresses[i]] = _statuses[i];
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 }
