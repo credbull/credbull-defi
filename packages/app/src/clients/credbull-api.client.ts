@@ -2,7 +2,7 @@ import { AccountStatusDto, WalletDto } from '@credbull/api';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 const buildURL = (path: string) => {
-  return `${process.env.NEXT_PUBLIC_API_BASE_URL}${path}`;
+  return `${process.env.API_BASE_URL}${path}`;
 };
 
 const authHeaders = async (supabase: SupabaseClient) => {
@@ -42,11 +42,7 @@ export const createClient = (supabase: SupabaseClient) => {
       });
 
       const responseData = await response.json();
-
-      if (responseData.status === 'active') {
-        return true;
-      }
-      return false;
+      return responseData.status === 'active';
     },
   };
 };

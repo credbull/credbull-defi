@@ -5,6 +5,7 @@ import { ERC4626__factory, MockStablecoin__factory } from '@credbull/contracts';
 import { Button, Card, Flex, Group, NumberInput, SimpleGrid, Text, TextInput } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useList, useNotification } from '@refinedev/core';
+import { OpenNotificationParams } from '@refinedev/core/dist/contexts/notification/INotificationContext';
 import { useForm } from '@refinedev/mantine';
 import { getPublicClient } from '@wagmi/core';
 import { useState } from 'react';
@@ -14,11 +15,9 @@ import { Address, useAccount, useBalance, useContractWrite, useWalletClient } fr
 import { foundry } from 'wagmi/chains';
 import { z } from 'zod';
 
-import { supabase } from '@/clients/supabase.client';
-
 import { BalanceOf } from '@/components/contracts/balance-of';
 
-import { createClient } from '../../../../clients/credbull-api.client';
+import { whitelistAddress } from '@/app/(protected)/dashboard/debug/actions';
 
 const mintSchema = z.object({
   address: z.string().min(42).max(42),
@@ -239,10 +238,9 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   );
 };
 
-const WhitelistWalletAddress = ({ erc20Address }: { erc20Address: string }) => {
+const WhitelistWalletAddress = () => {
   const { open } = useNotification();
   const { isConnected, address } = useAccount();
-  const { data: client } = useWalletClient();
   const [isLoading, setLoading] = useState(false);
 
   const form = useForm({
@@ -253,12 +251,13 @@ const WhitelistWalletAddress = ({ erc20Address }: { erc20Address: string }) => {
   const whitelist = async () => {
     setLoading(true);
     try {
-      const res = await createClient(supabase).whitelistAddress(address as Address);
-      if (res) {
-        open?.({ type: 'success', message: 'Address whitelisted' });
-      } else {
-        open?.({ type: 'error', message: 'Whitelist failed' });
-      }
+      const res = await whitelistAddress(address!);
+
+      const notification: OpenNotificationParams = res
+        ? { type: 'success', message: 'Address whitelisted' }
+        : { type: 'error', message: 'Whitelist failed' };
+
+      open?.(notification);
     } catch (e) {
       open?.({ type: 'error', description: 'Whitelist failed', message: e?.toString() ?? '' });
     } finally {
@@ -271,14 +270,6 @@ const WhitelistWalletAddress = ({ erc20Address }: { erc20Address: string }) => {
       <Flex direction="column" h="100%">
         <Group position="apart" mt="md" mb="xs">
           <Text weight={500}>Whitelist address</Text>
-          {/* <Text size="sm" color="gray">
-            <BalanceOf
-              enabled={!!form.values.address && !!address}
-              erc20Address={form.values.address ?? ''}
-              address={address}
-            />{' '}
-            SHARES
-          </Text> */}
         </Group>
 
         <form onSubmit={form.onSubmit(() => whitelist())} style={{ marginTop: 'auto' }}>
@@ -319,7 +310,7 @@ export function Debug() {
         <MintUSDC erc20Address={erc20Address ?? ''} />
         <SendEth />
         <VaultDeposit erc20Address={erc20Address ?? ''} />
-        <WhitelistWalletAddress erc20Address={erc20Address ?? ''} />
+        <WhitelistWalletAddress />
       </SimpleGrid>
     </Flex>
   );
