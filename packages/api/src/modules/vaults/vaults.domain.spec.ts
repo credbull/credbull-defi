@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers';
 import { describe, expect, it } from 'vitest';
 
-import { DistributionConfig, calculateDistribution } from './vaults.domain';
+import { DistributionConfig, calculateDistribution, calculateProportions } from './vaults.domain';
 
 describe('Vaults Domain', () => {
   it('should calculate distribution so according to the configuration', async () => {
@@ -69,5 +69,18 @@ describe('Vaults Domain', () => {
     const { error } = calculateDistribution(custodianTotalAssets, config);
 
     expect(error).toBeDefined();
+  });
+
+  it.only('should calculate the correct proportion of the total custodian amount', async () => {
+    const custodianAmount = BigNumber.from(3600);
+
+    const config = [
+      { custodianAmount, amount: BigNumber.from(1100) },
+      { custodianAmount, amount: BigNumber.from(2200) },
+    ];
+
+    const proportions = calculateProportions(config);
+    expect(proportions[0].toString()).toBe('99');
+    expect(proportions[1].toString()).toBe('201');
   });
 });

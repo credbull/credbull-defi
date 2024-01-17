@@ -7,12 +7,25 @@ export type DistributionConfig = Pick<Tables<'vault_distribution_configs'>, 'per
   vault_distribution_entities: Pick<Tables<'vault_distribution_entities'>, 'type' | 'address'> | null;
 };
 
+export function calculateProportions(data: { custodianAmount: BigNumber; amount: BigNumber }[]) {
+  const totalExpected = data.reduce((acc, cur) => acc.add(cur.amount), BigNumber.from(0));
+  const percentages = data.map((cur) => cur.amount.mul(100).div(totalExpected));
+  const totalProportions = percentages.reduce((acc, cur) => acc.add(cur), BigNumber.from(0));
+
+  if (totalProportions.toString() !== '100') {
+    const diff = totalProportions.sub(100);
+    const lastIndex = percentages.length - 1;
+    percentages[lastIndex] = percentages[lastIndex].sub(diff);
+  }
+
+  return data.map((cur, i) => cur.custodianAmount.sub(totalExpected).mul(percentages[i]).div(100));
+}
+
 export function calculateDistribution(
-  custodianTotalAssets: BigNumber,
+  custodianAssets: BigNumber,
   distributionConfig: DistributionConfig[],
-  parts?: number,
 ): ServiceResponse<{ address: string; amount: BigNumber }[]> {
-  let totalReturns = custodianTotalAssets.div(parts || 1);
+  let totalReturns = custodianAssets;
   const splits = [];
 
   try {
