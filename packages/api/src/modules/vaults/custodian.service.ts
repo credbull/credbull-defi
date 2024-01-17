@@ -37,7 +37,7 @@ export class CustodianService {
   }
 
   async forVaults(vaults: Pick<Tables<'vaults'>, 'id'>[]) {
-    const { error, data } = await this.supabase
+    return this.supabase
       .admin()
       .from('vault_distribution_entities')
       .select('*, vaults (id)')
@@ -46,10 +46,6 @@ export class CustodianService {
         vaults.map((vault) => vault.id),
       )
       .eq('type', 'custodian');
-
-    if (error) return { error };
-
-    return { data };
   }
 
   private asset(vault: Pick<Tables<'vaults'>, 'asset_address'>) {
