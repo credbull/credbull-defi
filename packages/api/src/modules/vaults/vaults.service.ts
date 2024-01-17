@@ -80,7 +80,12 @@ export class VaultsService {
       }
 
       // calculate the distribution and transfer the assets given the proportions
-      const transfers = await this.transferDistribution(vault, custodianProportions[i], distributionConfig.data);
+      const transfers = await this.transferDistribution(
+        vault,
+        custodianProportions[i],
+        custodianAddress,
+        distributionConfig.data,
+      );
       for (const call of transfers) if (call.error) errors.push(call.error);
       if (anyCallHasFailed(transfers)) continue;
 
@@ -121,7 +126,7 @@ export class VaultsService {
 
     // transfer the assets from the custodian to the vaults sequentially so that we don't trigger any nonce errors
     for (const dto of dtos) {
-      const transfer = await this.custodian.transfer(dto);
+      const transfer = await this.custodian.transfer(dto, custodianAddress);
       if (transfer.error) errors.push(transfer.error);
     }
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: dtos };
@@ -148,6 +153,7 @@ export class VaultsService {
   private async transferDistribution(
     vault: Tables<'vaults'>,
     custodianAssets: BigNumber,
+    custodianAddress: string,
     distributionConfig: DistributionConfig[],
   ): Promise<ServiceResponse<CustodianTransferDto>[]> {
     const { error, data: splits } = calculateDistribution(custodianAssets, distributionConfig);
@@ -157,7 +163,7 @@ export class VaultsService {
     const calls: ServiceResponse<CustodianTransferDto>[] = [];
     for (const split of splits!) {
       const dto = { asset_address: vault.asset_address, vault_id: vault.id, ...split };
-      const call = await this.custodian.transfer(dto);
+      const call = await this.custodian.transfer(dto, custodianAddress);
       calls.push(call);
     }
 

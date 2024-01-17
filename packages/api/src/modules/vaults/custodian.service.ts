@@ -26,10 +26,10 @@ export class CustodianService {
     return responseFromRead(asset.balanceOf(address.data));
   }
 
-  async transfer(dto: CustodianTransferDto): Promise<ServiceResponse<CustodianTransferDto>> {
+  async transfer(dto: CustodianTransferDto, custodianAddress?: string): Promise<ServiceResponse<CustodianTransferDto>> {
     const asset = this.asset(dto);
 
-    const address = await this.address({ id: dto.vault_id });
+    const address = custodianAddress ? { data: custodianAddress } : await this.address({ id: dto.vault_id });
     if (address.error) return address;
 
     const approve = await responseFromWrite(asset.approve(address.data, dto.amount));
