@@ -71,7 +71,7 @@ describe('Vaults Domain', () => {
     expect(error).toBeDefined();
   });
 
-  it.only('should calculate the correct proportion of the total custodian amount', async () => {
+  it('should calculate the correct proportion of the total custodian amount', async () => {
     const custodianAmount = BigNumber.from(3600);
 
     const config = [
