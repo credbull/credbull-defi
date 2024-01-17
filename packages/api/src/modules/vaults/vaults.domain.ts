@@ -12,12 +12,15 @@ export function calculateDistribution(
   expectedAssetsOnMaturity: BigNumber,
   custodianTotalAssets: BigNumber,
   distributionConfig: DistributionConfig[],
+  parts?: number,
 ): ServiceResponse<{ address: string; amount: BigNumber }[]> {
+  const distributionAmount = custodianTotalAssets.div(parts || 1);
+
   try {
-    if (custodianTotalAssets.lt(expectedAssetsOnMaturity))
+    if (distributionAmount.lt(expectedAssetsOnMaturity))
       return { error: new Error('Custodian amount should be bigger or same as expected amount') };
 
-    let totalReturns = custodianTotalAssets.sub(expectedAssetsOnMaturity);
+    let totalReturns = distributionAmount.sub(expectedAssetsOnMaturity);
     const splits = [{ address: vault.address, amount: expectedAssetsOnMaturity }];
 
     for (const { vault_distribution_entities, percentage } of distributionConfig) {

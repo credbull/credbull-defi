@@ -38,7 +38,9 @@ export class VaultsService {
 
     const errors = [];
     const maturedVaults = [];
-    for (const vault of vaults.data) {
+    for (let i = 0; i < vaults.data.length; i++) {
+      const vault = vaults.data[i];
+
       // gather all the data we need to calculate the asset distribution
       const requiredData = await this.requiredData(vault);
       for (const call of requiredData) if (call.error) errors.push(call.error);
@@ -49,6 +51,7 @@ export class VaultsService {
 
       // calculate the distribution and transfer the assets
       const transfers = await this.transferDistribution(
+        vaults.data.length - i,
         vault,
         expectedAssetsOnMaturity!,
         custodianTotalAssets!,
@@ -89,6 +92,7 @@ export class VaultsService {
   }
 
   private async transferDistribution(
+    parts: number,
     vault: Tables<'vaults'>,
     expectedAssetsOnMaturity: BigNumber,
     custodianTotalAssets: BigNumber,
@@ -99,6 +103,7 @@ export class VaultsService {
       expectedAssetsOnMaturity,
       custodianTotalAssets,
       distributionConfig,
+      parts,
     );
 
     if (error) return [{ error }];
