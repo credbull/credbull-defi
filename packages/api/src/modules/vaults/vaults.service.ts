@@ -119,7 +119,7 @@ export class VaultsService {
       return { error: new Error('Custodian amount should be bigger or same as expected amount') };
     }
 
-    // transfer the assets from the custodian to the vaults sequentially so we don't trigger any nonce errors
+    // transfer the assets from the custodian to the vaults sequentially so that we don't trigger any nonce errors
     for (const dto of dtos) {
       const transfer = await this.custodian.transfer(dto);
       if (transfer.error) errors.push(transfer.error);
