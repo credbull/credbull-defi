@@ -11,13 +11,17 @@ export class CustodianTransferDto {
   @IsString()
   asset_address: string;
 
+  @IsString()
+  custodian_address: string;
+
   @IsNumber()
   amount: BigNumber;
 
-  constructor(partial: Partial<CustodianTransferDto>) {
+  constructor(partial: CustodianTransferDto) {
     this.amount = BigNumber.from(partial.amount);
-    this.vault_id = partial.vault_id!;
-    this.address = partial.address!;
-    this.asset_address = partial.asset_address!;
+    this.vault_id = partial.vault_id;
+    this.address = partial.address;
+    this.asset_address = partial.asset_address;
+    this.asset_address = partial.custodian_address;
   }
 }

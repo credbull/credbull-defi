@@ -3,11 +3,15 @@ import { BigNumber } from 'ethers';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
 
+import { CustodianTransferDto } from './custodian.dto';
+
 export type DistributionConfig = Pick<Tables<'vault_distribution_configs'>, 'percentage'> & {
   vault_distribution_entities: Pick<Tables<'vault_distribution_entities'>, 'type' | 'address'> | null;
 };
 
-export function calculateProportions(data: { custodianAmount: BigNumber; amount: BigNumber }[]) {
+export type CalculateProportionsData = { custodianAmount: BigNumber; amount: BigNumber };
+
+export function calculateProportions(data: CalculateProportionsData[]) {
   const totalExpected = data.reduce((acc, cur) => acc.add(cur.amount), BigNumber.from(0));
   const percentages = data.map((cur) => cur.amount.mul(100).div(totalExpected));
   const totalProportions = percentages.reduce((acc, cur) => acc.add(cur), BigNumber.from(0));
@@ -19,6 +23,26 @@ export function calculateProportions(data: { custodianAmount: BigNumber; amount:
   }
 
   return data.map((cur, i) => cur.custodianAmount.sub(totalExpected).mul(percentages[i]).div(100));
+}
+
+export function prepareDistributionTransfers(
+  vault: Tables<'vaults'>,
+  custodianAssets: BigNumber,
+  custodianAddress: string,
+  distributionConfig: DistributionConfig[],
+): ServiceResponse<CustodianTransferDto[]> {
+  const splits = calculateDistribution(custodianAssets, distributionConfig);
+
+  if (splits.error) return splits;
+
+  const dtos: CustodianTransferDto[] = splits.data?.map((split) => ({
+    custodian_address: custodianAddress,
+    asset_address: vault.asset_address,
+    vault_id: vault.id,
+    ...split,
+  }));
+
+  return { data: dtos };
 }
 
 export function calculateDistribution(

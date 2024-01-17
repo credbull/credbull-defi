@@ -22,14 +22,14 @@ export class CustodianService {
     return responseFromRead(asset.balanceOf(custodianAddress));
   }
 
-  async transfer(dto: CustodianTransferDto, custodianAddress: string): Promise<ServiceResponse<CustodianTransferDto>> {
+  async transfer(dto: CustodianTransferDto): Promise<ServiceResponse<CustodianTransferDto>> {
     const asset = this.asset(dto);
 
-    const approve = await responseFromWrite(asset.approve(custodianAddress, dto.amount));
+    const approve = await responseFromWrite(asset.approve(dto.custodian_address, dto.amount));
     if (approve.error) return approve;
 
     const transfer = await responseFromWrite(
-      asset.transferFrom(custodianAddress, dto.address, dto.amount, this.ethers.overrides()),
+      asset.transferFrom(dto.custodian_address, dto.address, dto.amount, this.ethers.overrides()),
     );
     if (transfer.error) return transfer;
 
