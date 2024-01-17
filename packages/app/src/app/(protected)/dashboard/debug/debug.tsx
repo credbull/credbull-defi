@@ -14,7 +14,11 @@ import { Address, useAccount, useBalance, useContractWrite, useWalletClient } fr
 import { foundry } from 'wagmi/chains';
 import { z } from 'zod';
 
+import { supabase } from '@/clients/supabase.client';
+
 import { BalanceOf } from '@/components/contracts/balance-of';
+
+import { createClient } from '../../../../clients/credbull-api.client';
 
 const mintSchema = z.object({
   address: z.string().min(42).max(42),
@@ -149,6 +153,10 @@ const depositSchema = z.object({
   amount: z.number().positive(),
 });
 
+const whitelistSchema = z.object({
+  address: z.string().min(42).max(42),
+});
+
 const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   const { open } = useNotification();
   const { isConnected, address } = useAccount();
@@ -231,6 +239,70 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   );
 };
 
+const WhitelistWalletAddress = ({ erc20Address }: { erc20Address: string }) => {
+  const { open } = useNotification();
+  const { isConnected, address } = useAccount();
+  const { data: client } = useWalletClient();
+  const [isLoading, setLoading] = useState(false);
+
+  const form = useForm({
+    validate: zodResolver(whitelistSchema),
+    initialValues: { address: '' },
+  });
+
+  const whitelist = async () => {
+    setLoading(true);
+    try {
+      const res = await createClient(supabase).whitelistAddress(address as Address);
+      if (res) {
+        open?.({ type: 'success', message: 'Address whitelisted' });
+      } else {
+        open?.({ type: 'error', message: 'Whitelist failed' });
+      }
+    } catch (e) {
+      open?.({ type: 'error', description: 'Whitelist failed', message: e?.toString() ?? '' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card shadow="sm" p="xl" radius="md" withBorder>
+      <Flex direction="column" h="100%">
+        <Group position="apart" mt="md" mb="xs">
+          <Text weight={500}>Whitelist address</Text>
+          {/* <Text size="sm" color="gray">
+            <BalanceOf
+              enabled={!!form.values.address && !!address}
+              erc20Address={form.values.address ?? ''}
+              address={address}
+            />{' '}
+            SHARES
+          </Text> */}
+        </Group>
+
+        <form onSubmit={form.onSubmit(() => whitelist())} style={{ marginTop: 'auto' }}>
+          <TextInput label="Address" {...form.getInputProps('address')} disabled={!isConnected || isLoading} />
+
+          <Group grow>
+            <Button
+              type="submit"
+              variant="light"
+              color="blue"
+              mt="md"
+              radius="md"
+              disabled={!isConnected || isLoading}
+              loading={isLoading}
+            >
+              Whitelist
+            </Button>
+          </Group>
+        </form>
+      </Flex>
+    </Card>
+  );
+};
+
 export function Debug() {
   const { data: list, isLoading } = useList<Tables<'vaults'>>({
     resource: 'vaults',
@@ -247,6 +319,7 @@ export function Debug() {
         <MintUSDC erc20Address={erc20Address ?? ''} />
         <SendEth />
         <VaultDeposit erc20Address={erc20Address ?? ''} />
+        <WhitelistWalletAddress erc20Address={erc20Address ?? ''} />
       </SimpleGrid>
     </Flex>
   );

@@ -2,7 +2,7 @@ import { AccountStatusDto, WalletDto } from '@credbull/api';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 const buildURL = (path: string) => {
-  return `${process.env.API_BASE_URL}${path}`;
+  return `${process.env.NEXT_PUBLIC_API_BASE_URL}${path}`;
 };
 
 const authHeaders = async (supabase: SupabaseClient) => {
@@ -30,6 +30,23 @@ export const createClient = (supabase: SupabaseClient) => {
       });
 
       return response.json();
+    },
+    whitelistAddress: async (address: string): Promise<boolean> => {
+      const { headers } = await authHeaders(supabase);
+      const body = JSON.stringify({ address });
+
+      const response = await fetch(buildURL('/accounts/whitelist'), {
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        method: 'POST',
+        body,
+      });
+
+      const responseData = await response.json();
+
+      if (responseData.status === 'active') {
+        return true;
+      }
+      return false;
     },
   };
 };

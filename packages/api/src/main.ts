@@ -20,6 +20,7 @@ const compression = require('compression');
 
   app.use(compression());
   app.use(helmet());
+  app.enableCors();
 
   const config = new DocumentBuilder()
     .setTitle('Credbull API')
