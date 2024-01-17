@@ -78,7 +78,7 @@ const AppNavbar = ({ opened }: { opened: boolean }) => {
       <Navbar.Section>
         <NavLink
           onClick={() => startTransition(() => signOut())}
-          label="Logout"
+          label="Sign out"
           icon={<IconLogout size={16} stroke={1.5} />}
         />
       </Navbar.Section>

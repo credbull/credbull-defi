@@ -20,7 +20,7 @@ export function CodeCallbackRedirect(props: { access_token: string; refresh_toke
       <Card w="20%" h="30%" withBorder shadow="md">
         <Flex align="center" justify="center" h="100%" direction="column">
           <Group position="center">
-            <Title>Login in..</Title>
+            <Title>Signing in...</Title>
           </Group>
           <Group position="center" mt="lg">
             <Flex direction="column" align="center">
