@@ -10,7 +10,7 @@ import { useForm } from '@refinedev/mantine';
 import { IconCopy } from '@tabler/icons';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import _ from 'lodash';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
 import { Address, useAccount, useContractRead, useContractWrite, useWalletClient } from 'wagmi';
@@ -34,6 +34,12 @@ function Vault(props: VaultProps) {
   const [isLoading, setLoading] = useState(false);
   const { data: client } = useWalletClient();
   const isMatured = props.data.status === 'matured';
+
+  useEffect(() => {
+    if (clipboard.copied) {
+      open?.({ type: 'success', message: `Vault address copied!` });
+    }
+  }, [clipboard.copied, open]);
 
   const { data: userBalance } = useContractRead({
     address: props.data.address as Address,
@@ -113,9 +119,11 @@ function Vault(props: VaultProps) {
   return (
     <Card shadow="sm" p="xl" radius="md" withBorder>
       <Group position="apart" mt="md" mb="xs">
-        <Text weight={500} onClick={() => clipboard.copy(props.data?.address)} style={{ cursor: 'pointer' }}>
-          {name} <IconCopy size={12} />
-        </Text>
+        <Button variant="white" p="0" onClick={() => clipboard.copy(props.data?.address)}>
+          <Text weight={500} color="black" fz="lg">
+            {name} <IconCopy size={12} />
+          </Text>
+        </Button>
         <Badge color={isMatured ? 'orange' : opened ? 'green' : 'pink'} variant="light">
           {isMatured ? 'Claimable' : opened ? 'Open' : 'Closed'}
         </Badge>
@@ -214,19 +222,23 @@ type EntitiesBalancesProps = {
   erc20Address?: string;
 };
 const EntityBalance = ({ entity, erc20Address, name }: EntitiesBalancesProps) => {
+  const { open } = useNotification();
   const clipboard = useClipboard();
+
+  useEffect(() => {
+    if (clipboard.copied) {
+      open?.({ type: 'success', message: `${name} address copied!` });
+    }
+  }, [clipboard.copied, name, open]);
 
   return (
     <Flex direction="column" p="md" mr="md" justify="center" align="center">
-      <Text
-        size="sm"
-        color="gray"
-        mt="sm"
-        onClick={() => clipboard.copy(entity?.address)}
-        style={{ cursor: 'pointer' }}
-      >
-        {name} <IconCopy size={12} />
-      </Text>
+      <Button variant="white" p="0" mt="sm" onClick={() => clipboard.copy(entity?.address)}>
+        <Text size="sm" color="gray">
+          {name} <IconCopy size={12} />
+        </Text>
+      </Button>
+
       <Text size="lg" weight={500}>
         <BalanceOf enabled={!!erc20Address && !!entity} erc20Address={erc20Address!} address={entity?.address} /> USDC
       </Text>
