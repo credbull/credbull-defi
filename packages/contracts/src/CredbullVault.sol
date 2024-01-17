@@ -194,9 +194,9 @@ contract CredbullVault is ERC4626, Ownable {
         return shares;
     }
 
-    function deposit(uint256 assets, address receiver) public override onlyOwner returns (uint256) {
-        return super.deposit(assets, receiver);
-    }
+    // function deposit(uint256 assets, address receiver) public override onlyOwner returns (uint256) {
+    //     return super.deposit(assets, receiver);
+    // }
 
     function updateWhitelistRoot(bytes32 _root) external onlyOwner {
         whitelistRoot = _root;
