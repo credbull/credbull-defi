@@ -35,7 +35,7 @@ export class VaultsService {
       .lte('closed_at', 'now()');
 
     if (vaults.error) return vaults;
-    if (!vaults.data) return { data: [] };
+    if (!vaults.data || vaults.data.length === 0) return { data: [] };
 
     // get all custodians and group vaults by custodian
     const custodians = await this.custodian.forVaults(vaults.data);
@@ -64,7 +64,7 @@ export class VaultsService {
     const transfer = await this.transferToVaults(vaultsForCustodian, custodianAddress);
     if (transfer.error) return transfer;
 
-    // calculate the proportions for each vault so we can distribute the assets to the entities lates
+    // calculate the proportions for each vault so that we can distribute the assets to the entities
     const custodianProportions = calculateProportions(transfer.data);
 
     const errors: ServiceResponse<any>['error'][] = [];
@@ -113,18 +113,16 @@ export class VaultsService {
       });
     }
 
-    // transfer the assets from the custodian to the vaults sequentially so we don't trigger any nonce errors
-    let totalCustodianAssets = dtos.reduce((acc, cur) => acc.add(cur.custodianAmount), BigNumber.from(0));
-    for (const dto of dtos) {
-      // check if the custodian has enough assets to transfer
-      if (totalCustodianAssets.lt(dto.amount)) {
-        return { error: new Error('Custodian amount should be bigger or same as expected amount') };
-      }
+    // check if the custodian has enough assets to transfer to all vaults or stop the process to avoid custody of any funds
+    const totalExpectedAssets = dtos.reduce((acc, cur) => acc.add(cur.amount), BigNumber.from(0));
+    if (dtos[0].custodianAmount.lt(totalExpectedAssets)) {
+      return { error: new Error('Custodian amount should be bigger or same as expected amount') };
+    }
 
+    // transfer the assets from the custodian to the vaults sequentially so that we don't trigger any nonce errors
+    for (const dto of dtos) {
       const transfer = await this.custodian.transfer(dto);
       if (transfer.error) errors.push(transfer.error);
-
-      totalCustodianAssets = totalCustodianAssets.sub(dto.amount);
     }
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: dtos };
   }
