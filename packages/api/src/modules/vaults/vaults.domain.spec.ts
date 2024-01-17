@@ -45,6 +45,19 @@ describe('Vaults Domain', () => {
     expect(data?.[2].amount.toString()).toBe('40');
   });
 
+  it('should return empty split if there is no asset in the custodian', async () => {
+    const custodianTotalAssets = BigNumber.from(0);
+
+    const config: DistributionConfig[] = [
+      { percentage: 0.8, vault_distribution_entities: { type: 'treasury', address: 'treasury' } },
+      { percentage: 1, vault_distribution_entities: { type: 'activity_reward', address: 'activity_reward' } },
+    ];
+
+    const { data } = calculateDistribution(custodianTotalAssets, config);
+
+    expect(data?.length).toBe(0);
+  });
+
   it('should fail if calculation underflows', async () => {
     const custodianTotalAssets = BigNumber.from(100);
 

@@ -19,6 +19,8 @@ export function calculateDistribution(
     for (const { vault_distribution_entities, percentage } of distributionConfig) {
       const amount = totalReturns.mul(percentage * 100).div(100);
 
+      if (amount.isZero()) continue;
+
       splits.push({ address: vault_distribution_entities!.address, amount });
       totalReturns = totalReturns.sub(amount);
     }
