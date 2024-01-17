@@ -17,9 +17,10 @@ export class CustodianService {
     private readonly supabase: SupabaseService,
   ) {}
 
-  async totalAssets(vault: Tables<'vaults'>): Promise<ServiceResponse<BigNumber>> {
+  async totalAssets(vault: Tables<'vaults'>, custodianAddress?: string): Promise<ServiceResponse<BigNumber>> {
     const asset = this.asset(vault);
-    const address = await this.address(vault);
+
+    const address = custodianAddress ? { data: custodianAddress } : await this.address(vault);
     if (address.error) return address;
 
     return responseFromRead(asset.balanceOf(address.data));
@@ -40,6 +41,22 @@ export class CustodianService {
     if (transfer.error) return transfer;
 
     return { data: dto };
+  }
+
+  async forVaults(vaults: Pick<Tables<'vaults'>, 'id'>[]) {
+    const { error, data } = await this.supabase
+      .admin()
+      .from('vault_distribution_entities')
+      .select('*, vaults (id)')
+      .in(
+        'vault_id',
+        vaults.map((vault) => vault.id),
+      )
+      .eq('type', 'custodian');
+
+    if (error) return { error };
+
+    return { data };
   }
 
   private asset(vault: Pick<Tables<'vaults'>, 'asset_address'>) {

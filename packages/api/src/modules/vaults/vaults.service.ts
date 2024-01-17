@@ -1,6 +1,7 @@
 import { CredbullVault, CredbullVault__factory } from '@credbull/contracts';
 import { Injectable } from '@nestjs/common';
 import { BigNumber } from 'ethers';
+import * as _ from 'lodash';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
@@ -36,17 +37,36 @@ export class VaultsService {
     if (vaults.error) return vaults;
     if (!vaults.data) return { data: [] };
 
-    const errors = [];
-    const maturedVaults = [];
+    const custodians = await this.custodian.forVaults(vaults.data);
+    if (custodians.error) return custodians;
 
-    const transfer = await this.transferToVaults(vaults.data);
+    const groupedVaults = _.groupBy(custodians.data, 'address');
+    const matured = await Promise.all(
+      _.values(_.mapValues(groupedVaults, (group, key) => this.maturedVaults(vaults.data, group, key))),
+    );
+
+    if (anyCallHasFailed(matured)) return { error: new AggregateError(_.compact(matured.map((m) => m.error))) };
+    return { data: _.compact(matured.flatMap((m) => m.data)) };
+  }
+
+  private async maturedVaults(
+    vaults: Tables<'vaults'>[],
+    group: NonNullable<Awaited<ReturnType<typeof this.custodian.forVaults>>['data']>,
+    custodianAddress: string,
+  ): Promise<ServiceResponse<Tables<'vaults'>[]>> {
+    const vaultIds = group.map((custodian) => custodian.vaults?.id);
+    const vaultsForCustodian = vaults.filter((vault) => vaultIds.includes(vault.id));
+
+    const transfer = await this.transferToVaults(vaultsForCustodian, custodianAddress);
     if (transfer.error) return transfer;
 
-    for (let i = 0; i < vaults.data.length; i++) {
-      const vault = vaults.data[i];
+    const errors: ServiceResponse<any>['error'][] = [];
+    const maturedVaults: Tables<'vaults'>[] = [];
+    for (let i = 0; i < vaultsForCustodian.length; i++) {
+      const vault = vaultsForCustodian[i];
 
       // gather all the data we need to calculate the asset distribution
-      const requiredData = await Promise.all(this.requiredDataForEntities(vault));
+      const requiredData = await Promise.all(this.requiredDataForEntities(vault, custodianAddress));
       for (const call of requiredData) if (call.error) errors.push(call.error);
       if (anyCallHasFailed(requiredData)) continue;
 
@@ -54,7 +74,7 @@ export class VaultsService {
 
       // calculate the distribution and transfer the assets
       const transfers = await this.transferDistribution(
-        vaults.data.length - i,
+        vaultsForCustodian.length - i,
         vault,
         custodianTotalAssets!,
         distributionConfig!,
@@ -71,10 +91,10 @@ export class VaultsService {
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: maturedVaults };
   }
 
-  private async transferToVaults(vaults: Tables<'vaults'>[]) {
+  private async transferToVaults(vaults: Tables<'vaults'>[], custodianAddress: string) {
     const errors = [];
     for (const vault of vaults) {
-      const requiredData = await Promise.all(this.requiredDataForVaults(vault));
+      const requiredData = await Promise.all(this.requiredDataForVaults(vault, custodianAddress));
       for (const call of requiredData) if (call.error) errors.push(call.error);
       if (anyCallHasFailed(requiredData)) continue;
 
@@ -90,14 +110,15 @@ export class VaultsService {
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: vaults };
   }
 
-  private requiredDataForVaults(vault: Tables<'vaults'>) {
-    return [this.expectedAssetsOnMaturity(vault), this.custodian.totalAssets(vault)];
+  private requiredDataForVaults(vault: Tables<'vaults'>, custodianAddress: string) {
+    return [this.expectedAssetsOnMaturity(vault), this.custodian.totalAssets(vault, custodianAddress)];
   }
 
   private requiredDataForEntities(
     vault: Tables<'vaults'>,
+    custodianAddress: string,
   ): [Promise<ServiceResponse<BigNumber>>, Promise<ServiceResponse<DistributionConfig[]>>] {
-    return [this.custodian.totalAssets(vault), this.distributionConfig(vault)];
+    return [this.custodian.totalAssets(vault, custodianAddress), this.distributionConfig(vault)];
   }
 
   private async expectedAssetsOnMaturity(vault: Tables<'vaults'>): Promise<ServiceResponse<BigNumber>> {
