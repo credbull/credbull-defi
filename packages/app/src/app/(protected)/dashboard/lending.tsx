@@ -91,7 +91,7 @@ function Vault(props: VaultProps) {
         open?.({ type: 'success', message: 'Deposit successful' });
       }
     } catch (e) {
-      open?.({ type: 'error', message: 'Deposit failed', description: e?.toString() });
+      open?.({ type: 'error', description: 'Deposit failed', message: e?.toString() ?? '' });
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ function Vault(props: VaultProps) {
       await waitForTransactionReceipt(client!, claimTx);
       open?.({ type: 'success', message: 'Claim successful' });
     } catch (e) {
-      open?.({ type: 'error', message: 'Claim failed', description: e?.toString() });
+      open?.({ type: 'error', description: 'Claim failed', message: e?.toString() ?? '' });
     } finally {
       setLoading(false);
     }
@@ -191,7 +191,7 @@ function Vault(props: VaultProps) {
         </Group>
       ) : (
         <form onSubmit={form.onSubmit(() => onDeposit())}>
-          <Group mt="xl">
+          <Group mt="xl" grow>
             <NumberInput
               label="Deposit Amount"
               {...form.getInputProps('amount')}

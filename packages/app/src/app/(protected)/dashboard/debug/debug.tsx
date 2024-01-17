@@ -47,7 +47,7 @@ const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
       form.reset();
       open?.({ type: 'success', message: 'Mint successful' });
     } catch (e) {
-      open?.({ type: 'error', message: 'Mint failed', description: e?.toString() });
+      open?.({ type: 'error', description: 'Mint failed', message: e?.toString() ?? '' });
     } finally {
       setLoading(false);
     }
@@ -109,7 +109,7 @@ const SendEth = () => {
       await publicClient.waitForTransactionReceipt({ hash });
       open?.({ type: 'success', message: 'Send ETH successful' });
     } catch (e) {
-      open?.({ type: 'error', message: 'Send Eth failed', description: e?.toString() });
+      open?.({ type: 'error', description: 'Send Eth failed', message: e?.toString() ?? '' });
     } finally {
       setTimeout(() => setLoading(false), 1000);
     }
@@ -187,7 +187,7 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
       }
       open?.({ type: 'success', message: 'Deposit successful' });
     } catch (e) {
-      open?.({ type: 'error', message: 'Deposit failed', description: e?.toString() });
+      open?.({ type: 'error', description: 'Deposit failed', message: e?.toString() ?? '' });
     } finally {
       setLoading(false);
     }
