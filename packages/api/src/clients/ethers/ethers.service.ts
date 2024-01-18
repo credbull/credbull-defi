@@ -14,7 +14,6 @@ export class EthersService {
   }
 
   deployer(): Signer {
-    console.log('in deployer');
     return new Wallet(this.deployerKey, this.provider());
   }
 

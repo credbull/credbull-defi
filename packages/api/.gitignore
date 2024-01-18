@@ -2,3 +2,5 @@
 /dist
 
 .env.local
+
+coverage

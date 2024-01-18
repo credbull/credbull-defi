@@ -149,7 +149,7 @@ export class VaultsService {
       return { error: new Error('Custodian amount should be bigger or same as expected amount') };
     }
 
-    return errors.length > 0 ? { error: new AggregateError(errors) } : { data: dtos };
+    return { data: dtos };
   }
 
   private requiredDataForVaults(vault: Tables<'vaults'>, custodianAddress: string) {
