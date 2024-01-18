@@ -149,7 +149,7 @@ function Vault(props: VaultProps) {
 
       <Group position="apart" mt="md" mb="xs">
         <Text size="sm" color="gray">
-          Total Deposited*
+          Vault Balance
         </Text>
         <Text size="sm" color="gray">
           <BalanceOf
