@@ -1,9 +1,18 @@
 import { BigNumber } from 'ethers';
+import { z } from 'zod';
 
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
 
 import { CustodianTransferDto } from './custodian.dto';
+
+export const DistributionConfigSchema = z.object({
+  percentage: z.number(),
+  vault_distribution_entities: z.object({
+    type: z.string(),
+    address: z.string(),
+  }),
+}) as z.ZodSchema<DistributionConfig>;
 
 export type DistributionConfig = Pick<Tables<'vault_distribution_configs'>, 'percentage'> & {
   vault_distribution_entities: Pick<Tables<'vault_distribution_entities'>, 'type' | 'address'> | null;

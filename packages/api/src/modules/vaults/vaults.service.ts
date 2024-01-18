@@ -49,7 +49,7 @@ export class VaultsService {
 
     // gather all data required to transfer assets from the custodian to the vaults
     const transfers = await Promise.all(
-      _.values(_.mapValues(groupedVaults, (group, key) => this.prepareTransfersForVaults(vaults.data, group, key))),
+      _.values(_.mapValues(groupedVaults, (group, key) => this.prepareAllTransfers(vaults.data, group, key))),
     );
     if (anyCallHasFailed(transfers)) return { error: new AggregateError(_.compact(transfers.map((m) => m.error))) };
 
@@ -71,7 +71,7 @@ export class VaultsService {
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: maturedVaults };
   }
 
-  private async prepareTransfersForVaults(
+  private async prepareAllTransfers(
     vaults: Tables<'vaults'>[],
     group: NonNullable<Awaited<ReturnType<typeof this.custodian.forVaults>>['data']>,
     custodianAddress: string,
