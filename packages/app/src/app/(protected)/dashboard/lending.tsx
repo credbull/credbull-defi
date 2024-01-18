@@ -11,7 +11,7 @@ import { IconCopy } from '@tabler/icons';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import _ from 'lodash';
 import { useEffect, useState } from 'react';
-import { parseEther } from 'viem';
+import { formatEther, parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
 import { Address, useAccount, useContractRead, useContractWrite, useWalletClient } from 'wagmi';
 import { z } from 'zod';
@@ -48,6 +48,14 @@ function Vault(props: VaultProps) {
     watch: true,
     args: [props.address as Address],
     enabled: !!props.data.address && !!props.address,
+  });
+
+  const { data: vaultTotalAssets } = useContractRead({
+    address: props.data.address as Address,
+    abi: ERC4626__factory.abi,
+    functionName: 'totalAssets',
+    watch: true,
+    enabled: !!props.data.address,
   });
 
   const form = useForm({
@@ -131,7 +139,7 @@ function Vault(props: VaultProps) {
 
       <Group position="apart" mt="xl" mb="xs">
         <Text size="sm" color="gray">
-          Opens
+          Vault Opens
         </Text>
         <Text size="sm" color="gray">
           {format(opens, 'MM/dd/yyyy HH:mm')}
@@ -140,10 +148,19 @@ function Vault(props: VaultProps) {
 
       <Group position="apart" mt="md" mb="xs">
         <Text size="sm" color="gray">
-          Closes
+          Vault Closes
         </Text>
         <Text size="sm" color="gray">
           {format(closes, 'MM/dd/yyyy HH:mm')}
+        </Text>
+      </Group>
+
+      <Group position="apart" mt="md" mb="xs">
+        <Text size="sm" color="gray">
+          Vault Total Deposits
+        </Text>
+        <Text size="sm" color="gray">
+          {vaultTotalAssets ? formatEther(vaultTotalAssets) : '0'} USDC
         </Text>
       </Group>
 

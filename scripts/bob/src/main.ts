@@ -58,13 +58,13 @@ export const main = () => {
     const mintTx = await usdc.mint(bobSigner.address, parseEther('1000'));
     await mintTx.wait();
 
-    const approveTx = await usdc.approve(vaultAddress, parseEther('1'));
+    const approveTx = await usdc.approve(vaultAddress, parseEther('1000'));
     await approveTx.wait();
     console.log('Bob: gives the approval to the vault to swap it`s USDC. - OK');
 
     // console.log('Bob: deposits his USDC in the vault.');
     const vault = CredbullVault__factory.connect(vaultAddress, bobSigner);
-    const depositTx = await vault.deposit(parseEther('1'), bobSigner.address, { gasLimit: 10000000 });
+    const depositTx = await vault.deposit(parseEther('1000'), bobSigner.address, { gasLimit: 10000000 });
     await depositTx.wait();
     console.log('Bob: deposits his USDC in the vault. - OK');
 
