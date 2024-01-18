@@ -141,6 +141,8 @@ export class VaultsService {
       });
     }
 
+    if (errors.length > 0) return { error: new AggregateError(errors) };
+
     // check if the custodian has enough assets to transfer to all vaults or stop the process to avoid custody of any funds
     const totalExpectedAssets = dtos.reduce((acc, cur) => acc.add(cur.amount), BigNumber.from(0));
     if (dtos[0].custodianAmount.lt(totalExpectedAssets)) {
