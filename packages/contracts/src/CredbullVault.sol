@@ -61,12 +61,20 @@ contract CredbullVault is ERC4626, Ownable {
      */
     mapping(address => bool) public isWhitelisted;
 
+    struct Rules {
+        bool checkMaturity;
+        bool checkVaultOpenStatus;
+        bool checkWhitelist;
+    }
+
+    Rules rules;
+
     /**
      * @notice - Modifier to check for maturity status.
      * @dev - Used on internal withdraw method to check for maturity status
      */
     modifier onlyAfterMaturity() {
-        if (!isMatured) {
+        if (rules.checkMaturity && !isMatured) {
             revert CredbullVault__NotMatured();
         }
 
@@ -78,7 +86,7 @@ contract CredbullVault is ERC4626, Ownable {
      * @dev - Used on internal deposit method to check for open status
      */
     modifier onlyWhenOpened() {
-        if (block.timestamp < opensAtTimestamp) {
+        if (rules.checkVaultOpenStatus && (block.timestamp < opensAtTimestamp)) {
             revert CredbullVault__VaultNotOpened();
         }
         _;
@@ -88,7 +96,7 @@ contract CredbullVault is ERC4626, Ownable {
      * @notice - Modifier to check for whitelist status of an address
      */
     modifier onlyWhitelistAddress(address receiver) {
-        if (!isWhitelisted[receiver]) {
+        if (rules.checkWhitelist && !isWhitelisted[receiver]) {
             revert CredbullVault__NotAWhitelistedAddress();
         }
 
@@ -126,7 +134,7 @@ contract CredbullVault is ERC4626, Ownable {
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares)
         internal
         override
-        // onlyWhenOpened
+        onlyWhenOpened
         onlyWhitelistAddress(receiver)
     {
         SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
@@ -186,6 +194,12 @@ contract CredbullVault is ERC4626, Ownable {
         isMatured = true;
     }
 
+    /**
+     * @notice - Method to update the whitelist status of an address called only by the owner.
+     *
+     * @param _addresses - List of addresses value
+     * @param _statuses - List of statuses to update
+     */
     function updateWhitelistStatus(address[] calldata _addresses, bool[] calldata _statuses) external onlyOwner {
         require(_addresses.length == _statuses.length, "Length mismatch");
         uint256 length = _addresses.length;
@@ -197,5 +211,14 @@ contract CredbullVault is ERC4626, Ownable {
                 ++i;
             }
         }
+    }
+
+    /**
+     * @notice - Function to update the value of the rules
+     *
+     * @param _rules - The rules to be updated
+     */
+    function setRules(Rules calldata _rules) external onlyOwner {
+        rules = _rules;
     }
 }
