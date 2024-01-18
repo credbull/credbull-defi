@@ -5,7 +5,8 @@
   "workspaces": {
     "packages": [
       "packages/*",
-      "spikes/*"
+      "spikes/*",
+      "scripts/*"
     ]
   },
   "scripts": {

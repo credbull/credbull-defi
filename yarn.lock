@@ -8036,6 +8036,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bob@workspace:scripts/bob":
+  version: 0.0.0-use.local
+  resolution: "bob@workspace:scripts/bob"
+  dependencies:
+    "@credbull/api": "workspace:^"
+    "@credbull/contracts": "workspace:^"
+    "@supabase/supabase-js": ^2.39.1
+    "@trivago/prettier-plugin-sort-imports": ^4.3.0
+    "@types/node": ^20.10.5
+    "@typescript-eslint/eslint-plugin": ^6.16.0
+    "@typescript-eslint/parser": ^6.16.0
+    compression: ^1.7.4
+    dotenv: ^16.3.1
+    eslint: ^8.56.0
+    eslint-config-prettier: ^9.1.0
+    eslint-plugin-prettier: ^5.1.2
+    ethers: ^5.7.2
+    prettier: ^3.1.1
+    siwe: ^2.1.4
+    ts-node: ^10.9.2
+    typescript: ^5.3.3
+    zod: ^3.22.4
+  languageName: unknown
+  linkType: soft
+
 "body-parser@npm:1.20.1":
   version: 1.20.1
   resolution: "body-parser@npm:1.20.1"
