@@ -44,7 +44,6 @@ contract DeployVault is Script {
         CredbullVault vault = new CredbullVault(
             owner, IERC20(asset), shareName, shareSymbol, promisedYield, opensAt, opensAt + closesDuration, custodian
         );
-        _setRules(vault);
         vm.stopBroadcast();
 
         return vault;
@@ -58,9 +57,5 @@ contract DeployVault is Script {
         vm.stopBroadcast();
 
         return entities;
-    }
-
-    function _setRules(CredbullVault vault) internal {
-        vault.setRules(CredbullVault.Rules({ checkMaturity: true, checkVaultOpenStatus: true, checkWhitelist: true }));
     }
 }
