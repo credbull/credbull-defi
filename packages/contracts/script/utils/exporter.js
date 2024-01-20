@@ -46,9 +46,10 @@ async function exportConfigsToSupabase(client, entities) {
   const makeConfig = (e) => {
     if (e.type === 'custodian') return [];
 
-    const treasury = { order: 0, percentage: 0.8 };
-    const activityReward = { order: 1, percentage: 1 };
-    const config = e.type === 'treasury' ? treasury : activityReward;
+    const vault = { order: 0, percentage: 0.2 };
+    const treasury = { order: 1, percentage: 0.8 };
+    const activity_reward = { order: 2, percentage: 1 };
+    const config = { treasury, activity_reward, vault }[e.type];
 
     return [{ entity_id: e.id, ...config }];
   };
@@ -62,6 +63,7 @@ async function exportEntitiesToSupabase(client, onChainEntities, vaults) {
       { vault_id: v.id, address: onChainEntities.custodian, type: 'custodian' },
       { vault_id: v.id, address: onChainEntities.treasury, type: 'treasury' },
       { vault_id: v.id, address: onChainEntities.activityReward, type: 'activity_reward' },
+      { vault_id: v.id, address: v.address, type: 'vault' },
     ];
   };
 
