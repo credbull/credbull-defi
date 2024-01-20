@@ -94,7 +94,7 @@ describe('AccountsController', () => {
     expect(status).toBe(KYCStatus.ACTIVE);
   });
 
-  it.only('should verify the signature and link the wallet', async () => {
+  it('should verify the signature and link the wallet', async () => {
     const user_id = '1';
     const dto = {
       message:
