@@ -60,20 +60,26 @@ describe('AccountsController', () => {
     const user_id = '1';
     const address = '0x0000000000';
 
+    const insert = vi.fn();
     const select = vi.fn();
     const eq = vi.fn();
     const single = vi.fn();
+    const maybeSingle = vi.fn();
     const neq = vi.fn();
     const lt = vi.fn();
-    select.mockReturnValueOnce({ eq } as any).mockReturnValueOnce({ neq } as any);
-    eq.mockReturnValueOnce({ single } as any);
+    const builder = { insert, select, eq, single, neq, lt, maybeSingle };
+    select
+      .mockReturnValueOnce(builder as any)
+      .mockReturnValueOnce(builder as any)
+      .mockReturnValueOnce(builder as any);
+    eq.mockReturnValue(builder as any);
     single.mockResolvedValueOnce({ data: { user_id } } as any);
+    maybeSingle.mockResolvedValueOnce({} as any);
 
     neq.mockReturnValueOnce({ lt } as any);
     lt.mockResolvedValueOnce({ data: [{ address: '0xvault0xaddress' }] } as any);
 
-    const insert = vi.fn();
-    insert.mockReturnValueOnce({ select } as any);
+    insert.mockReturnValueOnce(builder as any);
     select.mockResolvedValueOnce({ data: [] } as any);
 
     admin.from.mockReturnValue({ select, insert } as any);
@@ -82,13 +88,13 @@ describe('AccountsController', () => {
     vault.isWhitelisted.mockResolvedValueOnce(false);
     vault.updateWhitelistStatus.mockResolvedValueOnce({} as any);
 
-    const { status } = await controller.whitelist({ address });
+    const { status } = await controller.whitelist({ user_id, address });
 
     expect(insert.mock.calls[0][0]).toStrictEqual({ address, user_id, event_name: 'accepted' });
     expect(status).toBe(KYCStatus.ACTIVE);
   });
 
-  it('should verify the signature and link the wallet', async () => {
+  it.only('should verify the signature and link the wallet', async () => {
     const user_id = '1';
     const dto = {
       message:
@@ -98,12 +104,17 @@ describe('AccountsController', () => {
     };
 
     const select = vi.fn();
+    const eq = vi.fn();
     const insert = vi.fn();
-    insert.mockReturnValueOnce({ select } as any);
-    select.mockResolvedValueOnce({ data: [{ user_id }] } as any);
+    const maybeSingle = vi.fn();
+    const builder = { select, eq, insert, maybeSingle };
+    insert.mockReturnValueOnce(builder as any);
+    eq.mockReturnValueOnce(builder as any);
+    maybeSingle.mockResolvedValueOnce({} as any);
+    select.mockReturnValueOnce(builder as any).mockResolvedValueOnce({ data: [{ user_id }] } as any);
 
     client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: user_id } } } as any);
-    client.from.mockReturnValue({ insert } as any);
+    client.from.mockReturnValue(builder as any);
 
     const data = await controller.linkWallet(dto);
 

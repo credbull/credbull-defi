@@ -9,7 +9,8 @@ export const whitelistAddress = async (address: string) => {
   const supabase = createSuabase(cookies());
   const credbullApi = createCredbull(supabase);
 
-  console.log('whitelisting address', address);
+  const auth = await supabase.auth.getSession();
+  const user_id = auth.data.session!.user.id;
 
-  return credbullApi.whitelistAddress(address);
+  return credbullApi.whitelistAddress({ address, user_id });
 };

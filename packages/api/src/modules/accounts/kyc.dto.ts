@@ -16,6 +16,12 @@ export class WhitelistAccountDto {
   })
   address: string;
 
+  @IsString()
+  @ApiProperty({
+    description: 'user id',
+  })
+  user_id: string;
+
   constructor(partial: Partial<WhitelistAccountDto>) {
     Object.assign(this, partial);
   }

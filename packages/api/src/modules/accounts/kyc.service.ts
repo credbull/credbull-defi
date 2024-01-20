@@ -27,24 +27,40 @@ export class KycService {
   }
 
   async whitelist(dto: WhitelistAccountDto): Promise<ServiceResponse<Tables<'kyc_events'>[]>> {
-    const { address } = dto;
+    const { address, user_id } = dto;
     const client = this.supabase.admin();
 
-    const wallet = await client.from('user_wallets').select().eq('address', address).single();
+    const existing = await client
+      .from('kyc_events')
+      .select()
+      .eq('address', address)
+      .eq('user_id', user_id)
+      .eq('event_name', 'accepted')
+      .maybeSingle();
+
+    if (existing.error) return existing;
+    if (existing.data) return { data: [existing.data] };
+
+    const wallet = await client.from('user_wallets').select().eq('address', address).eq('user_id', user_id).single();
     if (wallet.error) return wallet;
 
     const vaults = await client.from('vaults').select('*').neq('status', 'created').lt('opened_at', 'now()');
+    if (vaults.error) return vaults;
 
+    const errors = [];
     if (vaults.data) {
       for (const vault of vaults.data) {
         const vaultInstance = this.getVaultInstance(vault.address);
-        const { data } = await responseFromRead(vaultInstance.isWhitelisted(address));
-
-        if (!data) {
-          await responseFromWrite(vaultInstance.updateWhitelistStatus([address], [true]));
+        const { error, data } = await responseFromRead(vaultInstance.isWhitelisted(address));
+        if (error) {
+          errors.push(error);
+          continue;
         }
+
+        if (!data) await responseFromWrite(vaultInstance.updateWhitelistStatus([address], [true]));
       }
     }
+    if (errors.length) return { error: new AggregateError(errors) };
 
     return client
       .from('kyc_events')

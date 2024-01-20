@@ -36,7 +36,7 @@ export const main = () => {
 
     await fetch(`${process.env.API_BASE_URL}/accounts/whitelist`, {
       method: 'POST',
-      body: JSON.stringify({ address: bobSigner.address }),
+      body: JSON.stringify({ user_id: bob.user!.id, address: bobSigner.address }),
       ...adminHeaders,
     });
     console.log('Admin: receives the approval and KYCs Bob. - OK');
