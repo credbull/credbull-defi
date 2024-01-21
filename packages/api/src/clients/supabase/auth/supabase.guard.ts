@@ -39,7 +39,7 @@ export class SupabaseGuard extends AuthGuard('jwt') {
     );
 
     const { data } = await client.auth.getUser();
-    return data.user?.user_metadata.roles || [];
+    return data.user?.app_metadata.roles || [];
   }
 
   private matchRoles(roles: string[], userRoles: string[]): boolean {

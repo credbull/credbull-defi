@@ -81,7 +81,7 @@ describe('SupabaseGuard', () => {
     SupabaseRoles(['admin'])(handler);
     context.getHandler.mockReturnValue(handler);
 
-    client.auth.getUser.mockResolvedValueOnce({ data: { user: { user_metadata: { roles: [] } } } } as any);
+    client.auth.getUser.mockResolvedValueOnce({ data: { user: { app_metadata: { roles: [] } } } } as any);
 
     const active = await guard.canActivate(context);
     expect(active).toBe(false);
@@ -98,7 +98,7 @@ describe('SupabaseGuard', () => {
       getNext: () => ({}) as any,
     });
 
-    client.auth.getUser.mockResolvedValueOnce({ data: { user: { user_metadata: { roles: ['admin'] } } } } as any);
+    client.auth.getUser.mockResolvedValueOnce({ data: { user: { app_metadata: { roles: ['admin'] } } } } as any);
 
     const handler = vi.fn();
     SupabaseRoles(['admin'])(handler);
