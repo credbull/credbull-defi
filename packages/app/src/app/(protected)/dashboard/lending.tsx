@@ -283,7 +283,7 @@ export function Lending(props: { email?: string; status?: string }) {
     sorters: [{ field: 'opened_at', order: 'desc' }],
   });
 
-  const erc20Address = list?.data[0].asset_address;
+  const erc20Address = list?.data[0]?.asset_address;
   const custodian = _.find(entities?.data, { type: 'custodian' });
   const treasury = _.find(entities?.data, { type: 'treasury' });
   const activity = _.find(entities?.data, { type: 'activity_reward' });
