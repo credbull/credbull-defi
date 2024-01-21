@@ -29,7 +29,7 @@ describe('AuthenticationController', () => {
   });
 
   it('should throw supabase error when there is an error refreshing the token', async () => {
-    const data = { refreshToken: '' };
+    const data = { refresh_token: '' };
 
     admin.auth.refreshSession.mockResolvedValueOnce({ error: 'error' } as any);
 
@@ -42,7 +42,7 @@ describe('AuthenticationController', () => {
   });
 
   it('should throw when there is no session', async () => {
-    const data = { refreshToken: '' };
+    const data = { refresh_token: '' };
 
     admin.auth.refreshSession.mockResolvedValueOnce({ data: {} } as any);
 
@@ -55,14 +55,14 @@ describe('AuthenticationController', () => {
   });
 
   it('should return the tokens for a new session', async () => {
-    const data = { refreshToken: '' };
+    const data = { refresh_token: '' };
     const session = { refresh_token: 'refresh_token', access_token: 'access_token', user: { id: 'id' } };
 
     admin.auth.refreshSession.mockResolvedValueOnce({ data: { session } } as any);
 
-    const { refreshToken, accessToken } = await controller.refreshToken(data);
+    const { refresh_token, access_token } = await controller.refreshToken(data);
 
-    expect(refreshToken).toBe(session.refresh_token);
-    expect(accessToken).toBe(session.access_token);
+    expect(refresh_token).toBe(session.refresh_token);
+    expect(access_token).toBe(session.access_token);
   });
 });

@@ -1,18 +1,16 @@
 import { CredbullVault__factory, MockStablecoin__factory } from '@credbull/contracts';
 import { formatEther, parseEther } from 'ethers/lib/utils';
 
-import { headers, linkWalletMessage, login, signer, supabase } from './utils/helpers';
+import { headers, linkWalletMessage, login, signer } from './utils/helpers';
 
 export const main = () => {
   setTimeout(async () => {
-    const supabaseAnon = supabase();
-
     console.log('\n');
     console.log('=====================================');
     console.log('\n');
 
     // console.log('Bob: retrieves a session through api.');
-    const bob = await login(supabaseAnon);
+    const bob = await login();
 
     const bobHeaders = headers(bob);
     console.log('Bob: retrieves a session through api. - OK');
@@ -32,12 +30,12 @@ export const main = () => {
     console.log('Bob: sends the signed message to Credbull so that he can be KYC`ed. - OK');
 
     // console.log('Admin: receives the approval and KYCs Bob.');
-    const admin = await login(supabaseAnon, { admin: true });
+    const admin = await login({ admin: true });
     const adminHeaders = headers(admin);
 
     await fetch(`${process.env.API_BASE_URL}/accounts/whitelist`, {
       method: 'POST',
-      body: JSON.stringify({ user_id: bob.userId, address: bobSigner.address }),
+      body: JSON.stringify({ user_id: bob.user_id, address: bobSigner.address }),
       ...adminHeaders,
     });
     console.log('Admin: receives the approval and KYCs Bob. - OK');

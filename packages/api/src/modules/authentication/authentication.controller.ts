@@ -26,7 +26,9 @@ export class AuthenticationController {
   @ApiOperation({ summary: 'Returns a new access token and refresh token' })
   @ApiResponse({ status: 200, description: 'Success' })
   async refreshToken(@Body() data: CreateAccessTokenDto): Promise<RefreshTokenDto> {
-    const { data: auth, error } = await this.supabase.admin().auth.refreshSession({ refresh_token: data.refreshToken });
+    const { data: auth, error } = await this.supabase
+      .admin()
+      .auth.refreshSession({ refresh_token: data.refresh_token });
 
     if (error) throw new BadRequestException(error);
     if (!auth.session) throw new InternalServerErrorException("Couldn't refresh session");

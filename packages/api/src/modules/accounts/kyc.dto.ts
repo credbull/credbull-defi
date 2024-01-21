@@ -5,7 +5,6 @@ export enum KYCStatus {
   ACTIVE = 'active',
   PENDING = 'pending',
   REJECTED = 'rejected',
-  SUSPENDED = 'suspended',
 }
 
 export class WhitelistAccountDto {

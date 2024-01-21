@@ -5,7 +5,7 @@ import { IsString } from 'class-validator';
 export class CreateAccessTokenDto {
   @IsString()
   @ApiProperty({ description: 'refresh token' })
-  refreshToken: string;
+  refresh_token: string;
 
   constructor(partial: Partial<CreateAccessTokenDto>) {
     Object.assign(this, partial);
@@ -21,7 +21,7 @@ export class SignInDto {
   @ApiProperty({ description: 'email' })
   email: string;
 
-  constructor(partial: Partial<CreateAccessTokenDto>) {
+  constructor(partial: Partial<SignInDto>) {
     Object.assign(this, partial);
   }
 }
@@ -29,19 +29,18 @@ export class SignInDto {
 export class RefreshTokenDto {
   @IsString()
   @ApiProperty({ description: 'refresh token' })
-  refreshToken: string;
+  refresh_token: string;
 
   @IsString()
   @ApiProperty({ description: 'access token' })
-  accessToken: string;
+  access_token: string;
 
   @IsString()
   @ApiProperty({ description: 'user_id' })
-  userId: string;
+  user_id: string;
 
   constructor(partial: Pick<Session, 'refresh_token' | 'access_token' | 'user'>) {
-    this.accessToken = partial.access_token;
-    this.refreshToken = partial.refresh_token;
-    this.userId = partial.user.id;
+    Object.assign(this, partial);
+    this.user_id = partial.user.id;
   }
 }
