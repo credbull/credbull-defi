@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
-import { HelperConfig } from "../script/HelperConfig.s.sol";
+import { HelperConfig, NetworkConfig, TimeConfig } from "../script/HelperConfig.s.sol";
 import { CredbullVault } from "../src/CredbullVault.sol";
 import { DeployVault } from "../script/DeployVault.s.sol";
 import { console2 } from "forge-std/console2.sol";
@@ -22,7 +22,7 @@ contract CredbullVaultTest is Test {
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
 
-    uint256 vaultOpenTime;
+    uint256 private vaultOpenTime;
 
     uint256 private constant INITIAL_BALANCE = 1000 ether;
 
@@ -32,8 +32,13 @@ contract CredbullVaultTest is Test {
         vault = _vaults[0];
         config = _config;
 
-        (owner, asset,,, custodian,,) = config.activeNetworkConfig();
-        (vaultOpenTime,) = config.activeTimeConfig();
+        NetworkConfig memory active = config.getNetworkConfig();
+        owner = active.owner;
+        asset = active.asset;
+        custodian = active.custodian;
+
+        TimeConfig memory time = config.getTimeConfig();
+        vaultOpenTime = time.firstVaultOpensAt;
 
         address[] memory whitelistAddresses = new address[](2);
         whitelistAddresses[0] = alice;
@@ -46,13 +51,13 @@ contract CredbullVaultTest is Test {
         CredbullVault.Rules memory rules =
             CredbullVault.Rules({ checkMaturity: true, checkVaultOpenStatus: true, checkWhitelist: true });
 
-        vm.startPrank(owner);
-        vault.updateWhitelistStatus(whitelistAddresses, statuses);
+        vm.startPrank(active.owner);
+        vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vault.setRules(rules);
         vm.stopPrank();
 
-        MockStablecoin(asset).mint(alice, INITIAL_BALANCE);
-        MockStablecoin(asset).mint(bob, INITIAL_BALANCE);
+        MockStablecoin(active.asset).mint(alice, INITIAL_BALANCE);
+        MockStablecoin(active.asset).mint(bob, INITIAL_BALANCE);
     }
 
     function test__OwnerOfContract() public {
@@ -60,9 +65,9 @@ contract CredbullVaultTest is Test {
     }
 
     function test__ShareNameAndSymbol() public {
-        (,, string memory shareName, string memory shareSymbol,,,) = config.activeNetworkConfig();
-        assertEq(vault.name(), shareName);
-        assertEq(vault.symbol(), shareSymbol);
+        NetworkConfig memory active = config.getNetworkConfig();
+        assertEq(vault.name(), active.shareName);
+        assertEq(vault.symbol(), active.shareSymbol);
     }
 
     function test__CustodianAddress() public {
@@ -165,8 +170,9 @@ contract CredbullVaultTest is Test {
         bool[] memory statuses = new bool[](1);
         statuses[0] = false;
 
-        vm.prank(owner);
-        vault.updateWhitelistStatus(whitelistAddresses, statuses);
+        vm.startPrank(owner);
+        vault.kycProvider().updateStatus(whitelistAddresses, statuses);
+        vm.stopPrank();
 
         vm.expectRevert(CredbullVault.CredbullVault__NotAWhitelistedAddress.selector);
         vm.warp(vaultOpenTime);
@@ -191,8 +197,9 @@ contract CredbullVaultTest is Test {
         bool[] memory statuses = new bool[](1);
         statuses[0] = false;
 
-        vm.prank(owner);
-        vault.updateWhitelistStatus(whitelistAddresses, statuses);
+        vm.startPrank(owner);
+        vault.kycProvider().updateStatus(whitelistAddresses, statuses);
+        vm.stopPrank();
 
         setRule(true, true, false);
         deposit(alice, 10 ether, true);

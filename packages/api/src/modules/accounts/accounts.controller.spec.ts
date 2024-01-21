@@ -1,4 +1,4 @@
-import { CredbullVault } from '@credbull/contracts';
+import { AKYCProvider } from '@credbull/contracts';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -17,15 +17,15 @@ describe('AccountsController', () => {
   let controller: AccountsController;
   let client: DeepMockProxy<SupabaseClient>;
   let admin: DeepMockProxy<SupabaseClient>;
-  let vault: DeepMockProxy<CredbullVault>;
+  let kyc: DeepMockProxy<AKYCProvider>;
   let ethers: DeepMockProxy<EthersService>;
   beforeEach(async () => {
     client = mockDeep<SupabaseClient>();
     admin = mockDeep<SupabaseClient>();
-    vault = mockDeep<CredbullVault>();
+    kyc = mockDeep<AKYCProvider>();
     ethers = mockDeep<EthersService>();
 
-    (KycService.prototype as any).getVaultInstance = vi.fn().mockReturnValue(vault);
+    (KycService.prototype as any).getOnChainProvider = vi.fn().mockReturnValue(kyc);
 
     const service = { client: () => client, admin: () => admin };
 
@@ -45,11 +45,12 @@ describe('AccountsController', () => {
     const select = vi.fn();
     const eq = vi.fn();
     const single = vi.fn();
-    select.mockReturnValueOnce({ eq } as any);
-    eq.mockReturnValueOnce({ single } as any);
+    const builder = { select, eq, single };
+    select.mockReturnValueOnce(builder as any);
+    eq.mockReturnValueOnce(builder as any);
     single.mockResolvedValueOnce({ data: null } as any);
 
-    client.from.mockReturnValue({ select } as any);
+    client.from.mockReturnValue(builder as any);
 
     const { status } = await controller.status();
 
@@ -85,8 +86,8 @@ describe('AccountsController', () => {
     admin.from.mockReturnValue({ select, insert } as any);
     ethers.deployer.mockReturnValue({} as any);
 
-    vault.isWhitelisted.mockResolvedValueOnce(false);
-    vault.updateWhitelistStatus.mockResolvedValueOnce({} as any);
+    kyc.status.mockResolvedValueOnce(false);
+    kyc.updateStatus.mockResolvedValueOnce({} as any);
 
     const { status } = await controller.whitelist({ user_id, address });
 

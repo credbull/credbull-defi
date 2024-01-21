@@ -23,6 +23,10 @@ export class WalletsService {
       return { error: new Error('No discriminator provided') };
     }
 
+    if ((auth.data.user.app_metadata.entity_type as EntityType) !== 'partner' && dto.discriminator) {
+      return { error: new Error('Discriminator should not be provided') };
+    }
+
     const verify = await new SiweMessage(message).verify({ signature });
     if (verify.error) return { error: verify.error };
 

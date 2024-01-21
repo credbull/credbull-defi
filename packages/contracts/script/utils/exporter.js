@@ -44,7 +44,7 @@ async function exportAddress() {
 
 async function exportConfigsToSupabase(client, entities) {
   const makeConfig = (e) => {
-    if (e.type === 'custodian') return [];
+    if (['custodian', 'kyc_provider'].includes(e.type)) return [];
 
     const vault = { order: 0, percentage: 0.2 };
     const treasury = { order: 1, percentage: 0.8 };
@@ -61,6 +61,7 @@ async function exportEntitiesToSupabase(client, onChainEntities, vaults) {
   const makeEntities = (v) => {
     return [
       { vault_id: v.id, address: onChainEntities.custodian, type: 'custodian' },
+      { vault_id: v.id, address: onChainEntities.kycProvider, type: 'kyc_provider' },
       { vault_id: v.id, address: onChainEntities.treasury, type: 'treasury' },
       { vault_id: v.id, address: onChainEntities.activityReward, type: 'activity_reward' },
       { vault_id: v.id, address: v.address, type: 'vault' },
@@ -117,27 +118,32 @@ async function exportToSupabase(onChainEntities, onChainVaults) {
 }
 
 (async () => {
-  const contracts = await exportAddress();
+  try {
+    const contracts = await exportAddress();
 
-  if (process.env.EXPORT_TO_SUPABASE) {
-    const chain = process.env.NEXT_PUBLIC_TARGET_NETWORK_ID;
-    const vaults = contracts[chain].CredbullVault.map((v) => {
-      return {
-        address: v.address,
-        asset_address: v.arguments[1],
-        opened_at: v.arguments[5],
-        closed_at: v.arguments[6],
+    if (process.env.EXPORT_TO_SUPABASE) {
+      const chain = process.env.NEXT_PUBLIC_TARGET_NETWORK_ID;
+      const vaults = contracts[chain].CredbullVault.map((v) => {
+        return {
+          address: v.address,
+          asset_address: v.arguments[1],
+          opened_at: v.arguments[2],
+          closed_at: v.arguments[3],
+        };
+      });
+      const configDeployment = contracts[chain].CredbullEntities[0].arguments;
+      const entities = {
+        custodian: configDeployment[0],
+        kycProvider: configDeployment[1],
+        treasury: configDeployment[2],
+        activityReward: configDeployment[3],
       };
-    });
-    const configDeployment = contracts[chain].CredbullEntities[0].arguments;
-    const entities = {
-      custodian: configDeployment[0],
-      treasury: configDeployment[1],
-      activityReward: configDeployment[2],
-    };
 
-    await exportToSupabase(entities, vaults);
+      await exportToSupabase(entities, vaults);
+    }
+  } catch (e) {
+    console.log(e);
+  } finally {
+    console.log(`Finished exporting contracts`);
   }
-
-  console.log(`Finished exporting contracts`);
 })();
