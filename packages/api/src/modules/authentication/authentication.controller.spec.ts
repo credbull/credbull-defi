@@ -56,7 +56,7 @@ describe('AuthenticationController', () => {
 
   it('should return the tokens for a new session', async () => {
     const data = { refreshToken: '' };
-    const session = { refresh_token: 'refresh_token', access_token: 'access_token' };
+    const session = { refresh_token: 'refresh_token', access_token: 'access_token', user: { id: 'id' } };
 
     admin.auth.refreshSession.mockResolvedValueOnce({ data: { session } } as any);
 

@@ -1,4 +1,4 @@
-import { Database } from '@credbull/api/dist/src/types/supabase';
+import { Database } from '@credbull/api';
 import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import { Wallet, providers } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
@@ -10,19 +10,20 @@ export const supabase = (opts?: { admin: boolean }) =>
   );
 
 export const login = async (client: SupabaseClient, opts?: { admin: boolean }) => {
-  const { data, error } = await client.auth.signInWithPassword({
+  const body = JSON.stringify({
     email: opts?.admin ? process.env.ADMIN_EMAIL : process.env.BOB_EMAIL,
     password: opts?.admin ? process.env.ADMIN_PASSWORD : process.env.BOB_PASSWORD,
   });
-  if (error || !data) throw error;
-  return data;
+
+  const signIn = await fetch(`${process.env.API_BASE_URL}/auth/api/sign-in`, { method: 'POST', body, ...headers() });
+  return (await signIn.json()) as { accessToken: string; userId: string };
 };
 
-export const headers = (session: { access_token: string }) => {
+export const headers = (session?: { accessToken: string }) => {
   return {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
+      ...(session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
     },
   };
 };

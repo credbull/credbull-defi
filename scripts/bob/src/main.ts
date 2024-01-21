@@ -13,7 +13,8 @@ export const main = () => {
 
     // console.log('Bob: retrieves a session through api.');
     const bob = await login(supabaseAnon);
-    const bobHeaders = headers(bob.session);
+
+    const bobHeaders = headers(bob);
     console.log('Bob: retrieves a session through api. - OK');
 
     // console.log('Bob: signs a message with his wallet.');
@@ -32,11 +33,11 @@ export const main = () => {
 
     // console.log('Admin: receives the approval and KYCs Bob.');
     const admin = await login(supabaseAnon, { admin: true });
-    const adminHeaders = headers(admin.session);
+    const adminHeaders = headers(admin);
 
     await fetch(`${process.env.API_BASE_URL}/accounts/whitelist`, {
       method: 'POST',
-      body: JSON.stringify({ user_id: bob.user!.id, address: bobSigner.address }),
+      body: JSON.stringify({ user_id: bob.userId, address: bobSigner.address }),
       ...adminHeaders,
     });
     console.log('Admin: receives the approval and KYCs Bob. - OK');
