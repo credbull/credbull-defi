@@ -26,7 +26,7 @@ export const main = () => {
     // console.log('Bob: sends the signed message to Credbull so that he can be KYC`ed.');
     await fetch(`${process.env.API_BASE_URL}/accounts/link-wallet`, {
       method: 'POST',
-      body: JSON.stringify({ message, signature }),
+      body: JSON.stringify({ message, signature, discriminator: 'bob@partner.com' }),
       ...bobHeaders,
     });
     console.log('Bob: sends the signed message to Credbull so that he can be KYC`ed. - OK');

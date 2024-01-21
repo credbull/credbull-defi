@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class WalletDto {
   @IsNotEmpty()
@@ -11,6 +11,11 @@ export class WalletDto {
   @IsString()
   @ApiProperty({ type: String })
   signature: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ type: String, nullable: true })
+  discriminator?: string;
 
   constructor(partial: Partial<WalletDto>) {
     Object.assign(this, partial);

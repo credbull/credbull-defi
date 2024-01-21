@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 import { z } from 'zod';
 
 import { Enums, Tables } from './supabase';
@@ -61,6 +61,7 @@ export const UserWalletSchema = z.object({
   user_id: z.string(),
   address: z.string(),
   created_at: z.string(),
+  discriminator: z.string().optional(),
 }) as z.ZodSchema<Tables<'user_wallets'>>;
 
 export class UserWalletDto implements Tables<'user_wallets'> {
@@ -79,6 +80,11 @@ export class UserWalletDto implements Tables<'user_wallets'> {
   @IsString()
   @ApiProperty({ description: 'user wallet created at' })
   created_at: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ description: 'a custom discriminator for the wallet', nullable: true })
+  discriminator: string;
 
   constructor(partial: Partial<Tables<'user_wallets'>>) {
     Object.assign(this, partial);

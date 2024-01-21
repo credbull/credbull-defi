@@ -39,18 +39,21 @@ export interface Database {
         Row: {
           address: string;
           created_at: string;
+          discriminator: string | null;
           id: number;
           user_id: string;
         };
         Insert: {
           address: string;
           created_at?: string;
+          discriminator?: string | null;
           id?: number;
           user_id: string;
         };
         Update: {
           address?: string;
           created_at?: string;
+          discriminator?: string | null;
           id?: number;
           user_id?: string;
         };

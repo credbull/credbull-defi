@@ -30,6 +30,7 @@ export class WalletsService {
       .insert({
         user_id: auth.data.user?.id,
         address: verify.data.address,
+        discriminator: dto.discriminator,
       })
       .select();
   }
