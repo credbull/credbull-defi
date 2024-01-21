@@ -80,7 +80,8 @@ describe('Vaults Domain', () => {
     ];
 
     const proportions = calculateProportions(config);
-    expect(proportions[0].toString()).toBe('99');
-    expect(proportions[1].toString()).toBe('201');
+
+    expect(proportions[0].toString()).toBe('100');
+    expect(proportions[1].toString()).toBe('200');
   });
 });
