@@ -95,6 +95,7 @@ describe('AccountsController', () => {
   });
 
   it('should verify the signature and link the wallet', async () => {
+    const app_metadata = {};
     const user_id = '1';
     const dto = {
       message:
@@ -113,7 +114,7 @@ describe('AccountsController', () => {
     maybeSingle.mockResolvedValueOnce({} as any);
     select.mockReturnValueOnce(builder as any).mockResolvedValueOnce({ data: [{ user_id }] } as any);
 
-    client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: user_id } } } as any);
+    client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: user_id, app_metadata } } } as any);
     client.from.mockReturnValue(builder as any);
 
     const data = await controller.linkWallet(dto);
@@ -122,6 +123,7 @@ describe('AccountsController', () => {
   });
 
   it('should not verify the signature and throw an error', async () => {
+    const app_metadata = {};
     const user_id = '1';
     const dto = {
       message:
@@ -130,12 +132,26 @@ describe('AccountsController', () => {
         '0xd4a949ee6093ef47d3d1bcd82c5cf08e71f7fc33979d365cddcb3c1172b4e72fab0775b53ab60af990b23f0fa0bdc8cca03059c1b',
     };
 
-    client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: user_id } } } as any);
+    client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: user_id, app_metadata } } } as any);
 
     try {
       await controller.linkWallet(dto);
     } catch (e) {
       expect(e.error.type).toBe('Signature does not match address of the message.');
+    }
+  });
+
+  it('should require discriminator if entity type is partner', async () => {
+    const app_metadata = { entity_type: 'partner' };
+    const user_id = '1';
+    const dto = { message: '', signature: '' };
+
+    client.auth.getUser.mockResolvedValueOnce({ data: { user: { id: user_id, app_metadata } } } as any);
+
+    try {
+      await controller.linkWallet(dto);
+    } catch (e) {
+      expect(e.message).toBe('No discriminator provided');
     }
   });
 });
