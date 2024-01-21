@@ -13,19 +13,19 @@ export class WalletsService {
 
   async link(dto: WalletDto): Promise<ServiceResponse<Tables<'user_wallets'>[]>> {
     const { message, signature } = dto;
-    const supabase = this.supabase.client();
+    const client = this.supabase.client();
 
-    const auth = await supabase.auth.getUser();
+    const auth = await client.auth.getUser();
     if (auth.error) return { error: auth.error };
 
     const verify = await new SiweMessage(message).verify({ signature });
     if (verify.error) return { error: verify.error };
 
-    const existing = await supabase.from('user_wallets').select().eq('address', verify.data.address).maybeSingle();
+    const existing = await client.from('user_wallets').select().eq('address', verify.data.address).maybeSingle();
     if (existing.error) return { error: existing.error };
     if (existing.data) return { data: [existing.data] };
 
-    return supabase
+    return client
       .from('user_wallets')
       .insert({
         user_id: auth.data.user?.id,
