@@ -1,5 +1,6 @@
-import { CredbullVault__factory } from '@credbull/contracts';
+import { AKYCProvider__factory } from '@credbull/contracts';
 import { Injectable } from '@nestjs/common';
+import * as _ from 'lodash';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
@@ -17,50 +18,95 @@ export class KycService {
   ) {}
 
   async status(): Promise<ServiceResponse<KYCStatus>> {
-    const events = await this.supabase.client().from('kyc_events').select().eq('event_name', 'accepted').single();
+    const client = this.supabase.client();
+
+    const events = await client.from('kyc_events').select().eq('event_name', 'accepted').single();
+    if (events.error) return events;
 
     if (!events.data?.address) return { data: KYCStatus.PENDING };
 
-    return (await this.checkOnChain(events.data?.address)) //
-      ? { data: KYCStatus.ACTIVE }
-      : { data: KYCStatus.REJECTED };
+    const kycProvider = await client.from('vault_distribution_entities').select('*').eq('type', 'kyc_provider');
+    if (kycProvider.error) return kycProvider;
+
+    const distinctProviders = _.uniqBy(kycProvider.data ?? [], 'address');
+
+    const check = await this.checkOnChain(distinctProviders, events.data?.address);
+    if (check.error) return check;
+
+    return check.data ? { data: KYCStatus.ACTIVE } : { data: KYCStatus.REJECTED };
   }
 
   async whitelist(dto: WhitelistAccountDto): Promise<ServiceResponse<Tables<'kyc_events'>[]>> {
-    const { address } = dto;
-    const client = this.supabase.admin();
+    const admin = this.supabase.admin();
 
-    const wallet = await client.from('user_wallets').select().eq('address', address).single();
+    const existing = await admin
+      .from('kyc_events')
+      .select()
+      .eq('address', dto.address)
+      .eq('user_id', dto.user_id)
+      .eq('event_name', 'accepted')
+      .maybeSingle();
+
+    if (existing.error) return existing;
+    if (existing.data) return { data: [existing.data] };
+
+    const wallet = await admin
+      .from('user_wallets')
+      .select()
+      .eq('address', dto.address)
+      .eq('user_id', dto.user_id)
+      .single();
     if (wallet.error) return wallet;
 
-    const vaults = await client.from('vaults').select('*').neq('status', 'created').lt('opened_at', 'now()');
+    const query = admin.from('vault_distribution_entities').select('address').eq('type', 'kyc_provider');
+    if (wallet.data.discriminator) query.eq('tenant', dto.user_id);
 
-    if (vaults.data) {
-      for (const vault of vaults.data) {
-        const vaultInstance = this.getVaultInstance(vault.address);
-        const { data } = await responseFromRead(vaultInstance.isWhitelisted(address));
+    const providers = await query;
+    if (providers.error) return providers;
 
-        if (!data) {
-          await responseFromWrite(vaultInstance.updateWhitelistStatus([address], [true]));
-        }
+    const errors = [];
+    const distinctProviders = _.uniqBy(providers.data ?? [], 'address');
+
+    for (const { address } of distinctProviders) {
+      const provider = this.getOnChainProvider(address);
+      const { error, data } = await responseFromRead(provider.status(dto.address));
+      if (error) {
+        errors.push(error);
+        continue;
       }
-    }
 
-    return client
+      if (!data) await responseFromWrite(provider.updateStatus([dto.address], [true]));
+    }
+    if (errors.length) return { error: new AggregateError(errors) };
+
+    return admin
       .from('kyc_events')
-      .insert({
-        address,
-        user_id: wallet.data.user_id,
-        event_name: 'accepted',
-      })
+      .insert({ ...dto, event_name: 'accepted' })
       .select();
   }
 
-  private async checkOnChain(address: string): Promise<boolean> {
-    return Boolean(address);
+  private async checkOnChain(
+    kycProviders: Tables<'vault_distribution_entities'>[],
+    address: string,
+  ): Promise<ServiceResponse<boolean>> {
+    const errors = [];
+    let status = false;
+
+    for (const kyc of kycProviders) {
+      const provider = this.getOnChainProvider(kyc.address);
+      const { error, data } = await responseFromRead(provider.status(address));
+      if (error) {
+        errors.push(error);
+        continue;
+      }
+
+      status = status && data;
+      if (!status) break;
+    }
+    return errors.length > 0 ? { error: new AggregateError(errors) } : { data: status };
   }
 
-  private getVaultInstance(address: string) {
-    return CredbullVault__factory.connect(address, this.ethers.deployer());
+  private getOnChainProvider(address: string) {
+    return AKYCProvider__factory.connect(address, this.ethers.deployer());
   }
 }

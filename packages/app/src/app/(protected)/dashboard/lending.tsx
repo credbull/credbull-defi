@@ -283,7 +283,7 @@ export function Lending(props: { email?: string; status?: string }) {
     sorters: [{ field: 'opened_at', order: 'desc' }],
   });
 
-  const erc20Address = list?.data[0].asset_address;
+  const erc20Address = list?.data[0]?.asset_address;
   const custodian = _.find(entities?.data, { type: 'custodian' });
   const treasury = _.find(entities?.data, { type: 'treasury' });
   const activity = _.find(entities?.data, { type: 'activity_reward' });
@@ -294,7 +294,7 @@ export function Lending(props: { email?: string; status?: string }) {
         <EntityBalance entity={{ address: address! }} erc20Address={erc20Address} name="You" />
         <EntityBalance entity={treasury} erc20Address={erc20Address} name="Treasury" />
         <EntityBalance entity={activity} erc20Address={erc20Address} name="Activity Reward" />
-        <EntityBalance entity={custodian} erc20Address={erc20Address} name="Custodian" />
+        <EntityBalance entity={custodian} erc20Address={erc20Address} name="Circle" />
       </Flex>
 
       <SimpleGrid cols={4}>

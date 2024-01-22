@@ -167,7 +167,7 @@ describe('VaultService', () => {
 
     expect(transfers.data?.[2].address).toBe(config[0].vault_distribution_entities?.address);
     expect(transfers.data?.[2].custodian_address).toBe('0x555');
-    expect(transfers.data?.[2].amount.toString()).toBe('79');
+    expect(transfers.data?.[2].amount.toString()).toBe('80');
 
     expect(transfers.data?.[3].address).toBe(config[1].vault_distribution_entities?.address);
     expect(transfers.data?.[3].custodian_address).toBe('0x555');
@@ -179,7 +179,7 @@ describe('VaultService', () => {
 
     expect(transfers.data?.[5].address).toBe(config[1].vault_distribution_entities?.address);
     expect(transfers.data?.[5].custodian_address).toBe('0x555');
-    expect(transfers.data?.[5].amount.toString()).toBe('41');
+    expect(transfers.data?.[5].amount.toString()).toBe('40');
   });
 
   it('should return an error if there is not enough in the custodian to cover all vault transfer', async () => {

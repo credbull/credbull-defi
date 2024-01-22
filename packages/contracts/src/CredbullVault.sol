@@ -8,6 +8,8 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { console2 } from "forge-std/console2.sol";
+import "../test/mocks/AKYCProvider.sol";
+import { NetworkConfig } from "../script/HelperConfig.s.sol";
 
 // Vaults exchange Assets for Shares in the Vault
 // see: https://eips.ethereum.org/EIPS/eip-4626
@@ -25,6 +27,9 @@ contract CredbullVault is ERC4626, Ownable {
 
     //Address of the custodian to receive the assets on deposit and mint
     address public custodian;
+
+    //Mock kyc provider
+    AKYCProvider public kycProvider;
 
     /**
      * @dev
@@ -56,18 +61,13 @@ contract CredbullVault is ERC4626, Ownable {
      */
     bool public isMatured;
 
-    /**
-     * @notice - Track whitelisted addreses
-     */
-    mapping(address => bool) public isWhitelisted;
-
     struct Rules {
         bool checkMaturity;
         bool checkVaultOpenStatus;
         bool checkWhitelist;
     }
 
-    Rules rules;
+    Rules private rules;
 
     /**
      * @notice - Modifier to check for maturity status.
@@ -96,32 +96,22 @@ contract CredbullVault is ERC4626, Ownable {
      * @notice - Modifier to check for whitelist status of an address
      */
     modifier onlyWhitelistAddress(address receiver) {
-        if (rules.checkWhitelist && !isWhitelisted[receiver]) {
+        if (rules.checkWhitelist && !kycProvider.status(receiver)) {
             revert CredbullVault__NotAWhitelistedAddress();
         }
 
         _;
     }
 
-    /**
-     * @param _owner - The owner of this contract
-     * @param _asset - The address of the asset to be deposited to this vault
-     * @param _shareName - The name for the share token of the vault
-     * @param _shareSymbol - The symbol for the share token of the vault
-     * @param _custodian - The custodian wallet address to transfer asset.
-     * @param _promisedYield - The fixed yield that's promised to the users on deposit.
-     */
     constructor(
-        address _owner,
-        IERC20 _asset,
-        string memory _shareName,
-        string memory _shareSymbol,
+        NetworkConfig memory config,
+        IERC20 asset,
         uint256 _promisedYield,
         uint256 _opensAtTimestamp,
-        uint256 _closesAtTimestamp,
-        address _custodian
-    ) ERC4626(_asset) ERC20(_shareName, _shareSymbol) Ownable(_owner) {
-        custodian = _custodian;
+        uint256 _closesAtTimestamp
+    ) ERC4626(asset) ERC20(config.shareName, config.shareSymbol) Ownable(config.owner) {
+        custodian = config.custodian;
+        kycProvider = AKYCProvider(config.kycProvider);
         _fixedYield = _promisedYield;
         opensAtTimestamp = _opensAtTimestamp;
         closesAtTimestamp = _closesAtTimestamp;
@@ -192,25 +182,6 @@ contract CredbullVault is ERC4626, Ownable {
 
         _totalAssetDeposited = currentBalance;
         isMatured = true;
-    }
-
-    /**
-     * @notice - Method to update the whitelist status of an address called only by the owner.
-     *
-     * @param _addresses - List of addresses value
-     * @param _statuses - List of statuses to update
-     */
-    function updateWhitelistStatus(address[] calldata _addresses, bool[] calldata _statuses) external onlyOwner {
-        require(_addresses.length == _statuses.length, "Length mismatch");
-        uint256 length = _addresses.length;
-
-        for (uint256 i; i < length;) {
-            isWhitelisted[_addresses[i]] = _statuses[i];
-
-            unchecked {
-                ++i;
-            }
-        }
     }
 
     /**

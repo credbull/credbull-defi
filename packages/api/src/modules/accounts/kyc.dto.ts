@@ -5,7 +5,6 @@ export enum KYCStatus {
   ACTIVE = 'active',
   PENDING = 'pending',
   REJECTED = 'rejected',
-  SUSPENDED = 'suspended',
 }
 
 export class WhitelistAccountDto {
@@ -15,6 +14,12 @@ export class WhitelistAccountDto {
     description: 'wallet address to whitelist',
   })
   address: string;
+
+  @IsString()
+  @ApiProperty({
+    description: 'user id',
+  })
+  user_id: string;
 
   constructor(partial: Partial<WhitelistAccountDto>) {
     Object.assign(this, partial);

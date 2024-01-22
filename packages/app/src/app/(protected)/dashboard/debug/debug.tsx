@@ -152,10 +152,6 @@ const depositSchema = z.object({
   amount: z.number().positive(),
 });
 
-const whitelistSchema = z.object({
-  address: z.string().min(42).max(42),
-});
-
 const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   const { open } = useNotification();
   const { isConnected, address } = useAccount();
@@ -243,11 +239,6 @@ const WhitelistWalletAddress = () => {
   const { isConnected, address } = useAccount();
   const [isLoading, setLoading] = useState(false);
 
-  const form = useForm({
-    validate: zodResolver(whitelistSchema),
-    initialValues: { address: '' },
-  });
-
   const whitelist = async () => {
     setLoading(true);
     try {
@@ -272,23 +263,19 @@ const WhitelistWalletAddress = () => {
           <Text weight={500}>Whitelist address</Text>
         </Group>
 
-        <form onSubmit={form.onSubmit(() => whitelist())} style={{ marginTop: 'auto' }}>
-          <TextInput label="Address" {...form.getInputProps('address')} disabled={!isConnected || isLoading} />
-
-          <Group grow>
-            <Button
-              type="submit"
-              variant="light"
-              color="blue"
-              mt="md"
-              radius="md"
-              disabled={!isConnected || isLoading}
-              loading={isLoading}
-            >
-              Whitelist
-            </Button>
-          </Group>
-        </form>
+        <Group grow mt="auto">
+          <Button
+            onClick={() => whitelist()}
+            variant="light"
+            color="blue"
+            mt="md"
+            radius="md"
+            disabled={!isConnected || isLoading}
+            loading={isLoading}
+          >
+            Whitelist
+          </Button>
+        </Group>
       </Flex>
     </Card>
   );

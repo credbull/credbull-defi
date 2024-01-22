@@ -31,9 +31,9 @@ export const createClient = (supabase: SupabaseClient) => {
 
       return response.json();
     },
-    whitelistAddress: async (address: string): Promise<boolean> => {
+    whitelistAddress: async (dto: { address: string; user_id: string }): Promise<boolean> => {
       const { headers } = await authHeaders(supabase);
-      const body = JSON.stringify({ address });
+      const body = JSON.stringify(dto);
 
       const response = await fetch(buildURL('/accounts/whitelist'), {
         headers: { ...headers, 'Content-Type': 'application/json' },

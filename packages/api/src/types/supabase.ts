@@ -39,18 +39,21 @@ export interface Database {
         Row: {
           address: string;
           created_at: string;
+          discriminator: string | null;
           id: number;
           user_id: string;
         };
         Insert: {
           address: string;
           created_at?: string;
+          discriminator?: string | null;
           id?: number;
           user_id: string;
         };
         Update: {
           address?: string;
           created_at?: string;
+          discriminator?: string | null;
           id?: number;
           user_id?: string;
         };
@@ -71,6 +74,7 @@ export interface Database {
           id: number;
           order: number;
           percentage: number;
+          tenant: string | null;
         };
         Insert: {
           created_at?: string;
@@ -78,6 +82,7 @@ export interface Database {
           id?: number;
           order: number;
           percentage: number;
+          tenant?: string | null;
         };
         Update: {
           created_at?: string;
@@ -85,6 +90,7 @@ export interface Database {
           id?: number;
           order?: number;
           percentage?: number;
+          tenant?: string | null;
         };
         Relationships: [
           {
@@ -94,6 +100,13 @@ export interface Database {
             referencedRelation: 'vault_distribution_entities';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'vault_distribution_configs_tenant_fkey';
+            columns: ['tenant'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
         ];
       };
       vault_distribution_entities: {
@@ -101,24 +114,34 @@ export interface Database {
           address: string;
           created_at: string;
           id: number;
-          type: Database['public']['Enums']['vault_distribution_entity_types'];
+          tenant: string | null;
+          type: Database['public']['Enums']['vault_entity_types'];
           vault_id: number;
         };
         Insert: {
           address: string;
           created_at?: string;
           id?: number;
-          type: Database['public']['Enums']['vault_distribution_entity_types'];
+          tenant?: string | null;
+          type: Database['public']['Enums']['vault_entity_types'];
           vault_id: number;
         };
         Update: {
           address?: string;
           created_at?: string;
           id?: number;
-          type?: Database['public']['Enums']['vault_distribution_entity_types'];
+          tenant?: string | null;
+          type?: Database['public']['Enums']['vault_entity_types'];
           vault_id?: number;
         };
         Relationships: [
+          {
+            foreignKeyName: 'vault_distribution_entities_tenant_fkey';
+            columns: ['tenant'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'vault_distribution_entities_vault_id_fkey';
             columns: ['vault_id'];
@@ -184,7 +207,7 @@ export interface Database {
     };
     Enums: {
       kyc_event: 'processing' | 'accepted' | 'rejected';
-      vault_distribution_entity_types: 'activity_reward' | 'treasury' | 'vault' | 'custodian';
+      vault_entity_types: 'activity_reward' | 'treasury' | 'vault' | 'custodian' | 'kyc_provider';
       vault_status: 'created' | 'ready' | 'matured';
       vault_type: 'fixed_yield';
     };
