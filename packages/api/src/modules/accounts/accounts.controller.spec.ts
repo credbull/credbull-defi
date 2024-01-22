@@ -145,7 +145,7 @@ describe('AccountsController', () => {
   });
 
   it('should require discriminator if entity type is partner', async () => {
-    const app_metadata = { entity_type: 'partner' };
+    const app_metadata = { partner_type: 'channel' };
     const user_id = '1';
     const dto = { message: '', signature: '' };
 
