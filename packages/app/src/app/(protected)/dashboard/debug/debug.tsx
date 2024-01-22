@@ -10,6 +10,7 @@ import { useList, useNotification } from '@refinedev/core';
 import { OpenNotificationParams } from '@refinedev/core/dist/contexts/notification/INotificationContext';
 import { useForm } from '@refinedev/mantine';
 import { getPublicClient } from '@wagmi/core';
+import { ethers } from 'ethers';
 import { useState } from 'react';
 import { createWalletClient, http, parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
@@ -303,13 +304,6 @@ const CreateVaultFromFactory = () => {
     },
   });
 
-  // const {  data, error } = useContractRead({
-  //   address: factoryContractAddress as Address,
-  //   abi: CredbullVaultFactory__factory.abi,
-  //   functionName: 'owner',
-  //   args: undefined,
-  // });
-
   const { writeAsync: createVaultAsync } = useContractWrite({
     address: factoryContractAddress as Address,
     abi: CredbullVaultFactory__factory.abi,
@@ -336,10 +330,9 @@ const CreateVaultFromFactory = () => {
 
       if (client && createVaultTx.hash) {
         const receipt = await waitForTransactionReceipt(client!, createVaultTx);
-        console.log(receipt);
 
         const vaultData = {
-          address: receipt.contractAddress,
+          address: ethers.utils.defaultAbiCoder.decode(['address'], receipt.logs[1].topics[1] as Address)[0],
           asset_address: form.values.asset,
           opened_at: form.values.openAt,
           closed_at: form.values.closesAt,
