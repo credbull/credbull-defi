@@ -39,17 +39,6 @@ export class KycService {
   async whitelist(dto: WhitelistAccountDto): Promise<ServiceResponse<Tables<'kyc_events'>[]>> {
     const admin = this.supabase.admin();
 
-    const existing = await admin
-      .from('kyc_events')
-      .select()
-      .eq('address', dto.address)
-      .eq('user_id', dto.user_id)
-      .eq('event_name', 'accepted')
-      .maybeSingle();
-
-    if (existing.error) return existing;
-    if (existing.data) return { data: [existing.data] };
-
     const wallet = await admin
       .from('user_wallets')
       .select()
@@ -82,6 +71,17 @@ export class KycService {
       if (!data) await responseFromWrite(provider.updateStatus([dto.address], [true]));
     }
     if (errors.length) return { error: new AggregateError(errors) };
+
+    const existing = await admin
+      .from('kyc_events')
+      .select()
+      .eq('address', dto.address)
+      .eq('user_id', dto.user_id)
+      .eq('event_name', 'accepted')
+      .maybeSingle();
+
+    if (existing.error) return existing;
+    if (existing.data) return { data: [existing.data] };
 
     return admin
       .from('kyc_events')
