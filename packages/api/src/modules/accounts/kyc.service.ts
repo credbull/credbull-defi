@@ -59,7 +59,11 @@ export class KycService {
     if (wallet.error) return wallet;
 
     const query = admin.from('vault_distribution_entities').select('address').eq('type', 'kyc_provider');
-    if (wallet.data.discriminator) query.eq('tenant', dto.user_id);
+    if (wallet.data.discriminator) {
+      query.eq('tenant', dto.user_id);
+    } else {
+      query.is('tenant', null);
+    }
 
     const providers = await query;
     if (providers.error) return providers;
