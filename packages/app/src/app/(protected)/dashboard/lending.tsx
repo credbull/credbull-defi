@@ -1,7 +1,7 @@
 'use client';
 
 import { Tables } from '@credbull/api';
-import { ERC20__factory, ERC4626__factory } from '@credbull/contracts';
+import { AKYCProvider__factory, ERC20__factory, ERC4626__factory } from '@credbull/contracts';
 import { Badge, Button, Card, Flex, Group, NumberInput, SimpleGrid, Text } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useClipboard } from '@mantine/hooks';
@@ -24,6 +24,7 @@ const schema = z.object({
 
 type VaultProps = {
   data: Tables<'vaults'>;
+  entities: Tables<'vault_distribution_entities'>[];
   isConnected: boolean;
   address: Address;
 };
@@ -34,6 +35,8 @@ function Vault(props: VaultProps) {
   const [isLoading, setLoading] = useState(false);
   const { data: client } = useWalletClient();
   const isMatured = props.data.status === 'matured';
+
+  const kycProvider = _.find(props.entities, { type: 'kyc_provider' });
 
   useEffect(() => {
     if (clipboard.copied) {
@@ -48,6 +51,15 @@ function Vault(props: VaultProps) {
     watch: true,
     args: [props.address as Address],
     enabled: !!props.data.address && !!props.address,
+  });
+
+  const { data: kycStatus } = useContractRead({
+    address: kycProvider?.address as Address,
+    abi: AKYCProvider__factory.abi,
+    functionName: 'status',
+    watch: true,
+    args: [props.address as Address],
+    enabled: !!kycProvider?.address && !!props.address,
   });
 
   const { data: vaultTotalAssets } = useContractRead({
@@ -192,6 +204,15 @@ function Vault(props: VaultProps) {
         </Text>
       </Group>
 
+      <Group position="apart" mt="md" mb="xs">
+        <Text size="sm" color="gray">
+          Your KYC Status
+        </Text>
+        <Text size="sm" color="gray">
+          {kycStatus ? 'Active' : 'Inactive'}
+        </Text>
+      </Group>
+
       {isMatured ? (
         <Group mt="xl" grow>
           <Button
@@ -268,7 +289,6 @@ export function Lending(props: { email?: string; status?: string }) {
 
   const { data: entities } = useList<Tables<'vault_distribution_entities'>>({
     resource: 'vault_distribution_entities',
-    meta: { select: 'type, address' },
   });
 
   const { data: list, isLoading } = useList<Tables<'vaults'>>({
@@ -301,7 +321,15 @@ export function Lending(props: { email?: string; status?: string }) {
         {isLoading || !list ? (
           <>Loading...</>
         ) : (
-          list.data.map((val) => <Vault key={val.id} data={val} isConnected={isConnected} address={address!} />)
+          list.data.map((val) => (
+            <Vault
+              entities={_.filter(entities?.data, { vault_id: val.id })}
+              key={val.id}
+              data={val}
+              isConnected={isConnected}
+              address={address!}
+            />
+          ))
         )}
       </SimpleGrid>
     </Flex>
