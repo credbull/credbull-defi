@@ -99,14 +99,13 @@ async function exportVaultsToSupabase(client, onChainVaults) {
 async function exportToSupabase(onChainEntities, onChainVaults) {
   const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  if(onChainVaults) {
+  if (onChainVaults) {
     const vaults = await exportVaultsToSupabase(client, onChainVaults);
     if (vaults.error || !vaults.data) {
       console.log(vaults.error);
       throw vaults.error;
     }
   }
-
 
   const entities = await exportEntitiesToSupabase(client, onChainEntities, vaults);
   if (entities.error || !entities.data) {

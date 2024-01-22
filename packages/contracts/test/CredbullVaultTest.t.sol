@@ -31,7 +31,7 @@ contract CredbullVaultTest is Test {
 
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (factory, helperConfig) = deployer.run();
+        (factory, helperConfig) = deployer.runTest();
 
         vault = createTestVault();
 
