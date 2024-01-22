@@ -5,7 +5,7 @@ build:; forge build
 anvil: anvil
 
 deploy-local:
-	forge script script/DeployVault.s.sol:DeployVault --rpc-url http://localhost:8545 \
+	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url http://localhost:8545 \
 		--private-key ${DEFAULT_ANVIL_KEY} --broadcast -vvvv \
 		&& yarn gen-types && node script/utils/exporter.js
 

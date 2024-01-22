@@ -3,17 +3,20 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
-import { HelperConfig, NetworkConfig, TimeConfig } from "../script/HelperConfig.s.sol";
+import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
 import { CredbullVault } from "../src/CredbullVault.sol";
-import { DeployVault } from "../script/DeployVault.s.sol";
 import { console2 } from "forge-std/console2.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { MockStablecoin } from "./mocks/MockStablecoin.sol";
+import { CredbullVaultFactory } from "../src/CredbullVaultFactory.sol";
+import { DeployVaultFactory } from "../script/DeployVaultFactory.s.sol";
+import { ICredbull } from "../src/interface/ICredbull.sol";
 
 contract CredbullVaultTest is Test {
     CredbullVault private vault;
-    DeployVault private deployer;
-    HelperConfig private config;
+    CredbullVaultFactory factory;
+    DeployVaultFactory private deployer;
+    HelperConfig private helperConfig;
 
     address private owner;
     address private custodian;
@@ -27,18 +30,10 @@ contract CredbullVaultTest is Test {
     uint256 private constant INITIAL_BALANCE = 1000 ether;
 
     function setUp() public {
-        deployer = new DeployVault();
-        (CredbullVault[] memory _vaults, HelperConfig _config) = deployer.run();
-        vault = _vaults[0];
-        config = _config;
+        deployer = new DeployVaultFactory();
+        (factory, helperConfig) = deployer.run();
 
-        NetworkConfig memory active = config.getNetworkConfig();
-        owner = active.owner;
-        asset = active.asset;
-        custodian = active.custodian;
-
-        TimeConfig memory time = config.getTimeConfig();
-        vaultOpenTime = time.firstVaultOpensAt;
+        vault = createTestVault();
 
         address[] memory whitelistAddresses = new address[](2);
         whitelistAddresses[0] = alice;
@@ -51,13 +46,13 @@ contract CredbullVaultTest is Test {
         CredbullVault.Rules memory rules =
             CredbullVault.Rules({ checkMaturity: true, checkVaultOpenStatus: true, checkWhitelist: true });
 
-        vm.startPrank(active.owner);
+        vm.startPrank(owner);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vault.setRules(rules);
         vm.stopPrank();
 
-        MockStablecoin(active.asset).mint(alice, INITIAL_BALANCE);
-        MockStablecoin(active.asset).mint(bob, INITIAL_BALANCE);
+        MockStablecoin(asset).mint(alice, INITIAL_BALANCE);
+        MockStablecoin(asset).mint(bob, INITIAL_BALANCE);
     }
 
     function test__OwnerOfContract() public {
@@ -65,9 +60,9 @@ contract CredbullVaultTest is Test {
     }
 
     function test__ShareNameAndSymbol() public {
-        NetworkConfig memory active = config.getNetworkConfig();
-        assertEq(vault.name(), active.shareName);
-        assertEq(vault.symbol(), active.shareSymbol);
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+        assertEq(vault.name(), config.vaultParams.shareName);
+        assertEq(vault.symbol(), config.vaultParams.shareSymbol);
     }
 
     function test__CustodianAddress() public {
@@ -246,5 +241,17 @@ contract CredbullVaultTest is Test {
 
         vm.prank(owner);
         vault.setRules(rules);
+    }
+
+    function createTestVault() internal returns (CredbullVault) {
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+        ICredbull.VaultParams memory params = config.vaultParams;
+
+        owner = params.owner;
+        asset = address(params.asset);
+        vaultOpenTime = params.openAt;
+        custodian = params.custodian;
+        vm.prank(owner);
+        return factory.createVault(params);
     }
 }

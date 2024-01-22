@@ -99,11 +99,14 @@ async function exportVaultsToSupabase(client, onChainVaults) {
 async function exportToSupabase(onChainEntities, onChainVaults) {
   const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  const vaults = await exportVaultsToSupabase(client, onChainVaults);
-  if (vaults.error || !vaults.data) {
-    console.log(vaults.error);
-    throw vaults.error;
+  if(onChainVaults) {
+    const vaults = await exportVaultsToSupabase(client, onChainVaults);
+    if (vaults.error || !vaults.data) {
+      console.log(vaults.error);
+      throw vaults.error;
+    }
   }
+
 
   const entities = await exportEntitiesToSupabase(client, onChainEntities, vaults);
   if (entities.error || !entities.data) {
@@ -121,26 +124,26 @@ async function exportToSupabase(onChainEntities, onChainVaults) {
   try {
     const contracts = await exportAddress();
 
-    if (process.env.EXPORT_TO_SUPABASE) {
-      const chain = process.env.NEXT_PUBLIC_TARGET_NETWORK_ID;
-      const vaults = contracts[chain].CredbullVault.map((v) => {
-        return {
-          address: v.address,
-          asset_address: v.arguments[1],
-          opened_at: v.arguments[2],
-          closed_at: v.arguments[3],
-        };
-      });
-      const configDeployment = contracts[chain].CredbullEntities[0].arguments;
-      const entities = {
-        custodian: configDeployment[0],
-        kycProvider: configDeployment[1],
-        treasury: configDeployment[2],
-        activityReward: configDeployment[3],
-      };
+    // if (process.env.EXPORT_TO_SUPABASE) {
+    //   const chain = process.env.NEXT_PUBLIC_TARGET_NETWORK_ID;
+    //   // const vaults = contracts[chain].CredbullVault.map((v) => {
+    //   //   return {
+    //   //     address: v.address,
+    //   //     asset_address: v.arguments[1],
+    //   //     opened_at: v.arguments[2],
+    //   //     closed_at: v.arguments[3],
+    //   //   };
+    //   // });
+    //   const configDeployment = contracts[chain].CredbullEntities[0].arguments;
+    //   const entities = {
+    //     custodian: configDeployment[0],
+    //     kycProvider: configDeployment[1],
+    //     treasury: configDeployment[2],
+    //     activityReward: configDeployment[3],
+    //   };
 
-      await exportToSupabase(entities, vaults);
-    }
+    //   await exportToSupabase(entities, null);
+    // }
   } catch (e) {
     console.log(e);
   } finally {
