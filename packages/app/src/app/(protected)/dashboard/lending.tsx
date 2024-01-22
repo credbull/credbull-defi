@@ -38,6 +38,7 @@ function Vault(props: VaultProps) {
 
   const kycProvider = _.find(props.entities, { type: 'kyc_provider' });
   const custodian = _.find(props.entities, { type: 'custodian' });
+  const reward = _.find(props.entities, { type: 'activity_reward' });
 
   useEffect(() => {
     if (clipboard.copied) {
@@ -207,6 +208,20 @@ function Vault(props: VaultProps) {
 
       <Group position="apart" mt="md" mb="xs">
         <Text size="sm" color="gray">
+          Reward Pool Balance
+        </Text>
+        <Text size="sm" color="gray">
+          <BalanceOf
+            enabled={!!props.data.asset_address && !!reward?.address}
+            erc20Address={props.data.asset_address}
+            address={reward?.address}
+          />{' '}
+          USDC
+        </Text>
+      </Group>
+
+      <Group position="apart" mt="md" mb="xs">
+        <Text size="sm" color="gray">
           Your Shares
         </Text>
         <Text size="sm" color="gray">
@@ -320,14 +335,12 @@ export function Lending(props: { email?: string; status?: string }) {
 
   const erc20Address = list?.data[0]?.asset_address;
   const treasury = _.find(entities?.data, { type: 'treasury' });
-  const activity = _.find(entities?.data, { type: 'activity_reward' });
 
   return (
     <Flex justify="space-around" direction="column" gap="60px">
       <Flex justify="center" align="center" direction="row">
         <EntityBalance entity={{ address: address! }} erc20Address={erc20Address} name="You" />
         <EntityBalance entity={treasury} erc20Address={erc20Address} name="Treasury" />
-        <EntityBalance entity={activity} erc20Address={erc20Address} name="Activity Reward" />
       </Flex>
 
       <SimpleGrid cols={4}>
