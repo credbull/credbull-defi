@@ -42,7 +42,7 @@ function Vault(props: VaultProps) {
 
   useEffect(() => {
     if (clipboard.copied) {
-      open?.({ type: 'success', message: `Vault address copied!` });
+      open?.({ type: 'success', message: `Address copied!` });
     }
   }, [clipboard.copied, open]);
 
@@ -171,7 +171,7 @@ function Vault(props: VaultProps) {
 
       <Group position="apart" mt="md" mb="xs">
         <Text size="sm" color="gray">
-          Vault Total Deposits
+          Vault Total Assets
         </Text>
         <Text size="sm" color="gray">
           {vaultTotalAssets ? formatEther(vaultTotalAssets) : '0'} USDC
@@ -193,8 +193,8 @@ function Vault(props: VaultProps) {
       </Group>
 
       <Group position="apart" mt="md" mb="xs">
-        <Text size="sm" color="gray">
-          Circle Balance
+        <Text size="sm" color="gray" onClick={() => clipboard.copy(custodian?.address)} style={{ cursor: 'pointer' }}>
+          Circle Balance <IconCopy size={12} />
         </Text>
         <Text size="sm" color="gray">
           <BalanceOf

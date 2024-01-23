@@ -40,8 +40,6 @@ export class AccountsController {
   async whitelist(@Body() dto: WhitelistAccountDto): Promise<AccountStatusDto> {
     const { data, error } = await this.kyc.whitelist(dto);
 
-    console.log({ data, error });
-
     if (error) throw new BadRequestException(error);
     if (!data) throw new NotFoundException();
 
