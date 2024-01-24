@@ -174,15 +174,33 @@ contract CredbullVaultTest is Test {
         vault.deposit(10 ether, alice);
     }
 
-    function test__RevertDepositIfVaultNotOpened() public {
+    function test__deposit_should_fail_if_the_vault_deposit_window_is_in_the_future() public {
+        // given that the vault's deposit window is in the future
+        // when Alice try to deposit 10 ether
+        // then the deposit should be reverted
         vm.expectRevert(CredbullVault.CredbullVault__VaultNotOpened.selector);
         vault.deposit(10 ether, alice);
     }
 
-    function test__ShouldNotRevertOnVaultOpenModifier() public {
-        setRule(true, false, true);
-        deposit(alice, 10 ether, false);
+    function test_deposit_succeeds_when_the_vault_deposit_window_is_open() public {
+        // given that we are in the vault's deposit window
+        // when Alice try to deposit 10 ether
+        // then the deposit should be reverted
+        deposit(alice, 10 ether, true);
         assertEq(vault.balanceOf(alice), 10 ether);
+    }
+
+    function test__deposit_should_fail_if_the_vault_deposit_window_is_in_the_past() public {
+        // given that the vault's deposit window is in the past
+        vm.warp(vault.closesAtTimestamp());
+
+        // when Alice try to deposit 10 ether
+        // then the deposit should be reverted
+        vm.startPrank(alice);
+        IERC20(asset).approve(address(vault), 10 ether);
+        vm.expectRevert(CredbullVault.CredbullVault__VaultIsClosed.selector);
+        vault.deposit(10 ether, alice);
+        vm.stopPrank();
     }
 
     function test__ShouldNotRevertOnWhitelistModifier() public {
