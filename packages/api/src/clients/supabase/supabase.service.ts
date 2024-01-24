@@ -7,7 +7,7 @@ import { ExtractJwt } from 'passport-jwt';
 
 import { Database } from '../../types/supabase';
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable({ scope: Scope.TRANSIENT })
 export class SupabaseService {
   private supabase: SupabaseClient<Database>;
   private supabaseAdmin: SupabaseClient<Database>;
@@ -51,5 +51,11 @@ export class SupabaseService {
       },
     );
     return this.supabaseAdmin;
+  }
+
+  static createAdmin(publicUrl: string, privateKey: string) {
+    return createClient<Database, 'public'>(publicUrl, privateKey, {
+      auth: { persistSession: false },
+    });
   }
 }

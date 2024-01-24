@@ -15,7 +15,7 @@ contract CredbullVaultFactory is Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     //Event to emit when a new vault is created
-    event VaultDeployed(address indexed vault, address indexed asset, uint256 opensAt, uint256 closesAt);
+    event VaultDeployed(address indexed vault, ICredbull.VaultParams params);
 
     //Address set that contains list of all vault address
     EnumerableSet.AddressSet private allVaults;
@@ -29,7 +29,7 @@ contract CredbullVaultFactory is Ownable {
     function createVault(ICredbull.VaultParams memory _params) public onlyOwner returns (CredbullVault newVault) {
         newVault = new CredbullVault(_params);
 
-        emit VaultDeployed(address(newVault), newVault.asset(), _params.openAt, _params.closesAt);
+        emit VaultDeployed(address(newVault), _params);
 
         allVaults.add(address(newVault));
     }

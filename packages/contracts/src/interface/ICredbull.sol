@@ -19,6 +19,8 @@ abstract contract ICredbull {
         uint256 closesAt;
         address custodian;
         address kycProvider;
+        address treasury;
+        address activityReward;
     }
 
     //Struct defining various entities associated with Credbull

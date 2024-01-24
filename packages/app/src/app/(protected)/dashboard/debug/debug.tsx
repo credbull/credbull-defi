@@ -301,6 +301,8 @@ const CreateVaultFromFactory = () => {
       closesAt: 1705286800,
       custodian: Deployments.CredbullEntities[0].arguments[0],
       kycProvider: Deployments.CredbullEntities[0].arguments[1],
+      treasury: Deployments.CredbullEntities[0].arguments[2],
+      activityReward: Deployments.CredbullEntities[0].arguments[3],
     },
   });
 
@@ -318,6 +320,8 @@ const CreateVaultFromFactory = () => {
         closesAt: BigInt(form.values.closesAt),
         custodian: form.values.custodian as Address,
         kycProvider: form.values.kycProvider as Address,
+        treasury: form.values.treasury as Address,
+        activityReward: form.values.activityReward as Address,
         promisedYield: BigInt(10),
       },
     ],
@@ -338,7 +342,7 @@ const CreateVaultFromFactory = () => {
           closed_at: form.values.closesAt,
         };
 
-        await exportVaultsToSupabase(vaultData);
+        //await exportVaultsToSupabase(vaultData);
       }
       open?.({ type: 'success', message: 'Deposit successful' });
     } catch (e) {

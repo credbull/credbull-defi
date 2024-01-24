@@ -47,7 +47,9 @@ contract HelperConfig is Script {
             kycProvider: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
             promisedYield: PROMISED_FIXED_YIELD,
             openAt: openAt,
-            closesAt: closesAt
+            closesAt: closesAt,
+            treasury: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
+            activityReward: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
         });
 
         //TODO: Replace with actual addresses to be used on testnet
@@ -88,7 +90,9 @@ contract HelperConfig is Script {
             kycProvider: address(kycProvider),
             promisedYield: PROMISED_FIXED_YIELD,
             openAt: openAt,
-            closesAt: closesAt
+            closesAt: closesAt,
+            treasury: makeAddr("treasury"),
+            activityReward: makeAddr("activity")
         });
 
         ICredbull.Entities memory entities = ICredbull.Entities({
