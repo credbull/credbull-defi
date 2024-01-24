@@ -10,13 +10,6 @@
     ]
   },
   "scripts": {
-    "account": "yarn workspace @credbull/foundry account",
-    "chain": "yarn workspace @credbull/foundry chain",
-    "compile": "yarn workspace @credbull/foundry compile",
-    "deploy": "yarn workspace @credbull/foundry deploy",
-    "deploy:verify": "yarn workspace @credbull/foundry deploy:verify",
-    "fork": "yarn workspace @credbull/foundry fork",
-    "generate": "yarn workspace @credbull/foundry generate",
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",

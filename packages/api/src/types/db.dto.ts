@@ -4,8 +4,8 @@ import { z } from 'zod';
 
 import { Enums, Tables } from './supabase';
 
-export const EntityTypes = ['partner'] as const;
-export type EntityType = (typeof EntityTypes)[number];
+export const PartnerTypes = ['channel'] as const;
+export type PartnerType = (typeof PartnerTypes)[number];
 
 export const VaultType = ['fixed_yield'] as const;
 

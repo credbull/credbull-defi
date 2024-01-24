@@ -64,15 +64,17 @@ describe('AccountsController', () => {
     const insert = vi.fn();
     const select = vi.fn();
     const eq = vi.fn();
+    const is = vi.fn();
     const single = vi.fn();
     const maybeSingle = vi.fn();
     const neq = vi.fn();
     const lt = vi.fn();
-    const builder = { insert, select, eq, single, neq, lt, maybeSingle };
+    const builder = { insert, select, eq, single, neq, lt, maybeSingle, is };
     select
       .mockReturnValueOnce(builder as any)
       .mockReturnValueOnce(builder as any)
       .mockReturnValueOnce(builder as any);
+    is.mockReturnValue(builder as any);
     eq.mockReturnValue(builder as any);
     single.mockResolvedValueOnce({ data: { user_id } } as any);
     maybeSingle.mockResolvedValueOnce({} as any);
@@ -143,7 +145,7 @@ describe('AccountsController', () => {
   });
 
   it('should require discriminator if entity type is partner', async () => {
-    const app_metadata = { entity_type: 'partner' };
+    const app_metadata = { partner_type: 'channel' };
     const user_id = '1';
     const dto = { message: '', signature: '' };
 

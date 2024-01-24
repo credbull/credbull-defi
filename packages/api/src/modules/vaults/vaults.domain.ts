@@ -1,4 +1,5 @@
 import { BigNumber } from 'ethers';
+import { formatEther, parseEther } from 'ethers/lib/utils';
 import { z } from 'zod';
 
 import { ServiceResponse } from '../../types/responses';
@@ -20,13 +21,15 @@ export type DistributionConfig = Pick<Tables<'vault_distribution_configs'>, 'per
 
 export type CalculateProportionsData = { custodianAmount: BigNumber; amount: BigNumber };
 
+const toNumber = (n: BigNumber) => Number(formatEther(n));
+
 export function calculateProportions(data: CalculateProportionsData[]) {
-  const totalExpected = data.reduce((acc, cur) => acc + cur.amount.toNumber(), 0);
-  const percentages = data.map((cur) => (cur.amount.toNumber() * 100) / totalExpected);
+  const totalExpected = data.reduce((acc, cur) => acc + toNumber(cur.amount), 0);
+  const percentages = data.map((cur) => (toNumber(cur.amount) * 100) / totalExpected);
 
   return data
-    .map((cur, i) => ((cur.custodianAmount.toNumber() - totalExpected) * percentages[i]) / 100)
-    .map((n) => BigNumber.from(Math.round(n)));
+    .map((cur, i) => ((toNumber(cur.custodianAmount) - totalExpected) * percentages[i]) / 100)
+    .map((n) => parseEther(Math.round(n).toString()));
 }
 
 export function prepareDistributionTransfers(
