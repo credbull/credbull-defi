@@ -1,6 +1,6 @@
 import { CredbullVaultFactory, CredbullVaultFactory__factory } from '@credbull/contracts';
 //TODO: Figure out a proper way to import deployment data
-import * as deploymentData from '@credbull/contracts/deployments/31337.json';
+import * as deploymentData from '@credbull/contracts/deployments/index.json';
 import { ICredbull } from '@credbull/contracts/types/CredbullVault';
 import { Injectable, OnModuleInit, Scope } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -29,7 +29,9 @@ export class ListenerService implements OnModuleInit {
    *           The service should be in default scope.
    */
   async listenToContractEvent() {
-    const FactoryContractAddress = deploymentData.CredbullVaultFactory[0].address;
+    const chainId = await this.ethers.networkId();
+
+    const FactoryContractAddress = deploymentData[`${chainId}` as '31337'].CredbullVaultFactory[0].address;
     const contract = this.getFactoryContract(FactoryContractAddress);
     const eventName = 'VaultDeployed';
 

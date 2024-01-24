@@ -7,7 +7,8 @@ async function exportAddress() {
   const contracts = {};
 
   const folderPath = path.resolve(__dirname, '../../broadcast');
-  const outputPath = path.resolve(__dirname, '../../deployments');
+  const outputPath = path.resolve(__dirname, '../../deployments/');
+  const outputFileName = path.resolve(__dirname, '../../deployments/index.json');
 
   const deployFiles = await fs.promises.readdir(folderPath);
   for (const deployFile of deployFiles) {
@@ -30,13 +31,13 @@ async function exportAddress() {
             arguments: tx['arguments'],
           });
         }
-      }
-      if (!fs.existsSync(outputPath)) {
-        fs.mkdirSync(outputPath, { recursive: true });
-      }
-
-      fs.writeFileSync(path.resolve(outputPath, `${chainFile}.json`), JSON.stringify(contracts[chainFile]));
+      } 
     }
+    if (!fs.existsSync(outputPath)) {
+      fs.mkdirSync(outputPath, { recursive: true });
+    }
+
+    fs.writeFileSync(path.resolve(outputFileName), JSON.stringify(contracts));
   }
   return contracts;
 }

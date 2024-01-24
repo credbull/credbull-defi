@@ -23,6 +23,11 @@ export class EthersService {
     return new Wallet(this.deployerKey, this.socketProvider());
   }
 
+  async networkId(): Promise<number> {
+    const { chainId } = await this.provider().getNetwork();
+    return chainId;
+  }
+
   // TODO: this is only needed while we dont have a real custodian
   custodian(): Signer {
     const custodianKey = this.config.getOrThrow('ETHERS_CUSTODIAN_PRIVATE_KEY');
