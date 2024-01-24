@@ -9,11 +9,11 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { console2 } from "forge-std/console2.sol";
 import "../test/mocks/AKYCProvider.sol";
-import { NetworkConfig } from "../script/HelperConfig.s.sol";
+import { ICredbull } from "./interface/ICredbull.sol";
 
 // Vaults exchange Assets for Shares in the Vault
 // see: https://eips.ethereum.org/EIPS/eip-4626
-contract CredbullVault is ERC4626, Ownable {
+contract CredbullVault is ICredbull, ERC4626, Ownable {
     using Math for uint256;
 
     //Error to revert on withdraw if vault is not matured
@@ -103,18 +103,16 @@ contract CredbullVault is ERC4626, Ownable {
         _;
     }
 
-    constructor(
-        NetworkConfig memory config,
-        IERC20 asset,
-        uint256 _promisedYield,
-        uint256 _opensAtTimestamp,
-        uint256 _closesAtTimestamp
-    ) ERC4626(asset) ERC20(config.shareName, config.shareSymbol) Ownable(config.owner) {
-        custodian = config.custodian;
-        kycProvider = AKYCProvider(config.kycProvider);
-        _fixedYield = _promisedYield;
-        opensAtTimestamp = _opensAtTimestamp;
-        closesAtTimestamp = _closesAtTimestamp;
+    constructor(VaultParams memory params)
+        ERC4626(params.asset)
+        ERC20(params.shareName, params.shareSymbol)
+        Ownable(params.owner)
+    {
+        custodian = params.custodian;
+        kycProvider = AKYCProvider(params.kycProvider);
+        _fixedYield = params.promisedYield;
+        opensAtTimestamp = params.openAt;
+        closesAtTimestamp = params.closesAt;
     }
 
     /**

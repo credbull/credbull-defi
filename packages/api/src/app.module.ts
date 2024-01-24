@@ -1,16 +1,25 @@
-import { ClassSerializerInterceptor, Module, ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module, OnModuleInit, ValidationPipe } from '@nestjs/common';
 import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 
 import { AppController } from './app.controller';
 import { SupabaseModule } from './clients/supabase/supabase.module';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { AuthenticationModule } from './modules/authentication/authentication.module';
+import { ListenerModule } from './modules/eventlistener/listener.module';
 import { MetaTxModule } from './modules/metatx/metatx.module';
 import { VaultsModule } from './modules/vaults/vaults.module';
 import { Config } from './utils/module';
 
 @Module({
-  imports: [Config.module(), AccountsModule, SupabaseModule, AuthenticationModule, VaultsModule, MetaTxModule],
+  imports: [
+    Config.module(),
+    AccountsModule,
+    SupabaseModule,
+    AuthenticationModule,
+    VaultsModule,
+    MetaTxModule,
+    ListenerModule,
+  ],
   controllers: [AppController],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
@@ -20,4 +29,8 @@ import { Config } from './utils/module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  onModuleInit() {
+    console.log('App module init');
+  }
+}

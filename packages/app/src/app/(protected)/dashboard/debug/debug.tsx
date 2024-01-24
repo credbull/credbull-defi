@@ -1,17 +1,20 @@
 'use client';
 
 import { Tables } from '@credbull/api';
-import { ERC4626__factory, MockStablecoin__factory } from '@credbull/contracts';
+import { ERC4626__factory, IERC20, MockStablecoin__factory } from '@credbull/contracts';
+import { CredbullVaultFactory__factory } from '@credbull/contracts';
+import Deployments from '@credbull/contracts/deployments/31337.json';
 import { Button, Card, Flex, Group, NumberInput, SimpleGrid, Text, TextInput } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useList, useNotification } from '@refinedev/core';
 import { OpenNotificationParams } from '@refinedev/core/dist/contexts/notification/INotificationContext';
 import { useForm } from '@refinedev/mantine';
 import { getPublicClient } from '@wagmi/core';
+import { ethers } from 'ethers';
 import { useState } from 'react';
 import { createWalletClient, http, parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
-import { Address, useAccount, useBalance, useContractWrite, useWalletClient } from 'wagmi';
+import { Address, useAccount, useBalance, useContractRead, useContractWrite, useWalletClient } from 'wagmi';
 import { foundry } from 'wagmi/chains';
 import { z } from 'zod';
 
@@ -281,6 +284,96 @@ const WhitelistWalletAddress = () => {
   );
 };
 
+const CreateVaultFromFactory = () => {
+  const { open } = useNotification();
+  const { isConnected, address } = useAccount();
+  const { data: client } = useWalletClient();
+  const [isLoading, setLoading] = useState(false);
+  const factoryContractAddress = Deployments.CredbullVaultFactory[0].address;
+
+  const form = useForm({
+    initialValues: {
+      owner: Deployments.CredbullVaultFactory[0].arguments[0],
+      asset: Deployments.MockStablecoin[0].address,
+      shareName: 'Test share',
+      shareSymbol: 'Test symbol',
+      openAt: 1705276800,
+      closesAt: 1705286800,
+      custodian: Deployments.CredbullEntities[0].arguments[0],
+      kycProvider: Deployments.CredbullEntities[0].arguments[1],
+      treasury: Deployments.CredbullEntities[0].arguments[2],
+      activityReward: Deployments.CredbullEntities[0].arguments[3],
+    },
+  });
+
+  const { writeAsync: createVaultAsync } = useContractWrite({
+    address: factoryContractAddress as Address,
+    abi: CredbullVaultFactory__factory.abi,
+    functionName: 'createVault',
+    args: [
+      {
+        owner: form.values.owner as Address,
+        asset: form.values.asset as Address,
+        shareName: form.values.shareName,
+        shareSymbol: form.values.shareSymbol,
+        openAt: BigInt(form.values.openAt),
+        closesAt: BigInt(form.values.closesAt),
+        custodian: form.values.custodian as Address,
+        kycProvider: form.values.kycProvider as Address,
+        treasury: form.values.treasury as Address,
+        activityReward: form.values.activityReward as Address,
+        promisedYield: BigInt(10),
+      },
+    ],
+  });
+
+  const createVault = async () => {
+    setLoading(true);
+    try {
+      await createVaultAsync();
+      open?.({ type: 'success', message: 'Deposit successful' });
+    } catch (e) {
+      open?.({ type: 'error', description: 'Deposit failed', message: e?.toString() ?? '' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card shadow="sm" p="xl" radius="md" withBorder>
+      <Flex direction="column" h="100%">
+        <Group position="apart" mt="md" mb="xs">
+          <Text weight={500}>Create vault</Text>
+        </Group>
+
+        <form onSubmit={form.onSubmit(() => createVault())} style={{ marginTop: 'auto' }}>
+          <TextInput label="Owner" {...form.getInputProps('owner')} disabled={!isConnected || isLoading} />
+          <TextInput label="Asset" {...form.getInputProps('asset')} disabled={!isConnected || isLoading} />
+          <TextInput label="Share name" {...form.getInputProps('shareName')} disabled={!isConnected || isLoading} />
+          <TextInput label="Share symbol" {...form.getInputProps('shareSymbol')} disabled={!isConnected || isLoading} />
+          <TextInput label="Opens At" {...form.getInputProps('openAt')} disabled={!isConnected || isLoading} />
+          <TextInput label="Closes At" {...form.getInputProps('closesAt')} disabled={!isConnected || isLoading} />
+          <TextInput label="Custodian" {...form.getInputProps('custodian')} disabled={!isConnected || isLoading} />
+          <TextInput label="Kyc Provider" {...form.getInputProps('kycProvider')} disabled={!isConnected || isLoading} />
+          <Group grow>
+            <Button
+              type="submit"
+              variant="light"
+              color="blue"
+              mt="md"
+              radius="md"
+              disabled={!isConnected || isLoading}
+              loading={isLoading}
+            >
+              Create Vault
+            </Button>
+          </Group>
+        </form>
+      </Flex>
+    </Card>
+  );
+};
+
 export function Debug() {
   const { data: list, isLoading } = useList<Tables<'vaults'>>({
     resource: 'vaults',
@@ -298,6 +391,10 @@ export function Debug() {
         <SendEth />
         <VaultDeposit erc20Address={erc20Address ?? ''} />
         <WhitelistWalletAddress />
+      </SimpleGrid>
+
+      <SimpleGrid cols={1}>
+        <CreateVaultFromFactory />
       </SimpleGrid>
     </Flex>
   );
