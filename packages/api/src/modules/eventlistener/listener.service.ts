@@ -1,4 +1,5 @@
 import { CredbullVaultFactory, CredbullVaultFactory__factory } from '@credbull/contracts';
+//TODO: Figure out a proper way to import deployment data
 import * as deploymentData from '@credbull/contracts/deployments/31337.json';
 import { ICredbull } from '@credbull/contracts/types/CredbullVault';
 import { Injectable, OnModuleInit, Scope } from '@nestjs/common';
@@ -23,6 +24,10 @@ export class ListenerService implements OnModuleInit {
     this.supabaseAdmin = this.getSupabaseAdmin();
   }
 
+  /**
+   * @notice - This method called on onModuleInit of Listener module.
+   *           The service should be in default scope.
+   */
   async listenToContractEvent() {
     const FactoryContractAddress = deploymentData.CredbullVaultFactory[0].address;
     const contract = this.getFactoryContract(FactoryContractAddress);

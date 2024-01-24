@@ -20,7 +20,7 @@ import { z } from 'zod';
 
 import { BalanceOf } from '@/components/contracts/balance-of';
 
-import { exportVaultsToSupabase, whitelistAddress } from '@/app/(protected)/dashboard/debug/actions';
+import { whitelistAddress } from '@/app/(protected)/dashboard/debug/actions';
 
 const mintSchema = z.object({
   address: z.string().min(42).max(42),

@@ -7,10 +7,12 @@ import { Overrides, Wallet, providers } from 'ethers';
 export class EthersService {
   private readonly deployerKey: string;
   private readonly network: string;
+  private readonly network_wss: string;
 
   constructor(private readonly config: ConfigService) {
     this.deployerKey = config.getOrThrow('ETHERS_DEPLOYER_PRIVATE_KEY');
     this.network = config.getOrThrow('NEXT_PUBLIC_TARGET_NETWORK');
+    this.network_wss = config.getOrThrow('NEXT_PUBLIC_TARGET_NETWORK_WSS');
   }
 
   deployer(): Signer {
@@ -40,6 +42,6 @@ export class EthersService {
   }
 
   private socketProvider(): providers.Provider {
-    return new providers.WebSocketProvider('ws://localhost:8545');
+    return new providers.WebSocketProvider(this.network_wss);
   }
 }
