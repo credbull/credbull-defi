@@ -1,6 +1,4 @@
 import { CredbullVaultFactory, CredbullVaultFactory__factory } from '@credbull/contracts';
-//TODO: Figure out a proper way to import deployment data
-import * as deploymentData from '@credbull/contracts/deployments/index.json';
 import { ICredbull } from '@credbull/contracts/types/CredbullVault';
 import { Injectable, OnModuleInit, Scope } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -8,8 +6,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
-import { Database } from '../../types/supabase';
-import { Tables } from '../../types/supabase';
+import { Database, Tables } from '../../types/supabase';
 
 @Injectable({ scope: Scope.DEFAULT })
 export class ListenerService implements OnModuleInit {
@@ -29,10 +26,8 @@ export class ListenerService implements OnModuleInit {
    *           The service should be in default scope.
    */
   async listenToContractEvent() {
-    const chainId = await this.ethers.networkId();
-
-    const FactoryContractAddress = deploymentData[`${chainId}` as '31337'].CredbullVaultFactory[0].address;
-    const contract = this.getFactoryContract(FactoryContractAddress);
+    const factoryContractAddress = this.config.getOrThrow('VAULT_FACTORY_ADDRESS');
+    const contract = this.getFactoryContract(factoryContractAddress);
     const eventName = 'VaultDeployed';
 
     contract.on(eventName, async (vault: string, params: ICredbull.VaultParamsStruct) => {
