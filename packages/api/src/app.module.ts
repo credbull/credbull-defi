@@ -1,5 +1,6 @@
 import { ClassSerializerInterceptor, Module, OnModuleInit, ValidationPipe } from '@nestjs/common';
 import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from './app.controller';
 import { SupabaseModule } from './clients/supabase/supabase.module';
@@ -19,6 +20,7 @@ import { Config } from './utils/module';
     VaultsModule,
     MetaTxModule,
     ListenerModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [

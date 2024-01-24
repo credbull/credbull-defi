@@ -3,7 +3,7 @@
 import { Tables } from '@credbull/api';
 import { ERC4626__factory, IERC20, MockStablecoin__factory } from '@credbull/contracts';
 import { CredbullVaultFactory__factory } from '@credbull/contracts';
-import Deployments from '@credbull/contracts/deployments/31337.json';
+import Deployments from '@credbull/contracts/deployments/index.json';
 import { Button, Card, Flex, Group, NumberInput, SimpleGrid, Text, TextInput } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useList, useNotification } from '@refinedev/core';
@@ -14,7 +14,7 @@ import { ethers } from 'ethers';
 import { useState } from 'react';
 import { createWalletClient, http, parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
-import { Address, useAccount, useBalance, useContractRead, useContractWrite, useWalletClient } from 'wagmi';
+import { Address, useAccount, useBalance, useContractRead, useContractWrite, useNetwork, useWalletClient } from 'wagmi';
 import { foundry } from 'wagmi/chains';
 import { z } from 'zod';
 
@@ -288,21 +288,24 @@ const CreateVaultFromFactory = () => {
   const { open } = useNotification();
   const { isConnected, address } = useAccount();
   const { data: client } = useWalletClient();
+  const { chain } = useNetwork();
   const [isLoading, setLoading] = useState(false);
-  const factoryContractAddress = Deployments.CredbullVaultFactory[0].address;
+  const chainId = chain ? chain.id.toString() : '31337';
+  const deploymentData = Deployments[chainId as '31337'];
+  const factoryContractAddress = deploymentData.CredbullVaultFactory[0].address;
 
   const form = useForm({
     initialValues: {
-      owner: Deployments.CredbullVaultFactory[0].arguments[0],
-      asset: Deployments.MockStablecoin[0].address,
+      owner: deploymentData.CredbullVaultFactory[0].arguments[0],
+      asset: deploymentData.MockStablecoin[0].address,
       shareName: 'Test share',
       shareSymbol: 'Test symbol',
       openAt: 1705276800,
       closesAt: 1705286800,
-      custodian: Deployments.CredbullEntities[0].arguments[0],
-      kycProvider: Deployments.CredbullEntities[0].arguments[1],
-      treasury: Deployments.CredbullEntities[0].arguments[2],
-      activityReward: Deployments.CredbullEntities[0].arguments[3],
+      custodian: deploymentData.CredbullEntities[0].arguments[0],
+      kycProvider: deploymentData.CredbullEntities[0].arguments[1],
+      treasury: deploymentData.CredbullEntities[0].arguments[2],
+      activityReward: deploymentData.CredbullEntities[0].arguments[3],
     },
   });
 

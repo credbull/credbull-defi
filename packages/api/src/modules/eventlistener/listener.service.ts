@@ -1,5 +1,4 @@
 import { CredbullVaultFactory, CredbullVaultFactory__factory } from '@credbull/contracts';
-//TODO: Figure out a proper way to import deployment data
 import * as deploymentData from '@credbull/contracts/deployments/index.json';
 import { ICredbull } from '@credbull/contracts/types/CredbullVault';
 import { Injectable, OnModuleInit, Scope } from '@nestjs/common';
