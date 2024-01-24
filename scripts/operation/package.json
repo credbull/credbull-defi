@@ -2,7 +2,7 @@
   "name": "@credbull/operation",
   "packageManager": "yarn@3.2.3",
   "scripts": {
-    "api-deposit": "ts-node api-deposit.ts"
+    "op": "ts-node index.ts"
   },
   "dependencies": {
     "@credbull/api": "workspace:^",
