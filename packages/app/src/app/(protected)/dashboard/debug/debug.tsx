@@ -330,20 +330,7 @@ const CreateVaultFromFactory = () => {
   const createVault = async () => {
     setLoading(true);
     try {
-      const createVaultTx = await createVaultAsync();
-
-      if (client && createVaultTx.hash) {
-        const receipt = await waitForTransactionReceipt(client!, createVaultTx);
-
-        const vaultData = {
-          address: ethers.utils.defaultAbiCoder.decode(['address'], receipt.logs[1].topics[1] as Address)[0],
-          asset_address: form.values.asset,
-          opened_at: form.values.openAt,
-          closed_at: form.values.closesAt,
-        };
-
-        //await exportVaultsToSupabase(vaultData);
-      }
+      await createVaultAsync();
       open?.({ type: 'success', message: 'Deposit successful' });
     } catch (e) {
       open?.({ type: 'error', description: 'Deposit failed', message: e?.toString() ?? '' });
