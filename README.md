@@ -1,6 +1,8 @@
 <img src="credbull-logo.jpg" alt="Credbull Logo"/>
 
-# credbull-defi
+# Credbull DeFI (credbull-defi)
+
+---
 
 ## Project Structure
 
@@ -18,27 +20,29 @@
 
 ## Setup project locally
 
+- Ensure that you have:
+    - NodeJS + Yarn ([install yarn](https://yarnpkg.com/getting-started/install))
+    - Foundry ([install forge](https://book.getfoundry.sh/getting-started/installation))
+    - Docker ([install docker](https://docs.docker.com/get-docker/))
+    - Supabase CLI ([install the cli](https://github.com/supabase/cli#install-the-cli)) Hint: choose a native client for
+      your platform instead of the npm package)
+
+- Run yarn to install dependencies ```yarn install```
+
 - Ensure you have all the environment variables set in `.env`/`.env.local`/etc files in the root of each package. See
   the samples to check which variables are missing (ex: `.env.local.sample`).
 
-- To run locally you first need to install supabsae's
-  client, [install the cli](https://github.com/supabase/cli#install-the-cli)
-- then run `supabase start` in the root of this repo
+- Then cd into packages/api and run `supabase start` and follow the instructions from the cli
+
+---
 
 ## Test Locally
 
-- After the project has been setup locally you can just:
-
-```bash
-# Build, compile, run all tests
-yarn test
-```
+- After the project has been setup locally you can just ```yarn test```
 
 ---
 
 ## Run and Deploy Locally
 
-```bash
-# shell #1 - start a local anvil chain
-yarn dev
-```
+- Run ``yarn dev``
+- Run ```open http://localhost:3000```

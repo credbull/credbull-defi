@@ -31,7 +31,7 @@ async function exportAddress() {
             arguments: tx['arguments'],
           });
         }
-      } 
+      }
     }
     if (!fs.existsSync(outputPath)) {
       fs.mkdirSync(outputPath, { recursive: true });

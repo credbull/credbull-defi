@@ -46,3 +46,4 @@ jobs:
           ETHERS_DEPLOYER_PRIVATE_KEY: your_deployer_private_key
           ETHERS_INFURA_API_KEY: your_infura_api_key
           CRON_SECRET: any_string_will_do
+          NEXT_PUBLIC_TARGET_NETWORK_WSS: ws://localhost:8545

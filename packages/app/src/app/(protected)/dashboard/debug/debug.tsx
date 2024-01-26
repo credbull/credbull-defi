@@ -1,7 +1,7 @@
 'use client';
 
 import { Tables } from '@credbull/api';
-import { ERC4626__factory, IERC20, MockStablecoin__factory } from '@credbull/contracts';
+import { ERC4626__factory, MockStablecoin__factory } from '@credbull/contracts';
 import { CredbullVaultFactory__factory } from '@credbull/contracts';
 import Deployments from '@credbull/contracts/deployments/index.json';
 import { Button, Card, Flex, Group, NumberInput, SimpleGrid, Text, TextInput } from '@mantine/core';

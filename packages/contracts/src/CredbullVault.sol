@@ -20,8 +20,10 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
     error CredbullVault__NotMatured();
     //Error to revert mature if there is not enough balance to mature
     error CredbullVault__NotEnoughBalanceToMature();
-    //Error to revert deposit if the valut is not opened yet
+    //Error to revert deposit if the value is not opened yet
     error CredbullVault__VaultNotOpened();
+    //Error to revert deposit if the value is closed
+    error CredbullVault__VaultIsClosed();
     //Error to revert if the address is not whitelisted
     error CredbullVault__NotAWhitelistedAddress();
 
@@ -83,11 +85,22 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
 
     /**
      * @notice - Modifier to check for vault open status.
-     * @dev - Used on internal deposit method to check for open status
+     * @dev - Used on internal deposit method to check for closed status
      */
-    modifier onlyWhenOpened() {
+    modifier onlyAfterDepositWindowStart() {
         if (rules.checkVaultOpenStatus && (block.timestamp < opensAtTimestamp)) {
             revert CredbullVault__VaultNotOpened();
+        }
+        _;
+    }
+
+    /**
+     * @notice - Modifier to check for vault deposit closed status.
+     * @dev - Used on internal deposit method to check for closed status
+     */
+    modifier onlyBeforeDepositWindowEnds() {
+        if (rules.checkVaultOpenStatus && (closesAtTimestamp <= block.timestamp)) {
+            revert CredbullVault__VaultIsClosed();
         }
         _;
     }
@@ -122,7 +135,8 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares)
         internal
         override
-        onlyWhenOpened
+        onlyAfterDepositWindowStart
+        onlyBeforeDepositWindowEnds
         onlyWhitelistAddress(receiver)
     {
         SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
