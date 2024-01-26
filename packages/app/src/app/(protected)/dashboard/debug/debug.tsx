@@ -383,7 +383,7 @@ export function Debug() {
     pagination: { pageSize: 1 },
   });
 
-  const erc20Address = list?.data[0].asset_address;
+  const erc20Address = list?.data[0]?.asset_address;
 
   return isLoading ? (
     <>Loading...</>
