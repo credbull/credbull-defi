@@ -185,14 +185,33 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
      * @notice - mature method to mature the vault after the assets that was deposited from the custodian wallet with addition yield earned.
      * @dev - _totalAssetDeposited to be updated to calculate the right amount of asset with yield in proportion to the shares received.
      */
-    function mature() external onlyOwner {
+    function mature(address[] calldata entities, uint256[] calldata splitPercentage, uint256 totalProfitAmount)
+        external
+        onlyOwner
+    {
+        require(entities.length == splitPercentage.length, "Incorrect call data");
+
         uint256 currentBalance = IERC20(asset()).balanceOf(address(this));
 
-        if (this.expectedAssetsOnMaturity() > currentBalance) {
+        //Transfer any USDC directly sent to the vault to the treasury address
+        SafeERC20.safeTransfer(IERC20(asset()), entities[0], currentBalance);
+
+        //Share the total profits to the entities
+        uint256 totalAmountSharedWithEntities;
+        for (uint256 i = 0; i < entities.length; i++) {
+            uint256 amountToSend = (totalProfitAmount * splitPercentage[i]) / 100_00;
+            totalAmountSharedWithEntities += amountToSend;
+            SafeERC20.safeTransferFrom(IERC20(asset()), msg.sender, entities[i], amountToSend);
+        }
+
+        uint256 amountToTransferToVault = totalProfitAmount - totalAmountSharedWithEntities;
+
+        if (this.expectedAssetsOnMaturity() > amountToTransferToVault) {
             revert CredbullVault__NotEnoughBalanceToMature();
         }
 
-        _totalAssetDeposited = currentBalance;
+        SafeERC20.safeTransferFrom(IERC20(asset()), msg.sender, address(this), amountToTransferToVault);
+        _totalAssetDeposited = amountToTransferToVault;
         isMatured = true;
     }
 

@@ -104,16 +104,22 @@ contract CredbullVaultTest is Test {
         uint256 shares = deposit(alice, depositAmount, true);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(asset).mint(custodian, 1 ether);
+        MockStablecoin(asset).mint(custodian, 10 ether);
         uint256 finalBalance = MockStablecoin(asset).balanceOf(custodian);
 
-        vm.startPrank(custodian);
-        IERC20(asset).approve(address(custodian), finalBalance);
-        IERC20(asset).transferFrom(custodian, address(vault), finalBalance);
+        vm.prank(custodian);
+        IERC20(asset).transfer(owner, finalBalance);
+
+        vm.startPrank(owner);
+        IERC20(asset).approve(address(vault), finalBalance);
+        (address[] memory entities, uint256[] memory percentage) = matureVault(vault, finalBalance);
         vm.stopPrank();
 
-        vm.prank(owner);
-        vault.mature();
+        for (uint256 i = 0; i < entities.length; i++) {
+            uint256 expectedAmount = (finalBalance * percentage[i]) / 100_00;
+            console2.log(expectedAmount);
+            assertEq(expectedAmount, IERC20(asset).balanceOf(entities[i]));
+        }
 
         // ---- Assert Vault burns shares and Alice receive asset with additional 10% ---
         uint256 balanceBeforeRedeem = IERC20(asset).balanceOf(alice);
@@ -134,14 +140,15 @@ contract CredbullVaultTest is Test {
 
         // ---- Transfer assets to vault ---
         vm.startPrank(custodian);
-        IERC20(asset).approve(address(custodian), finalBalance);
-        IERC20(asset).transferFrom(custodian, address(vault), finalBalance);
+        IERC20(asset).transfer(owner, finalBalance);
         vm.stopPrank();
 
         // ---- Assert it can't be matured yet ---
-        vm.prank(owner);
+        vm.startPrank(owner);
+        IERC20(asset).approve(address(vault), finalBalance);
         vm.expectRevert(CredbullVault.CredbullVault__NotEnoughBalanceToMature.selector);
-        vault.mature();
+        matureVault(vault, finalBalance);
+        vm.stopPrank();
     }
 
     function test__RevertOnWithdrawIfVaultNotMatured() public {
@@ -271,5 +278,20 @@ contract CredbullVaultTest is Test {
         custodian = params.custodian;
         vm.prank(owner);
         return factory.createVault(params);
+    }
+
+    function matureVault(CredbullVault _vault, uint256 amount)
+        internal
+        returns (address[] memory entities, uint256[] memory splitPercentage)
+    {
+        entities = new address[](2);
+        entities[0] = makeAddr("treasury");
+        entities[1] = makeAddr("activity");
+
+        splitPercentage = new uint256[](2);
+        splitPercentage[0] = 8_00;
+        splitPercentage[1] = 2_00;
+
+        _vault.mature(entities, splitPercentage, amount);
     }
 }
