@@ -15,8 +15,10 @@ abstract contract ICredbull {
         string shareName;
         string shareSymbol;
         uint256 promisedYield;
-        uint256 openAt;
-        uint256 closesAt;
+        uint256 depositOpensAt;
+        uint256 depositClosesAt;
+        uint256 redemptionOpensAt;
+        uint256 redemptionClosesAt;
         address custodian;
         address kycProvider;
         address treasury;

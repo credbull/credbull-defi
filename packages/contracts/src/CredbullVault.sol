@@ -20,12 +20,13 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
     error CredbullVault__NotMatured();
     //Error to revert mature if there is not enough balance to mature
     error CredbullVault__NotEnoughBalanceToMature();
-    //Error to revert deposit if the value is not opened yet
-    error CredbullVault__VaultNotOpened();
-    //Error to revert deposit if the value is closed
-    error CredbullVault__VaultIsClosed();
     //Error to revert if the address is not whitelisted
     error CredbullVault__NotAWhitelistedAddress();
+
+    //Error to revert when operation is outside required window
+    error CredbullVault__OperationOutsideRequiredWindow(
+        string operation, uint256 windowOpensAt, uint256 windowClosesAt, uint256 timestamp
+    );
 
     //Address of the custodian to receive the assets on deposit and mint
     address public custodian;
@@ -50,13 +51,25 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
      * @dev
      * The timestamp when the vault opens for deposit.
      */
-    uint256 public opensAtTimestamp;
+    uint256 public depositOpensAtTimestamp;
 
     /**
      * @dev
      * The timestamp when the vault closes for deposit.
      */
-    uint256 public closesAtTimestamp;
+    uint256 public depositClosesAtTimestamp;
+
+    /**
+     * @dev
+     * The timestamp when the vault opens for redemption.
+     */
+    uint256 public redemptionOpensAtTimestamp;
+
+    /**
+     * @dev
+     * The timestamp when the vault closes for redemption.
+     */
+    uint256 public redemptionClosesAtTimestamp;
 
     /**
      * @notice - Track if vault is matured
@@ -84,24 +97,16 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
     }
 
     /**
-     * @notice - Modifier to check for vault open status.
-     * @dev - Used on internal deposit method to check for closed status
+     * @notice - Modifier to check for vault window operation status.
+     * @dev - Used on internal deposit/withdraw methods to check for window operation status
      */
-    modifier onlyAfterDepositWindowStart() {
-        if (rules.checkVaultOpenStatus && (block.timestamp < opensAtTimestamp)) {
-            revert CredbullVault__VaultNotOpened();
+    modifier onlyInsideRequiredWindow(string memory operation, uint256 windowOpensAt, uint256 windowClosesAt) {
+        if (rules.checkVaultOpenStatus && (block.timestamp < windowOpensAt || block.timestamp > windowClosesAt)) {
+            revert CredbullVault__OperationOutsideRequiredWindow(
+                operation, windowOpensAt, windowClosesAt, block.timestamp
+            );
         }
-        _;
-    }
 
-    /**
-     * @notice - Modifier to check for vault deposit closed status.
-     * @dev - Used on internal deposit method to check for closed status
-     */
-    modifier onlyBeforeDepositWindowEnds() {
-        if (rules.checkVaultOpenStatus && (closesAtTimestamp <= block.timestamp)) {
-            revert CredbullVault__VaultIsClosed();
-        }
         _;
     }
 
@@ -124,8 +129,10 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
         custodian = params.custodian;
         kycProvider = AKYCProvider(params.kycProvider);
         _fixedYield = params.promisedYield;
-        opensAtTimestamp = params.openAt;
-        closesAtTimestamp = params.closesAt;
+        depositOpensAtTimestamp = params.depositOpensAt;
+        depositClosesAtTimestamp = params.depositClosesAt;
+        redemptionOpensAtTimestamp = params.redemptionOpensAt;
+        redemptionClosesAtTimestamp = params.redemptionClosesAt;
     }
 
     /**
@@ -135,8 +142,7 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares)
         internal
         override
-        onlyAfterDepositWindowStart
-        onlyBeforeDepositWindowEnds
+        onlyInsideRequiredWindow("deposit", depositOpensAtTimestamp, depositClosesAtTimestamp)
         onlyWhitelistAddress(receiver)
     {
         SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
@@ -153,6 +159,7 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
     function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         internal
         override
+        onlyInsideRequiredWindow("withdraw", redemptionOpensAtTimestamp, redemptionClosesAtTimestamp)
         onlyAfterMaturity
     {
         if (caller != owner) {
