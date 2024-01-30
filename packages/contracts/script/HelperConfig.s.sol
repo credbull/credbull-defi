@@ -29,13 +29,14 @@ contract HelperConfig is Script {
         return activeNetworkConfig;
     }
 
-    function getTimeConfig() internal view returns (uint256 openAt, uint256 closeAt) {
-        openAt = vm.envUint("VAULT_OPENS_AT_TIMESTAMP");
-        closeAt = openAt + vm.envUint("VAULT_CLOSES_DURATION_TIMESTAMP");
+    function getTimeConfig() internal view returns (uint256 opensAt, uint256 closesAt) {
+        opensAt = vm.envUint("VAULT_OPENS_AT_TIMESTAMP");
+        closesAt = opensAt + vm.envUint("VAULT_CLOSES_DURATION_TIMESTAMP");
     }
 
     function getSepoliaEthConfig() internal view returns (NetworkConfig memory) {
-        (uint256 openAt, uint256 closesAt) = getTimeConfig();
+        (uint256 opensAt, uint256 closesAt) = getTimeConfig();
+        uint256 year = 365 days;
 
         //TODO: Replace with actual addresses to be used on testnet
         ICredbull.VaultParams memory sepoliaVaultParams = ICredbull.VaultParams({
@@ -46,8 +47,10 @@ contract HelperConfig is Script {
             custodian: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
             kycProvider: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
             promisedYield: PROMISED_FIXED_YIELD,
-            openAt: openAt,
-            closesAt: closesAt,
+            depositOpensAt: opensAt,
+            depositClosesAt: closesAt,
+            redemptionOpensAt: opensAt + year,
+            redemptionClosesAt: closesAt + year,
             treasury: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
             activityReward: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
         });
@@ -74,7 +77,8 @@ contract HelperConfig is Script {
         address custodian = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
         address owner = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // use a owner that we have a private key for testing
 
-        (uint256 openAt, uint256 closesAt) = getTimeConfig();
+        (uint256 opensAt, uint256 closesAt) = getTimeConfig();
+        uint256 year = 365 days;
 
         vm.startBroadcast();
         MockStablecoin usdc = new MockStablecoin(type(uint128).max);
@@ -89,8 +93,10 @@ contract HelperConfig is Script {
             custodian: custodian,
             kycProvider: address(kycProvider),
             promisedYield: PROMISED_FIXED_YIELD,
-            openAt: openAt,
-            closesAt: closesAt,
+            depositOpensAt: opensAt,
+            depositClosesAt: closesAt,
+            redemptionOpensAt: opensAt + year,
+            redemptionClosesAt: closesAt + year,
             treasury: makeAddr("treasury"),
             activityReward: makeAddr("activity")
         });

@@ -14,18 +14,14 @@ import { ICredbull } from "../src/interface/ICredbull.sol";
 
 contract CredbullVaultTest is Test {
     CredbullVault private vault;
-    CredbullVaultFactory factory;
+    CredbullVaultFactory private factory;
     DeployVaultFactory private deployer;
     HelperConfig private helperConfig;
 
-    address private owner;
-    address private custodian;
-    address private asset;
+    ICredbull.VaultParams private vaultParams;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
-
-    uint256 private vaultOpenTime;
 
     uint256 private constant INITIAL_BALANCE = 1000 ether;
 
@@ -33,7 +29,7 @@ contract CredbullVaultTest is Test {
         deployer = new DeployVaultFactory();
         (factory, helperConfig) = deployer.runTest();
 
-        vault = createTestVault();
+        (vault, vaultParams) = createTestVault();
 
         address[] memory whitelistAddresses = new address[](2);
         whitelistAddresses[0] = alice;
@@ -46,17 +42,17 @@ contract CredbullVaultTest is Test {
         CredbullVault.Rules memory rules =
             CredbullVault.Rules({ checkMaturity: true, checkVaultOpenStatus: true, checkWhitelist: true });
 
-        vm.startPrank(owner);
+        vm.startPrank(vaultParams.owner);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vault.setRules(rules);
         vm.stopPrank();
 
-        MockStablecoin(asset).mint(alice, INITIAL_BALANCE);
-        MockStablecoin(asset).mint(bob, INITIAL_BALANCE);
+        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE);
+        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE);
     }
 
     function test__OwnerOfContract() public {
-        assertEq(vault.owner(), owner);
+        assertEq(vault.owner(), vaultParams.owner);
     }
 
     function test__ShareNameAndSymbol() public {
@@ -66,14 +62,14 @@ contract CredbullVaultTest is Test {
     }
 
     function test__CustodianAddress() public {
-        assertEq(vault.custodian(), custodian);
+        assertEq(vault.custodian(), vaultParams.custodian);
     }
 
     function test__DepositAssetsAndGetShares() public {
-        uint256 custodiansBalance = IERC20(asset).balanceOf(custodian);
+        uint256 custodiansBalance = vaultParams.asset.balanceOf(vaultParams.custodian);
 
         // ---- Setup Part 1, Check balance before deposit ----
-        assertEq(IERC20(asset).balanceOf(address(vault)), 0, "Vault should start with no assets");
+        assertEq(vaultParams.asset.balanceOf(address(vault)), 0, "Vault should start with no assets");
         assertEq(vault.totalAssets(), 0, "Vault should start with no assets");
         assertEq(vault.balanceOf(alice), 0, "User should start with no Shares");
 
@@ -87,7 +83,7 @@ contract CredbullVaultTest is Test {
         // Vault should have the assets
         assertEq(vault.totalAssets(), depositAmount, "Vault should now have the assets");
         assertEq(
-            IERC20(asset).balanceOf(custodian),
+            vaultParams.asset.balanceOf(vaultParams.custodian),
             depositAmount + custodiansBalance,
             "Custodian should have received the assets"
         );
@@ -98,29 +94,30 @@ contract CredbullVaultTest is Test {
     }
 
     function test__WithdrawAssetAndBurnShares() public {
+        setRule(true, false, true);
         // ---- Setup Part 1 - Deposit Assets to the vault ---- //
         uint256 depositAmount = 10 ether;
         //Call internal deposit function
         uint256 shares = deposit(alice, depositAmount, true);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(asset).mint(custodian, 1 ether);
-        uint256 finalBalance = MockStablecoin(asset).balanceOf(custodian);
+        MockStablecoin(address(vaultParams.asset)).mint(vaultParams.custodian, 1 ether);
+        uint256 finalBalance = MockStablecoin(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
 
-        vm.startPrank(custodian);
-        IERC20(asset).approve(address(custodian), finalBalance);
-        IERC20(asset).transferFrom(custodian, address(vault), finalBalance);
+        vm.startPrank(vaultParams.custodian);
+        vaultParams.asset.approve(vaultParams.custodian, finalBalance);
+        vaultParams.asset.transferFrom(vaultParams.custodian, address(vault), finalBalance);
         vm.stopPrank();
 
-        vm.prank(owner);
+        vm.prank(vaultParams.owner);
         vault.mature();
 
         // ---- Assert Vault burns shares and Alice receive asset with additional 10% ---
-        uint256 balanceBeforeRedeem = IERC20(asset).balanceOf(alice);
+        uint256 balanceBeforeRedeem = vaultParams.asset.balanceOf(alice);
         vm.startPrank(alice);
         vault.approve(address(vault), shares);
         uint256 assets = vault.redeem(shares, alice, alice);
-        uint256 balanceAfterRedeem = IERC20(asset).balanceOf(alice);
+        uint256 balanceAfterRedeem = vaultParams.asset.balanceOf(alice);
         vm.stopPrank();
 
         assertEq(balanceAfterRedeem, balanceBeforeRedeem + assets, "Alice should recieve finalBalance with 10% yeild");
@@ -133,13 +130,13 @@ contract CredbullVaultTest is Test {
         uint256 finalBalance = depositAmount;
 
         // ---- Transfer assets to vault ---
-        vm.startPrank(custodian);
-        IERC20(asset).approve(address(custodian), finalBalance);
-        IERC20(asset).transferFrom(custodian, address(vault), finalBalance);
+        vm.startPrank(vaultParams.custodian);
+        vaultParams.asset.approve(vaultParams.custodian, finalBalance);
+        vaultParams.asset.transferFrom(vaultParams.custodian, address(vault), finalBalance);
         vm.stopPrank();
 
         // ---- Assert it can't be matured yet ---
-        vm.prank(owner);
+        vm.prank(vaultParams.owner);
         vm.expectRevert(CredbullVault.CredbullVault__NotEnoughBalanceToMature.selector);
         vault.mature();
     }
@@ -153,6 +150,8 @@ contract CredbullVaultTest is Test {
         vm.startPrank(alice);
         vault.approve(address(vault), shares);
 
+        vm.warp(vaultParams.redemptionOpensAt);
+
         vm.expectRevert(CredbullVault.CredbullVault__NotMatured.selector);
         vault.redeem(shares, alice, alice);
         vm.stopPrank();
@@ -165,12 +164,12 @@ contract CredbullVaultTest is Test {
         bool[] memory statuses = new bool[](1);
         statuses[0] = false;
 
-        vm.startPrank(owner);
+        vm.startPrank(vaultParams.owner);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
         vm.expectRevert(CredbullVault.CredbullVault__NotAWhitelistedAddress.selector);
-        vm.warp(vaultOpenTime);
+        vm.warp(vaultParams.depositOpensAt);
         vault.deposit(10 ether, alice);
     }
 
@@ -178,7 +177,15 @@ contract CredbullVaultTest is Test {
         // given that the vault's deposit window is in the future
         // when Alice try to deposit 10 ether
         // then the deposit should be reverted
-        vm.expectRevert(CredbullVault.CredbullVault__VaultNotOpened.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                CredbullVault.CredbullVault__OperationOutsideRequiredWindow.selector,
+                "deposit",
+                vaultParams.depositOpensAt,
+                vaultParams.depositClosesAt,
+                block.timestamp
+            )
+        );
         vault.deposit(10 ether, alice);
     }
 
@@ -192,14 +199,83 @@ contract CredbullVaultTest is Test {
 
     function test__deposit_should_fail_if_the_vault_deposit_window_is_in_the_past() public {
         // given that the vault's deposit window is in the past
-        vm.warp(vault.closesAtTimestamp());
+        vm.warp(vaultParams.depositClosesAt + 1);
 
         // when Alice try to deposit 10 ether
         // then the deposit should be reverted
         vm.startPrank(alice);
-        IERC20(asset).approve(address(vault), 10 ether);
-        vm.expectRevert(CredbullVault.CredbullVault__VaultIsClosed.selector);
+        vaultParams.asset.approve(address(vault), 10 ether);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                CredbullVault.CredbullVault__OperationOutsideRequiredWindow.selector,
+                "deposit",
+                vaultParams.depositOpensAt,
+                vaultParams.depositClosesAt,
+                block.timestamp
+            )
+        );
         vault.deposit(10 ether, alice);
+        vm.stopPrank();
+    }
+
+    function test__withdraw_should_fail_if_the_vault_redemption_window_is_in_the_future() public {
+        setRule(false, true, true);
+        uint256 shares = deposit(alice, 10 ether, true);
+        vm.startPrank(alice);
+        // given that the vault's redemption window is in the future
+        // when Alice try to redeem 10 ether
+        // then the redemption should be reverted
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                CredbullVault.CredbullVault__OperationOutsideRequiredWindow.selector,
+                "withdraw",
+                vaultParams.redemptionOpensAt,
+                vaultParams.redemptionClosesAt,
+                block.timestamp
+            )
+        );
+        vault.redeem(shares, alice, alice);
+        vm.stopPrank();
+    }
+
+    function test__withdraw_should_succeed_if_between_the_vault_redemption_window() public {
+        setRule(false, true, true);
+        uint256 shares = deposit(alice, 10 ether, true);
+        assertEq(vault.balanceOf(alice), 10 ether);
+
+        MockStablecoin token = MockStablecoin(address(vaultParams.asset));
+        token.mint(address(vault), 10 ether);
+
+        vm.startPrank(alice);
+        // given that the vault's redemption window is in the future
+        // when Alice try to redeem 10 ether
+        // then the redemption should be reverted
+        vm.warp(vaultParams.redemptionOpensAt + 1);
+        vault.redeem(shares, alice, alice);
+        vm.stopPrank();
+        assertEq(vault.balanceOf(alice), 0 ether);
+    }
+
+    function test__withdraw_should_fail_if_the_vault_redemption_window_is_in_the_past() public {
+        setRule(false, true, true);
+        uint256 shares = deposit(alice, 10 ether, true);
+        vm.startPrank(alice);
+
+        // given that the vault's redemption window is in the past
+        vm.warp(vaultParams.redemptionClosesAt + 1);
+
+        // when Alice try to redeem 10 ether
+        // then the redemption should be reverted
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                CredbullVault.CredbullVault__OperationOutsideRequiredWindow.selector,
+                "withdraw",
+                vaultParams.redemptionOpensAt,
+                vaultParams.redemptionClosesAt,
+                block.timestamp
+            )
+        );
+        vault.redeem(shares, alice, alice);
         vm.stopPrank();
     }
 
@@ -210,7 +286,7 @@ contract CredbullVaultTest is Test {
         bool[] memory statuses = new bool[](1);
         statuses[0] = false;
 
-        vm.startPrank(owner);
+        vm.startPrank(vaultParams.owner);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
@@ -220,30 +296,30 @@ contract CredbullVaultTest is Test {
     }
 
     function test__ShouldNotRevertOnMaturityModifier() public {
-        setRule(false, true, true);
+        setRule(false, false, true);
 
         uint256 depositAmount = 10 ether;
         uint256 shares = deposit(alice, depositAmount, true);
 
-        vm.prank(custodian);
-        IERC20(asset).transfer(address(vault), depositAmount);
+        vm.prank(vaultParams.custodian);
+        vaultParams.asset.transfer(address(vault), depositAmount);
 
         vm.startPrank(alice);
         vault.approve(address(vault), shares);
 
         vault.redeem(shares, alice, alice);
-        assertEq(IERC20(asset).balanceOf(alice), INITIAL_BALANCE);
+        assertEq(vaultParams.asset.balanceOf(alice), INITIAL_BALANCE);
         vm.stopPrank();
     }
 
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
-        IERC20(asset).approve(address(vault), assets);
+        vaultParams.asset.approve(address(vault), assets);
 
         // now we can deposit, alice is the caller and receiver
         if (warp) {
-            vm.warp(vaultOpenTime);
+            vm.warp(vaultParams.depositOpensAt);
         }
 
         shares = vault.deposit(assets, alice);
@@ -257,19 +333,15 @@ contract CredbullVaultTest is Test {
         rules =
             CredbullVault.Rules({ checkMaturity: maturity, checkVaultOpenStatus: vaultOpen, checkWhitelist: whitelist });
 
-        vm.prank(owner);
+        vm.prank(vaultParams.owner);
         vault.setRules(rules);
     }
 
-    function createTestVault() internal returns (CredbullVault) {
+    function createTestVault() internal returns (CredbullVault, ICredbull.VaultParams memory) {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         ICredbull.VaultParams memory params = config.vaultParams;
 
-        owner = params.owner;
-        asset = address(params.asset);
-        vaultOpenTime = params.openAt;
-        custodian = params.custodian;
-        vm.prank(owner);
-        return factory.createVault(params);
+        vm.prank(params.owner);
+        return (factory.createVault(params), params);
     }
 }
