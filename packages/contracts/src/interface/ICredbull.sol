@@ -32,4 +32,10 @@ abstract contract ICredbull {
         address activityReward;
         address custodian;
     }
+
+    //Struct defining the entites data associated with Credbull Vault
+    struct EntitiesData {
+        address[] entities;
+        uint256[] percentage;
+    }
 }
