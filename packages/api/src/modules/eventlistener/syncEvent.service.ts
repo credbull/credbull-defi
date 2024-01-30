@@ -98,8 +98,8 @@ export class SyncEventService implements OnModuleInit {
     return {
       type: 'fixed_yield' as const,
       status: 'ready' as const,
-      opened_at: new Date(Number(event.args.params.openAt) * 1000).toISOString(),
-      closed_at: new Date(Number(event.args.params.closesAt) * 1000).toISOString(),
+      opened_at: new Date(Number(event.args.params.depositOpensAt) * 1000).toISOString(),
+      closed_at: new Date(Number(event.args.params.depositClosesAt) * 1000).toISOString(),
       address: event.args.vault,
       strategy_address: event.args.vault,
       asset_address: event.args.params.asset,

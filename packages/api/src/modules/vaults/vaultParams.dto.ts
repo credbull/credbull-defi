@@ -21,11 +21,19 @@ export class VaultParamsDto {
 
   @ApiProperty({ type: BigNumber, example: '1705276800' })
   @IsNumber()
-  openAt: BigNumber;
+  depositOpensAt: BigNumber;
 
   @ApiProperty({ type: BigNumber, example: '1705286800' })
   @IsNumber()
-  closesAt: BigNumber;
+  depositClosesAt: BigNumber;
+
+  @ApiProperty({ type: BigNumber, example: '1705276800' })
+  @IsNumber()
+  redemptionOpensAt: BigNumber;
+
+  @ApiProperty({ type: BigNumber, example: '1705286800' })
+  @IsNumber()
+  redemptionClosesAt: BigNumber;
 
   @ApiProperty({ type: String, example: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' })
   @IsString()
