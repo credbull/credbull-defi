@@ -1,19 +1,13 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 
 import { EthersModule } from '../../clients/ethers/ethers.module';
-import { SupabaseModule } from '../../clients/supabase/supabase.module';
+import { ErrorsModule } from '../errors/errors.module';
 
-import { ListenerService } from './listener.service';
+import { SyncEventService } from './syncEvent.service';
 
 @Module({
-  imports: [SupabaseModule, EthersModule],
-  providers: [ListenerService],
-  exports: [ListenerService],
+  imports: [EthersModule, ErrorsModule],
+  providers: [SyncEventService],
+  exports: [SyncEventService],
 })
-export class ListenerModule implements OnModuleInit {
-  constructor(private listener: ListenerService) {}
-
-  onModuleInit() {
-    this.listener.listenToContractEvent();
-  }
-}
+export class ListenerModule {}

@@ -1,4 +1,10 @@
-import { CredbullVault, CredbullVault__factory } from '@credbull/contracts';
+import {
+  CredbullVault,
+  CredbullVaultFactory,
+  CredbullVaultFactory__factory,
+  CredbullVault__factory,
+} from '@credbull/contracts';
+import * as DeploymentData from '@credbull/contracts/deployments/index.json';
 import { Injectable } from '@nestjs/common';
 import { BigNumber } from 'ethers';
 import * as _ from 'lodash';
@@ -12,6 +18,7 @@ import { anyCallHasFailed } from '../../utils/errors';
 
 import { CustodianTransferDto } from './custodian.dto';
 import { CustodianService } from './custodian.service';
+import { VaultParamsDto } from './vaultParams.dto';
 import {
   CalculateProportionsData,
   DistributionConfig,
@@ -29,6 +36,14 @@ export class VaultsService {
 
   async current(): Promise<ServiceResponse<Tables<'vaults'>[]>> {
     return this.supabase.client().from('vaults').select('*').neq('status', 'created').lt('opened_at', 'now()');
+  }
+
+  async createVault(params: VaultParamsDto): Promise<string | undefined> {
+    const chainId = await this.ethers.networkId();
+    const factory = this.factoryContract(DeploymentData[`${chainId}` as '31337'].CredbullVaultFactory[0].address);
+    const estimation = await factory.estimateGas.createVault(params);
+    const response = await responseFromWrite(factory.createVault(params, { gasLimit: estimation }));
+    return response.data?.events?.[1].args?.[0];
   }
 
   async matureOutstanding(): Promise<ServiceResponse<Tables<'vaults'>[]>> {
@@ -181,5 +196,9 @@ export class VaultsService {
 
   private strategy(vault: Tables<'vaults'>): CredbullVault {
     return CredbullVault__factory.connect(vault.strategy_address, this.ethers.deployer());
+  }
+
+  private factoryContract(addr: string): CredbullVaultFactory {
+    return CredbullVaultFactory__factory.connect(addr, this.ethers.deployer());
   }
 }

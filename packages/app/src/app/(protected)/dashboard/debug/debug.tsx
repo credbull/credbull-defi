@@ -1,7 +1,7 @@
 'use client';
 
 import { Tables } from '@credbull/api';
-import { ERC4626__factory, IERC20, MockStablecoin__factory } from '@credbull/contracts';
+import { ERC4626__factory, MockStablecoin__factory } from '@credbull/contracts';
 import { CredbullVaultFactory__factory } from '@credbull/contracts';
 import Deployments from '@credbull/contracts/deployments/index.json';
 import { Button, Card, Flex, Group, NumberInput, SimpleGrid, Text, TextInput } from '@mantine/core';
@@ -288,8 +288,8 @@ const CreateVaultFromFactory = () => {
   const { open } = useNotification();
   const { isConnected, address } = useAccount();
   const { data: client } = useWalletClient();
-  const [isLoading, setLoading] = useState(false);
   const { chain } = useNetwork();
+  const [isLoading, setLoading] = useState(false);
   const chainId = chain ? chain.id.toString() : '31337';
   const deploymentData = Deployments[chainId as '31337'];
   const factoryContractAddress = deploymentData.CredbullVaultFactory[0].address;
@@ -319,8 +319,10 @@ const CreateVaultFromFactory = () => {
         asset: form.values.asset as Address,
         shareName: form.values.shareName,
         shareSymbol: form.values.shareSymbol,
-        openAt: BigInt(form.values.openAt),
-        closesAt: BigInt(form.values.closesAt),
+        depositOpensAt: BigInt(form.values.openAt),
+        depositClosesAt: BigInt(form.values.closesAt),
+        redemptionOpensAt: BigInt(form.values.openAt),
+        redemptionClosesAt: BigInt(form.values.closesAt),
         custodian: form.values.custodian as Address,
         kycProvider: form.values.kycProvider as Address,
         treasury: form.values.treasury as Address,
@@ -383,7 +385,7 @@ export function Debug() {
     pagination: { pageSize: 1 },
   });
 
-  const erc20Address = list?.data[0].asset_address;
+  const erc20Address = list?.data[0]?.asset_address;
 
   return isLoading ? (
     <>Loading...</>
