@@ -46,12 +46,10 @@ export class SyncVaultsService {
     }
 
     //Add all past events if any
-    if (vaults.data.length === 0) {
-      if (events.data.length > 0) {
-        const processedEvents = await this.processEventData(events.data);
-        if (processedEvents.error) {
-          console.log(processedEvents.error);
-        }
+    if (vaults.data.length === 0 && events.data.length > 0) {
+      const processedEvents = await this.processEventData(events.data);
+      if (processedEvents.error) {
+        console.log(processedEvents.error);
       }
       return;
     }
