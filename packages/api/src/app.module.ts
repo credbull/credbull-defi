@@ -7,7 +7,6 @@ import { SupabaseModule } from './clients/supabase/supabase.module';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { AuthenticationModule } from './modules/authentication/authentication.module';
 import { ErrorsModule } from './modules/errors/errors.module';
-import { ListenerModule } from './modules/eventlistener/listener.module';
 import { MetaTxModule } from './modules/metatx/metatx.module';
 import { VaultsModule } from './modules/vaults/vaults.module';
 import { Config } from './utils/module';
@@ -20,7 +19,6 @@ import { Config } from './utils/module';
     AuthenticationModule,
     VaultsModule,
     MetaTxModule,
-    ListenerModule,
     ErrorsModule,
     ScheduleModule.forRoot(),
   ],

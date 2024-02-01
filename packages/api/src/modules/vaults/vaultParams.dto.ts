@@ -1,8 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+import { Expose, Type } from 'class-transformer';
+import { IsArray, IsNumber, IsString } from 'class-validator';
 import { BigNumber } from 'ethers';
 
-export class VaultParamsDto {
+export class EntitesDto {
+  @Expose()
+  type: 'treasury' | 'custodian' | 'activity_reward' | 'vault' | 'kyc_provider';
+
+  @Expose()
+  address: string;
+
+  @Expose()
+  percentage: number;
+}
+
+export class VaultParamsDto extends EntitesDto {
   @ApiProperty({ type: String, example: '0xa0eC68DB71DD667a09863478fa0dCfC7b525871f' })
   @IsString()
   owner: string;
@@ -55,7 +67,16 @@ export class VaultParamsDto {
   @IsNumber()
   promisedYield: BigNumber;
 
+  @ApiProperty({
+    type: EntitesDto,
+    example: [{ type: 'treasury', address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8', percentage: 0.8 }],
+  })
+  @IsArray()
+  @Type(() => EntitesDto)
+  entities: EntitesDto[];
+
   constructor(partial: Partial<VaultParamsDto>) {
+    super();
     Object.assign(this, partial);
   }
 }
