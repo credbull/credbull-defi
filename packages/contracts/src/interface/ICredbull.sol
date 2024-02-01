@@ -11,6 +11,7 @@ abstract contract ICredbull {
     //Struct defining parameters for a vault
     struct VaultParams {
         address owner;
+        address operator;
         IERC20 asset;
         string shareName;
         string shareSymbol;

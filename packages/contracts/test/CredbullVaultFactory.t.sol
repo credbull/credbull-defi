@@ -9,6 +9,8 @@ import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
 import { ICredbull } from "../src/interface/ICredbull.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { CredbullVault } from "../src/CredbullVault.sol";
+import { console2 } from "forge-std/console2.sol";
+import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract CredbullVaultFactoryTest is Test {
     CredbullVaultFactory factory;
@@ -24,14 +26,68 @@ contract CredbullVaultFactoryTest is Test {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         ICredbull.VaultParams memory params = config.vaultParams;
 
-        vm.prank(params.owner);
+        vm.prank(config.factoryParams.operator);
         CredbullVault vault = factory.createVault(params);
 
-        assertEq(vault.owner(), params.owner);
         assertEq(vault.asset(), address(params.asset));
         assertEq(vault.name(), params.shareName);
         assertEq(vault.symbol(), params.shareSymbol);
         assertEq(address(vault.kycProvider()), params.kycProvider);
         assertEq(vault.custodian(), params.custodian);
+    }
+
+    function test__ShouldRevertCreateVaultOnUnAuthorizedUser() public {
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+
+        vm.prank(config.factoryParams.owner);
+        vm.expectRevert();
+        factory.createVault(config.vaultParams);
+    }
+
+    function test__ShouldAllowAdminToChangeOperator() public {
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+        address newOperator = makeAddr("new_operator");
+
+        vm.startPrank(config.factoryParams.owner);
+        factory.revokeRole(factory.OPERATOR_ROLE(), config.factoryParams.operator);
+        factory.grantRole(factory.OPERATOR_ROLE(), newOperator);
+        vm.stopPrank();
+
+        vm.startPrank(config.factoryParams.operator);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                config.factoryParams.operator,
+                factory.OPERATOR_ROLE()
+            )
+        );
+        factory.createVault(config.vaultParams);
+        vm.stopPrank();
+
+        vm.prank(newOperator);
+        factory.createVault(config.vaultParams);
+    }
+
+    function test__VaultCountShouldReturnCorrectVault() public {
+        createVault();
+        assertEq(factory.getTotalVaultCount(), 1);
+    }
+
+    function test__ShouldReturnVaultAtIndex() public {
+        CredbullVault vault = createVault();
+        assertEq(factory.getVaultAtIndex(0), address(vault));
+    }
+
+    function test__ShouldReturnVaultExistStatus() public {
+        CredbullVault vault = createVault();
+        assertEq(factory.isVaultExist(address(vault)), true);
+    }
+
+    function createVault() internal returns (CredbullVault vault) {
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+        ICredbull.VaultParams memory params = config.vaultParams;
+
+        vm.prank(config.factoryParams.operator);
+        vault = factory.createVault(params);
     }
 }
