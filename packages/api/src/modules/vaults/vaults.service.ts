@@ -5,7 +5,7 @@ import {
   CredbullVault__factory,
 } from '@credbull/contracts';
 import * as DeploymentData from '@credbull/contracts/deployments/index.json';
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { BigNumber } from 'ethers';
 import * as _ from 'lodash';
 
@@ -38,81 +38,25 @@ export class VaultsService {
     return this.supabase.client().from('vaults').select('*').neq('status', 'created').lt('opened_at', 'now()');
   }
 
-  async createVault(params: VaultParamsDto): Promise<ServiceResponse<Tables<'vaults'>[]>> {
-    const chainId = await this.ethers.networkId();
-    const factory = this.factoryContract(DeploymentData[`${chainId}` as '31337'].CredbullVaultFactory[0].address);
+  async createVault(params: VaultParamsDto): Promise<ServiceResponse<Tables<'vaults'>>> {
+    const chainId = `${await this.ethers.networkId()}` as keyof typeof DeploymentData;
+    const factory = this.factoryContract(DeploymentData[chainId].CredbullVaultFactory[0].address);
 
-    const estimation = await factory.estimateGas.createVault(params);
-    const response = await responseFromWrite(factory.createVault(params, { gasLimit: estimation }));
-    const vaultAddress = response.data?.events?.[2].args?.[0];
+    const estimation = await responseFromRead(factory.estimateGas.createVault(params));
+    if (estimation.error) return estimation;
 
-    const vaultData = await this.saveVaultDataToDB(params, vaultAddress);
-    if (vaultData.error) return vaultData;
+    const response = await responseFromWrite(factory.createVault(params, { gasLimit: estimation.data }));
+    if (response.error) return response;
 
-    const id = vaultData.data[0].id;
+    const vaultAddress = response.data.events?.[2].args?.[0];
+    const createdVault = await this.createVaultInDB(params, vaultAddress);
 
-    await this.addEntitiesAndDistribution(params.entities, id);
+    if (createdVault.error) return createdVault;
 
-    return vaultData;
-  }
+    const entities = await this.addEntitiesAndDistribution(params.entities, createdVault.data);
+    if (entities.error) return entities;
 
-  private async addEntitiesAndDistribution(entities: EntitesDto[], id: number) {
-    const entitiesMappedData = entities.map((en) => {
-      return {
-        type: en.type,
-        address: en.address,
-        vault_id: id,
-      };
-    });
-
-    const entitiesData = await this.supabase
-      .admin()
-      .from('vault_distribution_entities')
-      .insert(entitiesMappedData)
-      .select();
-    if (entitiesData.error) throw new InternalServerErrorException(entitiesData.error);
-    if (!entitiesData.data) throw new NotFoundException();
-
-    const filteredEntities = entities.filter((i) => i.type !== 'custodian' && i.type !== 'kyc_provider');
-    const distributionData = filteredEntities.map((en, i) => {
-      return {
-        order: i,
-        type: en.type,
-        percentage: en.percentage,
-      };
-    });
-
-    if (entitiesData.data.length > 0) {
-      //Add configs
-      const distributionMappedData = distributionData.map((en) => {
-        return {
-          entity_id: entitiesData.data.filter((i) => i.type === en.type)[0].id,
-          percentage: en.percentage,
-          order: en.order,
-        };
-      });
-
-      const configData = await this.supabase
-        .admin()
-        .from('vault_distribution_configs')
-        .insert(distributionMappedData)
-        .select();
-      if (configData.error) throw new InternalServerErrorException(configData.error);
-    }
-  }
-
-  private async saveVaultDataToDB(params: VaultParamsDto, vaultAddress: string) {
-    const vaultData = {
-      type: 'fixed_yield' as const,
-      status: 'ready' as const,
-      opened_at: new Date(Number(params.depositOpensAt) * 1000).toISOString(),
-      closed_at: new Date(Number(params.depositClosesAt) * 1000).toISOString(),
-      address: vaultAddress,
-      strategy_address: vaultAddress,
-      asset_address: params.asset,
-    };
-
-    return await this.supabase.admin().from('vaults').insert(vaultData).select();
+    return this.readyVaultInDB(createdVault.data);
   }
 
   async matureOutstanding(): Promise<ServiceResponse<Tables<'vaults'>[]>> {
@@ -153,6 +97,61 @@ export class VaultsService {
     }
 
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: maturedVaults };
+  }
+
+  private async addEntitiesAndDistribution(
+    entities: EntitesDto[],
+    vault: Pick<Tables<'vaults'>, 'id'>,
+  ): Promise<ServiceResponse<string>> {
+    const entitiesMappedData = entities.map((en) => ({ type: en.type, address: en.address, vault_id: vault.id }));
+
+    const entitiesData = await this.supabase
+      .admin()
+      .from('vault_distribution_entities')
+      .insert(entitiesMappedData)
+      .select();
+    if (entitiesData.error) return entitiesData;
+    if (!entitiesData.data) return { error: new NotFoundException() };
+
+    const filteredEntities = entities.filter((i) => i.type !== 'custodian' && i.type !== 'kyc_provider');
+    const distributionData = filteredEntities.map((en, i) => ({
+      order: i,
+      type: en.type,
+      percentage: en.percentage,
+    }));
+
+    if (entitiesData.data.length > 0) {
+      const distributionMappedData = distributionData.map((en) => {
+        const entity_id = entitiesData.data.filter((i) => i.type === en.type)[0].id;
+        return { entity_id, percentage: en.percentage, order: en.order };
+      });
+
+      const configData = await this.supabase
+        .admin()
+        .from('vault_distribution_configs')
+        .insert(distributionMappedData)
+        .select();
+      if (configData.error) return configData;
+    }
+    return { data: 'Vault created successfully' };
+  }
+
+  private async createVaultInDB(params: VaultParamsDto, vaultAddress: string) {
+    const vaultData = {
+      type: 'fixed_yield' as const,
+      status: 'created' as const,
+      opened_at: new Date(Number(params.depositOpensAt) * 1000).toISOString(),
+      closed_at: new Date(Number(params.depositClosesAt) * 1000).toISOString(),
+      address: vaultAddress,
+      strategy_address: vaultAddress,
+      asset_address: params.asset,
+    };
+
+    return this.supabase.admin().from('vaults').insert(vaultData).select().single();
+  }
+
+  private async readyVaultInDB(vault: Pick<Tables<'vaults'>, 'id'>) {
+    return this.supabase.admin().from('vaults').update({ status: 'ready' }).eq('id', vault.id).select().single();
   }
 
   private async prepareAllTransfers(

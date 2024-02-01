@@ -68,6 +68,6 @@ export class VaultsController {
     if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 
-    return data[0].address;
+    return data.address;
   }
 }
