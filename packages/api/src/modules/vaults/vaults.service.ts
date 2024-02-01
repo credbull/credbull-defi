@@ -44,7 +44,7 @@ export class VaultsService {
 
     const estimation = await factory.estimateGas.createVault(params);
     const response = await responseFromWrite(factory.createVault(params, { gasLimit: estimation }));
-    const vaultAddress = response.data?.events?.[1].args?.[0];
+    const vaultAddress = response.data?.events?.[2].args?.[0];
 
     const vaultData = await this.saveVaultDataToDB(params, vaultAddress);
     if (vaultData.error) return vaultData;
