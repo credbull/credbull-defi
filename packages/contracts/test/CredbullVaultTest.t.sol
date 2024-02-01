@@ -11,6 +11,7 @@ import { MockStablecoin } from "./mocks/MockStablecoin.sol";
 import { CredbullVaultFactory } from "../src/CredbullVaultFactory.sol";
 import { DeployVaultFactory } from "../script/DeployVaultFactory.s.sol";
 import { ICredbull } from "../src/interface/ICredbull.sol";
+import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract CredbullVaultTest is Test {
     CredbullVault private vault;
@@ -49,10 +50,6 @@ contract CredbullVaultTest is Test {
 
         MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE);
         MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE);
-    }
-
-    function test__OwnerOfContract() public {
-        assertEq(vault.owner(), vaultParams.owner);
     }
 
     function test__ShareNameAndSymbol() public {
@@ -109,7 +106,7 @@ contract CredbullVaultTest is Test {
         vaultParams.asset.transferFrom(vaultParams.custodian, address(vault), finalBalance);
         vm.stopPrank();
 
-        vm.prank(vaultParams.owner);
+        vm.prank(vaultParams.operator);
         vault.mature();
 
         // ---- Assert Vault burns shares and Alice receive asset with additional 10% ---
@@ -136,7 +133,7 @@ contract CredbullVaultTest is Test {
         vm.stopPrank();
 
         // ---- Assert it can't be matured yet ---
-        vm.prank(vaultParams.owner);
+        vm.prank(vaultParams.operator);
         vm.expectRevert(CredbullVault.CredbullVault__NotEnoughBalanceToMature.selector);
         vault.mature();
     }
@@ -312,6 +309,39 @@ contract CredbullVaultTest is Test {
         vm.stopPrank();
     }
 
+    function test__ShouldAllowOnlyOperatorToMatureVault() public {
+        vm.startPrank(vaultParams.owner);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, vaultParams.owner, factory.OPERATOR_ROLE()
+            )
+        );
+        vault.mature();
+        vm.stopPrank();
+    }
+
+    function test__ShouldAllowOwnerToChangeOperator() public {
+        address newOperator = makeAddr("new_operator");
+
+        vm.startPrank(vaultParams.owner);
+        vault.revokeRole(vault.OPERATOR_ROLE(), vaultParams.operator);
+        vault.grantRole(vault.OPERATOR_ROLE(), newOperator);
+        vm.stopPrank();
+
+        vm.startPrank(vaultParams.operator);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, vaultParams.operator, vault.OPERATOR_ROLE()
+            )
+        );
+        vault.mature();
+        vm.stopPrank();
+
+        vm.startPrank(newOperator);
+        vault.mature();
+        vm.stopPrank();
+    }
+
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
@@ -341,7 +371,7 @@ contract CredbullVaultTest is Test {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         ICredbull.VaultParams memory params = config.vaultParams;
 
-        vm.prank(params.owner);
+        vm.prank(config.factoryParams.operator);
         return (factory.createVault(params), params);
     }
 }

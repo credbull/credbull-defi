@@ -19,6 +19,10 @@ export class VaultParamsDto extends EntitesDto {
   @IsString()
   owner: string;
 
+  @ApiProperty({ type: String, example: '0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556' })
+  @IsString()
+  operator: string;
+
   @ApiProperty({ type: String, example: '0x5FbDB2315678afecb367f032d93F642f64180aa3' })
   @IsString()
   asset: string;

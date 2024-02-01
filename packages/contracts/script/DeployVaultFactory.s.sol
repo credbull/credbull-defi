@@ -24,14 +24,17 @@ contract DeployVaultFactory is Script {
         this.deployCredbullEntities(config.entities);
 
         address owner;
+        address operator;
         if (test) {
-            owner = config.vaultParams.owner;
+            owner = config.factoryParams.owner;
+            operator = config.factoryParams.operator;
         } else {
             owner = vm.envAddress("PUBLIC_OWNER_ADDRESS");
+            operator = vm.envAddress("PUBLIC_OPERATOR_ADDRESS");
         }
 
         vm.startBroadcast();
-        factory = new CredbullVaultFactory(owner);
+        factory = new CredbullVaultFactory(owner, operator);
         vm.stopBroadcast();
     }
 

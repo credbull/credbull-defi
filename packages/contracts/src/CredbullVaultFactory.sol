@@ -3,15 +3,15 @@
 pragma solidity ^0.8.19;
 
 import { CredbullVault } from "./CredbullVault.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { ICredbull } from "./interface/ICredbull.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
  * @notice - A factory contract to create vault contract
  */
-contract CredbullVaultFactory is Ownable {
+contract CredbullVaultFactory is AccessControl {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     //Event to emit when a new vault is created
@@ -20,13 +20,22 @@ contract CredbullVaultFactory is Ownable {
     //Address set that contains list of all vault address
     EnumerableSet.AddressSet private allVaults;
 
-    constructor(address owner) Ownable(owner) { }
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+
+    constructor(address owner, address operator) {
+        _grantRole(DEFAULT_ADMIN_ROLE, owner);
+        _grantRole(OPERATOR_ROLE, operator);
+    }
 
     /**
      * @notice - Function to create a new vault. Can be called only by the owner
      * @param _params - The VaultParams
      */
-    function createVault(ICredbull.VaultParams memory _params) public onlyOwner returns (CredbullVault newVault) {
+    function createVault(ICredbull.VaultParams memory _params)
+        public
+        onlyRole(OPERATOR_ROLE)
+        returns (CredbullVault newVault)
+    {
         newVault = new CredbullVault(_params);
 
         emit VaultDeployed(address(newVault), _params);

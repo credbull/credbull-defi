@@ -8,9 +8,15 @@ import { MockKYCProvider } from "../test/mocks/MockKYCProvider.sol";
 import { ICredbull } from "../src/interface/ICredbull.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
+struct FactoryParams {
+    address owner;
+    address operator;
+}
+
 struct NetworkConfig {
     ICredbull.VaultParams vaultParams;
     ICredbull.Entities entities;
+    FactoryParams factoryParams;
 }
 
 contract HelperConfig is Script {
@@ -44,6 +50,7 @@ contract HelperConfig is Script {
             shareName: "Share_sep",
             shareSymbol: "SYM_sep",
             owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
+            operator: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
             custodian: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
             kycProvider: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
             promisedYield: PROMISED_FIXED_YIELD,
@@ -63,7 +70,13 @@ contract HelperConfig is Script {
             treasury: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
         });
 
-        NetworkConfig memory sepoliaConfig = NetworkConfig({ vaultParams: sepoliaVaultParams, entities: entities });
+        FactoryParams memory factoryParams = FactoryParams({
+            owner: vm.envAddress("PUBLIC_OWNER_ADDRESS"),
+            operator: vm.envAddress("PUBLIC_OPERATOR_ADDRESS")
+        });
+
+        NetworkConfig memory sepoliaConfig =
+            NetworkConfig({ vaultParams: sepoliaVaultParams, entities: entities, factoryParams: factoryParams });
 
         return sepoliaConfig;
     }
@@ -90,6 +103,7 @@ contract HelperConfig is Script {
             shareName: "Share_sep",
             shareSymbol: "SYM_sep",
             owner: owner,
+            operator: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8,
             custodian: custodian,
             kycProvider: address(kycProvider),
             promisedYield: PROMISED_FIXED_YIELD,
@@ -108,7 +122,13 @@ contract HelperConfig is Script {
             treasury: makeAddr("treasury")
         });
 
-        NetworkConfig memory anvilConfig = NetworkConfig({ vaultParams: anvilVaultParams, entities: entities });
+        FactoryParams memory factoryParams = FactoryParams({
+            owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
+            operator: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+        });
+
+        NetworkConfig memory anvilConfig =
+            NetworkConfig({ vaultParams: anvilVaultParams, entities: entities, factoryParams: factoryParams });
 
         return anvilConfig;
     }

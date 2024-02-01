@@ -2,7 +2,6 @@
 pragma solidity ^0.8.19;
 
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -10,10 +9,11 @@ import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { console2 } from "forge-std/console2.sol";
 import "../test/mocks/AKYCProvider.sol";
 import { ICredbull } from "./interface/ICredbull.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
 // Vaults exchange Assets for Shares in the Vault
 // see: https://eips.ethereum.org/EIPS/eip-4626
-contract CredbullVault is ICredbull, ERC4626, Ownable {
+contract CredbullVault is ICredbull, ERC4626, AccessControl {
     using Math for uint256;
 
     //Error to revert on withdraw if vault is not matured
@@ -27,6 +27,8 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
     error CredbullVault__OperationOutsideRequiredWindow(
         string operation, uint256 windowOpensAt, uint256 windowClosesAt, uint256 timestamp
     );
+
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     //Address of the custodian to receive the assets on deposit and mint
     address public custodian;
@@ -121,11 +123,9 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
         _;
     }
 
-    constructor(VaultParams memory params)
-        ERC4626(params.asset)
-        ERC20(params.shareName, params.shareSymbol)
-        Ownable(params.owner)
-    {
+    constructor(VaultParams memory params) ERC4626(params.asset) ERC20(params.shareName, params.shareSymbol) {
+        _grantRole(DEFAULT_ADMIN_ROLE, params.owner);
+        _grantRole(OPERATOR_ROLE, params.operator);
         custodian = params.custodian;
         kycProvider = AKYCProvider(params.kycProvider);
         _fixedYield = params.promisedYield;
@@ -192,7 +192,7 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
      * @notice - mature method to mature the vault after the assets that was deposited from the custodian wallet with addition yield earned.
      * @dev - _totalAssetDeposited to be updated to calculate the right amount of asset with yield in proportion to the shares received.
      */
-    function mature() external onlyOwner {
+    function mature() external onlyRole(OPERATOR_ROLE) {
         uint256 currentBalance = IERC20(asset()).balanceOf(address(this));
 
         if (this.expectedAssetsOnMaturity() > currentBalance) {
@@ -208,7 +208,7 @@ contract CredbullVault is ICredbull, ERC4626, Ownable {
      *
      * @param _rules - The rules to be updated
      */
-    function setRules(Rules calldata _rules) external onlyOwner {
+    function setRules(Rules calldata _rules) external onlyRole(DEFAULT_ADMIN_ROLE) {
         rules = _rules;
     }
 }
