@@ -5,7 +5,6 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseClient } from '@supabase/supabase-js';
-import * as _ from 'lodash';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
@@ -60,18 +59,6 @@ export class SyncVaultsService {
       const processedEvents = await this.processEventData(vaultsToBeAdded);
       if (processedEvents.error) {
         console.log(processedEvents.error);
-      }
-      return;
-    }
-
-    //Remove duplicates
-    if (vaults.data.length > events.data.length) {
-      const vaultAddresses = vaults.data.map((vault) => vault.address);
-      const duplicates = _.uniq(_.filter(vaultAddresses, (v, i) => vaultAddresses.indexOf(v) !== i));
-
-      const deleted = await this.supabaseAdmin.from('vaults').delete().in('address', duplicates);
-      if (deleted.error) {
-        console.log(deleted.error);
       }
       return;
     }
