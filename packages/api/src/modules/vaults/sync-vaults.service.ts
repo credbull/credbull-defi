@@ -30,6 +30,13 @@ export class SyncVaultsService {
 
   private async sync() {
     this.supabaseAdmin = this.getSupabaseAdmin();
+
+    const deleteCorrupted = await this.supabaseAdmin.from('vaults').delete().eq('status', 'created');
+    if (deleteCorrupted.error) {
+      console.log(deleteCorrupted.error);
+      return;
+    }
+
     const vaults = await this.supabaseAdmin.from('vaults').select();
     if (vaults.error) {
       console.log(vaults.error);
@@ -46,16 +53,7 @@ export class SyncVaultsService {
     }
 
     //Add all past events if any
-    if (vaults.data.length === 0 && events.data.length > 0) {
-      const processedEvents = await this.processEventData(events.data);
-      if (processedEvents.error) {
-        console.log(processedEvents.error);
-      }
-      return;
-    }
-
-    //add missing data
-    if (vaults.data.length > 0) {
+    if (events.data.length > 0) {
       const vaultsInDB = vaults.data.map((vault) => vault.address);
       const vaultsToBeAdded = events.data.filter((event) => !vaultsInDB.includes(event.args.vault));
 
