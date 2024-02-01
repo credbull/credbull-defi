@@ -50,7 +50,6 @@ export class VaultsService {
 
     const vaultAddress = response.data.events?.[2].args?.[0];
     const createdVault = await this.createVaultInDB(params, vaultAddress);
-
     if (createdVault.error) return createdVault;
 
     const entities = await this.addEntitiesAndDistribution(params.entities, createdVault.data);
