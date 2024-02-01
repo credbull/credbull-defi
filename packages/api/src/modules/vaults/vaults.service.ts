@@ -18,13 +18,13 @@ import { anyCallHasFailed } from '../../utils/errors';
 
 import { CustodianTransferDto } from './custodian.dto';
 import { CustodianService } from './custodian.service';
-import { EntitesDto, VaultParamsDto } from './vaultParams.dto';
 import {
   CalculateProportionsData,
   DistributionConfig,
   calculateProportions,
   prepareDistributionTransfers,
 } from './vaults.domain';
+import { EntitiesDto, VaultParamsDto } from './vaults.dto';
 
 @Injectable()
 export class VaultsService {
@@ -100,7 +100,7 @@ export class VaultsService {
   }
 
   private async addEntitiesAndDistribution(
-    entities: EntitesDto[],
+    entities: EntitiesDto[],
     vault: Pick<Tables<'vaults'>, 'id'>,
   ): Promise<ServiceResponse<string>> {
     const entitiesMappedData = entities.map((en) => ({ type: en.type, address: en.address, vault_id: vault.id }));
@@ -114,11 +114,7 @@ export class VaultsService {
     if (!entitiesData.data) return { error: new NotFoundException() };
 
     const filteredEntities = entities.filter((i) => i.type !== 'custodian' && i.type !== 'kyc_provider');
-    const distributionData = filteredEntities.map((en, i) => ({
-      order: i,
-      type: en.type,
-      percentage: en.percentage,
-    }));
+    const distributionData = filteredEntities.map(({ type, percentage }, order) => ({ order, type, percentage }));
 
     if (entitiesData.data.length > 0) {
       const distributionMappedData = distributionData.map((en) => {
