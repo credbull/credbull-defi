@@ -1,5 +1,14 @@
 import '@credbull/contracts';
-import { BadRequestException, Body, Controller, Get, NotFoundException, Post, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  InternalServerErrorException,
+  NotFoundException,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { SupabaseGuard, SupabaseRoles } from '../../clients/supabase/auth/supabase.guard';
@@ -55,11 +64,10 @@ export class VaultsController {
   @ApiResponse({ status: 400, description: 'Incorrect vault params data' })
   @ApiResponse({ status: 200, description: 'Success', type: VaultsDto })
   async createVault(@Body() dto: VaultParamsDto): Promise<string> {
-    const address = await this.vaults.createVault(dto);
-    if (address) {
-      return address;
-    }
+    const { data, error } = await this.vaults.createVault(dto);
+    if (error) throw new InternalServerErrorException(error);
+    if (!data) throw new NotFoundException();
 
-    return '';
+    return data[0].address;
   }
 }
