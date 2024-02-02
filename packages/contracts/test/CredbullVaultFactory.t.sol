@@ -13,9 +13,11 @@ import { console2 } from "forge-std/console2.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract CredbullVaultFactoryTest is Test {
-    CredbullVaultFactory factory;
+    CredbullVaultFactory private factory;
     DeployVaultFactory private deployer;
     HelperConfig private helperConfig;
+
+    string constant OPTIONS = "{}";
 
     function setUp() public {
         deployer = new DeployVaultFactory();
@@ -27,7 +29,7 @@ contract CredbullVaultFactoryTest is Test {
         ICredbull.VaultParams memory params = config.vaultParams;
 
         vm.prank(config.factoryParams.operator);
-        CredbullVault vault = factory.createVault(params);
+        CredbullVault vault = factory.createVault(params, OPTIONS);
 
         assertEq(vault.asset(), address(params.asset));
         assertEq(vault.name(), params.shareName);
@@ -41,7 +43,7 @@ contract CredbullVaultFactoryTest is Test {
 
         vm.prank(config.factoryParams.owner);
         vm.expectRevert();
-        factory.createVault(config.vaultParams);
+        factory.createVault(config.vaultParams, OPTIONS);
     }
 
     function test__ShouldAllowAdminToChangeOperator() public {
@@ -61,11 +63,11 @@ contract CredbullVaultFactoryTest is Test {
                 factory.OPERATOR_ROLE()
             )
         );
-        factory.createVault(config.vaultParams);
+        factory.createVault(config.vaultParams, OPTIONS);
         vm.stopPrank();
 
         vm.prank(newOperator);
-        factory.createVault(config.vaultParams);
+        factory.createVault(config.vaultParams, OPTIONS);
     }
 
     function test__VaultCountShouldReturnCorrectVault() public {
@@ -88,6 +90,6 @@ contract CredbullVaultFactoryTest is Test {
         ICredbull.VaultParams memory params = config.vaultParams;
 
         vm.prank(config.factoryParams.operator);
-        vault = factory.createVault(params);
+        vault = factory.createVault(params, OPTIONS);
     }
 }

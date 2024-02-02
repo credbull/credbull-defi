@@ -372,6 +372,6 @@ contract CredbullVaultTest is Test {
         ICredbull.VaultParams memory params = config.vaultParams;
 
         vm.prank(config.factoryParams.operator);
-        return (factory.createVault(params), params);
+        return (factory.createVault(params, "{}"), params);
     }
 }

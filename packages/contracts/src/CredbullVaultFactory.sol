@@ -15,7 +15,7 @@ contract CredbullVaultFactory is AccessControl {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     //Event to emit when a new vault is created
-    event VaultDeployed(address indexed vault, ICredbull.VaultParams params);
+    event VaultDeployed(address indexed vault, ICredbull.VaultParams params, string options);
 
     //Address set that contains list of all vault address
     EnumerableSet.AddressSet private allVaults;
@@ -31,14 +31,14 @@ contract CredbullVaultFactory is AccessControl {
      * @notice - Function to create a new vault. Can be called only by the owner
      * @param _params - The VaultParams
      */
-    function createVault(ICredbull.VaultParams memory _params)
+    function createVault(ICredbull.VaultParams memory _params, string calldata _options)
         public
         onlyRole(OPERATOR_ROLE)
         returns (CredbullVault newVault)
     {
         newVault = new CredbullVault(_params);
 
-        emit VaultDeployed(address(newVault), _params);
+        emit VaultDeployed(address(newVault), _params, _options);
 
         allVaults.add(address(newVault));
     }

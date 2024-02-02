@@ -45,10 +45,11 @@ export class VaultsService {
 
     const factory = this.factoryContract(config.data[config.data.length - 1].address);
 
-    const estimation = await responseFromRead(factory.estimateGas.createVault(params));
+    const pptions = JSON.stringify({ entities: params.entities });
+    const estimation = await responseFromRead(factory.estimateGas.createVault(params, pptions));
     if (estimation.error) return estimation;
 
-    const response = await responseFromWrite(factory.createVault(params, { gasLimit: estimation.data }));
+    const response = await responseFromWrite(factory.createVault(params, pptions, { gasLimit: estimation.data }));
     if (response.error) return response;
 
     const vaultAddress = response.data.events?.[2].args?.[0];
@@ -101,7 +102,7 @@ export class VaultsService {
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: maturedVaults };
   }
 
-  private async addEntitiesAndDistribution(
+  public async addEntitiesAndDistribution(
     entities: EntitiesDto[],
     vault: Pick<Tables<'vaults'>, 'id'>,
   ): Promise<ServiceResponse<string>> {

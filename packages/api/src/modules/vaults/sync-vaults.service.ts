@@ -12,11 +12,15 @@ import { ServiceResponse } from '../../types/responses';
 import { Database, Tables } from '../../types/supabase';
 import { responseFromRead } from '../../utils/contracts';
 
+import { VaultParamsDto } from './vaults.dto';
+import { VaultsService } from './vaults.service';
+
 @Injectable()
 export class SyncVaultsService {
   private supabaseAdmin: SupabaseClient<Database>;
 
   constructor(
+    private readonly vaultsService: VaultsService,
     private readonly ethers: EthersService,
     private readonly config: ConfigService,
   ) {}
@@ -87,32 +91,11 @@ export class SyncVaultsService {
     };
   }
 
-  private prepareEntitiesDataFromEvent(events: VaultDeployedEvent[], vaults: Tables<'vaults'>[]) {
+  private addEntitiesAndDistributionFromEvents(events: VaultDeployedEvent[], vaults: Tables<'vaults'>[]) {
     return events.flatMap((event, index) => {
-      return [
-        { vault_id: vaults[index].id, address: event.args.params.custodian, type: 'custodian' as const },
-        { vault_id: vaults[index].id, address: event.args.params.kycProvider, type: 'kyc_provider' as const },
-        { vault_id: vaults[index].id, address: event.args.params.treasury, type: 'treasury' as const },
-        {
-          vault_id: vaults[index].id,
-          address: event.args.params.activityReward,
-          type: 'activity_reward' as const,
-        },
-        { vault_id: vaults[index].id, address: event.args.vault, type: 'vault' as const },
-      ];
+      const { entities } = JSON.parse(event.args.options) as { entities: VaultParamsDto['entities'] };
+      return this.vaultsService.addEntitiesAndDistribution(entities, vaults[index]);
     });
-  }
-
-  private prepareConfigDataFromEntities(entities: Tables<'vault_distribution_entities'>) {
-    if (['custodian', 'kyc_provider'].includes(entities.type)) return [];
-
-    const vault = { order: 0, percentage: 0.2 };
-    const treasury = { order: 1, percentage: 0.8 };
-    const activity_reward = { order: 2, percentage: 1 };
-
-    const config = entities.type === 'vault' ? vault : entities.type === 'treasury' ? treasury : activity_reward;
-
-    return [{ entity_id: entities.id, ...config }];
   }
 
   private async processEventData(events: VaultDeployedEvent[]): Promise<ServiceResponse<any>> {
@@ -124,22 +107,9 @@ export class SyncVaultsService {
     if (newVaults.error) return newVaults;
     if (!newVaults.data) return { error: new Error('No data') };
 
-    //Push entities
-    const entities = await this.supabaseAdmin
-      .from('vault_distribution_entities')
-      .insert(this.prepareEntitiesDataFromEvent(events, newVaults.data))
-      .select();
-    if (entities.error) return entities;
-    if (!entities.data) return { error: new Error('No data') };
-
-    //Push config
-    const configs = await this.supabaseAdmin
-      .from('vault_distribution_configs')
-      .insert(entities.data.flatMap(this.prepareConfigDataFromEntities))
-      .select();
-
-    if (configs.error) return configs;
-    if (!configs.data) return { error: new Error('No data') };
+    const entities = await Promise.all(this.addEntitiesAndDistributionFromEvents(events, newVaults.data));
+    const errors = entities.map((entity) => entity.error).filter((error) => error !== undefined);
+    if (errors.length > 0) return { error: new AggregateError(errors) };
 
     const ids = newVaults.data.map((v) => v.id);
     return this.supabaseAdmin.from('vaults').update({ status: 'ready' }).in('id', ids).select();
