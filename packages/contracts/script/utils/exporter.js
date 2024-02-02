@@ -41,24 +41,22 @@ async function exportAddress() {
     fs.writeFileSync(path.resolve(outputFileName), JSON.stringify(contracts));
 
     let dataToStoreOnDB = [];
-    for(let chainId in contracts) {
-      
-      for(let localContracts in contracts[chainId]) {
+    for (let chainId in contracts) {
+      for (let localContracts in contracts[chainId]) {
         console.log(localContracts);
 
         const data = {
           chainId: chainId,
           contract_name: localContracts,
-          address: contracts[chainId][localContracts][0].address
-        }
+          address: contracts[chainId][localContracts][0].address,
+        };
 
         dataToStoreOnDB.push(data);
       }
     }
-    if(process.env.EXPORT_TO_SUPABASE === 'true') {
+    if (process.env.EXPORT_TO_SUPABASE === 'true') {
       exportToSupabase(dataToStoreOnDB);
     }
-    
   }
   return contracts;
 }
@@ -71,7 +69,6 @@ async function exportToSupabase(dataToStoreOnDB) {
     console.log(config.error);
     throw config.error;
   }
-
 }
 
 (async () => {
