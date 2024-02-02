@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const path = require('path');
 const fs = require('fs');
+const { createClient } = require('@supabase/supabase-js');
 
 async function exportAddress() {
   const contracts = {};
@@ -38,8 +39,39 @@ async function exportAddress() {
     }
 
     fs.writeFileSync(path.resolve(outputFileName), JSON.stringify(contracts));
+
+    let dataToStoreOnDB = [];
+    for(let chainId in contracts) {
+      
+      for(let localContracts in contracts[chainId]) {
+        console.log(localContracts);
+
+        const data = {
+          chainId: chainId,
+          contract_name: localContracts,
+          address: contracts[chainId][localContracts][0].address
+        }
+
+        dataToStoreOnDB.push(data);
+      }
+    }
+    if(process.env.EXPORT_TO_SUPABASE === 'true') {
+      exportToSupabase(dataToStoreOnDB);
+    }
+    
   }
   return contracts;
+}
+
+async function exportToSupabase(dataToStoreOnDB) {
+  const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  const config = await client.from('config').insert(dataToStoreOnDB).select();
+  if (config.error || !config.data) {
+    console.log(config.error);
+    throw config.error;
+  }
+
 }
 
 (async () => {
