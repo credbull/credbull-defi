@@ -14,8 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { SupabaseGuard, SupabaseRoles } from '../../clients/supabase/auth/supabase.guard';
 import { CronGuard } from '../../utils/guards';
 
-import { VaultParamsDto } from './vaultParams.dto';
-import { VaultsDto } from './vaults.dto';
+import { VaultParamsDto, VaultsDto } from './vaults.dto';
 import { VaultsService } from './vaults.service';
 
 @Controller('vaults')
@@ -68,6 +67,6 @@ export class VaultsController {
     if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 
-    return data[0].address;
+    return data.address;
   }
 }
