@@ -316,6 +316,7 @@ const CreateVaultFromFactory = () => {
     args: [
       {
         owner: form.values.owner as Address,
+        operator: form.values.owner as Address,
         asset: form.values.asset as Address,
         shareName: form.values.shareName,
         shareSymbol: form.values.shareSymbol,

@@ -40,7 +40,10 @@ export class VaultsService {
 
   async createVault(params: VaultParamsDto): Promise<ServiceResponse<Tables<'vaults'>>> {
     const chainId = `${await this.ethers.networkId()}` as keyof typeof DeploymentData;
-    const factory = this.factoryContract(DeploymentData[chainId].CredbullVaultFactory[0].address);
+    const config = await this.getFactoryContractAddress(chainId);
+    if (config.error || !config.data) return config;
+
+    const factory = this.factoryContract(config.data[config.data.length - 1].address);
 
     const estimation = await responseFromRead(factory.estimateGas.createVault(params));
     if (estimation.error) return estimation;
@@ -55,7 +58,7 @@ export class VaultsService {
     const entities = await this.addEntitiesAndDistribution(params.entities, createdVault.data);
     if (entities.error) return entities;
 
-    return this.readyVaultInDB(createdVault.data);
+    return await this.readyVaultInDB(createdVault.data);
   }
 
   async matureOutstanding(): Promise<ServiceResponse<Tables<'vaults'>[]>> {
@@ -143,6 +146,15 @@ export class VaultsService {
     };
 
     return this.supabase.admin().from('vaults').insert(vaultData).select().single();
+  }
+
+  private async getFactoryContractAddress(chainId: string) {
+    return this.supabase
+      .admin()
+      .from('config')
+      .select()
+      .eq('contract_name', 'CredbullVaultFactory')
+      .eq('chainId', chainId);
   }
 
   private async readyVaultInDB(vault: Pick<Tables<'vaults'>, 'id'>) {
