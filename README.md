@@ -20,6 +20,8 @@
 
 ## Setup project locally
 
+- Ìf you only want to work on the contracts, you don't need to setup the whole project. Please go directly to [`contracts/`](./packages/contracts/README.md) and follow the instructions there.
+---
 - Ensure that you have:
     - NodeJS + Yarn ([install yarn](https://yarnpkg.com/getting-started/install))
     - Foundry ([install forge](https://book.getfoundry.sh/getting-started/installation))
