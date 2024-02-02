@@ -31,6 +31,10 @@
 
 - Ensure you have all the environment variables set in `.env`/`.env.local`/etc files in the root of each package. See
   the samples to check which variables are missing (ex: `.env.local.sample`).
+  - Most variables should be already configured for local development. Missing variables:
+    - /contracts
+      - PUBLIC_OWNER_ADDRESS=your-wallet-address
+      - PUBLIC_OPERATOR_ADDRESS=your-wallet-address
 
 - Then cd into packages/api and run `supabase start` and follow the instructions from the cli
 
