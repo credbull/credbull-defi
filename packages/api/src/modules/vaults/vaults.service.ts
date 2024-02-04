@@ -46,7 +46,7 @@ export class VaultsService {
 
     const factory = await this.factoryContract(factoryAddress.data.address);
 
-    const options = JSON.stringify({ entities: params.entities });
+    const options = JSON.stringify({ entities: params.entities, tenant: params.tenant });
     const estimation = await responseFromRead(factory.estimateGas.createVault(params, options));
     if (estimation.error) return estimation;
 

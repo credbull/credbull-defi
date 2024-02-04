@@ -1,8 +1,14 @@
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 
-import { headers, login, supabase } from './utils/helpers';
+import { headers, login, supabase, userByEmail } from './utils/helpers';
 
-const createParams = (params: { kycProvider?: string; asset?: string; matured?: boolean; upside?: string }) => {
+const createParams = (params: {
+  kycProvider?: string;
+  asset?: string;
+  matured?: boolean;
+  upside?: string;
+  tenant?: string;
+}) => {
   const owner = process.env.PUBLIC_OWNER_ADDRESS;
   const operator = process.env.PUBLIC_OPERATOR_ADDRESS;
 
@@ -50,10 +56,14 @@ const createParams = (params: { kycProvider?: string; asset?: string; matured?: 
     treasury,
     activityReward,
     entities,
+    tenant: params.tenant,
   };
 };
 
-export const main = (scenarios: { matured: boolean; upside: boolean }, params?: { upsideVault: string }) => {
+export const main = (
+  scenarios: { matured: boolean; upside: boolean; tenant: boolean },
+  params?: { upsideVault: string; tenantEmail: string },
+) => {
   setTimeout(async () => {
     console.log('\n');
     console.log('=====================================');
@@ -77,6 +87,7 @@ export const main = (scenarios: { matured: boolean; upside: boolean }, params?: 
           asset,
           matured: scenarios.matured,
           upside: scenarios.upside ? params?.upsideVault : undefined,
+          tenant: scenarios.tenant && params?.tenantEmail ? (await userByEmail(params?.tenantEmail)).id : undefined,
         }),
       ),
       ...adminHeaders,

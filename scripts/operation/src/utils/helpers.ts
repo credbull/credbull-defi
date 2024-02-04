@@ -9,6 +9,17 @@ export const supabase = (opts?: { admin: boolean }) =>
     opts?.admin ? process.env.SUPABASE_SERVICE_ROLE_KEY : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   );
 
+export const userByEmail = async (email: string) => {
+  const client = supabase({ admin: true });
+  const listUsers = await client.auth.admin.listUsers({ perPage: 10000 });
+  if (listUsers.error) throw listUsers.error;
+
+  const user = listUsers.data.users.find((u) => u.email === email);
+  if (!user) throw new Error('No User');
+
+  return user;
+};
+
 export const headers = (session?: Awaited<ReturnType<typeof login>>) => {
   return {
     headers: {

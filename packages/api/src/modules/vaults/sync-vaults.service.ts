@@ -84,6 +84,7 @@ export class SyncVaultsService {
   }
 
   private prepareVaultDataFromEvent(event: VaultDeployedEvent) {
+    const { tenant } = JSON.parse(event.args.options) as Pick<VaultParamsDto, 'entities' | 'tenant'>;
     return {
       type: 'fixed_yield' as const,
       status: 'created' as const,
@@ -94,12 +95,13 @@ export class SyncVaultsService {
       address: event.args.vault,
       strategy_address: event.args.vault,
       asset_address: event.args.params.asset,
+      tenant,
     } as Tables<'vaults'>;
   }
 
   private addEntitiesAndDistributionFromEvents(events: VaultDeployedEvent[], vaults: Tables<'vaults'>[]) {
     return events.flatMap((event, index) => {
-      const { entities } = JSON.parse(event.args.options) as { entities: VaultParamsDto['entities'] };
+      const { entities } = JSON.parse(event.args.options) as Pick<VaultParamsDto, 'entities' | 'tenant'>;
       return addEntitiesAndDistribution(entities, vaults[index], this.supabaseAdmin);
     });
   }
