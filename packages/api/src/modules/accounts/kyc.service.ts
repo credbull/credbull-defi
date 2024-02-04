@@ -61,7 +61,7 @@ export class KycService {
     const distinctProviders = _.uniqBy(providers.data ?? [], 'address');
 
     for (const { address } of distinctProviders) {
-      const provider = this.getOnChainProvider(address);
+      const provider = await this.getOnChainProvider(address);
       const { error, data } = await responseFromRead(provider.status(dto.address));
       if (error) {
         errors.push(error);
@@ -97,7 +97,7 @@ export class KycService {
     let status = false;
 
     for (const kyc of kycProviders) {
-      const provider = this.getOnChainProvider(kyc.address);
+      const provider = await this.getOnChainProvider(kyc.address);
       const { error, data } = await responseFromRead(provider.status(address));
       if (error) {
         errors.push(error);
@@ -110,7 +110,7 @@ export class KycService {
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: status };
   }
 
-  private getOnChainProvider(address: string) {
-    return AKYCProvider__factory.connect(address, this.ethers.deployer());
+  private async getOnChainProvider(address: string) {
+    return AKYCProvider__factory.connect(address, await this.ethers.deployer());
   }
 }

@@ -62,11 +62,11 @@ export class VaultsController {
   @ApiOperation({ summary: 'Create a new vault' })
   @ApiResponse({ status: 400, description: 'Incorrect vault params data' })
   @ApiResponse({ status: 200, description: 'Success', type: VaultsDto })
-  async createVault(@Body() dto: VaultParamsDto): Promise<string> {
+  async createVault(@Body() dto: VaultParamsDto): Promise<VaultsDto> {
     const { data, error } = await this.vaults.createVault(dto);
     if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 
-    return data.address;
+    return { data: [data] };
   }
 }

@@ -17,7 +17,7 @@ export const main = () => {
 
     // console.log('Bob: signs a message with his wallet.');
     const bobSigner = signer(process.env.BOB_PRIVATE_KEY);
-    const message = await linkWalletMessage(bobSigner.address);
+    const message = await linkWalletMessage(bobSigner);
     const signature = await bobSigner.signMessage(message);
     console.log('Bob: signs a message with his wallet. - OK');
 

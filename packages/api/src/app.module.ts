@@ -1,4 +1,4 @@
-import { ClassSerializerInterceptor, Module, OnModuleInit, ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module, ValidationPipe } from '@nestjs/common';
 import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 
@@ -29,8 +29,4 @@ import { Config } from './utils/module';
     },
   ],
 })
-export class AppModule implements OnModuleInit {
-  onModuleInit() {
-    console.log('App module init');
-  }
-}
+export class AppModule {}

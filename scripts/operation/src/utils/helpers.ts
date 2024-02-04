@@ -28,14 +28,15 @@ export const login = async (opts?: { admin: boolean }): Promise<{ access_token: 
   return signIn.json();
 };
 
-export const linkWalletMessage = async (address: string) => {
+export const linkWalletMessage = async (signer: Wallet) => {
+  const chainId = await signer.getChainId();
   const preMessage = new SiweMessage({
     domain: 'localhost:3000',
-    address,
+    address: signer.address,
     statement: 'By connecting your wallet, you agree to the Terms of Service and Privacy Policy.',
     uri: 'http://localhost:3000',
     version: '1',
-    chainId: Number(process.env.NEXT_PUBLIC_TARGET_NETWORK_ID),
+    chainId,
     nonce: generateNonce(),
   });
 

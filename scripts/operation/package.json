@@ -9,6 +9,7 @@
     "@credbull/contracts": "workspace:^",
     "@supabase/supabase-js": "^2.39.1",
     "compression": "^1.7.4",
+    "date-fns": "^3.3.1",
     "dotenv": "^16.3.1",
     "ethers": "^5.7.2",
     "siwe": "^2.1.4",

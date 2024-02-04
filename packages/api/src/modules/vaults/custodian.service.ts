@@ -18,12 +18,12 @@ export class CustodianService {
   ) {}
 
   async totalAssets(vault: Tables<'vaults'>, custodianAddress: string): Promise<ServiceResponse<BigNumber>> {
-    const asset = this.asset(vault);
+    const asset = await this.asset(vault);
     return responseFromRead(asset.balanceOf(custodianAddress));
   }
 
   async transfer(dto: CustodianTransferDto): Promise<ServiceResponse<CustodianTransferDto>> {
-    const asset = this.asset(dto);
+    const asset = await this.asset(dto);
 
     const approve = await responseFromWrite(asset.approve(dto.custodian_address, dto.amount));
     if (approve.error) return approve;
@@ -48,7 +48,7 @@ export class CustodianService {
       .eq('type', 'custodian');
   }
 
-  private asset(vault: Pick<Tables<'vaults'>, 'asset_address'>) {
-    return ERC20__factory.connect(vault.asset_address, this.ethers.custodian());
+  private async asset(vault: Pick<Tables<'vaults'>, 'asset_address'>) {
+    return ERC20__factory.connect(vault.asset_address, await this.ethers.custodian());
   }
 }

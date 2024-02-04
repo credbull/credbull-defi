@@ -86,7 +86,7 @@ describe('AccountsController', () => {
     select.mockResolvedValueOnce({ data: [] } as any);
 
     admin.from.mockReturnValue({ select, insert } as any);
-    ethers.deployer.mockReturnValue({} as any);
+    ethers.deployer.mockResolvedValue({} as any);
 
     kyc.status.mockResolvedValueOnce(false);
     kyc.updateStatus.mockResolvedValueOnce({} as any);

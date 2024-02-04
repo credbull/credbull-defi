@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 
 import { EthersService } from './ethers.service';
 
@@ -6,8 +6,4 @@ import { EthersService } from './ethers.service';
   providers: [EthersService],
   exports: [EthersService],
 })
-export class EthersModule implements OnModuleInit {
-  onModuleInit() {
-    console.log('On ethers module init');
-  }
-}
+export class EthersModule {}

@@ -23,7 +23,8 @@ import {
   calculateProportions,
   prepareDistributionTransfers,
 } from './vaults.domain';
-import { EntitiesDto, VaultParamsDto } from './vaults.dto';
+import { VaultParamsDto } from './vaults.dto';
+import { addEntitiesAndDistribution, getFactoryContractAddress } from './vaults.repository';
 
 @Injectable()
 export class VaultsService {
@@ -39,24 +40,24 @@ export class VaultsService {
 
   async createVault(params: VaultParamsDto): Promise<ServiceResponse<Tables<'vaults'>>> {
     const chainId = await this.ethers.networkId();
-    const factoryAddress = await this.getFactoryContractAddress(chainId.toString());
+    const factoryAddress = await getFactoryContractAddress(chainId.toString(), this.supabase.admin());
     if (factoryAddress.error) return factoryAddress;
     if (!factoryAddress.data) return { error: new NotFoundException() };
 
-    const factory = this.factoryContract(factoryAddress.data.address);
+    const factory = await this.factoryContract(factoryAddress.data.address);
 
-    const pptions = JSON.stringify({ entities: params.entities });
-    const estimation = await responseFromRead(factory.estimateGas.createVault(params, pptions));
+    const options = JSON.stringify({ entities: params.entities });
+    const estimation = await responseFromRead(factory.estimateGas.createVault(params, options));
     if (estimation.error) return estimation;
 
-    const response = await responseFromWrite(factory.createVault(params, pptions, { gasLimit: estimation.data }));
+    const response = await responseFromWrite(factory.createVault(params, options, { gasLimit: estimation.data }));
     if (response.error) return response;
 
     const vaultAddress = response.data.events?.[2].args?.[0];
     const createdVault = await this.createVaultInDB(params, vaultAddress);
     if (createdVault.error) return createdVault;
 
-    const entities = await this.addEntitiesAndDistribution(params.entities, createdVault.data);
+    const entities = await addEntitiesAndDistribution(params.entities, createdVault.data, this.supabase.admin());
     if (entities.error) return entities;
 
     return await this.readyVaultInDB(createdVault.data);
@@ -102,47 +103,6 @@ export class VaultsService {
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: maturedVaults };
   }
 
-  public async addEntitiesAndDistribution(
-    entities: EntitiesDto[],
-    vault: Pick<Tables<'vaults'>, 'id'>,
-  ): Promise<ServiceResponse<string>> {
-    const entitiesMappedData = entities.map((en) => ({ type: en.type, address: en.address, vault_id: vault.id }));
-
-    const entitiesData = await this.supabase.admin().from('vault_entities').insert(entitiesMappedData).select();
-    if (entitiesData.error) return entitiesData;
-    if (!entitiesData.data) return { error: new NotFoundException() };
-
-    const filteredEntities = entities.filter((i) => i.type !== 'custodian' && i.type !== 'kyc_provider');
-    const distributionData = filteredEntities.map(({ type, percentage }, order) => ({ order, type, percentage }));
-
-    if (entitiesData.data.length > 0) {
-      const distributionMappedData = distributionData.map((en) => {
-        const entity_id = entitiesData.data.filter((i) => i.type === en.type)[0].id;
-        return { entity_id, percentage: en.percentage, order: en.order };
-      });
-
-      const configData = await this.supabase
-        .admin()
-        .from('vault_distribution_configs')
-        .insert(distributionMappedData)
-        .select();
-      if (configData.error) return configData;
-    }
-    return { data: 'Vault created successfully' };
-  }
-
-  public async getFactoryContractAddress(
-    chainId: string,
-  ): Promise<ServiceResponse<Tables<'contracts_addresses'> | null | undefined>> {
-    return this.supabase
-      .admin()
-      .from('contracts_addresses')
-      .select()
-      .eq('contract_name', 'CredbullVaultFactory')
-      .eq('chain_dd', chainId)
-      .single();
-  }
-
   private async createVaultInDB(params: VaultParamsDto, vaultAddress: string) {
     const vaultData = {
       type: 'fixed_yield' as const,
@@ -152,7 +112,8 @@ export class VaultsService {
       address: vaultAddress,
       strategy_address: vaultAddress,
       asset_address: params.asset,
-    };
+      tenant: params.tenant,
+    } as Tables<'vaults'>;
 
     return this.supabase.admin().from('vaults').insert(vaultData).select().single();
   }
@@ -216,7 +177,7 @@ export class VaultsService {
 
     // create the transfer dto for each vault
     for (const vault of vaults) {
-      const requiredData = await Promise.all(this.requiredDataForVaults(vault, custodianAddress));
+      const requiredData = await Promise.all(await this.requiredDataForVaults(vault, custodianAddress));
       for (const call of requiredData) if (call.error) errors.push(call.error);
       if (anyCallHasFailed(requiredData)) continue;
 
@@ -242,8 +203,8 @@ export class VaultsService {
     return { data: dtos };
   }
 
-  private requiredDataForVaults(vault: Tables<'vaults'>, custodianAddress: string) {
-    const contract = this.contract(vault);
+  private async requiredDataForVaults(vault: Tables<'vaults'>, custodianAddress: string) {
+    const contract = await this.contract(vault);
     return [responseFromRead(contract.expectedAssetsOnMaturity()), this.custodian.totalAssets(vault, custodianAddress)];
   }
 
@@ -257,7 +218,7 @@ export class VaultsService {
   }
 
   private async mature(vault: Tables<'vaults'>): Promise<ServiceResponse<Tables<'vaults'>[]>> {
-    const strategy = this.strategy(vault);
+    const strategy = await this.strategy(vault);
 
     const maturedOnChain = await responseFromWrite(strategy.mature(this.ethers.overrides()));
     if (maturedOnChain.error) return maturedOnChain;
@@ -265,15 +226,15 @@ export class VaultsService {
     return this.supabase.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id).select();
   }
 
-  private contract(vault: Tables<'vaults'>): CredbullVault {
-    return CredbullVault__factory.connect(vault.address, this.ethers.deployer());
+  private async contract(vault: Tables<'vaults'>): Promise<CredbullVault> {
+    return CredbullVault__factory.connect(vault.address, await this.ethers.deployer());
   }
 
-  private strategy(vault: Tables<'vaults'>): CredbullVault {
-    return CredbullVault__factory.connect(vault.strategy_address, this.ethers.deployer());
+  private async strategy(vault: Tables<'vaults'>): Promise<CredbullVault> {
+    return CredbullVault__factory.connect(vault.strategy_address, await this.ethers.deployer());
   }
 
-  private factoryContract(addr: string): CredbullVaultFactory {
-    return CredbullVaultFactory__factory.connect(addr, this.ethers.deployer());
+  private async factoryContract(addr: string): Promise<CredbullVaultFactory> {
+    return CredbullVaultFactory__factory.connect(addr, await this.ethers.deployer());
   }
 }

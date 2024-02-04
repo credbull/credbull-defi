@@ -12,14 +12,13 @@ import { Database, Tables } from '../../types/supabase';
 import { responseFromRead } from '../../utils/contracts';
 
 import { VaultParamsDto } from './vaults.dto';
-import { VaultsService } from './vaults.service';
+import { addEntitiesAndDistribution, getFactoryContractAddress } from './vaults.repository';
 
 @Injectable()
 export class SyncVaultsService {
   private supabaseAdmin: SupabaseClient<Database>;
 
   constructor(
-    private readonly vaultsService: VaultsService,
     private readonly ethers: EthersService,
     private readonly config: ConfigService,
   ) {}
@@ -46,13 +45,13 @@ export class SyncVaultsService {
     }
 
     const chainId = await this.ethers.networkId();
-    const factoryAddress = await this.vaultsService.getFactoryContractAddress(chainId.toString());
+    const factoryAddress = await getFactoryContractAddress(chainId.toString(), this.supabaseAdmin);
     if (factoryAddress.error || !factoryAddress.data) {
       console.log(factoryAddress.error || 'No factory address');
       return;
     }
 
-    const factoryContract = this.getFactoryContract(factoryAddress.data.address);
+    const factoryContract = await this.getFactoryContract(factoryAddress.data.address);
     const eventFilter = factoryContract.filters.VaultDeployed();
     const events = await responseFromRead(factoryContract.queryFilter(eventFilter));
     if (events.error) {
@@ -80,8 +79,8 @@ export class SyncVaultsService {
     );
   }
 
-  private getFactoryContract(addr: string): CredbullVaultFactory {
-    return CredbullVaultFactory__factory.connect(addr, this.ethers.deployer());
+  private async getFactoryContract(addr: string): Promise<CredbullVaultFactory> {
+    return CredbullVaultFactory__factory.connect(addr, await this.ethers.deployer());
   }
 
   private prepareVaultDataFromEvent(event: VaultDeployedEvent) {
@@ -99,7 +98,7 @@ export class SyncVaultsService {
   private addEntitiesAndDistributionFromEvents(events: VaultDeployedEvent[], vaults: Tables<'vaults'>[]) {
     return events.flatMap((event, index) => {
       const { entities } = JSON.parse(event.args.options) as { entities: VaultParamsDto['entities'] };
-      return this.vaultsService.addEntitiesAndDistribution(entities, vaults[index]);
+      return addEntitiesAndDistribution(entities, vaults[index], this.supabaseAdmin);
     });
   }
 

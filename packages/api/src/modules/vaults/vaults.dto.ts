@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsArray, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 import { BigNumber } from 'ethers';
 
 import { VaultDto } from '../../types/db.dto';
@@ -95,6 +95,11 @@ export class VaultParamsDto extends EntitiesDto {
   @IsArray()
   @Type(() => EntitiesDto)
   entities: EntitiesDto[];
+
+  @ApiProperty({ type: String, nullable: true })
+  @IsString()
+  @IsOptional()
+  tenant?: string;
 
   constructor(partial: Partial<VaultParamsDto>) {
     super();
