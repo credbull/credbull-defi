@@ -69,7 +69,7 @@ export class VaultsService {
       .from('vaults')
       .select('*')
       .eq('status', 'ready')
-      .lte('closed_at', 'now()');
+      .lte('redemptions_opened_at', 'now()');
 
     if (vaults.error) return vaults;
     if (!vaults.data || vaults.data.length === 0) return { data: [] };
