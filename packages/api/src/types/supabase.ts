@@ -3,6 +3,30 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
+      contracts_addresses: {
+        Row: {
+          address: string;
+          chain_id: string;
+          contract_name: string;
+          created_at: string;
+          id: number;
+        };
+        Insert: {
+          address: string;
+          chain_id: string;
+          contract_name: string;
+          created_at?: string;
+          id?: number;
+        };
+        Update: {
+          address?: string;
+          chain_id?: string;
+          contract_name?: string;
+          created_at?: string;
+          id?: number;
+        };
+        Relationships: [];
+      };
       kyc_events: {
         Row: {
           address: string;

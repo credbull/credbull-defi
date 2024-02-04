@@ -46,7 +46,7 @@ async function exportAddress() {
         console.log(localContracts);
 
         const data = {
-          chainId: chainId,
+          chain_id: chainId,
           contract_name: localContracts,
           address: contracts[chainId][localContracts][0].address,
         };
@@ -64,7 +64,7 @@ async function exportAddress() {
 async function exportToSupabase(dataToStoreOnDB) {
   const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  const config = await client.from('config').insert(dataToStoreOnDB).select();
+  const config = await client.from('contracts_addresses').insert(dataToStoreOnDB).select();
   if (config.error || !config.data) {
     console.log(config.error);
     throw config.error;

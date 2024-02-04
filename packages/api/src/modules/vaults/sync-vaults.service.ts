@@ -1,5 +1,4 @@
 import { CredbullVaultFactory, CredbullVaultFactory__factory } from '@credbull/contracts';
-import * as DeploymentData from '@credbull/contracts/deployments/index.json';
 import { VaultDeployedEvent } from '@credbull/contracts/types/CredbullVaultFactory';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -46,8 +45,14 @@ export class SyncVaultsService {
       return;
     }
 
-    const chainId = `${await this.ethers.networkId()}` as keyof typeof DeploymentData;
-    const factoryContract = this.getFactoryContract(DeploymentData[chainId].CredbullVaultFactory[0].address);
+    const chainId = await this.ethers.networkId();
+    const factoryAddress = await this.vaultsService.getFactoryContractAddress(chainId.toString());
+    if (factoryAddress.error || !factoryAddress.data) {
+      console.log(factoryAddress.error || 'No factory address');
+      return;
+    }
+
+    const factoryContract = this.getFactoryContract(factoryAddress.data.address);
     const eventFilter = factoryContract.filters.VaultDeployed();
     const events = await responseFromRead(factoryContract.queryFilter(eventFilter));
     if (events.error) {

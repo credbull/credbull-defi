@@ -4,7 +4,6 @@ import {
   CredbullVaultFactory__factory,
   CredbullVault__factory,
 } from '@credbull/contracts';
-import * as DeploymentData from '@credbull/contracts/deployments/index.json';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BigNumber } from 'ethers';
 import * as _ from 'lodash';
@@ -39,11 +38,12 @@ export class VaultsService {
   }
 
   async createVault(params: VaultParamsDto): Promise<ServiceResponse<Tables<'vaults'>>> {
-    const chainId = `${await this.ethers.networkId()}` as keyof typeof DeploymentData;
-    const config = await this.getFactoryContractAddress(chainId);
-    if (config.error || !config.data) return config;
+    const chainId = await this.ethers.networkId();
+    const factoryAddress = await this.getFactoryContractAddress(chainId.toString());
+    if (factoryAddress.error) return factoryAddress;
+    if (!factoryAddress.data) return { error: new NotFoundException() };
 
-    const factory = this.factoryContract(config.data[config.data.length - 1].address);
+    const factory = this.factoryContract(factoryAddress.data.address);
 
     const pptions = JSON.stringify({ entities: params.entities });
     const estimation = await responseFromRead(factory.estimateGas.createVault(params, pptions));
@@ -131,6 +131,18 @@ export class VaultsService {
     return { data: 'Vault created successfully' };
   }
 
+  public async getFactoryContractAddress(
+    chainId: string,
+  ): Promise<ServiceResponse<Tables<'contracts_addresses'> | null | undefined>> {
+    return this.supabase
+      .admin()
+      .from('contracts_addresses')
+      .select()
+      .eq('contract_name', 'CredbullVaultFactory')
+      .eq('chain_dd', chainId)
+      .single();
+  }
+
   private async createVaultInDB(params: VaultParamsDto, vaultAddress: string) {
     const vaultData = {
       type: 'fixed_yield' as const,
@@ -143,15 +155,6 @@ export class VaultsService {
     };
 
     return this.supabase.admin().from('vaults').insert(vaultData).select().single();
-  }
-
-  private async getFactoryContractAddress(chainId: string) {
-    return this.supabase
-      .admin()
-      .from('config')
-      .select()
-      .eq('contract_name', 'CredbullVaultFactory')
-      .eq('chainId', chainId);
   }
 
   private async readyVaultInDB(vault: Pick<Tables<'vaults'>, 'id'>) {
