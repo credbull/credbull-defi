@@ -14,6 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { SupabaseGuard, SupabaseRoles } from '../../clients/supabase/auth/supabase.guard';
 import { CronGuard } from '../../utils/guards';
 
+import { groupVaultsPerStrategy } from './vaults.domain';
 import { VaultParamsDto, VaultsDto } from './vaults.dto';
 import { VaultsService } from './vaults.service';
 
@@ -31,13 +32,13 @@ export class VaultsController {
     description: 'Success',
     type: VaultsDto,
   })
-  async current(): Promise<VaultsDto> {
+  async current(): Promise<VaultsDto[]> {
     const { data, error } = await this.vaults.current();
 
     if (error) throw new BadRequestException(error);
     if (!data) throw new NotFoundException();
 
-    return new VaultsDto({ data });
+    return groupVaultsPerStrategy(data);
   }
 
   @Get('/mature-outstanding')
@@ -48,13 +49,13 @@ export class VaultsController {
     description: 'Success',
     type: VaultsDto,
   })
-  async matureOutstanding(): Promise<VaultsDto> {
+  async matureOutstanding(): Promise<VaultsDto[]> {
     const { data, error } = await this.vaults.matureOutstanding();
 
     if (error) throw new BadRequestException(error);
     if (!data) throw new NotFoundException();
 
-    return new VaultsDto({ data });
+    return groupVaultsPerStrategy(data);
   }
 
   @Post('/create-vault')
@@ -64,9 +65,10 @@ export class VaultsController {
   @ApiResponse({ status: 200, description: 'Success', type: VaultsDto })
   async createVault(@Body() dto: VaultParamsDto): Promise<VaultsDto> {
     const { data, error } = await this.vaults.createVault(dto);
+
     if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 
-    return { data: [data] };
+    return new VaultsDto({ address: data.strategy_address, data: [data] });
   }
 }

@@ -1,11 +1,13 @@
 import { BigNumber } from 'ethers';
 import { formatEther, parseEther } from 'ethers/lib/utils';
+import * as _ from 'lodash';
 import { z } from 'zod';
 
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
 
 import { CustodianTransferDto } from './custodian.dto';
+import { VaultsDto } from './vaults.dto';
 
 export const DistributionConfigSchema = z.object({
   percentage: z.number(),
@@ -73,3 +75,9 @@ export function calculateDistribution(
     return { error: e };
   }
 }
+
+export const groupVaultsPerStrategy = (vaults: Tables<'vaults'>[]) => {
+  const vaultsPerStrategy = _.chain(vaults).groupBy('strategy_address').value();
+
+  return Object.keys(vaultsPerStrategy).map((address) => new VaultsDto({ address, data: vaultsPerStrategy[address] }));
+};

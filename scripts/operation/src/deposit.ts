@@ -47,11 +47,10 @@ export const main = () => {
     });
 
     const vaults = await vaultsResponse.json();
-    console.log('Bob: queries for existing vaults. - OK');
 
-    // console.log('Bob: gives the approval to the vault to swap it`s USDC.');
-    const vaultAddress = vaults['data'][0].address;
-    const usdcAddress = vaults['data'][0].asset_address;
+    console.log('Bob: queries for existing vaults. - OK');
+    const vaultAddress = vaults[0]['data'][0].address;
+    const usdcAddress = vaults[0]['data'][0].asset_address;
 
     const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
     const mintTx = await usdc.mint(bobSigner.address, parseEther('1000'));

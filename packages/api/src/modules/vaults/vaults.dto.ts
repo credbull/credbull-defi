@@ -9,11 +9,17 @@ import { Tables } from '../../types/supabase';
 export class VaultsDto {
   @IsArray()
   @ApiProperty({
-    description: 'array of vaults',
-    isArray: true,
-    type: VaultDto,
+    description: 'vaults grouped by strategy',
+    type: [VaultDto],
   })
   data: Tables<'vaults'>[];
+
+  @IsString()
+  @ApiProperty({
+    description: 'strategy address for vaults',
+    type: String,
+  })
+  address: string;
 
   constructor(partial: Partial<VaultsDto>) {
     Object.assign(this, partial);
