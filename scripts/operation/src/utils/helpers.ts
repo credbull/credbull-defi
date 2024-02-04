@@ -1,5 +1,6 @@
 import { Database } from '@credbull/api';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 import { Wallet, providers } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
 
@@ -56,4 +57,12 @@ export const linkWalletMessage = async (signer: Wallet) => {
 
 export const signer = (privateKey: string) => {
   return new Wallet(privateKey, new providers.JsonRpcProvider(process.env.NEXT_PUBLIC_TARGET_NETWORK));
+};
+
+export const generateAddress = () => {
+  const id = crypto.randomBytes(32).toString('hex');
+  const privateKey = '0x' + id;
+
+  const wallet = new Wallet(privateKey);
+  return wallet.address;
 };

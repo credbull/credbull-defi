@@ -1,6 +1,6 @@
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 
-import { headers, login, supabase, userByEmail } from './utils/helpers';
+import { generateAddress, headers, login, supabase, userByEmail } from './utils/helpers';
 
 const createParams = (params: {
   kycProvider?: string;
@@ -12,7 +12,7 @@ const createParams = (params: {
   const owner = process.env.PUBLIC_OWNER_ADDRESS;
   const operator = process.env.PUBLIC_OPERATOR_ADDRESS;
 
-  const custodian = process.env.ADDRESSES_CUSTODIAN;
+  const custodian = params.matured ? process.env.ADDRESSES_CUSTODIAN : generateAddress();
   const treasury = process.env.ADDRESSES_TREASURY;
   const activityReward = process.env.ADDRESSES_ACTIVITY_REWARD;
 

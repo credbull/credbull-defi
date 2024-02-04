@@ -195,7 +195,7 @@ function Vault(props: VaultProps) {
           Vault Total Assets
         </Text>
         <Text size="sm" color="gray">
-          {vaultTotalAssets ? formatEther(vaultTotalAssets) : '0'} USDC
+          {vaultTotalAssets ? parseFloat(formatEther(vaultTotalAssets)).toFixed(2) : '0'} USDC
         </Text>
       </Group>
 

@@ -20,5 +20,5 @@ export function BalanceOf(props: BalanceOfProps) {
   });
 
   const value = formatEther(data ?? BigInt(0));
-  return <>{parseFloat(value).toFixed(value.includes('.') ? 3 : 0)}</>;
+  return <>{parseFloat(value).toFixed(value.includes('.') ? 2 : 0)}</>;
 }
