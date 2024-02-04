@@ -6,6 +6,7 @@ import { Script } from "forge-std/Script.sol";
 import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
 import { CredbullEntities } from "../src/CredbullEntities.sol";
 import { CredbullVaultFactory } from "../src/CredbullVaultFactory.sol";
+import { CredbullUpsideVaultFactory } from "../src/CredbullUpsideVaultFactory.sol";
 import { ICredbull } from "../src/interface/ICredbull.sol";
 import { console2 } from "forge-std/console2.sol";
 
@@ -35,6 +36,8 @@ contract DeployVaultFactory is Script {
 
         vm.startBroadcast();
         factory = new CredbullVaultFactory(owner, operator);
+        CredbullUpsideVaultFactory upsideFactory = new CredbullUpsideVaultFactory(owner, operator);
+        console2.log("CredbullUpsideVaultFactory: ", address(upsideFactory));
         vm.stopBroadcast();
     }
 

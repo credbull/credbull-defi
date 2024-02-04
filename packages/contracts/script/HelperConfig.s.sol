@@ -5,6 +5,7 @@ pragma solidity ^0.8.19;
 import { Script } from "forge-std/Script.sol";
 import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
 import { MockKYCProvider } from "../test/mocks/MockKYCProvider.sol";
+import { MockToken } from "../test/mocks/MockToken.sol";
 import { ICredbull } from "../src/interface/ICredbull.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
@@ -95,6 +96,7 @@ contract HelperConfig is Script {
 
         vm.startBroadcast();
         MockStablecoin usdc = new MockStablecoin(type(uint128).max);
+        MockToken token = new MockToken(type(uint128).max);
         MockKYCProvider kycProvider = new MockKYCProvider(owner);
         vm.stopBroadcast();
 

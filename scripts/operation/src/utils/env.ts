@@ -11,6 +11,7 @@ export const envVariables = z.object({
   BOB_PRIVATE_KEY: z.string(),
   ADMIN_EMAIL: z.string().email(),
   ADMIN_PASSWORD: z.string(),
+  ADMIN_PRIVATE_KEY: z.string(),
   PUBLIC_OWNER_ADDRESS: z.string().optional(),
   PUBLIC_OPERATOR_ADDRESS: z.string().optional(),
   ADDRESSES_CUSTODIAN: z.string().optional(),

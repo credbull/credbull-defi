@@ -146,12 +146,12 @@ contract CredbullVault is ICredbull, ERC4626, AccessControl {
         onlyInsideRequiredWindow("deposit", depositOpensAtTimestamp, depositClosesAtTimestamp)
         onlyWhitelistAddress(receiver)
     {
-        SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
+        SafeERC20.safeTransferFrom(IERC20(asset()), receiver, custodian, assets);
         _totalAssetDeposited += assets;
 
         _mint(receiver, shares);
 
-        emit Deposit(caller, receiver, assets, shares);
+        emit Deposit(receiver, receiver, assets, shares);
     }
 
     /**
@@ -163,7 +163,7 @@ contract CredbullVault is ICredbull, ERC4626, AccessControl {
         onlyInsideRequiredWindow("withdraw", redemptionOpensAtTimestamp, redemptionClosesAtTimestamp)
         onlyAfterMaturity
     {
-        if (caller != owner) {
+        if (receiver != owner) {
             _spendAllowance(owner, caller, shares);
         }
 
