@@ -25,7 +25,7 @@ const createParams = (params: { kycProvider?: string; asset?: string; matured?: 
 
   const baseEntities = [
     { type: 'treasury', address: treasury, percentage: 0.8 },
-    { type: 'activity_reward', address: activityReward, percentage: 0.8 },
+    { type: 'activity_reward', address: activityReward, percentage: 1 },
     { type: 'custodian', address: custodian },
     { type: 'kyc_provider', address: kycProvider },
   ];
