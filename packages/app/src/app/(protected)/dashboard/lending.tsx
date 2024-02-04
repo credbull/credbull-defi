@@ -134,9 +134,12 @@ function Vault(props: VaultProps) {
 
   const name = props.data.type === 'fixed_yield' ? 'Fixed Yield Vault' : 'Structured Yield Vault';
 
-  const closes = parseISO(props.data.closed_at);
-  const opens = parseISO(props.data.opened_at);
-  const opened = isAfter(new Date(), opens) && isBefore(new Date(), closes);
+  const redemptionsOpen = parseISO(props.data.redemptions_opened_at);
+  const redemptionsClose = parseISO(props.data.redemptions_closed_at);
+
+  const depositsOpen = parseISO(props.data.deposits_opened_at);
+  const depositsClose = parseISO(props.data.deposits_closed_at);
+  const opened = isAfter(new Date(), depositsOpen) && isBefore(new Date(), depositsClose);
 
   return (
     <Card shadow="sm" p="xl" radius="md" withBorder>
@@ -153,19 +156,37 @@ function Vault(props: VaultProps) {
 
       <Group position="apart" mt="xl" mb="xs">
         <Text size="sm" color="gray">
-          Vault Opens
+          Vault Deposits Open
         </Text>
         <Text size="sm" color="gray">
-          {format(opens, 'MM/dd/yyyy HH:mm')}
+          {format(depositsOpen, 'MM/dd/yyyy HH:mm')}
         </Text>
       </Group>
 
       <Group position="apart" mt="md" mb="xs">
         <Text size="sm" color="gray">
-          Vault Closes
+          Vault Deposits Close
         </Text>
         <Text size="sm" color="gray">
-          {format(closes, 'MM/dd/yyyy HH:mm')}
+          {format(depositsClose, 'MM/dd/yyyy HH:mm')}
+        </Text>
+      </Group>
+
+      <Group position="apart" mt="md" mb="xs">
+        <Text size="sm" color="gray">
+          Vault Redemption Open
+        </Text>
+        <Text size="sm" color="gray">
+          {format(redemptionsOpen, 'MM/dd/yyyy HH:mm')}
+        </Text>
+      </Group>
+
+      <Group position="apart" mt="md" mb="xs">
+        <Text size="sm" color="gray">
+          Vault Redemption Close
+        </Text>
+        <Text size="sm" color="gray">
+          {format(redemptionsClose, 'MM/dd/yyyy HH:mm')}
         </Text>
       </Group>
 
@@ -319,18 +340,20 @@ export function Lending(props: { email?: string; status?: string }) {
 
   const { data: entities } = useList<Tables<'vault_entities'>>({
     resource: 'vault_entities',
+    pagination: { pageSize: 1000 },
   });
 
   const { data: list, isLoading } = useList<Tables<'vaults'>>({
     resource: 'vaults',
     filters: [
       { field: 'status', operator: 'ne', value: 'created' },
-      { field: 'opened_at', operator: 'lt', value: 'now()' },
+      { field: 'deposits_opened_at', operator: 'lt', value: 'now()' },
     ],
     queryOptions: {
       refetchOnWindowFocus: 'always',
     },
-    sorters: [{ field: 'opened_at', order: 'desc' }],
+    pagination: { pageSize: 1000 },
+    sorters: [{ field: 'deposits_opened_at', order: 'desc' }],
   });
 
   const erc20Address = list?.data[0]?.asset_address;

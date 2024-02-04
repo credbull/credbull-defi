@@ -35,7 +35,7 @@ export class VaultsService {
   ) {}
 
   async current(): Promise<ServiceResponse<Tables<'vaults'>[]>> {
-    return this.supabase.client().from('vaults').select('*').neq('status', 'created').lt('opened_at', 'now()');
+    return this.supabase.client().from('vaults').select('*').neq('status', 'created').lt('deposits_opened_at', 'now()');
   }
 
   async createVault(params: VaultParamsDto): Promise<ServiceResponse<Tables<'vaults'>>> {
@@ -107,8 +107,10 @@ export class VaultsService {
     const vaultData = {
       type: 'fixed_yield' as const,
       status: 'created' as const,
-      opened_at: new Date(Number(params.depositOpensAt) * 1000).toISOString(),
-      closed_at: new Date(Number(params.depositClosesAt) * 1000).toISOString(),
+      deposits_opened_at: new Date(Number(params.depositOpensAt) * 1000).toISOString(),
+      deposits_closed_at: new Date(Number(params.depositClosesAt) * 1000).toISOString(),
+      redemptions_opened_at: new Date(Number(params.redemptionOpensAt) * 1000).toISOString(),
+      redemptions_closed_at: new Date(Number(params.redemptionClosesAt) * 1000).toISOString(),
       address: vaultAddress,
       strategy_address: vaultAddress,
       asset_address: params.asset,

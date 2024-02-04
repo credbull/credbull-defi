@@ -20,8 +20,10 @@ export const VaultSchema = z.object({
   asset_address: z.string(),
   tenant: z.string(),
   created_at: z.string(),
-  opened_at: z.string(),
-  closed_at: z.string(),
+  deposits_opened_at: z.string(),
+  deposits_closed_at: z.string(),
+  redemptions_opened_at: z.string(),
+  redemptions_closed_at: z.string(),
 }) as z.ZodSchema<Tables<'vaults'>>;
 
 export class VaultDto implements Tables<'vaults'> {
@@ -49,11 +51,17 @@ export class VaultDto implements Tables<'vaults'> {
   @ApiProperty({ description: 'vault created at' })
   created_at: string;
 
-  @ApiProperty({ description: 'vault opened at' })
-  opened_at: string;
+  @ApiProperty({ description: 'vault deposits opened at' })
+  deposits_opened_at: string;
 
-  @ApiProperty({ description: 'vault closed at' })
-  closed_at: string;
+  @ApiProperty({ description: 'vault deposits closed at' })
+  deposits_closed_at: string;
+
+  @ApiProperty({ description: 'vault redemptions opened at' })
+  redemptions_opened_at: string;
+
+  @ApiProperty({ description: 'vault redemptions closed at' })
+  redemptions_closed_at: string;
 
   constructor(partial: Partial<Tables<'vaults'>>) {
     Object.assign(this, partial);

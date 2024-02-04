@@ -1,4 +1,4 @@
-import { startOfWeek, startOfYear, subDays } from 'date-fns';
+import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 
 import { headers, login, supabase } from './utils/helpers';
 
@@ -14,23 +14,25 @@ const createParams = (params: { kycProvider?: string; asset?: string; matured?: 
   const kycProvider = params.kycProvider;
 
   const week = 604800;
-  const year = 31556952;
   const currentYearStart = startOfYear(new Date());
   let depositOpensAt = startOfWeek(new Date());
   if (params.matured) depositOpensAt = startOfYear(subDays(currentYearStart, 1));
 
   const depositDateAsTimestamp = depositOpensAt.getTime() / 1000;
 
+  const redemptionOpensAt = addYears(depositOpensAt, 1);
+  const redemptionDateAsTimestamp = redemptionOpensAt.getTime() / 1000;
+
+  const baseEntities = [
+    { type: 'treasury', address: treasury, percentage: 0.8 },
+    { type: 'activity_reward', address: activityReward, percentage: 0.8 },
+    { type: 'custodian', address: custodian },
+    { type: 'kyc_provider', address: kycProvider },
+  ];
+
   const entities = params.upside
-    ? [
-        { type: 'vault', address: params.upside, percentage: 0.2 },
-        { type: 'treasury', address: treasury, percentage: 0.8 },
-        { type: 'activity_reward', address: activityReward, percentage: 0.8 },
-      ]
-    : [
-        { type: 'treasury', address: treasury, percentage: 0.8 },
-        { type: 'activity_reward', address: activityReward, percentage: 0.8 },
-      ];
+    ? [{ type: 'vault', address: params.upside, percentage: 0.2 }, ...baseEntities]
+    : baseEntities;
 
   return {
     shareName: 'Credbull Liquidity',
@@ -38,8 +40,8 @@ const createParams = (params: { kycProvider?: string; asset?: string; matured?: 
     promisedYield: 10,
     depositOpensAt: depositDateAsTimestamp,
     depositClosesAt: depositDateAsTimestamp + week,
-    redemptionOpensAt: depositDateAsTimestamp + year,
-    redemptionClosesAt: depositDateAsTimestamp + week + year,
+    redemptionOpensAt: redemptionDateAsTimestamp,
+    redemptionClosesAt: redemptionDateAsTimestamp + week,
     owner,
     operator,
     asset,

@@ -23,7 +23,7 @@ export class SyncVaultsService {
     private readonly config: ConfigService,
   ) {}
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_MINUTE)
   async syncEventData() {
     console.log('Syncing vault data...');
     await this.sync();
@@ -87,12 +87,14 @@ export class SyncVaultsService {
     return {
       type: 'fixed_yield' as const,
       status: 'created' as const,
-      opened_at: new Date(Number(event.args.params.depositOpensAt) * 1000).toISOString(),
-      closed_at: new Date(Number(event.args.params.depositClosesAt) * 1000).toISOString(),
+      deposits_opened_at: new Date(Number(event.args.params.depositOpensAt) * 1000).toISOString(),
+      deposits_closed_at: new Date(Number(event.args.params.depositClosesAt) * 1000).toISOString(),
+      redemptions_opened_at: new Date(Number(event.args.params.redemptionOpensAt) * 1000).toISOString(),
+      redemptions_closed_at: new Date(Number(event.args.params.redemptionClosesAt) * 1000).toISOString(),
       address: event.args.vault,
       strategy_address: event.args.vault,
       asset_address: event.args.params.asset,
-    };
+    } as Tables<'vaults'>;
   }
 
   private addEntitiesAndDistributionFromEvents(events: VaultDeployedEvent[], vaults: Tables<'vaults'>[]) {

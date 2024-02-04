@@ -179,10 +179,12 @@ export interface Database {
         Row: {
           address: string;
           asset_address: string;
-          closed_at: string;
           created_at: string;
+          deposits_closed_at: string;
+          deposits_opened_at: string;
           id: number;
-          opened_at: string;
+          redemptions_closed_at: string;
+          redemptions_opened_at: string;
           status: Database['public']['Enums']['vault_status'];
           strategy_address: string;
           tenant: string | null;
@@ -191,10 +193,12 @@ export interface Database {
         Insert: {
           address: string;
           asset_address: string;
-          closed_at: string;
           created_at?: string;
+          deposits_closed_at: string;
+          deposits_opened_at: string;
           id?: number;
-          opened_at: string;
+          redemptions_closed_at: string;
+          redemptions_opened_at: string;
           status?: Database['public']['Enums']['vault_status'];
           strategy_address: string;
           tenant?: string | null;
@@ -203,10 +207,12 @@ export interface Database {
         Update: {
           address?: string;
           asset_address?: string;
-          closed_at?: string;
           created_at?: string;
+          deposits_closed_at?: string;
+          deposits_opened_at?: string;
           id?: number;
-          opened_at?: string;
+          redemptions_closed_at?: string;
+          redemptions_opened_at?: string;
           status?: Database['public']['Enums']['vault_status'];
           strategy_address?: string;
           tenant?: string | null;

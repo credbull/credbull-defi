@@ -35,8 +35,10 @@ describe('VaultsController', () => {
       status: 'ready',
       address: '0x6E12D8C87503D4287c294f2Fdef96ACd9DFf6bd2',
       strategy_address: '0xF62849F9A0B5Bf2913b396098F7c7019b51A820a',
-      opened_at: '2024-01-07T03:00:01+00:00',
-      closed_at: '2024-01-14T02:59:59+00:00',
+      deposits_opened_at: '2024-01-07T03:00:01+00:00',
+      deposits_closed_at: '2024-01-14T02:59:59+00:00',
+      redemptions_opened_at: '2024-01-07T03:00:01+00:00',
+      redemptions_closed_at: '2024-01-14T02:59:59+00:00',
       owner: null,
       created_at: '2024-01-09T18:58:27.328262+00:00',
     };

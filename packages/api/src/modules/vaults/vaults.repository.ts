@@ -33,7 +33,7 @@ export async function addEntitiesAndDistribution(
   if (entitiesData.error) return entitiesData;
   if (!entitiesData.data) return { error: new NotFoundException() };
 
-  const filteredEntities = entities.filter((i) => i.type !== 'custodian' && i.type !== 'kyc_provider');
+  const filteredEntities = entities.filter((i) => Boolean(i.percentage)) as Required<EntitiesDto>[];
   const distributionData = filteredEntities.map(({ type, percentage }, order) => ({ order, type, percentage }));
 
   if (entitiesData.data.length > 0) {

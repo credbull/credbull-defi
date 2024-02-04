@@ -6,7 +6,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MockKYCProvider is AKYCProvider, Ownable {
     /**
-     * @notice - Track whitelisted addreses
+     * @notice - Track whitelisted addresses
      */
     mapping(address => bool) public isWhitelisted;
 

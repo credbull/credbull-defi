@@ -28,7 +28,7 @@ export class EntitiesDto {
   address: string;
 
   @Expose()
-  percentage: number;
+  percentage?: number;
 }
 
 export class VaultParamsDto extends EntitiesDto {

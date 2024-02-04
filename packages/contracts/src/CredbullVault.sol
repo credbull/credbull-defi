@@ -133,6 +133,7 @@ contract CredbullVault is ICredbull, ERC4626, AccessControl {
         depositClosesAtTimestamp = params.depositClosesAt;
         redemptionOpensAtTimestamp = params.redemptionOpensAt;
         redemptionClosesAtTimestamp = params.redemptionClosesAt;
+        rules = Rules({ checkMaturity: true, checkVaultOpenStatus: true, checkWhitelist: true });
     }
 
     /**
