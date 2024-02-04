@@ -97,7 +97,7 @@ export interface Database {
             foreignKeyName: 'vault_distribution_configs_entity_id_fkey';
             columns: ['entity_id'];
             isOneToOne: false;
-            referencedRelation: 'vault_distribution_entities';
+            referencedRelation: 'vault_entities';
             referencedColumns: ['id'];
           },
           {
@@ -109,7 +109,7 @@ export interface Database {
           },
         ];
       };
-      vault_distribution_entities: {
+      vault_entities: {
         Row: {
           address: string;
           created_at: string;
@@ -136,14 +136,14 @@ export interface Database {
         };
         Relationships: [
           {
-            foreignKeyName: 'vault_distribution_entities_tenant_fkey';
+            foreignKeyName: 'vault_entities_tenant_fkey';
             columns: ['tenant'];
             isOneToOne: false;
             referencedRelation: 'users';
             referencedColumns: ['id'];
           },
           {
-            foreignKeyName: 'vault_distribution_entities_vault_id_fkey';
+            foreignKeyName: 'vault_entities_vault_id_fkey';
             columns: ['vault_id'];
             isOneToOne: false;
             referencedRelation: 'vaults';

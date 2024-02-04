@@ -25,7 +25,7 @@ export class KycService {
 
     if (!events.data?.address) return { data: KYCStatus.PENDING };
 
-    const kycProvider = await client.from('vault_distribution_entities').select('*').eq('type', 'kyc_provider');
+    const kycProvider = await client.from('vault_entities').select('*').eq('type', 'kyc_provider');
     if (kycProvider.error) return kycProvider;
 
     const distinctProviders = _.uniqBy(kycProvider.data ?? [], 'address');
@@ -47,7 +47,7 @@ export class KycService {
       .single();
     if (wallet.error) return wallet;
 
-    const query = admin.from('vault_distribution_entities').select('address').eq('type', 'kyc_provider');
+    const query = admin.from('vault_entities').select('address').eq('type', 'kyc_provider');
     if (wallet.data.discriminator) {
       query.eq('tenant', dto.user_id);
     } else {
@@ -90,7 +90,7 @@ export class KycService {
   }
 
   private async checkOnChain(
-    kycProviders: Tables<'vault_distribution_entities'>[],
+    kycProviders: Tables<'vault_entities'>[],
     address: string,
   ): Promise<ServiceResponse<boolean>> {
     const errors = [];

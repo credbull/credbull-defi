@@ -122,11 +122,11 @@ describe('VaultService', () => {
     expect(transfers.data?.[0].custodian_address).toBe('0x555');
     expect(transfers.data?.[0].amount).toStrictEqual(parseEther('1100'));
 
-    expect(transfers.data?.[1].address).toBe(config[0].vault_distribution_entities?.address);
+    expect(transfers.data?.[1].address).toBe(config[0].vault_entities?.address);
     expect(transfers.data?.[1].custodian_address).toBe('0x555');
     expect(transfers.data?.[1].amount).toStrictEqual(parseEther('80'));
 
-    expect(transfers.data?.[2].address).toBe(config[1].vault_distribution_entities?.address);
+    expect(transfers.data?.[2].address).toBe(config[1].vault_entities?.address);
     expect(transfers.data?.[2].custodian_address).toBe('0x555');
     expect(transfers.data?.[2].amount).toStrictEqual(parseEther('20'));
   });
@@ -163,19 +163,19 @@ describe('VaultService', () => {
     expect(transfers.data?.[1].custodian_address).toBe('0x555');
     expect(transfers.data?.[1].amount).toStrictEqual(parseEther('2200'));
 
-    expect(transfers.data?.[2].address).toBe(config[0].vault_distribution_entities?.address);
+    expect(transfers.data?.[2].address).toBe(config[0].vault_entities?.address);
     expect(transfers.data?.[2].custodian_address).toBe('0x555');
     expect(transfers.data?.[2].amount).toStrictEqual(parseEther('80'));
 
-    expect(transfers.data?.[3].address).toBe(config[1].vault_distribution_entities?.address);
+    expect(transfers.data?.[3].address).toBe(config[1].vault_entities?.address);
     expect(transfers.data?.[3].custodian_address).toBe('0x555');
     expect(transfers.data?.[3].amount).toStrictEqual(parseEther('20'));
 
-    expect(transfers.data?.[4].address).toBe(config[0].vault_distribution_entities?.address);
+    expect(transfers.data?.[4].address).toBe(config[0].vault_entities?.address);
     expect(transfers.data?.[4].custodian_address).toBe('0x555');
     expect(transfers.data?.[4].amount).toStrictEqual(parseEther('160'));
 
-    expect(transfers.data?.[5].address).toBe(config[1].vault_distribution_entities?.address);
+    expect(transfers.data?.[5].address).toBe(config[1].vault_entities?.address);
     expect(transfers.data?.[5].custodian_address).toBe('0x555');
     expect(transfers.data?.[5].amount).toStrictEqual(parseEther('40'));
   });

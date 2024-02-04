@@ -39,7 +39,7 @@ export class CustodianService {
   async forVaults(vaults: Pick<Tables<'vaults'>, 'id'>[]) {
     return this.supabase
       .admin()
-      .from('vault_distribution_entities')
+      .from('vault_entities')
       .select('*, vaults (id)')
       .in(
         'vault_id',

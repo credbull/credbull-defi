@@ -9,14 +9,14 @@ import { CustodianTransferDto } from './custodian.dto';
 
 export const DistributionConfigSchema = z.object({
   percentage: z.number(),
-  vault_distribution_entities: z.object({
+  vault_entities: z.object({
     type: z.string(),
     address: z.string(),
   }),
 }) as z.ZodSchema<DistributionConfig>;
 
 export type DistributionConfig = Pick<Tables<'vault_distribution_configs'>, 'percentage'> & {
-  vault_distribution_entities: Pick<Tables<'vault_distribution_entities'>, 'type' | 'address'> | null;
+  vault_entities: Pick<Tables<'vault_entities'>, 'type' | 'address'> | null;
 };
 
 export type CalculateProportionsData = { custodianAmount: BigNumber; amount: BigNumber };
@@ -60,12 +60,12 @@ export function calculateDistribution(
   const splits = [];
 
   try {
-    for (const { vault_distribution_entities, percentage } of distributionConfig) {
+    for (const { vault_entities, percentage } of distributionConfig) {
       const amount = totalReturns.mul(percentage * 100).div(100);
 
       if (amount.isZero()) continue;
 
-      splits.push({ address: vault_distribution_entities!.address, amount });
+      splits.push({ address: vault_entities!.address, amount });
       totalReturns = totalReturns.sub(amount);
     }
     return { data: splits };

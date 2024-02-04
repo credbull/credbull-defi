@@ -55,7 +55,7 @@ async function exportAddress() {
       }
     }
     if (process.env.EXPORT_TO_SUPABASE === 'true') {
-      exportToSupabase(dataToStoreOnDB);
+      await exportToSupabase(dataToStoreOnDB);
     }
   }
   return contracts;

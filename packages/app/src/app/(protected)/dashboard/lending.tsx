@@ -24,7 +24,7 @@ const schema = z.object({
 
 type VaultProps = {
   data: Tables<'vaults'>;
-  entities: Tables<'vault_distribution_entities'>[];
+  entities: Tables<'vault_entities'>[];
   isConnected: boolean;
   address: Address;
 };
@@ -286,7 +286,7 @@ function Vault(props: VaultProps) {
 
 type EntitiesBalancesProps = {
   name: string;
-  entity?: Pick<Tables<'vault_distribution_entities'>, 'address'>;
+  entity?: Pick<Tables<'vault_entities'>, 'address'>;
   erc20Address?: string;
 };
 const EntityBalance = ({ entity, erc20Address, name }: EntitiesBalancesProps) => {
@@ -317,8 +317,8 @@ const EntityBalance = ({ entity, erc20Address, name }: EntitiesBalancesProps) =>
 export function Lending(props: { email?: string; status?: string }) {
   const { isConnected, address } = useAccount();
 
-  const { data: entities } = useList<Tables<'vault_distribution_entities'>>({
-    resource: 'vault_distribution_entities',
+  const { data: entities } = useList<Tables<'vault_entities'>>({
+    resource: 'vault_entities',
   });
 
   const { data: list, isLoading } = useList<Tables<'vaults'>>({

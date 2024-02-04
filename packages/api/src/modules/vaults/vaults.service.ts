@@ -108,11 +108,7 @@ export class VaultsService {
   ): Promise<ServiceResponse<string>> {
     const entitiesMappedData = entities.map((en) => ({ type: en.type, address: en.address, vault_id: vault.id }));
 
-    const entitiesData = await this.supabase
-      .admin()
-      .from('vault_distribution_entities')
-      .insert(entitiesMappedData)
-      .select();
+    const entitiesData = await this.supabase.admin().from('vault_entities').insert(entitiesMappedData).select();
     if (entitiesData.error) return entitiesData;
     if (!entitiesData.data) return { error: new NotFoundException() };
 
@@ -252,8 +248,8 @@ export class VaultsService {
     return this.supabase
       .admin()
       .from('vault_distribution_configs')
-      .select('*, vault_distribution_entities!inner (type, address)')
-      .eq('vault_distribution_entities.vault_id', vault.id)
+      .select('*, vault_entities!inner (type, address)')
+      .eq('vault_entities.vault_id', vault.id)
       .order('order');
   }
 

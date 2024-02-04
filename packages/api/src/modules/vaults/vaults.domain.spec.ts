@@ -8,8 +8,8 @@ describe('Vaults Domain', () => {
     const custodianTotalAssets = parseEther('100');
 
     const config: DistributionConfig[] = [
-      { percentage: 0.8, vault_distribution_entities: { type: 'treasury', address: 'treasury' } },
-      { percentage: 1, vault_distribution_entities: { type: 'activity_reward', address: 'activity_reward' } },
+      { percentage: 0.8, vault_entities: { type: 'treasury', address: 'treasury' } },
+      { percentage: 1, vault_entities: { type: 'activity_reward', address: 'activity_reward' } },
     ];
 
     const { data } = calculateDistribution(custodianTotalAssets, config);
@@ -26,9 +26,9 @@ describe('Vaults Domain', () => {
     const custodianTotalAssets = parseEther('100');
 
     const config: DistributionConfig[] = [
-      { percentage: 0.2, vault_distribution_entities: { type: 'treasury', address: 'treasury' } },
-      { percentage: 0.5, vault_distribution_entities: { type: 'custodian', address: 'custodian' } },
-      { percentage: 1, vault_distribution_entities: { type: 'activity_reward', address: 'activity_reward' } },
+      { percentage: 0.2, vault_entities: { type: 'treasury', address: 'treasury' } },
+      { percentage: 0.5, vault_entities: { type: 'custodian', address: 'custodian' } },
+      { percentage: 1, vault_entities: { type: 'activity_reward', address: 'activity_reward' } },
     ];
 
     const { data } = calculateDistribution(custodianTotalAssets, config);
@@ -49,8 +49,8 @@ describe('Vaults Domain', () => {
     const custodianTotalAssets = parseEther('0');
 
     const config: DistributionConfig[] = [
-      { percentage: 0.8, vault_distribution_entities: { type: 'treasury', address: 'treasury' } },
-      { percentage: 1, vault_distribution_entities: { type: 'activity_reward', address: 'activity_reward' } },
+      { percentage: 0.8, vault_entities: { type: 'treasury', address: 'treasury' } },
+      { percentage: 1, vault_entities: { type: 'activity_reward', address: 'activity_reward' } },
     ];
 
     const { data } = calculateDistribution(custodianTotalAssets, config);
@@ -62,8 +62,8 @@ describe('Vaults Domain', () => {
     const custodianTotalAssets = parseEther('100');
 
     const config: DistributionConfig[] = [
-      { percentage: 0.008, vault_distribution_entities: { type: 'treasury', address: 'treasury' } },
-      { percentage: 1, vault_distribution_entities: { type: 'activity_reward', address: 'activity_reward' } },
+      { percentage: 0.008, vault_entities: { type: 'treasury', address: 'treasury' } },
+      { percentage: 1, vault_entities: { type: 'activity_reward', address: 'activity_reward' } },
     ];
 
     const { error } = calculateDistribution(custodianTotalAssets, config);
