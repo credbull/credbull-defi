@@ -15,6 +15,8 @@ contract CredbullUpsideVault is ERC4626 {
     ERC4626 public baseVault;
     ERC4626 public upsideVault;
 
+    uint256 public twap = 1;
+
     constructor(
         address _baseVault,
         address _upsideVault,
@@ -29,7 +31,7 @@ contract CredbullUpsideVault is ERC4626 {
     function deposit(uint256 assets, address receiver, bool upside) public virtual returns (uint256) {
         uint256 shares = 0;
         if (upside) {
-            shares = super.deposit(assets, receiver);
+            shares = super.deposit(assets * twap, receiver);
             return upsideVault.deposit(assets, receiver);
         } else {
             baseVault.deposit(assets, receiver);

@@ -164,7 +164,7 @@ contract CredbullVault is ICredbull, ERC4626, AccessControl {
         onlyAfterMaturity
     {
         if (receiver != owner) {
-            _spendAllowance(owner, caller, shares);
+            _spendAllowance(owner, receiver, shares);
         }
 
         _burn(owner, shares);
