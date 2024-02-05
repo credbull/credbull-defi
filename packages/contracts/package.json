@@ -8,7 +8,7 @@
     "build": "forge build",
     "test": "forge test",
     "format": "forge fmt && prettier './script/**/*.js' --write",
-    "lint": "eslint --fix --ignore-path .gitignore",
+    "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint  './*(test|src)/**/*.sol'",
     "deploy": "make deploy-local",
     "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/**/*.json && tsc",
     "postinstall": "yarn build && yarn gen-types"
@@ -30,6 +30,7 @@
     "@ethersproject/providers": "^5.7.2",
     "@supabase/supabase-js": "^2.39.3",
     "dotenv": "^16.3.1",
-    "ethers": "^5.7.2"
+    "ethers": "^5.7.2",
+    "solhint": "^4.1.1"
   }
 }

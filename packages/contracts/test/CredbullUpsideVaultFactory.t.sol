@@ -9,10 +9,7 @@ import { CredbullUpsideVault } from "../src/CredbullUpsideVault.sol";
 import { DeployVaultFactory } from "../script/DeployVaultFactory.s.sol";
 import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
 import { ICredbull } from "../src/interface/ICredbull.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { CredbullVault } from "../src/CredbullVault.sol";
-import { console2 } from "forge-std/console2.sol";
-import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { MockToken } from "./mocks/MockToken.sol";
 import { MockStablecoin } from "./mocks/MockStablecoin.sol";
 

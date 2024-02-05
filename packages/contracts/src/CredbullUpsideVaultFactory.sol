@@ -2,12 +2,10 @@
 
 pragma solidity ^0.8.19;
 
-import { CredbullVault } from "./CredbullVault.sol";
 import { CredbullUpsideVault } from "./CredbullUpsideVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { ICredbull } from "./interface/ICredbull.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**

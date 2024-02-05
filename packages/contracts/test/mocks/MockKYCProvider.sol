@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "./AKYCProvider.sol";
+import { AKYCProvider } from "./AKYCProvider.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MockKYCProvider is AKYCProvider, Ownable {
+    error LengthMismatch();
+
     /**
      * @notice - Track whitelisted addresses
      */
@@ -23,7 +25,8 @@ contract MockKYCProvider is AKYCProvider, Ownable {
      * @param _statuses - List of statuses to update
      */
     function updateStatus(address[] calldata _addresses, bool[] calldata _statuses) external override onlyOwner {
-        require(_addresses.length == _statuses.length, "Length mismatch");
+        if (_addresses.length != _statuses.length) revert LengthMismatch();
+
         uint256 length = _addresses.length;
 
         for (uint256 i; i < length;) {

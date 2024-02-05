@@ -1,5 +1,6 @@
 {
   "*.sol": [
-    "forge fmt"
+    "forge fmt",
+    "yarn solhint"
   ]
 }

@@ -7,9 +7,7 @@ import { CredbullVaultFactory } from "../src/CredbullVaultFactory.sol";
 import { DeployVaultFactory } from "../script/DeployVaultFactory.s.sol";
 import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
 import { ICredbull } from "../src/interface/ICredbull.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { CredbullVault } from "../src/CredbullVault.sol";
-import { console2 } from "forge-std/console2.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract CredbullVaultFactoryTest is Test {
@@ -17,7 +15,7 @@ contract CredbullVaultFactoryTest is Test {
     DeployVaultFactory private deployer;
     HelperConfig private helperConfig;
 
-    string constant OPTIONS = "{}";
+    string private constant OPTIONS = "{}";
 
     function setUp() public {
         deployer = new DeployVaultFactory();
