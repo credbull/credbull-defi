@@ -1,16 +1,17 @@
 import { supabase, userByEmail } from './utils/helpers';
 
-export const main = () => {
+export const main = (scenarios: object, params?: { email: string }) => {
   setTimeout(async () => {
     console.log('\n');
     console.log('=====================================');
     console.log('\n');
 
-    const user = await userByEmail(process.env.BOB_EMAIL);
+    if (!params?.email) throw new Error('Email is required');
+    const user = await userByEmail(params?.email);
 
     const client = supabase({ admin: true });
     const updateUserById = await client.auth.admin.updateUserById(user.id, {
-      app_metadata: { ...user.app_metadata, partner_type: ['channel'] },
+      app_metadata: { ...user.app_metadata, partner_type: 'channel' },
     });
     if (updateUserById.error) throw updateUserById.error;
 
