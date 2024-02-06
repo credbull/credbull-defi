@@ -5,7 +5,6 @@ pragma solidity ^0.8.19;
 import { Script } from "forge-std/Script.sol";
 import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
 import { CredbullVaultFactory } from "../src/CredbullVaultFactory.sol";
-import { CredbullUpsideVaultFactory } from "../src/CredbullUpsideVaultFactory.sol";
 
 contract DeployVaultFactory is Script {
     bool private test;
@@ -31,7 +30,6 @@ contract DeployVaultFactory is Script {
 
         vm.startBroadcast();
         factory = new CredbullVaultFactory(owner, operator);
-        new CredbullUpsideVaultFactory(owner, operator);
         vm.stopBroadcast();
     }
 }
