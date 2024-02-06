@@ -36,8 +36,9 @@ RUN yarn run build
 FROM base
 
 # Copy built application
-COPY --from=build /app/packages/api /app
+COPY --from=build /app/packages /app
 
 # Start the server by default, this can be overwritten at runtime
+WORKDIR /app/api
 EXPOSE 3000
 CMD [ "yarn", "run", "start:prod" ]
