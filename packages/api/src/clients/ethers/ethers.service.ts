@@ -63,14 +63,7 @@ export class EthersService {
     maxRetries = 3,
     interval = 2000,
   ): Promise<providers.Provider | boolean> {
-    const env = this.config.getOrThrow('NODE_ENV');
-    const provider =
-      env === 'development'
-        ? new providers.JsonRpcProvider(endpoint)
-        : new providers.InfuraProvider(
-            this.config.getOrThrow('ETHERS_INFURA_NETWORK'),
-            this.config.getOrThrow('ETHERS_INFURA_API_KEY'),
-          );
+    const provider = new providers.JsonRpcProvider(endpoint);
 
     let retries = 0;
     while (retries < maxRetries) {
