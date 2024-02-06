@@ -43,7 +43,6 @@ jobs:
           NEXT_PUBLIC_TARGET_NETWORK_WSS: ws://localhost:8545
 
   deploy:
-    name: Deploy app
     runs-on: ubuntu-latest
     concurrency: deploy-group
     needs: test
