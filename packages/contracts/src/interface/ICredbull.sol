@@ -22,7 +22,5 @@ abstract contract ICredbull {
         uint256 redemptionClosesAt;
         address custodian;
         address kycProvider;
-        address treasury;
-        address activityReward;
     }
 }

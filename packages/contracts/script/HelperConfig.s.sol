@@ -41,25 +41,20 @@ contract HelperConfig is Script {
     }
 
     function getSepoliaEthConfig() internal view returns (NetworkConfig memory) {
-        (uint256 opensAt, uint256 closesAt) = getTimeConfig();
-        uint256 year = 365 days;
-
-        //TODO: Replace with actual addresses to be used on testnet
-        ICredbull.VaultParams memory sepoliaVaultParams = ICredbull.VaultParams({
-            asset: IERC20(0x6402c4c08C1F752Ac8c91beEAF226018ec1a27f2),
-            shareName: "Share_sep",
-            shareSymbol: "SYM_sep",
-            owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-            operator: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-            custodian: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-            kycProvider: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-            promisedYield: PROMISED_FIXED_YIELD,
-            depositOpensAt: opensAt,
-            depositClosesAt: closesAt,
-            redemptionOpensAt: opensAt + year,
-            redemptionClosesAt: closesAt + year,
-            treasury: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-            activityReward: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+        // no need for vault params when using a real network
+        ICredbull.VaultParams memory empty = ICredbull.VaultParams({
+            asset: IERC20(vm.addr(0)),
+            owner: vm.addr(0),
+            operator: vm.addr(0),
+            custodian: vm.addr(0),
+            kycProvider: vm.addr(0),
+            shareName: "",
+            shareSymbol: "",
+            promisedYield: 0,
+            depositOpensAt: 0,
+            depositClosesAt: 0,
+            redemptionOpensAt: 0,
+            redemptionClosesAt: 0
         });
 
         FactoryParams memory factoryParams = FactoryParams({
@@ -67,8 +62,7 @@ contract HelperConfig is Script {
             operator: vm.envAddress("PUBLIC_OPERATOR_ADDRESS")
         });
 
-        NetworkConfig memory sepoliaConfig =
-            NetworkConfig({ vaultParams: sepoliaVaultParams, factoryParams: factoryParams });
+        NetworkConfig memory sepoliaConfig = NetworkConfig({ factoryParams: factoryParams, vaultParams: empty });
 
         return sepoliaConfig;
     }
@@ -103,9 +97,7 @@ contract HelperConfig is Script {
             depositOpensAt: opensAt,
             depositClosesAt: closesAt,
             redemptionOpensAt: opensAt + year,
-            redemptionClosesAt: closesAt + year,
-            treasury: makeAddr("treasury"),
-            activityReward: makeAddr("activity")
+            redemptionClosesAt: closesAt + year
         });
 
         FactoryParams memory factoryParams = FactoryParams({
