@@ -13,17 +13,13 @@ on:
 
 jobs:
   ci:
-    name: Deploy app
     runs-on: ubuntu-latest
     environment: dev
-    concurrency: deploy-group
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "yarn"
