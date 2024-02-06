@@ -46,8 +46,7 @@ jobs:
           CRON_SECRET: any_string_will_do
           NEXT_PUBLIC_TARGET_NETWORK_WSS: ws://localhost:8545
 
-      - name: Deploy app
-        uses: superfly/flyctl-actions/setup-flyctl@master
-        run: flyctl deploy ../.. --remote-only
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy ../.. --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
