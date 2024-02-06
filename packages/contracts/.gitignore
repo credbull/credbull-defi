@@ -17,6 +17,3 @@ docs/
 localhost.json
 .env*.local
 deployments
-
-types
-index.js

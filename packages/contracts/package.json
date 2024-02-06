@@ -10,8 +10,7 @@
     "format": "forge fmt && prettier './script/**/*.js' --write",
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint  './*(test|src)/**/*.sol'",
     "deploy": "make deploy-local",
-    "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/**/*.json && tsc",
-    "postinstall": "yarn build && yarn gen-types"
+    "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/**/*.json && tsc"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
