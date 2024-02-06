@@ -7,6 +7,8 @@ app = 'credbull-defi-api'
 primary_region = 'lhr'
 
 [build]
+  dockerfile = "./packages/api/Dockerfile"
+  ignorefile = "./packages/api/.dockerignore"
 
 [http_service]
   internal_port = 3000
