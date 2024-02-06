@@ -3,10 +3,10 @@
 import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit';
 import { ReactNode } from 'react';
 import { WagmiConfig, configureChains, createConfig } from 'wagmi';
-import { foundry } from 'wagmi/chains';
+import { arbitrumSepolia, foundry } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 
-const { chains, publicClient } = configureChains([foundry], [publicProvider()]);
+const { chains, publicClient } = configureChains([foundry, arbitrumSepolia], [publicProvider()]);
 
 const { connectors } = getDefaultWallets({
   appName: 'Credbull DeFI',
