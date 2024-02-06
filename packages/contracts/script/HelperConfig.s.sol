@@ -16,7 +16,6 @@ struct FactoryParams {
 
 struct NetworkConfig {
     ICredbull.VaultParams vaultParams;
-    ICredbull.Entities entities;
     FactoryParams factoryParams;
 }
 
@@ -63,21 +62,13 @@ contract HelperConfig is Script {
             activityReward: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
         });
 
-        //TODO: Replace with actual addresses to be used on testnet
-        ICredbull.Entities memory entities = ICredbull.Entities({
-            activityReward: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-            custodian: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-            kycProvider: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-            treasury: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-        });
-
         FactoryParams memory factoryParams = FactoryParams({
             owner: vm.envAddress("PUBLIC_OWNER_ADDRESS"),
             operator: vm.envAddress("PUBLIC_OPERATOR_ADDRESS")
         });
 
         NetworkConfig memory sepoliaConfig =
-            NetworkConfig({ vaultParams: sepoliaVaultParams, entities: entities, factoryParams: factoryParams });
+            NetworkConfig({ vaultParams: sepoliaVaultParams, factoryParams: factoryParams });
 
         return sepoliaConfig;
     }
@@ -96,7 +87,7 @@ contract HelperConfig is Script {
 
         vm.startBroadcast();
         MockStablecoin usdc = new MockStablecoin(type(uint128).max);
-        MockToken token = new MockToken(type(uint128).max);
+        new MockToken(type(uint128).max);
         MockKYCProvider kycProvider = new MockKYCProvider(owner);
         vm.stopBroadcast();
 
@@ -117,20 +108,13 @@ contract HelperConfig is Script {
             activityReward: makeAddr("activity")
         });
 
-        ICredbull.Entities memory entities = ICredbull.Entities({
-            activityReward: makeAddr("activityReward"),
-            custodian: custodian,
-            kycProvider: address(kycProvider),
-            treasury: makeAddr("treasury")
-        });
-
         FactoryParams memory factoryParams = FactoryParams({
             owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
             operator: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
         });
 
         NetworkConfig memory anvilConfig =
-            NetworkConfig({ vaultParams: anvilVaultParams, entities: entities, factoryParams: factoryParams });
+            NetworkConfig({ vaultParams: anvilVaultParams, factoryParams: factoryParams });
 
         return anvilConfig;
     }

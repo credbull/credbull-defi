@@ -25,12 +25,4 @@ abstract contract ICredbull {
         address treasury;
         address activityReward;
     }
-
-    //Struct defining various entities associated with Credbull
-    struct Entities {
-        address kycProvider;
-        address treasury;
-        address activityReward;
-        address custodian;
-    }
 }
