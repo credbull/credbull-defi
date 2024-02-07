@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.19;
 
-import { WhitelistPlugIn } from "./plugins/WhitelistPlug.sol";
-import { WindowPlugIn } from "./plugins/WindowPlug.sol";
+import { WhitelistPlugIn } from "./plugins/WhitelistPlugIn.sol";
+import { WindowPlugIn } from "./plugins/WindowPlugIn.sol";
 import { MaturityVault } from "./extensions/MaturityVault.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 

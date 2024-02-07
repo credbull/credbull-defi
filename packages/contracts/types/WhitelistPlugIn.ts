@@ -19,53 +19,43 @@ import type {
   OnEvent,
 } from "./common";
 
-export interface CredbullEntitiesInterface extends utils.Interface {
+export interface WhitelistPlugInInterface extends utils.Interface {
   functions: {
-    "activityReward()": FunctionFragment;
-    "custodian()": FunctionFragment;
+    "checkWhitelist()": FunctionFragment;
     "kycProvider()": FunctionFragment;
-    "treasury()": FunctionFragment;
   };
 
   getFunction(
-    nameOrSignatureOrTopic:
-      | "activityReward"
-      | "custodian"
-      | "kycProvider"
-      | "treasury"
+    nameOrSignatureOrTopic: "checkWhitelist" | "kycProvider"
   ): FunctionFragment;
 
   encodeFunctionData(
-    functionFragment: "activityReward",
+    functionFragment: "checkWhitelist",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "custodian", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "kycProvider",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "treasury", values?: undefined): string;
 
   decodeFunctionResult(
-    functionFragment: "activityReward",
+    functionFragment: "checkWhitelist",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "custodian", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "kycProvider",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "treasury", data: BytesLike): Result;
 
   events: {};
 }
 
-export interface CredbullEntities extends BaseContract {
+export interface WhitelistPlugIn extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: CredbullEntitiesInterface;
+  interface: WhitelistPlugInInterface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,
@@ -87,52 +77,32 @@ export interface CredbullEntities extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    activityReward(overrides?: CallOverrides): Promise<[string]>;
-
-    custodian(overrides?: CallOverrides): Promise<[string]>;
+    checkWhitelist(overrides?: CallOverrides): Promise<[boolean]>;
 
     kycProvider(overrides?: CallOverrides): Promise<[string]>;
-
-    treasury(overrides?: CallOverrides): Promise<[string]>;
   };
 
-  activityReward(overrides?: CallOverrides): Promise<string>;
-
-  custodian(overrides?: CallOverrides): Promise<string>;
+  checkWhitelist(overrides?: CallOverrides): Promise<boolean>;
 
   kycProvider(overrides?: CallOverrides): Promise<string>;
 
-  treasury(overrides?: CallOverrides): Promise<string>;
-
   callStatic: {
-    activityReward(overrides?: CallOverrides): Promise<string>;
-
-    custodian(overrides?: CallOverrides): Promise<string>;
+    checkWhitelist(overrides?: CallOverrides): Promise<boolean>;
 
     kycProvider(overrides?: CallOverrides): Promise<string>;
-
-    treasury(overrides?: CallOverrides): Promise<string>;
   };
 
   filters: {};
 
   estimateGas: {
-    activityReward(overrides?: CallOverrides): Promise<BigNumber>;
-
-    custodian(overrides?: CallOverrides): Promise<BigNumber>;
+    checkWhitelist(overrides?: CallOverrides): Promise<BigNumber>;
 
     kycProvider(overrides?: CallOverrides): Promise<BigNumber>;
-
-    treasury(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    activityReward(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    custodian(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    checkWhitelist(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     kycProvider(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    treasury(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

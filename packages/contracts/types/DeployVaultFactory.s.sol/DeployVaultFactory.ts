@@ -21,51 +21,22 @@ import type {
   OnEvent,
 } from "../common";
 
-export declare namespace ICredbull {
-  export type EntitiesStruct = {
-    kycProvider: string;
-    treasury: string;
-    activityReward: string;
-    custodian: string;
-  };
-
-  export type EntitiesStructOutput = [string, string, string, string] & {
-    kycProvider: string;
-    treasury: string;
-    activityReward: string;
-    custodian: string;
-  };
-}
-
 export interface DeployVaultFactoryInterface extends utils.Interface {
   functions: {
     "IS_SCRIPT()": FunctionFragment;
-    "deployCredbullEntities((address,address,address,address))": FunctionFragment;
     "run()": FunctionFragment;
     "runTest()": FunctionFragment;
   };
 
   getFunction(
-    nameOrSignatureOrTopic:
-      | "IS_SCRIPT"
-      | "deployCredbullEntities"
-      | "run"
-      | "runTest"
+    nameOrSignatureOrTopic: "IS_SCRIPT" | "run" | "runTest"
   ): FunctionFragment;
 
   encodeFunctionData(functionFragment: "IS_SCRIPT", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "deployCredbullEntities",
-    values: [ICredbull.EntitiesStruct]
-  ): string;
   encodeFunctionData(functionFragment: "run", values?: undefined): string;
   encodeFunctionData(functionFragment: "runTest", values?: undefined): string;
 
   decodeFunctionResult(functionFragment: "IS_SCRIPT", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "deployCredbullEntities",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "run", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "runTest", data: BytesLike): Result;
 
@@ -101,11 +72,6 @@ export interface DeployVaultFactory extends BaseContract {
   functions: {
     IS_SCRIPT(overrides?: CallOverrides): Promise<[boolean]>;
 
-    deployCredbullEntities(
-      config: ICredbull.EntitiesStruct,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
     run(
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
@@ -117,11 +83,6 @@ export interface DeployVaultFactory extends BaseContract {
 
   IS_SCRIPT(overrides?: CallOverrides): Promise<boolean>;
 
-  deployCredbullEntities(
-    config: ICredbull.EntitiesStruct,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
   run(overrides?: Overrides & { from?: string }): Promise<ContractTransaction>;
 
   runTest(
@@ -130,11 +91,6 @@ export interface DeployVaultFactory extends BaseContract {
 
   callStatic: {
     IS_SCRIPT(overrides?: CallOverrides): Promise<boolean>;
-
-    deployCredbullEntities(
-      config: ICredbull.EntitiesStruct,
-      overrides?: CallOverrides
-    ): Promise<string>;
 
     run(
       overrides?: CallOverrides
@@ -150,11 +106,6 @@ export interface DeployVaultFactory extends BaseContract {
   estimateGas: {
     IS_SCRIPT(overrides?: CallOverrides): Promise<BigNumber>;
 
-    deployCredbullEntities(
-      config: ICredbull.EntitiesStruct,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
     run(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
 
     runTest(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
@@ -162,11 +113,6 @@ export interface DeployVaultFactory extends BaseContract {
 
   populateTransaction: {
     IS_SCRIPT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    deployCredbullEntities(
-      config: ICredbull.EntitiesStruct,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
 
     run(
       overrides?: Overrides & { from?: string }

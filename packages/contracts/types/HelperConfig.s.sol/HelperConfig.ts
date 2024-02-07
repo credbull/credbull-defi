@@ -29,17 +29,14 @@ export type FactoryParamsStructOutput = [string, string] & {
 
 export type NetworkConfigStruct = {
   vaultParams: ICredbull.VaultParamsStruct;
-  entities: ICredbull.EntitiesStruct;
   factoryParams: FactoryParamsStruct;
 };
 
 export type NetworkConfigStructOutput = [
   ICredbull.VaultParamsStructOutput,
-  ICredbull.EntitiesStructOutput,
   FactoryParamsStructOutput
 ] & {
   vaultParams: ICredbull.VaultParamsStructOutput;
-  entities: ICredbull.EntitiesStructOutput;
   factoryParams: FactoryParamsStructOutput;
 };
 
@@ -57,8 +54,6 @@ export declare namespace ICredbull {
     redemptionClosesAt: BigNumberish;
     custodian: string;
     kycProvider: string;
-    treasury: string;
-    activityReward: string;
   };
 
   export type VaultParamsStructOutput = [
@@ -72,8 +67,6 @@ export declare namespace ICredbull {
     BigNumber,
     BigNumber,
     BigNumber,
-    string,
-    string,
     string,
     string
   ] & {
@@ -89,22 +82,6 @@ export declare namespace ICredbull {
     redemptionClosesAt: BigNumber;
     custodian: string;
     kycProvider: string;
-    treasury: string;
-    activityReward: string;
-  };
-
-  export type EntitiesStruct = {
-    kycProvider: string;
-    treasury: string;
-    activityReward: string;
-    custodian: string;
-  };
-
-  export type EntitiesStructOutput = [string, string, string, string] & {
-    kycProvider: string;
-    treasury: string;
-    activityReward: string;
-    custodian: string;
   };
 }
 

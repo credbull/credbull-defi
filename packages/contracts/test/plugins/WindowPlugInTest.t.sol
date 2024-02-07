@@ -7,9 +7,9 @@ import { WindowVaultMock } from "../mocks/vaults/WindowVaultMock.m.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
-import { WindowPlugIn } from "../../src/plugins/WindowPlug.sol";
+import { WindowPlugIn } from "../../src/plugins/WindowPlugIn.sol";
 
-contract WindowPlugTest is Test {
+contract WindowPlugInTest is Test {
     WindowVaultMock private vault;
 
     ICredbull.VaultParams private vaultParams;

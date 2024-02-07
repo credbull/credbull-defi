@@ -40,8 +40,6 @@ export declare namespace ICredbull {
     redemptionClosesAt: BigNumberish;
     custodian: string;
     kycProvider: string;
-    treasury: string;
-    activityReward: string;
   };
 
   export type VaultParamsStructOutput = [
@@ -55,8 +53,6 @@ export declare namespace ICredbull {
     BigNumber,
     BigNumber,
     BigNumber,
-    string,
-    string,
     string,
     string
   ] & {
@@ -72,8 +68,6 @@ export declare namespace ICredbull {
     redemptionClosesAt: BigNumber;
     custodian: string;
     kycProvider: string;
-    treasury: string;
-    activityReward: string;
   };
 }
 

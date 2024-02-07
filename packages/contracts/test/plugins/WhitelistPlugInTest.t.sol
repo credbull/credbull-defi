@@ -7,9 +7,9 @@ import { WhitelistVaultMock } from "../mocks/vaults/WhitelistVaultMock.m.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
-import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlug.sol";
+import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
 
-contract WhitelistPlugTest is Test {
+contract WhitelistPlugInTest is Test {
     WhitelistVaultMock private vault;
 
     ICredbull.VaultParams private vaultParams;

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import { CredbullBaseVault } from "../../../src/base/CredbullBaseVault.sol";
-import { WindowPlugIn } from "../../../src/plugins/WindowPlug.sol";
+import { WindowPlugIn } from "../../../src/plugins/WindowPlugIn.sol";
 
 contract WindowVaultMock is CredbullBaseVault, WindowPlugIn {
     constructor(VaultParams memory params)
