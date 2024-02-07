@@ -5,6 +5,9 @@
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
+    "contracts#build": {
+      "outputs": ["types/**"]
+    },
     "api#build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
