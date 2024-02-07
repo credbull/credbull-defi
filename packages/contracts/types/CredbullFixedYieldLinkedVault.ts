@@ -31,6 +31,7 @@ export declare namespace ICredbull {
     owner: string;
     operator: string;
     asset: string;
+    token: string;
     shareName: string;
     shareSymbol: string;
     promisedYield: BigNumberish;
@@ -48,6 +49,7 @@ export declare namespace ICredbull {
     string,
     string,
     string,
+    string,
     BigNumber,
     BigNumber,
     BigNumber,
@@ -59,6 +61,7 @@ export declare namespace ICredbull {
     owner: string;
     operator: string;
     asset: string;
+    token: string;
     shareName: string;
     shareSymbol: string;
     promisedYield: BigNumber;
@@ -114,7 +117,6 @@ export interface CredbullFixedYieldLinkedVaultInterface
     "redemptionOpensAtTimestamp()": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
-    "setParentLink(address)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "symbol()": FunctionFragment;
     "toggleMaturityCheck(bool)": FunctionFragment;
@@ -170,7 +172,6 @@ export interface CredbullFixedYieldLinkedVaultInterface
       | "redemptionOpensAtTimestamp"
       | "renounceRole"
       | "revokeRole"
-      | "setParentLink"
       | "supportsInterface"
       | "symbol"
       | "toggleMaturityCheck"
@@ -310,10 +311,6 @@ export interface CredbullFixedYieldLinkedVaultInterface
   encodeFunctionData(
     functionFragment: "revokeRole",
     values: [BytesLike, string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setParentLink",
-    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "supportsInterface",
@@ -460,10 +457,6 @@ export interface CredbullFixedYieldLinkedVaultInterface
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "setParentLink",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "supportsInterface",
     data: BytesLike
@@ -773,11 +766,6 @@ export interface CredbullFixedYieldLinkedVault extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
-    setParentLink(
-      _parentLink: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -964,11 +952,6 @@ export interface CredbullFixedYieldLinkedVault extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
-  setParentLink(
-    _parentLink: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
   supportsInterface(
     interfaceId: BytesLike,
     overrides?: CallOverrides
@@ -1150,11 +1133,6 @@ export interface CredbullFixedYieldLinkedVault extends BaseContract {
     revokeRole(
       role: BytesLike,
       account: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setParentLink(
-      _parentLink: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1431,11 +1409,6 @@ export interface CredbullFixedYieldLinkedVault extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
-    setParentLink(
-      _parentLink: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -1650,11 +1623,6 @@ export interface CredbullFixedYieldLinkedVault extends BaseContract {
     revokeRole(
       role: BytesLike,
       account: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setParentLink(
-      _parentLink: string,
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 

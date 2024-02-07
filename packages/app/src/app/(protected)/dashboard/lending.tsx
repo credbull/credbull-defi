@@ -132,7 +132,7 @@ function Vault(props: VaultProps) {
     }
   };
 
-  const name = props.data.type === 'fixed_yield' ? 'Fixed Yield Vault' : 'Structured Yield Vault';
+  const name = props.data.type === 'fixed_yield' ? 'Fixed Yield' : 'Fixed Yield (+ Upside)';
 
   const redemptionsOpen = parseISO(props.data.redemptions_opened_at);
   const redemptionsClose = parseISO(props.data.redemptions_closed_at);

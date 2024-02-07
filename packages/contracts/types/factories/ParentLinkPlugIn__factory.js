@@ -37,19 +37,6 @@ const _abi = [
         stateMutability: "view",
         type: "function",
     },
-    {
-        inputs: [
-            {
-                internalType: "address",
-                name: "_parentLink",
-                type: "address",
-            },
-        ],
-        name: "setParentLink",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
 ];
 class ParentLinkPlugIn__factory {
     static createInterface() {

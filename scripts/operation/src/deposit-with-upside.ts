@@ -1,7 +1,6 @@
 import {
   CredbullFixedYieldVaultWithUpside__factory,
   CredbullFixedYieldVault__factory,
-  CredbullVaultWithUpsideFactory__factory,
   MockStablecoin__factory,
   MockToken__factory,
 } from '@credbull/contracts';
@@ -9,7 +8,7 @@ import { formatEther, parseEther } from 'ethers/lib/utils';
 
 import { headers, linkWalletMessage, login, signer, supabase } from './utils/helpers';
 
-export const main = (scenarios: { upside: boolean }) => {
+export const main = () => {
   setTimeout(async () => {
     console.log('\n');
     console.log('=====================================');
@@ -56,9 +55,9 @@ export const main = (scenarios: { upside: boolean }) => {
 
     console.log('Bob: queries for existing vaults. - OK');
 
-    const vaultAddress = vaults[0]['data'][scenarios.upside ? 1 : 0].address;
-    const strategyAddress = vaults[0]['data'][0].strategy_address;
-    const usdcAddress = vaults[0]['data'][0].asset_address;
+    const vaultAddress = vaults['data'][0].address;
+    const strategyAddress = vaults['data'][0].strategy_address;
+    const usdcAddress = vaults['data'][0].asset_address;
 
     const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
     const mintTx = await usdc.mint(bobSigner.address, parseEther('1000'));
@@ -69,23 +68,21 @@ export const main = (scenarios: { upside: boolean }) => {
     await approveTx.wait();
     console.log('Bob: gives the approval to the vault to swap it`s USDC. - OK');
 
-    if (scenarios.upside) {
-      const client = supabase({ admin: true });
-      const addresses = await client.from('contracts_addresses').select();
-      if (addresses.error) return addresses;
+    const client = supabase({ admin: true });
+    const addresses = await client.from('contracts_addresses').select();
+    if (addresses.error) return addresses;
 
-      const tokenAddress = addresses.data.find((a) => a.contract_name === 'MockToken');
-      if (!tokenAddress) throw new Error('Token address not found');
+    const tokenAddress = addresses.data.find((a) => a.contract_name === 'MockToken');
+    if (!tokenAddress) throw new Error('Token address not found');
 
-      const token = MockToken__factory.connect(tokenAddress.address, bobSigner);
-      const tokenTx = await token.mint(bobSigner.address, parseEther('1000'));
-      await tokenTx.wait();
-      console.log('token usdc - OK');
+    const token = MockToken__factory.connect(tokenAddress.address, bobSigner);
+    const tokenTx = await token.mint(bobSigner.address, parseEther('1000'));
+    await tokenTx.wait();
+    console.log('token usdc - OK');
 
-      const approveTTx = await token.approve(strategyAddress, parseEther('1000'));
-      await approveTTx.wait();
-      console.log('Bob: gives the approval to the vault to swap it`s cToken. - OK');
-    }
+    const approveTTx = await token.approve(strategyAddress, parseEther('1000'));
+    await approveTTx.wait();
+    console.log('Bob: gives the approval to the vault to swap it`s cToken. - OK');
 
     const vault = CredbullFixedYieldVaultWithUpside__factory.connect(strategyAddress, bobSigner);
     const depositTx = await vault.deposit(parseEther('1000'), bobSigner.address, { gasLimit: 10000000 });
@@ -96,10 +93,8 @@ export const main = (scenarios: { upside: boolean }) => {
     const balanceOfInner = await innerVault.balanceOf(bobSigner.address);
     console.log(`Bob: has ${formatEther(balanceOfInner)} USDC deposited in the vault. - OK`);
 
-    if (scenarios.upside) {
-      const balanceOf = await vault.balanceOf(bobSigner.address);
-      console.log(`Bob: has ${formatEther(balanceOf)} cToken deposited in the vault. - OK`);
-    }
+    const balanceOf = await vault.balanceOf(bobSigner.address);
+    console.log(`Bob: has ${formatEther(balanceOf)} cToken deposited in the vault. - OK`);
 
     console.log('\n');
     console.log('=====================================');

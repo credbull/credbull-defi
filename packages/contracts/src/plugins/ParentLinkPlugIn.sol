@@ -9,7 +9,8 @@ abstract contract ParentLinkPlugIn {
 
     bool public checkParentLink;
 
-    constructor() {
+    constructor(address _parentLink) {
+        parentLink = _parentLink;
         checkParentLink = true;
     }
 
@@ -21,9 +22,5 @@ abstract contract ParentLinkPlugIn {
 
     function _toggleParentLinkCheck(bool status) internal virtual {
         checkParentLink = status;
-    }
-
-    function setParentLink(address _parentLink) public {
-        parentLink = _parentLink;
     }
 }

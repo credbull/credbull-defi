@@ -43,6 +43,10 @@ export class VaultParamsDto extends EntitiesDto {
   @IsString()
   asset: string;
 
+  @ApiProperty({ type: String, example: '0x5FbDB2315678afecb367f032d93F642f64180aa3' })
+  @IsString()
+  token: string;
+
   @ApiProperty({ type: String, example: 'Test share' })
   @IsString()
   shareName: string;

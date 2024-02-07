@@ -45,6 +45,7 @@ export declare namespace ICredbull {
     owner: string;
     operator: string;
     asset: string;
+    token: string;
     shareName: string;
     shareSymbol: string;
     promisedYield: BigNumberish;
@@ -62,6 +63,7 @@ export declare namespace ICredbull {
     string,
     string,
     string,
+    string,
     BigNumber,
     BigNumber,
     BigNumber,
@@ -73,6 +75,7 @@ export declare namespace ICredbull {
     owner: string;
     operator: string;
     asset: string;
+    token: string;
     shareName: string;
     shareSymbol: string;
     promisedYield: BigNumber;

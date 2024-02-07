@@ -17,9 +17,9 @@ contract FixedYieldLinkedVault is
 {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-    constructor(VaultParams memory params)
+    constructor(VaultParams memory params, address _parentLink)
         CallerReceiverVault(params)
-        ParentLinkPlugIn()
+        ParentLinkPlugIn(_parentLink)
         WhitelistPlugIn(params.kycProvider)
         WindowPlugIn(params.depositOpensAt, params.depositClosesAt, params.redemptionOpensAt, params.redemptionClosesAt)
     {
@@ -28,7 +28,7 @@ contract FixedYieldLinkedVault is
     }
 
     modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {
-        _checkParentLink(caller);
+        _checkParentLink(_msgSender());
         _checkIsWhitelisted(receiver);
         _checkIsDepositWithinWindow();
         _;

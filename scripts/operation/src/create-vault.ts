@@ -5,6 +5,7 @@ import { generateAddress, headers, login, supabase, userByEmail } from './utils/
 const createParams = (params: {
   kycProvider?: string;
   asset?: string;
+  token?: string;
   matured?: boolean;
   upside?: string;
   tenant?: string;
@@ -17,6 +18,7 @@ const createParams = (params: {
   const activityReward = process.env.ADDRESSES_ACTIVITY_REWARD;
 
   const asset = params.asset;
+  const token = params.token;
   const kycProvider = params.kycProvider;
 
   const week = 604800;
@@ -51,6 +53,7 @@ const createParams = (params: {
     owner,
     operator,
     asset,
+    token,
     custodian,
     kycProvider,
     treasury,
@@ -79,6 +82,7 @@ export const main = (
 
     const kycProvider = addresses.data.find((i) => i.contract_name === 'MockKYCProvider')?.address;
     const asset = addresses.data.find((i) => i.contract_name === 'MockStablecoin')?.address;
+    const token = addresses.data.find((i) => i.contract_name === 'MockToken')?.address;
     const createVault = await fetch(
       `${process.env.API_BASE_URL}/vaults/create-vault${scenarios.upside ? '-upside' : ''}`,
       {
@@ -87,6 +91,7 @@ export const main = (
           createParams({
             kycProvider,
             asset,
+            token,
             matured: scenarios.matured,
             upside: scenarios.upside ? params?.upsideVault : undefined,
             tenant: scenarios.tenant && params?.tenantEmail ? (await userByEmail(params?.tenantEmail)).id : undefined,

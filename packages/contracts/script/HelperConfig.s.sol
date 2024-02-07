@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
 import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
+import { MockToken } from "../test/mocks/MockToken.sol";
 import { MockKYCProvider } from "../test/mocks/MockKYCProvider.sol";
 import { ICredbull } from "../src/interface/ICredbull.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
@@ -43,6 +44,7 @@ contract HelperConfig is Script {
         // no need for vault params when using a real network
         ICredbull.VaultParams memory empty = ICredbull.VaultParams({
             asset: IERC20(vm.addr(0)),
+            token: IERC20(vm.addr(0)),
             owner: vm.addr(0),
             operator: vm.addr(0),
             custodian: vm.addr(0),
@@ -79,12 +81,14 @@ contract HelperConfig is Script {
         uint256 year = 365 days;
 
         vm.startBroadcast();
+        MockToken token = new MockToken(type(uint128).max);
         MockStablecoin usdc = new MockStablecoin(type(uint128).max);
         MockKYCProvider kycProvider = new MockKYCProvider(owner);
         vm.stopBroadcast();
 
         ICredbull.VaultParams memory anvilVaultParams = ICredbull.VaultParams({
             asset: IERC20(usdc),
+            token: IERC20(token),
             shareName: "Share_sep",
             shareSymbol: "SYM_sep",
             owner: owner,

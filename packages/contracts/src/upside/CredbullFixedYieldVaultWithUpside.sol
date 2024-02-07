@@ -3,12 +3,12 @@ pragma solidity ^0.8.19;
 
 pragma solidity ^0.8.19;
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { FixedYieldVault } from "../FixedYieldVault.sol";
-import { ParentLinkPlugIn } from "../plugins/ParentLinkPlugIn.sol";
 
-contract CredbullFixedYieldVaultWithUpside is FixedYieldVault {
+contract CredbullFixedYieldVaultWithUpside is FixedYieldVault, Ownable {
     using Math for uint256;
 
     address public linkedVault;
@@ -16,12 +16,8 @@ contract CredbullFixedYieldVaultWithUpside is FixedYieldVault {
     uint256 public twap = 1;
     uint256 public collateralPercentage;
 
-    constructor(VaultParams memory params, address _linkedVault, uint256 _collateralPercentage)
-        FixedYieldVault(params)
-    {
+    constructor(VaultParams memory params, uint256 _collateralPercentage) FixedYieldVault(params) Ownable(msg.sender) {
         collateralPercentage = _collateralPercentage;
-        linkedVault = _linkedVault;
-        ParentLinkPlugIn(linkedVault).setParentLink(address(this));
     }
 
     function deposit(uint256 assets, address receiver) public override returns (uint256) {
@@ -56,5 +52,9 @@ contract CredbullFixedYieldVaultWithUpside is FixedYieldVault {
 
     function setTWAP(uint256 _twap) public onlyRole(OPERATOR_ROLE) {
         twap = _twap;
+    }
+
+    function setLinkedVault(address _linkedVault) public onlyOwner {
+        linkedVault = _linkedVault;
     }
 }

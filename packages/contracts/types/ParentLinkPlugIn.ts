@@ -6,8 +6,6 @@ import type {
   BigNumber,
   BytesLike,
   CallOverrides,
-  ContractTransaction,
-  Overrides,
   PopulatedTransaction,
   Signer,
   utils,
@@ -25,11 +23,10 @@ export interface ParentLinkPlugInInterface extends utils.Interface {
   functions: {
     "checkParentLink()": FunctionFragment;
     "parentLink()": FunctionFragment;
-    "setParentLink(address)": FunctionFragment;
   };
 
   getFunction(
-    nameOrSignatureOrTopic: "checkParentLink" | "parentLink" | "setParentLink"
+    nameOrSignatureOrTopic: "checkParentLink" | "parentLink"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -40,20 +37,12 @@ export interface ParentLinkPlugInInterface extends utils.Interface {
     functionFragment: "parentLink",
     values?: undefined
   ): string;
-  encodeFunctionData(
-    functionFragment: "setParentLink",
-    values: [string]
-  ): string;
 
   decodeFunctionResult(
     functionFragment: "checkParentLink",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "parentLink", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "setParentLink",
-    data: BytesLike
-  ): Result;
 
   events: {};
 }
@@ -88,31 +77,16 @@ export interface ParentLinkPlugIn extends BaseContract {
     checkParentLink(overrides?: CallOverrides): Promise<[boolean]>;
 
     parentLink(overrides?: CallOverrides): Promise<[string]>;
-
-    setParentLink(
-      _parentLink: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
   };
 
   checkParentLink(overrides?: CallOverrides): Promise<boolean>;
 
   parentLink(overrides?: CallOverrides): Promise<string>;
 
-  setParentLink(
-    _parentLink: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     checkParentLink(overrides?: CallOverrides): Promise<boolean>;
 
     parentLink(overrides?: CallOverrides): Promise<string>;
-
-    setParentLink(
-      _parentLink: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {};
@@ -121,21 +95,11 @@ export interface ParentLinkPlugIn extends BaseContract {
     checkParentLink(overrides?: CallOverrides): Promise<BigNumber>;
 
     parentLink(overrides?: CallOverrides): Promise<BigNumber>;
-
-    setParentLink(
-      _parentLink: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     checkParentLink(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     parentLink(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    setParentLink(
-      _parentLink: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
   };
 }

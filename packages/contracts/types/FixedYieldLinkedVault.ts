@@ -31,6 +31,7 @@ export declare namespace ICredbull {
     owner: string;
     operator: string;
     asset: string;
+    token: string;
     shareName: string;
     shareSymbol: string;
     promisedYield: BigNumberish;
@@ -48,6 +49,7 @@ export declare namespace ICredbull {
     string,
     string,
     string,
+    string,
     BigNumber,
     BigNumber,
     BigNumber,
@@ -59,6 +61,7 @@ export declare namespace ICredbull {
     owner: string;
     operator: string;
     asset: string;
+    token: string;
     shareName: string;
     shareSymbol: string;
     promisedYield: BigNumber;
@@ -113,7 +116,6 @@ export interface FixedYieldLinkedVaultInterface extends utils.Interface {
     "redemptionOpensAtTimestamp()": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
-    "setParentLink(address)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "symbol()": FunctionFragment;
     "toggleMaturityCheck(bool)": FunctionFragment;
@@ -169,7 +171,6 @@ export interface FixedYieldLinkedVaultInterface extends utils.Interface {
       | "redemptionOpensAtTimestamp"
       | "renounceRole"
       | "revokeRole"
-      | "setParentLink"
       | "supportsInterface"
       | "symbol"
       | "toggleMaturityCheck"
@@ -309,10 +310,6 @@ export interface FixedYieldLinkedVaultInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "revokeRole",
     values: [BytesLike, string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setParentLink",
-    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "supportsInterface",
@@ -459,10 +456,6 @@ export interface FixedYieldLinkedVaultInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "setParentLink",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "supportsInterface",
     data: BytesLike
@@ -772,11 +765,6 @@ export interface FixedYieldLinkedVault extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
-    setParentLink(
-      _parentLink: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -963,11 +951,6 @@ export interface FixedYieldLinkedVault extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
-  setParentLink(
-    _parentLink: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
   supportsInterface(
     interfaceId: BytesLike,
     overrides?: CallOverrides
@@ -1149,11 +1132,6 @@ export interface FixedYieldLinkedVault extends BaseContract {
     revokeRole(
       role: BytesLike,
       account: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setParentLink(
-      _parentLink: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1430,11 +1408,6 @@ export interface FixedYieldLinkedVault extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
-    setParentLink(
-      _parentLink: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -1649,11 +1622,6 @@ export interface FixedYieldLinkedVault extends BaseContract {
     revokeRole(
       role: BytesLike,
       account: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setParentLink(
-      _parentLink: string,
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 

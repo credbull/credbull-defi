@@ -31,6 +31,7 @@ export declare namespace ICredbull {
     owner: string;
     operator: string;
     asset: string;
+    token: string;
     shareName: string;
     shareSymbol: string;
     promisedYield: BigNumberish;
@@ -48,6 +49,7 @@ export declare namespace ICredbull {
     string,
     string,
     string,
+    string,
     BigNumber,
     BigNumber,
     BigNumber,
@@ -59,6 +61,7 @@ export declare namespace ICredbull {
     owner: string;
     operator: string;
     asset: string;
+    token: string;
     shareName: string;
     shareSymbol: string;
     promisedYield: BigNumber;
@@ -75,7 +78,7 @@ export interface CredbullVaultFactoryInterface extends utils.Interface {
   functions: {
     "DEFAULT_ADMIN_ROLE()": FunctionFragment;
     "OPERATOR_ROLE()": FunctionFragment;
-    "createVault((address,address,address,string,string,uint256,uint256,uint256,uint256,uint256,address,address),string)": FunctionFragment;
+    "createVault((address,address,address,address,string,string,uint256,uint256,uint256,uint256,uint256,address,address),string)": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
     "getTotalVaultCount()": FunctionFragment;
     "getVaultAtIndex(uint256)": FunctionFragment;
@@ -196,7 +199,7 @@ export interface CredbullVaultFactoryInterface extends utils.Interface {
     "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
     "RoleGranted(bytes32,address,address)": EventFragment;
     "RoleRevoked(bytes32,address,address)": EventFragment;
-    "VaultDeployed(address,(address,address,address,string,string,uint256,uint256,uint256,uint256,uint256,address,address),string)": EventFragment;
+    "VaultDeployed(address,(address,address,address,address,string,string,uint256,uint256,uint256,uint256,uint256,address,address),string)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
@@ -468,7 +471,7 @@ export interface CredbullVaultFactory extends BaseContract {
       sender?: string | null
     ): RoleRevokedEventFilter;
 
-    "VaultDeployed(address,(address,address,address,string,string,uint256,uint256,uint256,uint256,uint256,address,address),string)"(
+    "VaultDeployed(address,(address,address,address,address,string,string,uint256,uint256,uint256,uint256,uint256,address,address),string)"(
       vault?: string | null,
       params?: null,
       options?: null

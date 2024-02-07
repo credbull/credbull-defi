@@ -13,6 +13,7 @@ interface ICredbull {
         address owner;
         address operator;
         IERC20 asset;
+        IERC20 token;
         string shareName;
         string shareSymbol;
         uint256 promisedYield;
