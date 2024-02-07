@@ -32,8 +32,9 @@ contract CredbullUpsideVaultFactory is AccessControl {
         onlyRole(OPERATOR_ROLE)
         returns (CredbullUpsideVault)
     {
-        CredbullUpsideVault newVault =
-        new CredbullUpsideVault(baseVault, upsideVault, IERC20(asset), IERC20Metadata(baseVault).name(), IERC20Metadata(baseVault).symbol());
+        CredbullUpsideVault newVault = new CredbullUpsideVault(
+            baseVault, upsideVault, IERC20(asset), IERC20Metadata(baseVault).name(), IERC20Metadata(baseVault).symbol()
+        );
 
         allVaults.add(address(newVault));
 
