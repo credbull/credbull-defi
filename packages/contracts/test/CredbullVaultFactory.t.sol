@@ -7,7 +7,7 @@ import { CredbullVaultFactory } from "../src/CredbullVaultFactory.sol";
 import { DeployVaultFactory } from "../script/DeployVaultFactory.s.sol";
 import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
 import { ICredbull } from "../src/interface/ICredbull.sol";
-import { CredbullVault } from "../src/CredbullVault.sol";
+import { CredbullFixedYieldVault } from "../src/CredbullFixedYieldVault.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract CredbullVaultFactoryTest is Test {
@@ -27,7 +27,7 @@ contract CredbullVaultFactoryTest is Test {
         ICredbull.VaultParams memory params = config.vaultParams;
 
         vm.prank(config.factoryParams.operator);
-        CredbullVault vault = factory.createVault(params, OPTIONS);
+        CredbullFixedYieldVault vault = factory.createVault(params, OPTIONS);
 
         assertEq(vault.asset(), address(params.asset));
         assertEq(vault.name(), params.shareName);
@@ -74,16 +74,16 @@ contract CredbullVaultFactoryTest is Test {
     }
 
     function test__ShouldReturnVaultAtIndex() public {
-        CredbullVault vault = createVault();
+        CredbullFixedYieldVault vault = createVault();
         assertEq(factory.getVaultAtIndex(0), address(vault));
     }
 
     function test__ShouldReturnVaultExistStatus() public {
-        CredbullVault vault = createVault();
+        CredbullFixedYieldVault vault = createVault();
         assertEq(factory.isVaultExist(address(vault)), true);
     }
 
-    function createVault() internal returns (CredbullVault vault) {
+    function createVault() internal returns (CredbullFixedYieldVault vault) {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         ICredbull.VaultParams memory params = config.vaultParams;
 

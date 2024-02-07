@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.19;
 
-import { MaturityVault } from "../../../src/v2/extensions/MaturityVault.sol";
+import { MaturityVault } from "../../../src/extensions/MaturityVault.sol";
 
 contract MaturityVaultMock is MaturityVault {
     constructor(VaultParams memory params) MaturityVault(params) { }

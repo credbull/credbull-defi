@@ -3,11 +3,11 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
-import { MaturityVaultMock } from "../../mocks/vaults/MaturityVaultMock.m.sol";
-import { ICredbull } from "../../../src/interface/ICredbull.sol";
-import { NetworkConfig, HelperConfig } from "../../../script/HelperConfig.s.sol";
-import { MockStablecoin } from "../../mocks/MockStablecoin.sol";
-import { MaturityVault } from "../../../src/v2/extensions/MaturityVault.sol";
+import { MaturityVaultMock } from "../mocks/vaults/MaturityVaultMock.m.sol";
+import { ICredbull } from "../../src/interface/ICredbull.sol";
+import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
+import { MockStablecoin } from "../mocks/MockStablecoin.sol";
+import { MaturityVault } from "../../src/extensions/MaturityVault.sol";
 
 contract MaturityVaultTest is Test {
     MaturityVaultMock private vault;

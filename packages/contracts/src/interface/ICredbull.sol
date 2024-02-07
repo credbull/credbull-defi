@@ -5,9 +5,9 @@ pragma solidity ^0.8.19;
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 /**
- * @notice - abstract contract representing the interface for Credbull contracts.
+ * @notice - Interface for all Credbull contracts.
  */
-abstract contract ICredbull {
+interface ICredbull {
     //Struct defining parameters for a vault
     struct VaultParams {
         address owner;

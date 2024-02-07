@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.19;
 
-import { AKYCProvider } from "../../../test/mocks/MockKYCProvider.sol";
+import { AKYCProvider } from "../../test/mocks/MockKYCProvider.sol";
 
 abstract contract WhitelistPlugIn {
     //Error to revert if the address is not whitelisted

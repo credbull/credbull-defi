@@ -3,11 +3,11 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
-import { WindowVaultMock } from "../../mocks/vaults/WindowVaultMock.m.sol";
-import { ICredbull } from "../../../src/interface/ICredbull.sol";
-import { NetworkConfig, HelperConfig } from "../../../script/HelperConfig.s.sol";
-import { MockStablecoin } from "../../mocks/MockStablecoin.sol";
-import { WindowPlugIn } from "../../../src/v2/plugins/WindowPlug.sol";
+import { WindowVaultMock } from "../mocks/vaults/WindowVaultMock.m.sol";
+import { ICredbull } from "../../src/interface/ICredbull.sol";
+import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
+import { MockStablecoin } from "../mocks/MockStablecoin.sol";
+import { WindowPlugIn } from "../../src/plugins/WindowPlug.sol";
 
 contract WindowPlugTest is Test {
     WindowVaultMock private vault;

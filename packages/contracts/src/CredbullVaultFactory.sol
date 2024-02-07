@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.19;
 
-import { CredbullVault } from "./CredbullVault.sol";
+import { CredbullFixedYieldVault } from "./CredbullFixedYieldVault.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { ICredbull } from "./interface/ICredbull.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
@@ -33,9 +33,9 @@ contract CredbullVaultFactory is AccessControl {
     function createVault(ICredbull.VaultParams memory _params, string calldata _options)
         public
         onlyRole(OPERATOR_ROLE)
-        returns (CredbullVault newVault)
+        returns (CredbullFixedYieldVault newVault)
     {
-        newVault = new CredbullVault(_params);
+        newVault = new CredbullFixedYieldVault(_params);
 
         emit VaultDeployed(address(newVault), _params, _options);
 
