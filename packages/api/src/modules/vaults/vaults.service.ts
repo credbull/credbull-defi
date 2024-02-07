@@ -1,8 +1,8 @@
 import {
-  CredbullVault,
+  CredbullFixedYieldVault,
+  CredbullFixedYieldVault__factory,
   CredbullVaultFactory,
   CredbullVaultFactory__factory,
-  CredbullVault__factory,
 } from '@credbull/contracts';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BigNumber } from 'ethers';
@@ -228,12 +228,12 @@ export class VaultsService {
     return this.supabase.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id).select();
   }
 
-  private async contract(vault: Tables<'vaults'>): Promise<CredbullVault> {
-    return CredbullVault__factory.connect(vault.address, await this.ethers.deployer());
+  private async contract(vault: Tables<'vaults'>): Promise<CredbullFixedYieldVault> {
+    return CredbullFixedYieldVault__factory.connect(vault.address, await this.ethers.deployer());
   }
 
-  private async strategy(vault: Tables<'vaults'>): Promise<CredbullVault> {
-    return CredbullVault__factory.connect(vault.strategy_address, await this.ethers.deployer());
+  private async strategy(vault: Tables<'vaults'>): Promise<CredbullFixedYieldVault> {
+    return CredbullFixedYieldVault__factory.connect(vault.strategy_address, await this.ethers.deployer());
   }
 
   private async factoryContract(addr: string): Promise<CredbullVaultFactory> {
