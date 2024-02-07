@@ -36,7 +36,8 @@ RUN yarn run build
 FROM base
 
 # Copy built application
-COPY --from=build /app/packages /app
+COPY --from=build /app/packages/contracts /app/contracts
+COPY --from=build /app/packages/api /app/api
 
 # Start the server by default, this can be overwritten at runtime
 WORKDIR /app/api

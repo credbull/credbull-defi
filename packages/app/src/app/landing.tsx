@@ -15,7 +15,7 @@ export function Landing() {
         <Group position="center" mt="lg">
           <Flex direction="column" align="center">
             <Text c="dimmed" fw={500} fz="1rem">
-              The world is becoming more volatile.{' '}
+              The world is becoming more volatile{' '}
             </Text>
             <Text fw={500} fz="1.5rem" fs="italic">
               Your investments don’t need to be..{' '}
