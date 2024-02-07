@@ -11,6 +11,7 @@
     "migrate:local": "supabase migration up —local",
     "dev": "nest start --watch",
     "build": "nest build",
+    "build:ci": "yarn build",
     "start": "nest start",
     "start:prod": "node dist/src/main",
     "test": "vitest --run",
