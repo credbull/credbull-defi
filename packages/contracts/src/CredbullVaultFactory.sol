@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.19;
 
-import { CredbullFixedYieldVault } from "./CredbullFixedYieldVault.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { ICredbull } from "./interface/ICredbull.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { CredbullFixedYieldVault } from "./CredbullFixedYieldVault.sol";
+import { ICredbull } from "./interface/ICredbull.sol";
 
 /**
  * @notice - A factory contract to create vault contract
@@ -17,7 +17,7 @@ contract CredbullVaultFactory is AccessControl {
     event VaultDeployed(address indexed vault, ICredbull.VaultParams params, string options);
 
     //Address set that contains list of all vault address
-    EnumerableSet.AddressSet private allVaults;
+    EnumerableSet.AddressSet internal allVaults;
 
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
@@ -32,14 +32,17 @@ contract CredbullVaultFactory is AccessControl {
      */
     function createVault(ICredbull.VaultParams memory _params, string calldata _options)
         public
+        virtual
         onlyRole(OPERATOR_ROLE)
-        returns (CredbullFixedYieldVault newVault)
+        returns (address)
     {
-        newVault = new CredbullFixedYieldVault(_params);
+        CredbullFixedYieldVault newVault = new CredbullFixedYieldVault(_params);
 
         emit VaultDeployed(address(newVault), _params, _options);
 
         allVaults.add(address(newVault));
+
+        return address(newVault);
     }
 
     //Get total no.of vaults

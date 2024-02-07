@@ -1,6 +1,7 @@
 import {
-  CredbullUpsideVault__factory,
-  CredbullVault__factory,
+  CredbullFixedYieldVaultWithUpside__factory,
+  CredbullFixedYieldVault__factory,
+  CredbullVaultWithUpsideFactory__factory,
   MockStablecoin__factory,
   MockToken__factory,
 } from '@credbull/contracts';
@@ -86,24 +87,17 @@ export const main = (scenarios: { upside: boolean }) => {
       console.log('Bob: gives the approval to the vault to swap it`s cToken. - OK');
     }
 
-    const innerVault = CredbullVault__factory.connect(vaultAddress, bobSigner);
-
-    const vault = CredbullUpsideVault__factory.connect(strategyAddress, bobSigner);
-    const depositTx = await vault['deposit(uint256,address,bool)'](
-      parseEther('1000'),
-      bobSigner.address,
-      Boolean(scenarios.upside),
-      {
-        gasLimit: 10000000,
-      },
-    );
+    const vault = CredbullFixedYieldVaultWithUpside__factory.connect(strategyAddress, bobSigner);
+    const depositTx = await vault.deposit(parseEther('1000'), bobSigner.address, { gasLimit: 10000000 });
     await depositTx.wait();
     console.log('Bob: deposits his USDC in the vault. - OK');
 
+    const innerVault = CredbullFixedYieldVault__factory.connect(vaultAddress, bobSigner);
     const balanceOfInner = await innerVault.balanceOf(bobSigner.address);
-    const balanceOf = await vault.balanceOf(bobSigner.address);
     console.log(`Bob: has ${formatEther(balanceOfInner)} USDC deposited in the vault. - OK`);
+
     if (scenarios.upside) {
+      const balanceOf = await vault.balanceOf(bobSigner.address);
       console.log(`Bob: has ${formatEther(balanceOf)} cToken deposited in the vault. - OK`);
     }
 

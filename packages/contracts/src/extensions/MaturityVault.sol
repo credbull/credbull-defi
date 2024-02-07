@@ -68,7 +68,7 @@ abstract contract MaturityVault is CredbullBaseVault {
         }
     }
 
-    function _toogleMaturityCheck(bool status) internal {
+    function _toggleMaturityCheck(bool status) internal {
         checkMaturity = status;
     }
 }

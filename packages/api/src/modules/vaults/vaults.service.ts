@@ -3,6 +3,8 @@ import {
   CredbullFixedYieldVault__factory,
   CredbullVaultFactory,
   CredbullVaultFactory__factory,
+  CredbullVaultWithUpsideFactory,
+  CredbullVaultWithUpsideFactory__factory,
 } from '@credbull/contracts';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BigNumber } from 'ethers';
@@ -24,7 +26,11 @@ import {
   prepareDistributionTransfers,
 } from './vaults.domain';
 import { VaultParamsDto } from './vaults.dto';
-import { addEntitiesAndDistribution, getFactoryContractAddress } from './vaults.repository';
+import {
+  addEntitiesAndDistribution,
+  getFactoryContractAddress,
+  getFactoryUpsideContractAddress,
+} from './vaults.repository';
 
 @Injectable()
 export class VaultsService {
@@ -38,13 +44,18 @@ export class VaultsService {
     return this.supabase.client().from('vaults').select('*').neq('status', 'created').lt('deposits_opened_at', 'now()');
   }
 
-  async createVault(params: VaultParamsDto): Promise<ServiceResponse<Tables<'vaults'>>> {
+  async createVault(params: VaultParamsDto, upside?: boolean): Promise<ServiceResponse<Tables<'vaults'>>> {
     const chainId = await this.ethers.networkId();
-    const factoryAddress = await getFactoryContractAddress(chainId.toString(), this.supabase.admin());
+    const factoryAddress = upside
+      ? await getFactoryUpsideContractAddress(chainId.toString(), this.supabase.admin())
+      : await getFactoryContractAddress(chainId.toString(), this.supabase.admin());
+
     if (factoryAddress.error) return factoryAddress;
     if (!factoryAddress.data) return { error: new NotFoundException() };
 
-    const factory = await this.factoryContract(factoryAddress.data.address);
+    const factory = upside
+      ? await this.factoryUpsideContract(factoryAddress.data.address)
+      : await this.factoryContract(factoryAddress.data.address);
 
     const options = JSON.stringify({ entities: params.entities, tenant: params.tenant });
     const estimation = await responseFromRead(factory.estimateGas.createVault(params, options));
@@ -53,8 +64,8 @@ export class VaultsService {
     const response = await responseFromWrite(factory.createVault(params, options, { gasLimit: estimation.data }));
     if (response.error) return response;
 
-    const vaultAddress = response.data.events?.[2].args?.[0];
-    const createdVault = await this.createVaultInDB(params, vaultAddress);
+    const vaultAddress = response.data.events?.find((e) => e.event === 'VaultDeployed')?.args?.[0];
+    const createdVault = await this.createVaultInDB(params, vaultAddress, !!upside);
     if (createdVault.error) return createdVault;
 
     const entities = await addEntitiesAndDistribution(params.entities, createdVault.data, this.supabase.admin());
@@ -103,9 +114,9 @@ export class VaultsService {
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: maturedVaults };
   }
 
-  private async createVaultInDB(params: VaultParamsDto, vaultAddress: string) {
+  private async createVaultInDB(params: VaultParamsDto, vaultAddress: string, upside: boolean) {
     const vaultData = {
-      type: 'fixed_yield' as const,
+      type: upside ? 'fixed_yield_upside' : 'fixed_yield',
       status: 'created' as const,
       deposits_opened_at: new Date(Number(params.depositOpensAt) * 1000).toISOString(),
       deposits_closed_at: new Date(Number(params.depositClosesAt) * 1000).toISOString(),
@@ -238,5 +249,9 @@ export class VaultsService {
 
   private async factoryContract(addr: string): Promise<CredbullVaultFactory> {
     return CredbullVaultFactory__factory.connect(addr, await this.ethers.deployer());
+  }
+
+  private async factoryUpsideContract(addr: string): Promise<CredbullVaultWithUpsideFactory> {
+    return CredbullVaultWithUpsideFactory__factory.connect(addr, await this.ethers.deployer());
   }
 }

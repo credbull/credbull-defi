@@ -7,7 +7,7 @@ import { Enums, Tables } from './supabase';
 export const PartnerTypes = ['channel'] as const;
 export type PartnerType = (typeof PartnerTypes)[number];
 
-export const VaultType = ['fixed_yield'] as const;
+export const VaultType = ['fixed_yield', 'fixed_yield_upside'] as const;
 
 export const VaultStatus = ['created', 'ready'] as const;
 

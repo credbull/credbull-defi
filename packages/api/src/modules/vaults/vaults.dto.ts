@@ -14,13 +14,6 @@ export class VaultsDto {
   })
   data: Tables<'vaults'>[];
 
-  @IsString()
-  @ApiProperty({
-    description: 'strategy address for vaults',
-    type: String,
-  })
-  address: string;
-
   constructor(partial: Partial<VaultsDto>) {
     Object.assign(this, partial);
   }

@@ -11,12 +11,14 @@ contract WindowVaultMock is CredbullBaseVault, WindowPlugIn {
         WindowPlugIn(params.depositOpensAt, params.depositClosesAt, params.redemptionOpensAt, params.redemptionClosesAt)
     { }
 
-    modifier depositModifier(address receiver) override {
+    modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {
         _checkIsDepositWithinWindow();
         _;
     }
 
-    modifier withdrawModifier() override {
+    modifier withdrawModifier(address caller, address receiver, address owner, uint256 assets, uint256 shares)
+        override
+    {
         _checkIsWithdrawWithinWindow();
         _;
     }

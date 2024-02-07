@@ -1,4 +1,4 @@
-import { CredbullVault__factory, MockStablecoin__factory } from '@credbull/contracts';
+import { CredbullFixedYieldVault__factory, MockStablecoin__factory } from '@credbull/contracts';
 import { formatEther, parseEther } from 'ethers/lib/utils';
 
 import { headers, linkWalletMessage, login, signer } from './utils/helpers';
@@ -49,8 +49,8 @@ export const main = () => {
     const vaults = await vaultsResponse.json();
 
     console.log('Bob: queries for existing vaults. - OK');
-    const vaultAddress = vaults[0]['data'][0].address;
-    const usdcAddress = vaults[0]['data'][0].asset_address;
+    const vaultAddress = vaults['data'][0].address;
+    const usdcAddress = vaults['data'][0].asset_address;
 
     const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
     const mintTx = await usdc.mint(bobSigner.address, parseEther('1000'));
@@ -61,7 +61,7 @@ export const main = () => {
     console.log('Bob: gives the approval to the vault to swap it`s USDC. - OK');
 
     // console.log('Bob: deposits his USDC in the vault.');
-    const vault = CredbullVault__factory.connect(vaultAddress, bobSigner);
+    const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, bobSigner);
     const depositTx = await vault.deposit(parseEther('1000'), bobSigner.address, { gasLimit: 10000000 });
     await depositTx.wait();
     console.log('Bob: deposits his USDC in the vault. - OK');

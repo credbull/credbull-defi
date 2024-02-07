@@ -19,13 +19,15 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, Access
         _grantRole(OPERATOR_ROLE, params.operator);
     }
 
-    modifier depositModifier(address receiver) override {
+    modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {
         _checkIsWhitelisted(receiver);
         _checkIsDepositWithinWindow();
         _;
     }
 
-    modifier withdrawModifier() override {
+    modifier withdrawModifier(address caller, address receiver, address owner, uint256 assets, uint256 shares)
+        override
+    {
         _checkIsWithdrawWithinWindow();
         _checkVaultMaturity();
         _;
@@ -36,7 +38,7 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, Access
     }
 
     function toggleMaturityCheck(bool status) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _toogleMaturityCheck(status);
+        _toggleMaturityCheck(status);
     }
 
     function toggleWhitelistCheck(bool status) public onlyRole(DEFAULT_ADMIN_ROLE) {

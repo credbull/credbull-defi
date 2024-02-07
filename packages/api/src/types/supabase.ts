@@ -1,6 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       contracts_addresses: {
@@ -239,13 +239,13 @@ export interface Database {
       kyc_event: 'processing' | 'accepted' | 'rejected';
       vault_entity_types: 'activity_reward' | 'treasury' | 'vault' | 'custodian' | 'kyc_provider';
       vault_status: 'created' | 'ready' | 'matured';
-      vault_type: 'fixed_yield';
+      vault_type: 'fixed_yield' | 'fixed_yield_upside';
     };
     CompositeTypes: {
       [_ in never]: never;
     };
   };
-}
+};
 
 export type Tables<
   PublicTableNameOrOptions extends

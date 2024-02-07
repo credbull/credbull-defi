@@ -1,4 +1,4 @@
-import { CredbullVault__factory, MockStablecoin__factory } from '@credbull/contracts';
+import { CredbullFixedYieldVault__factory, MockStablecoin__factory } from '@credbull/contracts';
 import { formatEther, parseEther } from 'ethers/lib/utils';
 
 import { headers, login, signer } from './utils/helpers';
@@ -28,11 +28,11 @@ export const main = () => {
 
     console.log('Bob: queries for existing vaults. - OK');
 
-    const vaultAddress = vaults[0]['data'][0].address;
-    const usdcAddress = vaults[0]['data'][0].asset_address;
+    const vaultAddress = vaults['data'][0].address;
+    const usdcAddress = vaults['data'][0].asset_address;
 
     const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
-    const vault = CredbullVault__factory.connect(vaultAddress, bobSigner);
+    const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, bobSigner);
     const mintTx = await usdc.mint(vaultAddress, parseEther('1000'));
     await mintTx.wait();
 

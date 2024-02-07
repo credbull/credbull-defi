@@ -79,19 +79,22 @@ export const main = (
 
     const kycProvider = addresses.data.find((i) => i.contract_name === 'MockKYCProvider')?.address;
     const asset = addresses.data.find((i) => i.contract_name === 'MockStablecoin')?.address;
-    const createVault = await fetch(`${process.env.API_BASE_URL}/vaults/create-vault`, {
-      method: 'POST',
-      body: JSON.stringify(
-        createParams({
-          kycProvider,
-          asset,
-          matured: scenarios.matured,
-          upside: scenarios.upside ? params?.upsideVault : undefined,
-          tenant: scenarios.tenant && params?.tenantEmail ? (await userByEmail(params?.tenantEmail)).id : undefined,
-        }),
-      ),
-      ...adminHeaders,
-    });
+    const createVault = await fetch(
+      `${process.env.API_BASE_URL}/vaults/create-vault${scenarios.upside ? '-upside' : ''}`,
+      {
+        method: 'POST',
+        body: JSON.stringify(
+          createParams({
+            kycProvider,
+            asset,
+            matured: scenarios.matured,
+            upside: scenarios.upside ? params?.upsideVault : undefined,
+            tenant: scenarios.tenant && params?.tenantEmail ? (await userByEmail(params?.tenantEmail)).id : undefined,
+          }),
+        ),
+        ...adminHeaders,
+      },
+    );
 
     const vaults = await createVault.json();
     console.log('Vaults: ', vaults);

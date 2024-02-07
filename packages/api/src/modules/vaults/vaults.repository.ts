@@ -6,16 +6,26 @@ import { Database, Tables } from '../../types/supabase';
 
 import { EntitiesDto } from './vaults.dto';
 
+async function getContractAddress(
+  chainId: string,
+  name: string,
+  supabase: SupabaseClient<Database>,
+): Promise<ServiceResponse<Tables<'contracts_addresses'> | null | undefined>> {
+  return supabase.from('contracts_addresses').select().eq('contract_name', name).eq('chain_id', chainId).single();
+}
+
 export async function getFactoryContractAddress(
   chainId: string,
   supabase: SupabaseClient<Database>,
 ): Promise<ServiceResponse<Tables<'contracts_addresses'> | null | undefined>> {
-  return supabase
-    .from('contracts_addresses')
-    .select()
-    .eq('contract_name', 'CredbullVaultFactory')
-    .eq('chain_id', chainId)
-    .single();
+  return getContractAddress(chainId, 'CredbullVaultFactory', supabase);
+}
+
+export async function getFactoryUpsideContractAddress(
+  chainId: string,
+  supabase: SupabaseClient<Database>,
+): Promise<ServiceResponse<Tables<'contracts_addresses'> | null | undefined>> {
+  return getContractAddress(chainId, 'CredbullVaultWithUpsideFactory', supabase);
 }
 
 export async function addEntitiesAndDistribution(

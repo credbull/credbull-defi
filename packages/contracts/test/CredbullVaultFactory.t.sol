@@ -27,7 +27,7 @@ contract CredbullVaultFactoryTest is Test {
         ICredbull.VaultParams memory params = config.vaultParams;
 
         vm.prank(config.factoryParams.operator);
-        CredbullFixedYieldVault vault = factory.createVault(params, OPTIONS);
+        CredbullFixedYieldVault vault = CredbullFixedYieldVault(factory.createVault(params, OPTIONS));
 
         assertEq(vault.asset(), address(params.asset));
         assertEq(vault.name(), params.shareName);
@@ -88,6 +88,6 @@ contract CredbullVaultFactoryTest is Test {
         ICredbull.VaultParams memory params = config.vaultParams;
 
         vm.prank(config.factoryParams.operator);
-        vault = factory.createVault(params, OPTIONS);
+        vault = CredbullFixedYieldVault(factory.createVault(params, OPTIONS));
     }
 }

@@ -50,7 +50,7 @@ describe('VaultsController', () => {
 
     client.from.mockReturnValue(builder as any);
 
-    const [{ data }] = await controller.current();
+    const { data } = await controller.current();
 
     expect(data.length).toBe(1);
   });

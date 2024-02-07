@@ -22,11 +22,13 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
      */
     uint256 public totalAssetDeposited;
 
-    modifier depositModifier(address receiver) virtual {
+    modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) virtual {
         _;
     }
 
-    modifier withdrawModifier() virtual {
+    modifier withdrawModifier(address caller, address receiver, address owner, uint256 assets, uint256 shares)
+        virtual
+    {
         _;
     }
 
@@ -41,7 +43,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares)
         internal
         override
-        depositModifier(receiver)
+        depositModifier(caller, receiver, assets, shares)
     {
         SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
         totalAssetDeposited += assets;
@@ -57,7 +59,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
     function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         internal
         override
-        withdrawModifier
+        withdrawModifier(caller, receiver, owner, assets, shares)
     {
         if (caller != owner) {
             _spendAllowance(owner, caller, shares);
