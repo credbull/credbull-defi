@@ -221,14 +221,12 @@ export interface CredbullVaultWithUpsideFactoryInterface
     "RoleGranted(bytes32,address,address)": EventFragment;
     "RoleRevoked(bytes32,address,address)": EventFragment;
     "VaultDeployed(address,(address,address,address,address,string,string,uint256,uint256,uint256,uint256,uint256,address,address),string)": EventFragment;
-    "VaultStrategySet(address,address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "VaultDeployed"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "VaultStrategySet"): EventFragment;
 }
 
 export interface RoleAdminChangedEventObject {
@@ -279,18 +277,6 @@ export type VaultDeployedEvent = TypedEvent<
 >;
 
 export type VaultDeployedEventFilter = TypedEventFilter<VaultDeployedEvent>;
-
-export interface VaultStrategySetEventObject {
-  vault: string;
-  strategy: string;
-}
-export type VaultStrategySetEvent = TypedEvent<
-  [string, string],
-  VaultStrategySetEventObject
->;
-
-export type VaultStrategySetEventFilter =
-  TypedEventFilter<VaultStrategySetEvent>;
 
 export interface CredbullVaultWithUpsideFactory extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -537,15 +523,6 @@ export interface CredbullVaultWithUpsideFactory extends BaseContract {
       params?: null,
       options?: null
     ): VaultDeployedEventFilter;
-
-    "VaultStrategySet(address,address)"(
-      vault?: string | null,
-      strategy?: string | null
-    ): VaultStrategySetEventFilter;
-    VaultStrategySet(
-      vault?: string | null,
-      strategy?: string | null
-    ): VaultStrategySetEventFilter;
   };
 
   estimateGas: {

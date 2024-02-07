@@ -100,7 +100,6 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     "hasRole(bytes32,address)": FunctionFragment;
     "isMatured()": FunctionFragment;
     "kycProvider()": FunctionFragment;
-    "linkedVault()": FunctionFragment;
     "mature()": FunctionFragment;
     "maxDeposit(address)": FunctionFragment;
     "maxMint(address)": FunctionFragment;
@@ -108,7 +107,6 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     "maxWithdraw(address)": FunctionFragment;
     "mint(uint256,address)": FunctionFragment;
     "name()": FunctionFragment;
-    "owner()": FunctionFragment;
     "previewDeposit(uint256)": FunctionFragment;
     "previewMint(uint256)": FunctionFragment;
     "previewRedeem(uint256)": FunctionFragment;
@@ -116,22 +114,20 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     "redeem(uint256,address,address)": FunctionFragment;
     "redemptionClosesAtTimestamp()": FunctionFragment;
     "redemptionOpensAtTimestamp()": FunctionFragment;
-    "renounceOwnership()": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
-    "setLinkedVault(address)": FunctionFragment;
     "setTWAP(uint256)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "symbol()": FunctionFragment;
     "toggleMaturityCheck(bool)": FunctionFragment;
     "toggleWhitelistCheck(bool)": FunctionFragment;
     "toggleWindowCheck(bool)": FunctionFragment;
+    "token()": FunctionFragment;
     "totalAssetDeposited()": FunctionFragment;
     "totalAssets()": FunctionFragment;
     "totalSupply()": FunctionFragment;
     "transfer(address,uint256)": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
     "twap()": FunctionFragment;
     "withdraw(uint256,address,address)": FunctionFragment;
   };
@@ -161,7 +157,6 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
       | "hasRole"
       | "isMatured"
       | "kycProvider"
-      | "linkedVault"
       | "mature"
       | "maxDeposit"
       | "maxMint"
@@ -169,7 +164,6 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
       | "maxWithdraw"
       | "mint"
       | "name"
-      | "owner"
       | "previewDeposit"
       | "previewMint"
       | "previewRedeem"
@@ -177,22 +171,20 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
       | "redeem"
       | "redemptionClosesAtTimestamp"
       | "redemptionOpensAtTimestamp"
-      | "renounceOwnership"
       | "renounceRole"
       | "revokeRole"
-      | "setLinkedVault"
       | "setTWAP"
       | "supportsInterface"
       | "symbol"
       | "toggleMaturityCheck"
       | "toggleWhitelistCheck"
       | "toggleWindowCheck"
+      | "token"
       | "totalAssetDeposited"
       | "totalAssets"
       | "totalSupply"
       | "transfer"
       | "transferFrom"
-      | "transferOwnership"
       | "twap"
       | "withdraw"
   ): FunctionFragment;
@@ -274,10 +266,6 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     functionFragment: "kycProvider",
     values?: undefined
   ): string;
-  encodeFunctionData(
-    functionFragment: "linkedVault",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "mature", values?: undefined): string;
   encodeFunctionData(functionFragment: "maxDeposit", values: [string]): string;
   encodeFunctionData(functionFragment: "maxMint", values: [string]): string;
@@ -288,7 +276,6 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     values: [BigNumberish, string]
   ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
-  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "previewDeposit",
     values: [BigNumberish]
@@ -318,20 +305,12 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "renounceOwnership",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "renounceRole",
     values: [BytesLike, string]
   ): string;
   encodeFunctionData(
     functionFragment: "revokeRole",
     values: [BytesLike, string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setLinkedVault",
-    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "setTWAP",
@@ -354,6 +333,7 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     functionFragment: "toggleWindowCheck",
     values: [boolean]
   ): string;
+  encodeFunctionData(functionFragment: "token", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "totalAssetDeposited",
     values?: undefined
@@ -373,10 +353,6 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
   encodeFunctionData(
     functionFragment: "transferFrom",
     values: [string, string, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "transferOwnership",
-    values: [string]
   ): string;
   encodeFunctionData(functionFragment: "twap", values?: undefined): string;
   encodeFunctionData(
@@ -446,10 +422,6 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     functionFragment: "kycProvider",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "linkedVault",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "mature", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "maxDeposit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "maxMint", data: BytesLike): Result;
@@ -460,7 +432,6 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
   ): Result;
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "previewDeposit",
     data: BytesLike
@@ -487,18 +458,10 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "renounceOwnership",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "renounceRole",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "setLinkedVault",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "setTWAP", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "supportsInterface",
@@ -517,6 +480,7 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     functionFragment: "toggleWindowCheck",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "token", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "totalAssetDeposited",
     data: BytesLike
@@ -534,17 +498,12 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     functionFragment: "transferFrom",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "transferOwnership",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "twap", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
   events: {
     "Approval(address,address,uint256)": EventFragment;
     "Deposit(address,address,uint256,uint256)": EventFragment;
-    "OwnershipTransferred(address,address)": EventFragment;
     "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
     "RoleGranted(bytes32,address,address)": EventFragment;
     "RoleRevoked(bytes32,address,address)": EventFragment;
@@ -554,7 +513,6 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
@@ -586,18 +544,6 @@ export type DepositEvent = TypedEvent<
 >;
 
 export type DepositEventFilter = TypedEventFilter<DepositEvent>;
-
-export interface OwnershipTransferredEventObject {
-  previousOwner: string;
-  newOwner: string;
-}
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string],
-  OwnershipTransferredEventObject
->;
-
-export type OwnershipTransferredEventFilter =
-  TypedEventFilter<OwnershipTransferredEvent>;
 
 export interface RoleAdminChangedEventObject {
   role: string;
@@ -761,8 +707,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     kycProvider(overrides?: CallOverrides): Promise<[string]>;
 
-    linkedVault(overrides?: CallOverrides): Promise<[string]>;
-
     mature(
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
@@ -782,8 +726,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
     ): Promise<ContractTransaction>;
 
     name(overrides?: CallOverrides): Promise<[string]>;
-
-    owner(overrides?: CallOverrides): Promise<[string]>;
 
     previewDeposit(
       assets: BigNumberish,
@@ -818,10 +760,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     redemptionOpensAtTimestamp(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
     renounceRole(
       role: BytesLike,
       callerConfirmation: string,
@@ -831,11 +769,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
     revokeRole(
       role: BytesLike,
       account: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    setLinkedVault(
-      _linkedVault: string,
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
@@ -866,6 +799,8 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
+    token(overrides?: CallOverrides): Promise<[string]>;
+
     totalAssetDeposited(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     totalAssets(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -882,11 +817,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
       from: string,
       to: string,
       value: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
-
-    transferOwnership(
-      newOwner: string,
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
@@ -972,8 +902,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
   kycProvider(overrides?: CallOverrides): Promise<string>;
 
-  linkedVault(overrides?: CallOverrides): Promise<string>;
-
   mature(
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
@@ -993,8 +921,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
   ): Promise<ContractTransaction>;
 
   name(overrides?: CallOverrides): Promise<string>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
 
   previewDeposit(
     assets: BigNumberish,
@@ -1027,10 +953,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
   redemptionOpensAtTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
 
-  renounceOwnership(
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
   renounceRole(
     role: BytesLike,
     callerConfirmation: string,
@@ -1040,11 +962,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
   revokeRole(
     role: BytesLike,
     account: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  setLinkedVault(
-    _linkedVault: string,
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
@@ -1075,6 +992,8 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
+  token(overrides?: CallOverrides): Promise<string>;
+
   totalAssetDeposited(overrides?: CallOverrides): Promise<BigNumber>;
 
   totalAssets(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1091,11 +1010,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
     from: string,
     to: string,
     value: BigNumberish,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
-
-  transferOwnership(
-    newOwner: string,
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
@@ -1181,8 +1095,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     kycProvider(overrides?: CallOverrides): Promise<string>;
 
-    linkedVault(overrides?: CallOverrides): Promise<string>;
-
     mature(overrides?: CallOverrides): Promise<void>;
 
     maxDeposit(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
@@ -1200,8 +1112,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
     ): Promise<BigNumber>;
 
     name(overrides?: CallOverrides): Promise<string>;
-
-    owner(overrides?: CallOverrides): Promise<string>;
 
     previewDeposit(
       assets: BigNumberish,
@@ -1234,8 +1144,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     redemptionOpensAtTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
 
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
-
     renounceRole(
       role: BytesLike,
       callerConfirmation: string,
@@ -1245,11 +1153,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
     revokeRole(
       role: BytesLike,
       account: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setLinkedVault(
-      _linkedVault: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1277,6 +1180,8 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    token(overrides?: CallOverrides): Promise<string>;
+
     totalAssetDeposited(overrides?: CallOverrides): Promise<BigNumber>;
 
     totalAssets(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1295,11 +1200,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
       value: BigNumberish,
       overrides?: CallOverrides
     ): Promise<boolean>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
 
     twap(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1335,15 +1235,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
       assets?: null,
       shares?: null
     ): DepositEventFilter;
-
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
-    OwnershipTransferred(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): OwnershipTransferredEventFilter;
 
     "RoleAdminChanged(bytes32,bytes32,bytes32)"(
       role?: BytesLike | null,
@@ -1481,8 +1372,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     kycProvider(overrides?: CallOverrides): Promise<BigNumber>;
 
-    linkedVault(overrides?: CallOverrides): Promise<BigNumber>;
-
     mature(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
 
     maxDeposit(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
@@ -1500,8 +1389,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
     ): Promise<BigNumber>;
 
     name(overrides?: CallOverrides): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
 
     previewDeposit(
       assets: BigNumberish,
@@ -1534,10 +1421,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     redemptionOpensAtTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
 
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
     renounceRole(
       role: BytesLike,
       callerConfirmation: string,
@@ -1547,11 +1430,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
     revokeRole(
       role: BytesLike,
       account: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    setLinkedVault(
-      _linkedVault: string,
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
@@ -1582,6 +1460,8 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
+    token(overrides?: CallOverrides): Promise<BigNumber>;
+
     totalAssetDeposited(overrides?: CallOverrides): Promise<BigNumber>;
 
     totalAssets(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1598,11 +1478,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
       from: string,
       to: string,
       value: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<BigNumber>;
-
-    transferOwnership(
-      newOwner: string,
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
@@ -1705,8 +1580,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     kycProvider(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    linkedVault(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     mature(
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
@@ -1738,8 +1611,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     previewDeposit(
       assets: BigNumberish,
@@ -1776,10 +1647,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    renounceOwnership(
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
     renounceRole(
       role: BytesLike,
       callerConfirmation: string,
@@ -1789,11 +1656,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
     revokeRole(
       role: BytesLike,
       account: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    setLinkedVault(
-      _linkedVault: string,
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
@@ -1824,6 +1686,8 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
+    token(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     totalAssetDeposited(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -1842,11 +1706,6 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
       from: string,
       to: string,
       value: BigNumberish,
-      overrides?: Overrides & { from?: string }
-    ): Promise<PopulatedTransaction>;
-
-    transferOwnership(
-      newOwner: string,
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 

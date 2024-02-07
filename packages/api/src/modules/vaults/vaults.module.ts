@@ -5,15 +5,14 @@ import { SupabaseModule } from '../../clients/supabase/supabase.module';
 import { CronStrategy } from '../../utils/guards';
 
 import { CustodianService } from './custodian.service';
-import { SyncStrategiesService } from './sync-strategies.service';
 import { SyncVaultsService } from './sync-vaults.service';
 import { VaultsController } from './vaults.controller';
 import { VaultsService } from './vaults.service';
 
 @Module({
   imports: [SupabaseModule, EthersModule],
-  providers: [VaultsService, CustodianService, CronStrategy, SyncVaultsService, SyncStrategiesService],
+  providers: [VaultsService, CustodianService, CronStrategy, SyncVaultsService],
   controllers: [VaultsController],
-  exports: [VaultsService, CustodianService, SyncVaultsService, SyncStrategiesService],
+  exports: [VaultsService, CustodianService, SyncVaultsService],
 })
 export class VaultsModule {}
