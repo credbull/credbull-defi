@@ -4,7 +4,7 @@
 #
 
 app = 'credbull-defi-api'
-primary_region = 'lhr'
+primary_region = 'fra'
 
 [build]
   dockerfile = "./packages/api/Dockerfile"
