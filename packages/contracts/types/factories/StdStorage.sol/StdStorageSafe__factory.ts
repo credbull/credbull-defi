@@ -10,59 +10,59 @@ import type {
 
 const _abi = [
   {
-    type: "event",
-    name: "SlotFound",
+    anonymous: false,
     inputs: [
       {
-        name: "who",
-        type: "address",
         indexed: false,
         internalType: "address",
+        name: "who",
+        type: "address",
       },
       {
-        name: "fsig",
-        type: "bytes4",
         indexed: false,
         internalType: "bytes4",
+        name: "fsig",
+        type: "bytes4",
       },
       {
-        name: "keysHash",
-        type: "bytes32",
         indexed: false,
         internalType: "bytes32",
+        name: "keysHash",
+        type: "bytes32",
       },
       {
-        name: "slot",
-        type: "uint256",
         indexed: false,
         internalType: "uint256",
+        name: "slot",
+        type: "uint256",
       },
     ],
-    anonymous: false,
+    name: "SlotFound",
+    type: "event",
   },
   {
-    type: "event",
-    name: "WARNING_UninitedSlot",
+    anonymous: false,
     inputs: [
       {
-        name: "who",
-        type: "address",
         indexed: false,
         internalType: "address",
+        name: "who",
+        type: "address",
       },
       {
-        name: "slot",
-        type: "uint256",
         indexed: false,
         internalType: "uint256",
+        name: "slot",
+        type: "uint256",
       },
     ],
-    anonymous: false,
+    name: "WARNING_UninitedSlot",
+    type: "event",
   },
 ] as const;
 
 const _bytecode =
-  "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122044ae60b429cc3285c4c0ab956f23037b736ca74f1fad3f571cf92f4c15bb814364736f6c63430008170033";
+  "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122078f29cce07fbab65afd0b1afafc7f22e48bef49b27bb6282f531bc2c1c39bce164736f6c63430008160033";
 
 type StdStorageSafeConstructorParams =
   | [signer?: Signer]

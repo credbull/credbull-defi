@@ -83,6 +83,7 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     "approve(address,uint256)": FunctionFragment;
     "asset()": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
+    "calculateTokenRedemption(uint256,address)": FunctionFragment;
     "checkMaturity()": FunctionFragment;
     "checkWhitelist()": FunctionFragment;
     "checkWindow()": FunctionFragment;
@@ -140,6 +141,7 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
       | "approve"
       | "asset"
       | "balanceOf"
+      | "calculateTokenRedemption"
       | "checkMaturity"
       | "checkWhitelist"
       | "checkWindow"
@@ -207,6 +209,10 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
   ): string;
   encodeFunctionData(functionFragment: "asset", values?: undefined): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "calculateTokenRedemption",
+    values: [BigNumberish, string]
+  ): string;
   encodeFunctionData(
     functionFragment: "checkMaturity",
     values?: undefined
@@ -372,6 +378,10 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "asset", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "calculateTokenRedemption",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "checkMaturity",
     data: BytesLike
@@ -655,6 +665,12 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     balanceOf(account: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    calculateTokenRedemption(
+      shares: BigNumberish,
+      owner: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
     checkMaturity(overrides?: CallOverrides): Promise<[boolean]>;
 
     checkWhitelist(overrides?: CallOverrides): Promise<[boolean]>;
@@ -850,6 +866,12 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
   balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+  calculateTokenRedemption(
+    shares: BigNumberish,
+    owner: string,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   checkMaturity(overrides?: CallOverrides): Promise<boolean>;
 
   checkWhitelist(overrides?: CallOverrides): Promise<boolean>;
@@ -1042,6 +1064,12 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
     asset(overrides?: CallOverrides): Promise<string>;
 
     balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    calculateTokenRedemption(
+      shares: BigNumberish,
+      owner: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     checkMaturity(overrides?: CallOverrides): Promise<boolean>;
 
@@ -1317,6 +1345,12 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+    calculateTokenRedemption(
+      shares: BigNumberish,
+      owner: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     checkMaturity(overrides?: CallOverrides): Promise<BigNumber>;
 
     checkWhitelist(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1514,6 +1548,12 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     balanceOf(
       account: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    calculateTokenRedemption(
+      shares: BigNumberish,
+      owner: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

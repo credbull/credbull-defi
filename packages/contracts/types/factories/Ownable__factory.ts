@@ -8,78 +8,78 @@ import type { Ownable, OwnableInterface } from "../Ownable";
 
 const _abi = [
   {
-    type: "function",
-    name: "owner",
+    inputs: [
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+    ],
+    name: "OwnableInvalidOwner",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+    ],
+    name: "OwnableUnauthorizedAccount",
+    type: "error",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "previousOwner",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
+    ],
+    name: "OwnershipTransferred",
+    type: "event",
+  },
+  {
     inputs: [],
+    name: "owner",
     outputs: [
       {
+        internalType: "address",
         name: "",
         type: "address",
-        internalType: "address",
       },
     ],
     stateMutability: "view",
+    type: "function",
   },
   {
-    type: "function",
-    name: "renounceOwnership",
     inputs: [],
+    name: "renounceOwnership",
     outputs: [],
     stateMutability: "nonpayable",
-  },
-  {
     type: "function",
-    name: "transferOwnership",
+  },
+  {
     inputs: [
       {
+        internalType: "address",
         name: "newOwner",
         type: "address",
-        internalType: "address",
       },
     ],
+    name: "transferOwnership",
     outputs: [],
     stateMutability: "nonpayable",
-  },
-  {
-    type: "event",
-    name: "OwnershipTransferred",
-    inputs: [
-      {
-        name: "previousOwner",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
-      {
-        name: "newOwner",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
-    ],
-    anonymous: false,
-  },
-  {
-    type: "error",
-    name: "OwnableInvalidOwner",
-    inputs: [
-      {
-        name: "owner",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-  },
-  {
-    type: "error",
-    name: "OwnableUnauthorizedAccount",
-    inputs: [
-      {
-        name: "account",
-        type: "address",
-        internalType: "address",
-      },
-    ],
+    type: "function",
   },
 ] as const;
 

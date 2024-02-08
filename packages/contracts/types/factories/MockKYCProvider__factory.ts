@@ -10,155 +10,155 @@ import type {
 
 const _abi = [
   {
-    type: "constructor",
     inputs: [
       {
+        internalType: "address",
         name: "_owner",
         type: "address",
-        internalType: "address",
       },
     ],
     stateMutability: "nonpayable",
+    type: "constructor",
   },
   {
-    type: "function",
-    name: "isWhitelisted",
-    inputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "bool",
-        internalType: "bool",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "owner",
     inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "renounceOwnership",
-    inputs: [],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "status",
-    inputs: [
-      {
-        name: "receiver",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "bool",
-        internalType: "bool",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "transferOwnership",
-    inputs: [
-      {
-        name: "newOwner",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "updateStatus",
-    inputs: [
-      {
-        name: "_addresses",
-        type: "address[]",
-        internalType: "address[]",
-      },
-      {
-        name: "_statuses",
-        type: "bool[]",
-        internalType: "bool[]",
-      },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "event",
-    name: "OwnershipTransferred",
-    inputs: [
-      {
-        name: "previousOwner",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
-      {
-        name: "newOwner",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
-    ],
-    anonymous: false,
-  },
-  {
-    type: "error",
     name: "LengthMismatch",
-    inputs: [],
+    type: "error",
   },
   {
-    type: "error",
-    name: "OwnableInvalidOwner",
     inputs: [
       {
+        internalType: "address",
         name: "owner",
         type: "address",
-        internalType: "address",
       },
     ],
+    name: "OwnableInvalidOwner",
+    type: "error",
   },
   {
-    type: "error",
-    name: "OwnableUnauthorizedAccount",
     inputs: [
       {
+        internalType: "address",
         name: "account",
         type: "address",
-        internalType: "address",
       },
     ],
+    name: "OwnableUnauthorizedAccount",
+    type: "error",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "previousOwner",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
+    ],
+    name: "OwnershipTransferred",
+    type: "event",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "isWhitelisted",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "receiver",
+        type: "address",
+      },
+    ],
+    name: "status",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
+    ],
+    name: "transferOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address[]",
+        name: "_addresses",
+        type: "address[]",
+      },
+      {
+        internalType: "bool[]",
+        name: "_statuses",
+        type: "bool[]",
+      },
+    ],
+    name: "updateStatus",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
   },
 ] as const;
 
 const _bytecode =
-  "0x608060405234801561001057600080fd5b506040516104fe3803806104fe83398101604081905261002f916100be565b806001600160a01b03811661005e57604051631e4fbdf760e01b81526000600482015260240160405180910390fd5b6100678161006e565b50506100ee565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6000602082840312156100d057600080fd5b81516001600160a01b03811681146100e757600080fd5b9392505050565b610401806100fd6000396000f3fe608060405234801561001057600080fd5b50600436106100625760003560e01c80633af32abf14610067578063645b8b1b1461009f578063715018a6146100cb5780638da5cb5b146100d5578063e2ee619c146100f0578063f2fde38b14610103575b600080fd5b61008a6100753660046102ab565b60016020526000908152604090205460ff1681565b60405190151581526020015b60405180910390f35b61008a6100ad3660046102ab565b6001600160a01b031660009081526001602052604090205460ff1690565b6100d3610116565b005b6000546040516001600160a01b039091168152602001610096565b6100d36100fe366004610327565b61012a565b6100d36101113660046102ab565b6101eb565b61011e61022e565b610128600061025b565b565b61013261022e565b828114610155576040516001621398b960e31b0319815260040160405180910390fd5b8260005b818110156101e35783838281811061017357610173610393565b905060200201602081019061018891906103a9565b6001600088888581811061019e5761019e610393565b90506020020160208101906101b391906102ab565b6001600160a01b031681526020810191909152604001600020805460ff1916911515919091179055600101610159565b505050505050565b6101f361022e565b6001600160a01b03811661022257604051631e4fbdf760e01b8152600060048201526024015b60405180910390fd5b61022b8161025b565b50565b6000546001600160a01b031633146101285760405163118cdaa760e01b8152336004820152602401610219565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6000602082840312156102bd57600080fd5b81356001600160a01b03811681146102d457600080fd5b9392505050565b60008083601f8401126102ed57600080fd5b50813567ffffffffffffffff81111561030557600080fd5b6020830191508360208260051b850101111561032057600080fd5b9250929050565b6000806000806040858703121561033d57600080fd5b843567ffffffffffffffff8082111561035557600080fd5b610361888389016102db565b9096509450602087013591508082111561037a57600080fd5b50610387878288016102db565b95989497509550505050565b634e487b7160e01b600052603260045260246000fd5b6000602082840312156103bb57600080fd5b813580151581146102d457600080fdfea26469706673582212205f79149aec25d7ae36d80fd806c4d6a836692254f3980063df711b232ba94f3564736f6c63430008170033";
+  "0x608060405234801561001057600080fd5b506040516104fe3803806104fe83398101604081905261002f916100be565b806001600160a01b03811661005e57604051631e4fbdf760e01b81526000600482015260240160405180910390fd5b6100678161006e565b50506100ee565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6000602082840312156100d057600080fd5b81516001600160a01b03811681146100e757600080fd5b9392505050565b610401806100fd6000396000f3fe608060405234801561001057600080fd5b50600436106100625760003560e01c80633af32abf14610067578063645b8b1b1461009f578063715018a6146100cb5780638da5cb5b146100d5578063e2ee619c146100f0578063f2fde38b14610103575b600080fd5b61008a6100753660046102ab565b60016020526000908152604090205460ff1681565b60405190151581526020015b60405180910390f35b61008a6100ad3660046102ab565b6001600160a01b031660009081526001602052604090205460ff1690565b6100d3610116565b005b6000546040516001600160a01b039091168152602001610096565b6100d36100fe366004610327565b61012a565b6100d36101113660046102ab565b6101eb565b61011e61022e565b610128600061025b565b565b61013261022e565b828114610155576040516001621398b960e31b0319815260040160405180910390fd5b8260005b818110156101e35783838281811061017357610173610393565b905060200201602081019061018891906103a9565b6001600088888581811061019e5761019e610393565b90506020020160208101906101b391906102ab565b6001600160a01b031681526020810191909152604001600020805460ff1916911515919091179055600101610159565b505050505050565b6101f361022e565b6001600160a01b03811661022257604051631e4fbdf760e01b8152600060048201526024015b60405180910390fd5b61022b8161025b565b50565b6000546001600160a01b031633146101285760405163118cdaa760e01b8152336004820152602401610219565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6000602082840312156102bd57600080fd5b81356001600160a01b03811681146102d457600080fd5b9392505050565b60008083601f8401126102ed57600080fd5b50813567ffffffffffffffff81111561030557600080fd5b6020830191508360208260051b850101111561032057600080fd5b9250929050565b6000806000806040858703121561033d57600080fd5b843567ffffffffffffffff8082111561035557600080fd5b610361888389016102db565b9096509450602087013591508082111561037a57600080fd5b50610387878288016102db565b95989497509550505050565b634e487b7160e01b600052603260045260246000fd5b6000602082840312156103bb57600080fd5b813580151581146102d457600080fdfea2646970667358221220fb46dacdfcf765e42f95a18699a24aa370419d8832fdcb71c990ac5d8c2c732d64736f6c63430008160033";
 
 type MockKYCProviderConstructorParams =
   | [signer?: Signer]

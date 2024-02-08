@@ -7,6 +7,8 @@ import type * as credbullBaseVaultTestTSol from "./CredbullBaseVaultTest.t.sol";
 export type { credbullBaseVaultTestTSol };
 import type * as credbullFixedYieldVaultTestTSol from "./CredbullFixedYieldVaultTest.t.sol";
 export type { credbullFixedYieldVaultTestTSol };
+import type * as credbullFixedYieldVaultWithUpsideTestTSol from "./CredbullFixedYieldVaultWithUpsideTest.t.sol";
+export type { credbullFixedYieldVaultWithUpsideTestTSol };
 import type * as credbullVaultFactoryTSol from "./CredbullVaultFactory.t.sol";
 export type { credbullVaultFactoryTSol };
 import type * as deployVaultFactorySSol from "./DeployVaultFactory.s.sol";
@@ -82,6 +84,8 @@ export { CredbullFixedYieldVault__factory } from "./factories/CredbullFixedYield
 export type { CredbullFixedYieldVaultTest } from "./CredbullFixedYieldVaultTest.t.sol/CredbullFixedYieldVaultTest";
 export { CredbullFixedYieldVaultTest__factory } from "./factories/CredbullFixedYieldVaultTest.t.sol/CredbullFixedYieldVaultTest__factory";
 export { CredbullFixedYieldVaultWithUpside__factory } from "./factories/CredbullFixedYieldVaultWithUpside__factory";
+export type { CredbullFixedYieldVaultWithUpsideTest } from "./CredbullFixedYieldVaultWithUpsideTest.t.sol/CredbullFixedYieldVaultWithUpsideTest";
+export { CredbullFixedYieldVaultWithUpsideTest__factory } from "./factories/CredbullFixedYieldVaultWithUpsideTest.t.sol/CredbullFixedYieldVaultWithUpsideTest__factory";
 export { CredbullVaultFactory__factory } from "./factories/CredbullVaultFactory__factory";
 export type { CredbullVaultFactoryTest } from "./CredbullVaultFactory.t.sol/CredbullVaultFactoryTest";
 export { CredbullVaultFactoryTest__factory } from "./factories/CredbullVaultFactory.t.sol/CredbullVaultFactoryTest__factory";

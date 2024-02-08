@@ -11,106 +11,106 @@ import type {
 
 const _abi = [
   {
-    type: "error",
-    name: "ERC1155InsufficientBalance",
     inputs: [
       {
+        internalType: "address",
         name: "sender",
         type: "address",
-        internalType: "address",
       },
       {
+        internalType: "uint256",
         name: "balance",
         type: "uint256",
-        internalType: "uint256",
       },
       {
+        internalType: "uint256",
         name: "needed",
         type: "uint256",
-        internalType: "uint256",
       },
       {
+        internalType: "uint256",
         name: "tokenId",
         type: "uint256",
-        internalType: "uint256",
       },
     ],
+    name: "ERC1155InsufficientBalance",
+    type: "error",
   },
   {
-    type: "error",
-    name: "ERC1155InvalidApprover",
     inputs: [
       {
+        internalType: "address",
         name: "approver",
         type: "address",
-        internalType: "address",
       },
     ],
+    name: "ERC1155InvalidApprover",
+    type: "error",
   },
   {
-    type: "error",
-    name: "ERC1155InvalidArrayLength",
     inputs: [
       {
+        internalType: "uint256",
         name: "idsLength",
         type: "uint256",
-        internalType: "uint256",
       },
       {
+        internalType: "uint256",
         name: "valuesLength",
         type: "uint256",
-        internalType: "uint256",
       },
     ],
+    name: "ERC1155InvalidArrayLength",
+    type: "error",
   },
   {
-    type: "error",
-    name: "ERC1155InvalidOperator",
     inputs: [
       {
+        internalType: "address",
         name: "operator",
         type: "address",
-        internalType: "address",
       },
     ],
+    name: "ERC1155InvalidOperator",
+    type: "error",
   },
   {
-    type: "error",
-    name: "ERC1155InvalidReceiver",
     inputs: [
       {
+        internalType: "address",
         name: "receiver",
         type: "address",
-        internalType: "address",
       },
     ],
+    name: "ERC1155InvalidReceiver",
+    type: "error",
   },
   {
-    type: "error",
-    name: "ERC1155InvalidSender",
     inputs: [
       {
+        internalType: "address",
         name: "sender",
         type: "address",
-        internalType: "address",
       },
     ],
+    name: "ERC1155InvalidSender",
+    type: "error",
   },
   {
-    type: "error",
-    name: "ERC1155MissingApprovalForAll",
     inputs: [
       {
+        internalType: "address",
         name: "operator",
         type: "address",
-        internalType: "address",
       },
       {
+        internalType: "address",
         name: "owner",
         type: "address",
-        internalType: "address",
       },
     ],
+    name: "ERC1155MissingApprovalForAll",
+    type: "error",
   },
 ] as const;
 

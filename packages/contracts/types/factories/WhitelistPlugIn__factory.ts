@@ -11,35 +11,35 @@ import type {
 
 const _abi = [
   {
-    type: "function",
-    name: "checkWhitelist",
     inputs: [],
+    name: "CredbullVault__NotAWhitelistedAddress",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "checkWhitelist",
     outputs: [
       {
+        internalType: "bool",
         name: "",
         type: "bool",
-        internalType: "bool",
       },
     ],
     stateMutability: "view",
+    type: "function",
   },
   {
-    type: "function",
-    name: "kycProvider",
     inputs: [],
+    name: "kycProvider",
     outputs: [
       {
+        internalType: "contract AKYCProvider",
         name: "",
         type: "address",
-        internalType: "contract AKYCProvider",
       },
     ],
     stateMutability: "view",
-  },
-  {
-    type: "error",
-    name: "CredbullVault__NotAWhitelistedAddress",
-    inputs: [],
+    type: "function",
   },
 ] as const;
 

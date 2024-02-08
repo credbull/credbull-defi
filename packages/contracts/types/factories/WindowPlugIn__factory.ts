@@ -8,90 +8,90 @@ import type { WindowPlugIn, WindowPlugInInterface } from "../WindowPlugIn";
 
 const _abi = [
   {
-    type: "function",
-    name: "checkWindow",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "bool",
-        internalType: "bool",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "depositClosesAtTimestamp",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "depositOpensAtTimestamp",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "redemptionClosesAtTimestamp",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "redemptionOpensAtTimestamp",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "error",
-    name: "CredbullVault__OperationOutsideRequiredWindow",
     inputs: [
       {
+        internalType: "uint256",
         name: "windowOpensAt",
         type: "uint256",
-        internalType: "uint256",
       },
       {
+        internalType: "uint256",
         name: "windowClosesAt",
         type: "uint256",
-        internalType: "uint256",
       },
       {
+        internalType: "uint256",
         name: "timestamp",
         type: "uint256",
-        internalType: "uint256",
       },
     ],
+    name: "CredbullVault__OperationOutsideRequiredWindow",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "checkWindow",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "depositClosesAtTimestamp",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "depositOpensAtTimestamp",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "redemptionClosesAtTimestamp",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "redemptionOpensAtTimestamp",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
 ] as const;
 

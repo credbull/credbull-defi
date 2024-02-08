@@ -78,6 +78,7 @@ export interface CredbullVaultFactoryInterface extends utils.Interface {
   functions: {
     "DEFAULT_ADMIN_ROLE()": FunctionFragment;
     "OPERATOR_ROLE()": FunctionFragment;
+    "allowCustodian(address)": FunctionFragment;
     "createVault((address,address,address,address,string,string,uint256,uint256,uint256,uint256,uint256,address,address),string)": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
     "getTotalVaultCount()": FunctionFragment;
@@ -94,6 +95,7 @@ export interface CredbullVaultFactoryInterface extends utils.Interface {
     nameOrSignatureOrTopic:
       | "DEFAULT_ADMIN_ROLE"
       | "OPERATOR_ROLE"
+      | "allowCustodian"
       | "createVault"
       | "getRoleAdmin"
       | "getTotalVaultCount"
@@ -113,6 +115,10 @@ export interface CredbullVaultFactoryInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "OPERATOR_ROLE",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "allowCustodian",
+    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "createVault",
@@ -161,6 +167,10 @@ export interface CredbullVaultFactoryInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "OPERATOR_ROLE",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "allowCustodian",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -288,6 +298,11 @@ export interface CredbullVaultFactory extends BaseContract {
 
     OPERATOR_ROLE(overrides?: CallOverrides): Promise<[string]>;
 
+    allowCustodian(
+      _custodian: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
     createVault(
       _params: ICredbull.VaultParamsStruct,
       _options: string,
@@ -339,6 +354,11 @@ export interface CredbullVaultFactory extends BaseContract {
 
   OPERATOR_ROLE(overrides?: CallOverrides): Promise<string>;
 
+  allowCustodian(
+    _custodian: string,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
   createVault(
     _params: ICredbull.VaultParamsStruct,
     _options: string,
@@ -389,6 +409,11 @@ export interface CredbullVaultFactory extends BaseContract {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
 
     OPERATOR_ROLE(overrides?: CallOverrides): Promise<string>;
+
+    allowCustodian(
+      _custodian: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
 
     createVault(
       _params: ICredbull.VaultParamsStruct,
@@ -488,6 +513,11 @@ export interface CredbullVaultFactory extends BaseContract {
 
     OPERATOR_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
+    allowCustodian(
+      _custodian: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
     createVault(
       _params: ICredbull.VaultParamsStruct,
       _options: string,
@@ -544,6 +574,11 @@ export interface CredbullVaultFactory extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     OPERATOR_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    allowCustodian(
+      _custodian: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
 
     createVault(
       _params: ICredbull.VaultParamsStruct,
