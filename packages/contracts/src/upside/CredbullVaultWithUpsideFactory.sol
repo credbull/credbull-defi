@@ -21,8 +21,13 @@ contract CredbullVaultWithUpsideFactory is CredbullVaultFactory {
         public
         override
         onlyRole(OPERATOR_ROLE)
+        onlyAllowedCustodians(_params.custodian)
         returns (address)
     {
+        if (!allowedCustodians.contains(_params.custodian)) {
+            revert CredbullVault__CustodianNotAllowed();
+        }
+
         CredbullFixedYieldVaultWithUpside newVault =
             new CredbullFixedYieldVaultWithUpside(_params, _params.token, requiredCollateral);
 

@@ -26,6 +26,9 @@ contract CredbullVaultFactoryTest is Test {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         ICredbull.VaultParams memory params = config.vaultParams;
 
+        vm.prank(config.factoryParams.owner);
+        factory.allowCustodian(params.custodian);
+
         vm.prank(config.factoryParams.operator);
         CredbullFixedYieldVault vault = CredbullFixedYieldVault(factory.createVault(params, OPTIONS));
 
@@ -49,6 +52,7 @@ contract CredbullVaultFactoryTest is Test {
         address newOperator = makeAddr("new_operator");
 
         vm.startPrank(config.factoryParams.owner);
+        factory.allowCustodian(config.vaultParams.custodian);
         factory.revokeRole(factory.OPERATOR_ROLE(), config.factoryParams.operator);
         factory.grantRole(factory.OPERATOR_ROLE(), newOperator);
         vm.stopPrank();
@@ -86,6 +90,9 @@ contract CredbullVaultFactoryTest is Test {
     function createVault() internal returns (CredbullFixedYieldVault vault) {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         ICredbull.VaultParams memory params = config.vaultParams;
+
+        vm.prank(config.factoryParams.owner);
+        factory.allowCustodian(config.vaultParams.custodian);
 
         vm.prank(config.factoryParams.operator);
         vault = CredbullFixedYieldVault(factory.createVault(params, OPTIONS));
