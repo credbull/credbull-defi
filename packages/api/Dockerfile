@@ -20,6 +20,8 @@ FROM base as build
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
 
+RUN curl -L https://foundry.paradigm.xyz | bash
+
 # Install node modules
 COPY package.json .
 COPY .yarn .yarn

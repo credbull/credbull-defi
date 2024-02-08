@@ -16,7 +16,7 @@ on:
       - "packages/contracts/**"
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     environment: dev
 
@@ -27,6 +27,11 @@ jobs:
         with:
           node-version: 20
           cache: "yarn"
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
 
       - name: Install dependencies
         run: yarn install
