@@ -4,6 +4,7 @@
 export * as credbullBaseVaultMockMSol from "./CredbullBaseVaultMock.m.sol";
 export * as credbullBaseVaultTestTSol from "./CredbullBaseVaultTest.t.sol";
 export * as credbullFixedYieldVaultTestTSol from "./CredbullFixedYieldVaultTest.t.sol";
+export * as credbullFixedYieldVaultWithUpsideTestTSol from "./CredbullFixedYieldVaultWithUpsideTest.t.sol";
 export * as credbullVaultFactoryTSol from "./CredbullVaultFactory.t.sol";
 export * as deployVaultFactorySSol from "./DeployVaultFactory.s.sol";
 export * as helperConfigSSol from "./HelperConfig.s.sol";
