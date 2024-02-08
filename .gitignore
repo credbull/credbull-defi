@@ -27,3 +27,4 @@ packages/.DS_Store
 packages/contracts/.DS_Store
 packages/contracts/lib/.DS_Store
 
+.vercel
