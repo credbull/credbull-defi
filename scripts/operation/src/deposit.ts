@@ -32,6 +32,7 @@ export const main = () => {
     // console.log('Admin: receives the approval and KYCs Bob.');
     const admin = await login({ admin: true });
     const adminHeaders = headers(admin);
+    const adminSigner = signer(process.env.ADMIN_PRIVATE_KEY);
 
     await fetch(`${process.env.API_BASE_URL}/accounts/whitelist`, {
       method: 'POST',
@@ -62,6 +63,10 @@ export const main = () => {
 
     // console.log('Bob: deposits his USDC in the vault.');
     const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, bobSigner);
+
+    const toggleTx = await vault.connect(adminSigner).toggleWindowCheck(false);
+    await toggleTx.wait();
+
     const depositTx = await vault.deposit(parseEther('1000'), bobSigner.address, { gasLimit: 10000000 });
     await depositTx.wait();
     console.log('Bob: deposits his USDC in the vault. - OK');
