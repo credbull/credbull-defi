@@ -13,7 +13,7 @@ on:
       - "packages/contracts/**"
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     environment: dev
 
@@ -48,14 +48,10 @@ jobs:
           CRON_SECRET: any_string_will_do
           NEXT_PUBLIC_TARGET_NETWORK_WSS: ws://localhost:8545
 
-  deploy:
-    runs-on: ubuntu-latest
-    concurrency: deploy-group
-    needs: test
-    environment: dev
+      - name: Build API
+        run: yarn build
+        working-directory: packages/api
 
-    steps:
-      - uses: actions/checkout@v3
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy ../.. --remote-only
         env:
