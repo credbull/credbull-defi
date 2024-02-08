@@ -16,11 +16,14 @@ ENV NODE_ENV="production"
 # Throw-away build stage to reduce size of final image
 FROM base as build
 
+SHELL ["/bin/bash", "-c"]
+
 # Install packages needed to build node modules
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3 curl ca-certificates
 
 RUN curl -L https://foundry.paradigm.xyz | bash
+RUN source /root/.bashrc
 RUN foundryup
 
 # Install node modules
