@@ -8,29 +8,29 @@ const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SU
 const outputFileName = path.resolve(__dirname, '../output/dbdata.json');
 
 async function checkDb() {
-    const { data, error } = await client.from('contracts_addresses').select();
+  const { data, error } = await client.from('contracts_addresses').select();
 
-    if(error) {
-        throw error;
-    }
+  if (error) {
+    throw error;
+  }
 
-    let dataToExport = {};
+  let dataToExport = {};
 
-    if(data.length > 0) {
-        data.map(i => { 
-            dataToExport[i.contract_name] = i.address;
-        });
-    }
+  if (data.length > 0) {
+    data.map((i) => {
+      dataToExport[i.contract_name] = i.address;
+    });
+  }
 
-    fs.writeFileSync(path.resolve(outputFileName), JSON.stringify(dataToExport));
+  fs.writeFileSync(path.resolve(outputFileName), JSON.stringify(dataToExport));
 }
 
 (async () => {
-    try {
-      await checkDb();
-    } catch (e) {
-      console.log(e);
-    } finally {
-      console.log(`Finished checking Database`);
-    }
-  })();
+  try {
+    await checkDb();
+  } catch (e) {
+    console.log(e);
+  } finally {
+    console.log(`Finished checking Database`);
+  }
+})();

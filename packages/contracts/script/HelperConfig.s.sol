@@ -31,8 +31,7 @@ contract HelperConfig is Script {
         if (block.chainid == 11155111) {
             activeNetworkConfig = getSepoliaEthConfig();
         } else {
-            //activeNetworkConfig = getAnvilEthConfig();
-            activeNetworkConfig = getSepoliaEthConfig();
+            activeNetworkConfig = getAnvilEthConfig();
         }
     }
 
@@ -47,9 +46,9 @@ contract HelperConfig is Script {
 
     function getSepoliaEthConfig() internal returns (NetworkConfig memory) {
         FactoryParams memory factoryParams = FactoryParams({
-            owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266, //vm.envAddress("PUBLIC_OWNER_ADDRESS"),
-            operator: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 //vm.envAddress("PUBLIC_OPERATOR_ADDRESS")
-         });
+            owner: vm.envAddress("PUBLIC_OWNER_ADDRESS"),
+            operator: vm.envAddress("PUBLIC_OPERATOR_ADDRESS")
+        });
 
         (address usdc, address token, address kycProvider) = deployMocks(factoryParams.owner);
 
