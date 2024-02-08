@@ -7,107 +7,107 @@ exports.IERC721Errors__factory = void 0;
 const ethers_1 = require("ethers");
 const _abi = [
     {
+        type: "error",
+        name: "ERC721IncorrectOwner",
         inputs: [
             {
-                internalType: "address",
                 name: "sender",
                 type: "address",
+                internalType: "address",
             },
             {
-                internalType: "uint256",
                 name: "tokenId",
                 type: "uint256",
+                internalType: "uint256",
             },
             {
-                internalType: "address",
                 name: "owner",
                 type: "address",
+                internalType: "address",
             },
         ],
-        name: "ERC721IncorrectOwner",
-        type: "error",
     },
     {
+        type: "error",
+        name: "ERC721InsufficientApproval",
         inputs: [
             {
-                internalType: "address",
                 name: "operator",
                 type: "address",
+                internalType: "address",
             },
             {
-                internalType: "uint256",
                 name: "tokenId",
                 type: "uint256",
+                internalType: "uint256",
             },
         ],
-        name: "ERC721InsufficientApproval",
-        type: "error",
     },
     {
+        type: "error",
+        name: "ERC721InvalidApprover",
         inputs: [
             {
-                internalType: "address",
                 name: "approver",
                 type: "address",
+                internalType: "address",
             },
         ],
-        name: "ERC721InvalidApprover",
-        type: "error",
     },
     {
+        type: "error",
+        name: "ERC721InvalidOperator",
         inputs: [
             {
-                internalType: "address",
                 name: "operator",
                 type: "address",
+                internalType: "address",
             },
         ],
-        name: "ERC721InvalidOperator",
-        type: "error",
     },
     {
+        type: "error",
+        name: "ERC721InvalidOwner",
         inputs: [
             {
-                internalType: "address",
                 name: "owner",
                 type: "address",
+                internalType: "address",
             },
         ],
-        name: "ERC721InvalidOwner",
-        type: "error",
     },
     {
+        type: "error",
+        name: "ERC721InvalidReceiver",
         inputs: [
             {
-                internalType: "address",
                 name: "receiver",
                 type: "address",
+                internalType: "address",
             },
         ],
-        name: "ERC721InvalidReceiver",
-        type: "error",
     },
     {
+        type: "error",
+        name: "ERC721InvalidSender",
         inputs: [
             {
-                internalType: "address",
                 name: "sender",
                 type: "address",
+                internalType: "address",
             },
         ],
-        name: "ERC721InvalidSender",
-        type: "error",
     },
     {
+        type: "error",
+        name: "ERC721NonexistentToken",
         inputs: [
             {
-                internalType: "uint256",
                 name: "tokenId",
                 type: "uint256",
+                internalType: "uint256",
             },
         ],
-        name: "ERC721NonexistentToken",
-        type: "error",
     },
 ];
 class IERC721Errors__factory {

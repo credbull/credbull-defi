@@ -7,36 +7,36 @@ import type { Address, AddressInterface } from "../Address";
 
 const _abi = [
   {
+    type: "error",
+    name: "AddressEmptyCode",
     inputs: [
       {
-        internalType: "address",
         name: "target",
         type: "address",
+        internalType: "address",
       },
     ],
-    name: "AddressEmptyCode",
-    type: "error",
   },
   {
+    type: "error",
+    name: "AddressInsufficientBalance",
     inputs: [
       {
-        internalType: "address",
         name: "account",
         type: "address",
+        internalType: "address",
       },
     ],
-    name: "AddressInsufficientBalance",
-    type: "error",
   },
   {
-    inputs: [],
-    name: "FailedInnerCall",
     type: "error",
+    name: "FailedInnerCall",
+    inputs: [],
   },
 ] as const;
 
 const _bytecode =
-  "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220f3923042daa934e4e1a9f01322bc241fd98c79ed46b08de544e13ca613070a5e64736f6c63430008160033";
+  "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220c189724e22c6b88923051a89307344506a89e63c0ffdbcfa8b636834721b4db864736f6c63430008170033";
 
 type AddressConstructorParams =
   | [signer?: Signer]

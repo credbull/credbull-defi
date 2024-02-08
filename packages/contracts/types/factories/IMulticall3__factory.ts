@@ -8,442 +8,442 @@ import type { IMulticall3, IMulticall3Interface } from "../IMulticall3";
 
 const _abi = [
   {
+    type: "function",
+    name: "aggregate",
     inputs: [
       {
-        components: [
-          {
-            internalType: "address",
-            name: "target",
-            type: "address",
-          },
-          {
-            internalType: "bytes",
-            name: "callData",
-            type: "bytes",
-          },
-        ],
-        internalType: "struct IMulticall3.Call[]",
         name: "calls",
         type: "tuple[]",
+        internalType: "struct IMulticall3.Call[]",
+        components: [
+          {
+            name: "target",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "callData",
+            type: "bytes",
+            internalType: "bytes",
+          },
+        ],
       },
     ],
-    name: "aggregate",
     outputs: [
       {
-        internalType: "uint256",
         name: "blockNumber",
         type: "uint256",
+        internalType: "uint256",
       },
       {
-        internalType: "bytes[]",
         name: "returnData",
         type: "bytes[]",
+        internalType: "bytes[]",
       },
     ],
     stateMutability: "payable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "aggregate3",
     inputs: [
       {
-        components: [
-          {
-            internalType: "address",
-            name: "target",
-            type: "address",
-          },
-          {
-            internalType: "bool",
-            name: "allowFailure",
-            type: "bool",
-          },
-          {
-            internalType: "bytes",
-            name: "callData",
-            type: "bytes",
-          },
-        ],
-        internalType: "struct IMulticall3.Call3[]",
         name: "calls",
         type: "tuple[]",
-      },
-    ],
-    name: "aggregate3",
-    outputs: [
-      {
+        internalType: "struct IMulticall3.Call3[]",
         components: [
           {
-            internalType: "bool",
-            name: "success",
-            type: "bool",
+            name: "target",
+            type: "address",
+            internalType: "address",
           },
           {
-            internalType: "bytes",
-            name: "returnData",
+            name: "allowFailure",
+            type: "bool",
+            internalType: "bool",
+          },
+          {
+            name: "callData",
             type: "bytes",
+            internalType: "bytes",
           },
         ],
-        internalType: "struct IMulticall3.Result[]",
+      },
+    ],
+    outputs: [
+      {
         name: "returnData",
         type: "tuple[]",
+        internalType: "struct IMulticall3.Result[]",
+        components: [
+          {
+            name: "success",
+            type: "bool",
+            internalType: "bool",
+          },
+          {
+            name: "returnData",
+            type: "bytes",
+            internalType: "bytes",
+          },
+        ],
       },
     ],
     stateMutability: "payable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "aggregate3Value",
     inputs: [
       {
+        name: "calls",
+        type: "tuple[]",
+        internalType: "struct IMulticall3.Call3Value[]",
         components: [
           {
-            internalType: "address",
             name: "target",
             type: "address",
+            internalType: "address",
           },
           {
-            internalType: "bool",
             name: "allowFailure",
             type: "bool",
+            internalType: "bool",
           },
           {
-            internalType: "uint256",
             name: "value",
             type: "uint256",
+            internalType: "uint256",
           },
           {
-            internalType: "bytes",
             name: "callData",
             type: "bytes",
+            internalType: "bytes",
           },
         ],
-        internalType: "struct IMulticall3.Call3Value[]",
-        name: "calls",
-        type: "tuple[]",
       },
     ],
-    name: "aggregate3Value",
     outputs: [
       {
-        components: [
-          {
-            internalType: "bool",
-            name: "success",
-            type: "bool",
-          },
-          {
-            internalType: "bytes",
-            name: "returnData",
-            type: "bytes",
-          },
-        ],
-        internalType: "struct IMulticall3.Result[]",
         name: "returnData",
         type: "tuple[]",
+        internalType: "struct IMulticall3.Result[]",
+        components: [
+          {
+            name: "success",
+            type: "bool",
+            internalType: "bool",
+          },
+          {
+            name: "returnData",
+            type: "bytes",
+            internalType: "bytes",
+          },
+        ],
       },
     ],
     stateMutability: "payable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "blockAndAggregate",
     inputs: [
       {
-        components: [
-          {
-            internalType: "address",
-            name: "target",
-            type: "address",
-          },
-          {
-            internalType: "bytes",
-            name: "callData",
-            type: "bytes",
-          },
-        ],
-        internalType: "struct IMulticall3.Call[]",
         name: "calls",
         type: "tuple[]",
-      },
-    ],
-    name: "blockAndAggregate",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "blockNumber",
-        type: "uint256",
-      },
-      {
-        internalType: "bytes32",
-        name: "blockHash",
-        type: "bytes32",
-      },
-      {
+        internalType: "struct IMulticall3.Call[]",
         components: [
           {
-            internalType: "bool",
-            name: "success",
-            type: "bool",
+            name: "target",
+            type: "address",
+            internalType: "address",
           },
           {
-            internalType: "bytes",
-            name: "returnData",
+            name: "callData",
             type: "bytes",
+            internalType: "bytes",
           },
         ],
-        internalType: "struct IMulticall3.Result[]",
+      },
+    ],
+    outputs: [
+      {
+        name: "blockNumber",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "blockHash",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
+      {
         name: "returnData",
         type: "tuple[]",
+        internalType: "struct IMulticall3.Result[]",
+        components: [
+          {
+            name: "success",
+            type: "bool",
+            internalType: "bool",
+          },
+          {
+            name: "returnData",
+            type: "bytes",
+            internalType: "bytes",
+          },
+        ],
       },
     ],
     stateMutability: "payable",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "getBasefee",
+    inputs: [],
     outputs: [
       {
-        internalType: "uint256",
         name: "basefee",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
+    type: "function",
+    name: "getBlockHash",
     inputs: [
       {
-        internalType: "uint256",
         name: "blockNumber",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
-    name: "getBlockHash",
     outputs: [
       {
-        internalType: "bytes32",
         name: "blockHash",
         type: "bytes32",
+        internalType: "bytes32",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "getBlockNumber",
+    inputs: [],
     outputs: [
       {
-        internalType: "uint256",
         name: "blockNumber",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "getChainId",
+    inputs: [],
     outputs: [
       {
-        internalType: "uint256",
         name: "chainid",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "getCurrentBlockCoinbase",
+    inputs: [],
     outputs: [
       {
-        internalType: "address",
         name: "coinbase",
         type: "address",
+        internalType: "address",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "getCurrentBlockDifficulty",
+    inputs: [],
     outputs: [
       {
-        internalType: "uint256",
         name: "difficulty",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "getCurrentBlockGasLimit",
+    inputs: [],
     outputs: [
       {
-        internalType: "uint256",
         name: "gaslimit",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "getCurrentBlockTimestamp",
+    inputs: [],
     outputs: [
       {
-        internalType: "uint256",
         name: "timestamp",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
+    type: "function",
+    name: "getEthBalance",
     inputs: [
       {
-        internalType: "address",
         name: "addr",
         type: "address",
+        internalType: "address",
       },
     ],
-    name: "getEthBalance",
     outputs: [
       {
-        internalType: "uint256",
         name: "balance",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "getLastBlockHash",
+    inputs: [],
     outputs: [
       {
-        internalType: "bytes32",
         name: "blockHash",
         type: "bytes32",
+        internalType: "bytes32",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
+    type: "function",
+    name: "tryAggregate",
     inputs: [
       {
-        internalType: "bool",
         name: "requireSuccess",
         type: "bool",
+        internalType: "bool",
       },
       {
-        components: [
-          {
-            internalType: "address",
-            name: "target",
-            type: "address",
-          },
-          {
-            internalType: "bytes",
-            name: "callData",
-            type: "bytes",
-          },
-        ],
-        internalType: "struct IMulticall3.Call[]",
         name: "calls",
         type: "tuple[]",
-      },
-    ],
-    name: "tryAggregate",
-    outputs: [
-      {
+        internalType: "struct IMulticall3.Call[]",
         components: [
           {
-            internalType: "bool",
-            name: "success",
-            type: "bool",
+            name: "target",
+            type: "address",
+            internalType: "address",
           },
           {
-            internalType: "bytes",
-            name: "returnData",
+            name: "callData",
             type: "bytes",
+            internalType: "bytes",
           },
         ],
-        internalType: "struct IMulticall3.Result[]",
+      },
+    ],
+    outputs: [
+      {
         name: "returnData",
         type: "tuple[]",
+        internalType: "struct IMulticall3.Result[]",
+        components: [
+          {
+            name: "success",
+            type: "bool",
+            internalType: "bool",
+          },
+          {
+            name: "returnData",
+            type: "bytes",
+            internalType: "bytes",
+          },
+        ],
       },
     ],
     stateMutability: "payable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "tryBlockAndAggregate",
     inputs: [
       {
-        internalType: "bool",
         name: "requireSuccess",
         type: "bool",
+        internalType: "bool",
       },
       {
-        components: [
-          {
-            internalType: "address",
-            name: "target",
-            type: "address",
-          },
-          {
-            internalType: "bytes",
-            name: "callData",
-            type: "bytes",
-          },
-        ],
-        internalType: "struct IMulticall3.Call[]",
         name: "calls",
         type: "tuple[]",
+        internalType: "struct IMulticall3.Call[]",
+        components: [
+          {
+            name: "target",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "callData",
+            type: "bytes",
+            internalType: "bytes",
+          },
+        ],
       },
     ],
-    name: "tryBlockAndAggregate",
     outputs: [
       {
-        internalType: "uint256",
         name: "blockNumber",
         type: "uint256",
+        internalType: "uint256",
       },
       {
-        internalType: "bytes32",
         name: "blockHash",
         type: "bytes32",
+        internalType: "bytes32",
       },
       {
-        components: [
-          {
-            internalType: "bool",
-            name: "success",
-            type: "bool",
-          },
-          {
-            internalType: "bytes",
-            name: "returnData",
-            type: "bytes",
-          },
-        ],
-        internalType: "struct IMulticall3.Result[]",
         name: "returnData",
         type: "tuple[]",
+        internalType: "struct IMulticall3.Result[]",
+        components: [
+          {
+            name: "success",
+            type: "bool",
+            internalType: "bool",
+          },
+          {
+            name: "returnData",
+            type: "bytes",
+            internalType: "bytes",
+          },
+        ],
       },
     ],
     stateMutability: "payable",
-    type: "function",
   },
 ] as const;
 

@@ -8,41 +8,41 @@ import type { AKYCProvider, AKYCProviderInterface } from "../AKYCProvider";
 
 const _abi = [
   {
+    type: "function",
+    name: "status",
     inputs: [
       {
-        internalType: "address",
         name: "receiver",
         type: "address",
+        internalType: "address",
       },
     ],
-    name: "status",
     outputs: [
       {
-        internalType: "bool",
         name: "",
         type: "bool",
+        internalType: "bool",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
+    type: "function",
+    name: "updateStatus",
     inputs: [
       {
-        internalType: "address[]",
         name: "_addresses",
         type: "address[]",
+        internalType: "address[]",
       },
       {
-        internalType: "bool[]",
         name: "_statuses",
         type: "bool[]",
+        internalType: "bool[]",
       },
     ],
-    name: "updateStatus",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
 ] as const;
 

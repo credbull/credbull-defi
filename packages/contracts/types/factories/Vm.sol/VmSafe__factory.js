@@ -7,3529 +7,3529 @@ exports.VmSafe__factory = void 0;
 const ethers_1 = require("ethers");
 const _abi = [
     {
+        type: "function",
+        name: "accesses",
         inputs: [
             {
-                internalType: "address",
                 name: "target",
                 type: "address",
+                internalType: "address",
             },
         ],
-        name: "accesses",
         outputs: [
             {
-                internalType: "bytes32[]",
                 name: "readSlots",
                 type: "bytes32[]",
+                internalType: "bytes32[]",
             },
             {
-                internalType: "bytes32[]",
                 name: "writeSlots",
                 type: "bytes32[]",
+                internalType: "bytes32[]",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "addr",
         inputs: [
             {
-                internalType: "uint256",
                 name: "privateKey",
                 type: "uint256",
+                internalType: "uint256",
             },
         ],
-        name: "addr",
         outputs: [
             {
-                internalType: "address",
                 name: "keyAddr",
                 type: "address",
+                internalType: "address",
             },
         ],
         stateMutability: "pure",
-        type: "function",
     },
     {
+        type: "function",
+        name: "assume",
         inputs: [
             {
-                internalType: "bool",
                 name: "condition",
                 type: "bool",
+                internalType: "bool",
             },
         ],
-        name: "assume",
         outputs: [],
         stateMutability: "pure",
-        type: "function",
     },
     {
+        type: "function",
+        name: "breakpoint",
         inputs: [
             {
-                internalType: "string",
                 name: "char",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "breakpoint",
         outputs: [],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "breakpoint",
         inputs: [
             {
-                internalType: "string",
                 name: "char",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "bool",
                 name: "value",
                 type: "bool",
+                internalType: "bool",
             },
         ],
-        name: "breakpoint",
         outputs: [],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
-        inputs: [],
+        type: "function",
         name: "broadcast",
+        inputs: [],
         outputs: [],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "broadcast",
         inputs: [
             {
-                internalType: "address",
                 name: "signer",
                 type: "address",
+                internalType: "address",
             },
         ],
-        name: "broadcast",
         outputs: [],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "broadcast",
         inputs: [
             {
-                internalType: "uint256",
                 name: "privateKey",
                 type: "uint256",
+                internalType: "uint256",
             },
         ],
-        name: "broadcast",
         outputs: [],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "closeFile",
         inputs: [
             {
-                internalType: "string",
                 name: "path",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "closeFile",
         outputs: [],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "computeCreate2Address",
         inputs: [
             {
-                internalType: "bytes32",
                 name: "salt",
                 type: "bytes32",
+                internalType: "bytes32",
             },
             {
-                internalType: "bytes32",
                 name: "initCodeHash",
                 type: "bytes32",
+                internalType: "bytes32",
             },
         ],
-        name: "computeCreate2Address",
         outputs: [
             {
-                internalType: "address",
                 name: "",
                 type: "address",
+                internalType: "address",
             },
         ],
         stateMutability: "pure",
-        type: "function",
     },
     {
+        type: "function",
+        name: "computeCreate2Address",
         inputs: [
             {
-                internalType: "bytes32",
                 name: "salt",
                 type: "bytes32",
+                internalType: "bytes32",
             },
             {
-                internalType: "bytes32",
                 name: "initCodeHash",
                 type: "bytes32",
+                internalType: "bytes32",
             },
             {
-                internalType: "address",
                 name: "deployer",
                 type: "address",
+                internalType: "address",
             },
         ],
-        name: "computeCreate2Address",
         outputs: [
             {
-                internalType: "address",
                 name: "",
                 type: "address",
+                internalType: "address",
             },
         ],
         stateMutability: "pure",
-        type: "function",
     },
     {
+        type: "function",
+        name: "computeCreateAddress",
         inputs: [
             {
-                internalType: "address",
                 name: "deployer",
                 type: "address",
+                internalType: "address",
             },
             {
-                internalType: "uint256",
                 name: "nonce",
                 type: "uint256",
+                internalType: "uint256",
             },
         ],
-        name: "computeCreateAddress",
         outputs: [
             {
-                internalType: "address",
                 name: "",
                 type: "address",
+                internalType: "address",
             },
         ],
         stateMutability: "pure",
-        type: "function",
     },
     {
+        type: "function",
+        name: "copyFile",
         inputs: [
             {
-                internalType: "string",
                 name: "from",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "to",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "copyFile",
         outputs: [
             {
-                internalType: "uint64",
                 name: "copied",
                 type: "uint64",
+                internalType: "uint64",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "createDir",
         inputs: [
             {
-                internalType: "string",
                 name: "path",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "bool",
                 name: "recursive",
                 type: "bool",
+                internalType: "bool",
             },
         ],
-        name: "createDir",
         outputs: [],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "createWallet",
         inputs: [
             {
-                internalType: "string",
                 name: "walletLabel",
                 type: "string",
-            },
-        ],
-        name: "createWallet",
-        outputs: [
-            {
-                components: [
-                    {
-                        internalType: "address",
-                        name: "addr",
-                        type: "address",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "publicKeyX",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "publicKeyY",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "privateKey",
-                        type: "uint256",
-                    },
-                ],
-                internalType: "struct VmSafe.Wallet",
-                name: "wallet",
-                type: "tuple",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "uint256",
-                name: "privateKey",
-                type: "uint256",
-            },
-        ],
-        name: "createWallet",
-        outputs: [
-            {
-                components: [
-                    {
-                        internalType: "address",
-                        name: "addr",
-                        type: "address",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "publicKeyX",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "publicKeyY",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "privateKey",
-                        type: "uint256",
-                    },
-                ],
-                internalType: "struct VmSafe.Wallet",
-                name: "wallet",
-                type: "tuple",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "uint256",
-                name: "privateKey",
-                type: "uint256",
-            },
-            {
                 internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "wallet",
+                type: "tuple",
+                internalType: "struct VmSafe.Wallet",
+                components: [
+                    {
+                        name: "addr",
+                        type: "address",
+                        internalType: "address",
+                    },
+                    {
+                        name: "publicKeyX",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "publicKeyY",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "privateKey",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                ],
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "createWallet",
+        inputs: [
+            {
+                name: "privateKey",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        outputs: [
+            {
+                name: "wallet",
+                type: "tuple",
+                internalType: "struct VmSafe.Wallet",
+                components: [
+                    {
+                        name: "addr",
+                        type: "address",
+                        internalType: "address",
+                    },
+                    {
+                        name: "publicKeyX",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "publicKeyY",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "privateKey",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                ],
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "createWallet",
+        inputs: [
+            {
+                name: "privateKey",
+                type: "uint256",
+                internalType: "uint256",
+            },
+            {
                 name: "walletLabel",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "createWallet",
         outputs: [
             {
-                components: [
-                    {
-                        internalType: "address",
-                        name: "addr",
-                        type: "address",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "publicKeyX",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "publicKeyY",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "privateKey",
-                        type: "uint256",
-                    },
-                ],
-                internalType: "struct VmSafe.Wallet",
                 name: "wallet",
                 type: "tuple",
+                internalType: "struct VmSafe.Wallet",
+                components: [
+                    {
+                        name: "addr",
+                        type: "address",
+                        internalType: "address",
+                    },
+                    {
+                        name: "publicKeyX",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "publicKeyY",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "privateKey",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                ],
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "deriveKey",
         inputs: [
             {
-                internalType: "string",
                 name: "mnemonic",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "uint32",
                 name: "index",
                 type: "uint32",
+                internalType: "uint32",
             },
         ],
-        name: "deriveKey",
         outputs: [
             {
-                internalType: "uint256",
                 name: "privateKey",
                 type: "uint256",
+                internalType: "uint256",
             },
         ],
         stateMutability: "pure",
-        type: "function",
     },
     {
+        type: "function",
+        name: "deriveKey",
         inputs: [
             {
-                internalType: "string",
                 name: "mnemonic",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "derivationPath",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "uint32",
                 name: "index",
                 type: "uint32",
+                internalType: "uint32",
             },
         ],
-        name: "deriveKey",
         outputs: [
             {
-                internalType: "uint256",
                 name: "privateKey",
                 type: "uint256",
+                internalType: "uint256",
             },
         ],
         stateMutability: "pure",
-        type: "function",
     },
     {
-        inputs: [
-            {
-                internalType: "string",
-                name: "name",
-                type: "string",
-            },
-        ],
+        type: "function",
         name: "envAddress",
+        inputs: [
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+        ],
         outputs: [
             {
-                internalType: "address",
                 name: "value",
                 type: "address",
+                internalType: "address",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
-        inputs: [
-            {
-                internalType: "string",
-                name: "name",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "delim",
-                type: "string",
-            },
-        ],
+        type: "function",
         name: "envAddress",
+        inputs: [
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "delim",
+                type: "string",
+                internalType: "string",
+            },
+        ],
         outputs: [
             {
-                internalType: "address[]",
                 name: "value",
                 type: "address[]",
+                internalType: "address[]",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envBool",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "envBool",
         outputs: [
             {
-                internalType: "bool",
                 name: "value",
                 type: "bool",
+                internalType: "bool",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envBool",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "delim",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "envBool",
         outputs: [
             {
-                internalType: "bool[]",
                 name: "value",
                 type: "bool[]",
+                internalType: "bool[]",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envBytes",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "envBytes",
         outputs: [
             {
-                internalType: "bytes",
                 name: "value",
                 type: "bytes",
+                internalType: "bytes",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envBytes",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "delim",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "envBytes",
         outputs: [
             {
-                internalType: "bytes[]",
                 name: "value",
                 type: "bytes[]",
+                internalType: "bytes[]",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envBytes32",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "delim",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "envBytes32",
         outputs: [
             {
-                internalType: "bytes32[]",
                 name: "value",
                 type: "bytes32[]",
+                internalType: "bytes32[]",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envBytes32",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "envBytes32",
         outputs: [
             {
-                internalType: "bytes32",
                 name: "value",
                 type: "bytes32",
+                internalType: "bytes32",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envInt",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "delim",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "envInt",
         outputs: [
             {
-                internalType: "int256[]",
                 name: "value",
                 type: "int256[]",
+                internalType: "int256[]",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envInt",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "envInt",
         outputs: [
             {
-                internalType: "int256",
                 name: "value",
                 type: "int256",
+                internalType: "int256",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "delim",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "bytes32[]",
                 name: "defaultValue",
                 type: "bytes32[]",
+                internalType: "bytes32[]",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "bytes32[]",
                 name: "value",
                 type: "bytes32[]",
+                internalType: "bytes32[]",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "delim",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "int256[]",
                 name: "defaultValue",
                 type: "int256[]",
+                internalType: "int256[]",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "int256[]",
                 name: "value",
                 type: "int256[]",
+                internalType: "int256[]",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "bool",
                 name: "defaultValue",
                 type: "bool",
+                internalType: "bool",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "bool",
                 name: "value",
                 type: "bool",
+                internalType: "bool",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "address",
                 name: "defaultValue",
                 type: "address",
+                internalType: "address",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "address",
                 name: "value",
                 type: "address",
+                internalType: "address",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "uint256",
                 name: "defaultValue",
                 type: "uint256",
+                internalType: "uint256",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "uint256",
                 name: "value",
                 type: "uint256",
+                internalType: "uint256",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "delim",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "bytes[]",
                 name: "defaultValue",
                 type: "bytes[]",
+                internalType: "bytes[]",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "bytes[]",
                 name: "value",
                 type: "bytes[]",
+                internalType: "bytes[]",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "delim",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "uint256[]",
                 name: "defaultValue",
                 type: "uint256[]",
+                internalType: "uint256[]",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "uint256[]",
                 name: "value",
                 type: "uint256[]",
+                internalType: "uint256[]",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "delim",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string[]",
                 name: "defaultValue",
                 type: "string[]",
+                internalType: "string[]",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "string[]",
                 name: "value",
                 type: "string[]",
+                internalType: "string[]",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "bytes",
                 name: "defaultValue",
                 type: "bytes",
+                internalType: "bytes",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "bytes",
                 name: "value",
                 type: "bytes",
+                internalType: "bytes",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "bytes32",
                 name: "defaultValue",
                 type: "bytes32",
+                internalType: "bytes32",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "bytes32",
                 name: "value",
                 type: "bytes32",
+                internalType: "bytes32",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "int256",
                 name: "defaultValue",
                 type: "int256",
+                internalType: "int256",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "int256",
                 name: "value",
                 type: "int256",
+                internalType: "int256",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "delim",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "address[]",
                 name: "defaultValue",
                 type: "address[]",
+                internalType: "address[]",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "address[]",
                 name: "value",
                 type: "address[]",
+                internalType: "address[]",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "defaultValue",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "string",
                 name: "value",
                 type: "string",
+                internalType: "string",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envOr",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "delim",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "bool[]",
                 name: "defaultValue",
                 type: "bool[]",
+                internalType: "bool[]",
             },
         ],
-        name: "envOr",
         outputs: [
             {
-                internalType: "bool[]",
                 name: "value",
                 type: "bool[]",
+                internalType: "bool[]",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
-        inputs: [
-            {
-                internalType: "string",
-                name: "name",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "delim",
-                type: "string",
-            },
-        ],
+        type: "function",
         name: "envString",
+        inputs: [
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "delim",
+                type: "string",
+                internalType: "string",
+            },
+        ],
         outputs: [
             {
-                internalType: "string[]",
                 name: "value",
                 type: "string[]",
+                internalType: "string[]",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envString",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "envString",
         outputs: [
             {
-                internalType: "string",
                 name: "value",
                 type: "string",
+                internalType: "string",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
-        inputs: [
-            {
-                internalType: "string",
-                name: "name",
-                type: "string",
-            },
-        ],
+        type: "function",
         name: "envUint",
+        inputs: [
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+        ],
         outputs: [
             {
-                internalType: "uint256",
                 name: "value",
                 type: "uint256",
+                internalType: "uint256",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "envUint",
         inputs: [
             {
-                internalType: "string",
                 name: "name",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
                 name: "delim",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "envUint",
         outputs: [
             {
-                internalType: "uint256[]",
                 name: "value",
                 type: "uint256[]",
+                internalType: "uint256[]",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "eth_getLogs",
         inputs: [
             {
-                internalType: "uint256",
                 name: "fromBlock",
                 type: "uint256",
+                internalType: "uint256",
             },
             {
-                internalType: "uint256",
                 name: "toBlock",
                 type: "uint256",
+                internalType: "uint256",
             },
             {
-                internalType: "address",
                 name: "target",
                 type: "address",
+                internalType: "address",
             },
             {
-                internalType: "bytes32[]",
                 name: "topics",
                 type: "bytes32[]",
+                internalType: "bytes32[]",
             },
         ],
-        name: "eth_getLogs",
         outputs: [
             {
+                name: "logs",
+                type: "tuple[]",
+                internalType: "struct VmSafe.EthGetLogs[]",
                 components: [
                     {
-                        internalType: "address",
                         name: "emitter",
                         type: "address",
+                        internalType: "address",
                     },
                     {
-                        internalType: "bytes32[]",
                         name: "topics",
                         type: "bytes32[]",
+                        internalType: "bytes32[]",
                     },
                     {
-                        internalType: "bytes",
                         name: "data",
                         type: "bytes",
+                        internalType: "bytes",
                     },
                     {
-                        internalType: "bytes32",
                         name: "blockHash",
                         type: "bytes32",
+                        internalType: "bytes32",
                     },
                     {
-                        internalType: "uint64",
                         name: "blockNumber",
                         type: "uint64",
+                        internalType: "uint64",
                     },
                     {
-                        internalType: "bytes32",
                         name: "transactionHash",
                         type: "bytes32",
+                        internalType: "bytes32",
                     },
                     {
-                        internalType: "uint64",
                         name: "transactionIndex",
                         type: "uint64",
+                        internalType: "uint64",
                     },
                     {
-                        internalType: "uint256",
                         name: "logIndex",
                         type: "uint256",
+                        internalType: "uint256",
                     },
                     {
-                        internalType: "bool",
                         name: "removed",
                         type: "bool",
+                        internalType: "bool",
                     },
                 ],
-                internalType: "struct VmSafe.EthGetLogs[]",
-                name: "logs",
-                type: "tuple[]",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "exists",
         inputs: [
             {
-                internalType: "string",
                 name: "path",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "exists",
         outputs: [
             {
-                internalType: "bool",
                 name: "result",
                 type: "bool",
+                internalType: "bool",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "ffi",
         inputs: [
             {
-                internalType: "string[]",
                 name: "commandInput",
                 type: "string[]",
+                internalType: "string[]",
             },
         ],
-        name: "ffi",
         outputs: [
             {
-                internalType: "bytes",
                 name: "result",
                 type: "bytes",
+                internalType: "bytes",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "fsMetadata",
         inputs: [
             {
-                internalType: "string",
                 name: "path",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "fsMetadata",
         outputs: [
             {
-                components: [
-                    {
-                        internalType: "bool",
-                        name: "isDir",
-                        type: "bool",
-                    },
-                    {
-                        internalType: "bool",
-                        name: "isSymlink",
-                        type: "bool",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "length",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "bool",
-                        name: "readOnly",
-                        type: "bool",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "modified",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "accessed",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "created",
-                        type: "uint256",
-                    },
-                ],
-                internalType: "struct VmSafe.FsMetadata",
                 name: "metadata",
                 type: "tuple",
+                internalType: "struct VmSafe.FsMetadata",
+                components: [
+                    {
+                        name: "isDir",
+                        type: "bool",
+                        internalType: "bool",
+                    },
+                    {
+                        name: "isSymlink",
+                        type: "bool",
+                        internalType: "bool",
+                    },
+                    {
+                        name: "length",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "readOnly",
+                        type: "bool",
+                        internalType: "bool",
+                    },
+                    {
+                        name: "modified",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "accessed",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "created",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                ],
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "getCode",
         inputs: [
             {
-                internalType: "string",
                 name: "artifactPath",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "getCode",
         outputs: [
             {
-                internalType: "bytes",
                 name: "creationBytecode",
                 type: "bytes",
+                internalType: "bytes",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "getDeployedCode",
         inputs: [
             {
-                internalType: "string",
                 name: "artifactPath",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "getDeployedCode",
         outputs: [
             {
-                internalType: "bytes",
                 name: "runtimeBytecode",
                 type: "bytes",
+                internalType: "bytes",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "getLabel",
         inputs: [
             {
-                internalType: "address",
                 name: "account",
                 type: "address",
+                internalType: "address",
             },
         ],
-        name: "getLabel",
         outputs: [
             {
-                internalType: "string",
                 name: "currentLabel",
                 type: "string",
+                internalType: "string",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "getMappingKeyAndParentOf",
         inputs: [
             {
-                internalType: "address",
                 name: "target",
                 type: "address",
+                internalType: "address",
             },
             {
-                internalType: "bytes32",
                 name: "elementSlot",
                 type: "bytes32",
+                internalType: "bytes32",
             },
         ],
-        name: "getMappingKeyAndParentOf",
         outputs: [
             {
-                internalType: "bool",
                 name: "found",
                 type: "bool",
+                internalType: "bool",
             },
             {
-                internalType: "bytes32",
                 name: "key",
                 type: "bytes32",
+                internalType: "bytes32",
             },
             {
-                internalType: "bytes32",
                 name: "parent",
                 type: "bytes32",
+                internalType: "bytes32",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "getMappingLength",
         inputs: [
             {
-                internalType: "address",
                 name: "target",
                 type: "address",
+                internalType: "address",
             },
             {
-                internalType: "bytes32",
                 name: "mappingSlot",
                 type: "bytes32",
+                internalType: "bytes32",
             },
         ],
-        name: "getMappingLength",
         outputs: [
             {
-                internalType: "uint256",
                 name: "length",
                 type: "uint256",
+                internalType: "uint256",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "getMappingSlotAt",
         inputs: [
             {
-                internalType: "address",
                 name: "target",
                 type: "address",
+                internalType: "address",
             },
             {
-                internalType: "bytes32",
                 name: "mappingSlot",
                 type: "bytes32",
+                internalType: "bytes32",
             },
             {
-                internalType: "uint256",
                 name: "idx",
                 type: "uint256",
+                internalType: "uint256",
             },
         ],
-        name: "getMappingSlotAt",
         outputs: [
             {
-                internalType: "bytes32",
                 name: "value",
                 type: "bytes32",
+                internalType: "bytes32",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "getNonce",
         inputs: [
             {
-                internalType: "address",
                 name: "account",
                 type: "address",
+                internalType: "address",
             },
         ],
-        name: "getNonce",
         outputs: [
             {
-                internalType: "uint64",
                 name: "nonce",
                 type: "uint64",
+                internalType: "uint64",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
+        type: "function",
+        name: "getNonce",
         inputs: [
             {
-                components: [
-                    {
-                        internalType: "address",
-                        name: "addr",
-                        type: "address",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "publicKeyX",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "publicKeyY",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "privateKey",
-                        type: "uint256",
-                    },
-                ],
-                internalType: "struct VmSafe.Wallet",
                 name: "wallet",
                 type: "tuple",
+                internalType: "struct VmSafe.Wallet",
+                components: [
+                    {
+                        name: "addr",
+                        type: "address",
+                        internalType: "address",
+                    },
+                    {
+                        name: "publicKeyX",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "publicKeyY",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "privateKey",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                ],
             },
         ],
-        name: "getNonce",
         outputs: [
             {
-                internalType: "uint64",
                 name: "nonce",
                 type: "uint64",
+                internalType: "uint64",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
-        inputs: [],
+        type: "function",
         name: "getRecordedLogs",
+        inputs: [],
         outputs: [
             {
-                components: [
-                    {
-                        internalType: "bytes32[]",
-                        name: "topics",
-                        type: "bytes32[]",
-                    },
-                    {
-                        internalType: "bytes",
-                        name: "data",
-                        type: "bytes",
-                    },
-                    {
-                        internalType: "address",
-                        name: "emitter",
-                        type: "address",
-                    },
-                ],
-                internalType: "struct VmSafe.Log[]",
                 name: "logs",
                 type: "tuple[]",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "path",
-                type: "string",
-            },
-        ],
-        name: "isDir",
-        outputs: [
-            {
-                internalType: "bool",
-                name: "result",
-                type: "bool",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "path",
-                type: "string",
-            },
-        ],
-        name: "isFile",
-        outputs: [
-            {
-                internalType: "bool",
-                name: "result",
-                type: "bool",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "keyExists",
-        outputs: [
-            {
-                internalType: "bool",
-                name: "",
-                type: "bool",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "address",
-                name: "account",
-                type: "address",
-            },
-            {
-                internalType: "string",
-                name: "newLabel",
-                type: "string",
-            },
-        ],
-        name: "label",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "address",
-                name: "target",
-                type: "address",
-            },
-            {
-                internalType: "bytes32",
-                name: "slot",
-                type: "bytes32",
-            },
-        ],
-        name: "load",
-        outputs: [
-            {
-                internalType: "bytes32",
-                name: "data",
-                type: "bytes32",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "stringifiedValue",
-                type: "string",
-            },
-        ],
-        name: "parseAddress",
-        outputs: [
-            {
-                internalType: "address",
-                name: "parsedValue",
-                type: "address",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "stringifiedValue",
-                type: "string",
-            },
-        ],
-        name: "parseBool",
-        outputs: [
-            {
-                internalType: "bool",
-                name: "parsedValue",
-                type: "bool",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "stringifiedValue",
-                type: "string",
-            },
-        ],
-        name: "parseBytes",
-        outputs: [
-            {
-                internalType: "bytes",
-                name: "parsedValue",
-                type: "bytes",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "stringifiedValue",
-                type: "string",
-            },
-        ],
-        name: "parseBytes32",
-        outputs: [
-            {
-                internalType: "bytes32",
-                name: "parsedValue",
-                type: "bytes32",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "stringifiedValue",
-                type: "string",
-            },
-        ],
-        name: "parseInt",
-        outputs: [
-            {
-                internalType: "int256",
-                name: "parsedValue",
-                type: "int256",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        name: "parseJson",
-        outputs: [
-            {
-                internalType: "bytes",
-                name: "abiEncodedData",
-                type: "bytes",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJson",
-        outputs: [
-            {
-                internalType: "bytes",
-                name: "abiEncodedData",
-                type: "bytes",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonAddress",
-        outputs: [
-            {
-                internalType: "address",
-                name: "",
-                type: "address",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonAddressArray",
-        outputs: [
-            {
-                internalType: "address[]",
-                name: "",
-                type: "address[]",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonBool",
-        outputs: [
-            {
-                internalType: "bool",
-                name: "",
-                type: "bool",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonBoolArray",
-        outputs: [
-            {
-                internalType: "bool[]",
-                name: "",
-                type: "bool[]",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonBytes",
-        outputs: [
-            {
-                internalType: "bytes",
-                name: "",
-                type: "bytes",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonBytes32",
-        outputs: [
-            {
-                internalType: "bytes32",
-                name: "",
-                type: "bytes32",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonBytes32Array",
-        outputs: [
-            {
-                internalType: "bytes32[]",
-                name: "",
-                type: "bytes32[]",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonBytesArray",
-        outputs: [
-            {
-                internalType: "bytes[]",
-                name: "",
-                type: "bytes[]",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonInt",
-        outputs: [
-            {
-                internalType: "int256",
-                name: "",
-                type: "int256",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonIntArray",
-        outputs: [
-            {
-                internalType: "int256[]",
-                name: "",
-                type: "int256[]",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonKeys",
-        outputs: [
-            {
-                internalType: "string[]",
-                name: "keys",
-                type: "string[]",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonString",
-        outputs: [
-            {
-                internalType: "string",
-                name: "",
-                type: "string",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonStringArray",
-        outputs: [
-            {
-                internalType: "string[]",
-                name: "",
-                type: "string[]",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonUint",
-        outputs: [
-            {
-                internalType: "uint256",
-                name: "",
-                type: "uint256",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "key",
-                type: "string",
-            },
-        ],
-        name: "parseJsonUintArray",
-        outputs: [
-            {
-                internalType: "uint256[]",
-                name: "",
-                type: "uint256[]",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "stringifiedValue",
-                type: "string",
-            },
-        ],
-        name: "parseUint",
-        outputs: [
-            {
-                internalType: "uint256",
-                name: "parsedValue",
-                type: "uint256",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [],
-        name: "pauseGasMetering",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [],
-        name: "projectRoot",
-        outputs: [
-            {
-                internalType: "string",
-                name: "path",
-                type: "string",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "path",
-                type: "string",
-            },
-            {
-                internalType: "uint64",
-                name: "maxDepth",
-                type: "uint64",
-            },
-        ],
-        name: "readDir",
-        outputs: [
-            {
+                internalType: "struct VmSafe.Log[]",
                 components: [
                     {
-                        internalType: "string",
-                        name: "errorMessage",
-                        type: "string",
+                        name: "topics",
+                        type: "bytes32[]",
+                        internalType: "bytes32[]",
                     },
                     {
-                        internalType: "string",
-                        name: "path",
-                        type: "string",
-                    },
-                    {
-                        internalType: "uint64",
-                        name: "depth",
-                        type: "uint64",
-                    },
-                    {
-                        internalType: "bool",
-                        name: "isDir",
-                        type: "bool",
-                    },
-                    {
-                        internalType: "bool",
-                        name: "isSymlink",
-                        type: "bool",
-                    },
-                ],
-                internalType: "struct VmSafe.DirEntry[]",
-                name: "entries",
-                type: "tuple[]",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "path",
-                type: "string",
-            },
-            {
-                internalType: "uint64",
-                name: "maxDepth",
-                type: "uint64",
-            },
-            {
-                internalType: "bool",
-                name: "followLinks",
-                type: "bool",
-            },
-        ],
-        name: "readDir",
-        outputs: [
-            {
-                components: [
-                    {
-                        internalType: "string",
-                        name: "errorMessage",
-                        type: "string",
-                    },
-                    {
-                        internalType: "string",
-                        name: "path",
-                        type: "string",
-                    },
-                    {
-                        internalType: "uint64",
-                        name: "depth",
-                        type: "uint64",
-                    },
-                    {
-                        internalType: "bool",
-                        name: "isDir",
-                        type: "bool",
-                    },
-                    {
-                        internalType: "bool",
-                        name: "isSymlink",
-                        type: "bool",
-                    },
-                ],
-                internalType: "struct VmSafe.DirEntry[]",
-                name: "entries",
-                type: "tuple[]",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "path",
-                type: "string",
-            },
-        ],
-        name: "readDir",
-        outputs: [
-            {
-                components: [
-                    {
-                        internalType: "string",
-                        name: "errorMessage",
-                        type: "string",
-                    },
-                    {
-                        internalType: "string",
-                        name: "path",
-                        type: "string",
-                    },
-                    {
-                        internalType: "uint64",
-                        name: "depth",
-                        type: "uint64",
-                    },
-                    {
-                        internalType: "bool",
-                        name: "isDir",
-                        type: "bool",
-                    },
-                    {
-                        internalType: "bool",
-                        name: "isSymlink",
-                        type: "bool",
-                    },
-                ],
-                internalType: "struct VmSafe.DirEntry[]",
-                name: "entries",
-                type: "tuple[]",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "path",
-                type: "string",
-            },
-        ],
-        name: "readFile",
-        outputs: [
-            {
-                internalType: "string",
-                name: "data",
-                type: "string",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "path",
-                type: "string",
-            },
-        ],
-        name: "readFileBinary",
-        outputs: [
-            {
-                internalType: "bytes",
-                name: "data",
-                type: "bytes",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "path",
-                type: "string",
-            },
-        ],
-        name: "readLine",
-        outputs: [
-            {
-                internalType: "string",
-                name: "line",
-                type: "string",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "linkPath",
-                type: "string",
-            },
-        ],
-        name: "readLink",
-        outputs: [
-            {
-                internalType: "string",
-                name: "targetPath",
-                type: "string",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [],
-        name: "record",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [],
-        name: "recordLogs",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "uint256",
-                name: "privateKey",
-                type: "uint256",
-            },
-        ],
-        name: "rememberKey",
-        outputs: [
-            {
-                internalType: "address",
-                name: "keyAddr",
-                type: "address",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "path",
-                type: "string",
-            },
-            {
-                internalType: "bool",
-                name: "recursive",
-                type: "bool",
-            },
-        ],
-        name: "removeDir",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "path",
-                type: "string",
-            },
-        ],
-        name: "removeFile",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [],
-        name: "resumeGasMetering",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "method",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "params",
-                type: "string",
-            },
-        ],
-        name: "rpc",
-        outputs: [
-            {
-                internalType: "bytes",
-                name: "data",
-                type: "bytes",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "rpcAlias",
-                type: "string",
-            },
-        ],
-        name: "rpcUrl",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [],
-        name: "rpcUrlStructs",
-        outputs: [
-            {
-                components: [
-                    {
-                        internalType: "string",
-                        name: "key",
-                        type: "string",
-                    },
-                    {
-                        internalType: "string",
-                        name: "url",
-                        type: "string",
-                    },
-                ],
-                internalType: "struct VmSafe.Rpc[]",
-                name: "urls",
-                type: "tuple[]",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [],
-        name: "rpcUrls",
-        outputs: [
-            {
-                internalType: "string[2][]",
-                name: "urls",
-                type: "string[2][]",
-            },
-        ],
-        stateMutability: "view",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "address[]",
-                name: "values",
-                type: "address[]",
-            },
-        ],
-        name: "serializeAddress",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "address",
-                name: "value",
-                type: "address",
-            },
-        ],
-        name: "serializeAddress",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "bool[]",
-                name: "values",
-                type: "bool[]",
-            },
-        ],
-        name: "serializeBool",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "bool",
-                name: "value",
-                type: "bool",
-            },
-        ],
-        name: "serializeBool",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "bytes[]",
-                name: "values",
-                type: "bytes[]",
-            },
-        ],
-        name: "serializeBytes",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "bytes",
-                name: "value",
-                type: "bytes",
-            },
-        ],
-        name: "serializeBytes",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "bytes32[]",
-                name: "values",
-                type: "bytes32[]",
-            },
-        ],
-        name: "serializeBytes32",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "bytes32",
-                name: "value",
-                type: "bytes32",
-            },
-        ],
-        name: "serializeBytes32",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "int256",
-                name: "value",
-                type: "int256",
-            },
-        ],
-        name: "serializeInt",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "int256[]",
-                name: "values",
-                type: "int256[]",
-            },
-        ],
-        name: "serializeInt",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "value",
-                type: "string",
-            },
-        ],
-        name: "serializeJson",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "string[]",
-                name: "values",
-                type: "string[]",
-            },
-        ],
-        name: "serializeString",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "value",
-                type: "string",
-            },
-        ],
-        name: "serializeString",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "uint256",
-                name: "value",
-                type: "uint256",
-            },
-        ],
-        name: "serializeUint",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "objectKey",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "valueKey",
-                type: "string",
-            },
-            {
-                internalType: "uint256[]",
-                name: "values",
-                type: "uint256[]",
-            },
-        ],
-        name: "serializeUint",
-        outputs: [
-            {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "string",
-                name: "name",
-                type: "string",
-            },
-            {
-                internalType: "string",
-                name: "value",
-                type: "string",
-            },
-        ],
-        name: "setEnv",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                components: [
-                    {
-                        internalType: "address",
-                        name: "addr",
-                        type: "address",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "publicKeyX",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "publicKeyY",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "privateKey",
-                        type: "uint256",
-                    },
-                ],
-                internalType: "struct VmSafe.Wallet",
-                name: "wallet",
-                type: "tuple",
-            },
-            {
-                internalType: "bytes32",
-                name: "digest",
-                type: "bytes32",
-            },
-        ],
-        name: "sign",
-        outputs: [
-            {
-                internalType: "uint8",
-                name: "v",
-                type: "uint8",
-            },
-            {
-                internalType: "bytes32",
-                name: "r",
-                type: "bytes32",
-            },
-            {
-                internalType: "bytes32",
-                name: "s",
-                type: "bytes32",
-            },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "uint256",
-                name: "privateKey",
-                type: "uint256",
-            },
-            {
-                internalType: "bytes32",
-                name: "digest",
-                type: "bytes32",
-            },
-        ],
-        name: "sign",
-        outputs: [
-            {
-                internalType: "uint8",
-                name: "v",
-                type: "uint8",
-            },
-            {
-                internalType: "bytes32",
-                name: "r",
-                type: "bytes32",
-            },
-            {
-                internalType: "bytes32",
-                name: "s",
-                type: "bytes32",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "uint256",
-                name: "duration",
-                type: "uint256",
-            },
-        ],
-        name: "sleep",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [],
-        name: "startBroadcast",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "address",
-                name: "signer",
-                type: "address",
-            },
-        ],
-        name: "startBroadcast",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "uint256",
-                name: "privateKey",
-                type: "uint256",
-            },
-        ],
-        name: "startBroadcast",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [],
-        name: "startMappingRecording",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [],
-        name: "startStateDiffRecording",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [],
-        name: "stopAndReturnStateDiff",
-        outputs: [
-            {
-                components: [
-                    {
-                        components: [
-                            {
-                                internalType: "uint256",
-                                name: "forkId",
-                                type: "uint256",
-                            },
-                            {
-                                internalType: "uint256",
-                                name: "chainId",
-                                type: "uint256",
-                            },
-                        ],
-                        internalType: "struct VmSafe.ChainInfo",
-                        name: "chainInfo",
-                        type: "tuple",
-                    },
-                    {
-                        internalType: "enum VmSafe.AccountAccessKind",
-                        name: "kind",
-                        type: "uint8",
-                    },
-                    {
-                        internalType: "address",
-                        name: "account",
-                        type: "address",
-                    },
-                    {
-                        internalType: "address",
-                        name: "accessor",
-                        type: "address",
-                    },
-                    {
-                        internalType: "bool",
-                        name: "initialized",
-                        type: "bool",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "oldBalance",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "newBalance",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "bytes",
-                        name: "deployedCode",
-                        type: "bytes",
-                    },
-                    {
-                        internalType: "uint256",
-                        name: "value",
-                        type: "uint256",
-                    },
-                    {
-                        internalType: "bytes",
                         name: "data",
                         type: "bytes",
+                        internalType: "bytes",
                     },
                     {
-                        internalType: "bool",
-                        name: "reverted",
-                        type: "bool",
-                    },
-                    {
-                        components: [
-                            {
-                                internalType: "address",
-                                name: "account",
-                                type: "address",
-                            },
-                            {
-                                internalType: "bytes32",
-                                name: "slot",
-                                type: "bytes32",
-                            },
-                            {
-                                internalType: "bool",
-                                name: "isWrite",
-                                type: "bool",
-                            },
-                            {
-                                internalType: "bytes32",
-                                name: "previousValue",
-                                type: "bytes32",
-                            },
-                            {
-                                internalType: "bytes32",
-                                name: "newValue",
-                                type: "bytes32",
-                            },
-                            {
-                                internalType: "bool",
-                                name: "reverted",
-                                type: "bool",
-                            },
-                        ],
-                        internalType: "struct VmSafe.StorageAccess[]",
-                        name: "storageAccesses",
-                        type: "tuple[]",
+                        name: "emitter",
+                        type: "address",
+                        internalType: "address",
                     },
                 ],
-                internalType: "struct VmSafe.AccountAccess[]",
-                name: "accountAccesses",
-                type: "tuple[]",
             },
         ],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
-        inputs: [],
-        name: "stopBroadcast",
-        outputs: [],
-        stateMutability: "nonpayable",
         type: "function",
-    },
-    {
-        inputs: [],
-        name: "stopMappingRecording",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
+        name: "isDir",
         inputs: [
             {
-                internalType: "address",
-                name: "value",
-                type: "address",
+                name: "path",
+                type: "string",
+                internalType: "string",
             },
         ],
-        name: "toString",
         outputs: [
             {
-                internalType: "string",
-                name: "stringifiedValue",
-                type: "string",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "uint256",
-                name: "value",
-                type: "uint256",
-            },
-        ],
-        name: "toString",
-        outputs: [
-            {
-                internalType: "string",
-                name: "stringifiedValue",
-                type: "string",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "bytes",
-                name: "value",
-                type: "bytes",
-            },
-        ],
-        name: "toString",
-        outputs: [
-            {
-                internalType: "string",
-                name: "stringifiedValue",
-                type: "string",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
-    },
-    {
-        inputs: [
-            {
-                internalType: "bool",
-                name: "value",
+                name: "result",
                 type: "bool",
+                internalType: "bool",
             },
         ],
-        name: "toString",
-        outputs: [
-            {
-                internalType: "string",
-                name: "stringifiedValue",
-                type: "string",
-            },
-        ],
-        stateMutability: "pure",
-        type: "function",
+        stateMutability: "nonpayable",
     },
     {
+        type: "function",
+        name: "isFile",
         inputs: [
             {
-                internalType: "int256",
-                name: "value",
-                type: "int256",
+                name: "path",
+                type: "string",
+                internalType: "string",
             },
         ],
-        name: "toString",
         outputs: [
             {
-                internalType: "string",
-                name: "stringifiedValue",
-                type: "string",
+                name: "result",
+                type: "bool",
+                internalType: "bool",
             },
         ],
-        stateMutability: "pure",
-        type: "function",
+        stateMutability: "nonpayable",
     },
     {
+        type: "function",
+        name: "keyExists",
         inputs: [
             {
-                internalType: "bytes32",
-                name: "value",
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "bool",
+                internalType: "bool",
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "label",
+        inputs: [
+            {
+                name: "account",
+                type: "address",
+                internalType: "address",
+            },
+            {
+                name: "newLabel",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "load",
+        inputs: [
+            {
+                name: "target",
+                type: "address",
+                internalType: "address",
+            },
+            {
+                name: "slot",
                 type: "bytes32",
+                internalType: "bytes32",
             },
         ],
-        name: "toString",
         outputs: [
             {
-                internalType: "string",
+                name: "data",
+                type: "bytes32",
+                internalType: "bytes32",
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "parseAddress",
+        inputs: [
+            {
                 name: "stringifiedValue",
                 type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "parsedValue",
+                type: "address",
+                internalType: "address",
             },
         ],
         stateMutability: "pure",
-        type: "function",
     },
     {
+        type: "function",
+        name: "parseBool",
         inputs: [
             {
-                internalType: "string[]",
-                name: "commandInput",
-                type: "string[]",
+                name: "stringifiedValue",
+                type: "string",
+                internalType: "string",
             },
         ],
-        name: "tryFfi",
         outputs: [
             {
+                name: "parsedValue",
+                type: "bool",
+                internalType: "bool",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseBytes",
+        inputs: [
+            {
+                name: "stringifiedValue",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "parsedValue",
+                type: "bytes",
+                internalType: "bytes",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseBytes32",
+        inputs: [
+            {
+                name: "stringifiedValue",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "parsedValue",
+                type: "bytes32",
+                internalType: "bytes32",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseInt",
+        inputs: [
+            {
+                name: "stringifiedValue",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "parsedValue",
+                type: "int256",
+                internalType: "int256",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJson",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "abiEncodedData",
+                type: "bytes",
+                internalType: "bytes",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJson",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "abiEncodedData",
+                type: "bytes",
+                internalType: "bytes",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonAddress",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "address",
+                internalType: "address",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonAddressArray",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "address[]",
+                internalType: "address[]",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonBool",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "bool",
+                internalType: "bool",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonBoolArray",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "bool[]",
+                internalType: "bool[]",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonBytes",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "bytes",
+                internalType: "bytes",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonBytes32",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "bytes32",
+                internalType: "bytes32",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonBytes32Array",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "bytes32[]",
+                internalType: "bytes32[]",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonBytesArray",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "bytes[]",
+                internalType: "bytes[]",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonInt",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "int256",
+                internalType: "int256",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonIntArray",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "int256[]",
+                internalType: "int256[]",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonKeys",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "keys",
+                type: "string[]",
+                internalType: "string[]",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonString",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonStringArray",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "string[]",
+                internalType: "string[]",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonUint",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseJsonUintArray",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "key",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "uint256[]",
+                internalType: "uint256[]",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "parseUint",
+        inputs: [
+            {
+                name: "stringifiedValue",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "parsedValue",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "pauseGasMetering",
+        inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "projectRoot",
+        inputs: [],
+        outputs: [
+            {
+                name: "path",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "readDir",
+        inputs: [
+            {
+                name: "path",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "maxDepth",
+                type: "uint64",
+                internalType: "uint64",
+            },
+        ],
+        outputs: [
+            {
+                name: "entries",
+                type: "tuple[]",
+                internalType: "struct VmSafe.DirEntry[]",
                 components: [
                     {
-                        internalType: "int32",
-                        name: "exitCode",
-                        type: "int32",
+                        name: "errorMessage",
+                        type: "string",
+                        internalType: "string",
                     },
                     {
-                        internalType: "bytes",
-                        name: "stdout",
-                        type: "bytes",
+                        name: "path",
+                        type: "string",
+                        internalType: "string",
                     },
                     {
-                        internalType: "bytes",
-                        name: "stderr",
-                        type: "bytes",
+                        name: "depth",
+                        type: "uint64",
+                        internalType: "uint64",
+                    },
+                    {
+                        name: "isDir",
+                        type: "bool",
+                        internalType: "bool",
+                    },
+                    {
+                        name: "isSymlink",
+                        type: "bool",
+                        internalType: "bool",
                     },
                 ],
-                internalType: "struct VmSafe.FfiResult",
-                name: "result",
-                type: "tuple",
             },
         ],
-        stateMutability: "nonpayable",
-        type: "function",
+        stateMutability: "view",
     },
     {
-        inputs: [],
-        name: "unixTime",
+        type: "function",
+        name: "readDir",
+        inputs: [
+            {
+                name: "path",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "maxDepth",
+                type: "uint64",
+                internalType: "uint64",
+            },
+            {
+                name: "followLinks",
+                type: "bool",
+                internalType: "bool",
+            },
+        ],
         outputs: [
             {
-                internalType: "uint256",
-                name: "milliseconds",
-                type: "uint256",
+                name: "entries",
+                type: "tuple[]",
+                internalType: "struct VmSafe.DirEntry[]",
+                components: [
+                    {
+                        name: "errorMessage",
+                        type: "string",
+                        internalType: "string",
+                    },
+                    {
+                        name: "path",
+                        type: "string",
+                        internalType: "string",
+                    },
+                    {
+                        name: "depth",
+                        type: "uint64",
+                        internalType: "uint64",
+                    },
+                    {
+                        name: "isDir",
+                        type: "bool",
+                        internalType: "bool",
+                    },
+                    {
+                        name: "isSymlink",
+                        type: "bool",
+                        internalType: "bool",
+                    },
+                ],
             },
         ],
-        stateMutability: "nonpayable",
-        type: "function",
+        stateMutability: "view",
     },
     {
+        type: "function",
+        name: "readDir",
         inputs: [
             {
-                internalType: "string",
                 name: "path",
                 type: "string",
-            },
-            {
                 internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "entries",
+                type: "tuple[]",
+                internalType: "struct VmSafe.DirEntry[]",
+                components: [
+                    {
+                        name: "errorMessage",
+                        type: "string",
+                        internalType: "string",
+                    },
+                    {
+                        name: "path",
+                        type: "string",
+                        internalType: "string",
+                    },
+                    {
+                        name: "depth",
+                        type: "uint64",
+                        internalType: "uint64",
+                    },
+                    {
+                        name: "isDir",
+                        type: "bool",
+                        internalType: "bool",
+                    },
+                    {
+                        name: "isSymlink",
+                        type: "bool",
+                        internalType: "bool",
+                    },
+                ],
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "readFile",
+        inputs: [
+            {
+                name: "path",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
                 name: "data",
                 type: "string",
+                internalType: "string",
             },
         ],
-        name: "writeFile",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
+        stateMutability: "view",
     },
     {
+        type: "function",
+        name: "readFileBinary",
         inputs: [
             {
-                internalType: "string",
                 name: "path",
                 type: "string",
+                internalType: "string",
             },
+        ],
+        outputs: [
             {
-                internalType: "bytes",
                 name: "data",
                 type: "bytes",
+                internalType: "bytes",
             },
         ],
-        name: "writeFileBinary",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
+        stateMutability: "view",
     },
     {
+        type: "function",
+        name: "readLine",
         inputs: [
             {
-                internalType: "string",
-                name: "json",
-                type: "string",
-            },
-            {
-                internalType: "string",
                 name: "path",
                 type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "line",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "readLink",
+        inputs: [
+            {
+                name: "linkPath",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "targetPath",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "record",
+        inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "recordLogs",
+        inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "rememberKey",
+        inputs: [
+            {
+                name: "privateKey",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        outputs: [
+            {
+                name: "keyAddr",
+                type: "address",
+                internalType: "address",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "removeDir",
+        inputs: [
+            {
+                name: "path",
+                type: "string",
+                internalType: "string",
             },
             {
+                name: "recursive",
+                type: "bool",
+                internalType: "bool",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "removeFile",
+        inputs: [
+            {
+                name: "path",
+                type: "string",
                 internalType: "string",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "resumeGasMetering",
+        inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "rpc",
+        inputs: [
+            {
+                name: "method",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "params",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "data",
+                type: "bytes",
+                internalType: "bytes",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "rpcUrl",
+        inputs: [
+            {
+                name: "rpcAlias",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "rpcUrlStructs",
+        inputs: [],
+        outputs: [
+            {
+                name: "urls",
+                type: "tuple[]",
+                internalType: "struct VmSafe.Rpc[]",
+                components: [
+                    {
+                        name: "key",
+                        type: "string",
+                        internalType: "string",
+                    },
+                    {
+                        name: "url",
+                        type: "string",
+                        internalType: "string",
+                    },
+                ],
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "rpcUrls",
+        inputs: [],
+        outputs: [
+            {
+                name: "urls",
+                type: "string[2][]",
+                internalType: "string[2][]",
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "serializeAddress",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
                 name: "valueKey",
                 type: "string",
+                internalType: "string",
+            },
+            {
+                name: "values",
+                type: "address[]",
+                internalType: "address[]",
             },
         ],
-        name: "writeJson",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-    },
-    {
-        inputs: [
+        outputs: [
             {
-                internalType: "string",
                 name: "json",
                 type: "string",
-            },
-            {
                 internalType: "string",
-                name: "path",
-                type: "string",
             },
         ],
-        name: "writeJson",
-        outputs: [],
         stateMutability: "nonpayable",
-        type: "function",
     },
     {
+        type: "function",
+        name: "serializeAddress",
         inputs: [
             {
-                internalType: "string",
-                name: "path",
+                name: "objectKey",
                 type: "string",
+                internalType: "string",
             },
             {
-                internalType: "string",
-                name: "data",
+                name: "valueKey",
                 type: "string",
+                internalType: "string",
+            },
+            {
+                name: "value",
+                type: "address",
+                internalType: "address",
             },
         ],
-        name: "writeLine",
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeBool",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "values",
+                type: "bool[]",
+                internalType: "bool[]",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeBool",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "value",
+                type: "bool",
+                internalType: "bool",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeBytes",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "values",
+                type: "bytes[]",
+                internalType: "bytes[]",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeBytes",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "value",
+                type: "bytes",
+                internalType: "bytes",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeBytes32",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "values",
+                type: "bytes32[]",
+                internalType: "bytes32[]",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeBytes32",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "value",
+                type: "bytes32",
+                internalType: "bytes32",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeInt",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "value",
+                type: "int256",
+                internalType: "int256",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeInt",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "values",
+                type: "int256[]",
+                internalType: "int256[]",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeJson",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "value",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeString",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "values",
+                type: "string[]",
+                internalType: "string[]",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeString",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "value",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeUint",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "value",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "serializeUint",
+        inputs: [
+            {
+                name: "objectKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "values",
+                type: "uint256[]",
+                internalType: "uint256[]",
+            },
+        ],
+        outputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "setEnv",
+        inputs: [
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "value",
+                type: "string",
+                internalType: "string",
+            },
+        ],
         outputs: [],
         stateMutability: "nonpayable",
+    },
+    {
         type: "function",
+        name: "sign",
+        inputs: [
+            {
+                name: "wallet",
+                type: "tuple",
+                internalType: "struct VmSafe.Wallet",
+                components: [
+                    {
+                        name: "addr",
+                        type: "address",
+                        internalType: "address",
+                    },
+                    {
+                        name: "publicKeyX",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "publicKeyY",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "privateKey",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                ],
+            },
+            {
+                name: "digest",
+                type: "bytes32",
+                internalType: "bytes32",
+            },
+        ],
+        outputs: [
+            {
+                name: "v",
+                type: "uint8",
+                internalType: "uint8",
+            },
+            {
+                name: "r",
+                type: "bytes32",
+                internalType: "bytes32",
+            },
+            {
+                name: "s",
+                type: "bytes32",
+                internalType: "bytes32",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "sign",
+        inputs: [
+            {
+                name: "privateKey",
+                type: "uint256",
+                internalType: "uint256",
+            },
+            {
+                name: "digest",
+                type: "bytes32",
+                internalType: "bytes32",
+            },
+        ],
+        outputs: [
+            {
+                name: "v",
+                type: "uint8",
+                internalType: "uint8",
+            },
+            {
+                name: "r",
+                type: "bytes32",
+                internalType: "bytes32",
+            },
+            {
+                name: "s",
+                type: "bytes32",
+                internalType: "bytes32",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "sleep",
+        inputs: [
+            {
+                name: "duration",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "startBroadcast",
+        inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "startBroadcast",
+        inputs: [
+            {
+                name: "signer",
+                type: "address",
+                internalType: "address",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "startBroadcast",
+        inputs: [
+            {
+                name: "privateKey",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "startMappingRecording",
+        inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "startStateDiffRecording",
+        inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "stopAndReturnStateDiff",
+        inputs: [],
+        outputs: [
+            {
+                name: "accountAccesses",
+                type: "tuple[]",
+                internalType: "struct VmSafe.AccountAccess[]",
+                components: [
+                    {
+                        name: "chainInfo",
+                        type: "tuple",
+                        internalType: "struct VmSafe.ChainInfo",
+                        components: [
+                            {
+                                name: "forkId",
+                                type: "uint256",
+                                internalType: "uint256",
+                            },
+                            {
+                                name: "chainId",
+                                type: "uint256",
+                                internalType: "uint256",
+                            },
+                        ],
+                    },
+                    {
+                        name: "kind",
+                        type: "uint8",
+                        internalType: "enum VmSafe.AccountAccessKind",
+                    },
+                    {
+                        name: "account",
+                        type: "address",
+                        internalType: "address",
+                    },
+                    {
+                        name: "accessor",
+                        type: "address",
+                        internalType: "address",
+                    },
+                    {
+                        name: "initialized",
+                        type: "bool",
+                        internalType: "bool",
+                    },
+                    {
+                        name: "oldBalance",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "newBalance",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "deployedCode",
+                        type: "bytes",
+                        internalType: "bytes",
+                    },
+                    {
+                        name: "value",
+                        type: "uint256",
+                        internalType: "uint256",
+                    },
+                    {
+                        name: "data",
+                        type: "bytes",
+                        internalType: "bytes",
+                    },
+                    {
+                        name: "reverted",
+                        type: "bool",
+                        internalType: "bool",
+                    },
+                    {
+                        name: "storageAccesses",
+                        type: "tuple[]",
+                        internalType: "struct VmSafe.StorageAccess[]",
+                        components: [
+                            {
+                                name: "account",
+                                type: "address",
+                                internalType: "address",
+                            },
+                            {
+                                name: "slot",
+                                type: "bytes32",
+                                internalType: "bytes32",
+                            },
+                            {
+                                name: "isWrite",
+                                type: "bool",
+                                internalType: "bool",
+                            },
+                            {
+                                name: "previousValue",
+                                type: "bytes32",
+                                internalType: "bytes32",
+                            },
+                            {
+                                name: "newValue",
+                                type: "bytes32",
+                                internalType: "bytes32",
+                            },
+                            {
+                                name: "reverted",
+                                type: "bool",
+                                internalType: "bool",
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "stopBroadcast",
+        inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "stopMappingRecording",
+        inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "toString",
+        inputs: [
+            {
+                name: "value",
+                type: "address",
+                internalType: "address",
+            },
+        ],
+        outputs: [
+            {
+                name: "stringifiedValue",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "toString",
+        inputs: [
+            {
+                name: "value",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        outputs: [
+            {
+                name: "stringifiedValue",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "toString",
+        inputs: [
+            {
+                name: "value",
+                type: "bytes",
+                internalType: "bytes",
+            },
+        ],
+        outputs: [
+            {
+                name: "stringifiedValue",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "toString",
+        inputs: [
+            {
+                name: "value",
+                type: "bool",
+                internalType: "bool",
+            },
+        ],
+        outputs: [
+            {
+                name: "stringifiedValue",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "toString",
+        inputs: [
+            {
+                name: "value",
+                type: "int256",
+                internalType: "int256",
+            },
+        ],
+        outputs: [
+            {
+                name: "stringifiedValue",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "toString",
+        inputs: [
+            {
+                name: "value",
+                type: "bytes32",
+                internalType: "bytes32",
+            },
+        ],
+        outputs: [
+            {
+                name: "stringifiedValue",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "tryFfi",
+        inputs: [
+            {
+                name: "commandInput",
+                type: "string[]",
+                internalType: "string[]",
+            },
+        ],
+        outputs: [
+            {
+                name: "result",
+                type: "tuple",
+                internalType: "struct VmSafe.FfiResult",
+                components: [
+                    {
+                        name: "exitCode",
+                        type: "int32",
+                        internalType: "int32",
+                    },
+                    {
+                        name: "stdout",
+                        type: "bytes",
+                        internalType: "bytes",
+                    },
+                    {
+                        name: "stderr",
+                        type: "bytes",
+                        internalType: "bytes",
+                    },
+                ],
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "unixTime",
+        inputs: [],
+        outputs: [
+            {
+                name: "milliseconds",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "writeFile",
+        inputs: [
+            {
+                name: "path",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "data",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "writeFileBinary",
+        inputs: [
+            {
+                name: "path",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "data",
+                type: "bytes",
+                internalType: "bytes",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "writeJson",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "path",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "valueKey",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "writeJson",
+        inputs: [
+            {
+                name: "json",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "path",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "writeLine",
+        inputs: [
+            {
+                name: "path",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "data",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
     },
 ];
 class VmSafe__factory {

@@ -7,35 +7,35 @@ exports.WhitelistPlugIn__factory = void 0;
 const ethers_1 = require("ethers");
 const _abi = [
     {
-        inputs: [],
-        name: "CredbullVault__NotAWhitelistedAddress",
-        type: "error",
-    },
-    {
-        inputs: [],
+        type: "function",
         name: "checkWhitelist",
+        inputs: [],
         outputs: [
             {
-                internalType: "bool",
                 name: "",
                 type: "bool",
+                internalType: "bool",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
     {
-        inputs: [],
+        type: "function",
         name: "kycProvider",
+        inputs: [],
         outputs: [
             {
-                internalType: "contract AKYCProvider",
                 name: "",
                 type: "address",
+                internalType: "contract AKYCProvider",
             },
         ],
         stateMutability: "view",
-        type: "function",
+    },
+    {
+        type: "error",
+        name: "CredbullVault__NotAWhitelistedAddress",
+        inputs: [],
     },
 ];
 class WhitelistPlugIn__factory {

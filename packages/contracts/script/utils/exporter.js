@@ -44,7 +44,6 @@ async function exportAddress() {
     for (let chainId in contracts) {
       for (let localContracts in contracts[chainId]) {
         console.log(localContracts);
-
         const data = {
           chain_id: chainId,
           contract_name: localContracts,
@@ -64,13 +63,7 @@ async function exportAddress() {
 async function exportToSupabase(dataToStoreOnDB) {
   const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  const deleted = await client.from('contracts_addresses').delete().neq('id', '0').select();
-  if (deleted.error) {
-    console.log(deleted.error);
-    throw deleted.error;
-  }
-
-  const config = await client.from('contracts_addresses').insert(dataToStoreOnDB).select();
+  const config = await client.from('contracts_addresses').upsert(dataToStoreOnDB, { onConflict: 'contract_name'}).select();
   if (config.error || !config.data) {
     console.log(config.error);
     throw config.error;

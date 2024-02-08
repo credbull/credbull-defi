@@ -7,7 +7,9 @@ import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
 import { MockToken } from "../test/mocks/MockToken.sol";
 import { MockKYCProvider } from "../test/mocks/MockKYCProvider.sol";
 import { ICredbull } from "../src/interface/ICredbull.sol";
+import { stdJson } from "forge-std/StdJson.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { console2 } from "forge-std/console2.sol";
 
 struct FactoryParams {
     address owner;
@@ -23,11 +25,14 @@ contract HelperConfig is Script {
     NetworkConfig private activeNetworkConfig;
     uint256 private constant PROMISED_FIXED_YIELD = 10;
 
+    using stdJson for string;
+
     constructor() {
         if (block.chainid == 11155111) {
             activeNetworkConfig = getSepoliaEthConfig();
         } else {
-            activeNetworkConfig = getAnvilEthConfig();
+            //activeNetworkConfig = getAnvilEthConfig();
+            activeNetworkConfig = getSepoliaEthConfig();
         }
     }
 
@@ -40,15 +45,22 @@ contract HelperConfig is Script {
         closesAt = opensAt + vm.envUint("VAULT_CLOSES_DURATION_TIMESTAMP");
     }
 
-    function getSepoliaEthConfig() internal view returns (NetworkConfig memory) {
+    function getSepoliaEthConfig() internal returns (NetworkConfig memory) {
+        FactoryParams memory factoryParams = FactoryParams({
+            owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266, //vm.envAddress("PUBLIC_OWNER_ADDRESS"),
+            operator: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 //vm.envAddress("PUBLIC_OPERATOR_ADDRESS")
+         });
+
+        (address usdc, address token, address kycProvider) = deployMocks(factoryParams.owner);
+
         // no need for vault params when using a real network
         ICredbull.VaultParams memory empty = ICredbull.VaultParams({
-            asset: IERC20(vm.addr(0)),
-            token: IERC20(vm.addr(0)),
-            owner: vm.addr(0),
-            operator: vm.addr(0),
-            custodian: vm.addr(0),
-            kycProvider: vm.addr(0),
+            asset: IERC20(usdc),
+            token: IERC20(token),
+            owner: address(0),
+            operator: address(0),
+            custodian: address(0),
+            kycProvider: kycProvider,
             shareName: "",
             shareSymbol: "",
             promisedYield: 0,
@@ -58,14 +70,61 @@ contract HelperConfig is Script {
             redemptionClosesAt: 0
         });
 
-        FactoryParams memory factoryParams = FactoryParams({
-            owner: vm.envAddress("PUBLIC_OWNER_ADDRESS"),
-            operator: vm.envAddress("PUBLIC_OPERATOR_ADDRESS")
-        });
-
         NetworkConfig memory sepoliaConfig = NetworkConfig({ factoryParams: factoryParams, vaultParams: empty });
-
         return sepoliaConfig;
+    }
+
+    function deployMocks(address owner) internal returns (address, address, address) {
+        MockToken token;
+        MockStablecoin usdc;
+        MockKYCProvider kycProvider;
+
+        bool deployMockToken;
+        bool deployMockStableCoin;
+        bool deployMockKycProvider;
+
+        string memory root = vm.projectRoot();
+        string memory path = string.concat(root, "/script/output/dbdata.json");
+        string memory json = vm.readFile(path);
+
+        bytes memory mockToken = json.parseRaw(".MockToken");
+        bytes memory mockStableCoin = json.parseRaw(".MockStablecoin");
+        bytes memory mockKycProvider = json.parseRaw(".MockKYCProvider");
+
+        if (mockToken.length == 0) {
+            deployMockToken = true;
+        }
+
+        if (mockStableCoin.length == 0) {
+            deployMockStableCoin = true;
+        }
+
+        if (mockKycProvider.length == 0) {
+            deployMockKycProvider = true;
+        }
+
+        vm.startBroadcast();
+        if (deployMockToken) {
+            token = new MockToken(type(uint128).max);
+        } else {
+            console2.log("!!!!! Deployment skipped for MockStablecoin !!!!!");
+        }
+
+        if (deployMockStableCoin) {
+            usdc = new MockStablecoin(type(uint128).max);
+        } else {
+            console2.log("!!!!! Deployment skipped for MockStablecoin !!!!!");
+        }
+
+        if (deployMockKycProvider) {
+            kycProvider = new MockKYCProvider(owner);
+        } else {
+            console2.log("!!!!! Deployment skipped for MockKYCProvider !!!!!");
+        }
+
+        vm.stopBroadcast();
+
+        return (address(token), address(usdc), address(kycProvider));
     }
 
     function getAnvilEthConfig() internal returns (NetworkConfig memory) {

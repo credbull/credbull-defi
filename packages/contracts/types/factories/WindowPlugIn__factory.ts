@@ -8,90 +8,90 @@ import type { WindowPlugIn, WindowPlugInInterface } from "../WindowPlugIn";
 
 const _abi = [
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "windowOpensAt",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "windowClosesAt",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "timestamp",
-        type: "uint256",
-      },
-    ],
-    name: "CredbullVault__OperationOutsideRequiredWindow",
-    type: "error",
-  },
-  {
-    inputs: [],
+    type: "function",
     name: "checkWindow",
+    inputs: [],
     outputs: [
       {
-        internalType: "bool",
         name: "",
         type: "bool",
+        internalType: "bool",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "depositClosesAtTimestamp",
+    inputs: [],
     outputs: [
       {
-        internalType: "uint256",
         name: "",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "depositOpensAtTimestamp",
+    inputs: [],
     outputs: [
       {
-        internalType: "uint256",
         name: "",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "redemptionClosesAtTimestamp",
+    inputs: [],
     outputs: [
       {
-        internalType: "uint256",
         name: "",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "redemptionOpensAtTimestamp",
+    inputs: [],
     outputs: [
       {
-        internalType: "uint256",
         name: "",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
+  },
+  {
+    type: "error",
+    name: "CredbullVault__OperationOutsideRequiredWindow",
+    inputs: [
+      {
+        name: "windowOpensAt",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "windowClosesAt",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "timestamp",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
   },
 ] as const;
 

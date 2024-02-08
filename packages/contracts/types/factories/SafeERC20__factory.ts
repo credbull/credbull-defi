@@ -7,41 +7,41 @@ import type { SafeERC20, SafeERC20Interface } from "../SafeERC20";
 
 const _abi = [
   {
+    type: "error",
+    name: "SafeERC20FailedDecreaseAllowance",
     inputs: [
       {
-        internalType: "address",
         name: "spender",
         type: "address",
+        internalType: "address",
       },
       {
-        internalType: "uint256",
         name: "currentAllowance",
         type: "uint256",
+        internalType: "uint256",
       },
       {
-        internalType: "uint256",
         name: "requestedDecrease",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
-    name: "SafeERC20FailedDecreaseAllowance",
-    type: "error",
   },
   {
+    type: "error",
+    name: "SafeERC20FailedOperation",
     inputs: [
       {
-        internalType: "address",
         name: "token",
         type: "address",
+        internalType: "address",
       },
     ],
-    name: "SafeERC20FailedOperation",
-    type: "error",
   },
 ] as const;
 
 const _bytecode =
-  "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea26469706673582212209b2a34bb26619d7456ed356b1c42b22b55dff267cfbb913de215395813599dc664736f6c63430008160033";
+  "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122068310392bcdcc324cf71691628f763a35aacde94771e8210541a14a458edf24c64736f6c63430008170033";
 
 type SafeERC20ConstructorParams =
   | [signer?: Signer]

@@ -8,17 +8,17 @@ import type { Script, ScriptInterface } from "../Script";
 
 const _abi = [
   {
-    inputs: [],
+    type: "function",
     name: "IS_SCRIPT",
+    inputs: [],
     outputs: [
       {
-        internalType: "bool",
         name: "",
         type: "bool",
+        internalType: "bool",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
 ] as const;
 

@@ -7,23 +7,23 @@ exports.IERC165__factory = void 0;
 const ethers_1 = require("ethers");
 const _abi = [
     {
+        type: "function",
+        name: "supportsInterface",
         inputs: [
             {
-                internalType: "bytes4",
                 name: "interfaceId",
                 type: "bytes4",
+                internalType: "bytes4",
             },
         ],
-        name: "supportsInterface",
         outputs: [
             {
-                internalType: "bool",
                 name: "",
                 type: "bool",
+                internalType: "bool",
             },
         ],
         stateMutability: "view",
-        type: "function",
     },
 ];
 class IERC165__factory {
