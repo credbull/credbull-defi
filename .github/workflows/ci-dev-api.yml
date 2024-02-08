@@ -50,7 +50,6 @@ jobs:
 
       - name: Build API
         run: yarn build
-        working-directory: packages/api
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy ../.. --remote-only
