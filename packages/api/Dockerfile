@@ -24,6 +24,7 @@ RUN apt-get update -qq && \
 
 RUN curl -L https://foundry.paradigm.xyz | bash
 RUN source /root/.bashrc
+ENV PATH="~/.foundry/bin:${PATH}"
 RUN foundryup
 
 # Install node modules
