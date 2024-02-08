@@ -13,17 +13,29 @@ import { ICredbull } from "./interface/ICredbull.sol";
 contract CredbullVaultFactory is AccessControl {
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    error CredbullVault__CustodianNotAllowed();
+
     //Event to emit when a new vault is created
     event VaultDeployed(address indexed vault, ICredbull.VaultParams params, string options);
 
     //Address set that contains list of all vault address
     EnumerableSet.AddressSet internal allVaults;
 
+    EnumerableSet.AddressSet internal allowedCustodians;
+
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     constructor(address owner, address operator) {
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
         _grantRole(OPERATOR_ROLE, operator);
+    }
+
+    modifier onlyAllowedCustodians(address _custodian) virtual {
+        if (!allowedCustodians.contains(_custodian)) {
+            revert CredbullVault__CustodianNotAllowed();
+        }
+
+        _;
     }
 
     /**
@@ -34,6 +46,7 @@ contract CredbullVaultFactory is AccessControl {
         public
         virtual
         onlyRole(OPERATOR_ROLE)
+        onlyAllowedCustodians(_params.custodian)
         returns (address)
     {
         CredbullFixedYieldVault newVault = new CredbullFixedYieldVault(_params);
@@ -43,6 +56,10 @@ contract CredbullVaultFactory is AccessControl {
         allVaults.add(address(newVault));
 
         return address(newVault);
+    }
+
+    function allowCustodian(address _custodian) external onlyRole(DEFAULT_ADMIN_ROLE) returns (bool) {
+        return allowedCustodians.add(_custodian);
     }
 
     //Get total no.of vaults

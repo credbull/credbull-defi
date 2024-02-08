@@ -83,7 +83,7 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
     "approve(address,uint256)": FunctionFragment;
     "asset()": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
-    "calculateTokenRedemption(uint256)": FunctionFragment;
+    "calculateTokenRedemption(uint256,address)": FunctionFragment;
     "checkMaturity()": FunctionFragment;
     "checkWhitelist()": FunctionFragment;
     "checkWindow()": FunctionFragment;
@@ -211,7 +211,7 @@ export interface CredbullFixedYieldVaultWithUpsideInterface
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
   encodeFunctionData(
     functionFragment: "calculateTokenRedemption",
-    values: [BigNumberish]
+    values: [BigNumberish, string]
   ): string;
   encodeFunctionData(
     functionFragment: "checkMaturity",
@@ -667,6 +667,7 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     calculateTokenRedemption(
       shares: BigNumberish,
+      owner: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
@@ -867,6 +868,7 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
   calculateTokenRedemption(
     shares: BigNumberish,
+    owner: string,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
@@ -1065,6 +1067,7 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     calculateTokenRedemption(
       shares: BigNumberish,
+      owner: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -1344,6 +1347,7 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     calculateTokenRedemption(
       shares: BigNumberish,
+      owner: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -1549,6 +1553,7 @@ export interface CredbullFixedYieldVaultWithUpside extends BaseContract {
 
     calculateTokenRedemption(
       shares: BigNumberish,
+      owner: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

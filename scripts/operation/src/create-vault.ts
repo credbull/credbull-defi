@@ -1,8 +1,10 @@
+import { CredbullVaultFactory__factory } from '@credbull/contracts';
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 
-import { generateAddress, headers, login, supabase, userByEmail } from './utils/helpers';
+import { generateAddress, headers, login, signer, supabase, userByEmail } from './utils/helpers';
 
 const createParams = (params: {
+  custodian: string;
   kycProvider?: string;
   asset?: string;
   token?: string;
@@ -13,13 +15,13 @@ const createParams = (params: {
   const owner = process.env.PUBLIC_OWNER_ADDRESS;
   const operator = process.env.PUBLIC_OPERATOR_ADDRESS;
 
-  const custodian = params.matured ? process.env.ADDRESSES_CUSTODIAN : generateAddress();
   const treasury = process.env.ADDRESSES_TREASURY;
   const activityReward = process.env.ADDRESSES_ACTIVITY_REWARD;
 
   const asset = params.asset;
   const token = params.token;
   const kycProvider = params.kycProvider;
+  const custodian = params.custodian;
 
   const week = 604800;
   const currentYearStart = startOfYear(new Date());
@@ -79,6 +81,17 @@ export const main = (
 
     const admin = await login({ admin: true });
     const adminHeaders = headers(admin);
+    const adminSigner = signer(process.env.ADMIN_PRIVATE_KEY);
+
+    // allow custodian address
+    const custodian = scenarios.matured ? process.env.ADDRESSES_CUSTODIAN! : generateAddress();
+    const factoryAddress = addresses.data.find(
+      (i) => i.contract_name === (scenarios.upside ? 'CredbullVaultWithUpsideFactory' : 'CredbullVaultFactory'),
+    )?.address;
+
+    const factory = CredbullVaultFactory__factory.connect(factoryAddress!, adminSigner);
+    const allowTx = await factory.allowCustodian(custodian);
+    await allowTx.wait();
 
     const kycProvider = addresses.data.find((i) => i.contract_name === 'MockKYCProvider')?.address;
     const asset = addresses.data.find((i) => i.contract_name === 'MockStablecoin')?.address;
@@ -89,6 +102,7 @@ export const main = (
         method: 'POST',
         body: JSON.stringify(
           createParams({
+            custodian,
             kycProvider,
             asset,
             token,
