@@ -5,7 +5,7 @@
   "types": "index.ts",
   "scripts": {
     "dev": "anvil --config-out localhost.json & make deploy-local",
-    "build": "rm -rf out && $HOME/.foundry/bin/forge build",
+    "build": "rm -rf out && forge build",
     "test": "forge test",
     "format": "forge fmt && prettier './script/**/*.js' --write",
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint  './*(test|src)/**/*.sol'",

@@ -27,12 +27,14 @@ RUN source /root/.bashrc
 ENV PATH="~/.foundry/bin:${PATH}"
 RUN foundryup
 
+RUN ln -s $HOME/.foundry/bin/forge /bin/forge
+
 # Install node modules
 COPY package.json .
 COPY .yarn .yarn
 COPY .yarnrc.yml .yarnrc.yml
 COPY packages packages
-RUN yarn install
+RUN yarn install || true
 
 # Build application
 WORKDIR /app/packages/api
