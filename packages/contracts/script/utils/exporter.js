@@ -63,10 +63,7 @@ async function exportAddress() {
 async function exportToSupabase(dataToStoreOnDB) {
   const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  const config = await client
-    .from('contracts_addresses')
-    .upsert(dataToStoreOnDB, { onConflict: 'contract_name' })
-    .select();
+  const config = await client.from('contracts_addresses').upsert(dataToStoreOnDB).select();
   if (config.error || !config.data) {
     console.log(config.error);
     throw config.error;

@@ -1,4 +1,7 @@
 name: ci-dev-app
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 defaults:
   run:
@@ -10,9 +13,10 @@ on:
     branches: [ "main*" ]
     paths:
       - "packages/app/**"
+      - "packages/contracts/**"
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     environment: dev
 
@@ -23,6 +27,11 @@ jobs:
         with:
           node-version: 20
           cache: "yarn"
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
 
       - name: Install dependencies
         run: yarn install
@@ -37,3 +46,15 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: your_supabase_service_role_key
           API_BASE_URL: http://localhost:3001
           APP_BASE_URL: http://localhost:3000
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --cwd ../.. --token=${{ secrets.VERCEL_TOKEN }}
+#
+      - name: Build Project Artifacts
+        run: vercel build --prod --cwd ../.. --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel
+        run: vercel deploy --prebuilt --prod --cwd ../.. --token=${{ secrets.VERCEL_TOKEN }}
