@@ -20,3 +20,5 @@ deployments
 
 types
 index.js
+
+/script/output/dbdata.json

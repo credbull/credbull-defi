@@ -14,26 +14,25 @@ async function exportAddress() {
   const deployFiles = await fs.promises.readdir(folderPath);
   for (const deployFile of deployFiles) {
     const deployFilePath = path.resolve(folderPath, deployFile);
-    const chainFiles = await fs.promises.readdir(deployFilePath);
+    const chainDir = process.env.NEXT_PUBLIC_TARGET_NETWORK_ID;
 
-    for (const chainFile of chainFiles) {
-      contracts[chainFile] = contracts[chainFile] || {};
-      const runBuffer = fs.readFileSync(path.resolve(deployFilePath, chainFile, 'run-latest.json'));
+    contracts[chainDir] = contracts[chainDir] || {};
+    const runBuffer = fs.readFileSync(path.resolve(deployFilePath, chainDir, 'run-latest.json'));
 
-      const output = JSON.parse(runBuffer.toString('utf-8'));
-      const transactions = output['transactions'];
-      for (const tx of transactions) {
-        if (tx['transactionType'] === 'CREATE') {
-          const contractName = tx['contractName'];
+    const output = JSON.parse(runBuffer.toString('utf-8'));
+    const transactions = output['transactions'];
+    for (const tx of transactions) {
+      if (tx['transactionType'] === 'CREATE') {
+        const contractName = tx['contractName'];
 
-          contracts[chainFile][contractName] = (contracts[chainFile][contractName] || []).concat({
-            name: contractName,
-            address: tx['contractAddress'],
-            arguments: tx['arguments'],
-          });
-        }
+        contracts[chainDir][contractName] = (contracts[chainDir][contractName] || []).concat({
+          name: contractName,
+          address: tx['contractAddress'],
+          arguments: tx['arguments'],
+        });
       }
     }
+
     if (!fs.existsSync(outputPath)) {
       fs.mkdirSync(outputPath, { recursive: true });
     }
@@ -43,7 +42,7 @@ async function exportAddress() {
     let dataToStoreOnDB = [];
     for (let chainId in contracts) {
       for (let localContracts in contracts[chainId]) {
-        console.log(localContracts);
+        console.log(`Exporting ${localContracts} on chain ${chainId}`);
         const data = {
           chain_id: chainId,
           contract_name: localContracts,
@@ -63,7 +62,11 @@ async function exportAddress() {
 async function exportToSupabase(dataToStoreOnDB) {
   const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  const config = await client.from('contracts_addresses').upsert(dataToStoreOnDB).select();
+  const config = await client
+    .from('contracts_addresses')
+    .upsert(dataToStoreOnDB, { onConflict: 'contract_name' })
+    .select();
+
   if (config.error || !config.data) {
     console.log(config.error);
     throw config.error;

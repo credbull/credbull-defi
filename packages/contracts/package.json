@@ -4,12 +4,13 @@
   "main": "index.js",
   "types": "index.ts",
   "scripts": {
-    "dev": "anvil --config-out localhost.json & make deploy-local",
+    "dev": "rm ./script/output/dbdata.json || true && anvil --config-out localhost.json & make deploy-local",
     "build": "rm -rf out && forge build",
     "test": "forge test",
     "format": "forge fmt && prettier './script/**/*.js' --write",
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint  './*(test|src)/**/*.sol'",
     "deploy": "make deploy-local",
+    "deploy:ci": "node ./script/utils/checkDb.js && make deploy-sepolia",
     "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/**/*.json && tsc",
     "postinstall": "yarn build && yarn gen-types"
   },

@@ -39,3 +39,9 @@ jobs:
           # the environment variables below should be removed when we configure the secrets in github
           VAULT_OPENS_AT_TIMESTAMP: 1705276800
           VAULT_CLOSES_DURATION_TIMESTAMP: 60
+
+      - name: Deploy contracts
+        run: yarn deploy:ci
+        env:
+          EXPORT_TO_SUPABASE: true
+          NEXT_PUBLIC_TARGET_NETWORK_ID: 421614
