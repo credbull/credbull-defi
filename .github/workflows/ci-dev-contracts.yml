@@ -45,6 +45,9 @@ jobs:
           node-version: 20
           cache: "yarn"
 
+      - name: Install dependencies
+        run: yarn install
+
       - name: Deploy contracts
         run: yarn deploy:ci
         env:
