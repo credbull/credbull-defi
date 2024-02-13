@@ -23,5 +23,6 @@ interface ICredbull {
         uint256 redemptionClosesAt;
         address custodian;
         address kycProvider;
+        uint256 maxCap;
     }
 }

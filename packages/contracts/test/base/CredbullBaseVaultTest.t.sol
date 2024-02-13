@@ -7,8 +7,13 @@ import { CredbullBaseVaultMock } from "../mocks/vaults/CredbullBaseVaultMock.m.s
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
+import { CredbullBaseVault } from "../../src/base/CredbullBaseVault.sol";
+import { console2 } from "forge-std/console2.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract CredbullBaseVaultTest is Test {
+    using Math for uint256;
+
     CredbullBaseVaultMock private vault;
     HelperConfig private helperConfig;
 
@@ -17,16 +22,19 @@ contract CredbullBaseVaultTest is Test {
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
 
-    uint256 private constant INITIAL_BALANCE = 1000 ether;
+    uint256 private precision;
+
+    uint256 private constant INITIAL_BALANCE = 1e6;
 
     function setUp() public {
         helperConfig = new HelperConfig();
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         vaultParams = config.vaultParams;
         vault = new CredbullBaseVaultMock(vaultParams);
+        precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
 
-        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE);
-        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE);
+        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
+        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__BaseVault__ShareNameAndSymbol() public {
@@ -48,7 +56,7 @@ contract CredbullBaseVaultTest is Test {
         assertEq(vault.balanceOf(alice), 0, "User should start with no Shares");
 
         // ---- Setup Part 2 - Alice Deposit and Receives shares ----
-        uint256 depositAmount = 10 ether;
+        uint256 depositAmount = 10 * precision;
         //Call internal deposit function
         uint256 shares = deposit(alice, depositAmount, true);
 
@@ -69,12 +77,12 @@ contract CredbullBaseVaultTest is Test {
 
     function test__BaseVault__WithdrawAssetAndBurnShares() public {
         // ---- Setup Part 1 - Deposit Assets to the vault ---- //
-        uint256 depositAmount = 10 ether;
+        uint256 depositAmount = 10 * precision;
         //Call internal deposit function
         uint256 shares = deposit(alice, depositAmount, true);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(address(vaultParams.asset)).mint(vaultParams.custodian, 1 ether);
+        MockStablecoin(address(vaultParams.asset)).mint(vaultParams.custodian, 1 * precision);
         uint256 finalBalance = MockStablecoin(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
 
         vm.startPrank(vaultParams.custodian);
@@ -94,12 +102,58 @@ contract CredbullBaseVaultTest is Test {
     }
 
     function test__BaseVault__totalAssetShouldReturnTotalDeposited() public {
-        uint256 depositAmount = 10 ether;
+        uint256 depositAmount = 10 * precision;
         //Call internal deposit function
         deposit(alice, depositAmount, true);
 
         assertEq(vault.totalAssets(), vault.totalAssetDeposited());
         assertEq(vault.totalAssetDeposited(), depositAmount);
+    }
+
+    function test__BaseVault__ShouldRevertDepositIfReachedMaxCap() public {
+        uint256 aliceDepositAmount = 100 * precision;
+        //Call internal deposit function
+        deposit(alice, aliceDepositAmount, true);
+
+        uint256 maxCap = vault.maxCap();
+
+        // Edge case - when total deposited asset is exactly 1 million
+        uint256 bobDepositAmount = maxCap - aliceDepositAmount;
+        MockStablecoin(address(vaultParams.asset)).mint(bob, bobDepositAmount);
+        deposit(bob, bobDepositAmount, true);
+
+        uint256 additionalDepositAmount = 1 * precision;
+        vm.startPrank(alice);
+        vaultParams.asset.approve(address(vault), additionalDepositAmount);
+
+        vm.expectRevert(CredbullBaseVault.CredbullVault__MaxCapReached.selector);
+        vm.warp(vaultParams.depositOpensAt);
+        vault.deposit(additionalDepositAmount, alice);
+        vm.stopPrank();
+    }
+
+    function test__BaseVault__ShouldRevertOnTransferOutsideEcosystem() public {
+        uint256 depositAmount = 100 * precision;
+        deposit(alice, depositAmount, true);
+
+        vm.prank(alice);
+        vm.expectRevert(CredbullBaseVault.CredbullVault__TransferOutsideEcosystem.selector);
+        vault.transfer(bob, 100 * precision);
+    }
+
+    function test__BaseVault__ShouldRevertOnFractionalDepositAmount_Fuzz(uint256 depositAmount) public {
+        depositAmount = bound(depositAmount, 1, vault.maxCap());
+
+        if ((depositAmount % precision) > 0) {
+            vm.startPrank(alice);
+            vaultParams.asset.approve(address(vault), depositAmount);
+            vm.expectRevert(CredbullBaseVault.CredbullVault__InvalidAssetAmount.selector);
+            vm.warp(vaultParams.depositOpensAt);
+            vault.deposit(depositAmount, alice);
+            vm.stopPrank();
+        } else {
+            deposit(alice, depositAmount, true);
+        }
     }
 
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {

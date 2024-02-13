@@ -3,11 +3,11 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
-import { CredbullVaultFactory } from "../src/CredbullVaultFactory.sol";
-import { DeployVaultFactory } from "../script/DeployVaultFactory.s.sol";
-import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
-import { ICredbull } from "../src/interface/ICredbull.sol";
-import { CredbullFixedYieldVault } from "../src/CredbullFixedYieldVault.sol";
+import { CredbullVaultFactory } from "../../src/factories/CredbullVaultFactory.sol";
+import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
+import { HelperConfig, NetworkConfig } from "../../script/HelperConfig.s.sol";
+import { ICredbull } from "../../src/interface/ICredbull.sol";
+import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract CredbullVaultFactoryTest is Test {

@@ -66,7 +66,8 @@ contract HelperConfig is Script {
             depositOpensAt: 0,
             depositClosesAt: 0,
             redemptionOpensAt: 0,
-            redemptionClosesAt: 0
+            redemptionClosesAt: 0,
+            maxCap: 1e6 * 1e6
         });
 
         NetworkConfig memory sepoliaConfig = NetworkConfig({ factoryParams: factoryParams, vaultParams: empty });
@@ -157,7 +158,8 @@ contract HelperConfig is Script {
             depositOpensAt: opensAt,
             depositClosesAt: closesAt,
             redemptionOpensAt: opensAt + year,
-            redemptionClosesAt: closesAt + year
+            redemptionClosesAt: closesAt + year,
+            maxCap: 1e6 * 1e6
         });
 
         FactoryParams memory factoryParams = FactoryParams({

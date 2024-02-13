@@ -5,8 +5,8 @@ pragma solidity ^0.8.19;
 import { Script } from "forge-std/Script.sol";
 import { stdJson } from "forge-std/StdJson.sol";
 import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
-import { CredbullVaultFactory } from "../src/CredbullVaultFactory.sol";
-import { CredbullVaultWithUpsideFactory } from "../src/upside/CredbullVaultWithUpsideFactory.sol";
+import { CredbullVaultFactory } from "../src/factories/CredbullVaultFactory.sol";
+import { CredbullVaultWithUpsideFactory } from "../src/factories/CredbullVaultWithUpsideFactory.sol";
 import { console2 } from "forge-std/console2.sol";
 
 contract DeployVaultFactory is Script {

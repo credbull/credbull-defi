@@ -3,10 +3,10 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
-import { ICredbull } from "../src/interface/ICredbull.sol";
-import { NetworkConfig, HelperConfig } from "../script/HelperConfig.s.sol";
-import { MockStablecoin } from "./mocks/MockStablecoin.sol";
-import { CredbullFixedYieldVault } from "../src/CredbullFixedYieldVault.sol";
+import { ICredbull } from "../../src/interface/ICredbull.sol";
+import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
+import { MockStablecoin } from "../mocks/MockStablecoin.sol";
+import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract CredbullFixedYieldVaultTest is Test {
@@ -18,7 +18,8 @@ contract CredbullFixedYieldVaultTest is Test {
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
 
-    uint256 private constant INITIAL_BALANCE = 1000 ether;
+    uint256 decimals;
+    uint256 private constant INITIAL_BALANCE = 1000;
 
     function setUp() public {
         helperConfig = new HelperConfig();
@@ -38,8 +39,10 @@ contract CredbullFixedYieldVaultTest is Test {
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
-        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE);
-        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE);
+        decimals = MockStablecoin(address(vaultParams.asset)).decimals();
+
+        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * decimals);
+        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * decimals);
     }
 
     function test__FixedYieldVault__ShouldAllowOwnerToChangeOperator() public {

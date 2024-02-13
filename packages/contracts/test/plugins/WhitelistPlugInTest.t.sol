@@ -17,14 +17,16 @@ contract WhitelistPlugInTest is Test {
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
+    uint256 precision;
 
-    uint256 private constant INITIAL_BALANCE = 1000 ether;
+    uint256 private constant INITIAL_BALANCE = 1e6;
 
     function setUp() public {
         helperConfig = new HelperConfig();
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         vaultParams = config.vaultParams;
         vault = new WhitelistVaultMock(vaultParams);
+        precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
 
         address[] memory whitelistAddresses = new address[](2);
         whitelistAddresses[0] = alice;
@@ -38,8 +40,8 @@ contract WhitelistPlugInTest is Test {
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
-        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE);
-        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE);
+        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
+        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__WhitelistVault__RevertDepositIfReceiverNotWhitelisted() public {
@@ -54,11 +56,11 @@ contract WhitelistPlugInTest is Test {
         vm.stopPrank();
 
         vm.expectRevert(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector);
-        vault.deposit(10 ether, alice);
+        vault.deposit(10 * precision, alice);
     }
 
     function test__WhitelistVault__SucessfulDepositOnWhitelistVault() public {
-        uint256 depositAmount = 10 ether;
+        uint256 depositAmount = 10 * precision;
         vm.startPrank(alice);
         vaultParams.asset.approve(address(vault), depositAmount);
 
@@ -81,8 +83,8 @@ contract WhitelistPlugInTest is Test {
 
         vault.toggleWhitelistCheck(false);
 
-        deposit(alice, 10 ether, true);
-        assertEq(vault.balanceOf(alice), 10 ether);
+        deposit(alice, 10 * precision, true);
+        assertEq(vault.balanceOf(alice), 10 * precision);
     }
 
     function test__WhitelistVault__ShouldToggleWhitelist() public {

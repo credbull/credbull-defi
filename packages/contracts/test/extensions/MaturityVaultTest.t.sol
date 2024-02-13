@@ -14,30 +14,32 @@ contract MaturityVaultTest is Test {
 
     ICredbull.VaultParams private vaultParams;
     HelperConfig private helperConfig;
+    uint256 private precision;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
 
-    uint256 private constant INITIAL_BALANCE = 1000 ether;
+    uint256 private constant INITIAL_BALANCE = 1000;
 
     function setUp() public {
         helperConfig = new HelperConfig();
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         vaultParams = config.vaultParams;
         vault = new MaturityVaultMock(vaultParams);
+        precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
 
-        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE);
-        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE);
+        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
+        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__MaturityVault__WithdrawAssetAndBurnShares() public {
         // ---- Setup Part 1 - Deposit Assets to the vault ---- //
-        uint256 depositAmount = 10 ether;
+        uint256 depositAmount = 10 * precision;
         //Call internal deposit function
         uint256 shares = deposit(alice, depositAmount, true);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(address(vaultParams.asset)).mint(vaultParams.custodian, 1 ether);
+        MockStablecoin(address(vaultParams.asset)).mint(vaultParams.custodian, 1 * precision);
         uint256 finalBalance = MockStablecoin(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
 
         vm.startPrank(vaultParams.custodian);
@@ -61,7 +63,7 @@ contract MaturityVaultTest is Test {
 
     function test__MaturityVault__RevertOnWithdrawIfVaultNotMatured() public {
         // ---- Setup Part 1 - Deposit Assets to the vault ---- //
-        uint256 depositAmount = 10 ether;
+        uint256 depositAmount = 10 * precision;
         //Call internal deposit function
         uint256 shares = deposit(alice, depositAmount, true);
 
@@ -77,7 +79,7 @@ contract MaturityVaultTest is Test {
 
     function test__MaturityVault__NotEnoughBalanceToMatureVault() public {
         // ---- Setup Part 1 - Deposit Assets to the vault ---- //
-        uint256 depositAmount = 10 ether;
+        uint256 depositAmount = 10 * precision;
         deposit(alice, depositAmount, true);
         uint256 finalBalance = depositAmount;
 
@@ -94,7 +96,7 @@ contract MaturityVaultTest is Test {
     }
 
     function test__MaturityVault__ExpectedAssetOnMaturity() public {
-        uint256 depositAmount = 10 ether;
+        uint256 depositAmount = 10 * precision;
         deposit(alice, depositAmount, true);
 
         uint256 expectedAssetVaulue = ((depositAmount * (100 + vaultParams.promisedYield)) / 100);
@@ -103,7 +105,7 @@ contract MaturityVaultTest is Test {
     }
 
     function test__MaturityVault__ShouldNotRevertOnMaturityModifier() public {
-        uint256 depositAmount = 10 ether;
+        uint256 depositAmount = 10 * precision;
         uint256 shares = deposit(alice, depositAmount, true);
 
         vm.prank(vaultParams.custodian);
@@ -115,7 +117,7 @@ contract MaturityVaultTest is Test {
         vault.toogleMaturityCheck(false);
 
         vault.redeem(shares, alice, alice);
-        assertEq(vaultParams.asset.balanceOf(alice), INITIAL_BALANCE);
+        assertEq(vaultParams.asset.balanceOf(alice), INITIAL_BALANCE * precision);
         vm.stopPrank();
     }
 
