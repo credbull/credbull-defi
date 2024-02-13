@@ -40,6 +40,11 @@ jobs:
           VAULT_OPENS_AT_TIMESTAMP: 1705276800
           VAULT_CLOSES_DURATION_TIMESTAMP: 60
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "yarn"
+
       - name: Deploy contracts
         run: yarn deploy:ci
         env:
