@@ -23,7 +23,7 @@ contract DeployVaultFactory is Script {
     }
 
     function run() public returns (CredbullVaultFactory factory, HelperConfig helperConfig) {
-        helperConfig = new HelperConfig();
+        helperConfig = new HelperConfig(test);
         NetworkConfig memory config = helperConfig.getNetworkConfig();
 
         address owner;
@@ -39,16 +39,17 @@ contract DeployVaultFactory is Script {
 
             string memory root = vm.projectRoot();
             string memory path = string.concat(root, "/script/output/dbdata.json");
-            string memory json = vm.readFile(path);
 
-            bytes memory vaultFactory = json.parseRaw(".CredbullVaultFactory");
-            bytes memory upsideFactory = json.parseRaw(".CredbullVaultWithUpsideFactory");
+            if (vm.exists(path)) {
+                string memory json = vm.readFile(path);
 
-            if (vaultFactory.length == 0) {
+                bytes memory vaultFactory = json.parseRaw(".CredbullVaultFactory");
+                bytes memory upsideFactory = json.parseRaw(".CredbullVaultWithUpsideFactory");
+
+                deployFactory = vaultFactory.length == 0;
+                deployUpsideFactory = upsideFactory.length == 0;
+            } else {
                 deployFactory = true;
-            }
-
-            if (upsideFactory.length == 0) {
                 deployUpsideFactory = true;
             }
         }
@@ -56,15 +57,19 @@ contract DeployVaultFactory is Script {
         vm.startBroadcast();
         if (deployFactory) {
             factory = new CredbullVaultFactory(owner, operator);
+            console2.log("!!!!! Deploying CredbullVaultFactory !!!!!");
         } else {
             console2.log("!!!!! Deployment skipped for CredbullVaultFactory !!!!!");
         }
 
         if (deployUpsideFactory) {
             new CredbullVaultWithUpsideFactory(owner, operator, 20);
+            console2.log("!!!!! Deploying CredbullVaultWithUpsideFactory !!!!!");
         } else {
             console2.log("!!!!! Deployment skipped for CredbullVaultWithUpsideFactory !!!!!");
         }
         vm.stopBroadcast();
+
+        return (factory, helperConfig);
     }
 }

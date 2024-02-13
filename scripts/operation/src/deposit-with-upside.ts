@@ -1,6 +1,5 @@
 import {
   CredbullFixedYieldVaultWithUpside__factory,
-  CredbullFixedYieldVault__factory,
   MockStablecoin__factory,
   MockToken__factory,
 } from '@credbull/contracts';
@@ -85,7 +84,7 @@ export const main = () => {
 
     const vault = CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, bobSigner);
     const depositTx = await vault.deposit(parseEther('1000'), bobSigner.address, { gasLimit: 10000000 });
-    const rec = await depositTx.wait();
+    await depositTx.wait();
     console.log('Bob: deposits his USDC in the vault. - OK');
 
     console.log(`Vault: has ${formatEther(await token.balanceOf(vaultAddress))} cToken. - OK`);

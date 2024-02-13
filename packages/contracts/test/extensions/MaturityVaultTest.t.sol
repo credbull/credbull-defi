@@ -22,7 +22,7 @@ contract MaturityVaultTest is Test {
     uint256 private constant INITIAL_BALANCE = 1000;
 
     function setUp() public {
-        helperConfig = new HelperConfig();
+        helperConfig = new HelperConfig(true);
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         vaultParams = config.vaultParams;
         vault = new MaturityVaultMock(vaultParams);

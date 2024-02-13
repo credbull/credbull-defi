@@ -22,13 +22,15 @@ struct NetworkConfig {
 }
 
 contract HelperConfig is Script {
+    bool private test;
     NetworkConfig private activeNetworkConfig;
     uint256 private constant PROMISED_FIXED_YIELD = 10;
 
     using stdJson for string;
 
-    constructor() {
-        if (block.chainid == 11155111) {
+    constructor(bool _test) {
+        test = _test;
+        if (block.chainid == 421614) {
             activeNetworkConfig = getSepoliaEthConfig();
         } else {
             activeNetworkConfig = getAnvilEthConfig();
@@ -79,45 +81,43 @@ contract HelperConfig is Script {
         MockStablecoin usdc;
         MockKYCProvider kycProvider;
 
-        bool deployMockToken;
-        bool deployMockStableCoin;
-        bool deployMockKycProvider;
+        bool deployMockToken = true;
+        bool deployMockStableCoin = true;
+        bool deployMockKycProvider = true;
 
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/script/output/dbdata.json");
-        string memory json = vm.readFile(path);
 
-        bytes memory mockToken = json.parseRaw(".MockToken");
-        bytes memory mockStableCoin = json.parseRaw(".MockStablecoin");
-        bytes memory mockKycProvider = json.parseRaw(".MockKYCProvider");
+        if (vm.exists(path)) {
+            string memory json = vm.readFile(path);
 
-        if (mockToken.length == 0) {
-            deployMockToken = true;
-        }
+            bytes memory mockToken = json.parseRaw(".MockToken");
+            bytes memory mockStableCoin = json.parseRaw(".MockStablecoin");
+            bytes memory mockKycProvider = json.parseRaw(".MockKYCProvider");
 
-        if (mockStableCoin.length == 0) {
-            deployMockStableCoin = true;
-        }
-
-        if (mockKycProvider.length == 0) {
-            deployMockKycProvider = true;
+            deployMockToken = test || mockToken.length == 0;
+            deployMockStableCoin = test || mockStableCoin.length == 0;
+            deployMockKycProvider = test || mockKycProvider.length == 0;
         }
 
         vm.startBroadcast();
         if (deployMockToken) {
             token = new MockToken(type(uint128).max);
+            console2.log("!!!!! Deploying MockToken !!!!!");
         } else {
-            console2.log("!!!!! Deployment skipped for MockStablecoin !!!!!");
+            console2.log("!!!!! Deployment skipped for MockToken !!!!!");
         }
 
         if (deployMockStableCoin) {
             usdc = new MockStablecoin(type(uint128).max);
+            console2.log("!!!!! Deploying MockStablecoin !!!!!");
         } else {
             console2.log("!!!!! Deployment skipped for MockStablecoin !!!!!");
         }
 
         if (deployMockKycProvider) {
             kycProvider = new MockKYCProvider(owner);
+            console2.log("!!!!! Deploying MockKYCProvider !!!!!");
         } else {
             console2.log("!!!!! Deployment skipped for MockKYCProvider !!!!!");
         }
@@ -139,11 +139,7 @@ contract HelperConfig is Script {
         (uint256 opensAt, uint256 closesAt) = getTimeConfig();
         uint256 year = 365 days;
 
-        vm.startBroadcast();
-        MockToken token = new MockToken(type(uint128).max);
-        MockStablecoin usdc = new MockStablecoin(type(uint128).max);
-        MockKYCProvider kycProvider = new MockKYCProvider(owner);
-        vm.stopBroadcast();
+        (address usdc, address token, address kycProvider) = deployMocks(owner);
 
         ICredbull.VaultParams memory anvilVaultParams = ICredbull.VaultParams({
             asset: IERC20(usdc),

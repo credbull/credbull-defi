@@ -22,7 +22,7 @@ contract WhitelistPlugInTest is Test {
     uint256 private constant INITIAL_BALANCE = 1e6;
 
     function setUp() public {
-        helperConfig = new HelperConfig();
+        helperConfig = new HelperConfig(true);
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         vaultParams = config.vaultParams;
         vault = new WhitelistVaultMock(vaultParams);

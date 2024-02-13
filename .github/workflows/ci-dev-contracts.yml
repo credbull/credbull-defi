@@ -12,7 +12,7 @@ on:
       - "packages/contracts/**"
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     environment: dev
 
@@ -39,3 +39,24 @@ jobs:
           # the environment variables below should be removed when we configure the secrets in github
           VAULT_OPENS_AT_TIMESTAMP: 1705276800
           VAULT_CLOSES_DURATION_TIMESTAMP: 60
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Deploy contracts
+        run: yarn deploy:ci
+        env:
+          EXPORT_TO_SUPABASE: true
+          NEXT_PUBLIC_TARGET_NETWORK_ID: 421614
+          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          PUBLIC_OPERATOR_ADDRESS: ${{ secrets.PUBLIC_OPERATOR_ADDRESS }}
+          PUBLIC_OWNER_ADDRESS: ${{ secrets.PUBLIC_OWNER_ADDRESS }}
+          SEPOLIA_PRIVATE_KEY: ${{ secrets.SEPOLIA_PRIVATE_KEY }}
+          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
