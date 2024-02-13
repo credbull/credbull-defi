@@ -52,7 +52,7 @@ contract HelperConfig is Script {
             operator: vm.envAddress("PUBLIC_OPERATOR_ADDRESS")
         });
 
-        (address usdc, address token, address kycProvider) = deployMocks(factoryParams.owner);
+        (address token, address usdc, address kycProvider) = deployMocks(factoryParams.owner);
 
         // no need for vault params when using a real network
         ICredbull.VaultParams memory empty = ICredbull.VaultParams({
@@ -139,7 +139,7 @@ contract HelperConfig is Script {
         (uint256 opensAt, uint256 closesAt) = getTimeConfig();
         uint256 year = 365 days;
 
-        (address usdc, address token, address kycProvider) = deployMocks(owner);
+        (address token, address usdc, address kycProvider) = deployMocks(owner);
 
         ICredbull.VaultParams memory anvilVaultParams = ICredbull.VaultParams({
             asset: IERC20(usdc),

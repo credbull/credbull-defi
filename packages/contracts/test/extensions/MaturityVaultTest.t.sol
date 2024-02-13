@@ -8,6 +8,7 @@ import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { MaturityVault } from "../../src/extensions/MaturityVault.sol";
+import { console2 } from "forge-std/console2.sol";
 
 contract MaturityVaultTest is Test {
     MaturityVaultMock private vault;
@@ -19,11 +20,13 @@ contract MaturityVaultTest is Test {
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
 
-    uint256 private constant INITIAL_BALANCE = 1000;
+    uint256 private constant INITIAL_BALANCE = 1e6;
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
         NetworkConfig memory config = helperConfig.getNetworkConfig();
+        console2.log(address(config.vaultParams.asset));
+        console2.log(address(config.vaultParams.token));
         vaultParams = config.vaultParams;
         vault = new MaturityVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
