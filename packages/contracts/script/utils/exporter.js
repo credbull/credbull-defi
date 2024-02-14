@@ -47,6 +47,7 @@ async function exportAddress() {
           chain_id: chainId,
           contract_name: localContracts,
           address: contracts[chainId][localContracts][0].address,
+          outdated: false,
         };
 
         dataToStoreOnDB.push(data);
@@ -65,6 +66,7 @@ async function exportToSupabase(dataToStoreOnDB) {
   const config = await client
     .from('contracts_addresses')
     .upsert(dataToStoreOnDB, { onConflict: 'contract_name' })
+    .is('outdated', true)
     .select();
 
   if (config.error || !config.data) {

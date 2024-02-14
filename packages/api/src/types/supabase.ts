@@ -10,6 +10,7 @@ export type Database = {
           contract_name: string;
           created_at: string;
           id: number;
+          outdated: boolean;
         };
         Insert: {
           address: string;
@@ -17,6 +18,7 @@ export type Database = {
           contract_name: string;
           created_at?: string;
           id?: number;
+          outdated?: boolean;
         };
         Update: {
           address?: string;
@@ -24,6 +26,7 @@ export type Database = {
           contract_name?: string;
           created_at?: string;
           id?: number;
+          outdated?: boolean;
         };
         Relationships: [];
       };
