@@ -73,7 +73,7 @@ contract DeployVaultFactory is Script {
             factory = new CredbullFixedYieldVaultFactory(owner, operator);
             console2.log("!!!!! Deploying CredbullFixedYieldVaultFactory !!!!!");
         } else {
-            console2.log("!!!!! Deployment skipped for CredbullVaultFactory !!!!!");
+            console2.log("!!!!! Deployment skipped for CredbullFixedYieldVaultFactory !!!!!");
         }
 
         if (deployUpsideFactory) {
