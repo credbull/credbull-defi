@@ -1,3 +1,4 @@
+import { Log } from '@algoan/nestjs-logging-interceptor';
 import { BadRequestException, Body, Controller, InternalServerErrorException, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
@@ -11,6 +12,9 @@ export class AuthenticationController {
   constructor(private readonly supabase: SupabaseService) {}
 
   @Post('api/sign-in')
+  @Log({
+    mask: { request: ['password'], response: ['refresh_token', 'access_token'] },
+  })
   @ApiOperation({ summary: 'Returns a new access token and refresh token' })
   @ApiResponse({ status: 200, description: 'Success' })
   async signIn(@Body() data: SignInDto): Promise<RefreshTokenDto> {
@@ -23,6 +27,9 @@ export class AuthenticationController {
   }
 
   @Post('api/token')
+  @Log({
+    mask: { request: ['refresh_token'], response: ['refresh_token', 'access_token'] },
+  })
   @ApiOperation({ summary: 'Returns a new access token and refresh token' })
   @ApiResponse({ status: 200, description: 'Success' })
   async refreshToken(@Body() data: CreateAccessTokenDto): Promise<RefreshTokenDto> {

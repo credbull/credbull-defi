@@ -1,9 +1,11 @@
+import { ConsoleLogger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeepMockProxy, mockDeep } from 'vitest-mock-extended';
 
 import { SupabaseService } from '../../clients/supabase/supabase.service';
+import { logger } from '../../utils/logger';
 import { Config } from '../../utils/module';
 
 import { VaultsController } from './vaults.controller';
@@ -20,6 +22,7 @@ describe('VaultsController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [Config.module(), VaultsModule],
+      providers: [{ provide: ConsoleLogger, useValue: logger }],
     })
       .overrideProvider(SupabaseService)
       .useValue(service)

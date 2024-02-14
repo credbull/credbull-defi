@@ -1,5 +1,5 @@
 import { Signer } from '@ethersproject/abstract-signer';
-import { Injectable } from '@nestjs/common';
+import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Overrides, Wallet, providers } from 'ethers';
 
@@ -8,7 +8,11 @@ export class EthersService {
   private readonly deployerKey: string;
   private isOnRetry: boolean = false; // Prevent running the retry code on every error hanlder call
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly logger: ConsoleLogger,
+  ) {
+    this.logger.setContext(this.constructor.name);
     this.deployerKey = config.getOrThrow('ETHERS_DEPLOYER_PRIVATE_KEY');
   }
 
@@ -69,15 +73,16 @@ export class EthersService {
     while (retries < maxRetries) {
       try {
         await provider.getNetwork();
-        console.log('Connected successfully.');
+        this.logger.log(`Connected successfully`);
         return provider;
       } catch (error) {
-        console.error(`Connection failed (attempt ${retries + 1}/${maxRetries}):`, error.message);
+        this.logger.error(`Connection failed (attempt ${retries + 1}/${maxRetries}):`, error.message);
         retries++;
         await new Promise((resolve) => setTimeout(resolve, interval));
       }
     }
-    console.error(`Max retries (${maxRetries}) exceeded. Could not establish connection.`);
+
+    this.logger.error(`Max retries (${maxRetries}) exceeded. Could not establish connection.`);
     return false;
   }
 }

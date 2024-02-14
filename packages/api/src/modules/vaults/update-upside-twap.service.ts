@@ -1,5 +1,5 @@
 import { CredbullFixedYieldVaultWithUpside, CredbullFixedYieldVaultWithUpside__factory } from '@credbull/contracts';
-import { Injectable } from '@nestjs/common';
+import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -18,32 +18,35 @@ export class UpdateUpsideTwapService {
   constructor(
     private readonly ethers: EthersService,
     private readonly config: ConfigService,
-  ) {}
+    private readonly logger: ConsoleLogger,
+  ) {
+    this.logger.setContext(this.constructor.name);
+  }
 
   @Cron(CronExpression.EVERY_6_HOURS)
   async updateTWAP() {
-    console.log('Updating twap data...');
+    this.logger.log('Updating twap data...');
     this.supabaseAdmin = this.admin();
 
     const vaults = await this.vaults();
     if (vaults.error || !vaults.data) {
-      console.log(vaults.error || 'No vaults found');
+      this.logger.error(vaults.error || 'No vaults found');
       return;
     }
 
     const twap = await this.twap();
     if (twap.error) {
-      console.log(twap.error);
+      this.logger.error(twap.error);
       return;
     }
 
     for (const { address } of vaults.data) {
       const vault = await this.contract(address);
       const updated = await responseFromWrite(vault.setTWAP(twap.data));
-      if (updated.error) console.log(updated.error);
+      if (updated.error) this.logger.error(updated.error);
     }
 
-    console.log(`Updated all vaults with TWAP: ${twap.data}`);
+    this.logger.log(`Updated all vaults with TWAP: ${twap.data}`);
   }
 
   private async vaults() {

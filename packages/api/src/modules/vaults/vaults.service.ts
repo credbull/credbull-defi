@@ -7,7 +7,7 @@ import {
   CredbullUpsideVaultFactory__factory,
 } from '@credbull/contracts';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { BigNumber } from 'ethers';
+import { BigNumber, type ContractTransaction } from 'ethers';
 import * as _ from 'lodash';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
@@ -62,18 +62,16 @@ export class VaultsService {
 
     const options = JSON.stringify({ entities: params.entities, tenant: params.tenant });
 
-    if (!collateralPercentage) {
-      collateralPercentage = 0;
-    }
+    if (!collateralPercentage) collateralPercentage = 0;
 
-    const readMethod = upside
+    const readMethod: Promise<BigNumber> = upside
       ? upsideFactory.estimateGas.createVault(params, collateralPercentage, options)
       : factory.estimateGas.createVault(params, options);
 
     const estimation = await responseFromRead(readMethod);
     if (estimation.error) return estimation;
 
-    const writeMethod = upside
+    const writeMethod: Promise<ContractTransaction> = upside
       ? upsideFactory.createVault(params, collateralPercentage, options, { gasLimit: BigNumber.from('100000') })
       : factory.createVault(params, options, { gasLimit: BigNumber.from('100000') });
 

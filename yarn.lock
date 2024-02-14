@@ -26,6 +26,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@algoan/nestjs-logging-interceptor@npm:^2.5.1":
+  version: 2.5.1
+  resolution: "@algoan/nestjs-logging-interceptor@npm:2.5.1"
+  dependencies:
+    flatted: ^3.2.9
+  peerDependencies:
+    "@nestjs/common": ">=5"
+    "@nestjs/core": ">=5"
+    express: ">=4"
+    rxjs: ">=6"
+  checksum: 1c87d16fef2cc3ec92556d6017ab76551e7c7dabb47fc33f2c3131eaa088f772ab9301ef7c3b6ff8d9c16ef0789e82456a88a52d03faa6fd210c8691bb54154a
+  languageName: node
+  linkType: hard
+
 "@ampproject/remapping@npm:^2.2.0, @ampproject/remapping@npm:^2.2.1":
   version: 2.2.1
   resolution: "@ampproject/remapping@npm:2.2.1"
@@ -560,6 +574,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@credbull/api@workspace:packages/api"
   dependencies:
+    "@algoan/nestjs-logging-interceptor": ^2.5.1
     "@anatine/zod-mock": ^3.13.3
     "@credbull/contracts": "workspace:^"
     "@faker-js/faker": ^8.3.1

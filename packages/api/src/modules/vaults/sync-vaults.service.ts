@@ -5,7 +5,7 @@ import {
   CredbullUpsideVaultFactory__factory,
 } from '@credbull/contracts';
 import { VaultDeployedEvent } from '@credbull/contracts/types/CredbullVaultFactory';
-import { Injectable } from '@nestjs/common';
+import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -30,11 +30,14 @@ export class SyncVaultsService {
   constructor(
     private readonly ethers: EthersService,
     private readonly config: ConfigService,
-  ) {}
+    private readonly logger: ConsoleLogger,
+  ) {
+    this.logger.setContext(this.constructor.name);
+  }
 
   @Cron(CronExpression.EVERY_30_SECONDS)
   async syncEventData() {
-    console.log('Syncing vault data...');
+    this.logger.log('Syncing vault data...');
     await this.sync();
   }
 
@@ -43,13 +46,13 @@ export class SyncVaultsService {
 
     const deleteCorrupted = await this.supabaseAdmin.from('vaults').delete().eq('status', 'created');
     if (deleteCorrupted.error) {
-      console.log(deleteCorrupted.error);
+      this.logger.error(deleteCorrupted.error);
       return;
     }
 
     const vaults = await this.supabaseAdmin.from('vaults').select();
     if (vaults.error) {
-      console.log(vaults.error);
+      this.logger.error(vaults.error);
       return;
     }
 
@@ -64,7 +67,7 @@ export class SyncVaultsService {
       : await getFactoryContractAddress(chainId, this.supabaseAdmin);
 
     if (factoryAddress.error || !factoryAddress.data) {
-      console.log(factoryAddress.error || 'No factory address');
+      this.logger.error(factoryAddress.error || 'No factory address');
       return;
     }
 
@@ -77,7 +80,7 @@ export class SyncVaultsService {
 
     const events = await responseFromRead(factoryContract.queryFilter(eventFilter));
     if (events.error) {
-      console.log(events.error);
+      this.logger.error(events.error);
       return;
     }
 
@@ -88,7 +91,7 @@ export class SyncVaultsService {
 
       const processedEvents = await this.processEventData(vaultsToBeAdded, upside);
       if (processedEvents.error) {
-        console.log(processedEvents.error);
+        this.logger.error(processedEvents.error);
       }
       return;
     }

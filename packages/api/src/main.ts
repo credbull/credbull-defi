@@ -10,7 +10,9 @@ import { logger } from './utils/logger';
 const compression = require('compression');
 
 (async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { logger });
+  const app = await NestFactory.create(AppModule, { logger: false });
+
+  app.useLogger(logger);
 
   app.enableVersioning({
     defaultVersion: VERSION_NEUTRAL,
