@@ -8,7 +8,7 @@ const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SU
 const outputFileName = path.resolve(__dirname, '../output/dbdata.json');
 
 async function checkDb() {
-  const { data, error } = await client.from('contracts_addresses').select();
+  const { data, error } = await client.from('contracts_addresses').select().is('outdated', false);
 
   if (error) {
     throw error;
