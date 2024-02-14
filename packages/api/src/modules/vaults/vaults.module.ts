@@ -6,13 +6,14 @@ import { CronStrategy } from '../../utils/guards';
 
 import { CustodianService } from './custodian.service';
 import { SyncVaultsService } from './sync-vaults.service';
+import { UpdateUpsideTwapService } from './update-upside-twap.service';
 import { VaultsController } from './vaults.controller';
 import { VaultsService } from './vaults.service';
 
 @Module({
   imports: [SupabaseModule, EthersModule],
-  providers: [VaultsService, CustodianService, CronStrategy, SyncVaultsService],
+  providers: [VaultsService, CustodianService, CronStrategy, SyncVaultsService, UpdateUpsideTwapService],
   controllers: [VaultsController],
-  exports: [VaultsService, CustodianService, SyncVaultsService],
+  exports: [VaultsService, CustodianService, SyncVaultsService, UpdateUpsideTwapService],
 })
 export class VaultsModule {}
