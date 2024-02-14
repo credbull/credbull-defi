@@ -1,4 +1,6 @@
 import { LoggingInterceptor } from '@algoan/nestjs-logging-interceptor';
+import { LoggerService } from '@nestjs/common';
+import * as Sentry from '@sentry/node';
 import { WinstonModule, utilities } from 'nest-winston';
 import * as winston from 'winston';
 
@@ -9,8 +11,8 @@ const finalFormat =
     ? winston.format.json()
     : utilities.format.nestLike('api', { colors: true });
 
-export const factory = () =>
-  WinstonModule.createLogger({
+export const factory = () => {
+  const logger = WinstonModule.createLogger({
     format: winston.format.combine(...baseFormats, winston.format.json()),
     transports: [
       new winston.transports.Console({
@@ -18,6 +20,16 @@ export const factory = () =>
       }),
     ],
   });
+
+  const error = (message: any, ...optionalParams: any[]): any => {
+    Sentry.captureException(message);
+    return logger.error(message, ...optionalParams);
+  };
+
+  return new Proxy(logger, {
+    get: (target: LoggerService, prop: keyof LoggerService) => (prop === 'error' ? error : target[prop]),
+  });
+};
 
 export const logger = factory();
 
