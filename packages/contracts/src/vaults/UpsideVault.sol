@@ -17,7 +17,7 @@ contract UpsideVault is FixedYieldVault {
     uint256 public collateralPercentage;
 
     mapping(address account => uint256) private _balances;
-    uint256 totalCollateralDeposited;
+    uint256 public totalCollateralDeposited;
 
     uint256 private constant MAX_PERCENTAGE = 100_00; //100% upto two decimals
     uint256 private ADDITIONAL_PRECISION;
@@ -73,10 +73,10 @@ contract UpsideVault is FixedYieldVault {
 
         _balances[owner] -= collateral;
         totalCollateralDeposited -= collateral;
+        totalAssetDeposited -= assets;
 
         _burn(owner, shares);
         SafeERC20.safeTransfer(IERC20(asset()), receiver, assets);
-        totalAssetDeposited -= assets;
 
         emit Withdraw(caller, receiver, owner, assets, shares);
     }
@@ -91,7 +91,7 @@ contract UpsideVault is FixedYieldVault {
         }
 
         uint256 vaultPercent = shares.mulDiv(MAX_PERCENTAGE, totalSupply());
-        return totalAssetDeposited.mulDiv(vaultPercent, MAX_PERCENTAGE);
+        return totalCollateralDeposited.mulDiv(vaultPercent, MAX_PERCENTAGE);
     }
 
     function setTWAP(uint256 _twap) public onlyRole(OPERATOR_ROLE) {

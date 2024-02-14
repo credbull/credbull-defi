@@ -5,8 +5,8 @@ pragma solidity ^0.8.19;
 import { Script } from "forge-std/Script.sol";
 import { stdJson } from "forge-std/StdJson.sol";
 import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
-import { CredbullVaultFactory } from "../src/factories/CredbullVaultFactory.sol";
-import { CredbullVaultWithUpsideFactory } from "../src/factories/CredbullVaultWithUpsideFactory.sol";
+import { CredbullFixedYieldVaultFactory } from "../src/factories/CredbullFixedYieldVaultFactory.sol";
+import { CredbullUpsideVaultFactory } from "../src/factories/CredbullUpsideVaultFactory.sol";
 import { console2 } from "forge-std/console2.sol";
 
 contract DeployVaultFactory is Script {
@@ -14,15 +14,29 @@ contract DeployVaultFactory is Script {
 
     using stdJson for string;
 
-    bool private deployFactory;
+    bool private deployFixedYieldFactory;
     bool private deployUpsideFactory;
 
-    function runTest() public returns (CredbullVaultFactory factory, HelperConfig helperConfig) {
+    function runTest()
+        public
+        returns (
+            CredbullFixedYieldVaultFactory factory,
+            CredbullUpsideVaultFactory upsideFactory,
+            HelperConfig helperConfig
+        )
+    {
         test = true;
         return run();
     }
 
-    function run() public returns (CredbullVaultFactory factory, HelperConfig helperConfig) {
+    function run()
+        public
+        returns (
+            CredbullFixedYieldVaultFactory factory,
+            CredbullUpsideVaultFactory upsideFactory,
+            HelperConfig helperConfig
+        )
+    {
         helperConfig = new HelperConfig(test);
         NetworkConfig memory config = helperConfig.getNetworkConfig();
 
@@ -31,7 +45,7 @@ contract DeployVaultFactory is Script {
         if (test) {
             owner = config.factoryParams.owner;
             operator = config.factoryParams.operator;
-            deployFactory = true;
+            deployFixedYieldFactory = true;
             deployUpsideFactory = true;
         } else {
             owner = vm.envAddress("PUBLIC_OWNER_ADDRESS");
@@ -44,32 +58,32 @@ contract DeployVaultFactory is Script {
                 string memory json = vm.readFile(path);
 
                 bytes memory vaultFactory = json.parseRaw(".CredbullVaultFactory");
-                bytes memory upsideFactory = json.parseRaw(".CredbullVaultWithUpsideFactory");
+                bytes memory upsideVaultFactory = json.parseRaw(".CredbullVaultWithUpsideFactory");
 
-                deployFactory = vaultFactory.length == 0;
-                deployUpsideFactory = upsideFactory.length == 0;
+                deployFixedYieldFactory = vaultFactory.length == 0;
+                deployUpsideFactory = upsideVaultFactory.length == 0;
             } else {
-                deployFactory = true;
+                deployFixedYieldFactory = true;
                 deployUpsideFactory = true;
             }
         }
 
         vm.startBroadcast();
-        if (deployFactory) {
-            factory = new CredbullVaultFactory(owner, operator);
-            console2.log("!!!!! Deploying CredbullVaultFactory !!!!!");
+        if (deployFixedYieldFactory) {
+            factory = new CredbullFixedYieldVaultFactory(owner, operator);
+            console2.log("!!!!! Deploying CredbullFixedYieldVaultFactory !!!!!");
         } else {
             console2.log("!!!!! Deployment skipped for CredbullVaultFactory !!!!!");
         }
 
         if (deployUpsideFactory) {
-            new CredbullVaultWithUpsideFactory(owner, operator, 20);
+            upsideFactory = new CredbullUpsideVaultFactory(owner, operator);
             console2.log("!!!!! Deploying CredbullVaultWithUpsideFactory !!!!!");
         } else {
             console2.log("!!!!! Deployment skipped for CredbullVaultWithUpsideFactory !!!!!");
         }
         vm.stopBroadcast();
 
-        return (factory, helperConfig);
+        return (factory, upsideFactory, helperConfig);
     }
 }

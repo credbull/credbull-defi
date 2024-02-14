@@ -14,6 +14,7 @@ import { console2 } from "forge-std/console2.sol";
 struct FactoryParams {
     address owner;
     address operator;
+    uint256 collateralPercentage;
 }
 
 struct NetworkConfig {
@@ -25,6 +26,7 @@ contract HelperConfig is Script {
     bool private test;
     NetworkConfig private activeNetworkConfig;
     uint256 private constant PROMISED_FIXED_YIELD = 10;
+    uint256 private constant COLLATERAL_PERCENTAGE = 20_00;
 
     using stdJson for string;
 
@@ -49,7 +51,8 @@ contract HelperConfig is Script {
     function getSepoliaEthConfig() internal returns (NetworkConfig memory) {
         FactoryParams memory factoryParams = FactoryParams({
             owner: vm.envAddress("PUBLIC_OWNER_ADDRESS"),
-            operator: vm.envAddress("PUBLIC_OPERATOR_ADDRESS")
+            operator: vm.envAddress("PUBLIC_OPERATOR_ADDRESS"),
+            collateralPercentage: vm.envUint("COLLATERAL_PERCENTAGE")
         });
 
         (address token, address usdc, address kycProvider) = deployMocks(factoryParams.owner);
@@ -160,7 +163,8 @@ contract HelperConfig is Script {
 
         FactoryParams memory factoryParams = FactoryParams({
             owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-            operator: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+            operator: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8,
+            collateralPercentage: COLLATERAL_PERCENTAGE
         });
 
         NetworkConfig memory anvilConfig =

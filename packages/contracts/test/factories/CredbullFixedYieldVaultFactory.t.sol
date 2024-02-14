@@ -3,23 +3,22 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
-import { CredbullVaultFactory } from "../../src/factories/CredbullVaultFactory.sol";
+import { CredbullFixedYieldVaultFactory } from "../../src/factories/CredbullFixedYieldVaultFactory.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { HelperConfig, NetworkConfig } from "../../script/HelperConfig.s.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
+import { CredbullVaultFactory } from "../../src/factories/CredbullVaultFactory.sol";
 
-contract CredbullVaultFactoryTest is Test {
-    CredbullVaultFactory private factory;
+contract CredbullFixedYieldVaultFactoryTest is Test {
+    CredbullFixedYieldVaultFactory private factory;
     DeployVaultFactory private deployer;
     HelperConfig private helperConfig;
 
-    string private constant OPTIONS = "{}";
-
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (factory, helperConfig) = deployer.runTest();
+        (factory,, helperConfig) = deployer.runTest();
     }
 
     function test__CreateVaultFromFactory() public {
@@ -30,7 +29,7 @@ contract CredbullVaultFactoryTest is Test {
         factory.allowCustodian(params.custodian);
 
         vm.prank(config.factoryParams.operator);
-        CredbullFixedYieldVault vault = CredbullFixedYieldVault(factory.createVault(params, OPTIONS));
+        CredbullFixedYieldVault vault = CredbullFixedYieldVault(factory.createVault(params));
 
         assertEq(vault.asset(), address(params.asset));
         assertEq(vault.name(), params.shareName);
@@ -44,7 +43,7 @@ contract CredbullVaultFactoryTest is Test {
 
         vm.prank(config.factoryParams.owner);
         vm.expectRevert();
-        factory.createVault(config.vaultParams, OPTIONS);
+        factory.createVault(config.vaultParams);
     }
 
     function test__ShouldAllowAdminToChangeOperator() public {
@@ -65,11 +64,11 @@ contract CredbullVaultFactoryTest is Test {
                 factory.OPERATOR_ROLE()
             )
         );
-        factory.createVault(config.vaultParams, OPTIONS);
+        factory.createVault(config.vaultParams);
         vm.stopPrank();
 
         vm.prank(newOperator);
-        factory.createVault(config.vaultParams, OPTIONS);
+        factory.createVault(config.vaultParams);
     }
 
     function test__VaultCountShouldReturnCorrectVault() public {
@@ -87,6 +86,49 @@ contract CredbullVaultFactoryTest is Test {
         assertEq(factory.isVaultExist(address(vault)), true);
     }
 
+    function test__ShouldRevertOnNotAllowedCustodians() public {
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+        ICredbull.VaultParams memory params = config.vaultParams;
+
+        vm.prank(config.factoryParams.owner);
+        factory.allowCustodian(config.vaultParams.custodian);
+
+        params.custodian = makeAddr("randomCustodian");
+
+        vm.prank(config.factoryParams.operator);
+        vm.expectRevert(CredbullVaultFactory.CredbullVaultFactory__CustodianNotAllowed.selector);
+        factory.createVault(params);
+    }
+
+    function test__ShouldAllowAdminToAddCustodians() public {
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+
+        vm.prank(config.factoryParams.owner);
+        factory.allowCustodian(config.vaultParams.custodian);
+
+        assertTrue(factory.isCustodianAllowed(config.vaultParams.custodian));
+    }
+
+    function test__ShoulRemoveCustodianIfExist() public {
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+
+        vm.startPrank(config.factoryParams.owner);
+        factory.allowCustodian(config.vaultParams.custodian);
+        assertTrue(factory.isCustodianAllowed(config.vaultParams.custodian));
+
+        factory.removeCustodian(config.vaultParams.custodian);
+        assertTrue(!factory.isCustodianAllowed(config.vaultParams.custodian));
+        vm.stopPrank();
+    }
+
+    function test__ShouldRevertAllowAdmingIfNotOwner() public {
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+
+        vm.prank(makeAddr("random_addr"));
+        vm.expectRevert();
+        factory.allowCustodian(config.vaultParams.custodian);
+    }
+
     function createVault() internal returns (CredbullFixedYieldVault vault) {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         ICredbull.VaultParams memory params = config.vaultParams;
@@ -95,6 +137,6 @@ contract CredbullVaultFactoryTest is Test {
         factory.allowCustodian(config.vaultParams.custodian);
 
         vm.prank(config.factoryParams.operator);
-        vault = CredbullFixedYieldVault(factory.createVault(params, OPTIONS));
+        vault = CredbullFixedYieldVault(factory.createVault(params));
     }
 }
