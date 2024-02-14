@@ -1,6 +1,8 @@
 import { VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as Sentry from '@sentry/node';
+import { ProfilingIntegration } from '@sentry/profiling-node';
 import helmet from 'helmet';
 
 import { AppModule } from './app.module';
@@ -8,6 +10,15 @@ import { logger } from './utils/logger';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const compression = require('compression');
+
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    integrations: [new ProfilingIntegration()],
+    tracesSampleRate: 1.0,
+    profilesSampleRate: 1.0,
+  });
+}
 
 (async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: false });

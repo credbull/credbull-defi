@@ -588,6 +588,8 @@ __metadata:
     "@nestjs/schematics": ^10.0.3
     "@nestjs/swagger": ^7.1.17
     "@nestjs/testing": ^10.3.0
+    "@sentry/node": ^7.101.0
+    "@sentry/profiling-node": ^7.101.0
     "@supabase/supabase-js": ^2.39.1
     "@swc/core": ^1.3.101
     "@trivago/prettier-plugin-sort-imports": ^4.3.0
@@ -3849,6 +3851,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry-internal/tracing@npm:7.101.0":
+  version: 7.101.0
+  resolution: "@sentry-internal/tracing@npm:7.101.0"
+  dependencies:
+    "@sentry/core": 7.101.0
+    "@sentry/types": 7.101.0
+    "@sentry/utils": 7.101.0
+  checksum: f9167a590f36caa333df256646039e61bb1fc25f57fa9fed1c2a6893df0ca31bf90e40a6ed94769af3b501e07b7070c8402ab4a69fa070d71d184884e2a9a164
+  languageName: node
+  linkType: hard
+
 "@sentry/core@npm:5.30.0":
   version: 5.30.0
   resolution: "@sentry/core@npm:5.30.0"
@@ -3859,6 +3872,16 @@ __metadata:
     "@sentry/utils": 5.30.0
     tslib: ^1.9.3
   checksum: 8a2b22687e70d76fa4381bce215d770b6c08561c5ff5d6afe39c8c3c509c18ee7384ad0be3aee18d3a858a3c88e1d2821cf10eb5e05646376a33200903b56da2
+  languageName: node
+  linkType: hard
+
+"@sentry/core@npm:7.101.0":
+  version: 7.101.0
+  resolution: "@sentry/core@npm:7.101.0"
+  dependencies:
+    "@sentry/types": 7.101.0
+    "@sentry/utils": 7.101.0
+  checksum: 9fc73ec92d434969f6e2dfa8459fe39d3bfb7734053542b632a9d165d5878cc3c8c7512aba25201d93cfae4fb68a25d9eeba16450e078e8f934b85e981a2ed07
   languageName: node
   linkType: hard
 
@@ -3901,6 +3924,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/node@npm:^7.101.0":
+  version: 7.101.0
+  resolution: "@sentry/node@npm:7.101.0"
+  dependencies:
+    "@sentry-internal/tracing": 7.101.0
+    "@sentry/core": 7.101.0
+    "@sentry/types": 7.101.0
+    "@sentry/utils": 7.101.0
+  checksum: 08cdcbab90179bb9dd3dd1ec6d8cd36473b3cae61f244e76200cdeaa82cdb0b1c03b267d88af88820dcf20323fe8c3d666fca87e4f8a6c68130faa47166f2cc0
+  languageName: node
+  linkType: hard
+
+"@sentry/profiling-node@npm:^7.101.0":
+  version: 7.101.0
+  resolution: "@sentry/profiling-node@npm:7.101.0"
+  dependencies:
+    detect-libc: ^2.0.2
+    node-abi: ^3.52.0
+    node-gyp: latest
+  bin:
+    sentry-prune-profiler-binaries: scripts/prune-profiler-binaries.js
+  checksum: 2aac8a3b06e0a11d3a645e888f476a64ca91a6ee83bb707e300a358c0ba7c176e9cd91fe4ab3cac16482515597e931b4c15a770359c00400881f0fd4e9efe811
+  languageName: node
+  linkType: hard
+
 "@sentry/tracing@npm:5.30.0":
   version: 5.30.0
   resolution: "@sentry/tracing@npm:5.30.0"
@@ -3921,6 +3969,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/types@npm:7.101.0":
+  version: 7.101.0
+  resolution: "@sentry/types@npm:7.101.0"
+  checksum: 7dfed2fb8b17d0bad966ef92cb4c4f165284e100308c8d1224df47b85a009025d4ce38e9870e89464997ab6495617f6bc6d5da420d56c8c4feb306d8f83dda58
+  languageName: node
+  linkType: hard
+
 "@sentry/utils@npm:5.30.0":
   version: 5.30.0
   resolution: "@sentry/utils@npm:5.30.0"
@@ -3928,6 +3983,15 @@ __metadata:
     "@sentry/types": 5.30.0
     tslib: ^1.9.3
   checksum: 27b259a136c664427641dd32ee3dc490553f3b5e92986accfa829d14063ebc69b191e92209ac9c40fbc367f74cfa17dc93b4c40981d666711fd57b4d51a82062
+  languageName: node
+  linkType: hard
+
+"@sentry/utils@npm:7.101.0":
+  version: 7.101.0
+  resolution: "@sentry/utils@npm:7.101.0"
+  dependencies:
+    "@sentry/types": 7.101.0
+  checksum: 3508751cc116f136e4fd119c3cefe6ea9494b8656f8c4a83deed4d61896d0fa315566c225c8e23b9cc4736146662e5bc8a3f0aa92bb8a2f148f015bf4853bf99
   languageName: node
   linkType: hard
 
@@ -9944,6 +10008,13 @@ __metadata:
   bin:
     detect-libc: ./bin/detect-libc.js
   checksum: daaaed925ffa7889bd91d56e9624e6c8033911bb60f3a50a74a87500680652969dbaab9526d1e200a4c94acf80fc862a22131841145a0a8482d60a99c24f4a3e
+  languageName: node
+  linkType: hard
+
+"detect-libc@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "detect-libc@npm:2.0.2"
+  checksum: 2b2cd3649b83d576f4be7cc37eb3b1815c79969c8b1a03a40a4d55d83bc74d010753485753448eacb98784abf22f7dbd3911fd3b60e29fda28fed2d1a997944d
   languageName: node
   linkType: hard
 
@@ -16027,6 +16098,15 @@ __metadata:
   bin:
     next: dist/bin/next
   checksum: c869b0014ae921ada3bf22301985027ec320aebcd6aa9c16e8afbded68bb8def5874cca034c680e8c351a79578f1e514971d02777f6f0a5a1d7290f25970ac0d
+  languageName: node
+  linkType: hard
+
+"node-abi@npm:^3.52.0":
+  version: 3.54.0
+  resolution: "node-abi@npm:3.54.0"
+  dependencies:
+    semver: ^7.3.5
+  checksum: 260caae87299bb2fac6a269ba5dd378dbe1d99030396832fca7199b6cb5fd46556d2ec0d431f4a76ab2d53e49948047543afe3f1d70d0e6ebad04d33139650da
   languageName: node
   linkType: hard
 

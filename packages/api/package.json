@@ -31,6 +31,8 @@
     "@nestjs/platform-express": "^10.3.0",
     "@nestjs/schedule": "^4.0.0",
     "@nestjs/swagger": "^7.1.17",
+    "@sentry/node": "^7.101.0",
+    "@sentry/profiling-node": "^7.101.0",
     "@supabase/supabase-js": "^2.39.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
