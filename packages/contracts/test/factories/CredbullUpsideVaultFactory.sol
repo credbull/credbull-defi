@@ -8,8 +8,6 @@ import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { HelperConfig, NetworkConfig } from "../../script/HelperConfig.s.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
-import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
-import { CredbullVaultFactory } from "../../src/factories/CredbullVaultFactory.sol";
 
 contract CredbullVaultWithUpsideFactoryTest is Test {
     CredbullUpsideVaultFactory private factory;

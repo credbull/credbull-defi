@@ -5,7 +5,6 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { FixedYieldVault } from "./FixedYieldVault.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract UpsideVault is FixedYieldVault {
     using Math for uint256;
@@ -20,7 +19,7 @@ contract UpsideVault is FixedYieldVault {
     uint256 public totalCollateralDeposited;
 
     uint256 private constant MAX_PERCENTAGE = 100_00; //100% upto two decimals
-    uint256 private ADDITIONAL_PRECISION;
+    uint256 private additionalPrecision;
 
     constructor(VaultParams memory params, IERC20 _token, uint256 _collateralPercentage) FixedYieldVault(params) {
         collateralPercentage = _collateralPercentage;
@@ -30,7 +29,7 @@ contract UpsideVault is FixedYieldVault {
         uint8 tokenDecimal = _checkValidDecimalValue(address(_token));
 
         if (tokenDecimal >= assetDecimal) {
-            ADDITIONAL_PRECISION = 10 ** (tokenDecimal - assetDecimal);
+            additionalPrecision = 10 ** (tokenDecimal - assetDecimal);
         } else {
             revert CredbullVault__UnsupportedDecimalValue();
         }
@@ -82,7 +81,7 @@ contract UpsideVault is FixedYieldVault {
     }
 
     function getCollateralAmount(uint256 assets) public view virtual returns (uint256) {
-        return (assets * ADDITIONAL_PRECISION).mulDiv(collateralPercentage, MAX_PERCENTAGE) / twap;
+        return (assets * additionalPrecision).mulDiv(collateralPercentage, MAX_PERCENTAGE) / twap;
     }
 
     function calculateTokenRedemption(uint256 shares, address account) public view virtual returns (uint256) {

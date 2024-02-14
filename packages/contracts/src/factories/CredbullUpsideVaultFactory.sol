@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.19;
 
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { ICredbull } from "../interface/ICredbull.sol";
 import { CredbullVaultFactory } from "./CredbullVaultFactory.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../CredbullFixedYieldVaultWithUpside.sol";
