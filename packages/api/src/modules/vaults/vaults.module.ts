@@ -1,4 +1,4 @@
-import { ConsoleLogger, Module } from '@nestjs/common';
+import { ConsoleLogger, Module, Scope } from '@nestjs/common';
 
 import { EthersModule } from '../../clients/ethers/ethers.module';
 import { SupabaseModule } from '../../clients/supabase/supabase.module';
@@ -19,7 +19,7 @@ import { VaultsService } from './vaults.service';
     CronStrategy,
     SyncVaultsService,
     UpdateUpsideTwapService,
-    { provide: ConsoleLogger, useFactory: logger.factory },
+    { provide: ConsoleLogger, useFactory: logger.factory, scope: Scope.TRANSIENT },
   ],
   controllers: [VaultsController],
   exports: [VaultsService, CustodianService, SyncVaultsService, UpdateUpsideTwapService],
