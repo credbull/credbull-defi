@@ -18,7 +18,7 @@ contract CredbullFixedYieldVaultTest is Test {
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
 
-    uint256 decimals;
+    uint256 private decimals;
     uint256 private constant INITIAL_BALANCE = 1000;
 
     function setUp() public {

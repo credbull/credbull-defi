@@ -17,7 +17,7 @@ contract WhitelistPlugInTest is Test {
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
-    uint256 precision;
+    uint256 private precision;
 
     uint256 private constant INITIAL_BALANCE = 1e6;
 
