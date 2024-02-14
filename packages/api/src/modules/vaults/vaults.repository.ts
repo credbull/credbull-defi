@@ -18,14 +18,14 @@ export async function getFactoryContractAddress(
   chainId: string,
   supabase: SupabaseClient<Database>,
 ): Promise<ServiceResponse<Tables<'contracts_addresses'> | null | undefined>> {
-  return getContractAddress(chainId, 'CredbullVaultFactory', supabase);
+  return getContractAddress(chainId, 'CredbullFixedYieldVaultFactory', supabase);
 }
 
 export async function getFactoryUpsideContractAddress(
   chainId: string,
   supabase: SupabaseClient<Database>,
 ): Promise<ServiceResponse<Tables<'contracts_addresses'> | null | undefined>> {
-  return getContractAddress(chainId, 'CredbullVaultWithUpsideFactory', supabase);
+  return getContractAddress(chainId, 'CredbullUpsideVaultFactory', supabase);
 }
 
 export async function addEntitiesAndDistribution(

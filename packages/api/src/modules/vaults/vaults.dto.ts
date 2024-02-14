@@ -91,6 +91,10 @@ export class VaultParamsDto extends EntitiesDto {
   @IsNumber()
   promisedYield: BigNumber;
 
+  @ApiProperty({ type: BigNumber, example: '1000000000000', description: 'Should be in wei with 6 decimals' })
+  @IsNumber()
+  maxCap: BigNumber;
+
   @ApiProperty({
     type: EntitiesDto,
     example: [{ type: 'treasury', address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8', percentage: 0.8 }],
@@ -99,7 +103,7 @@ export class VaultParamsDto extends EntitiesDto {
   @Type(() => EntitiesDto)
   entities: EntitiesDto[];
 
-  @ApiProperty({ type: String, nullable: true })
+  @ApiProperty({ type: String, nullable: true, example: '848f6e15-d1b4-423b-a080-43ef222fbd6b' })
   @IsString()
   @IsOptional()
   tenant?: string;
@@ -108,4 +112,10 @@ export class VaultParamsDto extends EntitiesDto {
     super();
     Object.assign(this, partial);
   }
+}
+
+export class UpsideVaultParamsDto extends VaultParamsDto {
+  @ApiProperty({ type: Number })
+  @IsNumber()
+  collateralPercentage: number;
 }

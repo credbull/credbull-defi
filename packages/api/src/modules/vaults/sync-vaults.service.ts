@@ -1,8 +1,8 @@
 import {
-  CredbullVaultFactory,
-  CredbullVaultFactory__factory,
-  CredbullVaultWithUpsideFactory,
-  CredbullVaultWithUpsideFactory__factory,
+  CredbullFixedYieldVaultFactory,
+  CredbullFixedYieldVaultFactory__factory,
+  CredbullUpsideVaultFactory,
+  CredbullUpsideVaultFactory__factory,
 } from '@credbull/contracts';
 import { VaultDeployedEvent } from '@credbull/contracts/types/CredbullVaultFactory';
 import { Injectable } from '@nestjs/common';
@@ -32,7 +32,7 @@ export class SyncVaultsService {
     private readonly config: ConfigService,
   ) {}
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async syncEventData() {
     console.log('Syncing vault data...');
     await this.sync();
@@ -68,11 +68,13 @@ export class SyncVaultsService {
       return;
     }
 
-    const factoryContract = upside
-      ? await this.factoryUpsideContract(factoryAddress.data.address)
-      : await this.getFactoryContract(factoryAddress.data.address);
+    const upsideFactoryContract = await this.factoryUpsideContract(factoryAddress.data.address);
+    const factoryContract = await this.getFactoryContract(factoryAddress.data.address);
 
-    const eventFilter = factoryContract.filters.VaultDeployed();
+    const eventFilter = upside
+      ? upsideFactoryContract.filters.VaultDeployed()
+      : factoryContract.filters.VaultDeployed();
+
     const events = await responseFromRead(factoryContract.queryFilter(eventFilter));
     if (events.error) {
       console.log(events.error);
@@ -139,11 +141,11 @@ export class SyncVaultsService {
     );
   }
 
-  private async getFactoryContract(addr: string): Promise<CredbullVaultFactory> {
-    return CredbullVaultFactory__factory.connect(addr, await this.ethers.deployer());
+  private async getFactoryContract(addr: string): Promise<CredbullFixedYieldVaultFactory> {
+    return CredbullFixedYieldVaultFactory__factory.connect(addr, await this.ethers.deployer());
   }
 
-  private async factoryUpsideContract(addr: string): Promise<CredbullVaultWithUpsideFactory> {
-    return CredbullVaultWithUpsideFactory__factory.connect(addr, await this.ethers.deployer());
+  private async factoryUpsideContract(addr: string): Promise<CredbullUpsideVaultFactory> {
+    return CredbullUpsideVaultFactory__factory.connect(addr, await this.ethers.deployer());
   }
 }

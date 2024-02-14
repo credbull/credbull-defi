@@ -16,6 +16,8 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     DeployVaultFactory private deployer;
     HelperConfig private helperConfig;
 
+    string private OPTIONS = "{}";
+
     function setUp() public {
         deployer = new DeployVaultFactory();
         (factory,, helperConfig) = deployer.runTest();
@@ -29,7 +31,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         factory.allowCustodian(params.custodian);
 
         vm.prank(config.factoryParams.operator);
-        CredbullFixedYieldVault vault = CredbullFixedYieldVault(factory.createVault(params));
+        CredbullFixedYieldVault vault = CredbullFixedYieldVault(factory.createVault(params, OPTIONS));
 
         assertEq(vault.asset(), address(params.asset));
         assertEq(vault.name(), params.shareName);
@@ -43,7 +45,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
 
         vm.prank(config.factoryParams.owner);
         vm.expectRevert();
-        factory.createVault(config.vaultParams);
+        factory.createVault(config.vaultParams, OPTIONS);
     }
 
     function test__ShouldAllowAdminToChangeOperator() public {
@@ -64,11 +66,11 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
                 factory.OPERATOR_ROLE()
             )
         );
-        factory.createVault(config.vaultParams);
+        factory.createVault(config.vaultParams, OPTIONS);
         vm.stopPrank();
 
         vm.prank(newOperator);
-        factory.createVault(config.vaultParams);
+        factory.createVault(config.vaultParams, OPTIONS);
     }
 
     function test__VaultCountShouldReturnCorrectVault() public {
@@ -97,7 +99,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
 
         vm.prank(config.factoryParams.operator);
         vm.expectRevert(CredbullVaultFactory.CredbullVaultFactory__CustodianNotAllowed.selector);
-        factory.createVault(params);
+        factory.createVault(params, OPTIONS);
     }
 
     function test__ShouldAllowAdminToAddCustodians() public {
@@ -137,6 +139,6 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         factory.allowCustodian(config.vaultParams.custodian);
 
         vm.prank(config.factoryParams.operator);
-        vault = CredbullFixedYieldVault(factory.createVault(params));
+        vault = CredbullFixedYieldVault(factory.createVault(params, OPTIONS));
     }
 }

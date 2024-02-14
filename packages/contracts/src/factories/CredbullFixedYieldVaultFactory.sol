@@ -13,7 +13,7 @@ contract CredbullFixedYieldVaultFactory is CredbullVaultFactory {
      * @param _params - The VaultParams
      */
 
-    function createVault(ICredbull.VaultParams memory _params)
+    function createVault(ICredbull.VaultParams memory _params, string memory options)
         public
         virtual
         onlyRole(OPERATOR_ROLE)
@@ -22,7 +22,7 @@ contract CredbullFixedYieldVaultFactory is CredbullVaultFactory {
     {
         CredbullFixedYieldVault newVault = new CredbullFixedYieldVault(_params);
 
-        emit VaultDeployed(address(newVault), _params);
+        emit VaultDeployed(address(newVault), _params, options);
 
         _addVault(address(newVault));
 

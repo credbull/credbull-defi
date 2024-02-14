@@ -16,7 +16,7 @@ abstract contract CredbullVaultFactory is AccessControl {
     error CredbullVaultFactory__CustodianNotAllowed();
 
     //Event to emit when a new vault is created
-    event VaultDeployed(address indexed vault, ICredbull.VaultParams params);
+    event VaultDeployed(address indexed vault, ICredbull.VaultParams params, string options);
 
     //Address set that contains list of all vault address
     EnumerableSet.AddressSet internal allVaults;

@@ -14,6 +14,8 @@ contract CredbullVaultWithUpsideFactoryTest is Test {
     DeployVaultFactory private deployer;
     HelperConfig private helperConfig;
 
+    string private OPTIONS = "{}";
+
     function setUp() public {
         deployer = new DeployVaultFactory();
         (, factory, helperConfig) = deployer.runTest();
@@ -27,8 +29,9 @@ contract CredbullVaultWithUpsideFactoryTest is Test {
         factory.allowCustodian(params.custodian);
 
         vm.prank(config.factoryParams.operator);
-        CredbullFixedYieldVaultWithUpside vault =
-            CredbullFixedYieldVaultWithUpside(factory.createVault(params, config.factoryParams.collateralPercentage));
+        CredbullFixedYieldVaultWithUpside vault = CredbullFixedYieldVaultWithUpside(
+            factory.createVault(params, config.factoryParams.collateralPercentage, OPTIONS)
+        );
 
         assertEq(vault.asset(), address(params.asset));
         assertEq(vault.name(), params.shareName);

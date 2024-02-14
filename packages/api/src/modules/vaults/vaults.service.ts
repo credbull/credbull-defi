@@ -1,10 +1,10 @@
 import {
   CredbullFixedYieldVault,
+  CredbullFixedYieldVaultFactory,
+  CredbullFixedYieldVaultFactory__factory,
   CredbullFixedYieldVault__factory,
-  CredbullVaultFactory,
-  CredbullVaultFactory__factory,
-  CredbullVaultWithUpsideFactory,
-  CredbullVaultWithUpsideFactory__factory,
+  CredbullUpsideVaultFactory,
+  CredbullUpsideVaultFactory__factory,
 } from '@credbull/contracts';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BigNumber } from 'ethers';
@@ -44,7 +44,11 @@ export class VaultsService {
     return this.supabase.client().from('vaults').select('*').neq('status', 'created').lt('deposits_opened_at', 'now()');
   }
 
-  async createVault(params: VaultParamsDto, upside?: boolean): Promise<ServiceResponse<Tables<'vaults'>>> {
+  async createVault(
+    params: VaultParamsDto,
+    upside?: boolean,
+    collateralPercentage?: number,
+  ): Promise<ServiceResponse<Tables<'vaults'>>> {
     const chainId = await this.ethers.networkId();
     const factoryAddress = upside
       ? await getFactoryUpsideContractAddress(chainId.toString(), this.supabase.admin())
@@ -53,15 +57,27 @@ export class VaultsService {
     if (factoryAddress.error) return factoryAddress;
     if (!factoryAddress.data) return { error: new NotFoundException() };
 
-    const factory = upside
-      ? await this.factoryUpsideContract(factoryAddress.data.address)
-      : await this.factoryContract(factoryAddress.data.address);
+    const factory = await this.factoryContract(factoryAddress.data.address);
+    const upsideFactory = await this.factoryUpsideContract(factoryAddress.data.address);
 
     const options = JSON.stringify({ entities: params.entities, tenant: params.tenant });
-    const estimation = await responseFromRead(factory.estimateGas.createVault(params, options));
+
+    if (!collateralPercentage) {
+      collateralPercentage = 0;
+    }
+
+    const readMethod = upside
+      ? upsideFactory.estimateGas.createVault(params, collateralPercentage, options)
+      : factory.estimateGas.createVault(params, options);
+
+    const estimation = await responseFromRead(readMethod);
     if (estimation.error) return estimation;
 
-    const response = await responseFromWrite(factory.createVault(params, options, { gasLimit: estimation.data }));
+    const writeMethod = upside
+      ? upsideFactory.createVault(params, collateralPercentage, options, { gasLimit: BigNumber.from('100000') })
+      : factory.createVault(params, options, { gasLimit: BigNumber.from('100000') });
+
+    const response = await responseFromWrite(writeMethod);
     if (response.error) return response;
 
     const vaultAddress = response.data.events?.find((e) => e.event === 'VaultDeployed')?.args?.[0];
@@ -247,11 +263,11 @@ export class VaultsService {
     return CredbullFixedYieldVault__factory.connect(vault.strategy_address, await this.ethers.deployer());
   }
 
-  private async factoryContract(addr: string): Promise<CredbullVaultFactory> {
-    return CredbullVaultFactory__factory.connect(addr, await this.ethers.deployer());
+  private async factoryContract(addr: string): Promise<CredbullFixedYieldVaultFactory> {
+    return CredbullFixedYieldVaultFactory__factory.connect(addr, await this.ethers.deployer());
   }
 
-  private async factoryUpsideContract(addr: string): Promise<CredbullVaultWithUpsideFactory> {
-    return CredbullVaultWithUpsideFactory__factory.connect(addr, await this.ethers.deployer());
+  private async factoryUpsideContract(addr: string): Promise<CredbullUpsideVaultFactory> {
+    return CredbullUpsideVaultFactory__factory.connect(addr, await this.ethers.deployer());
   }
 }

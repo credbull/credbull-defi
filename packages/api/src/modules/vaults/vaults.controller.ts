@@ -14,7 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { SupabaseGuard, SupabaseRoles } from '../../clients/supabase/auth/supabase.guard';
 import { CronGuard } from '../../utils/guards';
 
-import { VaultParamsDto, VaultsDto } from './vaults.dto';
+import { UpsideVaultParamsDto, VaultParamsDto, VaultsDto } from './vaults.dto';
 import { VaultsService } from './vaults.service';
 
 @Controller('vaults')
@@ -76,8 +76,8 @@ export class VaultsController {
   @ApiOperation({ summary: 'Create a new vault' })
   @ApiResponse({ status: 400, description: 'Incorrect vault params data' })
   @ApiResponse({ status: 200, description: 'Success', type: VaultsDto })
-  async createVaultUpside(@Body() dto: VaultParamsDto): Promise<VaultsDto> {
-    const { data, error } = await this.vaults.createVault(dto, true);
+  async createVaultUpside(@Body() dto: UpsideVaultParamsDto): Promise<VaultsDto> {
+    const { data, error } = await this.vaults.createVault(dto as VaultParamsDto, true, dto.collateralPercentage);
 
     if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
