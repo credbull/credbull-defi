@@ -50,6 +50,8 @@ jobs:
 
       - name: Build API
         run: yarn build
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy ../.. --remote-only
