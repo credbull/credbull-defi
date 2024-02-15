@@ -2,6 +2,7 @@ import '@credbull/contracts';
 import {
   BadRequestException,
   Body,
+  ConsoleLogger,
   Controller,
   Get,
   InternalServerErrorException,
@@ -21,7 +22,19 @@ import { VaultsService } from './vaults.service';
 @ApiTags('Vaults')
 @ApiBearerAuth()
 export class VaultsController {
-  constructor(private readonly vaults: VaultsService) {}
+  constructor(
+    private readonly vaults: VaultsService,
+    private readonly logger: ConsoleLogger,
+  ) {
+    this.logger.setContext(VaultsController.name);
+  }
+
+  @Get('api/error')
+  @ApiOperation({ summary: 'Temporary API to test error handling' })
+  @ApiResponse({ status: 200, description: 'Success' })
+  async error(): Promise<void> {
+    this.logger.error('This is a test error');
+  }
 
   @Get('/current')
   @UseGuards(SupabaseGuard)
