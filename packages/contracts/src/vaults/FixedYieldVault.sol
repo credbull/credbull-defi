@@ -6,7 +6,7 @@ import { WhitelistPlugIn } from "../plugins/WhitelistPlugIn.sol";
 import { WindowPlugIn } from "../plugins/WindowPlugIn.sol";
 import { MaturityVault } from "../extensions/MaturityVault.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { MaxCapPlugIn } from "../plugins/MaxCapPlugin.sol";
+import { MaxCapPlugIn } from "../plugins/MaxCapPlug.sol";
 
 contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCapPlugIn, AccessControl {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
