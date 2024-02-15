@@ -49,7 +49,7 @@ jobs:
           NEXT_PUBLIC_TARGET_NETWORK_WSS: ws://localhost:8545
 
       - name: Build API
-        run: yarn build
+        run: yarn build && yarn run sentry:sourcemaps
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 

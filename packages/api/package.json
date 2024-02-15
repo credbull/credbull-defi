@@ -10,7 +10,7 @@
     "migrate:pull": "supabase db pull && supabase gen types typescript --linked --schema public > src/types/supabase.ts && yarn format",
     "migrate:local": "supabase migration up —local",
     "dev": "nest start --watch",
-    "build": "nest build && npm run sentry:sourcemaps",
+    "build": "nest build",
     "build:ci": "yarn build",
     "start": "nest start",
     "start:prod": "node dist/src/main",
