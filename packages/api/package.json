@@ -10,7 +10,7 @@
     "migrate:pull": "supabase db pull && supabase gen types typescript --linked --schema public > src/types/supabase.ts && yarn format",
     "migrate:local": "supabase migration up —local",
     "dev": "nest start --watch",
-    "build": "nest build",
+    "build": "nest build && npm run sentry:sourcemaps",
     "build:ci": "yarn build",
     "start": "nest start",
     "start:prod": "node dist/src/main",
@@ -19,7 +19,8 @@
     "test:precommit": "vitest related --run",
     "lint": "eslint --fix --ignore-path .gitignore",
     "lint:precommit": "yarn lint",
-    "format": "prettier . --write"
+    "format": "prettier . --write",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org credbull --project credbull-defi-api ./dist && sentry-cli sourcemaps upload --org credbull --project credbull-defi-api ./dist"
   },
   "dependencies": {
     "@algoan/nestjs-logging-interceptor": "^2.5.1",
@@ -31,6 +32,7 @@
     "@nestjs/platform-express": "^10.3.0",
     "@nestjs/schedule": "^4.0.0",
     "@nestjs/swagger": "^7.1.17",
+    "@sentry/cli": "^2.28.6",
     "@sentry/node": "^7.101.0",
     "@sentry/profiling-node": "^7.101.0",
     "@supabase/supabase-js": "^2.39.1",

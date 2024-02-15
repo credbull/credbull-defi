@@ -4,3 +4,6 @@
 .env.local
 
 coverage
+
+# Sentry Config File
+.sentryclirc
