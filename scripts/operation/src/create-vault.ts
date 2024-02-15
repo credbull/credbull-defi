@@ -62,6 +62,7 @@ const createParams = (params: {
     activityReward,
     entities,
     tenant: params.tenant,
+    maxCap: 1000000,
   };
 };
 

@@ -72,8 +72,8 @@ export class VaultsService {
     if (estimation.error) return estimation;
 
     const writeMethod: Promise<ContractTransaction> = upside
-      ? upsideFactory.createVault(params, collateralPercentage, options, { gasLimit: BigNumber.from('100000') })
-      : factory.createVault(params, options, { gasLimit: BigNumber.from('100000') });
+      ? upsideFactory.createVault(params, collateralPercentage, options, { gasLimit: estimation.data })
+      : factory.createVault(params, options, { gasLimit: estimation.data });
 
     const response = await responseFromWrite(writeMethod);
     if (response.error) return response;
