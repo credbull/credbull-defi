@@ -86,7 +86,7 @@ export const main = (
     // allow custodian address
     const custodian = scenarios.matured ? process.env.ADDRESSES_CUSTODIAN! : generateAddress();
     const factoryAddress = addresses.data.find(
-      (i) => i.contract_name === (scenarios.upside ? 'CredbullVaultWithUpsideFactory' : 'CredbullVaultFactory'),
+      (i) => i.contract_name === (scenarios.upside ? 'CredbullUpsideVaultFactory' : 'CredbullFixedYieldVaultFactory'),
     )?.address;
 
     const factory = CredbullVaultFactory__factory.connect(factoryAddress!, adminSigner);
