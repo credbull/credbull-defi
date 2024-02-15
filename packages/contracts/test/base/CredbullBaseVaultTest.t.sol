@@ -9,6 +9,8 @@ import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { CredbullBaseVault } from "../../src/base/CredbullBaseVault.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { MockToken } from "../mocks/MockToken.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 //import { console2 } from "forge-std/console2.sol";
 
 contract CredbullBaseVaultTest is Test {
@@ -110,28 +112,6 @@ contract CredbullBaseVaultTest is Test {
         assertEq(vault.totalAssetDeposited(), depositAmount);
     }
 
-    function test__BaseVault__ShouldRevertDepositIfReachedMaxCap() public {
-        uint256 aliceDepositAmount = 100 * precision;
-        //Call internal deposit function
-        deposit(alice, aliceDepositAmount, true);
-
-        uint256 maxCap = vault.maxCap();
-
-        // Edge case - when total deposited asset is exactly 1 million
-        uint256 bobDepositAmount = maxCap - aliceDepositAmount;
-        MockStablecoin(address(vaultParams.asset)).mint(bob, bobDepositAmount);
-        deposit(bob, bobDepositAmount, true);
-
-        uint256 additionalDepositAmount = 1 * precision;
-        vm.startPrank(alice);
-        vaultParams.asset.approve(address(vault), additionalDepositAmount);
-
-        vm.expectRevert(CredbullBaseVault.CredbullVault__MaxCapReached.selector);
-        vm.warp(vaultParams.depositOpensAt);
-        vault.deposit(additionalDepositAmount, alice);
-        vm.stopPrank();
-    }
-
     function test__BaseVault__ShouldRevertOnTransferOutsideEcosystem() public {
         uint256 depositAmount = 100 * precision;
         deposit(alice, depositAmount, true);
@@ -142,7 +122,7 @@ contract CredbullBaseVaultTest is Test {
     }
 
     function test__BaseVault__ShouldRevertOnFractionalDepositAmount_Fuzz(uint256 depositAmount) public {
-        depositAmount = bound(depositAmount, 1, vault.maxCap());
+        depositAmount = bound(depositAmount, 1, 1e6 * 1e6);
 
         if ((depositAmount % precision) > 0) {
             vm.startPrank(alice);
@@ -154,6 +134,14 @@ contract CredbullBaseVaultTest is Test {
         } else {
             deposit(alice, depositAmount, true);
         }
+    }
+
+    function test__ShouldRevertIfDecimalIsNotSupported() public {
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+        vaultParams = config.vaultParams;
+        vm.expectRevert(CredbullBaseVault.CredbullVault__UnsupportedDecimalValue.selector);
+        vm.mockCall(address(vaultParams.asset), abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(24));
+        new CredbullBaseVaultMock(vaultParams);
     }
 
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {

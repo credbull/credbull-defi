@@ -12,7 +12,6 @@ import { ICredbull } from "../interface/ICredbull.sol";
 abstract contract CredbullBaseVault is ICredbull, ERC4626 {
     using Math for uint256;
 
-    error CredbullVault__MaxCapReached();
     error CredbullVault__TransferOutsideEcosystem();
     error CredbullVault__InvalidAssetAmount();
     error CredbullVault__UnsupportedDecimalValue();
@@ -27,14 +26,12 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
      */
     uint256 public totalAssetDeposited;
 
-    //Max no.of assets that can be deposited to the vault;
-    uint256 public maxCap;
-
     //Make the vault decimal same as asset decimal
     uint8 public VAULT_DECIMALS;
 
     //Max decimal value supported by the vault
     uint8 public constant MAX_DECIMAL = 18;
+    //Min decimal value supported by vault
     uint8 public constant MIN_DECIMAL = 6;
 
     modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) virtual {
@@ -49,7 +46,6 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
 
     constructor(VaultParams memory params) ERC4626(params.asset) ERC20(params.shareName, params.shareSymbol) {
         custodian = params.custodian;
-        maxCap = params.maxCap;
 
         VAULT_DECIMALS = _checkValidDecimalValue(address(params.asset));
     }
@@ -71,10 +67,6 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
 
         SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
         totalAssetDeposited += assets;
-
-        if (totalAssetDeposited > maxCap) {
-            revert CredbullVault__MaxCapReached();
-        }
 
         _mint(receiver, shares);
 
@@ -109,6 +101,8 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
         return totalAssetDeposited;
     }
 
+    //Check decimal value of the asset and token used in the vaults.
+    //Revert if it's not supported
     function _checkValidDecimalValue(address token) internal view returns (uint8) {
         uint8 decimal = ERC20(token).decimals();
 

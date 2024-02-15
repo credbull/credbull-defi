@@ -6,13 +6,15 @@ import { WhitelistPlugIn } from "../plugins/WhitelistPlugIn.sol";
 import { WindowPlugIn } from "../plugins/WindowPlugIn.sol";
 import { MaturityVault } from "../extensions/MaturityVault.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { MaxCapPlugIn } from "../plugins/MaxCapPlugin.sol";
 
-contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, AccessControl {
+contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCapPlugIn, AccessControl {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     constructor(VaultParams memory params)
         MaturityVault(params)
         WhitelistPlugIn(params.kycProvider)
+        MaxCapPlugIn(params.maxCap)
         WindowPlugIn(params.depositOpensAt, params.depositClosesAt, params.redemptionOpensAt, params.redemptionClosesAt)
     {
         _grantRole(DEFAULT_ADMIN_ROLE, params.owner);
@@ -22,6 +24,7 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, Access
     modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {
         _checkIsWhitelisted(receiver);
         _checkIsDepositWithinWindow();
+        _checkMaxCap(totalAssetDeposited + assets);
         _;
     }
 
@@ -47,5 +50,9 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, Access
 
     function toggleWindowCheck(bool status) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _toggleWindowCheck(status);
+    }
+
+    function toggleMaxCapCheck(bool status) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _toggleMaxCapCheck(status);
     }
 }
