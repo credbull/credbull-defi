@@ -12,7 +12,7 @@ contract UpsideVault is FixedYieldVault {
     error CredbullVault__InsufficientShareBalance();
 
     IERC20 public token;
-    uint256 public twap = 1;
+    uint256 public twap = 100_00;
     uint256 public collateralPercentage;
 
     mapping(address account => uint256) private _balances;
@@ -40,6 +40,11 @@ contract UpsideVault is FixedYieldVault {
         override
         depositModifier(caller, receiver, assets, shares)
     {
+        (, uint256 reminder) = assets.tryMod(10 ** VAULT_DECIMALS);
+        if (reminder > 0) {
+            revert CredbullVault__InvalidAssetAmount();
+        }
+
         uint256 collateral = getCollateralAmount(assets);
         SafeERC20.safeTransferFrom(token, _msgSender(), address(this), collateral);
 
@@ -81,7 +86,8 @@ contract UpsideVault is FixedYieldVault {
     }
 
     function getCollateralAmount(uint256 assets) public view virtual returns (uint256) {
-        return (assets * additionalPrecision).mulDiv(collateralPercentage, MAX_PERCENTAGE) / twap;
+        return
+            ((assets * additionalPrecision).mulDiv(collateralPercentage, MAX_PERCENTAGE)).mulDiv(MAX_PERCENTAGE, twap);
     }
 
     function calculateTokenRedemption(uint256 shares, address account) public view virtual returns (uint256) {

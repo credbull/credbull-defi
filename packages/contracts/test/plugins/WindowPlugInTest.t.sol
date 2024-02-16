@@ -155,7 +155,7 @@ contract WindowPlugInTest is Test {
             vm.warp(vaultParams.depositOpensAt);
         }
 
-        shares = vault.deposit(assets, alice);
+        shares = vault.deposit(assets, user);
         vm.stopPrank();
     }
 }

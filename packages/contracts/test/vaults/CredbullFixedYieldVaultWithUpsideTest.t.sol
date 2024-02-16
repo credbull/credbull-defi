@@ -203,7 +203,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
             vm.warp(vaultParams.depositOpensAt);
         }
 
-        shares = vault.deposit(assets, alice);
+        shares = vault.deposit(assets, user);
         vm.stopPrank();
     }
 
@@ -218,7 +218,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
             vm.warp(vaultParams.depositOpensAt);
         }
 
-        assets = vault.mint(shares, alice);
+        assets = vault.mint(shares, user);
         vm.stopPrank();
     }
 }
