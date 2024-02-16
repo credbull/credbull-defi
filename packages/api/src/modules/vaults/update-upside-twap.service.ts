@@ -55,7 +55,7 @@ export class UpdateUpsideTwapService {
 
   private async twap(): Promise<ServiceResponse<BigNumberish>> {
     // TODO: replace this whenever we have a real exchange to retrieve the TWAP from
-    return Promise.resolve({ data: 1 });
+    return Promise.resolve({ data: 100_00 });
   }
 
   private admin() {
