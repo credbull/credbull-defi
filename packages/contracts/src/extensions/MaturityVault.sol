@@ -40,13 +40,13 @@ abstract contract MaturityVault is CredbullBaseVault {
     }
 
     /**
-     * @notice - A method to mature the vault after the assets that was deposited from the custodian wallet with addition yield earned.
+     * @notice - Method to mature the vault after the assets that was deposited from the custodian wallet with addition yield earned.
      * @dev - _totalAssetDeposited to be updated to calculate the right amount of asset with yield in proportion to the shares received.
      */
     function _mature() internal {
         uint256 currentBalance = IERC20(asset()).balanceOf(address(this));
 
-        if (this.expectedAssetsOnMaturity() > currentBalance) {
+        if (expectedAssetsOnMaturity() > currentBalance) {
             revert CredbullVault__NotEnoughBalanceToMature();
         }
 

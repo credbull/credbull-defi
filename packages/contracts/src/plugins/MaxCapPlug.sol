@@ -24,4 +24,8 @@ contract MaxCapPlugIn {
     function _toggleMaxCapCheck(bool status) internal virtual {
         checkMaxCap = status;
     }
+
+    function _updateMaxCap(uint256 _value) internal virtual {
+        maxCap = _value;
+    }
 }

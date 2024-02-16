@@ -23,6 +23,12 @@ contract WindowVaultMock is CredbullBaseVault, WindowPlugIn {
         _;
     }
 
+    function updateWindow(uint256 _depositOpen, uint256 _depositClose, uint256 _withdrawOpen, uint256 _withdrawClose)
+        public
+    {
+        _updateWindow(_depositOpen, _depositClose, _withdrawOpen, _withdrawClose);
+    }
+
     function toggleWindowCheck(bool status) public {
         _toggleWindowCheck(status);
     }

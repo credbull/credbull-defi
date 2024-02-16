@@ -61,6 +61,16 @@ abstract contract WindowPlugIn {
         _checkIsWithinWindow(redemptionOpensAtTimestamp, redemptionClosesAtTimestamp);
     }
 
+    function _updateWindow(uint256 _depositOpen, uint256 _depositClose, uint256 _withdrawOpen, uint256 _withdrawClose)
+        internal
+        virtual
+    {
+        depositOpensAtTimestamp = _depositOpen;
+        depositClosesAtTimestamp = _depositClose;
+        redemptionOpensAtTimestamp = _withdrawOpen;
+        redemptionClosesAtTimestamp = _withdrawClose;
+    }
+
     function _toggleWindowCheck(bool status) internal {
         checkWindow = status;
     }

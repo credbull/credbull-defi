@@ -145,6 +145,30 @@ contract WindowPlugInTest is Test {
         assertEq(afterToggle, !beforeToggle);
     }
 
+    function test__WindowVault__ShouldUpdateWindowValues() public {
+        uint256 newDepositOpen = 100;
+        uint256 newDepositClose = 200;
+        uint256 newWithdrawOpen = 300;
+        uint256 newWithdrawClose = 400;
+
+        uint256 currentDepositOpen = vault.depositOpensAtTimestamp();
+        uint256 currentDepositClose = vault.depositClosesAtTimestamp();
+        uint256 currentWithdrawOpen = vault.redemptionOpensAtTimestamp();
+        uint256 currentWithdrawClose = vault.redemptionClosesAtTimestamp();
+
+        assertTrue(currentDepositOpen != newDepositOpen);
+        assertTrue(currentDepositClose != newDepositClose);
+        assertTrue(currentWithdrawOpen != newWithdrawOpen);
+        assertTrue(currentWithdrawClose != newWithdrawClose);
+
+        vault.updateWindow(newDepositOpen, newDepositClose, newWithdrawOpen, newWithdrawClose);
+
+        assertTrue(vault.depositOpensAtTimestamp() == newDepositOpen);
+        assertTrue(vault.depositClosesAtTimestamp() == newDepositClose);
+        assertTrue(vault.redemptionOpensAtTimestamp() == newWithdrawOpen);
+        assertTrue(vault.redemptionClosesAtTimestamp() == newWithdrawClose);
+    }
+
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);

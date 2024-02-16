@@ -17,7 +17,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
     error CredbullVault__UnsupportedDecimalValue();
 
     //Address of the custodian to receive the assets on deposit and mint
-    address public custodian;
+    address public immutable custodian;
 
     /**
      * @dev
@@ -27,7 +27,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
     uint256 public totalAssetDeposited;
 
     //Make the vault decimal same as asset decimal
-    uint8 public VAULT_DECIMALS;
+    uint8 public immutable VAULT_DECIMALS;
 
     //Max decimal value supported by the vault
     uint8 public constant MAX_DECIMAL = 18;
@@ -65,8 +65,8 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
             revert CredbullVault__InvalidAssetAmount();
         }
 
-        SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
         totalAssetDeposited += assets;
+        SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
 
         _mint(receiver, shares);
 
@@ -86,9 +86,10 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
             _spendAllowance(owner, caller, shares);
         }
 
+        totalAssetDeposited -= assets;
+
         _burn(owner, shares);
         SafeERC20.safeTransfer(IERC20(asset()), receiver, assets);
-        totalAssetDeposited -= assets;
 
         emit Withdraw(caller, receiver, owner, assets, shares);
     }
@@ -113,6 +114,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
         return decimal;
     }
 
+    //The share token should be soul bound. Should be transferable only to vault to receive assets back
     function transfer(address to, uint256 value) public override(ERC20, IERC20) returns (bool) {
         if (to != address(this)) revert CredbullVault__TransferOutsideEcosystem();
         address owner = _msgSender();
@@ -120,6 +122,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
         return true;
     }
 
+    //The share token should be soul bound. Should be transferable only to vault to receive assets back
     function transferFrom(address from, address to, uint256 value) public override(ERC20, IERC20) returns (bool) {
         if (to != address(this)) revert CredbullVault__TransferOutsideEcosystem();
         address spender = _msgSender();

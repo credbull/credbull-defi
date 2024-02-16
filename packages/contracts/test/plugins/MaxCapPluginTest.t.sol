@@ -58,6 +58,17 @@ contract MaxCapPluginTest is Test {
         vm.stopPrank();
     }
 
+    function test__MaxCapVault__UpdateMaxCapValue() public {
+        uint256 newValue = 100 * precision;
+        uint256 currentValue = vault.maxCap();
+
+        assertTrue(newValue != currentValue);
+
+        vault.updateMaxCap(newValue);
+
+        assertTrue(vault.maxCap() == newValue);
+    }
+
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);

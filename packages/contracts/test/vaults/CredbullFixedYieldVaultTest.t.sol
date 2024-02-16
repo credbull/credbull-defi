@@ -69,17 +69,6 @@ contract CredbullFixedYieldVaultTest is Test {
         vm.stopPrank();
     }
 
-    function test__FixedYieldVault__ShouldAllowOnlyOperatorToMatureVault() public {
-        vm.startPrank(vaultParams.owner);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector, vaultParams.owner, vault.OPERATOR_ROLE()
-            )
-        );
-        vault.mature();
-        vm.stopPrank();
-    }
-
     function test__FixedYieldVault__RevertMatureIfNotOperator() public {
         vm.startPrank(vaultParams.owner);
         vm.expectRevert(
@@ -91,7 +80,7 @@ contract CredbullFixedYieldVaultTest is Test {
         vm.stopPrank();
     }
 
-    function test__FixedYieldVault__RevertMaturityToggleIfNotOperator() public {
+    function test__FixedYieldVault__RevertMaturityToggleIfNotAdmin() public {
         vm.startPrank(vaultParams.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -102,9 +91,12 @@ contract CredbullFixedYieldVaultTest is Test {
         );
         vault.toggleMaturityCheck(false);
         vm.stopPrank();
+
+        vm.prank(vaultParams.owner);
+        vault.toggleMaturityCheck(false);
     }
 
-    function test__FixedYieldVault__RevertWhitelistToggleIfNotOperator() public {
+    function test__FixedYieldVault__RevertWhitelistToggleIfNotAdmin() public {
         vm.startPrank(vaultParams.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -115,9 +107,12 @@ contract CredbullFixedYieldVaultTest is Test {
         );
         vault.toggleWhitelistCheck(false);
         vm.stopPrank();
+
+        vm.prank(vaultParams.owner);
+        vault.toggleWhitelistCheck(false);
     }
 
-    function test__FixedYieldVault__RevertWindowToggleIfNotOperator() public {
+    function test__FixedYieldVault__RevertWindowToggleIfNotAdmin() public {
         vm.startPrank(vaultParams.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -128,6 +123,9 @@ contract CredbullFixedYieldVaultTest is Test {
         );
         vault.toggleWindowCheck(false);
         vm.stopPrank();
+
+        vm.prank(vaultParams.owner);
+        vault.toggleWindowCheck(false);
     }
 
     function test__FixedYieldVault__ShouldCheckForWhitelsitedAddresses() public {
@@ -161,7 +159,7 @@ contract CredbullFixedYieldVaultTest is Test {
         vault.deposit(10 * precision, alice);
     }
 
-    function test__FixedYieldVault__RevertMaxCapToggleIfNotOperator() public {
+    function test__FixedYieldVault__RevertMaxCapToggleIfNotAdmin() public {
         vm.startPrank(vaultParams.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -172,5 +170,40 @@ contract CredbullFixedYieldVaultTest is Test {
         );
         vault.toggleMaxCapCheck(false);
         vm.stopPrank();
+
+        vm.prank(vaultParams.owner);
+        vault.toggleMaxCapCheck(false);
+    }
+
+    function test__FixedYieldVault__RevertUdpateMaxCapIfNotAdmin() public {
+        vm.startPrank(vaultParams.operator);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                vaultParams.operator,
+                vault.DEFAULT_ADMIN_ROLE()
+            )
+        );
+        vault.updateMaxCap(100 * precision);
+        vm.stopPrank();
+
+        vm.prank(vaultParams.owner);
+        vault.updateMaxCap(100 * precision);
+    }
+
+    function test__FixedYieldVault__RevertWindowUpdateIfNotAdmin() public {
+        vm.startPrank(vaultParams.operator);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                vaultParams.operator,
+                vault.DEFAULT_ADMIN_ROLE()
+            )
+        );
+        vault.updateWindow(100, 200, 300, 400);
+        vm.stopPrank();
+
+        vm.prank(vaultParams.owner);
+        vault.updateWindow(100, 200, 300, 400);
     }
 }

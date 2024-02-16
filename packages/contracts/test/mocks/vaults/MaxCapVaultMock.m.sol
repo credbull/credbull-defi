@@ -17,4 +17,8 @@ contract MaxCapVaultMock is CredbullBaseVault, MaxCapPlugIn {
     function toggleMaxCapCheck(bool status) public {
         _toggleMaxCapCheck(status);
     }
+
+    function updateMaxCap(uint256 _value) public {
+        _updateMaxCap(_value);
+    }
 }

@@ -46,17 +46,17 @@ contract UpsideVault is FixedYieldVault {
         }
 
         uint256 collateral = getCollateralAmount(assets);
-        SafeERC20.safeTransferFrom(token, _msgSender(), address(this), collateral);
 
         _balances[receiver] += collateral;
         totalCollateralDeposited += collateral;
-
-        SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
         totalAssetDeposited += assets;
 
         if (totalAssetDeposited > maxCap) {
             revert CredbullVault__MaxCapReached();
         }
+
+        SafeERC20.safeTransferFrom(token, _msgSender(), address(this), collateral);
+        SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
 
         _mint(receiver, shares);
 
@@ -73,11 +73,12 @@ contract UpsideVault is FixedYieldVault {
         }
 
         uint256 collateral = calculateTokenRedemption(shares, owner);
-        SafeERC20.safeTransfer(token, receiver, collateral);
 
         _balances[owner] -= collateral;
         totalCollateralDeposited -= collateral;
         totalAssetDeposited -= assets;
+
+        SafeERC20.safeTransfer(token, receiver, collateral);
 
         _burn(owner, shares);
         SafeERC20.safeTransfer(IERC20(asset()), receiver, assets);
