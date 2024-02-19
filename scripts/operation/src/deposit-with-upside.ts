@@ -83,12 +83,12 @@ export const main = () => {
     console.log('Bob: gives the approval to the vault to swap it`s cToken. - OK');
 
     const vault = CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, bobSigner);
-    const depositTx = await vault.deposit(parseEther('1000'), bobSigner.address, { gasLimit: 10000000 });
+    const depositTx = await vault.deposit(100_000000, bobSigner.address, { gasLimit: 10000000 });
     await depositTx.wait();
     console.log('Bob: deposits his USDC in the vault. - OK');
 
     console.log(`Vault: has ${formatEther(await token.balanceOf(vaultAddress))} cToken. - OK`);
-    console.log(`Bob: has ${formatEther(await vault.balanceOf(bobSigner.address))} SHARES. - OK`);
+    console.log(`Bob: has ${(await vault.balanceOf(bobSigner.address)).div(1_000000)} SHARES. - OK`);
 
     console.log('\n');
     console.log('=====================================');

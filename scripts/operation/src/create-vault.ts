@@ -110,7 +110,7 @@ export const main = (
             asset,
             token,
             matured: scenarios.matured,
-            upside: scenarios.upside ? params?.upsideVault : undefined,
+            upside: params?.upsideVault,
             tenant: scenarios.tenant && params?.tenantEmail ? (await userByEmail(params?.tenantEmail)).id : undefined,
           }),
         ),
