@@ -3,7 +3,7 @@ import {
   MockStablecoin__factory,
   MockToken__factory,
 } from '@credbull/contracts';
-import { formatEther, parseEther } from 'ethers/lib/utils';
+import { formatEther, parseEther, parseUnits } from 'ethers/lib/utils';
 
 import { headers, linkWalletMessage, login, signer, supabase } from './utils/helpers';
 
@@ -58,11 +58,11 @@ export const main = () => {
     const usdcAddress = vaults['data'][0].asset_address;
 
     const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
-    const mintTx = await usdc.mint(bobSigner.address, parseEther('1000'));
+    const mintTx = await usdc.mint(bobSigner.address, parseUnits('1000', 'mwei'));
     await mintTx.wait();
     console.log('mint usdc - OK');
 
-    const approveTx = await usdc.approve(vaultAddress, parseEther('1000'));
+    const approveTx = await usdc.approve(vaultAddress, parseUnits('1000', 'mwei'));
     await approveTx.wait();
     console.log('Bob: gives the approval to the vault to swap it`s USDC. - OK');
 
@@ -74,21 +74,21 @@ export const main = () => {
     if (!tokenAddress) throw new Error('Token address not found');
 
     const token = MockToken__factory.connect(tokenAddress.address, bobSigner);
-    const tokenTx = await token.mint(bobSigner.address, parseEther('1000'));
+    const tokenTx = await token.mint(bobSigner.address, parseUnits('1000', 'mwei'));
     await tokenTx.wait();
     console.log('token usdc - OK');
 
-    const approveTTx = await token.approve(vaultAddress, parseEther('1000'));
+    const approveTTx = await token.approve(vaultAddress, parseUnits('1000', 'mwei'));
     await approveTTx.wait();
     console.log('Bob: gives the approval to the vault to swap it`s cToken. - OK');
 
     const vault = CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, bobSigner);
-    const depositTx = await vault.deposit(100_000000, bobSigner.address, { gasLimit: 10000000 });
+    const depositTx = await vault.deposit(parseUnits('1000', 'mwei'), bobSigner.address, { gasLimit: 10000000 });
     await depositTx.wait();
     console.log('Bob: deposits his USDC in the vault. - OK');
 
     console.log(`Vault: has ${formatEther(await token.balanceOf(vaultAddress))} cToken. - OK`);
-    console.log(`Bob: has ${(await vault.balanceOf(bobSigner.address)).div(1_000000)} SHARES. - OK`);
+    console.log(`Bob: has ${(await vault.balanceOf(bobSigner.address)).div(10 ** 6)} SHARES. - OK`);
 
     console.log('\n');
     console.log('=====================================');

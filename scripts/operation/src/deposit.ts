@@ -1,5 +1,5 @@
 import { CredbullFixedYieldVault__factory, MockStablecoin__factory } from '@credbull/contracts';
-import { formatEther, parseEther } from 'ethers/lib/utils';
+import { formatEther, parseEther, parseUnits } from 'ethers/lib/utils';
 
 import { headers, linkWalletMessage, login, signer } from './utils/helpers';
 
@@ -54,10 +54,10 @@ export const main = () => {
     const usdcAddress = vaults['data'][0].asset_address;
 
     const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
-    const mintTx = await usdc.mint(bobSigner.address, parseEther('1000'));
+    const mintTx = await usdc.mint(bobSigner.address, parseUnits('1000', 'mwei'));
     await mintTx.wait();
 
-    const approveTx = await usdc.approve(vaultAddress, parseEther('1000'));
+    const approveTx = await usdc.approve(vaultAddress, parseUnits('1000', 'mwei'));
     await approveTx.wait();
     console.log('Bob: gives the approval to the vault to swap it`s USDC. - OK');
 
@@ -67,12 +67,12 @@ export const main = () => {
     const toggleTx = await vault.connect(adminSigner).toggleWindowCheck(false);
     await toggleTx.wait();
 
-    const depositTx = await vault.deposit(1000_000000, bobSigner.address, { gasLimit: 10000000 });
+    const depositTx = await vault.deposit(parseUnits("1000", "mwei"), bobSigner.address, { gasLimit: 10000000 });
     await depositTx.wait();
     console.log('Bob: deposits his USDC in the vault. - OK');
 
     const balanceOf = await vault.balanceOf(bobSigner.address);
-    console.log(`Bob: has ${balanceOf.div(1000000)} USDC deposited in the vault. - OK`);
+    console.log(`Bob: has ${balanceOf.div(10 ** 6)} USDC deposited in the vault. - OK`);
 
     console.log('\n');
     console.log('=====================================');

@@ -3,7 +3,7 @@ import {
   MockStablecoin__factory,
   MockToken__factory,
 } from '@credbull/contracts';
-import { formatEther, parseEther } from 'ethers/lib/utils';
+import { formatEther, parseEther, parseUnits } from 'ethers/lib/utils';
 
 import { headers, login, signer, supabase } from './utils/helpers';
 
@@ -45,7 +45,7 @@ export const main = () => {
     const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
     const token = MockToken__factory.connect(tokenAddress.address, bobSigner);
     const vault = CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, bobSigner);
-    const mintTx = await usdc.mint(vaultAddress, parseEther('1000'));
+    const mintTx = await usdc.mint(vaultAddress,  parseUnits('1000', 'mwei'));
     await mintTx.wait();
 
     const shares = await vault.balanceOf(bobSigner.address);

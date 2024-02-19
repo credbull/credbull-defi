@@ -8,6 +8,7 @@ import { useList, useNotification } from '@refinedev/core';
 import { OpenNotificationParams } from '@refinedev/core/dist/contexts/notification/INotificationContext';
 import { useForm } from '@refinedev/mantine';
 import { getPublicClient } from '@wagmi/core';
+import { utils } from 'ethers';
 import { useState } from 'react';
 import { createWalletClient, http, parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
@@ -39,7 +40,7 @@ const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
     address: erc20Address as Address,
     abi: MockStablecoin__factory.abi,
     functionName: 'mint',
-    args: [form.values.address as Address, parseEther((form.values.amount ?? 0).toString())],
+    args: [form.values.address as Address, utils.parseUnits((form.values.amount ?? 0).toString(), 'mwei').toBigInt()],
   });
 
   const onMint = async () => {
@@ -167,14 +168,14 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
     address: erc20Address as Address,
     abi: ERC4626__factory.abi,
     functionName: 'approve',
-    args: [form.values.address as Address, parseEther((form.values.amount ?? 0).toString())],
+    args: [form.values.address as Address, utils.parseUnits((form.values.amount ?? 0).toString(), 'mwei').toBigInt()],
   });
 
   const { writeAsync: depositAsync } = useContractWrite({
     address: form.values.address as Address,
     abi: ERC4626__factory.abi,
     functionName: 'deposit',
-    args: [parseEther((form.values.amount ?? 0).toString()), address as Address],
+    args: [utils.parseUnits((form.values.amount ?? 0).toString(), 'mwei').toBigInt(), address as Address],
   });
 
   const onDeposit = async () => {

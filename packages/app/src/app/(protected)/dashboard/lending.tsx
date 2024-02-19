@@ -1,7 +1,7 @@
 'use client';
 
 import { Tables } from '@credbull/api';
-import { AKYCProvider__factory, ERC20__factory, ERC4626__factory } from '@credbull/contracts';
+import { AKYCProvider__factory, ERC20__factory, ERC4626__factory, MaxCapPlugIn__factory } from '@credbull/contracts';
 import { Badge, Button, Card, Flex, Group, NumberInput, SimpleGrid, Text } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useClipboard } from '@mantine/hooks';
@@ -9,9 +9,10 @@ import { useList, useNotification } from '@refinedev/core';
 import { useForm } from '@refinedev/mantine';
 import { IconCopy } from '@tabler/icons';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
+import { utils } from 'ethers';
 import _ from 'lodash';
 import { useEffect, useState } from 'react';
-import { formatEther, parseEther } from 'viem';
+import { formatEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
 import { Address, useAccount, useContractRead, useContractWrite, useWalletClient } from 'wagmi';
 import { z } from 'zod';
@@ -83,14 +84,14 @@ function Vault(props: VaultProps) {
     address: props.data.asset_address as Address,
     abi: ERC4626__factory.abi,
     functionName: 'approve',
-    args: [props.data.address as Address, parseEther((form.values.amount ?? 0).toString())],
+    args: [props.data.address as Address, utils.parseUnits((form.values.amount ?? 0).toString(), 'mwei').toBigInt()],
   });
 
   const { writeAsync: depositAsync } = useContractWrite({
     address: props.data.address as Address,
     abi: ERC4626__factory.abi,
     functionName: 'deposit',
-    args: [parseEther((form.values.amount ?? 0).toString()), props.address],
+    args: [utils.parseUnits((form.values.amount ?? 0).toString(), 'mwei').toBigInt(), props.address],
   });
 
   const { writeAsync: claimAsync } = useContractWrite({
