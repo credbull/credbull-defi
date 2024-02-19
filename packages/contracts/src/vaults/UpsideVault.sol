@@ -19,6 +19,7 @@ contract UpsideVault is FixedYieldVault {
     uint256 public totalCollateralDeposited;
 
     uint256 private constant MAX_PERCENTAGE = 100_00; //100% upto two decimals
+    uint256 private constant PRECISION = 1e18;
     uint256 private additionalPrecision;
 
     constructor(VaultParams memory params, IERC20 _token, uint256 _collateralPercentage) FixedYieldVault(params) {
@@ -96,8 +97,8 @@ contract UpsideVault is FixedYieldVault {
             revert CredbullVault__InsufficientShareBalance();
         }
 
-        uint256 vaultPercent = shares.mulDiv(MAX_PERCENTAGE, totalSupply());
-        return totalCollateralDeposited.mulDiv(vaultPercent, MAX_PERCENTAGE);
+        uint256 vaultPercent = shares.mulDiv(PRECISION, totalSupply());
+        return totalCollateralDeposited.mulDiv(vaultPercent, PRECISION);
     }
 
     function setTWAP(uint256 _twap) public onlyRole(OPERATOR_ROLE) {
