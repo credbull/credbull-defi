@@ -67,12 +67,12 @@ export const main = () => {
     const toggleTx = await vault.connect(adminSigner).toggleWindowCheck(false);
     await toggleTx.wait();
 
-    const depositTx = await vault.deposit(parseEther('1000'), bobSigner.address, { gasLimit: 10000000 });
+    const depositTx = await vault.deposit(1000_000000, bobSigner.address, { gasLimit: 10000000 });
     await depositTx.wait();
     console.log('Bob: deposits his USDC in the vault. - OK');
 
     const balanceOf = await vault.balanceOf(bobSigner.address);
-    console.log(`Bob: has ${formatEther(balanceOf)} USDC deposited in the vault. - OK`);
+    console.log(`Bob: has ${balanceOf.div(1000000)} USDC deposited in the vault. - OK`);
 
     console.log('\n');
     console.log('=====================================');
