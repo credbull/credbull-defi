@@ -1,5 +1,6 @@
 import { CredbullVaultFactory__factory } from '@credbull/contracts';
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
+import { parseEther } from 'ethers/lib/utils';
 
 import { generateAddress, headers, login, signer, supabase, userByEmail } from './utils/helpers';
 
@@ -62,7 +63,8 @@ const createParams = (params: {
     activityReward,
     entities,
     tenant: params.tenant,
-    maxCap: 1000000,
+    maxCap: parseEther('1000000').toString(),
+    collateralPercentage: 200,
   };
 };
 

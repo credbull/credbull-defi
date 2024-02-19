@@ -91,9 +91,9 @@ export class VaultParamsDto extends EntitiesDto {
   @IsNumber()
   promisedYield: BigNumber;
 
-  @ApiProperty({ type: BigNumber, example: '1000000000000', description: 'Should be in wei with 6 decimals' })
-  @IsNumber()
-  maxCap: BigNumber;
+  @ApiProperty({ type: String, example: '1000000000000', description: 'Should be in wei with 6 decimals' })
+  @IsString()
+  maxCap: string;
 
   @ApiProperty({
     type: EntitiesDto,
