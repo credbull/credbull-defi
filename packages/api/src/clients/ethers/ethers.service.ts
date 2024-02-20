@@ -6,7 +6,6 @@ import { Overrides, Wallet, providers } from 'ethers';
 @Injectable()
 export class EthersService {
   private readonly deployerKey: string;
-  private isOnRetry: boolean = false; // Prevent running the retry code on every error hanlder call
 
   constructor(
     private readonly config: ConfigService,
@@ -39,32 +38,30 @@ export class EthersService {
 
   private async provider(): Promise<providers.Provider> {
     const networkProviders = String(this.config.getOrThrow('ETHERS_PROVIDER_URLS')).split(',');
+
     let provider;
+    let connectionStatus: boolean = false;
+    for (let i = 0; i < networkProviders.length; i++) {
+      if (!connectionStatus) {
+        provider = await this.retryConnection(networkProviders[i]);
 
-    if (!this.isOnRetry) {
-      this.isOnRetry = true;
-      let connectionStatus: boolean = false;
-
-      while (!connectionStatus) {
-        for (let i = 0; i < networkProviders.length; i++) {
-          if (!connectionStatus) {
-            provider = await this.retryConnection(networkProviders[i]);
-
-            if (provider !== false) {
-              connectionStatus = true;
-              break;
-            }
-          }
+        if (provider !== false) {
+          connectionStatus = true;
+          break;
         }
       }
     }
-    this.isOnRetry = false;
+
+    if (!connectionStatus) {
+      this.logger.error(`Could not establish connection.`);
+    }
+
     return provider as providers.Provider;
   }
 
   private async retryConnection(
     endpoint: string,
-    maxRetries = 3,
+    maxRetries = 10,
     interval = 2000,
   ): Promise<providers.Provider | boolean> {
     const provider = new providers.JsonRpcProvider(endpoint);
@@ -82,7 +79,6 @@ export class EthersService {
       }
     }
 
-    this.logger.error(`Max retries (${maxRetries}) exceeded. Could not establish connection.`);
     return false;
   }
 }

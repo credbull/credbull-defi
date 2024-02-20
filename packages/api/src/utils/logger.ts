@@ -34,5 +34,5 @@ export const factory = () => {
 export const logger = factory();
 
 export const interceptor = new LoggingInterceptor({
-  mask: { requestHeader: { cookie: true } },
+  mask: { requestHeader: { cookie: true, authorization: true } },
 });
