@@ -69,8 +69,8 @@ describe('VaultsController', () => {
     try {
       await controller.current();
     } catch (e) {
-      expect(e.message).toBe('Bad Request Exception');
-      expect(e.status).toBe(400);
+      expect(e.message).toBe('Internal Server Error Exception');
+      expect(e.status).toBe(500);
     }
   });
 

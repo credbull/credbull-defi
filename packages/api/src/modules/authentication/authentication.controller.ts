@@ -1,5 +1,5 @@
 import { Log } from '@algoan/nestjs-logging-interceptor';
-import { BadRequestException, Body, Controller, InternalServerErrorException, Post } from '@nestjs/common';
+import { Body, Controller, InternalServerErrorException, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { SupabaseService } from '../../clients/supabase/supabase.service';
@@ -20,7 +20,7 @@ export class AuthenticationController {
   async signIn(@Body() data: SignInDto): Promise<RefreshTokenDto> {
     const { data: auth, error } = await this.supabase.admin().auth.signInWithPassword(data);
 
-    if (error) throw new BadRequestException(error);
+    if (error) throw new InternalServerErrorException(error);
     if (!auth.session) throw new InternalServerErrorException("Couldn't refresh session");
 
     return new RefreshTokenDto(auth.session);
@@ -37,7 +37,7 @@ export class AuthenticationController {
       .admin()
       .auth.refreshSession({ refresh_token: data.refresh_token });
 
-    if (error) throw new BadRequestException(error);
+    if (error) throw new InternalServerErrorException(error);
     if (!auth.session) throw new InternalServerErrorException("Couldn't refresh session");
 
     return new RefreshTokenDto(auth.session);

@@ -1,6 +1,5 @@
 import '@credbull/contracts';
 import {
-  BadRequestException,
   Body,
   ConsoleLogger,
   Controller,
@@ -47,7 +46,7 @@ export class VaultsController {
   async current(): Promise<VaultsDto> {
     const { data, error } = await this.vaults.current();
 
-    if (error) throw new BadRequestException(error);
+    if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 
     return new VaultsDto({ data });
@@ -64,7 +63,7 @@ export class VaultsController {
   async matureOutstanding(): Promise<VaultsDto> {
     const { data, error } = await this.vaults.matureOutstanding();
 
-    if (error) throw new BadRequestException(error);
+    if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 
     return new VaultsDto({ data });

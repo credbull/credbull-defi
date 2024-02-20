@@ -37,7 +37,7 @@ describe('AuthenticationController', () => {
       await controller.refreshToken(data);
     } catch (e) {
       expect(e.response.message).toBe('error');
-      expect(e.status).toBe(400);
+      expect(e.status).toBe(500);
     }
   });
 
