@@ -57,8 +57,8 @@ contract DeployVaultFactory is Script {
             if (vm.exists(path)) {
                 string memory json = vm.readFile(path);
 
-                bytes memory vaultFactory = json.parseRaw(".CredbullVaultFactory");
-                bytes memory upsideVaultFactory = json.parseRaw(".CredbullVaultWithUpsideFactory");
+                bytes memory vaultFactory = json.parseRaw(".CredbullFixedYieldVaultFactory");
+                bytes memory upsideVaultFactory = json.parseRaw(".CredbullUpsideVaultFactory");
 
                 deployFixedYieldFactory = vaultFactory.length == 0;
                 deployUpsideFactory = upsideVaultFactory.length == 0;
