@@ -1,5 +1,6 @@
 import '@credbull/contracts';
 import {
+  BadRequestException,
   Body,
   ConsoleLogger,
   Controller,
@@ -12,6 +13,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { SupabaseGuard, SupabaseRoles } from '../../clients/supabase/auth/supabase.guard';
+import { isKnownError } from '../../utils/errors';
 import { CronGuard } from '../../utils/guards';
 
 import { UpsideVaultParamsDto, VaultParamsDto, VaultsDto } from './vaults.dto';
@@ -26,13 +28,6 @@ export class VaultsController {
     private readonly logger: ConsoleLogger,
   ) {
     this.logger.setContext(VaultsController.name);
-  }
-
-  @Get('api/error')
-  @ApiOperation({ summary: 'Temporary API to test error handling' })
-  @ApiResponse({ status: 200, description: 'Success' })
-  async error(): Promise<void> {
-    this.logger.error('This is a test error');
   }
 
   @Get('/current')
@@ -63,6 +58,7 @@ export class VaultsController {
   async matureOutstanding(): Promise<VaultsDto> {
     const { data, error } = await this.vaults.matureOutstanding();
 
+    if (isKnownError(error)) throw new BadRequestException(error);
     if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 
@@ -77,6 +73,7 @@ export class VaultsController {
   async createVault(@Body() dto: VaultParamsDto): Promise<VaultsDto> {
     const { data, error } = await this.vaults.createVault(dto);
 
+    if (isKnownError(error)) throw new BadRequestException(error);
     if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 
@@ -91,6 +88,7 @@ export class VaultsController {
   async createVaultUpside(@Body() dto: UpsideVaultParamsDto): Promise<VaultsDto> {
     const { data, error } = await this.vaults.createVault(dto as VaultParamsDto, true, dto.collateralPercentage);
 
+    if (isKnownError(error)) throw new BadRequestException(error);
     if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 

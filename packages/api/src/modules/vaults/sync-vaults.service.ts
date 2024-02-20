@@ -15,6 +15,7 @@ import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
 import { Database, Tables } from '../../types/supabase';
 import { responseFromRead } from '../../utils/contracts';
+import { NoDataFound } from '../../utils/errors';
 
 import { VaultParamsDto } from './vaults.dto';
 import {
@@ -35,7 +36,7 @@ export class SyncVaultsService {
     this.logger.setContext(this.constructor.name);
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
   async syncEventData() {
     this.logger.log('Syncing vault data...');
     await this.sync();
@@ -127,7 +128,7 @@ export class SyncVaultsService {
       .insert(events.map((e) => this.prepareVaultDataFromEvent(e, upside)))
       .select();
     if (newVaults.error) return newVaults;
-    if (!newVaults.data) return { error: new Error('No data') };
+    if (!newVaults.data) return { error: NoDataFound };
 
     const entities = await Promise.all(this.addEntitiesAndDistributionFromEvents(events, newVaults.data));
     const errors = entities.map((entity) => entity.error).filter((error) => error !== undefined);

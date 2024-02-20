@@ -1,10 +1,9 @@
-import { PostgrestError } from '@supabase/supabase-js';
-import { SiweError } from 'siwe';
+import { KnownError, UnknownError } from '../utils/errors';
 
 export type ServiceResponse<T> =
   | { error?: null; data: T }
   | {
-      error: Error | PostgrestError | SiweError;
+      error: KnownError | UnknownError;
       data?: null;
     };
 

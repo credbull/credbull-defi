@@ -31,7 +31,7 @@ describe('AuthenticationController', () => {
   it('should throw supabase error when there is an error refreshing the token', async () => {
     const data = { refresh_token: '' };
 
-    admin.auth.refreshSession.mockResolvedValueOnce({ error: 'error' } as any);
+    admin.auth.refreshSession.mockResolvedValueOnce({ error: new Error('error') } as any);
 
     try {
       await controller.refreshToken(data);

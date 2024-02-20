@@ -5,6 +5,7 @@ import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { PartnerType } from '../../types/db.dto';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
+import { DiscriminatorProvided, NoDiscriminator } from '../../utils/errors';
 
 import { WalletDto } from './wallets.dto';
 
@@ -20,11 +21,11 @@ export class WalletsService {
     if (auth.error) return { error: auth.error };
 
     if ((auth.data.user.app_metadata.partner_type as PartnerType) === 'channel' && !dto.discriminator) {
-      return { error: new Error('No discriminator provided') };
+      return { error: NoDiscriminator };
     }
 
     if ((auth.data.user.app_metadata.partner_type as PartnerType) !== 'channel' && dto.discriminator) {
-      return { error: new Error('Discriminator should not be provided') };
+      return { error: DiscriminatorProvided };
     }
 
     const verify = await new SiweMessage(message).verify({ signature });

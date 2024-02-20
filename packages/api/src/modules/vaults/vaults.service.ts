@@ -15,7 +15,7 @@ import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
 import { responseFromRead, responseFromWrite } from '../../utils/contracts';
-import { anyCallHasFailed } from '../../utils/errors';
+import { CustodianAmountLesserThanExpected, anyCallHasFailed } from '../../utils/errors';
 
 import { CustodianTransferDto } from './custodian.dto';
 import { CustodianService } from './custodian.service';
@@ -224,7 +224,7 @@ export class VaultsService {
     // check if the custodian has enough assets to transfer to all vaults or stop the process to avoid custody of any funds
     const totalExpectedAssets = dtos.reduce((acc, cur) => acc.add(cur.amount), BigNumber.from(0));
     if (dtos[0].custodianAmount.lt(totalExpectedAssets)) {
-      return { error: new Error('Custodian amount should be bigger or same as expected amount') };
+      return { error: CustodianAmountLesserThanExpected };
     }
 
     return { data: dtos };

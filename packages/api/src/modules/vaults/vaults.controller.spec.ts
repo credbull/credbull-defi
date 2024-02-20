@@ -62,7 +62,7 @@ describe('VaultsController', () => {
     const builder = { select: vi.fn(), neq: vi.fn(), lt: vi.fn() };
     builder.select.mockReturnValueOnce(builder as any);
     builder.neq.mockReturnValueOnce(builder as any);
-    builder.lt.mockReturnValueOnce({ error: 1 } as any);
+    builder.lt.mockReturnValueOnce({ error: new Error('Internal Server Error Exception') } as any);
 
     client.from.mockReturnValue(builder as any);
 

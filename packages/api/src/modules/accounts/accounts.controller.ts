@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -11,6 +12,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 
 import { SupabaseGuard, SupabaseRoles } from '../../clients/supabase/auth/supabase.guard';
 import { UserWalletDto } from '../../types/db.dto';
+import { isKnownError } from '../../utils/errors';
 
 import { AccountStatusDto } from './accounts.dto';
 import { KYCStatus, WhitelistAccountDto } from './kyc.dto';
@@ -34,6 +36,7 @@ export class AccountsController {
   async status(): Promise<AccountStatusDto> {
     const { data, error } = await this.kyc.status();
 
+    if (isKnownError(error)) throw new BadRequestException(error);
     if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 
@@ -48,6 +51,7 @@ export class AccountsController {
   async whitelist(@Body() dto: WhitelistAccountDto): Promise<AccountStatusDto> {
     const { data, error } = await this.kyc.whitelist(dto);
 
+    if (isKnownError(error)) throw new BadRequestException(error);
     if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 
@@ -60,6 +64,7 @@ export class AccountsController {
   async linkWallet(@Body() dto: WalletDto): Promise<UserWalletDto> {
     const { data, error } = await this.wallets.link(dto);
 
+    if (isKnownError(error)) throw new BadRequestException(error);
     if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 
