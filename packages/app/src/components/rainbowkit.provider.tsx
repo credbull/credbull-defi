@@ -1,20 +1,29 @@
 'use client';
 
-import { RainbowKitProvider, getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit';
 import { ReactNode } from 'react';
-import { WagmiProvider } from 'wagmi';
+import { WagmiConfig, configureChains, createConfig } from 'wagmi';
 import { foundry, polygonMumbai } from 'wagmi/chains';
+import { publicProvider } from 'wagmi/providers/public';
 
-const wagmiConfig = getDefaultConfig({
+const { chains, publicClient } = configureChains([foundry, polygonMumbai], [publicProvider()]);
+
+const { connectors } = getDefaultWallets({
   appName: 'Credbull DeFI',
   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
-  chains: [foundry, polygonMumbai],
+  chains,
+});
+
+const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors,
+  publicClient,
 });
 
 export function RainbowkitProvider({ children }: { children: ReactNode }) {
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <RainbowKitProvider>{children}</RainbowKitProvider>
-    </WagmiProvider>
+    <WagmiConfig config={wagmiConfig}>
+      <RainbowKitProvider chains={chains}>{children}</RainbowKitProvider>
+    </WagmiConfig>
   );
 }
