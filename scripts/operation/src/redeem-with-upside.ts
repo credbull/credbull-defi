@@ -45,7 +45,7 @@ export const main = () => {
     const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
     const token = MockToken__factory.connect(tokenAddress.address, bobSigner);
     const vault = CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, bobSigner);
-    const mintTx = await usdc.mint(vaultAddress,  parseUnits('1000', 'mwei'));
+    const mintTx = await usdc.mint(vaultAddress, parseUnits('1000', 'mwei'));
     await mintTx.wait();
 
     const shares = await vault.balanceOf(bobSigner.address);

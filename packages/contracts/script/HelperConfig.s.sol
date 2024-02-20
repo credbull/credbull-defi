@@ -32,7 +32,7 @@ contract HelperConfig is Script {
 
     constructor(bool _test) {
         test = _test;
-        if (block.chainid == 421614) {
+        if (block.chainid == 421614 || block.chainid == 80001) {
             activeNetworkConfig = getSepoliaEthConfig();
         } else {
             activeNetworkConfig = getAnvilEthConfig();
