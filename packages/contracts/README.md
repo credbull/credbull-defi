@@ -14,6 +14,14 @@ If you exclusively want to work on the contracts, you don't need to setup the wh
 $ forge --help
 $ anvil --help
 ```
+
+## Setup using Docker
+
+- Clone the repository with submodules `git clone --recurse-submodules
+- Build the image with `docker build -f Dockerfile -t credbull-contracts .`
+- SSH into the container with `docker run --entrypoint "/bin/sh" -it credbull-contracts`
+- You can then run `forge` and `anvil` commands as usual
+
 ## Foundry Documentation
 
 https://book.getfoundry.sh/
