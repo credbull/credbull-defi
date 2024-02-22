@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.19;
 
-import { AKYCProvider } from "../../test/mocks/MockKYCProvider.sol";
+import { IKYCProvider } from "../interface/IKYCProvider.sol";
 
 /// @notice - A PlugIn to handle whitelisting
 abstract contract WhitelistPlugIn {
@@ -10,7 +10,7 @@ abstract contract WhitelistPlugIn {
     error CredbullVault__NotAWhitelistedAddress();
 
     /// @notice - Address of the Kyc provider
-    AKYCProvider public kycProvider;
+    IKYCProvider public kycProvider;
 
     /// @notice - Flag to check for whitelist
     bool public checkWhitelist;
@@ -19,7 +19,7 @@ abstract contract WhitelistPlugIn {
      * @param _kycProvider - Address of the Kyc Provider
      */
     constructor(address _kycProvider) {
-        kycProvider = AKYCProvider(_kycProvider);
+        kycProvider = IKYCProvider(_kycProvider);
         checkWhitelist = true; // Set the check to true by default
     }
 

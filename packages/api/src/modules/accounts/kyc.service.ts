@@ -1,4 +1,4 @@
-import { AKYCProvider__factory } from '@credbull/contracts';
+import { CredbullKYCProvider__factory } from '@credbull/contracts';
 import { Injectable } from '@nestjs/common';
 import * as _ from 'lodash';
 
@@ -111,6 +111,6 @@ export class KycService {
   }
 
   private async getOnChainProvider(address: string) {
-    return AKYCProvider__factory.connect(address, await this.ethers.deployer());
+    return CredbullKYCProvider__factory.connect(address, await this.ethers.deployer());
   }
 }

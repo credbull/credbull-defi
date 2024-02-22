@@ -1,4 +1,4 @@
-import { AKYCProvider } from '@credbull/contracts';
+import { CredbullKYCProvider } from '@credbull/contracts';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -17,12 +17,12 @@ describe('AccountsController', () => {
   let controller: AccountsController;
   let client: DeepMockProxy<SupabaseClient>;
   let admin: DeepMockProxy<SupabaseClient>;
-  let kyc: DeepMockProxy<AKYCProvider>;
+  let kyc: DeepMockProxy<CredbullKYCProvider>;
   let ethers: DeepMockProxy<EthersService>;
   beforeEach(async () => {
     client = mockDeep<SupabaseClient>();
     admin = mockDeep<SupabaseClient>();
-    kyc = mockDeep<AKYCProvider>();
+    kyc = mockDeep<CredbullKYCProvider>();
     ethers = mockDeep<EthersService>();
 
     (KycService.prototype as any).getOnChainProvider = vi.fn().mockReturnValue(kyc);

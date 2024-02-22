@@ -9,7 +9,7 @@ import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
-import { MockKYCProvider } from "../mocks/MockKYCProvider.sol";
+import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
 
 contract CredbullFixedYieldVaultTest is Test {
     CredbullFixedYieldVault private vault;
@@ -155,7 +155,7 @@ contract CredbullFixedYieldVaultTest is Test {
         vm.stopPrank();
 
         vm.expectRevert(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector);
-        vm.expectCall(address(vaultParams.kycProvider), abi.encodeCall(MockKYCProvider.status, alice));
+        vm.expectCall(address(vaultParams.kycProvider), abi.encodeCall(CredbullKYCProvider.status, alice));
         vault.deposit(10 * precision, alice);
     }
 

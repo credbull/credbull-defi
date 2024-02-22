@@ -5,7 +5,7 @@ pragma solidity ^0.8.19;
 import { Script } from "forge-std/Script.sol";
 import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
 import { MockToken } from "../test/mocks/MockToken.sol";
-import { MockKYCProvider } from "../test/mocks/MockKYCProvider.sol";
+import { CredbullKYCProvider } from "../src/CredbullKYCProvider.sol";
 import { ICredbull } from "../src/interface/ICredbull.sol";
 import { stdJson } from "forge-std/StdJson.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
@@ -82,7 +82,7 @@ contract HelperConfig is Script {
     function deployMocks(address owner) internal returns (address, address, address) {
         MockToken token;
         MockStablecoin usdc;
-        MockKYCProvider kycProvider;
+        CredbullKYCProvider kycProvider;
 
         bool deployMockToken = true;
         bool deployMockStableCoin = true;
@@ -119,7 +119,7 @@ contract HelperConfig is Script {
         }
 
         if (deployMockKycProvider) {
-            kycProvider = new MockKYCProvider(owner);
+            kycProvider = new CredbullKYCProvider(owner);
             console2.log("!!!!! Deploying MockKYCProvider !!!!!");
         } else {
             console2.log("!!!!! Deployment skipped for MockKYCProvider !!!!!");

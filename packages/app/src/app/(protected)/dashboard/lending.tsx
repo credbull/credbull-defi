@@ -1,7 +1,12 @@
 'use client';
 
 import { Tables } from '@credbull/api';
-import { AKYCProvider__factory, ERC20__factory, ERC4626__factory, MaxCapPlugIn__factory } from '@credbull/contracts';
+import {
+  CredbullKYCProvider__factory,
+  ERC20__factory,
+  ERC4626__factory,
+  MaxCapPlugIn__factory,
+} from '@credbull/contracts';
 import { Badge, Button, Card, Flex, Group, NumberInput, SimpleGrid, Text } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useClipboard } from '@mantine/hooks';
@@ -58,7 +63,7 @@ function Vault(props: VaultProps) {
 
   const { data: kycStatus } = useContractRead({
     address: kycProvider?.address as Address,
-    abi: AKYCProvider__factory.abi,
+    abi: CredbullKYCProvider__factory.abi,
     functionName: 'status',
     watch: true,
     args: [props.address as Address],
