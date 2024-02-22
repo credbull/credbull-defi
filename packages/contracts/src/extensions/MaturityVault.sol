@@ -14,19 +14,18 @@ abstract contract MaturityVault is CredbullBaseVault {
     //Error to revert mature if there is not enough balance to mature
     error CredbullVault__NotEnoughBalanceToMature();
 
-    /**
-     * @notice - Track if vault is matured
-     */
+    /// @notice - Track if vault is matured
     bool public isMatured;
 
+    /// @notice - Toggle to check for maturity
     bool public checkMaturity;
 
-    /**
-     * @dev
-     * The fixed yield that's promised to the users on deposit.
-     */
+    /// @dev The fixed yield value in percentage(100) that's promised to the users on deposit.
     uint256 private _fixedYield;
 
+    /**
+     * @param params - Vault parameters
+     */
     constructor(VaultParams memory params) CredbullBaseVault(params) {
         checkMaturity = true;
         _fixedYield = params.promisedYield;
@@ -40,8 +39,8 @@ abstract contract MaturityVault is CredbullBaseVault {
     }
 
     /**
-     * @notice - Method to mature the vault after the assets that was deposited from the custodian wallet with addition yield earned.
-     * @dev - _totalAssetDeposited to be updated to calculate the right amount of asset with yield in proportion to the shares received.
+     * @notice - Method to mature the vault by by depositing back the asset from the custodian wallet with addition yield earned.
+     * @dev - _totalAssetDeposited to be updated to calculate the right amount of asset with yield in proportion to the shares.
      */
     function _mature() internal {
         uint256 currentBalance = IERC20(asset()).balanceOf(address(this));
@@ -54,6 +53,7 @@ abstract contract MaturityVault is CredbullBaseVault {
         isMatured = true;
     }
 
+    /// @dev - To be access controlled on inherited contract
     function mature() public virtual {
         _mature();
     }
@@ -68,6 +68,10 @@ abstract contract MaturityVault is CredbullBaseVault {
         }
     }
 
+    /**
+     * @notice - Function to toggle the check for maturity
+     * @param status - Boolean value to toggle
+     */
     function _toggleMaturityCheck(bool status) internal {
         checkMaturity = status;
     }

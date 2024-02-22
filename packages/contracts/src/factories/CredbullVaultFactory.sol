@@ -12,19 +12,19 @@ import { ICredbull } from "../interface/ICredbull.sol";
 abstract contract CredbullVaultFactory is AccessControl {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    //Error to revert if custodian is not allowed
+    /// @notice Error to revert if custodian is not allowed
     error CredbullVaultFactory__CustodianNotAllowed();
 
-    //Event to emit when a new vault is created
+    /// @notice Event to emit when a new vault is created
     event VaultDeployed(address indexed vault, ICredbull.VaultParams params, string options);
 
-    //Address set that contains list of all vault address
+    /// @notice Address set that contains list of all vault address
     EnumerableSet.AddressSet internal allVaults;
 
-    //Address set that contains list of all custodian addresses
+    /// @notice Address set that contains list of all custodian addresses
     EnumerableSet.AddressSet internal allowedCustodians;
 
-    //Hash for operator role
+    /// @notice Hash for operator role
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /**
@@ -50,38 +50,39 @@ abstract contract CredbullVaultFactory is AccessControl {
         _;
     }
 
-    //Add vault address to the set
+    /// @notice Add vault address to the set
     function _addVault(address _vault) internal virtual {
         allVaults.add(_vault);
     }
 
-    //Add custodian address to the set
+    /// @notice Add custodian address to the set
     function allowCustodian(address _custodian) public onlyRole(DEFAULT_ADMIN_ROLE) returns (bool) {
         return allowedCustodians.add(_custodian);
     }
 
-    //Remove custodian address from the set
+    /// @notice Remove custodian address from the set
     function removeCustodian(address _custodian) public onlyRole(DEFAULT_ADMIN_ROLE) {
         if (allowedCustodians.contains(_custodian)) {
             allowedCustodians.remove(_custodian);
         }
     }
 
-    //Get total no.of vaults
+    /// @notice Get total no.of vaults
     function getTotalVaultCount() public view returns (uint256) {
         return allVaults.length();
     }
 
-    //Get vault address at a given index
+    /// @notice Get vault address at a given index
     function getVaultAtIndex(uint256 _index) public view returns (address) {
         return allVaults.at(_index);
     }
 
-    //Check if the vault exisits
+    /// @notice Check if the vault exisits for a given address
     function isVaultExist(address _vault) public view returns (bool) {
         return allVaults.contains(_vault);
     }
 
+    /// @notice Check if the custodian allowed for a given address
     function isCustodianAllowed(address _custodian) public view returns (bool) {
         return allowedCustodians.contains(_custodian);
     }

@@ -16,7 +16,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
     error CredbullVault__InvalidAssetAmount();
     error CredbullVault__UnsupportedDecimalValue();
 
-    //Address of the custodian to receive the assets on deposit and mint
+    /// @notice Address of the custodian to receive the assets on deposit and mint
     address public immutable custodian;
 
     /**
@@ -26,24 +26,31 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
      */
     uint256 public totalAssetDeposited;
 
-    //Make the vault decimal same as asset decimal
+    /// @notice The vault decimal which is same as the asset decimal
     uint8 public immutable VAULT_DECIMALS;
 
-    //Max decimal value supported by the vault
+    /// @notice Max decimal value supported by the vault
     uint8 public constant MAX_DECIMAL = 18;
-    //Min decimal value supported by vault
+
+    /// @notice Min decimal value supported by vault
     uint8 public constant MIN_DECIMAL = 6;
 
+    /// @notice Modifier to add additional checks on deposit
     modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) virtual {
         _;
     }
 
+    /// @notice Modifier to add additional checks on withdraw
     modifier withdrawModifier(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         virtual
     {
         _;
     }
 
+    /**
+     *
+     * @param params - Vault parameters
+     */
     constructor(VaultParams memory params) ERC4626(params.asset) ERC20(params.shareName, params.shareSymbol) {
         custodian = params.custodian;
 
@@ -102,7 +109,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
         return totalAssetDeposited;
     }
 
-    //Check decimal value of the asset and token used in the vaults.
+    /// @notice Check decimal value of the asset and token used in the vaults.
     //Revert if it's not supported
     function _checkValidDecimalValue(address token) internal view returns (uint8) {
         uint8 decimal = ERC20(token).decimals();
@@ -114,7 +121,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
         return decimal;
     }
 
-    //The share token should be soul bound. Should be transferable only to vault to receive assets back
+    /// @notice The share token should be soul bound. Should be transferable only to vault to receive assets back
     function transfer(address to, uint256 value) public override(ERC20, IERC20) returns (bool) {
         if (to != address(this)) revert CredbullVault__TransferOutsideEcosystem();
         address owner = _msgSender();
@@ -122,7 +129,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
         return true;
     }
 
-    //The share token should be soul bound. Should be transferable only to vault to receive assets back
+    /// @notice The share token should be soul bound. Should be transferable only to vault to receive assets back
     function transferFrom(address from, address to, uint256 value) public override(ERC20, IERC20) returns (bool) {
         if (to != address(this)) revert CredbullVault__TransferOutsideEcosystem();
         address spender = _msgSender();
@@ -131,6 +138,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
         return true;
     }
 
+    /// @notice Decimal value of share token is same as asset token
     function decimals() public view override returns (uint8) {
         return VAULT_DECIMALS;
     }

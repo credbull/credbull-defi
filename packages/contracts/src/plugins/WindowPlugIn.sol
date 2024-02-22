@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.19;
 
+/// @notice - A plugIn to handle deposit and withdraw window
 abstract contract WindowPlugIn {
     //Error to revert when operation is outside required window
     error CredbullVault__OperationOutsideRequiredWindow(
@@ -32,8 +33,15 @@ abstract contract WindowPlugIn {
      */
     uint256 public redemptionClosesAtTimestamp;
 
+    /// @notice - Flag to check for window
     bool public checkWindow;
 
+    /**
+     * @param _depositOpensAt - Deposit open Unix timestamp
+     * @param _depositClosesAt - Deposit close Unix timestamp
+     * @param _redemptionOpensAt - Redemption open Unix timestamp
+     * @param _redemptionClosesAt - Redemption close Unix timestamp
+     */
     constructor(
         uint256 _depositOpensAt,
         uint256 _depositClosesAt,
@@ -47,20 +55,24 @@ abstract contract WindowPlugIn {
         checkWindow = true;
     }
 
+    /// @notice - Check if a given timestamp is with in a window
     function _checkIsWithinWindow(uint256 windowOpensAt, uint256 windowClosesAt) internal view {
         if (checkWindow && (block.timestamp < windowOpensAt || block.timestamp > windowClosesAt)) {
             revert CredbullVault__OperationOutsideRequiredWindow(windowOpensAt, windowClosesAt, block.timestamp);
         }
     }
 
+    ///@notice - Check for deposit window
     function _checkIsDepositWithinWindow() internal view virtual {
         _checkIsWithinWindow(depositOpensAtTimestamp, depositClosesAtTimestamp);
     }
 
+    ///@notice Check for withdraw window
     function _checkIsWithdrawWithinWindow() internal view virtual {
         _checkIsWithinWindow(redemptionOpensAtTimestamp, redemptionClosesAtTimestamp);
     }
 
+    ///@notice - Function to update all timestamps
     function _updateWindow(uint256 _depositOpen, uint256 _depositClose, uint256 _withdrawOpen, uint256 _withdrawClose)
         internal
         virtual
@@ -71,6 +83,7 @@ abstract contract WindowPlugIn {
         redemptionClosesAtTimestamp = _withdrawClose;
     }
 
+    ///@notice - Function to toggle check for window
     function _toggleWindowCheck(bool status) internal {
         checkWindow = status;
     }

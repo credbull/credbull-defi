@@ -6,20 +6,32 @@ import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { FixedYieldVault } from "./FixedYieldVault.sol";
 
+///@notice - Upside vault
 contract UpsideVault is FixedYieldVault {
     using Math for uint256;
 
     error CredbullVault__InsufficientShareBalance();
 
+    /// @notice address of the Credbull token CBL
     IERC20 public token;
+
     uint256 public twap = 100_00;
+
+    /// @notice Percentage of collateral (100_00) is 100%
     uint256 public collateralPercentage;
 
     mapping(address account => uint256) private _balances;
+
+    /// @notice Total collateral deposited
     uint256 public totalCollateralDeposited;
 
-    uint256 private constant MAX_PERCENTAGE = 100_00; //100% upto two decimals
+    /// @notice Maximum percentage value (100%)
+    uint256 private constant MAX_PERCENTAGE = 100_00;
+
+    /// @notice Precision used for math
     uint256 private constant PRECISION = 1e18;
+
+    /// @notice Additional precision required for math
     uint256 private additionalPrecision;
 
     constructor(VaultParams memory params, IERC20 _token, uint256 _collateralPercentage) FixedYieldVault(params) {
@@ -36,6 +48,7 @@ contract UpsideVault is FixedYieldVault {
         }
     }
 
+    ///@dev - Overridden internal deposit method to handle collateral
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares)
         internal
         override
@@ -64,6 +77,7 @@ contract UpsideVault is FixedYieldVault {
         emit Deposit(caller, receiver, assets, shares);
     }
 
+    /// @dev - Overridden withdraw method to handle collateral
     function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         internal
         override
@@ -87,11 +101,13 @@ contract UpsideVault is FixedYieldVault {
         emit Withdraw(caller, receiver, owner, assets, shares);
     }
 
+    ///@notice - Get the collateral amount to deposit for the given asset
     function getCollateralAmount(uint256 assets) public view virtual returns (uint256) {
         return
             ((assets * additionalPrecision).mulDiv(collateralPercentage, MAX_PERCENTAGE)).mulDiv(MAX_PERCENTAGE, twap);
     }
 
+    ///@notice - Get the collateral amount to redeem for the given shares
     function calculateTokenRedemption(uint256 shares, address account) public view virtual returns (uint256) {
         if (balanceOf(account) < shares) {
             revert CredbullVault__InsufficientShareBalance();
@@ -101,6 +117,7 @@ contract UpsideVault is FixedYieldVault {
         return totalCollateralDeposited.mulDiv(vaultPercent, PRECISION);
     }
 
+    ///@notice - Update the twap value
     function setTWAP(uint256 _twap) public onlyRole(OPERATOR_ROLE) {
         twap = _twap;
     }

@@ -7,12 +7,16 @@ import { ICredbull } from "../interface/ICredbull.sol";
 import { CredbullFixedYieldVault } from "../CredbullFixedYieldVault.sol";
 
 contract CredbullFixedYieldVaultFactory is CredbullVaultFactory {
-    constructor(address owner, address operator) CredbullVaultFactory(owner, operator) { }
     /**
-     * @notice - Function to create a new vault. Can be called only by the owner
+     * @param owner - The owner of the factory contract
+     * @param operator - The operator of the factory contract
+     */
+    constructor(address owner, address operator) CredbullVaultFactory(owner, operator) { }
+
+    /**
+     * @notice - Function to create a new vault. Should be called only by the owner
      * @param _params - The VaultParams
      */
-
     function createVault(ICredbull.VaultParams memory _params, string memory options)
         public
         virtual
