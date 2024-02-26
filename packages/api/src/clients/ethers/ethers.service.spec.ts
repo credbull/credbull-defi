@@ -20,6 +20,6 @@ describe('EthersService', () => {
   });
 
   it('should have a deployer method', () => {
-    expect(service.deployer).toBeDefined();
+    expect(service.operator).toBeDefined();
   });
 });

@@ -254,18 +254,18 @@ export class VaultsService {
   }
 
   private async contract(vault: Tables<'vaults'>): Promise<CredbullFixedYieldVault> {
-    return CredbullFixedYieldVault__factory.connect(vault.address, await this.ethers.deployer());
+    return CredbullFixedYieldVault__factory.connect(vault.address, await this.ethers.operator());
   }
 
   private async strategy(vault: Tables<'vaults'>): Promise<CredbullFixedYieldVault> {
-    return CredbullFixedYieldVault__factory.connect(vault.strategy_address, await this.ethers.deployer());
+    return CredbullFixedYieldVault__factory.connect(vault.strategy_address, await this.ethers.operator());
   }
 
   private async factoryContract(addr: string): Promise<CredbullFixedYieldVaultFactory> {
-    return CredbullFixedYieldVaultFactory__factory.connect(addr, await this.ethers.deployer());
+    return CredbullFixedYieldVaultFactory__factory.connect(addr, await this.ethers.operator());
   }
 
   private async factoryUpsideContract(addr: string): Promise<CredbullUpsideVaultFactory> {
-    return CredbullUpsideVaultFactory__factory.connect(addr, await this.ethers.deployer());
+    return CredbullUpsideVaultFactory__factory.connect(addr, await this.ethers.operator());
   }
 }

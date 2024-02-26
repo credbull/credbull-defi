@@ -55,7 +55,7 @@ contract HelperConfig is Script {
             collateralPercentage: vm.envUint("COLLATERAL_PERCENTAGE")
         });
 
-        (address token, address usdc, address kycProvider) = deployMocks(factoryParams.owner);
+        (address token, address usdc, address kycProvider) = deployMocks(factoryParams.operator);
 
         // no need for vault params when using a real network
         ICredbull.VaultParams memory empty = ICredbull.VaultParams({
@@ -80,7 +80,7 @@ contract HelperConfig is Script {
         return sepoliaConfig;
     }
 
-    function deployMocks(address owner) internal returns (address, address, address) {
+    function deployMocks(address operator) internal returns (address, address, address) {
         MockToken token;
         MockStablecoin usdc;
         CredbullKYCProvider kycProvider;
@@ -120,7 +120,7 @@ contract HelperConfig is Script {
         }
 
         if (deployMockKycProvider) {
-            kycProvider = new CredbullKYCProvider(owner);
+            kycProvider = new CredbullKYCProvider(operator);
             console2.log("!!!!! Deploying MockKYCProvider !!!!!");
         } else {
             console2.log("!!!!! Deployment skipped for MockKYCProvider !!!!!");
@@ -139,11 +139,12 @@ contract HelperConfig is Script {
         // TODO: because we dont have a real custodian, we need to fix one that we have a private key for testing.
         address custodian = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
         address owner = test ? 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 : vm.envAddress("PUBLIC_OWNER_ADDRESS"); // use a owner that we have a private key for testing
+        address operator = test ? 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 : vm.envAddress("PUBLIC_OPERATOR_ADDRESS");
 
         (uint256 opensAt, uint256 closesAt) = getTimeConfig();
         uint256 year = 365 days;
 
-        (address token, address usdc, address kycProvider) = deployMocks(owner);
+        (address token, address usdc, address kycProvider) = deployMocks(operator);
 
         ICredbull.VaultParams memory anvilVaultParams = ICredbull.VaultParams({
             asset: IERC20(usdc),
@@ -151,7 +152,7 @@ contract HelperConfig is Script {
             shareName: "Share_sep",
             shareSymbol: "SYM_sep",
             owner: owner,
-            operator: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8,
+            operator: operator,
             custodian: custodian,
             kycProvider: address(kycProvider),
             promisedYield: PROMISED_FIXED_YIELD,
@@ -163,11 +164,8 @@ contract HelperConfig is Script {
             depositThresholdForWhitelisting: 1000e6
         });
 
-        FactoryParams memory factoryParams = FactoryParams({
-            owner: owner,
-            operator: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8,
-            collateralPercentage: COLLATERAL_PERCENTAGE
-        });
+        FactoryParams memory factoryParams =
+            FactoryParams({ owner: owner, operator: operator, collateralPercentage: COLLATERAL_PERCENTAGE });
 
         NetworkConfig memory anvilConfig =
             NetworkConfig({ vaultParams: anvilVaultParams, factoryParams: factoryParams });

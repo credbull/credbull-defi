@@ -117,6 +117,6 @@ export class KycService {
   }
 
   private async getOnChainProvider(address: string) {
-    return CredbullKYCProvider__factory.connect(address, await this.ethers.deployer());
+    return CredbullKYCProvider__factory.connect(address, await this.ethers.operator());
   }
 }

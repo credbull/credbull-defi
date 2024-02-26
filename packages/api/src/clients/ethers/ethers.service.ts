@@ -15,7 +15,7 @@ export class EthersService {
     this.deployerKey = config.getOrThrow('ETHERS_DEPLOYER_PRIVATE_KEY');
   }
 
-  async deployer(): Promise<Signer> {
+  async operator(): Promise<Signer> {
     return new Wallet(this.deployerKey, await this.provider());
   }
 

@@ -41,7 +41,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         bool[] memory statuses = new bool[](1);
         statuses[0] = true;
 
-        vm.startPrank(vaultParams.owner);
+        vm.startPrank(vaultParams.operator);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 

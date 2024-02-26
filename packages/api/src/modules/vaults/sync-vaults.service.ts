@@ -146,10 +146,10 @@ export class SyncVaultsService {
   }
 
   private async getFactoryContract(addr: string): Promise<CredbullFixedYieldVaultFactory> {
-    return CredbullFixedYieldVaultFactory__factory.connect(addr, await this.ethers.deployer());
+    return CredbullFixedYieldVaultFactory__factory.connect(addr, await this.ethers.operator());
   }
 
   private async factoryUpsideContract(addr: string): Promise<CredbullUpsideVaultFactory> {
-    return CredbullUpsideVaultFactory__factory.connect(addr, await this.ethers.deployer());
+    return CredbullUpsideVaultFactory__factory.connect(addr, await this.ethers.operator());
   }
 }

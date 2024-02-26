@@ -66,6 +66,6 @@ export class UpdateUpsideTwapService {
   }
 
   private async contract(addr: string): Promise<CredbullFixedYieldVaultWithUpside> {
-    return CredbullFixedYieldVaultWithUpside__factory.connect(addr, await this.ethers.deployer());
+    return CredbullFixedYieldVaultWithUpside__factory.connect(addr, await this.ethers.operator());
   }
 }

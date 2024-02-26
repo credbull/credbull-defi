@@ -36,7 +36,7 @@ contract WhitelistPlugInTest is Test {
         statuses[0] = true;
         statuses[1] = true;
 
-        vm.startPrank(vaultParams.owner);
+        vm.startPrank(vaultParams.operator);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
@@ -51,7 +51,7 @@ contract WhitelistPlugInTest is Test {
         bool[] memory statuses = new bool[](1);
         statuses[0] = false;
 
-        vm.startPrank(vaultParams.owner);
+        vm.startPrank(vaultParams.operator);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
@@ -100,7 +100,7 @@ contract WhitelistPlugInTest is Test {
         bool[] memory statuses = new bool[](1);
         statuses[0] = false;
 
-        vm.startPrank(vaultParams.owner);
+        vm.startPrank(vaultParams.operator);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
