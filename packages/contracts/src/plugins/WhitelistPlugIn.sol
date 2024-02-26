@@ -15,17 +15,21 @@ abstract contract WhitelistPlugIn {
     /// @notice - Flag to check for whitelist
     bool public checkWhitelist;
 
+    /// @notice - Deposit threshold amount to check for whitelisting
+    uint256 depositThresholdForWhitelisting;
+
     /**
      * @param _kycProvider - Address of the Kyc Provider
      */
-    constructor(address _kycProvider) {
+    constructor(address _kycProvider, uint256 _depositThresholdForWhitelisting) {
         kycProvider = IKYCProvider(_kycProvider);
         checkWhitelist = true; // Set the check to true by default
+        depositThresholdForWhitelisting = _depositThresholdForWhitelisting;
     }
 
     /// @notice - Function to check for whitelisted address
-    function _checkIsWhitelisted(address receiver) internal view virtual {
-        if (checkWhitelist && !kycProvider.status(receiver)) {
+    function _checkIsWhitelisted(address receiver, uint256 amount) internal view virtual {
+        if (checkWhitelist && amount >= depositThresholdForWhitelisting && !kycProvider.status(receiver)) {
             revert CredbullVault__NotAWhitelistedAddress();
         }
     }

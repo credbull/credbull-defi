@@ -1,5 +1,5 @@
 import { CredbullFixedYieldVault__factory, MockStablecoin__factory } from '@credbull/contracts';
-import { formatEther, parseEther, parseUnits } from 'ethers/lib/utils';
+import { parseUnits } from 'ethers/lib/utils';
 
 import { headers, linkWalletMessage, login, signer } from './utils/helpers';
 

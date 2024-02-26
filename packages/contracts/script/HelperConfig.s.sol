@@ -72,7 +72,8 @@ contract HelperConfig is Script {
             depositClosesAt: 0,
             redemptionOpensAt: 0,
             redemptionClosesAt: 0,
-            maxCap: 1e6 * 1e6
+            maxCap: 1e6 * 1e6,
+            depositThresholdForWhitelisting: 1000e6
         });
 
         NetworkConfig memory sepoliaConfig = NetworkConfig({ factoryParams: factoryParams, vaultParams: empty });
@@ -137,7 +138,7 @@ contract HelperConfig is Script {
 
         // TODO: because we dont have a real custodian, we need to fix one that we have a private key for testing.
         address custodian = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
-        address owner = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // use a owner that we have a private key for testing
+        address owner = test ? 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 : vm.envAddress("PUBLIC_OWNER_ADDRESS"); // use a owner that we have a private key for testing
 
         (uint256 opensAt, uint256 closesAt) = getTimeConfig();
         uint256 year = 365 days;
@@ -158,11 +159,12 @@ contract HelperConfig is Script {
             depositClosesAt: closesAt,
             redemptionOpensAt: opensAt + year,
             redemptionClosesAt: closesAt + year,
-            maxCap: 1e6 * 1e6
+            maxCap: 1e6 * 1e6,
+            depositThresholdForWhitelisting: 1000e6
         });
 
         FactoryParams memory factoryParams = FactoryParams({
-            owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
+            owner: owner,
             operator: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8,
             collateralPercentage: COLLATERAL_PERCENTAGE
         });

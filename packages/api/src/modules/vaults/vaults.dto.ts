@@ -95,6 +95,10 @@ export class VaultParamsDto extends EntitiesDto {
   @IsString()
   maxCap: string;
 
+  @ApiProperty({ type: String, example: '1000000000', description: 'Should be in wei with 6 decimals' })
+  @IsString()
+  depositThresholdForWhitelisting: string;
+
   @ApiProperty({
     type: EntitiesDto,
     example: [{ type: 'treasury', address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8', percentage: 0.8 }],

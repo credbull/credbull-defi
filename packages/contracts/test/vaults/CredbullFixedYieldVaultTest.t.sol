@@ -140,7 +140,7 @@ contract CredbullFixedYieldVaultTest is Test {
         vm.stopPrank();
 
         vm.expectRevert(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector);
-        vault.deposit(10 * precision, alice);
+        vault.deposit(1000 * precision, alice);
     }
 
     function test__FixedYieldVault__ExpectACallToWhitelistPlugin() public {
@@ -156,7 +156,7 @@ contract CredbullFixedYieldVaultTest is Test {
 
         vm.expectRevert(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector);
         vm.expectCall(address(vaultParams.kycProvider), abi.encodeCall(CredbullKYCProvider.status, alice));
-        vault.deposit(10 * precision, alice);
+        vault.deposit(1000 * precision, alice);
     }
 
     function test__FixedYieldVault__RevertMaxCapToggleIfNotAdmin() public {

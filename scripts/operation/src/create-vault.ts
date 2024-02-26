@@ -63,7 +63,8 @@ const createParams = (params: {
     activityReward,
     entities,
     tenant: params.tenant,
-    maxCap: parseEther('1000000').toString(),
+    maxCap: (1e6 * 1e6).toString(),
+    depositThresholdForWhitelisting: (1000e6).toString(),
     collateralPercentage: 200,
   };
 };
@@ -96,7 +97,7 @@ export const main = (
     const allowTx = await factory.allowCustodian(custodian);
     await allowTx.wait();
 
-    const kycProvider = addresses.data.find((i) => i.contract_name === 'MockKYCProvider')?.address;
+    const kycProvider = addresses.data.find((i) => i.contract_name === 'CredbullKYCProvider')?.address;
     const asset = addresses.data.find((i) => i.contract_name === 'MockStablecoin')?.address;
     const token = addresses.data.find((i) => i.contract_name === 'MockToken')?.address;
     const createVault = await fetch(

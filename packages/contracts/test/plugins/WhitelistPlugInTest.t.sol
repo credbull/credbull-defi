@@ -55,12 +55,35 @@ contract WhitelistPlugInTest is Test {
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
+        uint256 depositAmount = 1000 * precision;
+
+        vm.startPrank(alice);
+        vaultParams.asset.approve(address(vault), depositAmount);
+
         vm.expectRevert(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector);
-        vault.deposit(10 * precision, alice);
+        vault.deposit(depositAmount, alice);
+        vm.stopPrank();
+    }
+
+    function test__WhitelistVault__ShouldSkipCheckIfDepositIsLessThanThreshold() public {
+        address[] memory whitelistAddresses = new address[](1);
+        whitelistAddresses[0] = alice;
+
+        bool[] memory statuses = new bool[](1);
+        statuses[0] = false;
+
+        uint256 depositAmount = 100 * precision;
+        vm.startPrank(alice);
+        vaultParams.asset.approve(address(vault), depositAmount);
+
+        vault.deposit(depositAmount, alice);
+        vm.stopPrank();
+
+        assertEq(vault.balanceOf(alice), depositAmount);
     }
 
     function test__WhitelistVault__SucessfulDepositOnWhitelistVault() public {
-        uint256 depositAmount = 10 * precision;
+        uint256 depositAmount = 1000 * precision;
         vm.startPrank(alice);
         vaultParams.asset.approve(address(vault), depositAmount);
 

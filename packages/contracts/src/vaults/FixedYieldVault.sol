@@ -15,7 +15,7 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCap
 
     constructor(VaultParams memory params)
         MaturityVault(params)
-        WhitelistPlugIn(params.kycProvider)
+        WhitelistPlugIn(params.kycProvider, params.depositThresholdForWhitelisting)
         MaxCapPlugIn(params.maxCap)
         WindowPlugIn(params.depositOpensAt, params.depositClosesAt, params.redemptionOpensAt, params.redemptionClosesAt)
     {
@@ -28,7 +28,7 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCap
     /// Should check for deposit window
     /// Should check for max cap
     modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {
-        _checkIsWhitelisted(receiver);
+        _checkIsWhitelisted(receiver, assets);
         _checkIsDepositWithinWindow();
         _checkMaxCap(totalAssetDeposited + assets);
         _;

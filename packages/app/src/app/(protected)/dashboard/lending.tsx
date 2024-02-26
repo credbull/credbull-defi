@@ -5,6 +5,7 @@ import {
   CredbullKYCProvider__factory,
   ERC20__factory,
   ERC4626__factory,
+  FixedYieldVault__factory,
   MaxCapPlugIn__factory,
 } from '@credbull/contracts';
 import { Badge, Button, Card, Flex, Group, NumberInput, SimpleGrid, Text } from '@mantine/core';
@@ -94,7 +95,7 @@ function Vault(props: VaultProps) {
 
   const { writeAsync: depositAsync } = useContractWrite({
     address: props.data.address as Address,
-    abi: ERC4626__factory.abi,
+    abi: FixedYieldVault__factory.abi,
     functionName: 'deposit',
     args: [utils.parseUnits((form.values.amount ?? 0).toString(), 'mwei').toBigInt(), props.address],
   });

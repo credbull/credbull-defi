@@ -6,10 +6,13 @@ import { CredbullBaseVault } from "../../../src/base/CredbullBaseVault.sol";
 import { WhitelistPlugIn } from "../../../src/plugins/WhitelistPlugIn.sol";
 
 contract WhitelistVaultMock is CredbullBaseVault, WhitelistPlugIn {
-    constructor(VaultParams memory params) CredbullBaseVault(params) WhitelistPlugIn(params.kycProvider) { }
+    constructor(VaultParams memory params)
+        CredbullBaseVault(params)
+        WhitelistPlugIn(params.kycProvider, params.depositThresholdForWhitelisting)
+    { }
 
     modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {
-        _checkIsWhitelisted(receiver);
+        _checkIsWhitelisted(receiver, assets);
         _;
     }
 

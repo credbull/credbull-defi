@@ -24,5 +24,6 @@ interface ICredbull {
         address custodian;
         address kycProvider;
         uint256 maxCap;
+        uint256 depositThresholdForWhitelisting;
     }
 }
