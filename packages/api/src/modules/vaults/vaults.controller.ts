@@ -16,6 +16,7 @@ import { SupabaseGuard, SupabaseRoles } from '../../clients/supabase/auth/supaba
 import { isKnownError } from '../../utils/errors';
 import { CronGuard } from '../../utils/guards';
 
+import { MatureVaultsService } from './mature-vaults.service';
 import { UpsideVaultParamsDto, VaultParamsDto, VaultsDto } from './vaults.dto';
 import { VaultsService } from './vaults.service';
 
@@ -25,6 +26,7 @@ import { VaultsService } from './vaults.service';
 export class VaultsController {
   constructor(
     private readonly vaults: VaultsService,
+    private readonly mature: MatureVaultsService,
     private readonly logger: ConsoleLogger,
   ) {
     this.logger.setContext(VaultsController.name);
@@ -56,7 +58,7 @@ export class VaultsController {
     type: VaultsDto,
   })
   async matureOutstanding(): Promise<VaultsDto> {
-    const { data, error } = await this.vaults.matureOutstanding();
+    const { data, error } = await this.mature.matureOutstanding();
 
     if (isKnownError(error)) throw new BadRequestException(error);
     if (error) throw new InternalServerErrorException(error);
