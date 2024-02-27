@@ -50,7 +50,13 @@ export class UpdateUpsideTwapService {
   }
 
   private async vaults() {
-    return this.supabaseAdmin.from('vaults').select().eq('type', 'fixed_yield_upside').eq('status', 'ready');
+    return this.supabaseAdmin
+      .from('vaults')
+      .select()
+      .eq('type', 'fixed_yield_upside')
+      .eq('status', 'ready')
+      .lte('deposits_opened_at', 'now()')
+      .gte('deposits_closed_at', 'now()');
   }
 
   private async twap(): Promise<ServiceResponse<BigNumberish>> {
