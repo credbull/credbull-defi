@@ -35,11 +35,9 @@ export class VaultsController {
   @Get('/current')
   @UseGuards(SupabaseGuard)
   @ApiOperation({ summary: 'Returns current active and matured vaults' })
-  @ApiResponse({
-    status: 200,
-    description: 'Success',
-    type: VaultsDto,
-  })
+  @ApiResponse({ status: 200, description: 'Success', type: VaultsDto })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 500, description: 'Internal Error' })
   async current(): Promise<VaultsDto> {
     const { data, error } = await this.vaults.current();
 
@@ -52,11 +50,9 @@ export class VaultsController {
   @Get('/mature-outstanding')
   @UseGuards(CronGuard)
   @ApiOperation({ summary: 'Matures any outstanding vault and returns them' })
-  @ApiResponse({
-    status: 200,
-    description: 'Success',
-    type: VaultsDto,
-  })
+  @ApiResponse({ status: 200, description: 'Success', type: VaultsDto })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 500, description: 'Internal Error' })
   async matureOutstanding(): Promise<VaultsDto> {
     const { data, error } = await this.mature.matureOutstanding();
 
@@ -70,8 +66,9 @@ export class VaultsController {
   @Post('/create-vault')
   @SupabaseRoles(['admin'])
   @ApiOperation({ summary: 'Create a new vault' })
-  @ApiResponse({ status: 400, description: 'Incorrect vault params data' })
   @ApiResponse({ status: 200, description: 'Success', type: VaultsDto })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 500, description: 'Internal Error' })
   async createVault(@Body() dto: VaultParamsDto): Promise<VaultsDto> {
     const { data, error } = await this.vaults.createVault(dto);
 
@@ -85,8 +82,9 @@ export class VaultsController {
   @Post('/create-vault-upside')
   @SupabaseRoles(['admin'])
   @ApiOperation({ summary: 'Create a new vault' })
-  @ApiResponse({ status: 400, description: 'Incorrect vault params data' })
   @ApiResponse({ status: 200, description: 'Success', type: VaultsDto })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 500, description: 'Internal Error' })
   async createVaultUpside(@Body() dto: UpsideVaultParamsDto): Promise<VaultsDto> {
     const { data, error } = await this.vaults.createVault(dto as VaultParamsDto, true, dto.collateralPercentage);
 

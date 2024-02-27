@@ -18,6 +18,8 @@ export class AuthenticationController {
   })
   @ApiOperation({ summary: 'Returns a new access token and refresh token' })
   @ApiResponse({ status: 200, description: 'Success' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 500, description: 'Internal Error' })
   async signIn(@Body() data: SignInDto): Promise<RefreshTokenDto> {
     const { data: auth, error } = await this.supabase.admin().auth.signInWithPassword(data);
 
@@ -34,6 +36,8 @@ export class AuthenticationController {
   })
   @ApiOperation({ summary: 'Returns a new access token and refresh token' })
   @ApiResponse({ status: 200, description: 'Success' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 500, description: 'Internal Error' })
   async refreshToken(@Body() data: CreateAccessTokenDto): Promise<RefreshTokenDto> {
     const { data: auth, error } = await this.supabase
       .admin()
