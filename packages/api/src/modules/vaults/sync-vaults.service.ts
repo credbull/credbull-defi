@@ -51,18 +51,12 @@ export class SyncVaultsService {
       return;
     }
 
-    const vaults = await this.supabaseAdmin.from('vaults').select();
-    if (vaults.error) {
-      this.logger.error(vaults.error);
-      return;
-    }
-
     const chainId = await this.ethers.networkId();
-    await this.processEvents(vaults.data, chainId.toString(), false);
-    await this.processEvents(vaults.data, chainId.toString(), true);
+    await this.processEvents(chainId.toString(), false);
+    await this.processEvents(chainId.toString(), true);
   }
 
-  private async processEvents(vaults: Tables<'vaults'>[], chainId: string, upside: boolean) {
+  private async processEvents(chainId: string, upside: boolean) {
     const factoryAddress = upside
       ? await getFactoryUpsideContractAddress(chainId, this.supabaseAdmin)
       : await getFactoryContractAddress(chainId, this.supabaseAdmin);
@@ -87,14 +81,18 @@ export class SyncVaultsService {
 
     //Add all past events if any
     if (events.data.length > 0) {
-      const vaultsInDB = vaults.map((vault) => vault.address);
+      const vaults = await this.supabaseAdmin.from('vaults').select('address');
+
+      if (vaults.error) {
+        this.logger.error(vaults.error);
+        return;
+      }
+
+      const vaultsInDB = vaults.data.map((vault) => vault.address);
       const vaultsToBeAdded = events.data.filter((event) => !vaultsInDB.includes(event.args.vault));
 
       const processedEvents = await this.processEventData(vaultsToBeAdded, upside);
-      if (processedEvents.error) {
-        this.logger.error(processedEvents.error);
-      }
-      return;
+      if (processedEvents.error) this.logger.error(processedEvents.error);
     }
   }
 
