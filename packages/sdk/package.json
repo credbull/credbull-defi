@@ -1,0 +1,24 @@
+{
+  "name": "@credbull/sdk",
+  "packageManager": "yarn@3.2.3",
+  "scripts": {
+    "dev": "ts-node index.ts",
+    "mock": "ts-node mock/mock.ts",
+    "deposit": "ts-node mock/deposit.ts"
+  },
+  "dependencies": {
+    "@credbull/api": "workspace:^",
+    "@credbull/contracts": "workspace:^",
+    "dotenv": "^16.4.5",
+    "ethers": "5.7.2",
+    "siwe": "^2.1.4",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.20",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

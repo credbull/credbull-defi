@@ -28,7 +28,7 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCap
     /// Should check for deposit window
     /// Should check for max cap
     modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {
-        _checkIsWhitelisted(receiver, assets);
+        _checkIsWhitelisted(receiver, assets + convertToAssets(balanceOf(receiver)));
         _checkIsDepositWithinWindow();
         _checkMaxCap(totalAssetDeposited + assets);
         _;
