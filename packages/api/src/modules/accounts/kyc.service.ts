@@ -70,10 +70,7 @@ export class KycService {
 
       if (!data) {
         const { error } = await responseFromWrite(provider.updateStatus([dto.address], [true]));
-        if (error) {
-          errors.push(error);
-          continue;
-        }
+        if (error) errors.push(error);
       }
     }
     if (errors.length) return { error: new AggregateError(errors) };
