@@ -96,6 +96,23 @@ export class SyncVaultsService {
     }
   }
 
+  private async processEventData(events: VaultDeployedEvent[], upside: boolean): Promise<ServiceResponse<any>> {
+    //Push vault
+    const newVaults = await this.supabaseAdmin
+      .from('vaults')
+      .insert(events.map((e) => this.prepareVaultDataFromEvent(e, upside)))
+      .select();
+    if (newVaults.error) return newVaults;
+    if (!newVaults.data) return { error: NoDataFound };
+
+    const entities = await Promise.all(this.addEntitiesAndDistributionFromEvents(events, newVaults.data));
+    const errors = entities.map((entity) => entity.error).filter((error) => error !== undefined);
+    if (errors.length > 0) return { error: new AggregateError(errors) };
+
+    const ids = newVaults.data.map((v) => v.id);
+    return this.supabaseAdmin.from('vaults').update({ status: 'ready' }).in('id', ids).select();
+  }
+
   private prepareVaultDataFromEvent(event: VaultDeployedEvent, upside: boolean) {
     const { tenant } = JSON.parse(event.args.options) as Pick<VaultParamsDto, 'entities' | 'tenant'>;
     return {
@@ -117,23 +134,6 @@ export class SyncVaultsService {
       const { entities } = JSON.parse(event.args.options) as Pick<VaultParamsDto, 'entities' | 'tenant'>;
       return addEntitiesAndDistribution(entities, vaults[index], this.supabaseAdmin);
     });
-  }
-
-  private async processEventData(events: VaultDeployedEvent[], upside: boolean): Promise<ServiceResponse<any>> {
-    //Push vault
-    const newVaults = await this.supabaseAdmin
-      .from('vaults')
-      .insert(events.map((e) => this.prepareVaultDataFromEvent(e, upside)))
-      .select();
-    if (newVaults.error) return newVaults;
-    if (!newVaults.data) return { error: NoDataFound };
-
-    const entities = await Promise.all(this.addEntitiesAndDistributionFromEvents(events, newVaults.data));
-    const errors = entities.map((entity) => entity.error).filter((error) => error !== undefined);
-    if (errors.length > 0) return { error: new AggregateError(errors) };
-
-    const ids = newVaults.data.map((v) => v.id);
-    return this.supabaseAdmin.from('vaults').update({ status: 'ready' }).in('id', ids).select();
   }
 
   private getSupabaseAdmin() {
