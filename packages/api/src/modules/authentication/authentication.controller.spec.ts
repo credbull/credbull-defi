@@ -3,6 +3,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DeepMockProxy, mockDeep } from 'vitest-mock-extended';
 
+import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { Config } from '../../utils/module';
 
@@ -22,6 +23,8 @@ describe('AuthenticationController', () => {
       imports: [Config.module(), AuthenticationModule],
     })
       .overrideProvider(SupabaseService)
+      .useValue(service)
+      .overrideProvider(SupabaseAdminService)
       .useValue(service)
       .compile();
 

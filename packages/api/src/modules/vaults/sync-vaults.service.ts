@@ -6,12 +6,11 @@ import {
 } from '@credbull/contracts';
 import { VaultDeployedEvent } from '@credbull/contracts/types/CredbullVaultFactory';
 import { ConsoleLogger, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
-import { SupabaseService } from '../../clients/supabase/supabase.service';
+import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { ServiceResponse } from '../../types/responses';
 import { Database, Tables } from '../../types/supabase';
 import { responseFromRead } from '../../utils/contracts';
@@ -30,7 +29,7 @@ export class SyncVaultsService {
 
   constructor(
     private readonly ethers: EthersService,
-    private readonly config: ConfigService,
+    private readonly supabase: SupabaseAdminService,
     private readonly logger: ConsoleLogger,
   ) {
     this.logger.setContext(this.constructor.name);
@@ -43,7 +42,7 @@ export class SyncVaultsService {
   }
 
   private async sync() {
-    this.supabaseAdmin = this.getSupabaseAdmin();
+    this.supabaseAdmin = this.supabase.admin();
 
     const deleteCorrupted = await this.supabaseAdmin.from('vaults').delete().eq('status', 'created');
     if (deleteCorrupted.error) {
@@ -134,13 +133,6 @@ export class SyncVaultsService {
       const { entities } = JSON.parse(event.args.options) as Pick<VaultParamsDto, 'entities' | 'tenant'>;
       return addEntitiesAndDistribution(entities, vaults[index], this.supabaseAdmin);
     });
-  }
-
-  private getSupabaseAdmin() {
-    return SupabaseService.createAdmin(
-      this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_URL'),
-      this.config.getOrThrow('SUPABASE_SERVICE_ROLE_KEY'),
-    );
   }
 
   private async getFactoryContract(addr: string): Promise<CredbullFixedYieldVaultFactory> {

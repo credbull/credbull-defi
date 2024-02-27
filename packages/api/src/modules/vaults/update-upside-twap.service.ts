@@ -1,12 +1,11 @@
 import { CredbullFixedYieldVaultWithUpside, CredbullFixedYieldVaultWithUpside__factory } from '@credbull/contracts';
 import { ConsoleLogger, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { BigNumberish } from 'ethers';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
-import { SupabaseService } from '../../clients/supabase/supabase.service';
+import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { ServiceResponse } from '../../types/responses';
 import { Database } from '../../types/supabase';
 import { responseFromWrite } from '../../utils/contracts';
@@ -17,7 +16,7 @@ export class UpdateUpsideTwapService {
 
   constructor(
     private readonly ethers: EthersService,
-    private readonly config: ConfigService,
+    private readonly supabase: SupabaseAdminService,
     private readonly logger: ConsoleLogger,
   ) {
     this.logger.setContext(this.constructor.name);
@@ -26,7 +25,7 @@ export class UpdateUpsideTwapService {
   @Cron(CronExpression.EVERY_6_HOURS)
   async updateTWAP() {
     this.logger.log('Updating twap data...');
-    this.supabaseAdmin = this.admin();
+    this.supabaseAdmin = this.supabase.admin();
 
     const vaults = await this.vaults();
     if (vaults.error || !vaults.data) {
@@ -62,13 +61,6 @@ export class UpdateUpsideTwapService {
   private async twap(): Promise<ServiceResponse<BigNumberish>> {
     // TODO: replace this whenever we have a real exchange to retrieve the TWAP from
     return Promise.resolve({ data: 100_00 });
-  }
-
-  private admin() {
-    return SupabaseService.createAdmin(
-      this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_URL'),
-      this.config.getOrThrow('SUPABASE_SERVICE_ROLE_KEY'),
-    );
   }
 
   private async contract(addr: string): Promise<CredbullFixedYieldVaultWithUpside> {

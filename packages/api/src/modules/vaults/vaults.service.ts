@@ -11,6 +11,7 @@ import { BigNumber, type ContractTransaction } from 'ethers';
 import * as _ from 'lodash';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
+import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
@@ -37,6 +38,7 @@ export class VaultsService {
   constructor(
     private readonly ethers: EthersService,
     private readonly supabase: SupabaseService,
+    private readonly supabaseAdmin: SupabaseAdminService,
     private readonly custodian: CustodianService,
   ) {}
 
@@ -51,8 +53,8 @@ export class VaultsService {
   ): Promise<ServiceResponse<Tables<'vaults'>>> {
     const chainId = await this.ethers.networkId();
     const factoryAddress = upside
-      ? await getFactoryUpsideContractAddress(chainId.toString(), this.supabase.admin())
-      : await getFactoryContractAddress(chainId.toString(), this.supabase.admin());
+      ? await getFactoryUpsideContractAddress(chainId.toString(), this.supabaseAdmin.admin())
+      : await getFactoryContractAddress(chainId.toString(), this.supabaseAdmin.admin());
 
     if (factoryAddress.error) return factoryAddress;
     if (!factoryAddress.data) return { error: new NotFoundException() };
@@ -82,14 +84,14 @@ export class VaultsService {
     const createdVault = await this.createVaultInDB(params, vaultAddress, !!upside);
     if (createdVault.error) return createdVault;
 
-    const entities = await addEntitiesAndDistribution(params.entities, createdVault.data, this.supabase.admin());
+    const entities = await addEntitiesAndDistribution(params.entities, createdVault.data, this.supabaseAdmin.admin());
     if (entities.error) return entities;
 
     return await this.readyVaultInDB(createdVault.data);
   }
 
   async matureOutstanding(): Promise<ServiceResponse<Tables<'vaults'>[]>> {
-    const vaults = await this.supabase
+    const vaults = await this.supabaseAdmin
       .admin()
       .from('vaults')
       .select('*')
@@ -142,11 +144,11 @@ export class VaultsService {
       tenant: params.tenant,
     } as Tables<'vaults'>;
 
-    return this.supabase.admin().from('vaults').insert(vaultData).select().single();
+    return this.supabaseAdmin.admin().from('vaults').insert(vaultData).select().single();
   }
 
   private async readyVaultInDB(vault: Pick<Tables<'vaults'>, 'id'>) {
-    return this.supabase.admin().from('vaults').update({ status: 'ready' }).eq('id', vault.id).select().single();
+    return this.supabaseAdmin.admin().from('vaults').update({ status: 'ready' }).eq('id', vault.id).select().single();
   }
 
   private async prepareAllTransfers(
@@ -236,7 +238,7 @@ export class VaultsService {
   }
 
   private async distributionConfig(vault: Tables<'vaults'>): Promise<ServiceResponse<DistributionConfig[]>> {
-    return this.supabase
+    return this.supabaseAdmin
       .admin()
       .from('vault_distribution_configs')
       .select('*, vault_entities!inner (type, address)')
@@ -250,7 +252,7 @@ export class VaultsService {
     const maturedOnChain = await responseFromWrite(strategy.mature(this.ethers.overrides()));
     if (maturedOnChain.error) return maturedOnChain;
 
-    return this.supabase.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id).select();
+    return this.supabaseAdmin.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id).select();
   }
 
   private async contract(vault: Tables<'vaults'>): Promise<CredbullFixedYieldVault> {

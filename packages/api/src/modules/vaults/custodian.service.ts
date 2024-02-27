@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { BigNumber } from 'ethers';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
-import { SupabaseService } from '../../clients/supabase/supabase.service';
+import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
 import { responseFromRead, responseFromWrite } from '../../utils/contracts';
@@ -14,7 +14,7 @@ import { CustodianTransferDto } from './custodian.dto';
 export class CustodianService {
   constructor(
     private readonly ethers: EthersService,
-    private readonly supabase: SupabaseService,
+    private readonly supabase: SupabaseAdminService,
   ) {}
 
   async totalAssets(vault: Tables<'vaults'>, custodianAddress: string): Promise<ServiceResponse<BigNumber>> {
