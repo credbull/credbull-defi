@@ -16,12 +16,12 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
     error CredbullVault__InvalidAssetAmount();
     error CredbullVault__UnsupportedDecimalValue();
 
-    /// @notice Address of the custodian to receive the assets on deposit and mint
-    address public immutable custodian;
+    /// @notice Address of the CUSTODIAN to receive the assets on deposit and mint
+    address public immutable CUSTODIAN;
 
     /**
      * @dev
-     * The assets deposited to the vault will be sent to custodian address so this is
+     * The assets deposited to the vault will be sent to CUSTODIAN address so this is
      * separate variable to track the total assets that's been deposited to this vault.
      */
     uint256 public totalAssetDeposited;
@@ -52,13 +52,13 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
      * @param params - Vault parameters
      */
     constructor(VaultParams memory params) ERC4626(params.asset) ERC20(params.shareName, params.shareSymbol) {
-        custodian = params.custodian;
+        CUSTODIAN = params.custodian;
 
         VAULT_DECIMALS = _checkValidDecimalValue(address(params.asset));
     }
 
     /**
-     * @dev - The internal deposit function of ERC4626 overridden to transfer the asset to custodian wallet
+     * @dev - The internal deposit function of ERC4626 overridden to transfer the asset to CUSTODIAN wallet
      * and update the _totalAssetDeposited on deposit/mint
      */
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares)
@@ -73,7 +73,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
         }
 
         totalAssetDeposited += assets;
-        SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
+        SafeERC20.safeTransferFrom(IERC20(asset()), caller, CUSTODIAN, assets);
 
         _mint(receiver, shares);
 

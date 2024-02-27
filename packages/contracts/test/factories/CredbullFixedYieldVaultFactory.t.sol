@@ -37,7 +37,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         assertEq(vault.name(), params.shareName);
         assertEq(vault.symbol(), params.shareSymbol);
         assertEq(address(vault.kycProvider()), params.kycProvider);
-        assertEq(vault.custodian(), params.custodian);
+        assertEq(vault.CUSTODIAN(), params.custodian);
     }
 
     function test__ShouldRevertCreateVaultOnUnAuthorizedUser() public {
