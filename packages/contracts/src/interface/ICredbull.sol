@@ -26,4 +26,7 @@ interface ICredbull {
         uint256 maxCap;
         uint256 depositThresholdForWhitelisting;
     }
+
+    /// @notice - Zero address error
+    error ZeroAddress();
 }

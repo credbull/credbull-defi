@@ -3,6 +3,7 @@
 pragma solidity ^0.8.19;
 
 import { IKYCProvider } from "../interface/IKYCProvider.sol";
+import { ICredbull } from "../interface/ICredbull.sol";
 
 /// @notice - A PlugIn to handle whitelisting
 abstract contract WhitelistPlugIn {
@@ -22,6 +23,10 @@ abstract contract WhitelistPlugIn {
      * @param _kycProvider - Address of the Kyc Provider
      */
     constructor(address _kycProvider, uint256 _depositThresholdForWhitelisting) {
+        if (_kycProvider == address(0)) {
+            revert ICredbull.ZeroAddress();
+        }
+
         kycProvider = IKYCProvider(_kycProvider);
         checkWhitelist = true; // Set the check to true by default
         depositThresholdForWhitelisting = _depositThresholdForWhitelisting;

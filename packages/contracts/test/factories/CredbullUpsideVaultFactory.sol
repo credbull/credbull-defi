@@ -8,22 +8,26 @@ import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { HelperConfig, NetworkConfig } from "../../script/HelperConfig.s.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
+import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
 
 contract CredbullVaultWithUpsideFactoryTest is Test {
     CredbullUpsideVaultFactory private factory;
     DeployVaultFactory private deployer;
     HelperConfig private helperConfig;
+    CredbullKYCProvider private kycProvider;
 
     string private OPTIONS = "{}";
 
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (, factory,, helperConfig) = deployer.runTest();
+        (, factory, kycProvider, helperConfig) = deployer.runTest();
     }
 
     function test__CreateUpsideVaultFromFactory() public {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         ICredbull.VaultParams memory params = config.vaultParams;
+
+        params.kycProvider = address(kycProvider);
 
         vm.prank(config.factoryParams.owner);
         factory.allowCustodian(params.custodian);

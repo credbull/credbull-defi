@@ -52,6 +52,10 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
      * @param params - Vault parameters
      */
     constructor(VaultParams memory params) ERC4626(params.asset) ERC20(params.shareName, params.shareSymbol) {
+        if (params.custodian == address(0) || address(params.asset) == address(0)) {
+            revert ZeroAddress();
+        }
+
         CUSTODIAN = params.custodian;
 
         VAULT_DECIMALS = _checkValidDecimalValue(address(params.asset));

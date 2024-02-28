@@ -10,21 +10,25 @@ import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { CredbullVaultFactory } from "../../src/factories/CredbullVaultFactory.sol";
+import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
 
 contract CredbullFixedYieldVaultFactoryTest is Test {
     CredbullFixedYieldVaultFactory private factory;
     DeployVaultFactory private deployer;
     HelperConfig private helperConfig;
+    CredbullKYCProvider private kycProvider;
+    NetworkConfig config;
 
     string private OPTIONS = "{}";
 
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (factory,,, helperConfig) = deployer.runTest();
+        (factory,, kycProvider, helperConfig) = deployer.runTest();
+        config = helperConfig.getNetworkConfig();
+        config.vaultParams.kycProvider = address(kycProvider);
     }
 
     function test__CreateVaultFromFactory() public {
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
         ICredbull.VaultParams memory params = config.vaultParams;
 
         vm.prank(config.factoryParams.owner);
@@ -41,15 +45,12 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     }
 
     function test__ShouldRevertCreateVaultOnUnAuthorizedUser() public {
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-
         vm.prank(config.factoryParams.owner);
         vm.expectRevert();
         factory.createVault(config.vaultParams, OPTIONS);
     }
 
     function test__ShouldAllowAdminToChangeOperator() public {
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
         address newOperator = makeAddr("new_operator");
 
         vm.startPrank(config.factoryParams.owner);
@@ -89,7 +90,6 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     }
 
     function test__ShouldRevertOnNotAllowedCustodians() public {
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
         ICredbull.VaultParams memory params = config.vaultParams;
 
         vm.prank(config.factoryParams.owner);
@@ -103,8 +103,6 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     }
 
     function test__ShouldAllowAdminToAddCustodians() public {
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-
         vm.prank(config.factoryParams.owner);
         factory.allowCustodian(config.vaultParams.custodian);
 
@@ -112,8 +110,6 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     }
 
     function test__ShoulRemoveCustodianIfExist() public {
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-
         vm.startPrank(config.factoryParams.owner);
         factory.allowCustodian(config.vaultParams.custodian);
         assertTrue(factory.isCustodianAllowed(config.vaultParams.custodian));
@@ -124,15 +120,12 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     }
 
     function test__ShouldRevertAllowAdmingIfNotOwner() public {
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-
         vm.prank(makeAddr("random_addr"));
         vm.expectRevert();
         factory.allowCustodian(config.vaultParams.custodian);
     }
 
     function createVault() internal returns (CredbullFixedYieldVault vault) {
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
         ICredbull.VaultParams memory params = config.vaultParams;
 
         vm.prank(config.factoryParams.owner);
