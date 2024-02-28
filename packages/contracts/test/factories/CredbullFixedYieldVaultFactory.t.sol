@@ -20,7 +20,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
 
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (factory,, helperConfig) = deployer.runTest();
+        (factory,,, helperConfig) = deployer.runTest();
     }
 
     function test__CreateVaultFromFactory() public {

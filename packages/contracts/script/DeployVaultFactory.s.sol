@@ -7,6 +7,7 @@ import { stdJson } from "forge-std/StdJson.sol";
 import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
 import { CredbullFixedYieldVaultFactory } from "../src/factories/CredbullFixedYieldVaultFactory.sol";
 import { CredbullUpsideVaultFactory } from "../src/factories/CredbullUpsideVaultFactory.sol";
+import { CredbullKYCProvider } from "../src/CredbullKYCProvider.sol";
 import { console2 } from "forge-std/console2.sol";
 
 contract DeployVaultFactory is Script {
@@ -16,12 +17,14 @@ contract DeployVaultFactory is Script {
 
     bool private deployFixedYieldFactory;
     bool private deployUpsideFactory;
+    bool private deployCredbullKYCProvider;
 
     function runTest()
         public
         returns (
             CredbullFixedYieldVaultFactory factory,
             CredbullUpsideVaultFactory upsideFactory,
+            CredbullKYCProvider kycProvider,
             HelperConfig helperConfig
         )
     {
@@ -34,6 +37,7 @@ contract DeployVaultFactory is Script {
         returns (
             CredbullFixedYieldVaultFactory factory,
             CredbullUpsideVaultFactory upsideFactory,
+            CredbullKYCProvider kycProvider,
             HelperConfig helperConfig
         )
     {
@@ -47,6 +51,7 @@ contract DeployVaultFactory is Script {
             operator = config.factoryParams.operator;
             deployFixedYieldFactory = true;
             deployUpsideFactory = true;
+            deployCredbullKYCProvider = true;
         } else {
             owner = vm.envAddress("PUBLIC_OWNER_ADDRESS");
             operator = vm.envAddress("PUBLIC_OPERATOR_ADDRESS");
@@ -59,12 +64,15 @@ contract DeployVaultFactory is Script {
 
                 bytes memory vaultFactory = json.parseRaw(".CredbullFixedYieldVaultFactory");
                 bytes memory upsideVaultFactory = json.parseRaw(".CredbullUpsideVaultFactory");
+                bytes memory kycProviderBytes = json.parseRaw(".CredbullKYCProvider");
 
                 deployFixedYieldFactory = vaultFactory.length == 0;
                 deployUpsideFactory = upsideVaultFactory.length == 0;
+                deployCredbullKYCProvider = kycProviderBytes.length == 0;
             } else {
                 deployFixedYieldFactory = true;
                 deployUpsideFactory = true;
+                deployCredbullKYCProvider = true;
             }
         }
 
@@ -82,8 +90,15 @@ contract DeployVaultFactory is Script {
         } else {
             console2.log("!!!!! Deployment skipped for CredbullVaultWithUpsideFactory !!!!!");
         }
+
+        if (deployCredbullKYCProvider) {
+            kycProvider = new CredbullKYCProvider(operator);
+            console2.log("!!!!! Deploying CredbullKYCProvider !!!!!");
+        } else {
+            console2.log("!!!!! Deployment skipped for CredbullKYCProvider !!!!!");
+        }
         vm.stopBroadcast();
 
-        return (factory, upsideFactory, helperConfig);
+        return (factory, upsideFactory, kycProvider, helperConfig);
     }
 }

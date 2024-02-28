@@ -55,7 +55,7 @@ contract HelperConfig is Script {
             collateralPercentage: vm.envUint("COLLATERAL_PERCENTAGE")
         });
 
-        (address token, address usdc, address kycProvider) = deployMocks(factoryParams.operator);
+        (address token, address usdc) = deployMocks();
 
         // no need for vault params when using a real network
         ICredbull.VaultParams memory empty = ICredbull.VaultParams({
@@ -64,7 +64,7 @@ contract HelperConfig is Script {
             owner: address(0),
             operator: address(0),
             custodian: address(0),
-            kycProvider: kycProvider,
+            kycProvider: address(0),
             shareName: "",
             shareSymbol: "",
             promisedYield: 0,
@@ -80,14 +80,12 @@ contract HelperConfig is Script {
         return sepoliaConfig;
     }
 
-    function deployMocks(address operator) internal returns (address, address, address) {
+    function deployMocks() internal returns (address, address) {
         MockToken token;
         MockStablecoin usdc;
-        CredbullKYCProvider kycProvider;
 
         bool deployMockToken = true;
         bool deployMockStableCoin = true;
-        bool deployMockKycProvider = true;
 
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/script/output/dbdata.json");
@@ -97,11 +95,9 @@ contract HelperConfig is Script {
 
             bytes memory mockToken = json.parseRaw(".MockToken");
             bytes memory mockStableCoin = json.parseRaw(".MockStablecoin");
-            bytes memory mockKycProvider = json.parseRaw(".MockKYCProvider");
 
             deployMockToken = test || mockToken.length == 0;
             deployMockStableCoin = test || mockStableCoin.length == 0;
-            deployMockKycProvider = test || mockKycProvider.length == 0;
         }
 
         vm.startBroadcast();
@@ -119,16 +115,9 @@ contract HelperConfig is Script {
             console2.log("!!!!! Deployment skipped for MockStablecoin !!!!!");
         }
 
-        if (deployMockKycProvider) {
-            kycProvider = new CredbullKYCProvider(operator);
-            console2.log("!!!!! Deploying MockKYCProvider !!!!!");
-        } else {
-            console2.log("!!!!! Deployment skipped for MockKYCProvider !!!!!");
-        }
-
         vm.stopBroadcast();
 
-        return (address(token), address(usdc), address(kycProvider));
+        return (address(token), address(usdc));
     }
 
     function getAnvilEthConfig() internal returns (NetworkConfig memory) {
@@ -144,7 +133,7 @@ contract HelperConfig is Script {
         (uint256 opensAt, uint256 closesAt) = getTimeConfig();
         uint256 year = 365 days;
 
-        (address token, address usdc, address kycProvider) = deployMocks(operator);
+        (address token, address usdc) = deployMocks();
 
         ICredbull.VaultParams memory anvilVaultParams = ICredbull.VaultParams({
             asset: IERC20(usdc),
@@ -154,7 +143,7 @@ contract HelperConfig is Script {
             owner: owner,
             operator: operator,
             custodian: custodian,
-            kycProvider: address(kycProvider),
+            kycProvider: address(0),
             promisedYield: PROMISED_FIXED_YIELD,
             depositOpensAt: opensAt,
             depositClosesAt: closesAt,

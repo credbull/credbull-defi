@@ -10,10 +10,14 @@ import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
+import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
+import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
 
 contract CredbullFixedYieldVaultTest is Test {
     CredbullFixedYieldVault private vault;
     HelperConfig private helperConfig;
+    DeployVaultFactory private deployer;
+    CredbullKYCProvider private kycProvider;
 
     ICredbull.VaultParams private vaultParams;
 
@@ -24,9 +28,15 @@ contract CredbullFixedYieldVaultTest is Test {
     uint256 private constant INITIAL_BALANCE = 1000;
 
     function setUp() public {
-        helperConfig = new HelperConfig(true);
+        deployer = new DeployVaultFactory();
+        (,, kycProvider, helperConfig) = deployer.runTest();
+
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         vaultParams = config.vaultParams;
+
+        if (vaultParams.kycProvider == address(0)) {
+            vaultParams.kycProvider = address(kycProvider);
+        }
         vault = new CredbullFixedYieldVault(vaultParams);
 
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();

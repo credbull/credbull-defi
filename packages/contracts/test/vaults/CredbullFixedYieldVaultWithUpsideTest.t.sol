@@ -10,12 +10,16 @@ import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldV
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { MockToken } from "../mocks/MockToken.sol";
 import { console2 } from "forge-std/console2.sol";
+import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
+import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
 
 contract CredbullFixedYieldVaultWithUpsideTest is Test {
     using Math for uint256;
 
     CredbullFixedYieldVaultWithUpside private vault;
     HelperConfig private helperConfig;
+    DeployVaultFactory private deployer;
+    CredbullKYCProvider private kycProvider;
 
     ICredbull.VaultParams private vaultParams;
 
@@ -29,9 +33,17 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     uint256 private precision;
 
     function setUp() public {
+        deployer = new DeployVaultFactory();
+        (,, kycProvider, helperConfig) = deployer.runTest();
+
         helperConfig = new HelperConfig(true);
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         vaultParams = config.vaultParams;
+
+        if (vaultParams.kycProvider == address(0)) {
+            vaultParams.kycProvider = address(kycProvider);
+        }
+
         vault = new CredbullFixedYieldVaultWithUpside(vaultParams, vaultParams.token, REQUIRED_COLLATERAL_PERCENTAGE);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
 

@@ -8,9 +8,13 @@ import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
+import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
+import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
 
 contract WhitelistPlugInTest is Test {
     WhitelistVaultMock private vault;
+    DeployVaultFactory private deployer;
+    CredbullKYCProvider private kycProvider;
 
     ICredbull.VaultParams private vaultParams;
     HelperConfig private helperConfig;
@@ -22,9 +26,16 @@ contract WhitelistPlugInTest is Test {
     uint256 private constant INITIAL_BALANCE = 1e6;
 
     function setUp() public {
-        helperConfig = new HelperConfig(true);
+        deployer = new DeployVaultFactory();
+        (,, kycProvider, helperConfig) = deployer.runTest();
+
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         vaultParams = config.vaultParams;
+
+        if (vaultParams.kycProvider == address(0)) {
+            vaultParams.kycProvider = address(kycProvider);
+        }
+
         vault = new WhitelistVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
 
