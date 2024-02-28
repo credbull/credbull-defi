@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import { IKYCProvider } from "./interface/IKYCProvider.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { IKYCProvider } from "./interface/IKYCProvider.sol";
 
 contract CredbullKYCProvider is IKYCProvider, Ownable {
     error LengthMismatch();

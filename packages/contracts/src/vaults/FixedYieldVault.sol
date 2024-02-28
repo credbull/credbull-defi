@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.19;
 
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { MaturityVault } from "../extensions/MaturityVault.sol";
 import { WhitelistPlugIn } from "../plugins/WhitelistPlugIn.sol";
 import { WindowPlugIn } from "../plugins/WindowPlugIn.sol";
-import { MaturityVault } from "../extensions/MaturityVault.sol";
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { MaxCapPlugIn } from "../plugins/MaxCapPlug.sol";
 
 /// @notice - A Fixed yield vault
