@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import * as _ from 'lodash';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
+import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
@@ -15,6 +16,7 @@ export class KycService {
   constructor(
     private readonly ethers: EthersService,
     private readonly supabase: SupabaseService,
+    private readonly supabaseAdmin: SupabaseAdminService,
   ) {}
 
   async status(): Promise<ServiceResponse<KYCStatus>> {
@@ -37,7 +39,7 @@ export class KycService {
   }
 
   async whitelist(dto: WhitelistAccountDto): Promise<ServiceResponse<Tables<'kyc_events'>[]>> {
-    const admin = this.supabase.admin();
+    const admin = this.supabaseAdmin.admin();
 
     const wallet = await admin
       .from('user_wallets')
@@ -70,10 +72,7 @@ export class KycService {
 
       if (!data) {
         const { error } = await responseFromWrite(provider.updateStatus([dto.address], [true]));
-        if (error) {
-          errors.push(error);
-          continue;
-        }
+        if (error) errors.push(error);
       }
     }
     if (errors.length) return { error: new AggregateError(errors) };

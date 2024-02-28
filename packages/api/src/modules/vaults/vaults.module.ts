@@ -6,6 +6,7 @@ import { CronStrategy } from '../../utils/guards';
 import * as logger from '../../utils/logger';
 
 import { CustodianService } from './custodian.service';
+import { MatureVaultsService } from './mature-vaults.service';
 import { SyncVaultsService } from './sync-vaults.service';
 import { UpdateUpsideTwapService } from './update-upside-twap.service';
 import { VaultsController } from './vaults.controller';
@@ -15,6 +16,7 @@ import { VaultsService } from './vaults.service';
   imports: [SupabaseModule, EthersModule],
   providers: [
     VaultsService,
+    MatureVaultsService,
     CustodianService,
     CronStrategy,
     SyncVaultsService,
@@ -22,6 +24,6 @@ import { VaultsService } from './vaults.service';
     { provide: ConsoleLogger, useFactory: logger.factory, scope: Scope.TRANSIENT },
   ],
   controllers: [VaultsController],
-  exports: [VaultsService, CustodianService, SyncVaultsService, UpdateUpsideTwapService],
+  exports: [VaultsService, MatureVaultsService, CustodianService, SyncVaultsService, UpdateUpsideTwapService],
 })
 export class VaultsModule {}

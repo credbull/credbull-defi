@@ -4,19 +4,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { VaultSchema } from '../../types/db.dto';
 
+import { MatureVaultsService } from './mature-vaults.service';
 import { DistributionConfig, DistributionConfigSchema } from './vaults.domain';
-import { VaultsService } from './vaults.service';
 
-describe('VaultService', () => {
+describe('MatureVaultService', () => {
   // Ideally we don't want to test private methods, but given that VaultService relies heavily on
   // external calls, I took that approach of splitting the logic to create the transfers dtos from the main method
   // and test the private methods that create the dtos directly.
-  let prepareVaultTransfers: (service: object) => (typeof VaultsService.prototype)['prepareVaultTransfers'];
-  let prepareAllTransfers: (service: object) => (typeof VaultsService.prototype)['prepareAllTransfers'];
+  let prepareVaultTransfers: (service: object) => (typeof MatureVaultsService.prototype)['prepareVaultTransfers'];
+  let prepareAllTransfers: (service: object) => (typeof MatureVaultsService.prototype)['prepareAllTransfers'];
 
   beforeEach(async () => {
-    prepareVaultTransfers = (service: object) => VaultsService.prototype['prepareVaultTransfers'].bind(service);
-    prepareAllTransfers = (service: object) => VaultsService.prototype['prepareAllTransfers'].bind(service);
+    prepareVaultTransfers = (service: object) => MatureVaultsService.prototype['prepareVaultTransfers'].bind(service);
+    prepareAllTransfers = (service: object) => MatureVaultsService.prototype['prepareAllTransfers'].bind(service);
   });
 
   it('should return just a single transfer to a vault', async () => {

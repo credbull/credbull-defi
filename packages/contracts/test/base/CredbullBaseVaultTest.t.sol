@@ -9,9 +9,8 @@ import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { CredbullBaseVault } from "../../src/base/CredbullBaseVault.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { MockToken } from "../mocks/MockToken.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { console2 } from "forge-std/console2.sol";
+//import { console2 } from "forge-std/console2.sol";
 
 contract CredbullBaseVaultTest is Test {
     using Math for uint256;
@@ -47,7 +46,7 @@ contract CredbullBaseVaultTest is Test {
     }
 
     function test__BaseVault__CustodianAddress() public {
-        assertEq(vault.custodian(), vaultParams.custodian);
+        assertEq(vault.CUSTODIAN(), vaultParams.custodian);
     }
 
     function test__BaseVault__DepositAssetsAndGetShares() public {

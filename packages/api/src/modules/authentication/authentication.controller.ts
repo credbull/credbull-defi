@@ -2,7 +2,7 @@ import { Log } from '@algoan/nestjs-logging-interceptor';
 import { BadRequestException, Body, Controller, InternalServerErrorException, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { SupabaseService } from '../../clients/supabase/supabase.service';
+import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { isKnownError } from '../../utils/errors';
 
 import { CreateAccessTokenDto, RefreshTokenDto, SignInDto } from './authentication.dto';
@@ -10,7 +10,7 @@ import { CreateAccessTokenDto, RefreshTokenDto, SignInDto } from './authenticati
 @Controller('auth')
 @ApiTags('Authentication')
 export class AuthenticationController {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(private readonly supabase: SupabaseAdminService) {}
 
   @Post('api/sign-in')
   @Log({
@@ -18,6 +18,8 @@ export class AuthenticationController {
   })
   @ApiOperation({ summary: 'Returns a new access token and refresh token' })
   @ApiResponse({ status: 200, description: 'Success' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 500, description: 'Internal Error' })
   async signIn(@Body() data: SignInDto): Promise<RefreshTokenDto> {
     const { data: auth, error } = await this.supabase.admin().auth.signInWithPassword(data);
 
@@ -34,6 +36,8 @@ export class AuthenticationController {
   })
   @ApiOperation({ summary: 'Returns a new access token and refresh token' })
   @ApiResponse({ status: 200, description: 'Success' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 500, description: 'Internal Error' })
   async refreshToken(@Body() data: CreateAccessTokenDto): Promise<RefreshTokenDto> {
     const { data: auth, error } = await this.supabase
       .admin()

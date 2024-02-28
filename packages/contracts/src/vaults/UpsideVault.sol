@@ -70,7 +70,7 @@ contract UpsideVault is FixedYieldVault {
         }
 
         SafeERC20.safeTransferFrom(token, _msgSender(), address(this), collateral);
-        SafeERC20.safeTransferFrom(IERC20(asset()), caller, custodian, assets);
+        SafeERC20.safeTransferFrom(IERC20(asset()), caller, CUSTODIAN, assets);
 
         _mint(receiver, shares);
 

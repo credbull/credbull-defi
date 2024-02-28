@@ -39,20 +39,24 @@ export async function addEntitiesAndDistribution(
     vault_id: vault.id,
     tenant: vault.tenant,
   }));
-
   const entitiesData = await supabase.from('vault_entities').insert(entitiesMappedData).select();
   if (entitiesData.error) return entitiesData;
   if (!entitiesData.data) return { error: new NotFoundException() };
 
-  const filteredEntities = entities.filter((i) => Boolean(i.percentage)) as Required<EntitiesDto>[];
-  const distributionData = filteredEntities.map(({ type, percentage }, order) => ({ order, type, percentage }));
-
   if (entitiesData.data.length > 0) {
-    const distributionMappedData = distributionData.map((en) => {
-      const entity = entitiesData.data.filter((i) => i.type === en.type)[0];
-      return { entity_id: entity.id, percentage: en.percentage, order: en.order, tenant: entity.tenant };
-    });
+    const filteredEntities = entities.filter((i) => Boolean(i.percentage)) as Required<EntitiesDto>[];
+    if (filteredEntities.length === 0) return { data: 'Vault created successfully' };
 
+    const distributionData = filteredEntities.map(({ type, percentage }, order) => ({ order, type, percentage }));
+    const distributionMappedData = distributionData.map((en) => {
+      const entity = entitiesData.data.find((i) => i.type === en.type)!;
+      return {
+        entity_id: entity.id,
+        tenant: entity.tenant,
+        percentage: en.percentage,
+        order: en.order,
+      };
+    });
     const configData = await supabase.from('vault_distribution_configs').insert(distributionMappedData).select();
     if (configData.error) return configData;
   }

@@ -6,12 +6,11 @@ import {
 } from '@credbull/contracts';
 import { VaultDeployedEvent } from '@credbull/contracts/types/CredbullVaultFactory';
 import { ConsoleLogger, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
-import { SupabaseService } from '../../clients/supabase/supabase.service';
+import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { ServiceResponse } from '../../types/responses';
 import { Database, Tables } from '../../types/supabase';
 import { responseFromRead } from '../../utils/contracts';
@@ -30,7 +29,7 @@ export class SyncVaultsService {
 
   constructor(
     private readonly ethers: EthersService,
-    private readonly config: ConfigService,
+    private readonly supabase: SupabaseAdminService,
     private readonly logger: ConsoleLogger,
   ) {
     this.logger.setContext(this.constructor.name);
@@ -43,7 +42,7 @@ export class SyncVaultsService {
   }
 
   private async sync() {
-    this.supabaseAdmin = this.getSupabaseAdmin();
+    this.supabaseAdmin = this.supabase.admin();
 
     const deleteCorrupted = await this.supabaseAdmin.from('vaults').delete().eq('status', 'created');
     if (deleteCorrupted.error) {
@@ -51,18 +50,12 @@ export class SyncVaultsService {
       return;
     }
 
-    const vaults = await this.supabaseAdmin.from('vaults').select();
-    if (vaults.error) {
-      this.logger.error(vaults.error);
-      return;
-    }
-
     const chainId = await this.ethers.networkId();
-    await this.processEvents(vaults.data, chainId.toString(), false);
-    await this.processEvents(vaults.data, chainId.toString(), true);
+    await this.processEvents(chainId.toString(), false);
+    await this.processEvents(chainId.toString(), true);
   }
 
-  private async processEvents(vaults: Tables<'vaults'>[], chainId: string, upside: boolean) {
+  private async processEvents(chainId: string, upside: boolean) {
     const factoryAddress = upside
       ? await getFactoryUpsideContractAddress(chainId, this.supabaseAdmin)
       : await getFactoryContractAddress(chainId, this.supabaseAdmin);
@@ -87,15 +80,36 @@ export class SyncVaultsService {
 
     //Add all past events if any
     if (events.data.length > 0) {
-      const vaultsInDB = vaults.map((vault) => vault.address);
+      const vaults = await this.supabaseAdmin.from('vaults').select('address');
+
+      if (vaults.error) {
+        this.logger.error(vaults.error);
+        return;
+      }
+
+      const vaultsInDB = vaults.data.map((vault) => vault.address);
       const vaultsToBeAdded = events.data.filter((event) => !vaultsInDB.includes(event.args.vault));
 
       const processedEvents = await this.processEventData(vaultsToBeAdded, upside);
-      if (processedEvents.error) {
-        this.logger.error(processedEvents.error);
-      }
-      return;
+      if (processedEvents.error) this.logger.error(processedEvents.error);
     }
+  }
+
+  private async processEventData(events: VaultDeployedEvent[], upside: boolean): Promise<ServiceResponse<any>> {
+    //Push vault
+    const newVaults = await this.supabaseAdmin
+      .from('vaults')
+      .insert(events.map((e) => this.prepareVaultDataFromEvent(e, upside)))
+      .select();
+    if (newVaults.error) return newVaults;
+    if (!newVaults.data) return { error: NoDataFound };
+
+    const entities = await Promise.all(this.addEntitiesAndDistributionFromEvents(events, newVaults.data));
+    const errors = entities.map((entity) => entity.error).filter((error) => error !== undefined);
+    if (errors.length > 0) return { error: new AggregateError(errors) };
+
+    const ids = newVaults.data.map((v) => v.id);
+    return this.supabaseAdmin.from('vaults').update({ status: 'ready' }).in('id', ids).select();
   }
 
   private prepareVaultDataFromEvent(event: VaultDeployedEvent, upside: boolean) {
@@ -119,30 +133,6 @@ export class SyncVaultsService {
       const { entities } = JSON.parse(event.args.options) as Pick<VaultParamsDto, 'entities' | 'tenant'>;
       return addEntitiesAndDistribution(entities, vaults[index], this.supabaseAdmin);
     });
-  }
-
-  private async processEventData(events: VaultDeployedEvent[], upside: boolean): Promise<ServiceResponse<any>> {
-    //Push vault
-    const newVaults = await this.supabaseAdmin
-      .from('vaults')
-      .insert(events.map((e) => this.prepareVaultDataFromEvent(e, upside)))
-      .select();
-    if (newVaults.error) return newVaults;
-    if (!newVaults.data) return { error: NoDataFound };
-
-    const entities = await Promise.all(this.addEntitiesAndDistributionFromEvents(events, newVaults.data));
-    const errors = entities.map((entity) => entity.error).filter((error) => error !== undefined);
-    if (errors.length > 0) return { error: new AggregateError(errors) };
-
-    const ids = newVaults.data.map((v) => v.id);
-    return this.supabaseAdmin.from('vaults').update({ status: 'ready' }).in('id', ids).select();
-  }
-
-  private getSupabaseAdmin() {
-    return SupabaseService.createAdmin(
-      this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_URL'),
-      this.config.getOrThrow('SUPABASE_SERVICE_ROLE_KEY'),
-    );
   }
 
   private async getFactoryContract(addr: string): Promise<CredbullFixedYieldVaultFactory> {

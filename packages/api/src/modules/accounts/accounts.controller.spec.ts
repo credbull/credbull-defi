@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeepMockProxy, mockDeep } from 'vitest-mock-extended';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
+import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { Config } from '../../utils/module';
 
@@ -32,6 +33,8 @@ describe('AccountsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [Config.module(), AccountsModule],
     })
+      .overrideProvider(SupabaseAdminService)
+      .useValue(service)
       .overrideProvider(SupabaseService)
       .useValue(service)
       .overrideProvider(EthersService)
@@ -86,7 +89,7 @@ describe('AccountsController', () => {
     select.mockResolvedValueOnce({ data: [] } as any);
 
     admin.from.mockReturnValue({ select, insert } as any);
-    ethers.deployer.mockResolvedValue({} as any);
+    ethers.operator.mockResolvedValue({} as any);
 
     kyc.status.mockResolvedValueOnce(false);
     kyc.updateStatus.mockResolvedValueOnce({} as any);

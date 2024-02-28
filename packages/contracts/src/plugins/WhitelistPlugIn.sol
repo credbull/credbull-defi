@@ -16,7 +16,7 @@ abstract contract WhitelistPlugIn {
     bool public checkWhitelist;
 
     /// @notice - Deposit threshold amount to check for whitelisting
-    uint256 depositThresholdForWhitelisting;
+    uint256 public depositThresholdForWhitelisting;
 
     /**
      * @param _kycProvider - Address of the Kyc Provider
