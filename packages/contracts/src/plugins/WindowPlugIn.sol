@@ -62,17 +62,17 @@ abstract contract WindowPlugIn {
         }
     }
 
-    ///@notice - Check for deposit window
+    /// @notice - Check for deposit window
     function _checkIsDepositWithinWindow() internal view virtual {
         _checkIsWithinWindow(depositOpensAtTimestamp, depositClosesAtTimestamp);
     }
 
-    ///@notice Check for withdraw window
+    /// @notice Check for withdraw window
     function _checkIsWithdrawWithinWindow() internal view virtual {
         _checkIsWithinWindow(redemptionOpensAtTimestamp, redemptionClosesAtTimestamp);
     }
 
-    ///@notice - Function to update all timestamps
+    /// @notice - Function to update all timestamps
     function _updateWindow(uint256 _depositOpen, uint256 _depositClose, uint256 _withdrawOpen, uint256 _withdrawClose)
         internal
         virtual
@@ -83,7 +83,7 @@ abstract contract WindowPlugIn {
         redemptionClosesAtTimestamp = _withdrawClose;
     }
 
-    ///@notice - Function to toggle check for window
+    /// @notice - Function to toggle check for window
     function _toggleWindowCheck(bool status) internal {
         checkWindow = status;
     }

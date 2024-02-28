@@ -6,7 +6,7 @@ import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { FixedYieldVault } from "./FixedYieldVault.sol";
 
-///@notice - Upside vault
+/// @notice - Upside vault
 contract UpsideVault is FixedYieldVault {
     using Math for uint256;
 
@@ -48,7 +48,7 @@ contract UpsideVault is FixedYieldVault {
         }
     }
 
-    ///@dev - Overridden internal deposit method to handle collateral
+    /// @dev - Overridden internal deposit method to handle collateral
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares)
         internal
         override
@@ -101,13 +101,13 @@ contract UpsideVault is FixedYieldVault {
         emit Withdraw(caller, receiver, owner, assets, shares);
     }
 
-    ///@notice - Get the collateral amount to deposit for the given asset
+    /// @notice - Get the collateral amount to deposit for the given asset
     function getCollateralAmount(uint256 assets) public view virtual returns (uint256) {
         return
             ((assets * additionalPrecision).mulDiv(collateralPercentage, MAX_PERCENTAGE)).mulDiv(MAX_PERCENTAGE, twap);
     }
 
-    ///@notice - Get the collateral amount to redeem for the given shares
+    /// @notice - Get the collateral amount to redeem for the given shares
     function calculateTokenRedemption(uint256 shares, address account) public view virtual returns (uint256) {
         if (balanceOf(account) < shares) {
             revert CredbullVault__InsufficientShareBalance();
@@ -117,7 +117,7 @@ contract UpsideVault is FixedYieldVault {
         return totalCollateralDeposited.mulDiv(vaultPercent, PRECISION);
     }
 
-    ///@notice - Update the twap value
+    /// @notice - Update the twap value
     function setTWAP(uint256 _twap) public onlyRole(OPERATOR_ROLE) {
         twap = _twap;
     }
