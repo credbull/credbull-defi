@@ -36,17 +36,19 @@ config();
     await usdc.approve(vaultAddress, depositAmount);
     
     //Deposit through SDK
-    await sdk.deposit(vaultAddress, depositAmount);
+    await sdk.deposit(vaultAddress, depositAmount, userSigner.address);
 
     const shares = BigNumber.from('100000000');
     const vault = await sdk.getVaultInstance(vaultAddress);
 
-
     console.log((await vault.balanceOf(userSigner.address)).toString());
 
     await usdc.mint(vaultAddress, depositAmount);
+    //Skipping window check
+    await vault.toggleWindowCheck(false);
+    await vault.toggleMaturityCheck(false);
     //Redeem through SDK
-    await sdk.redeem(vaultAddress, shares);
+    await sdk.redeem(vaultAddress, shares, userSigner.address);
 
     console.log((await vault.balanceOf(userSigner.address)).toString());
 

@@ -62,8 +62,8 @@ config();
     const vault = await sdkUser1.getVaultInstance(vaultAddress);
 
     //Deposit through SDK
-    await sdkUser1.deposit(vaultAddress, depositAmount);
-    await sdkUser2.deposit(vaultAddress, depositAmount);
+    await sdkUser1.deposit(vaultAddress, depositAmount, user1Signer.address);
+    await sdkUser2.deposit(vaultAddress, depositAmount, user2Signer.address);
     console.log("========================== Deposit completed! =====================");
     console.log("User1 Shares:", (await vault.balanceOf(user1Signer.address)).toString());
     console.log("User2 Shares:", (await vault.balanceOf(user2Signer.address)).toString());
@@ -75,8 +75,8 @@ config();
     await vault.connect(admin).toggleWindowCheck(false);
 
     // //Redeem through SDK
-    await sdkUser1.redeem(vaultAddress, shares);
-    await sdkUser2.redeem(vaultAddress, shares);
+    await sdkUser1.redeem(vaultAddress, shares, user1Signer.address);
+    await sdkUser2.redeem(vaultAddress, shares, user2Signer.address);
     console.log("========================== Redeem completed! =====================");
     console.log("User1 Shares:", (await vault.balanceOf(user1Signer.address)).toString());
     console.log("User2 Shares:", (await vault.balanceOf(user2Signer.address)).toString());

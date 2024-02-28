@@ -1,11 +1,13 @@
 import { ServiceResponse } from "@credbull/api";
 import { Tables } from "@credbull/api";
-import { BigNumber, Signer } from 'ethers';
+import { BigNumber, Signer, providers } from 'ethers';
 import { CredbullFixedYieldVault__factory  } from "@credbull/contracts";
+import { decodeError } from "./mock/utils/helpers";
 
 export class CredbullSDK {
     private SERVICE_URL = 'http://localhost:3001';
-    constructor(private access_token: string, private signer: Signer) { }
+    constructor(private access_token: string, private signer: Signer | providers.Provider) {
+    }
 
     private headers() {
         return {
@@ -34,15 +36,13 @@ export class CredbullSDK {
     }
 
     /// Deposit token to the given vault address
-    async deposit(vaultAddress: string, amount: BigNumber) {
+    async deposit(vaultAddress: string, amount: BigNumber, receiver: string) {
         const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
-        return await vault.deposit(amount, await this.signer.getAddress());
+        return await vault.deposit(amount, receiver);
     }
 
-    async redeem(vaultAddress: string, shares: BigNumber) {
+    async redeem(vaultAddress: string, shares: BigNumber, receiver: string) {
         const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
-        const receiver = await this.signer.getAddress();
-        // await vault.estimateGas.redeem(shares, receiver, receiver);
         const res = await vault.redeem(shares, receiver, receiver);
         await res.wait();
     }
