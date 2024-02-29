@@ -1,7 +1,6 @@
 import { CredbullSDK } from "..";
-import { generateSigner, linkWalletMessage, login, signer } from './utils/helpers';
+import { __mockMint, generateSigner, login, signer } from './utils/helpers';
 import { BigNumber, utils } from 'ethers';
-import { MockStablecoin__factory  } from "@credbull/contracts";
 import { config } from 'dotenv';
 
 config();
@@ -36,45 +35,49 @@ config();
     const vaults = await sdkUser1.getAllVaults();
     console.log(vaults);
 
-    const message1 = await linkWalletMessage(user1Signer);
-    const signature1 = await user1Signer.signMessage(message1);
-
-    const message2 = await linkWalletMessage(user2Signer);
-    const signature2 = await user1Signer.signMessage(message2);
-
     //Link wallet through SDK
-    await sdkUser1.linkWallet(message1, signature1);
-    await sdkUser2.linkWallet(message2, signature2);
+    await sdkUser1.linkWallet();
+    await sdkUser2.linkWallet();
   
     //Prepare for deposit
     const vaultAddress = vaults.data ? vaults.data[0].address : "";
+    const vault = await sdkUser1.getVaultInstance(vaultAddress);
+
     const depositAmount = BigNumber.from('100000000');
 
+    //Mock mint for users - only for testing
+    if(process.env.NODE_ENV === 'development') {
+        await __mockMint(user1Signer.address, depositAmount, vault, user1Signer);
+        await __mockMint(user2Signer.address, depositAmount, vault, user2Signer);
+    }
+
     const usdc = await sdkUser1.getAssetInstance(vaultAddress);
-    await usdc.mint(user1Signer.address, depositAmount);
-    await usdc.mint(user2Signer.address, depositAmount);
 
     await usdc.connect(user1Signer).approve(vaultAddress, depositAmount);
     await usdc.connect(user2Signer).approve(vaultAddress, depositAmount);
 
-    const vault = await sdkUser1.getVaultInstance(vaultAddress);
-
     //Deposit through SDK
     await sdkUser1.deposit(vaultAddress, depositAmount, user1Signer.address);
     await sdkUser2.deposit(vaultAddress, depositAmount, user2Signer.address);
+
     console.log("========================== Deposit completed! =====================");
     console.log("User1 Shares:", (await vault.balanceOf(user1Signer.address)).toString());
     console.log("User2 Shares:", (await vault.balanceOf(user2Signer.address)).toString());
 
     const shares = depositAmount;
 
-    await usdc.mint(vaultAddress, depositAmount.mul(2));
-    //Skipping window check
-    await vault.connect(admin).toggleWindowCheck(false);
+    //Only for testing - Mature vault and other admin ops
+    if(process.env.NODE_ENV === 'development') {
+        await __mockMint(vaultAddress, depositAmount.mul(2), vault, user1Signer);
+        //Skipping window check
+        await vault.connect(admin).toggleWindowCheck(false);
+        await vault.connect(admin).toggleMaturityCheck(false);
+    }
 
-    // //Redeem through SDK
+    //Redeem through SDK
     await sdkUser1.redeem(vaultAddress, shares, user1Signer.address);
     await sdkUser2.redeem(vaultAddress, shares, user2Signer.address);
+    console.log((await usdc.balanceOf(user1Signer.address)).toString());
     console.log("========================== Redeem completed! =====================");
     console.log("User1 Shares:", (await vault.balanceOf(user1Signer.address)).toString());
     console.log("User2 Shares:", (await vault.balanceOf(user2Signer.address)).toString());

@@ -1,6 +1,7 @@
 import crypto from 'crypto';
-import { Wallet, providers } from 'ethers';
+import { Wallet, providers, BigNumber, Signer } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
+import { CredbullFixedYieldVault, MockStablecoin__factory } from "@credbull/contracts";
 
 
 export const headers = (session?: Awaited<ReturnType<typeof login>>) => {
@@ -22,20 +23,7 @@ export const login = async (email: string, password: string, opts?: { admin: boo
   return signIn.json();
 };
 
-export const linkWalletMessage = async (signer: Wallet) => {
-  const chainId = await signer.getChainId();
-  const preMessage = new SiweMessage({
-    domain: 'localhost:3000',
-    address: signer.address,
-    statement: 'By connecting your wallet, you agree to the Terms of Service and Privacy Policy.',
-    uri: 'http://localhost:3000',
-    version: '1',
-    chainId,
-    nonce: generateNonce(),
-  });
 
-  return preMessage.prepareMessage();
-};
 
 export const signer = (privateKey: string) => {
   return new Wallet(privateKey,  new providers.JsonRpcProvider(`http://localhost:8545`));
@@ -63,4 +51,11 @@ export const decodeError = (contract:any, err: String) => {
     const errorName = contractInterface.getError(selecter).name;
     console.log(errorName);
     console.log(res.toString());
+}
+
+export const __mockMint = async (to: string, amount: BigNumber, vault: CredbullFixedYieldVault, signer: Signer | providers.Provider) => {
+  const assetAddress = await vault.asset();
+  const asset = MockStablecoin__factory.connect(assetAddress, signer);
+
+  await asset.mint(to, amount);
 }
