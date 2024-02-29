@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.19;
 
-import { CredbullBaseVault } from "../base/CredbullBaseVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
+import { CredbullBaseVault } from "../base/CredbullBaseVault.sol";
 
 abstract contract MaturityVault is CredbullBaseVault {
     using Math for uint256;
