@@ -148,9 +148,12 @@ contract CredbullFixedYieldVaultTest is Test {
         vm.startPrank(vaultParams.operator);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
+        uint256 depositAmount = 1000 * precision;
 
-        vm.expectRevert(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector);
-        vault.deposit(1000 * precision, alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector, alice, depositAmount)
+        );
+        vault.deposit(depositAmount, alice);
     }
 
     function test__FixedYieldVault__ExpectACallToWhitelistPlugin() public {
@@ -164,9 +167,12 @@ contract CredbullFixedYieldVaultTest is Test {
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
-        vm.expectRevert(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector);
+        uint256 depositAmount = 1000 * precision;
+        vm.expectRevert(
+            abi.encodeWithSelector(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector, alice, depositAmount)
+        );
         vm.expectCall(address(vaultParams.kycProvider), abi.encodeCall(CredbullKYCProvider.status, alice));
-        vault.deposit(1000 * precision, alice);
+        vault.deposit(depositAmount, alice);
     }
 
     function test__FixedYieldVault__RevertMaxCapToggleIfNotAdmin() public {

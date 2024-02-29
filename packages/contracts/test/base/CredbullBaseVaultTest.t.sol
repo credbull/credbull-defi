@@ -132,7 +132,7 @@ contract CredbullBaseVaultTest is Test {
     function test__ShouldRevertIfDecimalIsNotSupported() public {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         vaultParams = config.vaultParams;
-        vm.expectRevert(CredbullBaseVault.CredbullVault__UnsupportedDecimalValue.selector);
+        vm.expectRevert(abi.encodeWithSelector(CredbullBaseVault.CredbullVault__UnsupportedDecimalValue.selector, 24));
         vm.mockCall(address(vaultParams.asset), abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(24));
         new CredbullBaseVaultMock(vaultParams);
     }
@@ -276,7 +276,7 @@ contract CredbullBaseVaultTest is Test {
     function depositWithRevert(address user, uint256 assets) internal returns (uint256 shares) {
         vm.startPrank(user);
         vaultParams.asset.approve(address(vault), assets);
-        vm.expectRevert(CredbullBaseVault.CredbullVault__InvalidAssetAmount.selector);
+        vm.expectRevert(abi.encodeWithSelector(CredbullBaseVault.CredbullVault__InvalidAssetAmount.selector, assets));
         vm.warp(vaultParams.depositOpensAt);
         shares = vault.deposit(assets, alice);
         vm.stopPrank();

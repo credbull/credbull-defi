@@ -13,8 +13,8 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
     using Math for uint256;
 
     error CredbullVault__TransferOutsideEcosystem();
-    error CredbullVault__InvalidAssetAmount();
-    error CredbullVault__UnsupportedDecimalValue();
+    error CredbullVault__InvalidAssetAmount(uint256);
+    error CredbullVault__UnsupportedDecimalValue(uint8);
 
     /// @notice Address of the CUSTODIAN to receive the assets on deposit and mint
     address public immutable CUSTODIAN;
@@ -73,7 +73,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
     {
         (, uint256 reminder) = assets.tryMod(10 ** VAULT_DECIMALS);
         if (reminder > 0) {
-            revert CredbullVault__InvalidAssetAmount();
+            revert CredbullVault__InvalidAssetAmount(assets);
         }
 
         totalAssetDeposited += assets;
@@ -119,7 +119,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
         uint8 decimal = ERC20(token).decimals();
 
         if (decimal > MAX_DECIMAL || decimal < MIN_DECIMAL) {
-            revert CredbullVault__UnsupportedDecimalValue();
+            revert CredbullVault__UnsupportedDecimalValue(decimal);
         }
 
         return decimal;

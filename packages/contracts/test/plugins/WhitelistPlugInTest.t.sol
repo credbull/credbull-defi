@@ -71,7 +71,9 @@ contract WhitelistPlugInTest is Test {
         vm.startPrank(alice);
         vaultParams.asset.approve(address(vault), depositAmount);
 
-        vm.expectRevert(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector, alice, depositAmount)
+        );
         vault.deposit(depositAmount, alice);
         vm.stopPrank();
     }

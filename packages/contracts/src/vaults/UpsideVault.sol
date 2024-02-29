@@ -44,7 +44,7 @@ contract UpsideVault is FixedYieldVault {
         if (tokenDecimal >= assetDecimal) {
             additionalPrecision = 10 ** (tokenDecimal - assetDecimal);
         } else {
-            revert CredbullVault__UnsupportedDecimalValue();
+            revert CredbullVault__UnsupportedDecimalValue(assetDecimal);
         }
     }
 
@@ -56,7 +56,7 @@ contract UpsideVault is FixedYieldVault {
     {
         (, uint256 reminder) = assets.tryMod(10 ** VAULT_DECIMALS);
         if (reminder > 0) {
-            revert CredbullVault__InvalidAssetAmount();
+            revert CredbullVault__InvalidAssetAmount(assets);
         }
 
         uint256 collateral = getCollateralAmount(assets);

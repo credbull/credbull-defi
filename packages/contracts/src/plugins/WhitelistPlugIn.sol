@@ -8,7 +8,7 @@ import { ICredbull } from "../interface/ICredbull.sol";
 /// @notice - A PlugIn to handle whitelisting
 abstract contract WhitelistPlugIn {
     /// @notice Error to revert if the address is not whitelisted
-    error CredbullVault__NotAWhitelistedAddress();
+    error CredbullVault__NotAWhitelistedAddress(address, uint256);
 
     /// @notice - Address of the Kyc provider
     IKYCProvider public kycProvider;
@@ -35,7 +35,7 @@ abstract contract WhitelistPlugIn {
     /// @notice - Function to check for whitelisted address
     function _checkIsWhitelisted(address receiver, uint256 amount) internal view virtual {
         if (checkWhitelist && amount >= depositThresholdForWhitelisting && !kycProvider.status(receiver)) {
-            revert CredbullVault__NotAWhitelistedAddress();
+            revert CredbullVault__NotAWhitelistedAddress(receiver, amount);
         }
     }
 

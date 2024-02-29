@@ -9,7 +9,6 @@ import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { MockToken } from "../mocks/MockToken.sol";
-import { console2 } from "forge-std/console2.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
 
