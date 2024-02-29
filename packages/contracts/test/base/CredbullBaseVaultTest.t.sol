@@ -137,7 +137,7 @@ contract CredbullBaseVaultTest is Test {
         new CredbullBaseVaultMock(vaultParams);
     }
 
-    function test__BaseVault_Deposit__Fuzz(uint256 depositAmount) public {
+    function test__BaseVault__Deposit__Fuzz(uint256 depositAmount) public {
         uint256 custodiansBalance = vaultParams.asset.balanceOf(vaultParams.custodian);
 
         // ---- Setup Part 1, Check balance before deposit ----

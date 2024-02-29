@@ -23,7 +23,7 @@ contract UpsideVault is FixedYieldVault {
     mapping(address account => uint256) private _balances;
 
     /// @notice Total collateral deposited
-    uint256 public totalCollateralDeposited;
+    // uint256 public totalCollateralDeposited;
 
     /// @notice Maximum percentage value (100%)
     uint256 private constant MAX_PERCENTAGE = 100_00;
@@ -62,7 +62,6 @@ contract UpsideVault is FixedYieldVault {
         uint256 collateral = getCollateralAmount(assets);
 
         _balances[receiver] += collateral;
-        totalCollateralDeposited += collateral;
         totalAssetDeposited += assets;
 
         if (totalAssetDeposited > maxCap) {
@@ -90,7 +89,6 @@ contract UpsideVault is FixedYieldVault {
         uint256 collateral = calculateTokenRedemption(shares, owner);
 
         _balances[owner] -= collateral;
-        totalCollateralDeposited -= collateral;
         totalAssetDeposited -= assets;
 
         SafeERC20.safeTransfer(token, receiver, collateral);
@@ -113,8 +111,8 @@ contract UpsideVault is FixedYieldVault {
             revert CredbullVault__InsufficientShareBalance();
         }
 
-        uint256 vaultPercent = shares.mulDiv(PRECISION, totalSupply());
-        return totalCollateralDeposited.mulDiv(vaultPercent, PRECISION);
+        uint256 sharePercent = shares.mulDiv(PRECISION, balanceOf(account));
+        return _balances[account].mulDiv(sharePercent, PRECISION);
     }
 
     ///@notice - Update the twap value

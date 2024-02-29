@@ -151,9 +151,6 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         vm.stopPrank();
 
         uint256 collateralToRedeem = vault.calculateTokenRedemption(shares, alice);
-        console2.log(vault.getCollateralAmount(depositAmount));
-        console2.log(vault.totalCollateralDeposited());
-        console2.log(collateralToRedeem);
 
         vm.prank(alice);
         uint256 assets = vault.redeem(shares, alice, alice);

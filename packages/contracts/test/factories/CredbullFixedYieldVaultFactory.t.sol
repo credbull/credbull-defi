@@ -17,7 +17,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     DeployVaultFactory private deployer;
     HelperConfig private helperConfig;
     CredbullKYCProvider private kycProvider;
-    NetworkConfig config;
+    NetworkConfig private config;
 
     string private OPTIONS = "{}";
 
