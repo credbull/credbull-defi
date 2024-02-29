@@ -1,7 +1,7 @@
 import { ServiceResponse } from "@credbull/api";
 import { Tables } from "@credbull/api";
 import { BigNumber, Signer, providers } from 'ethers';
-import { CredbullFixedYieldVault__factory  } from "@credbull/contracts";
+import { CredbullFixedYieldVault__factory, MockStablecoin__factory  } from "@credbull/contracts";
 import { decodeError } from "./mock/utils/helpers";
 
 export class CredbullSDK {
@@ -41,18 +41,22 @@ export class CredbullSDK {
         return await vault.deposit(amount, receiver);
     }
 
+    /// Redeem the share tokens
     async redeem(vaultAddress: string, shares: BigNumber, receiver: string) {
         const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
         const res = await vault.redeem(shares, receiver, receiver);
         await res.wait();
     }
 
-    /// Returns the asset address associated with vault
-    async getAssetAddress(vaultAddress: string) {
+    /// Get the instance of an asset associated with the vault
+    async getAssetInstance(vaultAddress: string) {
         const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
-        return await vault.asset(); 
+        const assetAddress =  await vault.asset();
+
+        return MockStablecoin__factory.connect(assetAddress, this.signer);
     }
 
+    /// Get the instance of the vault
     async getVaultInstance(vaultAddress: string) {
         return CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
     }

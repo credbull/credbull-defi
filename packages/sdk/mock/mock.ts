@@ -29,9 +29,7 @@ config();
     const vaultAddress = vaults.data ? vaults.data[0].address : "";
     const depositAmount = BigNumber.from('100000000');
 
-    const assetAddress = await sdk.getAssetAddress(vaultAddress);
-
-    const usdc = MockStablecoin__factory.connect(assetAddress, userSigner);
+    const usdc = await sdk.getAssetInstance(vaultAddress);
     await usdc.mint(userSigner.address, depositAmount);
     await usdc.approve(vaultAddress, depositAmount);
     
