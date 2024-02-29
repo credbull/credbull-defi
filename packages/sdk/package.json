@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "ts-node index.ts",
     "mock": "ts-node mock/mock.ts",
-    "deposit": "ts-node mock/deposit.ts"
+    "deposit": "ts-node mock/deposit.ts",
+    "format": "prettier . --write"
   },
   "dependencies": {
     "@credbull/api": "workspace:^",
@@ -15,9 +16,14 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/node": "^20.11.20",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.2",
+    "prettier": "^3.1.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
