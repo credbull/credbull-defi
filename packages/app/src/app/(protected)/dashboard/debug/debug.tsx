@@ -16,9 +16,17 @@ import { Address, useAccount, useBalance, useContractWrite, useWalletClient } fr
 import { foundry } from 'wagmi/chains';
 import { z } from 'zod';
 
+// import { CredbullSDK } from '@credbull/sdk';
+// import { ethers } from "ethers";
 import { BalanceOf } from '@/components/contracts/balance-of';
 
 import { whitelistAddress } from '@/app/(protected)/dashboard/debug/actions';
+
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
 
 const mintSchema = z.object({
   address: z.string().min(42).max(42),
@@ -235,6 +243,23 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   );
 };
 
+// const LinkWallet = () => {
+
+//   const connect = () => {
+//     const provider = new ethers.providers.Web3Provider(window.ethereum);
+//     provider.send("eth_requestAccounts", []).then(async () => {
+//       console.log(await provider.getSigner().getAddress());
+
+//       const sdk = new CredbullSDK("access_token_here", provider.getSigner());
+//       await sdk.linkWallet();
+//     });
+//   }
+
+//   return <>
+//     <button onClick={connect}> Link wallet</button>
+//   </>
+// }
+
 const WhitelistWalletAddress = () => {
   const { open } = useNotification();
   const { isConnected, address } = useAccount();
@@ -299,6 +324,7 @@ export function Debug() {
         <SendEth />
         <VaultDeposit erc20Address={erc20Address ?? ''} />
         <WhitelistWalletAddress />
+        {/* <LinkWallet /> */}
       </SimpleGrid>
     </Flex>
   );

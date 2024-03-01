@@ -23,6 +23,7 @@
   "dependencies": {
     "@credbull/api": "workspace:^",
     "@credbull/contracts": "workspace:^",
+    "@credbull/sdk": "workspace:^",
     "@emotion/react": "11.11.3",
     "@mantine/core": "5.10.5",
     "@mantine/form": "5.10.5",

@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "ts-node index.ts",
     "mock": "ts-node mock/mock.ts",
-    "deposit": "ts-node mock/deposit.ts"
+    "deposit": "ts-node mock/deposit.ts",
+    "build": "tsc"
   },
   "dependencies": {
     "@credbull/api": "workspace:^",

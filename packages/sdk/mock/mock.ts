@@ -1,6 +1,6 @@
 import { CredbullSDK } from "..";
 import { login, signer, __mockMint } from './utils/helpers';
-import { BigNumber } from 'ethers';
+import { BigNumber, providers } from 'ethers';
 
 import { config } from 'dotenv';
 
@@ -13,6 +13,7 @@ config();
   //Signer or Provider
   const userSigner = signer(process.env.ADMIN_PRIVATE_KEY || "0x");
 
+  const userAddress = await userSigner.getAddress();
   // Initialize the SDK
   const sdk = new CredbullSDK(res.access_token, userSigner);
 
@@ -33,18 +34,17 @@ config();
 
   //Prepare for deposit - Only for testing to mints asset token
   if(process.env.NODE_ENV === 'development') {
-    console.log('in node env dev')
-    await __mockMint(userSigner.address, depositAmount.mul(2), vault, userSigner);
+    await __mockMint(userAddress, depositAmount.mul(2), vault, userSigner);
   }
 
   await usdc.approve(vaultAddress, depositAmount);
 
   //Deposit through SDK
-  await sdk.deposit(vaultAddress, depositAmount, userSigner.address);
+  await sdk.deposit(vaultAddress, depositAmount, userAddress);
 
   const shares = BigNumber.from('100000000');
 
-  console.log((await vault.balanceOf(userSigner.address)).toString());
+  console.log((await vault.balanceOf(userAddress)).toString());
 
   //Only for testing, premint tokens and do admin ops
   if(process.env.NODE_ENV === 'development') {
@@ -55,8 +55,8 @@ config();
   }
 
   //Redeem through SDK
-  await sdk.redeem(vaultAddress, shares, userSigner.address);
+  await sdk.redeem(vaultAddress, shares, userAddress);
 
-  console.log((await vault.balanceOf(userSigner.address)).toString());
+  console.log((await vault.balanceOf(userAddress)).toString());
 
 })();

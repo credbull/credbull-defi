@@ -632,6 +632,7 @@ __metadata:
     "@anatine/zod-mock": ^3.13.3
     "@credbull/api": "workspace:^"
     "@credbull/contracts": "workspace:^"
+    "@credbull/sdk": "workspace:^"
     "@emotion/react": 11.11.3
     "@faker-js/faker": ^8.3.1
     "@mantine/core": 5.10.5
@@ -741,7 +742,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@credbull/sdk@workspace:packages/sdk":
+"@credbull/sdk@workspace:^, @credbull/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@credbull/sdk@workspace:packages/sdk"
   dependencies:
