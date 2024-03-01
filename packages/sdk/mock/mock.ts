@@ -1,8 +1,8 @@
-import { CredbullSDK } from "..";
-import { login, signer, __mockMint } from './utils/helpers';
-import { BigNumber, providers } from 'ethers';
 import { config } from 'dotenv';
+import { BigNumber, providers } from 'ethers';
 
+import { CredbullSDK } from '..';
+import { __mockMint, login, signer } from './utils/helpers';
 
 config();
 
@@ -32,7 +32,7 @@ config();
   const depositAmount = BigNumber.from('100000000');
 
   //Prepare for deposit - Only for testing to mints asset token
-  if(process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
     await __mockMint(userAddress, depositAmount.mul(2), vault, userSigner);
   }
 
@@ -57,5 +57,4 @@ config();
   await sdk.redeem(vaultAddress, shares, userAddress);
 
   console.log((await vault.balanceOf(userAddress)).toString());
-
 })();
