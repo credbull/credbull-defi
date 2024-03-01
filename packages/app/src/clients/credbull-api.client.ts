@@ -19,9 +19,9 @@ export const createClient = (supabase: SupabaseClient) => {
       const response = await fetch(buildURL('/accounts/status'), headers);
       return response.json();
     },
-    linkWallet: async (message: string, signature: string): Promise<WalletDto> => {
+    linkWallet: async (message: string, signature: string, discriminator?: string): Promise<WalletDto> => {
       const { headers } = await authHeaders(supabase);
-      const body = JSON.stringify({ message, signature });
+      const body = JSON.stringify({ message, signature, discriminator });
 
       const response = await fetch(buildURL('/accounts/link-wallet'), {
         headers: { ...headers, 'Content-Type': 'application/json' },

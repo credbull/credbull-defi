@@ -1,6 +1,5 @@
-import { CredbullVaultFactory__factory } from '@credbull/contracts';
+import { CredbullFixedYieldVault__factory, CredbullVaultFactory__factory } from '@credbull/contracts';
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
-import { parseEther } from 'ethers/lib/utils';
 
 import { generateAddress, headers, login, signer, supabase, userByEmail } from './utils/helpers';
 
@@ -88,7 +87,20 @@ export const main = (
     const adminSigner = signer(process.env.ADMIN_PRIVATE_KEY);
 
     // allow custodian address
-    const custodian = scenarios.matured ? process.env.ADDRESSES_CUSTODIAN! : generateAddress();
+    let custodian = scenarios.matured ? process.env.ADDRESSES_CUSTODIAN! : generateAddress();
+
+    if (params?.upsideVault && !scenarios.upside) {
+      const vault = await supabaseClient.from('vaults').select().eq('address', params.upsideVault).single();
+
+      const upsideCustodian = await supabaseClient
+        .from('vault_entities')
+        .select()
+        .eq('vault_id', vault.data!.id)
+        .eq('type', 'custodian')
+        .single();
+
+      custodian = upsideCustodian.data!.address;
+    }
     const factoryAddress = addresses.data.find(
       (i) => i.contract_name === (scenarios.upside ? 'CredbullUpsideVaultFactory' : 'CredbullFixedYieldVaultFactory'),
     )?.address;
@@ -120,6 +132,13 @@ export const main = (
     );
 
     const vaults = await createVault.json();
+
+    if (scenarios.matured) {
+      const vault = CredbullFixedYieldVault__factory.connect(vaults.data[0].address, adminSigner);
+      const toggleTx = await vault.toggleWindowCheck(false);
+      await toggleTx.wait();
+    }
+
     console.log('Vaults: ', vaults);
 
     console.log('\n');

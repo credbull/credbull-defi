@@ -13,10 +13,13 @@ import {
   Text,
   Title,
 } from '@mantine/core';
+import { User } from '@supabase/gotrue-js/dist/module/lib/types';
 import { IconBug, IconBusinessplan, IconChevronRight, IconLogout } from '@tabler/icons';
 import Link from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
-import { Dispatch, ReactNode, SetStateAction, useState, useTransition } from 'react';
+import { Dispatch, ReactNode, SetStateAction, useEffect, useState, useTransition } from 'react';
+
+import { createClient } from '@/clients/supabase.client';
 
 import { Routes } from '@/utils/routes';
 
@@ -24,6 +27,16 @@ import { signOut } from '@/app/(auth)/actions';
 import { LinkWallet } from '@/app/(protected)/dashboard/link-wallet';
 
 const AppHeader = ({ opened, setOpened }: { opened: boolean; setOpened: Dispatch<SetStateAction<boolean>> }) => {
+  const [user, setUser] = useState<User | undefined>(undefined);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user);
+    });
+  }, []);
+
   return (
     <Header height={{ base: 50, md: 70 }} p="md">
       <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
@@ -33,7 +46,7 @@ const AppHeader = ({ opened, setOpened }: { opened: boolean; setOpened: Dispatch
 
         <Group position="apart" grow w="100%">
           <Title order={1}>Credbull DeFI</Title>
-          <LinkWallet />
+          <LinkWallet user={user} />
         </Group>
       </div>
     </Header>

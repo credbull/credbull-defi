@@ -8,6 +8,7 @@ export type BalanceOfProps = {
   erc20Address: string;
   address: string | undefined;
   enabled?: boolean;
+  unit?: number | undefined;
 };
 
 export function BalanceOf(props: BalanceOfProps) {
@@ -20,8 +21,7 @@ export function BalanceOf(props: BalanceOfProps) {
     enabled: props.enabled,
   });
 
-  const value = BigNumber.from(data ?? BigInt(0))
-    .div(10 ** 6)
-    .toString();
+  const value = utils.formatUnits(data?.toString() ?? '0', props.unit ?? 6);
+
   return <>{parseFloat(value).toFixed(value.includes('.') ? 2 : 0)}</>;
 }

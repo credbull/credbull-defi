@@ -3,10 +3,10 @@
 import { cookies } from 'next/headers';
 
 import { createClient as createCredbull } from '@/clients/credbull-api.client';
-import { createClient as createSuabase } from '@/clients/supabase.server';
+import { createClient as createSupabase } from '@/clients/supabase.server';
 
 export const whitelistAddress = async (address: string) => {
-  const supabase = createSuabase(cookies());
+  const supabase = createSupabase(cookies());
   const credbullApi = createCredbull(supabase);
 
   const auth = await supabase.auth.getSession();

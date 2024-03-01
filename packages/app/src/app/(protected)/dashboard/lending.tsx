@@ -34,6 +34,7 @@ type VaultProps = {
   entities: Tables<'vault_entities'>[];
   isConnected: boolean;
   address: Address;
+  mockTokenAddress?: string;
 };
 
 function Vault(props: VaultProps) {
@@ -86,6 +87,13 @@ function Vault(props: VaultProps) {
     },
   });
 
+  const { writeAsync: approveTokenAsync } = useContractWrite({
+    address: props.mockTokenAddress as Address,
+    abi: ERC4626__factory.abi,
+    functionName: 'approve',
+    args: [props.data.address as Address, utils.parseUnits((form.values.amount ?? 0).toString(), 18).toBigInt()],
+  });
+
   const { writeAsync: approveAsync } = useContractWrite({
     address: props.data.asset_address as Address,
     abi: ERC4626__factory.abi,
@@ -110,6 +118,11 @@ function Vault(props: VaultProps) {
   const onDeposit = async () => {
     setLoading(true);
     try {
+      if (props.data.type === 'fixed_yield_upside') {
+        const approveTokenTx = await approveTokenAsync();
+        await waitForTransactionReceipt(client!, approveTokenTx);
+      }
+
       const approveTx = await approveAsync();
 
       if (client && approveTx.hash) {
@@ -342,7 +355,7 @@ const EntityBalance = ({ entity, erc20Address, name }: EntitiesBalancesProps) =>
   );
 };
 
-export function Lending(props: { email?: string; status?: string }) {
+export function Lending(props: { email?: string; status?: string; mockTokenAddress?: string }) {
   const { isConnected, address } = useAccount();
 
   const { data: entities } = useList<Tables<'vault_entities'>>({
@@ -379,6 +392,7 @@ export function Lending(props: { email?: string; status?: string }) {
         ) : (
           list.data.map((val) => (
             <Vault
+              mockTokenAddress={props.mockTokenAddress}
               entities={_.filter(entities?.data, { vault_id: val.id })}
               key={val.id}
               data={val}

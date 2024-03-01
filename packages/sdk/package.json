@@ -2,7 +2,6 @@
   "name": "@credbull/sdk",
   "packageManager": "yarn@3.2.3",
   "scripts": {
-    "dev": "ts-node index.ts",
     "mock": "ts-node mock/mock.ts",
     "deposit": "ts-node mock/deposit.ts",
     "build": "tsc",

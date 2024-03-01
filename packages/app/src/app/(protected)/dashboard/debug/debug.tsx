@@ -1,15 +1,23 @@
 'use client';
 
 import { Tables } from '@credbull/api';
-import { ERC4626__factory, MockStablecoin__factory } from '@credbull/contracts';
+import {
+  CredbullBaseVault__factory,
+  ERC4626__factory,
+  FixedYieldVault__factory,
+  MockStablecoin__factory,
+  MockToken__factory,
+} from '@credbull/contracts';
 import { Button, Card, Flex, Group, NumberInput, SimpleGrid, Text, TextInput } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
-import { useList, useNotification } from '@refinedev/core';
+import { useClipboard } from '@mantine/hooks';
+import { useList, useNotification, useOne } from '@refinedev/core';
 import { OpenNotificationParams } from '@refinedev/core/dist/contexts/notification/INotificationContext';
 import { useForm } from '@refinedev/mantine';
+import { IconCopy } from '@tabler/icons';
 import { getPublicClient } from '@wagmi/core';
 import { utils } from 'ethers';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createWalletClient, http, parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
 import { Address, useAccount, useBalance, useContractWrite, useWalletClient } from 'wagmi';
@@ -65,13 +73,109 @@ const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
     }
   };
 
+  const clipboard = useClipboard();
+
+  useEffect(() => {
+    if (clipboard.copied) {
+      open?.({ type: 'success', message: `USDC address copied!` });
+    }
+  }, [clipboard.copied, open]);
+
   return (
     <Card shadow="sm" p="xl" radius="md" withBorder>
       <Flex direction="column" h="100%">
         <Group position="apart" mt="md" mb="xs">
-          <Text weight={500}>Mint &quot;USDC&quot;</Text>
+          <Button variant="white" p="0" m="0" onClick={() => clipboard.copy(erc20Address)}>
+            <Text size="md" color="black">
+              Mint &quot;USDC&quot; <IconCopy size={12} />
+            </Text>
+          </Button>
+          <Text weight={500}></Text>
           <Text size="sm" color="gray">
             <BalanceOf enabled={!!erc20Address && !!address} erc20Address={erc20Address ?? ''} address={address} /> USDC
+          </Text>
+        </Group>
+
+        <form onSubmit={form.onSubmit(() => onMint())} style={{ marginTop: 'auto' }}>
+          <TextInput label="Address" {...form.getInputProps('address')} disabled={!isConnected || isLoading} />
+          <NumberInput label="Amount" {...form.getInputProps('amount')} disabled={!isConnected || isLoading} />
+
+          <Group grow>
+            <Button
+              type="submit"
+              variant="light"
+              color="blue"
+              mt="md"
+              radius="md"
+              disabled={!isConnected || isLoading}
+              loading={isLoading}
+            >
+              Mint
+            </Button>
+          </Group>
+        </form>
+      </Flex>
+    </Card>
+  );
+};
+
+const MintCToken = ({ erc20Address }: { erc20Address: string }) => {
+  const { open } = useNotification();
+  const { isConnected, address } = useAccount();
+  const { data: client } = useWalletClient();
+  const [isLoading, setLoading] = useState(false);
+
+  const form = useForm({
+    validate: zodResolver(mintSchema),
+    initialValues: { amount: 0, address: '' },
+  });
+
+  const { writeAsync } = useContractWrite({
+    address: erc20Address as Address,
+    abi: MockToken__factory.abi,
+    functionName: 'mint',
+    args: [form.values.address as Address, utils.parseUnits((form.values.amount ?? 0).toString(), 18).toBigInt()],
+  });
+
+  const onMint = async () => {
+    try {
+      setLoading(true);
+      const mintTx = await writeAsync();
+      await waitForTransactionReceipt(client!, mintTx);
+      form.reset();
+      open?.({ type: 'success', message: 'Mint successful' });
+    } catch (e) {
+      open?.({ type: 'error', description: 'Mint failed', message: e?.toString() ?? '' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clipboard = useClipboard();
+
+  useEffect(() => {
+    if (clipboard.copied) {
+      open?.({ type: 'success', message: `cToken address copied!` });
+    }
+  }, [clipboard.copied, open]);
+
+  return (
+    <Card shadow="sm" p="xl" radius="md" withBorder>
+      <Flex direction="column" h="100%">
+        <Group position="apart" mt="md" mb="xs">
+          <Button variant="white" p="0" m="0" onClick={() => clipboard.copy(erc20Address)}>
+            <Text size="md" color="black">
+              Mint &quot;cToken&quot; <IconCopy size={12} />
+            </Text>
+          </Button>
+          <Text size="sm" color="gray">
+            <BalanceOf
+              unit={18}
+              enabled={!!erc20Address && !!address}
+              erc20Address={erc20Address ?? ''}
+              address={address}
+            />{' '}
+            cToken
           </Text>
         </Group>
 
@@ -161,7 +265,7 @@ const depositSchema = z.object({
   amount: z.number().positive(),
 });
 
-const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
+const VaultDeposit = ({ erc20Address, mockTokenAddress }: { erc20Address: string; mockTokenAddress: string }) => {
   const { open } = useNotification();
   const { isConnected, address } = useAccount();
   const { data: client } = useWalletClient();
@@ -170,6 +274,13 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   const form = useForm({
     validate: zodResolver(depositSchema),
     initialValues: { amount: 0, address: '' },
+  });
+
+  const { writeAsync: approveTokenAsync } = useContractWrite({
+    address: mockTokenAddress as Address,
+    abi: ERC4626__factory.abi,
+    functionName: 'approve',
+    args: [form.values.address as Address, utils.parseUnits((form.values.amount ?? 0).toString(), 18).toBigInt()],
   });
 
   const { writeAsync: approveAsync } = useContractWrite({
@@ -189,6 +300,9 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   const onDeposit = async () => {
     setLoading(true);
     try {
+      const approveTokenTx = await approveTokenAsync();
+      await waitForTransactionReceipt(client!, approveTokenTx);
+
       const approveTx = await approveAsync();
 
       if (client && approveTx.hash) {
@@ -243,23 +357,6 @@ const VaultDeposit = ({ erc20Address }: { erc20Address: string }) => {
   );
 };
 
-// const LinkWallet = () => {
-
-//   const connect = () => {
-//     const provider = new ethers.providers.Web3Provider(window.ethereum);
-//     provider.send("eth_requestAccounts", []).then(async () => {
-//       console.log(await provider.getSigner().getAddress());
-
-//       const sdk = new CredbullSDK("access_token_here", provider.getSigner());
-//       await sdk.linkWallet();
-//     });
-//   }
-
-//   return <>
-//     <button onClick={connect}> Link wallet</button>
-//   </>
-// }
-
 const WhitelistWalletAddress = () => {
   const { open } = useNotification();
   const { isConnected, address } = useAccount();
@@ -307,7 +404,7 @@ const WhitelistWalletAddress = () => {
   );
 };
 
-export function Debug() {
+export function Debug(props: { mockTokenAddress: string | undefined }) {
   const { data: list, isLoading } = useList<Tables<'vaults'>>({
     resource: 'vaults',
     pagination: { pageSize: 1 },
@@ -321,8 +418,9 @@ export function Debug() {
     <Flex justify="space-around" direction="column" gap="60px">
       <SimpleGrid cols={4}>
         <MintUSDC erc20Address={erc20Address ?? ''} />
+        <MintCToken erc20Address={props.mockTokenAddress ?? ''} />
         <SendEth />
-        <VaultDeposit erc20Address={erc20Address ?? ''} />
+        <VaultDeposit erc20Address={erc20Address ?? ''} mockTokenAddress={props.mockTokenAddress ?? ''} />
         <WhitelistWalletAddress />
         {/* <LinkWallet /> */}
       </SimpleGrid>

@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 
 import { createClient } from '@/clients/supabase.server';
 
-import { accountStatus } from '@/app/(protected)/dashboard/actions';
+import { accountStatus, mockTokenAddress } from '@/app/(protected)/dashboard/actions';
 import { Lending } from '@/app/(protected)/dashboard/lending';
 
 export default async function Dashboard() {
@@ -10,6 +10,7 @@ export default async function Dashboard() {
   const { data: auth } = await supabase.auth.getUser();
 
   const account = await accountStatus();
+  const tokenAddress = await mockTokenAddress();
 
-  return <Lending status={account.status} email={auth.user?.email} />;
+  return <Lending status={account.status} email={auth.user?.email} mockTokenAddress={tokenAddress} />;
 }
