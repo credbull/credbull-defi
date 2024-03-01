@@ -1,17 +1,16 @@
 import { CredbullSDK } from "..";
 import { login, signer, __mockMint } from './utils/helpers';
 import { BigNumber, providers } from 'ethers';
-
 import { config } from 'dotenv';
 
-config();
 
+config();
 
 (async () => {
   //Login to get access token
   const res = await login('krishnakumar@ascent-hr', '1.ql8lo3qdok');
   //Signer or Provider
-  const userSigner = signer(process.env.ADMIN_PRIVATE_KEY || "0x");
+  const userSigner = signer(process.env.ADMIN_PRIVATE_KEY || '0x');
 
   const userAddress = await userSigner.getAddress();
   // Initialize the SDK
@@ -25,7 +24,7 @@ config();
   await sdk.linkWallet();
 
   //Prepare for deposit
-  const vaultAddress = vaults.data ? vaults.data[0].address : "";
+  const vaultAddress = vaults.data ? vaults.data[0].address : '';
 
   const vault = await sdk.getVaultInstance(vaultAddress);
   const usdc = await sdk.getAssetInstance(vaultAddress);
@@ -47,7 +46,7 @@ config();
   console.log((await vault.balanceOf(userAddress)).toString());
 
   //Only for testing, premint tokens and do admin ops
-  if(process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
     await __mockMint(vaultAddress, depositAmount, vault, userSigner);
     //Skipping window check
     await vault.toggleWindowCheck(false);

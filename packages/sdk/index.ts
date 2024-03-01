@@ -14,7 +14,7 @@ export class CredbullSDK {
                 ...(this.access_token ? { Authorization: `Bearer ${this.access_token}` } : {}),
             },
         };
-    };
+    }
 
     private async linkWalletMessage(signer: Signer) {
         const chainId = await signer.getChainId();
