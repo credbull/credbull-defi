@@ -5,6 +5,7 @@ const nextConfig = {
   experimental: {
     serverActions: true,
   },
+  transpilePackages: ['@credbull/sdk'],
   webpack: (config) => {
     config.externals.push({
       'utf-8-validate': 'commonjs utf-8-validate',

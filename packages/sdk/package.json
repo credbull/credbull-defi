@@ -1,10 +1,11 @@
 {
   "name": "@credbull/sdk",
   "packageManager": "yarn@3.2.3",
+  "main": "index.ts",
+  "types": "index.ts",
   "scripts": {
     "mock": "ts-node mock/mock.ts",
     "deposit": "ts-node mock/deposit.ts",
-    "build": "tsc",
     "format": "prettier . --write"
   },
   "dependencies": {
