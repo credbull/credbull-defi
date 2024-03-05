@@ -6,7 +6,8 @@
   "scripts": {
     "mock": "ts-node mock/mock.ts",
     "deposit": "ts-node mock/deposit.ts",
-    "format": "prettier . --write"
+    "format": "prettier . --write",
+    "build": "tsc"
   },
   "dependencies": {
     "@credbull/api": "workspace:^",

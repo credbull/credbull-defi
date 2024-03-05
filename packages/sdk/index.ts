@@ -1,4 +1,4 @@
-import { CredbullFixedYieldVault__factory, ERC20__factory } from '@credbull/contracts';
+import { CredbullFixedYieldVault__factory, CredbullFixedYieldVaultWithUpside__factory, ERC20__factory } from '@credbull/contracts';
 import { BigNumber, Signer } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
 
@@ -76,5 +76,12 @@ export class CredbullSDK {
   /// Get the instance of the vault
   async getVaultInstance(vaultAddress: string) {
     return CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
+  }
+
+  async getTokenInstance(vaultAddress: string) {
+    const vault = CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, this.signer);
+    const tokenAddress = await vault.token();
+
+    return ERC20__factory.connect(tokenAddress, this.signer);
   }
 }

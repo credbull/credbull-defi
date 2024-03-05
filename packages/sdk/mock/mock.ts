@@ -9,6 +9,7 @@ config();
 (async () => {
   //Login to get access token
   const res = await login('krishnakumar@ascent-hr', '1.ql8lo3qdok');
+  console.log(res);
   //Signer or Provider
   const userSigner = signer(process.env.ADMIN_PRIVATE_KEY || '0x');
 
