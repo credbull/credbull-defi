@@ -6,7 +6,6 @@ import {
   ERC20__factory,
   ERC4626__factory,
   FixedYieldVault__factory,
-  MaxCapPlugIn__factory,
 } from '@credbull/contracts';
 import { Badge, Button, Card, Flex, Group, NumberInput, SimpleGrid, Text } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
