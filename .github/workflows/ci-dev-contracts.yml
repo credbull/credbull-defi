@@ -52,7 +52,7 @@ jobs:
         run: yarn deploy:ci
         env:
           EXPORT_TO_SUPABASE: true
-          NEXT_PUBLIC_TARGET_NETWORK_ID: 80001
+          NEXT_PUBLIC_TARGET_NETWORK_ID: 421614
           COLLATERAL_PERCENTAGE: 200
           ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
