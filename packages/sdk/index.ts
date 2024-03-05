@@ -1,6 +1,13 @@
-import { CredbullFixedYieldVault__factory, CredbullFixedYieldVaultWithUpside__factory, ERC20__factory } from '@credbull/contracts';
+import {
+  CredbullFixedYieldVaultWithUpside__factory,
+  CredbullFixedYieldVault__factory,
+  ERC20__factory,
+} from '@credbull/contracts';
 import { BigNumber, Signer } from 'ethers';
+import { ethers } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
+
+import { decodeContractError } from './src/utils/utils';
 
 export class CredbullSDK {
   private SERVICE_URL = 'http://localhost:3001';
@@ -33,6 +40,16 @@ export class CredbullSDK {
     return preMessage.prepareMessage();
   }
 
+  private handleError(contract: ethers.Contract, error: any) {
+    if (error.error?.data?.data) {
+      decodeContractError(contract, error.error.data.data);
+    } else if (error.error?.error?.error?.data) {
+      decodeContractError(contract, error.error.error.error.data);
+    } else {
+      throw error;
+    }
+  }
+
   /// Return all active vaults
   async getAllVaults() {
     const vaultsData = await fetch(`${this.SERVICE_URL}/vaults/current`, { method: 'GET', ...this.headers() });
@@ -56,21 +73,20 @@ export class CredbullSDK {
   /// Deposit token to the given vault address
   async deposit(vaultAddress: string, amount: BigNumber, receiver: string) {
     const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
-    return await vault.deposit(amount, receiver);
+    await vault.deposit(amount, receiver).catch((err) => this.handleError(vault, err));
   }
 
   /// Redeem the share tokens
   async redeem(vaultAddress: string, shares: BigNumber, receiver: string) {
     const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
-    await vault.redeem(shares, receiver, receiver);
+    await vault.redeem(shares, receiver, receiver).catch((err) => this.handleError(vault, err));
   }
 
   /// Get the instance of an asset associated with the vault
   async getAssetInstance(vaultAddress: string) {
     const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
-    const assetAddress = await vault.asset();
-
-    return ERC20__factory.connect(assetAddress, this.signer);
+    const assetAddress = await vault.asset().catch((err) => this.handleError(vault, err));
+    return ERC20__factory.connect(assetAddress as string, this.signer);
   }
 
   /// Get the instance of the vault
@@ -80,8 +96,7 @@ export class CredbullSDK {
 
   async getTokenInstance(vaultAddress: string) {
     const vault = CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, this.signer);
-    const tokenAddress = await vault.token();
-
-    return ERC20__factory.connect(tokenAddress, this.signer);
+    const tokenAddress = await vault.token().catch((err) => this.handleError(vault, err));
+    return ERC20__factory.connect(tokenAddress as string, this.signer);
   }
 }

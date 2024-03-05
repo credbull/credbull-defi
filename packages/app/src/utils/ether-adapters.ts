@@ -40,17 +40,6 @@ export function walletClientToSigner(walletClient: WalletClient) {
 /** Action to convert a viem Wallet Client to an ethers.js Signer. */
 export async function getEthersSigner({ chainId }: { chainId?: number } = {}) {
   const walletClient = await getWalletClient({ chainId });
-  console.log(walletClient);
   if (!walletClient) return undefined;
   return walletClientToSigner(walletClient);
 }
-
-export const decodeError = (contract: any, err: string) => {
-  console.log('in decode error');
-  const contractInterface = contract.interface;
-  const selecter = err.slice(0, 10);
-  const res = contractInterface.decodeErrorResult(selecter, err);
-  const errorName = contractInterface.getError(selecter).name;
-  console.log(errorName);
-  console.log(res.toString());
-};
