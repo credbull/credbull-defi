@@ -1,5 +1,5 @@
 import { generateMock } from '@anatine/zod-mock';
-import { parseEther } from 'ethers/lib/utils';
+import { parseUnits } from 'ethers/lib/utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { VaultSchema } from '../../types/db.dto';
@@ -23,7 +23,9 @@ describe('MatureVaultService', () => {
     const custodianAddress = '0x555';
 
     const call = prepareVaultTransfers({
-      requiredDataForVaults: vi.fn().mockReturnValueOnce([{ data: parseEther('1100') }, { data: parseEther('1200') }]),
+      requiredDataForVaults: vi
+        .fn()
+        .mockReturnValueOnce([{ data: parseUnits('1100', 'mwei') }, { data: parseUnits('1200', 'mwei') }]),
     });
 
     const vault = generateMock(VaultSchema);
@@ -33,8 +35,8 @@ describe('MatureVaultService', () => {
     expect(transfers.data?.length).toBe(1);
     expect(transfers.data?.[0].address).toBe('0x1');
     expect(transfers.data?.[0].custodian_address).toBe('0x555');
-    expect(transfers.data?.[0].custodianAmount).toStrictEqual(parseEther('1200'));
-    expect(transfers.data?.[0].amount).toStrictEqual(parseEther('1100'));
+    expect(transfers.data?.[0].custodianAmount).toStrictEqual(parseUnits('1200', 'mwei'));
+    expect(transfers.data?.[0].amount).toStrictEqual(parseUnits('1100', 'mwei'));
   });
 
   it('should return just a all transfers', async () => {
@@ -43,8 +45,8 @@ describe('MatureVaultService', () => {
     const call = prepareVaultTransfers({
       requiredDataForVaults: vi
         .fn()
-        .mockReturnValueOnce([{ data: parseEther('1100') }, { data: parseEther('3600') }])
-        .mockReturnValueOnce([{ data: parseEther('2200') }, { data: parseEther('3600') }]),
+        .mockReturnValueOnce([{ data: parseUnits('1100', 'mwei') }, { data: parseUnits('3600', 'mwei') }])
+        .mockReturnValueOnce([{ data: parseUnits('2200', 'mwei') }, { data: parseUnits('3600', 'mwei') }]),
     });
 
     const vault1 = generateMock(VaultSchema);
@@ -56,12 +58,12 @@ describe('MatureVaultService', () => {
 
     expect(transfers.data?.length).toBe(2);
     expect(transfers.data?.[0].address).toBe('0x1');
-    expect(transfers.data?.[0].custodianAmount).toStrictEqual(parseEther('3600'));
-    expect(transfers.data?.[0].amount).toStrictEqual(parseEther('1100'));
+    expect(transfers.data?.[0].custodianAmount).toStrictEqual(parseUnits('3600', 'mwei'));
+    expect(transfers.data?.[0].amount).toStrictEqual(parseUnits('1100', 'mwei'));
 
     expect(transfers.data?.[1].address).toBe('0x2');
-    expect(transfers.data?.[1].custodianAmount).toStrictEqual(parseEther('3600'));
-    expect(transfers.data?.[1].amount).toStrictEqual(parseEther('2200'));
+    expect(transfers.data?.[1].custodianAmount).toStrictEqual(parseUnits('3600', 'mwei'));
+    expect(transfers.data?.[1].amount).toStrictEqual(parseUnits('2200', 'mwei'));
   });
 
   it('should return an error if there is not enough to cover all vaults', async () => {
@@ -70,8 +72,8 @@ describe('MatureVaultService', () => {
     const call = prepareVaultTransfers({
       requiredDataForVaults: vi
         .fn()
-        .mockReturnValueOnce([{ data: parseEther('1100') }, { data: parseEther('3000') }])
-        .mockReturnValueOnce([{ data: parseEther('2200') }, { data: parseEther('3000') }]),
+        .mockReturnValueOnce([{ data: parseUnits('1100', 'mwei') }, { data: parseUnits('3000', 'mwei') }])
+        .mockReturnValueOnce([{ data: parseUnits('2200', 'mwei') }, { data: parseUnits('3000', 'mwei') }]),
     });
 
     const vaults = [generateMock(VaultSchema), generateMock(VaultSchema)];
@@ -86,8 +88,8 @@ describe('MatureVaultService', () => {
     const call = prepareVaultTransfers({
       requiredDataForVaults: vi
         .fn()
-        .mockReturnValueOnce([{ data: parseEther('1100') }, { error: true }])
-        .mockReturnValueOnce([{ error: true }, { data: parseEther('3000') }]),
+        .mockReturnValueOnce([{ data: parseUnits('1100', 'mwei') }, { error: true }])
+        .mockReturnValueOnce([{ error: true }, { data: parseUnits('3000', 'mwei') }]),
     });
 
     const vaults = [generateMock(VaultSchema), generateMock(VaultSchema)];
@@ -108,7 +110,9 @@ describe('MatureVaultService', () => {
 
     const call = prepareAllTransfers({
       prepareVaultTransfers: prepareVaultTransfers({
-        requiredDataForVaults: vi.fn().mockReturnValue([{ data: parseEther('1100') }, { data: parseEther('1200') }]),
+        requiredDataForVaults: vi
+          .fn()
+          .mockReturnValue([{ data: parseUnits('1100', 'mwei') }, { data: parseUnits('1200', 'mwei') }]),
       }),
       distributionConfig: vi.fn().mockReturnValue({ data: config }),
     });
@@ -120,15 +124,15 @@ describe('MatureVaultService', () => {
     expect(transfers.data?.length).toBe(3);
     expect(transfers.data?.[0].address).toBe('0x1');
     expect(transfers.data?.[0].custodian_address).toBe('0x555');
-    expect(transfers.data?.[0].amount).toStrictEqual(parseEther('1100'));
+    expect(transfers.data?.[0].amount).toStrictEqual(parseUnits('1100', 'mwei'));
 
     expect(transfers.data?.[1].address).toBe(config[0].vault_entities?.address);
     expect(transfers.data?.[1].custodian_address).toBe('0x555');
-    expect(transfers.data?.[1].amount).toStrictEqual(parseEther('80'));
+    expect(transfers.data?.[1].amount.toString()).toStrictEqual(parseUnits('80', 'mwei').toString());
 
     expect(transfers.data?.[2].address).toBe(config[1].vault_entities?.address);
     expect(transfers.data?.[2].custodian_address).toBe('0x555');
-    expect(transfers.data?.[2].amount).toStrictEqual(parseEther('20'));
+    expect(transfers.data?.[2].amount).toStrictEqual(parseUnits('20', 'mwei'));
   });
 
   it('should return a proportional split between multiple vaults and entities', async () => {
@@ -145,8 +149,8 @@ describe('MatureVaultService', () => {
       prepareVaultTransfers: prepareVaultTransfers({
         requiredDataForVaults: vi
           .fn()
-          .mockReturnValueOnce([{ data: parseEther('1100') }, { data: parseEther('3600') }])
-          .mockReturnValueOnce([{ data: parseEther('2200') }, { data: parseEther('3600') }]),
+          .mockReturnValueOnce([{ data: parseUnits('1100', 'mwei') }, { data: parseUnits('3600', 'mwei') }])
+          .mockReturnValueOnce([{ data: parseUnits('2200', 'mwei') }, { data: parseUnits('3600', 'mwei') }]),
       }),
       distributionConfig: vi.fn().mockReturnValue({ data: config }),
     });
@@ -157,27 +161,27 @@ describe('MatureVaultService', () => {
     expect(transfers.data?.length).toBe(6);
     expect(transfers.data?.[0].address).toBe(vaults[0].address);
     expect(transfers.data?.[0].custodian_address).toBe('0x555');
-    expect(transfers.data?.[0].amount).toStrictEqual(parseEther('1100'));
+    expect(transfers.data?.[0].amount).toStrictEqual(parseUnits('1100', 'mwei'));
 
     expect(transfers.data?.[1].address).toBe(vaults[1].address);
     expect(transfers.data?.[1].custodian_address).toBe('0x555');
-    expect(transfers.data?.[1].amount).toStrictEqual(parseEther('2200'));
+    expect(transfers.data?.[1].amount).toStrictEqual(parseUnits('2200', 'mwei'));
 
     expect(transfers.data?.[2].address).toBe(config[0].vault_entities?.address);
     expect(transfers.data?.[2].custodian_address).toBe('0x555');
-    expect(transfers.data?.[2].amount).toStrictEqual(parseEther('80'));
+    expect(transfers.data?.[2].amount).toStrictEqual(parseUnits('80', 'mwei'));
 
     expect(transfers.data?.[3].address).toBe(config[1].vault_entities?.address);
     expect(transfers.data?.[3].custodian_address).toBe('0x555');
-    expect(transfers.data?.[3].amount).toStrictEqual(parseEther('20'));
+    expect(transfers.data?.[3].amount).toStrictEqual(parseUnits('20', 'mwei'));
 
     expect(transfers.data?.[4].address).toBe(config[0].vault_entities?.address);
     expect(transfers.data?.[4].custodian_address).toBe('0x555');
-    expect(transfers.data?.[4].amount).toStrictEqual(parseEther('160'));
+    expect(transfers.data?.[4].amount).toStrictEqual(parseUnits('160', 'mwei'));
 
     expect(transfers.data?.[5].address).toBe(config[1].vault_entities?.address);
     expect(transfers.data?.[5].custodian_address).toBe('0x555');
-    expect(transfers.data?.[5].amount).toStrictEqual(parseEther('40'));
+    expect(transfers.data?.[5].amount).toStrictEqual(parseUnits('40', 'mwei'));
   });
 
   it('should return an error if there is not enough in the custodian to cover all vault transfer', async () => {
@@ -194,8 +198,8 @@ describe('MatureVaultService', () => {
       prepareVaultTransfers: prepareVaultTransfers({
         requiredDataForVaults: vi
           .fn()
-          .mockReturnValueOnce([{ data: parseEther('1100') }, { data: parseEther('3000') }])
-          .mockReturnValueOnce([{ data: parseEther('2200') }, { data: parseEther('3000') }]),
+          .mockReturnValueOnce([{ data: parseUnits('1100', 'mwei') }, { data: parseUnits('3000', 'mwei') }])
+          .mockReturnValueOnce([{ data: parseUnits('2200', 'mwei') }, { data: parseUnits('3000', 'mwei') }]),
       }),
       distributionConfig: vi.fn().mockReturnValue({ data: config }),
     });
@@ -220,8 +224,8 @@ describe('MatureVaultService', () => {
       prepareVaultTransfers: prepareVaultTransfers({
         requiredDataForVaults: vi
           .fn()
-          .mockReturnValueOnce([{ data: parseEther('1100') }, { error: true }])
-          .mockReturnValueOnce([{ error: true }, { data: parseEther('3000') }]),
+          .mockReturnValueOnce([{ data: parseUnits('1100', 'mwei') }, { error: true }])
+          .mockReturnValueOnce([{ error: true }, { data: parseUnits('3000', 'mwei') }]),
       }),
       distributionConfig: vi.fn().mockReturnValue({ data: config }),
     });
@@ -246,8 +250,8 @@ describe('MatureVaultService', () => {
       prepareVaultTransfers: prepareVaultTransfers({
         requiredDataForVaults: vi
           .fn()
-          .mockReturnValueOnce([{ data: parseEther('1100') }, { data: parseEther('3600') }])
-          .mockReturnValueOnce([{ data: parseEther('2200') }, { data: parseEther('3600') }]),
+          .mockReturnValueOnce([{ data: parseUnits('1100', 'mwei') }, { data: parseUnits('3600', 'mwei') }])
+          .mockReturnValueOnce([{ data: parseUnits('2200', 'mwei') }, { data: parseUnits('3600', 'mwei') }]),
       }),
       distributionConfig: vi.fn().mockReturnValueOnce({ data: config }).mockReturnValueOnce({ error: true }),
     });
@@ -272,8 +276,8 @@ describe('MatureVaultService', () => {
       prepareVaultTransfers: prepareVaultTransfers({
         requiredDataForVaults: vi
           .fn()
-          .mockReturnValueOnce([{ data: parseEther('1100') }, { data: parseEther('3600') }])
-          .mockReturnValueOnce([{ data: parseEther('2200') }, { data: parseEther('3600') }]),
+          .mockReturnValueOnce([{ data: parseUnits('1100', 'mwei') }, { data: parseUnits('3600', 'mwei') }])
+          .mockReturnValueOnce([{ data: parseUnits('2200', 'mwei') }, { data: parseUnits('3600', 'mwei') }]),
       }),
       distributionConfig: vi.fn().mockReturnValue({ data: config }),
     });
