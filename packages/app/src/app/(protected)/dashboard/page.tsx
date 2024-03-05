@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/clients/supabase.server';
 
 import { accountStatus, mockTokenAddress } from '@/app/(protected)/dashboard/actions';
-import { Lending } from '@/app/(protected)/dashboard/lending-new';
+import { Lending } from '@/app/(protected)/dashboard/lending';
 
 export default async function Dashboard() {
   const supabase = createClient(cookies());
