@@ -221,7 +221,7 @@ function Vault(props: VaultProps) {
 
       <Group position="apart" mt="md" mb="xs">
         <Text size="sm" color="gray">
-          Vault Balance
+          Vault USDC Balance
         </Text>
         <Text size="sm" color="gray">
           <BalanceOf
@@ -230,6 +230,20 @@ function Vault(props: VaultProps) {
             address={props.data.address}
           />{' '}
           USDC
+        </Text>
+      </Group>
+
+      <Group position="apart" mt="md" mb="xs">
+        <Text size="sm" color="gray">
+          Vault cToken Balance
+        </Text>
+        <Text size="sm" color="gray">
+          <BalanceOf
+            enabled={!!props.mockTokenAddress && !!props.data.address}
+            erc20Address={props.mockTokenAddress!}
+            address={props.data.address}
+          />{' '}
+          cToken
         </Text>
       </Group>
 
@@ -386,7 +400,7 @@ export function Lending(props: { email?: string; status?: string; mockTokenAddre
         <EntityBalance entity={treasury} erc20Address={erc20Address} name="Treasury" />
       </Flex>
 
-      <SimpleGrid cols={4}>
+      <SimpleGrid cols={3}>
         {isLoading || !list ? (
           <>Loading...</>
         ) : (
