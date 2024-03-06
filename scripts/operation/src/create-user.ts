@@ -11,7 +11,7 @@ export const main = (scenarios: { channel: boolean }, params?: { email: string }
 
     const client = supabase({ admin: true });
     const password = (Math.random() + 1).toString(36);
-
+    console.log(password);
     const auth = await client.auth.signUp({
       email: params?.email,
       password,

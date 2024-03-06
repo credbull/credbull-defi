@@ -7,7 +7,9 @@
     "mock": "ts-node mock/mock.ts",
     "deposit": "ts-node mock/deposit.ts",
     "format": "prettier . --write",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "playwright test --reporter=list",
+    "report": "playwright show-report"
   },
   "dependencies": {
     "@credbull/api": "workspace:^",
@@ -18,6 +20,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.42.1",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/node": "^20.11.20",
     "@typescript-eslint/eslint-plugin": "^7.1.0",

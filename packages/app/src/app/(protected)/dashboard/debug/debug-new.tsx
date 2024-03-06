@@ -19,6 +19,7 @@ import { IconCopy } from '@tabler/icons';
 import { getPublicClient } from '@wagmi/core';
 import { utils } from 'ethers';
 import { ethers } from 'ethers';
+import { Signer } from 'ethers';
 import { useEffect, useState } from 'react';
 import { createWalletClient, http, parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
@@ -29,6 +30,8 @@ import { z } from 'zod';
 import { BalanceOf } from '@/components/contracts/balance-of';
 
 import { whitelistAddress } from '@/app/(protected)/dashboard/debug/actions';
+
+import { getEthersSigner } from '../../../../utils/ether-adapters';
 
 declare global {
   interface Window {
@@ -359,16 +362,16 @@ const VaultDeposit = ({ erc20Address, mockTokenAddress }: { erc20Address: string
 
 const LinkWallet = () => {
   const { connector } = useAccount();
-  const sdk = new CredbullSDK(process.env.NEXT_PUBLIC_ACCESS_TOKEN as string, connector?.getProvider() as any);
 
-  const getVaults = async () => {
-    const vaults = await sdk.getAllVaults();
-    console.log(vaults);
+  const link = async () => {
+    const signer = await getEthersSigner({ chainId: await connector?.getChainId() });
+    const sdk = new CredbullSDK(process.env.NEXT_PUBLIC_ACCESS_TOKEN as string, signer as Signer);
+    await sdk.linkWallet();
   };
 
   return (
     <>
-      <button onClick={getVaults}>Link Wallet</button>
+      <button onClick={link}>Link Wallet</button>
     </>
   );
 };
