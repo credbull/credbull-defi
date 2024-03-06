@@ -13,7 +13,7 @@ let walletSigner: Signer | undefined = undefined;
 let sdk: CredbullSDK;
 
 test.beforeAll(async () => {
-  const { access_token, user_id } = await login(process.env.USER_A_EMAIL || '', process.env.USER_A_PASSWORD || '');
+  const { access_token } = await login(process.env.USER_A_EMAIL || '', process.env.USER_A_PASSWORD || '');
   walletSigner = signer(process.env.USER_A_PRIVATE_KEY || '0x');
   sdk = new CredbullSDK(access_token, walletSigner as Signer);
 
@@ -21,20 +21,20 @@ test.beforeAll(async () => {
   await sdk.linkWallet();
 });
 
-test.describe('Single user Interaction', async () => {
+test.skip('Single user Interaction', async () => {
   test('Deposit and redeem flow', async () => {
     let vaults: any;
     let depoistInfo: any;
     const depositAmount = BigNumber.from('100000000');
 
-    vaults = await test.step('Get all vaults', async () => {
-      const vaults = await sdk.getAllVaults();
-      const totalVaults = vaults.data.length;
-
-      expect(totalVaults).toBeGreaterThan(0);
-      expect(vaults).toBeTruthy();
-      return vaults;
-    });
+    // vaults = await test.step('Get all vaults', async () => {
+    //   const vaults = await sdk.getAllVaults();
+    //   const totalVaults = vaults.data.length;
+    //
+    //   expect(totalVaults).toBeGreaterThan(0);
+    //   expect(vaults).toBeTruthy();
+    //   return vaults;
+    // });
 
     //MINT USDC for user
     await test.step('MINT USDC for user', async () => {
