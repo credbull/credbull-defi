@@ -6,7 +6,6 @@ import {
   ERC20__factory,
   ERC4626__factory,
   FixedYieldVault__factory,
-  MaxCapPlugIn__factory,
 } from '@credbull/contracts';
 import { Badge, Button, Card, Flex, Group, NumberInput, SimpleGrid, Text } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
@@ -221,7 +220,7 @@ function Vault(props: VaultProps) {
 
       <Group position="apart" mt="md" mb="xs">
         <Text size="sm" color="gray">
-          Vault Balance
+          Vault USDC Balance
         </Text>
         <Text size="sm" color="gray">
           <BalanceOf
@@ -230,6 +229,21 @@ function Vault(props: VaultProps) {
             address={props.data.address}
           />{' '}
           USDC
+        </Text>
+      </Group>
+
+      <Group position="apart" mt="md" mb="xs">
+        <Text size="sm" color="gray">
+          Vault cToken Balance
+        </Text>
+        <Text size="sm" color="gray">
+          <BalanceOf
+            enabled={!!props.mockTokenAddress && !!props.data.address}
+            erc20Address={props.mockTokenAddress!}
+            address={props.data.address}
+            unit={18}
+          />{' '}
+          cToken
         </Text>
       </Group>
 
@@ -263,7 +277,7 @@ function Vault(props: VaultProps) {
 
       <Group position="apart" mt="md" mb="xs">
         <Text size="sm" color="gray">
-          Your Shares
+          Your Claim Tokens
         </Text>
         <Text size="sm" color="gray">
           <BalanceOf
@@ -271,7 +285,7 @@ function Vault(props: VaultProps) {
             erc20Address={props.data.address}
             address={props.address}
           />{' '}
-          SHARES
+          CLAIM TOKENS
         </Text>
       </Group>
 
@@ -329,8 +343,9 @@ type EntitiesBalancesProps = {
   name: string;
   entity?: Pick<Tables<'vault_entities'>, 'address'>;
   erc20Address?: string;
+  unit?: number;
 };
-const EntityBalance = ({ entity, erc20Address, name }: EntitiesBalancesProps) => {
+const EntityBalance = ({ entity, erc20Address, name, unit }: EntitiesBalancesProps) => {
   const { open } = useNotification();
   const clipboard = useClipboard();
 
@@ -349,7 +364,12 @@ const EntityBalance = ({ entity, erc20Address, name }: EntitiesBalancesProps) =>
       </Button>
 
       <Text size="lg" weight={500}>
-        <BalanceOf enabled={!!erc20Address && !!entity} erc20Address={erc20Address!} address={entity?.address} /> USDC
+        <BalanceOf
+          enabled={!!erc20Address && !!entity}
+          erc20Address={erc20Address!}
+          address={entity?.address}
+          unit={unit}
+        />
       </Text>
     </Flex>
   );
@@ -382,11 +402,17 @@ export function Lending(props: { email?: string; status?: string; mockTokenAddre
   return (
     <Flex justify="space-around" direction="column" gap="60px">
       <Flex justify="center" align="center" direction="row">
-        <EntityBalance entity={{ address: address! }} erc20Address={erc20Address} name="You" />
-        <EntityBalance entity={treasury} erc20Address={erc20Address} name="Treasury" />
+        <EntityBalance entity={{ address: address! }} erc20Address={erc20Address} name="You (USDC)" />
+        <EntityBalance
+          entity={{ address: address! }}
+          erc20Address={props.mockTokenAddress}
+          name="You (cToken)"
+          unit={18}
+        />
+        <EntityBalance entity={treasury} erc20Address={erc20Address} name="Treasury (USDC)" />
       </Flex>
 
-      <SimpleGrid cols={4}>
+      <SimpleGrid cols={3}>
         {isLoading || !list ? (
           <>Loading...</>
         ) : (

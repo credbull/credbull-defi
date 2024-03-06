@@ -6,6 +6,7 @@ export const Routes = {
   CODE_CALLBACK: '/code/callback',
   MAGIC_LINK: '/magic-link',
   DASHBOARD: '/dashboard',
+  DASHBOARD_WITH_UPSIDE: '/dashboard/upside',
   DEBUG: '/dashboard/debug',
   HOME: '/',
 } as const;
