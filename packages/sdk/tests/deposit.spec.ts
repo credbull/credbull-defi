@@ -9,15 +9,13 @@ import { __mockMint, login, toggleMaturityCheck, toggleWindowCheck } from './uti
 
 config();
 
-let accessToken = '';
 let walletSigner: Signer | undefined = undefined;
 let sdk: CredbullSDK;
 
 test.beforeAll(async () => {
   const { access_token, user_id } = await login(process.env.USER_A_EMAIL || '', process.env.USER_A_PASSWORD || '');
-  accessToken = access_token;
   walletSigner = signer(process.env.USER_A_PRIVATE_KEY || '0x');
-  sdk = new CredbullSDK(accessToken, walletSigner as Signer);
+  sdk = new CredbullSDK(access_token, walletSigner as Signer);
 
   //link wallet
   await sdk.linkWallet();
@@ -46,19 +44,17 @@ test.describe('Single user Interaction', async () => {
     });
 
     //Get approval for deposit
-    depoistInfo = await test.step('Get approval for deposit', async () => {
+    await test.step('Get approval for deposit', async () => {
       const vaultAddress = vaults.data[0].address;
       const usdc = await sdk.getAssetInstance(vaultAddress);
       await usdc.approve(vaultAddress, depositAmount);
 
       const approval = await usdc.allowance(await (walletSigner as Signer).getAddress(), vaultAddress);
       expect(approval.toString()).toEqual(depositAmount.toString());
-      return { usdc, depositAmount };
     });
 
     //Deposit through SDK
     await test.step('Deposit through SDK', async () => {
-      const { depositAmount } = depoistInfo;
       const vaultAddress = vaults.data[0].address;
 
       const user = await (walletSigner as Signer).getAddress();
