@@ -85,6 +85,9 @@ function Vault(props: VaultProps) {
   const depositsClose = parseISO(props.data[0].deposits_closed_at);
   const opened = isAfter(new Date(), depositsOpen) && isBefore(new Date(), depositsClose);
 
+  const upsideVault = props.data.find((vault) => vault.type === 'fixed_yield_upside')!;
+  const normalVault = props.data.find((vault) => vault.type === 'fixed_yield')!;
+
   return (
     <Card shadow="sm" p="xl" radius="md" withBorder>
       <Group position="apart" mt="md" mb="xs">
@@ -152,16 +155,44 @@ function Vault(props: VaultProps) {
 
       <Group position="apart" mt="md" mb="xs">
         <Text size="sm" color="gray">
-          Vault cToken Balance
+          Vault USDC Balance (Upside)
         </Text>
         <Text size="sm" color="gray">
           <BalanceOf
-            enabled={!!props.mockTokenAddress && !!props.data[0].address}
+            enabled={!!upsideVault.asset_address && !!upsideVault.address}
+            erc20Address={upsideVault.asset_address}
+            address={upsideVault.address}
+          />{' '}
+          USDC
+        </Text>
+      </Group>
+
+      <Group position="apart" mt="md" mb="xs">
+        <Text size="sm" color="gray">
+          Vault USDC Balance
+        </Text>
+        <Text size="sm" color="gray">
+          <BalanceOf
+            enabled={!!normalVault.asset_address && !!normalVault.address}
+            erc20Address={normalVault.asset_address}
+            address={normalVault.address}
+          />{' '}
+          USDC
+        </Text>
+      </Group>
+
+      <Group position="apart" mt="md" mb="xs">
+        <Text size="sm" color="gray">
+          Vault CBL Balance
+        </Text>
+        <Text size="sm" color="gray">
+          <BalanceOf
+            enabled={!!props.mockTokenAddress && !!upsideVault.address}
             erc20Address={props.mockTokenAddress!}
-            address={props.data[0].address}
+            address={upsideVault.address}
             unit={18}
           />{' '}
-          cToken
+          CBL
         </Text>
       </Group>
 
@@ -199,8 +230,8 @@ function Vault(props: VaultProps) {
         </Text>
         <Text size="sm" color="gray">
           <BalanceOf
-            enabled={!!props.data[0].address && !!props.address}
-            erc20Address={props.data[0].address}
+            enabled={!!upsideVault.address && !!props.address}
+            erc20Address={upsideVault.address}
             address={props.address}
           />{' '}
           TOKENS
@@ -213,8 +244,8 @@ function Vault(props: VaultProps) {
         </Text>
         <Text size="sm" color="gray">
           <BalanceOf
-            enabled={!!props.data[1].address && !!props.address}
-            erc20Address={props.data[1].address}
+            enabled={!!normalVault.address && !!props.address}
+            erc20Address={normalVault.address}
             address={props.address}
           />{' '}
           TOKENS
@@ -231,20 +262,20 @@ function Vault(props: VaultProps) {
       </Group>
 
       <VaultActions
-        data={props.data[0]}
+        data={upsideVault}
         entities={props.entities}
         isConnected={props.isConnected}
         mockTokenAddress={props.mockTokenAddress}
         address={props.address}
-        upside={props.data[0].type === 'fixed_yield_upside'}
+        upside={true}
       />
       <VaultActions
-        data={props.data[1]}
+        data={normalVault}
         entities={props.entities}
         isConnected={props.isConnected}
         mockTokenAddress={props.mockTokenAddress}
         address={props.address}
-        upside={props.data[1].type === 'fixed_yield_upside'}
+        upside={false}
       />
     </Card>
   );
@@ -480,7 +511,7 @@ export function Lending(props: { email?: string; status?: string; mockTokenAddre
     <Flex justify="space-around" direction="column" gap="60px">
       <Flex justify="center" align="center" direction="row">
         <EntityBalance entity={{ address: address! }} erc20Address={erc20Address} name="You (USDC)" />
-        <EntityBalance entity={{ address: address! }} erc20Address={mockTokenAddress} name="You (cToken)" unit={18} />
+        <EntityBalance entity={{ address: address! }} erc20Address={mockTokenAddress} name="You (CBL)" unit={18} />
         <EntityBalance entity={treasury} erc20Address={erc20Address} name="Treasury (USDC)" />
       </Flex>
 
