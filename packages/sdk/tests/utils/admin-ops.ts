@@ -42,6 +42,18 @@ export async function __mockMint(
   await asset.mint(to, amount);
 }
 
+export async function __mockMintToken(
+  to: string,
+  amount: BigNumber,
+  vault:  CredbullFixedYieldVaultWithUpside,
+  signer: Signer | providers.Provider,
+) {
+  const tokenAddress = await vault.token();
+  const token = MockStablecoin__factory.connect(tokenAddress, signer);
+
+  await token.mint(to, amount);
+}
+
 export async function toggleMaturityCheck(
   vault: CredbullFixedYieldVault | CredbullFixedYieldVaultWithUpside,
   value: boolean,

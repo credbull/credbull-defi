@@ -46,6 +46,8 @@ export class CredbullSDK {
     } else if (error.error?.error?.error?.data) {
       decodeContractError(contract, error.error.error.error.data);
     } else {
+      console.log('Errorr.rrrrrrrrr')
+      console.log(error);
       throw error;
     }
   }
@@ -92,6 +94,11 @@ export class CredbullSDK {
   /// Get the instance of the vault
   async getVaultInstance(vaultAddress: string) {
     return CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
+  }
+
+  /// Get upside vault instance
+  async getUpsideVaultInstance(vaultAddress: string) {
+    return CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, this.signer);
   }
 
   async getTokenInstance(vaultAddress: string) {
