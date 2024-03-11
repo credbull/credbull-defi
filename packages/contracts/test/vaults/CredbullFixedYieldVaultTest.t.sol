@@ -12,6 +12,7 @@ import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract CredbullFixedYieldVaultTest is Test {
     CredbullFixedYieldVault private vault;
@@ -26,6 +27,7 @@ contract CredbullFixedYieldVaultTest is Test {
 
     uint256 private precision;
     uint256 private constant INITIAL_BALANCE = 1000;
+    uint256 private constant ADDITIONAL_PRECISION = 1e12;
 
     function setUp() public {
         deployer = new DeployVaultFactory();
@@ -207,6 +209,50 @@ contract CredbullFixedYieldVaultTest is Test {
         vault.updateMaxCap(100 * precision);
     }
 
+    function test__FixedYieldVault__RevertOpsIfVaultIsPaused() public {
+        vm.startPrank(vaultParams.owner);
+        vault.toggleWindowCheck(false);
+        vault.pauseVault();
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        vault.deposit(1000 * precision, alice);
+        vm.stopPrank();
+
+        vm.startPrank(vaultParams.owner);
+        vault.unpauseVault();
+        vm.stopPrank();
+    }
+
+    function test__FixedYieldVault__ShouldAllowAdminToUnpauseVault() public {
+        vm.startPrank(vaultParams.owner);
+        vault.toggleWindowCheck(false);
+        vault.pauseVault();
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        vault.deposit(1000 * precision, alice);
+        vm.stopPrank();
+
+        vm.startPrank(vaultParams.owner);
+        vault.unpauseVault();
+        deposit(alice, 1000 * precision, true);
+        vm.stopPrank();
+    }
+
+    function test__FixedYieldVault__ShouldAllowOnlyAdminToPauseVault() public {
+        vm.startPrank(vaultParams.operator);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                vaultParams.operator,
+                vault.DEFAULT_ADMIN_ROLE()
+            )
+        );
+        vault.pauseVault();
+        vm.stopPrank();
+
+        vm.startPrank(vaultParams.owner);
+        vault.pauseVault();
+        vm.stopPrank();
+    }
+
     function test__FixedYieldVault__RevertWindowUpdateIfNotAdmin() public {
         vm.startPrank(vaultParams.operator);
         vm.expectRevert(
@@ -221,5 +267,20 @@ contract CredbullFixedYieldVaultTest is Test {
 
         vm.prank(vaultParams.owner);
         vault.updateWindow(100, 200, 300, 400);
+    }
+
+    function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
+        // first, approve the deposit
+        vm.startPrank(user);
+        vaultParams.asset.approve(address(vault), assets);
+        vaultParams.token.approve(address(vault), assets * ADDITIONAL_PRECISION);
+
+        // wrap if set to true
+        if (warp) {
+            vm.warp(vaultParams.depositOpensAt);
+        }
+
+        shares = vault.deposit(assets, user);
+        vm.stopPrank();
     }
 }

@@ -82,4 +82,14 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCap
     {
         _updateWindow(_depositOpen, _depositClose, _withdrawOpen, _withdrawClose);
     }
+
+    /// @notice Pause the vault
+    function pauseVault() public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _pause();
+    }
+
+    /// @notice Unpause the vault
+    function unpauseVault() public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _unpause();
+    }
 }

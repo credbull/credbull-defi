@@ -7,9 +7,10 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { ICredbull } from "../interface/ICredbull.sol";
 
-abstract contract CredbullBaseVault is ICredbull, ERC4626 {
+abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
     using Math for uint256;
 
     error CredbullVault__TransferOutsideEcosystem();
@@ -70,6 +71,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
         virtual
         override
         depositModifier(caller, receiver, assets, shares)
+        whenNotPaused
     {
         (, uint256 reminder) = assets.tryMod(10 ** VAULT_DECIMALS);
         if (reminder > 0) {
@@ -92,6 +94,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626 {
         virtual
         override
         withdrawModifier(caller, receiver, owner, assets, shares)
+        whenNotPaused
     {
         if (caller != owner) {
             _spendAllowance(owner, caller, shares);
