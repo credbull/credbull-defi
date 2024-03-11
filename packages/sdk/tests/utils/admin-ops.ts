@@ -45,7 +45,7 @@ export async function __mockMint(
 export async function __mockMintToken(
   to: string,
   amount: BigNumber,
-  vault:  CredbullFixedYieldVaultWithUpside,
+  vault: CredbullFixedYieldVaultWithUpside,
   signer: Signer | providers.Provider,
 ) {
   const tokenAddress = await vault.token();

@@ -46,7 +46,6 @@ export class CredbullSDK {
     } else if (error.error?.error?.error?.data) {
       decodeContractError(contract, error.error.error.error.data);
     } else {
-      console.log('Errorr.rrrrrrrrr')
       console.log(error);
       throw error;
     }

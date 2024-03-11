@@ -6,7 +6,7 @@ import { BigNumber, Signer } from 'ethers';
 import { CredbullSDK } from '../index';
 import { signer } from '../mock/utils/helpers';
 
-import { __mockMint, __mockMintToken, login, toggleWindowCheck, toggleMaturityCheck } from './utils/admin-ops';
+import { __mockMint, __mockMintToken, login, toggleMaturityCheck, toggleWindowCheck } from './utils/admin-ops';
 
 config();
 
@@ -63,8 +63,18 @@ test.describe('Multi user Interaction - Upside', async () => {
 
       const collateralRequired = await vault.getCollateralAmount(depositAmount);
 
-      await __mockMintToken(await (walletSignerA as Signer).getAddress(), collateralRequired, vault, walletSignerA as Signer);
-      await __mockMintToken(await (walletSignerB as Signer).getAddress(), collateralRequired, vault, walletSignerB as Signer);
+      await __mockMintToken(
+        await (walletSignerA as Signer).getAddress(),
+        collateralRequired,
+        vault,
+        walletSignerA as Signer,
+      );
+      await __mockMintToken(
+        await (walletSignerB as Signer).getAddress(),
+        collateralRequired,
+        vault,
+        walletSignerB as Signer,
+      );
 
       await __mockMint(await (walletSignerA as Signer).getAddress(), depositAmount, vault, walletSignerA as Signer);
       await __mockMint(await (walletSignerB as Signer).getAddress(), depositAmount, vault, walletSignerB as Signer);
@@ -112,7 +122,9 @@ test.describe('Multi user Interaction - Upside', async () => {
 
       const vaultTokenBalanceAfterDeposit = await token.balanceOf(vaultAddress);
 
-      expect(vaultTokenBalanceBeforeDeposit.add(collateralRequired.mul(2)).toString()).toEqual(vaultTokenBalanceAfterDeposit.toString());
+      expect(vaultTokenBalanceBeforeDeposit.add(collateralRequired.mul(2)).toString()).toEqual(
+        vaultTokenBalanceAfterDeposit.toString(),
+      );
 
       expect(shareBalanceBeforeDepositA.add(depositAmount).toString()).toEqual(shareBalanceAfterDepositA.toString());
       expect(shareBalanceBeforeDepositB.add(depositAmount).toString()).toEqual(shareBalanceAfterDepositB.toString());

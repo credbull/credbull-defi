@@ -6,7 +6,7 @@ import { BigNumber, Signer } from 'ethers';
 import { CredbullSDK } from '../index';
 import { signer } from '../mock/utils/helpers';
 
-import { __mockMint, login, toggleMaturityCheck, toggleWindowCheck  } from './utils/admin-ops';
+import { __mockMint, login, toggleMaturityCheck, toggleWindowCheck } from './utils/admin-ops';
 
 config();
 
@@ -104,7 +104,7 @@ test.describe('Multi user Interaction - Fixed', async () => {
       //Skip checks
       await toggleMaturityCheck(vault, false);
       await toggleWindowCheck(vault, false);
-      
+
       await sdkA.redeem(vaultAddress, shares, userAddressA);
       await sdkB.redeem(vaultAddress, shares, userAddressB);
 
