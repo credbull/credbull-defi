@@ -38,9 +38,7 @@ export class VaultsService {
       .select('*')
       .neq('status', 'created')
       .lt('deposits_opened_at', 'now()');
-    if (vaults.error) return vaults;
-
-    if (vaults.data.length === 0) return vaults;
+    if (vaults.error || !vaults.data) return vaults;
 
     const unPausedVaults = await Promise.all(
       vaults.data.map(async (vault) => {

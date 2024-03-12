@@ -36,8 +36,8 @@ describe('VaultsController', () => {
       id: 1,
       type: 'fixed_yield',
       status: 'ready',
-      address: '0x6E12D8C87503D4287c294f2Fdef96ACd9DFf6bd2',
-      strategy_address: '0xF62849F9A0B5Bf2913b396098F7c7019b51A820a',
+      address: '0x75537828f2ce51be7289709686A69CbFDbB714F1',
+      strategy_address: '0x75537828f2ce51be7289709686A69CbFDbB714F1',
       deposits_opened_at: '2024-01-07T03:00:01+00:00',
       deposits_closed_at: '2024-01-14T02:59:59+00:00',
       redemptions_opened_at: '2024-01-07T03:00:01+00:00',
@@ -85,6 +85,7 @@ describe('VaultsController', () => {
     try {
       await controller.current();
     } catch (e) {
+      console.log('errorr.......', e);
       expect(e.message).toBe('Not Found');
       expect(e.status).toBe(404);
     }
