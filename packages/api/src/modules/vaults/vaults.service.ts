@@ -1,6 +1,8 @@
 import {
+  CredbullFixedYieldVault,
   CredbullFixedYieldVaultFactory,
   CredbullFixedYieldVaultFactory__factory,
+  CredbullFixedYieldVault__factory,
   CredbullUpsideVaultFactory,
   CredbullUpsideVaultFactory__factory,
 } from '@credbull/contracts';
@@ -30,7 +32,25 @@ export class VaultsService {
   ) {}
 
   async current(): Promise<ServiceResponse<Tables<'vaults'>[]>> {
-    return this.supabase.client().from('vaults').select('*').neq('status', 'created').lt('deposits_opened_at', 'now()');
+    const vaults = await this.supabase
+      .client()
+      .from('vaults')
+      .select('*')
+      .neq('status', 'created')
+      .lt('deposits_opened_at', 'now()');
+    if (vaults.error) return vaults;
+
+    if (vaults.data.length === 0) return vaults;
+
+    const unPausedVaults = await Promise.all(
+      vaults.data.map(async (vault) => {
+        const vaultContract = await this.vaultContract(vault.address);
+        const paused = await vaultContract.paused();
+        return paused ? null : vault;
+      }),
+    ).then((res) => vaults.data.filter((v, i) => res[i] !== null));
+
+    return { data: unPausedVaults, error: null };
   }
 
   async createVault(
@@ -100,6 +120,10 @@ export class VaultsService {
 
   private async factoryContract(addr: string): Promise<CredbullFixedYieldVaultFactory> {
     return CredbullFixedYieldVaultFactory__factory.connect(addr, await this.ethers.operator());
+  }
+
+  private async vaultContract(addr: string): Promise<CredbullFixedYieldVault> {
+    return CredbullFixedYieldVault__factory.connect(addr, await this.ethers.operator());
   }
 
   private async factoryUpsideContract(addr: string): Promise<CredbullUpsideVaultFactory> {

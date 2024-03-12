@@ -21,6 +21,7 @@ let userAddressB: string;
 let vaultAddress: string;
 
 test.beforeAll(async () => {
+  console.log(await login(process.env.ADMIN_EMAIL || '', process.env.ADMIN_PASSWORD || ''));
   const { access_token: userAToken } = await login(process.env.USER_A_EMAIL || '', process.env.USER_A_PASSWORD || '');
   const { access_token: userBToken } = await login(process.env.USER_B_EMAIL || '', process.env.USER_B_PASSWORD || '');
 
