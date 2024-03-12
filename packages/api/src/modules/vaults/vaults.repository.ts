@@ -1,5 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
+import * as _ from 'lodash';
 
 import { ServiceResponse } from '../../types/responses';
 import { Database, Tables } from '../../types/supabase';
@@ -61,4 +62,16 @@ export async function addEntitiesAndDistribution(
     if (configData.error) return configData;
   }
   return { data: 'Vault created successfully' };
+}
+
+export async function getUnpausedVaults(vaults: ServiceResponse<Tables<'vaults'>[]>) {
+  return _.compact(
+    await Promise.all(
+      (vaults.data || []).map(async (vault) => {
+        const vaultContract = await this.contract(vault);
+        const paused = await vaultContract.paused();
+        return paused ? null : vault;
+      }),
+    ),
+  );
 }

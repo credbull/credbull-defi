@@ -21,6 +21,7 @@ import {
   addEntitiesAndDistribution,
   getFactoryContractAddress,
   getFactoryUpsideContractAddress,
+  getUnpausedVaults,
 } from './vaults.repository';
 
 @Injectable()
@@ -40,13 +41,7 @@ export class VaultsService {
       .lt('deposits_opened_at', 'now()');
     if (vaults.error || !vaults.data) return vaults;
 
-    const unPausedVaults = await Promise.all(
-      vaults.data.map(async (vault) => {
-        const vaultContract = await this.vaultContract(vault.address);
-        const paused = await vaultContract.paused();
-        return paused ? null : vault;
-      }),
-    ).then((res) => vaults.data.filter((v, i) => res[i] !== null));
+    const unPausedVaults = await getUnpausedVaults(vaults);
 
     return { data: unPausedVaults, error: null };
   }

@@ -19,6 +19,7 @@ import {
   calculateProportions,
   prepareDistributionTransfers,
 } from './vaults.domain';
+import { getUnpausedVaults } from './vaults.repository';
 
 @Injectable()
 export class MatureVaultsService {
@@ -48,14 +49,16 @@ export class MatureVaultsService {
     if (vaults.error) return vaults;
     if (!vaults.data || vaults.data.length === 0) return { data: [] };
 
+    const unPausedVaults = await getUnpausedVaults(vaults);
+
     // get all custodians and group vaults by custodian
-    const custodians = await this.custodian.forVaults(vaults.data);
+    const custodians = await this.custodian.forVaults(unPausedVaults);
     if (custodians.error) return custodians;
     const groupedVaults = _.groupBy(custodians.data, 'address');
 
     // gather all data required to transfer assets from the custodian to the vaults
     const transfers = await Promise.all(
-      _.values(_.mapValues(groupedVaults, (group, key) => this.prepareAllTransfers(vaults.data, group, key))),
+      _.values(_.mapValues(groupedVaults, (group, key) => this.prepareAllTransfers(unPausedVaults, group, key))),
     );
     if (anyCallHasFailed(transfers)) return { error: new AggregateError(_.compact(transfers.map((m) => m.error))) };
 
@@ -68,7 +71,7 @@ export class MatureVaultsService {
 
     // mature the vault on and off chain
     const maturedVaults = [];
-    for (const vault of vaults.data) {
+    for (const vault of unPausedVaults) {
       const matured = await this.mature(vault);
       if (matured.error) errors.push(matured.error);
       if (matured.data) maturedVaults.push(...matured.data);

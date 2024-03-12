@@ -5,11 +5,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeepMockProxy, mockDeep } from 'vitest-mock-extended';
 
 import { SupabaseService } from '../../clients/supabase/supabase.service';
+import { ServiceResponse } from '../../types/responses';
+import { Tables } from '../../types/supabase';
 import { logger } from '../../utils/logger';
 import { Config } from '../../utils/module';
 
 import { VaultsController } from './vaults.controller';
 import { VaultsModule } from './vaults.module';
+
+vi.mock('./vaults.repository', async (importOriginal) => {
+  return {
+    ...(await importOriginal<typeof import('./vaults.repository')>()),
+    getUnpausedVaults: (vaults: ServiceResponse<Tables<'vaults'>[]>) => vaults.data,
+  };
+});
 
 describe('VaultsController', () => {
   let controller: VaultsController;
