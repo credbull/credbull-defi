@@ -1,29 +1,45 @@
 version: '3.8'
 
 services:
+  avnil:
+    image: avnil
+    build: 
+      context: .
+      dockerfile: Dockerfile-anvil
+    ports:
+      - 8545:8545
+    
+
   app:
     image: nestjs-app
+    build: 
+      context: .
+      dockerfile: Dockerfile-api
     ports:
       - 3001:3001
     environment:
       APP_PORT: 3001
       APP_VERSION: 0.0.1
-      NEXT_PUBLIC_SUPABASE_URL: your_supabase_url
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: your_supabase_anon_key
-      SUPABASE_SERVICE_ROLE_KEY: your_supabase_service_role_key
-      SUPABASE_JWT_SECRET: your_supabase_jwt_secret
-      ETHERS_DEPLOYER_PRIVATE_KEY: your_deployer_private_key
-      ETHERS_INFURA_API_KEY: your_infura_api_key
-      CRON_SECRET: any_string_will_do
-      NEXT_PUBLIC_TARGET_NETWORK_WSS: ws://localhost:8545
+
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_JWT_SECRET: ${{ secrets.SDK_SUPABASE_JWT_SECRET }}
+      ETHERS_CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_CUSTODIAN_PRIVATE_KEY }}
+      ETHERS_DEPLOYER_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
+      CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
+      NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
+      ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
+
     depends_on:
       - supabase
 
   supabase:
-    image: public.ecr.aws/supabase/postgres
+    image: public.ecr.aws/supabase/postgres:15.1.1.9
     ports:
       - 5432:5432
-    # volumes:
-    #   - ./data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
 
 # docker build -f Dockerfile -t imagename ../..

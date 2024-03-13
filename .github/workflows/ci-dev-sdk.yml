@@ -1,0 +1,61 @@
+name: ci-dev-sdk
+
+defaults:
+  run:
+    working-directory: .
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main*" ]
+    paths:
+      - "packages/api/**"
+      - "packages/contracts/**"
+      - "packages/sdk/**"
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "yarn"
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Docker compose up
+        run: docker compose up --build
+      
+      - name: Deploy contracts
+        run: cd packages/contracts/ && yarn deploy
+
+      - name: Create Admin
+        run: cd scripts/operation/ && yarn op --create-user null email:admin@gmail.com
+      
+      - name: Make Admin
+        run: cd scripts/operation/ && yarn op --make-admin null email:admin@gmail.com
+
+      - name: Create UserA
+        run: cd scripts/operation/ && yarn op --create-user null email:userA@gmail.com 
+      
+      - name: Create UserB
+        run: cd scripts/operation/ && yarn op --create-user null email:userB@gmail.com 
+      
+      - name: Create FixedYieldVault
+        run: cd scripts/operation/ && yarn op --create-vault
+
+      - name: Create UpsideVault
+        run: cd scripts/operation/ && yarn op --create-vault upside upsideVault:self
+
+      - name: Run SDK tests
+        run: cd packages/sdk/ && yarn test
