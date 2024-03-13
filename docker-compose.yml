@@ -29,7 +29,7 @@ services:
       ETHERS_DEPLOYER_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
       CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
       NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
-      ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
+      #ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
 
     depends_on:
       - supabase
