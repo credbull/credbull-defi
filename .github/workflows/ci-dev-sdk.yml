@@ -7,7 +7,7 @@ defaults:
 on:
   workflow_dispatch:
   push:
-    branches: [ "sdk-workflow*" ]
+    branches: [ "sdk-workflow" ]
     paths:
       - "packages/api/**"
       - "packages/contracts/**"
