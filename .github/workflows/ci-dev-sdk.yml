@@ -44,9 +44,6 @@ jobs:
           CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
           NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
           ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
-  
-      - name: Start supabase
-        run: cd packages/api/supabase && supabase start
 
       - name: Check network
         run: docker network ls
@@ -65,7 +62,6 @@ jobs:
           PUBLIC_OPERATOR_ADDRESS: ${{ secrets.SDK_PUBLIC_OPERATOR_ADDRESS }}
           PUBLIC_OWNER_ADDRESS: ${{ secrets.SDK_PUBLIC_OWNER_ADDRESS }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-        
 
       - name: Create Admin
         run: cd scripts/operation/ && yarn op --create-user null email:admin@gmail.com
