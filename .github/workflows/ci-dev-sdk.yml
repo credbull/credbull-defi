@@ -45,11 +45,8 @@ jobs:
           NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
           ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
       
-      - name: Run anvil
-        run: docker run container:anvil --network connect
-
-      # - name: Run app
-      #   run: docker run 
+      - name: Check network
+        run: docker network ls
       
       - name: Deploy contracts
         run: cd packages/contracts/ && yarn deploy
