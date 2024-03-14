@@ -7,10 +7,7 @@ defaults:
 on:
   push:
     branches: [ "*" ]
-    paths:
-      - "packages/api/**"
-      - "packages/contracts/**"
-      - "packages/sdk/**"
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
