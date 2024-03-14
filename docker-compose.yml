@@ -35,18 +35,18 @@ services:
       # NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
       # ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
 
-    depends_on:
-      - supabase
+  #   depends_on:
+  #     - supabase
 
-  supabase:
-    container_name: supabase
-    image: public.ecr.aws/supabase/postgres:15.1.1.9
-    network_mode: "host"
-    ports:
-      - 5432:5432
-    environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
+  # supabase:
+  #   container_name: supabase
+  #   image: public.ecr.aws/supabase/postgres:15.1.1.9
+  #   network_mode: "host"
+  #   ports:
+  #     - 5432:5432
+  #   environment:
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_USER: postgres
   
   # supabase-kong:
   #   container_name: supabase-kong
