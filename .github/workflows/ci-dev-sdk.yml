@@ -52,7 +52,7 @@ jobs:
         run: cd packages/contracts/ && yarn deploy
         env:
           EXPORT_TO_SUPABASE: true
-          NEXT_PUBLIC_TARGET_NETWORK_ID: 421614
+          NEXT_PUBLIC_TARGET_NETWORK_ID: 31337
           COLLATERAL_PERCENTAGE: 200
           DEFAULT_ANVIL_KEY: ${{ secrets.SDK_DEFAULT_ANVIL_KEY }}
           ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
