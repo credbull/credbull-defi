@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   avnil:
+    container_name: avnil
     image: avnil
     build: 
       context: .
@@ -11,6 +12,7 @@ services:
     
 
   app:
+    container_name: app
     image: nestjs-app
     build: 
       context: .
@@ -35,6 +37,7 @@ services:
       - supabase
 
   supabase:
+    container_name: supabase
     image: public.ecr.aws/supabase/postgres:15.1.1.9
     ports:
       - 5432:5432

@@ -46,7 +46,7 @@ jobs:
           ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
       
       - name: Run anvil
-        run: docker run anvil --network connect
+        run: docker run container:anvil --network connect
 
       # - name: Run app
       #   run: docker run 
