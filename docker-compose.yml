@@ -4,6 +4,7 @@ services:
   avnil:
     container_name: avnil
     image: avnil
+    network_mode: "host"
     build: 
       context: .
       dockerfile: Dockerfile-anvil
@@ -14,6 +15,7 @@ services:
   app:
     container_name: app
     image: nestjs-app
+    network_mode: "host"
     build: 
       context: .
       dockerfile: Dockerfile-api
@@ -39,6 +41,7 @@ services:
   supabase:
     container_name: supabase
     image: public.ecr.aws/supabase/postgres:15.1.1.9
+    network_mode: "host"
     ports:
       - 5432:5432
     environment:
