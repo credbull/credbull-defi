@@ -33,7 +33,7 @@ jobs:
         with:
           compose-file: docker-compose.yml
           compose-command: up
-          compose-options: -d
+          compose-options: --build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
