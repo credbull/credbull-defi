@@ -48,7 +48,7 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: cd packages/api/supabase && supabase migration up —local
+      - run: cd packages/api/supabase && supabase db push
         env: 
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SDK_SUPABASE_JWT_SECRET }}
           PROJECT_ID: ${{ secrets.SDK_SUPABASE_PROJECT_ID }}
