@@ -45,6 +45,14 @@ jobs:
           NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
           ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
 
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: cd packages/api/supabase && supabase migration up —local
+        env: 
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SDK_SUPABASE_JWT_SECRET }}
+          PROJECT_ID: ${{ secrets.SDK_SUPABASE_PROJECT_ID }}
+
       - name: Check network
         run: docker network ls
       
@@ -62,6 +70,8 @@ jobs:
           PUBLIC_OPERATOR_ADDRESS: ${{ secrets.SDK_PUBLIC_OPERATOR_ADDRESS }}
           PUBLIC_OWNER_ADDRESS: ${{ secrets.SDK_PUBLIC_OWNER_ADDRESS }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
+
+        
 
       - name: Create Admin
         run: cd scripts/operation/ && yarn op --create-user null email:admin@gmail.com
