@@ -48,7 +48,7 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: cd packages/api/supabase && supabase link --project-ref  && supabase db push
+      - run: cd packages/api/supabase && supabase link --project-ref ${{ secrets.SDK_SUPABASE_PROJECT_ID }} && supabase db push
         env: 
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SDK_SUPABASE_ACCESS_TOKEN }}
           PROJECT_ID: ${{ secrets.SDK_SUPABASE_PROJECT_ID }}
