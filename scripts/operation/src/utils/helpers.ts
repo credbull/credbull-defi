@@ -36,6 +36,9 @@ export const login = async (opts?: { admin: boolean }): Promise<{ access_token: 
     password: opts?.admin ? process.env.ADMIN_PASSWORD : process.env.BOB_PASSWORD,
   });
 
+  const check = await fetch('http://127.0.0.1:3001/', { method: 'GET'});
+  console.log(await check.json());
+
   const signIn = await fetch(`${process.env.API_BASE_URL}/auth/api/sign-in`, { method: 'POST', body, ...headers() });
   return signIn.json();
 };
