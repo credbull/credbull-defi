@@ -33,19 +33,20 @@ jobs:
         with:
           compose-file: docker-compose.yml
           compose-command: up
-          compose-options: --build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_JWT_SECRET: ${{ secrets.SDK_SUPABASE_JWT_SECRET }}
-          ETHERS_CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_CUSTODIAN_PRIVATE_KEY }}
-          ETHERS_DEPLOYER_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
-          CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
-          NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
-          ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
-          APP_PORT: 3001
-          APP_VERSION: 0.0.1000
+          compose-options: --build \
+            APP_VERSION=0.0.1000
+          secrets: | 
+            NEXT_PUBLIC_SUPABASE_URL = ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
+            SUPABASE_JWT_SECRET: ${{ secrets.SDK_SUPABASE_JWT_SECRET }}
+            ETHERS_CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_CUSTODIAN_PRIVATE_KEY }}
+            ETHERS_DEPLOYER_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
+            CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
+            NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
+            ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
+            APP_PORT: 3001
+            APP_VERSION: 0.0.1000
 
       - uses: supabase/setup-cli@v1
         with:
