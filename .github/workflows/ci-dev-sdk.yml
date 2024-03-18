@@ -71,20 +71,16 @@ jobs:
           PUBLIC_OPERATOR_ADDRESS: ${{ secrets.SDK_PUBLIC_OPERATOR_ADDRESS }}
           PUBLIC_OWNER_ADDRESS: ${{ secrets.SDK_PUBLIC_OWNER_ADDRESS }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-
-        
-
-      - name: Create Admin
-        run: cd scripts/operation/ && yarn op --create-user null email:admin@gmail.com
       
-      - name: Make Admin
-        run: cd scripts/operation/ && yarn op --make-admin null email:admin@gmail.com
-
-      - name: Create UserA
-        run: cd scripts/operation/ && yarn op --create-user null email:userA@gmail.com 
-      
-      - name: Create UserB
-        run: cd scripts/operation/ && yarn op --create-user null email:userB@gmail.com 
+      - name: Create default users
+        run: cd scripts/operation/ && yarn op --create-default-users
+        env:
+          API_BASE_URL: $${{ secrets.SDK_API_BASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
+          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
       
       - name: Create FixedYieldVault
         run: cd scripts/operation/ && yarn op --create-vault
