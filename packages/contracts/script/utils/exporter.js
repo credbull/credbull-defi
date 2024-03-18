@@ -81,9 +81,18 @@ async function exportToSupabase(dataToStoreOnDB) {
 (async () => {
   try {
     await exportAddress();
+
+
   } catch (e) {
     console.log(e);
-  } finally {
+
+    try{
+      const check = await fetch('http://api:3001/', { method: 'GET' });
+    console.log('simple network check', await check.json());
+    } catch(e)
+ {
+  console.log(e);
+ }  } finally {
     console.log(`Finished exporting contracts`);
   }
 })();
