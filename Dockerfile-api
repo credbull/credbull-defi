@@ -11,6 +11,9 @@ WORKDIR /app
 
 # Set production environment
 ENV NODE_ENV="production"
+ENV APP_PORT=3001
+ENV APP_VERSION="9.0.0"
+
 
 # Copy built application
 COPY packages/contracts /app/contracts

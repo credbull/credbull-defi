@@ -45,7 +45,7 @@ jobs:
           NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
           ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
           APP_PORT: 3001
-          APP_VERSION: 0.0.1
+          APP_VERSION: 0.0.1000
 
       - uses: supabase/setup-cli@v1
         with:
