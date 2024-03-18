@@ -25,4 +25,4 @@ EXPOSE 3001
 
 WORKDIR /app/api
 
-CMD [ "yarn", "run", "start:prod" ]
+CMD [ "yarn", "run", "dev" ]
