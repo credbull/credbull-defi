@@ -58,6 +58,9 @@ jobs:
 
       - name: Check network
         run: docker network ls
+
+      - name: Check containers
+        run: docker ps
       
       - name: Deploy contracts
         run: cd packages/contracts/ && yarn deploy
