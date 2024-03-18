@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const envVariables = z.object({
-  API_BASE_URL: z.string().url(),
+  API_BASE_URL: z.string(),
   APP_BASE_URL: z.string().url().optional(),
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string(),
