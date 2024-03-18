@@ -24,5 +24,6 @@ RUN yarn install
 EXPOSE 3001
 
 WORKDIR /app/api
+RUN yarn build
 
 CMD [ "yarn", "run", "start:prod" ]
