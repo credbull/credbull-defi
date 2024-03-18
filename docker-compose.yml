@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  avnil:
-    container_name: avnil
-    image: avnil
+  anvil:
+    container_name: anvil
+    image: anvil
     network_mode: "host"
     build: 
       context: .
@@ -12,9 +12,9 @@ services:
       - 8545:8545
     
 
-  app:
-    container_name: app
-    image: nestjs-app
+  api:
+    container_name: api
+    image: api
     network_mode: "host"
     build: 
       context: .
