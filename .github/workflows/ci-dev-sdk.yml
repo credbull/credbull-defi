@@ -81,10 +81,10 @@ jobs:
         run: sleep 30
 
       - name: Check anvil logs
-        run : docker logs -n 20 anvil
+        run : docker logs --tail 20 anvil
 
       - name: Check api logs
-        run: docker logs -n 20 api
+        run: docker logs --tail 20 api
       
       # - name: Create default users
       #   run: cd scripts/operation/ && yarn op --create-default-users
