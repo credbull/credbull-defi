@@ -47,8 +47,6 @@ jobs:
           APP_PORT: 3001
           APP_VERSION: 0.0.1000
 
-      - name: Curl ping
-        run: curl -X GET http://localhost:3001/
       - uses: supabase/setup-cli@v1
         with:
           version: latest
@@ -60,6 +58,9 @@ jobs:
 
       - name: Check network
         run: docker network ls
+
+      - name: Curl ping
+        run: curl -X GET http://localhost:3001/
 
       - name: Check containers
         run: docker ps
