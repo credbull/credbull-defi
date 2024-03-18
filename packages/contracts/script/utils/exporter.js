@@ -61,11 +61,13 @@ async function exportAddress() {
 }
 
 async function exportToSupabase(dataToStoreOnDB) {
-  const check = await fetch('http://127.0.0.1:3001/', { method: 'GET' });
+
+  const check = await fetch('http://0.0.0.0:3001/', { method: 'GET' });
   console.log('simple network check', await check.json());
 
-  const anvilCheck = await fetch('http://api:3001/', { method: 'GET' });
-  console.log('api check', await anvilCheck.json());
+
+
+
 
   const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
@@ -86,6 +88,8 @@ async function exportToSupabase(dataToStoreOnDB) {
     await exportAddress();
   } catch (e) {
     console.log(e);
+    const anvilCheck = await fetch('http://api:3001/', { method: 'GET' });
+    console.log('api check', await anvilCheck.json());
   } finally {
     console.log(`Finished exporting contracts`);
   }
