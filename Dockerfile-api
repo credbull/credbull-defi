@@ -15,6 +15,7 @@ ENV NODE_ENV="production"
 # Copy built application
 COPY packages/contracts /app/contracts
 COPY packages/api /app/api
+COPY yarn.lock /app
 
 # Start the server by default, this can be overwritten at runtime
 
@@ -24,5 +25,6 @@ RUN rm -rf node_modules && yarn install
 WORKDIR /app/api
 RUN yarn build
 EXPOSE 3001
+
 
 CMD [ "yarn", "run", "start:prod" ]
