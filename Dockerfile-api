@@ -19,12 +19,10 @@ COPY packages/api /app/api
 # Start the server by default, this can be overwritten at runtime
 
 WORKDIR /app
-RUN rm -rf node_modules
-RUN yarn cache clean
-RUN yarn
-EXPOSE 3001
+RUN rm -rf node_modules && yarn install
 
 WORKDIR /app/api
 RUN yarn build
+EXPOSE 3001
 
 CMD [ "yarn", "run", "start:prod" ]
