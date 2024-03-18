@@ -4,7 +4,7 @@ services:
   avnil:
     container_name: avnil
     image: avnil
-    network_mode: "host"
+    # network_mode: "host"
     build: 
       context: .
       dockerfile: Dockerfile-anvil
@@ -15,7 +15,7 @@ services:
   app:
     container_name: app
     image: nestjs-app
-    network_mode: "host"
+    # network_mode: "host"
     build: 
       context: .
       dockerfile: Dockerfile-api
