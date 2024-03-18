@@ -81,6 +81,8 @@ jobs:
           NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
           ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
+          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
       
       - name: Create FixedYieldVault
         run: cd scripts/operation/ && yarn op --create-vault
