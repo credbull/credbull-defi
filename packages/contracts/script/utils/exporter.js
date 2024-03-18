@@ -61,7 +61,7 @@ async function exportAddress() {
 }
 
 async function exportToSupabase(dataToStoreOnDB) {
-  const check = await fetch('http://0.0.0.0:3001/', { method: 'GET' });
+  const check = await fetch('http://127.0.0.1:3001/', { method: 'GET' });
   console.log('simple network check', await check.json());
 
   const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
