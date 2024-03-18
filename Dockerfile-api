@@ -2,7 +2,6 @@
 
 # Adjust NODE_VERSION as desired
 ARG NODE_VERSION=20.11.0
-# ARG APP_VERSION
 
 FROM node:${NODE_VERSION}-slim as base
 
@@ -14,8 +13,6 @@ WORKDIR /app
 # Set production environment
 ENV NODE_ENV="production"
 ENV APP_PORT=3001
-# ENV APP_VERSION=$APP_VERSION
-# RUN echo $APP_VERSION
 
 
 
