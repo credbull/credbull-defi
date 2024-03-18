@@ -20,11 +20,11 @@ COPY yarn.lock /app
 # Start the server by default, this can be overwritten at runtime
 
 WORKDIR /app
-RUN rm -rf node_modules && yarn install
+RUN yarn install
 
 WORKDIR /app/api
 RUN yarn build
 EXPOSE 3001
 
 
-CMD [ "yarn", "run", "start:prod" ]
+CMD [ "node" , "dist/src/main"]
