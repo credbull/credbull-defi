@@ -44,6 +44,8 @@ jobs:
           CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
           NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
           ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
+          APP_PORT: 3001
+          APP_VERSION: 0.0.1
 
       - uses: supabase/setup-cli@v1
         with:
