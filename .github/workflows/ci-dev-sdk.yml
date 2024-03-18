@@ -72,8 +72,11 @@ jobs:
           PUBLIC_OWNER_ADDRESS: ${{ secrets.SDK_PUBLIC_OWNER_ADDRESS }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
       
-      - name: Create default users
-        run: cd scripts/operation/ && yarn op --create-default-users
+      # - name: Create default users
+      #   run: cd scripts/operation/ && yarn op --create-default-users
+      
+      - name: Create FixedYieldVault
+        run: cd scripts/operation/ && yarn op --create-vault
         env:
           API_BASE_URL: $${{ secrets.SDK_API_BASE_URL }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
@@ -83,9 +86,6 @@ jobs:
           ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
           ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
-      
-      - name: Create FixedYieldVault
-        run: cd scripts/operation/ && yarn op --create-vault
 
       - name: Create UpsideVault
         run: cd scripts/operation/ && yarn op --create-vault upside upsideVault:self

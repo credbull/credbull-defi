@@ -1,5 +1,7 @@
 import { supabase } from './utils/helpers';
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const main = () => {
   setTimeout(async () => {
     console.log('\n');
@@ -24,6 +26,8 @@ export const main = () => {
     });
     if (adminAuth.error) throw adminAuth.error;
 
+    await wait(1000);
+
     const userAAuth = await client.auth.signUp({
       email: userA,
       password: userAPassword,
@@ -31,6 +35,8 @@ export const main = () => {
     });
 
     if (userAAuth.error) throw userAAuth.error;
+
+    await wait(1000);
 
     const userBAuth = await client.auth.signUp({
       email: userB,
