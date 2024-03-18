@@ -31,7 +31,6 @@ export const headers = (session?: Awaited<ReturnType<typeof login>>) => {
 };
 
 export const login = async (opts?: { admin: boolean }): Promise<{ access_token: string; user_id: string }> => {
-  console.log("Base url", process.env.API_BASE_URL);
   const body = JSON.stringify({
     email: opts?.admin ? process.env.ADMIN_EMAIL : process.env.BOB_EMAIL,
     password: opts?.admin ? process.env.ADMIN_PASSWORD : process.env.BOB_PASSWORD,

@@ -78,7 +78,7 @@ jobs:
       - name: Create FixedYieldVault
         run: cd scripts/operation/ && yarn op --create-vault
         env:
-          API_BASE_URL: $${{ secrets.SDK_API_BASE_URL }}
+          API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
