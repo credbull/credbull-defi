@@ -1,29 +1,59 @@
 version: '3.8'
 
 services:
-  app:
-    image: nestjs-app
+  anvil:
+    container_name: anvil
+    image: anvil
+    network_mode: "host"
+    build: 
+      context: .
+      dockerfile: Dockerfile-anvil
+    ports:
+      - 8545:8545
+    
+
+  api:
+    container_name: api
+    image: api
+    network_mode: "host"
+    build: 
+      context: .
+      dockerfile: Dockerfile-api
     ports:
       - 3001:3001
     environment:
       APP_PORT: 3001
-      APP_VERSION: 0.0.1
-      NEXT_PUBLIC_SUPABASE_URL: your_supabase_url
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: your_supabase_anon_key
-      SUPABASE_SERVICE_ROLE_KEY: your_supabase_service_role_key
-      SUPABASE_JWT_SECRET: your_supabase_jwt_secret
-      ETHERS_DEPLOYER_PRIVATE_KEY: your_deployer_private_key
-      ETHERS_INFURA_API_KEY: your_infura_api_key
-      CRON_SECRET: any_string_will_do
-      NEXT_PUBLIC_TARGET_NETWORK_WSS: ws://localhost:8545
-    depends_on:
-      - supabase
+      APP_VERSION: ${APP_VERSION}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+      ETHERS_CUSTODIAN_PRIVATE_KEY: ${ETHERS_CUSTODIAN_PRIVATE_KEY}
+      ETHERS_DEPLOYER_PRIVATE_KEY: ${ETHERS_DEPLOYER_PRIVATE_KEY}
+      CRON_SECRET: ${CRON_SECRET}
+      NEXT_PUBLIC_TARGET_NETWORK_WSS: ${NEXT_PUBLIC_TARGET_NETWORK_WSS}
+      ETHERS_PROVIDER_URLS: ${SDK_ETHERS_PROVIDER_URLS}
 
-  supabase:
-    image: public.ecr.aws/supabase/postgres
-    ports:
-      - 5432:5432
-    # volumes:
-    #   - ./data:/var/lib/postgresql/data
+  #   depends_on:
+  #     - supabase
+
+  # supabase:
+  #   container_name: supabase
+  #   image: public.ecr.aws/supabase/postgres:15.1.1.9
+  #   network_mode: "host"
+  #   ports:
+  #     - 5432:5432
+  #   environment:
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_USER: postgres
+  
+  # supabase-kong:
+  #   container_name: supabase-kong
+  #   image: public.ecr.aws/supabase/kong:2.8.1
+  #   ports:
+  #     - 54321:8000
+  #   environment:
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_USER: postgres
 
 # docker build -f Dockerfile -t imagename ../..

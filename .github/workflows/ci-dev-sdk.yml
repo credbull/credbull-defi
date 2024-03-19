@@ -5,13 +5,9 @@ defaults:
     working-directory: .
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ "*" ]
-    paths:
-      - "packages/api/**"
-      - "packages/contracts/**"
-      - "packages/sdk/**"
+    branches: [ "main" ]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -33,29 +29,94 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-      - name: Docker compose up
-        run: docker compose up --build
+      - uses: isbang/compose-action@v1.5.1
+        with:
+          compose-file: docker-compose.yml
+          compose-command: up
+          compose-options: --build 
+        env: 
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_JWT_SECRET: ${{ secrets.SDK_SUPABASE_JWT_SECRET }}
+          ETHERS_CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_CUSTODIAN_PRIVATE_KEY }}
+          ETHERS_DEPLOYER_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
+          CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
+          NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
+          ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
+          APP_PORT: 3001
+          APP_VERSION: 0.0.1000
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: cd packages/api/supabase && supabase link --project-ref ${{ secrets.SDK_SUPABASE_PROJECT_ID }} && supabase db push
+        env: 
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SDK_SUPABASE_ACCESS_TOKEN }}
+          PROJECT_ID: ${{ secrets.SDK_SUPABASE_PROJECT_ID }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SDK_SUPABASE_DB_PASSWORD }}
       
       - name: Deploy contracts
         run: cd packages/contracts/ && yarn deploy
-
-      - name: Create Admin
-        run: cd scripts/operation/ && yarn op --create-user null email:admin@gmail.com
+        env:
+          EXPORT_TO_SUPABASE: true
+          NEXT_PUBLIC_TARGET_NETWORK_ID: 31337
+          COLLATERAL_PERCENTAGE: 200
+          DEFAULT_ANVIL_KEY: ${{ secrets.SDK_DEFAULT_ANVIL_KEY }}
+          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+          VAULT_OPENS_AT_TIMESTAMP: ${{ secrets.SDK_VAULT_OPENS_AT_TIMESTAMP }}
+          VAULT_CLOSES_DURATION_TIMESTAMP: ${{ secrets.SDK_VAULT_CLOSES_DURATION_TIMESTAMP }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
+          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}      
       
-      - name: Make Admin
-        run: cd scripts/operation/ && yarn op --make-admin null email:admin@gmail.com
-
-      - name: Create UserA
-        run: cd scripts/operation/ && yarn op --create-user null email:userA@gmail.com 
-      
-      - name: Create UserB
-        run: cd scripts/operation/ && yarn op --create-user null email:userB@gmail.com 
-      
-      - name: Create FixedYieldVault
-        run: cd scripts/operation/ && yarn op --create-vault
-
-      - name: Create UpsideVault
-        run: cd scripts/operation/ && yarn op --create-vault upside upsideVault:self
+      - name: Create FixedYield and Upside vault 
+        run: cd scripts/operation/ && yarn op --create-vault && yarn op --create-vault upside upsideVault:self
+        env:
+          API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
+          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
+          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
+          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+          ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+          ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
 
       - name: Run SDK tests
         run: cd packages/sdk/ && yarn test
+        env:
+          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_DEFAULT_ANVIL_KEY }}
+          ADMIN_EMAIL: admin@cbl.com
+          ADMIN_PASSWORD: admin123
+
+          USER_A_PRIVATE_KEY: ${{ secrets.SDK_USER_A_PRIVATE_KEY }}
+          USER_A_EMAIL: usera@cbl.com
+          USER_A_PASSWORD: usera123
+
+          USER_B_PRIVATE_KEY: ${{ secrets.SDK_USER_B_PRIVATE_KEY }}
+          USER_B_EMAIL: userb@cbl.com
+          USER_B_PASSWORD: userb123
+
+          NODE_ENV: development
+          BASE_URL: http://localhost:3001
+
+      - name: Clean vault data
+        run: cd scripts/operation/ && yarn op --clean-vault-table
+        env:
+          API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
+          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
+          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
+          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+          ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+          ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"

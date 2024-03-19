@@ -2,6 +2,7 @@ import { ClassSerializerInterceptor, Module, ValidationPipe } from '@nestjs/comm
 import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 
+// import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { SupabaseModule } from './clients/supabase/supabase.module';
 import { AccountsModule } from './modules/accounts/accounts.module';

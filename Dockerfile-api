@@ -2,6 +2,7 @@
 
 # Adjust NODE_VERSION as desired
 ARG NODE_VERSION=20.11.0
+
 FROM node:${NODE_VERSION}-slim as base
 
 LABEL fly_launch_runtime="NestJS"
@@ -11,6 +12,9 @@ WORKDIR /app
 
 # Set production environment
 ENV NODE_ENV="production"
+ENV APP_PORT=3001
+
+
 
 # Copy built application
 COPY packages/contracts /app/contracts
@@ -21,8 +25,10 @@ COPY yarn.lock /app
 
 WORKDIR /app
 RUN yarn install
-EXPOSE 3001
 
 WORKDIR /app/api
+RUN yarn build
+EXPOSE 3001
+
 
 CMD [ "yarn", "run", "start:prod" ]

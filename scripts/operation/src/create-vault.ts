@@ -1,5 +1,7 @@
 import { CredbullFixedYieldVault__factory, CredbullVaultFactory__factory } from '@credbull/contracts';
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
+import { ethers } from 'ethers';
+import { abi } from "./utils/abi"
 
 import { generateAddress, headers, login, signer, supabase, userByEmail } from './utils/helpers';
 
@@ -72,6 +74,28 @@ export const main = (
   scenarios: { matured: boolean; upside: boolean; tenant: boolean },
   params?: { upsideVault: string; tenantEmail: string },
 ) => {
+
+  // function decodeContractError(contract: ethers.Contract, errorData: string) {
+  //   const contractInterface = contract.interface;
+  //   const selecter = errorData.slice(0, 10);
+  //   const errorFragment = contractInterface.getError(selecter);
+  //   const res = contractInterface.decodeErrorResult(errorFragment, errorData);
+  //   const errorInputs = errorFragment.inputs;
+
+  //   let message;
+  //   if (errorInputs.length > 0) {
+  //       message = errorInputs
+  //           .map((input: any, index: any) => {
+  //               return `${input.name}: ${res[index].toString()}`;
+  //           })
+  //           .join(', ');
+  //   }
+
+  //   throw new Error(`${errorFragment.name} | ${message ? message : ''}`);
+  // }
+
+  // const contractInstance = new ethers.Contract("0x5FbDB2315678afecb367f032d93F642f64180aa3", abi, new ethers.providers.JsonRpcProvider("http://localhost:8545"));
+  // decodeContractError(contractInstance, "0xe2517d3f000000000000000000000000cabe80b332aa9d900f5e32df51cb0bc5b276c55697667070c54ef182b0f5858b034beac1b6f3089aa2d3188bb1e8929f4fa9b929") ;
   setTimeout(async () => {
     console.log('\n');
     console.log('=====================================');

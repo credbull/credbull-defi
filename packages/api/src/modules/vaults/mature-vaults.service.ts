@@ -49,7 +49,7 @@ export class MatureVaultsService {
     if (vaults.error) return vaults;
     if (!vaults.data || vaults.data.length === 0) return { data: [] };
 
-    const unPausedVaults = await getUnpausedVaults(vaults);
+    const unPausedVaults = await getUnpausedVaults(vaults, await this.ethers.operator());
 
     // get all custodians and group vaults by custodian
     const custodians = await this.custodian.forVaults(unPausedVaults);
