@@ -6,7 +6,7 @@ defaults:
 
 on:
   push:
-    branches: [ "*" ]
+    branches: [ "main" ]
 
 jobs:
   deploy:
