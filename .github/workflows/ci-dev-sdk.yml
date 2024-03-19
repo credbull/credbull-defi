@@ -126,3 +126,18 @@ jobs:
 
       - name: Run SDK tests
         run: cd packages/sdk/ && yarn test
+        env:
+          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_DEFAULT_ANVIL_KEY }}
+          ADMIN_EMAIL: admin@clb.com
+          ADMIN_PASSWORD: admin123
+
+          USER_A_PRIVATE_KEY: ${{ secrets.SDK_USER_A_PRIVATE_KEY }}
+          USER_A_EMAIL: usera@cbl.com
+          USER_A_PASSWORD: usera123
+
+          USER_B_PRIVATE_KEY: ${{ secrets.SDK_USER_B_PRIVATE_KEY }}
+          USER_B_EMAIL: userb@cbl.com
+          USER_B_PASSWORD: userb123
+
+          NODE_ENV: development
+          BASE_URL: http://localhost:3001

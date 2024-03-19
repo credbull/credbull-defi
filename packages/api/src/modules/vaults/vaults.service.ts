@@ -9,7 +9,6 @@ import {
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BigNumber, type ContractTransaction } from 'ethers';
 
-// import { handleError } from '../../utils/decoder';
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
@@ -73,7 +72,6 @@ export class VaultsService {
 
     const estimation = await responseFromRead(readMethod);
     if (estimation.error) {
-      // handleError(factory, estimation.error);
       return estimation;
     }
 
