@@ -141,3 +141,6 @@ jobs:
 
           NODE_ENV: development
           BASE_URL: http://localhost:3001
+
+      - name: Clean vault data
+        run: cd scripts/operation/ && yarn op --clean-vault-table
