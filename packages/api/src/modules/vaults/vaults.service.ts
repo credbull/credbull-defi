@@ -41,7 +41,8 @@ export class VaultsService {
       .lt('deposits_opened_at', 'now()');
     if (vaults.error || !vaults.data) return vaults;
 
-    const unPausedVaults = await getUnpausedVaults(vaults);
+    const signer = await this.ethers.operator();
+    const unPausedVaults = await getUnpausedVaults(vaults, signer);
 
     return { data: unPausedVaults, error: null };
   }
@@ -81,6 +82,8 @@ export class VaultsService {
 
     const response = await responseFromWrite(writeMethod);
     if (response.error) return response;
+
+    console.log(response);
 
     const vaultAddress = response.data.events?.find((e) => e.event === 'VaultDeployed')?.args?.[0];
     const createdVault = await this.createVaultInDB(params, vaultAddress, !!upside);

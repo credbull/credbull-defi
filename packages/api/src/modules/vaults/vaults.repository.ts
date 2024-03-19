@@ -1,5 +1,7 @@
+import { CredbullFixedYieldVault__factory } from '@credbull/contracts';
 import { NotFoundException } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { Signer } from 'ethers';
 import * as _ from 'lodash';
 
 import { ServiceResponse } from '../../types/responses';
@@ -64,11 +66,11 @@ export async function addEntitiesAndDistribution(
   return { data: 'Vault created successfully' };
 }
 
-export async function getUnpausedVaults(vaults: ServiceResponse<Tables<'vaults'>[]>) {
+export async function getUnpausedVaults(vaults: ServiceResponse<Tables<'vaults'>[]>, operator: Signer) {
   return _.compact(
     await Promise.all(
       (vaults.data || []).map(async (vault) => {
-        const vaultContract = await this.contract(vault);
+        const vaultContract = CredbullFixedYieldVault__factory.connect(vault.address, operator);
         const paused = await vaultContract.paused();
         return paused ? null : vault;
       }),
