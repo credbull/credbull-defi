@@ -1,5 +1,19 @@
 name: ci-dev-sdk
 
+env:
+  API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
+  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+  NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
+  ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
+  ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
+  ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
+  PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+  PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+  ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+  ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+
 defaults:
   run:
     working-directory: .
@@ -55,15 +69,6 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SDK_SUPABASE_ACCESS_TOKEN }}
           PROJECT_ID: ${{ secrets.SDK_SUPABASE_PROJECT_ID }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SDK_SUPABASE_DB_PASSWORD }}
-
-      - name: Check network
-        run: docker network ls
-
-      - name: Curl ping
-        run: curl -X GET http://localhost:3001/
-
-      - name: Check containers
-        run: docker ps
       
       - name: Deploy contracts
         run: cd packages/contracts/ && yarn deploy
@@ -78,51 +83,23 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
           PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
           PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-
-      - name: Sleep for 30
-        run: sleep 30
-
-      - name: Check anvil logs
-        run : docker logs --tail 20 anvil
-
-      - name: Check api logs
-        run: docker logs --tail 20 api
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}      
       
-      # - name: Create default users
-      #   run: cd scripts/operation/ && yarn op --create-default-users
-      
-      - name: Create FixedYieldVault
-        run: cd scripts/operation/ && yarn op --create-vault
+      - name: Create FixedYield and Upside vault 
+        run: cd scripts/operation/ && yarn op --create-vault && yarn op --create-vault upside upsideVault:self
         env:
-          API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
-          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
-          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-          ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
-          ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
-
-      - name: Create UpsideVault
-        run: cd scripts/operation/ && yarn op --create-vault upside upsideVault:self
-        env:
-          API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
-          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
-          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-          ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
-          ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+          API_BASE_URL: $API_BASE_URL
+          NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: $NEXT_PUBLIC_SUPABASE_ANON_KEY
+          NEXT_PUBLIC_TARGET_NETWORK: $NEXT_PUBLIC_TARGET_NETWORK
+          SUPABASE_SERVICE_ROLE_KEY: $SUPABASE_SERVICE_ROLE_KEY
+          ADMIN_PRIVATE_KEY: $ADMIN_PRIVATE_KEY
+          ADMIN_EMAIL: $ADMIN_EMAIL
+          ADMIN_PASSWORD: $ADMIN_PASSWORD
+          PUBLIC_OWNER_ADDRESS: $PUBLIC_OWNER_ADDRESS
+          PUBLIC_OPERATOR_ADDRESS: $PUBLIC_OPERATOR_ADDRESS
+          ADDRESSES_TREASURY: $ADDRESSES_TREASURY
+          ADDRESSES_ACTIVITY_REWARD: $ADDRESSES_ACTIVITY_REWARD
 
       - name: Run SDK tests
         run: cd packages/sdk/ && yarn test
@@ -145,15 +122,15 @@ jobs:
       - name: Clean vault data
         run: cd scripts/operation/ && yarn op --clean-vault-table
         env:
-          API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
-          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
-          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-          ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
-          ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+          API_BASE_URL: $API_BASE_URL
+          NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: $NEXT_PUBLIC_SUPABASE_ANON_KEY
+          NEXT_PUBLIC_TARGET_NETWORK: $NEXT_PUBLIC_TARGET_NETWORK
+          SUPABASE_SERVICE_ROLE_KEY: $SUPABASE_SERVICE_ROLE_KEY
+          ADMIN_PRIVATE_KEY: $ADMIN_PRIVATE_KEY
+          ADMIN_EMAIL: $ADMIN_EMAIL
+          ADMIN_PASSWORD: $ADMIN_PASSWORD
+          PUBLIC_OWNER_ADDRESS: $PUBLIC_OWNER_ADDRESS
+          PUBLIC_OPERATOR_ADDRESS: $PUBLIC_OPERATOR_ADDRESS
+          ADDRESSES_TREASURY: $ADDRESSES_TREASURY
+          ADDRESSES_ACTIVITY_REWARD: $ADDRESSES_ACTIVITY_REWARD
