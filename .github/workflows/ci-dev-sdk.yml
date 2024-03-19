@@ -128,7 +128,7 @@ jobs:
         run: cd packages/sdk/ && yarn test
         env:
           ADMIN_PRIVATE_KEY: ${{ secrets.SDK_DEFAULT_ANVIL_KEY }}
-          ADMIN_EMAIL: admin@clb.com
+          ADMIN_EMAIL: admin@cbl.com
           ADMIN_PASSWORD: admin123
 
           USER_A_PRIVATE_KEY: ${{ secrets.SDK_USER_A_PRIVATE_KEY }}
