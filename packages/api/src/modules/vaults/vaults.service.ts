@@ -9,6 +9,7 @@ import {
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BigNumber, type ContractTransaction } from 'ethers';
 
+// import { handleError } from '../../utils/decoder';
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
@@ -71,7 +72,10 @@ export class VaultsService {
       : factory.estimateGas.createVault(params, options);
 
     const estimation = await responseFromRead(readMethod);
-    if (estimation.error) return estimation;
+    if (estimation.error) {
+      // handleError(factory, estimation.error);
+      return estimation;
+    }
 
     const writeMethod: Promise<ContractTransaction> = upside
       ? upsideFactory.createVault(params, collateralPercentage, options, { gasLimit: estimation.data })
