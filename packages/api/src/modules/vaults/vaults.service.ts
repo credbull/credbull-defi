@@ -41,8 +41,7 @@ export class VaultsService {
       .lt('deposits_opened_at', 'now()');
     if (vaults.error || !vaults.data) return vaults;
 
-    const signer = await this.ethers.operator();
-    const unPausedVaults = await getUnpausedVaults(vaults, signer);
+    const unPausedVaults = await getUnpausedVaults(vaults, await this.ethers.operator());
 
     return { data: unPausedVaults, error: null };
   }

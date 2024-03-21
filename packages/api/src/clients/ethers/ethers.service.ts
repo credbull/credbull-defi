@@ -36,6 +36,24 @@ export class EthersService {
     return env === 'development' ? { gasLimit: 1000000 } : {};
   }
 
+  public async wssProvider(): Promise<providers.WebSocketProvider> {
+    console.log(this.config.getOrThrow('WSS_PROVIDER_URLS'));
+    const provider = new providers.WebSocketProvider(this.config.getOrThrow('WSS_PROVIDER_URLS'));
+    provider._websocket.on('open', () => {
+      console.log('WebSocketProvider open');
+    });
+
+    provider._websocket.on('close', () => {
+      console.log('WebSocketProvider close');
+    });
+
+    provider._websocket.on('error', () => {
+      console.log('WebSocketProvider error');
+    });
+
+    return provider;
+  }
+
   private async provider(): Promise<providers.Provider> {
     const networkProviders = String(this.config.getOrThrow('ETHERS_PROVIDER_URLS')).split(',');
 
