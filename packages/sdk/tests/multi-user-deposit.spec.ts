@@ -156,7 +156,7 @@ test.describe('Multi user Interaction - Fixed', async () => {
       const shareBalanceAfterRedeemB = await vault.balanceOf(userAddressB);
 
       const usdcBalanceAfterRedeemA = await usdc.balanceOf(userAddressA);
-      const usdcBalanceAfterRedeemB = await usdc.balanceOf(userAddressB);
+      const usdcBalanceAfterRedeemB = await usdc.balanceOf(userAddressB); 
 
       expect(shareBalanceBeforeRedeemA.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemA.toString());
       expect(shareBalanceBeforeRedeemB.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemB.toString());
