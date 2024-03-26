@@ -6,7 +6,14 @@ import { BigNumber, Signer } from 'ethers';
 import { CredbullSDK } from '../index';
 import { signer } from '../mock/utils/helpers';
 
-import { __mockMint, __mockMintToken, login, whitelist, toggleWindowCheck, createUpsideVaultVault } from './utils/admin-ops';
+import {
+  __mockMint,
+  __mockMintToken,
+  createUpsideVaultVault,
+  login,
+  toggleWindowCheck,
+  whitelist,
+} from './utils/admin-ops';
 
 config();
 
@@ -26,8 +33,14 @@ let userBId: string;
 let vaultAddress: string;
 
 test.beforeAll(async () => {
-  const { access_token: userAToken, user_id: _userAId } = await login(process.env.USER_A_EMAIL || '', process.env.USER_A_PASSWORD || '');
-  const { access_token: userBToken, user_id: _userBId } = await login(process.env.USER_B_EMAIL || '', process.env.USER_B_PASSWORD || '');
+  const { access_token: userAToken, user_id: _userAId } = await login(
+    process.env.USER_A_EMAIL || '',
+    process.env.USER_A_PASSWORD || '',
+  );
+  const { access_token: userBToken, user_id: _userBId } = await login(
+    process.env.USER_B_EMAIL || '',
+    process.env.USER_B_PASSWORD || '',
+  );
 
   walletSignerA = signer(process.env.USER_A_PRIVATE_KEY || '0x');
   walletSignerB = signer(process.env.USER_B_PRIVATE_KEY || '0x');
@@ -51,7 +64,7 @@ test.describe('Multi user Interaction - Upside', async () => {
   test('Deposit and redeem flow', async () => {
     const depositAmount = BigNumber.from('100000000');
 
-    await test.step('Create upside vault', async() => {
+    await test.step('Create upside vault', async () => {
       await createUpsideVaultVault();
     });
 
@@ -70,7 +83,7 @@ test.describe('Multi user Interaction - Upside', async () => {
       return upsideVault;
     });
 
-    await test.step("Whitelist users", async() => {
+    await test.step('Whitelist users', async () => {
       await whitelist(userAddressA, userAId);
       await whitelist(userAddressB, userBId);
     });
@@ -85,13 +98,23 @@ test.describe('Multi user Interaction - Upside', async () => {
       const userABalance = await usdc.balanceOf(await (walletSignerA as Signer).getAddress());
       const userBBalance = await usdc.balanceOf(await (walletSignerB as Signer).getAddress());
 
-      if(userABalance.lt(depositAmount))
+      if (userABalance.lt(depositAmount))
         await __mockMint(await (walletSignerA as Signer).getAddress(), depositAmount, vault, walletSignerA as Signer);
-      if(userBBalance.lt(depositAmount))
+      if (userBBalance.lt(depositAmount))
         await __mockMint(await (walletSignerB as Signer).getAddress(), depositAmount, vault, walletSignerB as Signer);
 
-      await __mockMintToken(await (walletSignerA as Signer).getAddress(), collateralRequired, vault, walletSignerA as Signer);
-      await __mockMintToken(await (walletSignerB as Signer).getAddress(), collateralRequired, vault, walletSignerB as Signer);
+      await __mockMintToken(
+        await (walletSignerA as Signer).getAddress(),
+        collateralRequired,
+        vault,
+        walletSignerA as Signer,
+      );
+      await __mockMintToken(
+        await (walletSignerB as Signer).getAddress(),
+        collateralRequired,
+        vault,
+        walletSignerB as Signer,
+      );
 
       return collateralRequired;
     });
@@ -154,9 +177,9 @@ test.describe('Multi user Interaction - Upside', async () => {
 
       const totalDeposited = await vault.totalAssetDeposited();
 
-      const yeildAmount = (totalDeposited.mul(10)).div(100);
+      const yeildAmount = totalDeposited.mul(10).div(100);
 
-      const upsideYieldAmount = ((await token.balanceOf(vaultAddress)).mul(10).div(100)).div(1e12);
+      const upsideYieldAmount = (await token.balanceOf(vaultAddress)).mul(10).div(100).div(1e12);
 
       const mintAmount = totalDeposited.add(yeildAmount).add(upsideYieldAmount);
 

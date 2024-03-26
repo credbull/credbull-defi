@@ -26,8 +26,14 @@ let userBId: string;
 let vaultAddress: string;
 
 test.beforeAll(async () => {
-  const { access_token: userAToken, user_id: _userAId } = await login(process.env.USER_A_EMAIL || '', process.env.USER_A_PASSWORD || '');
-  const { access_token: userBToken, user_id: _userBId } = await login(process.env.USER_B_EMAIL || '', process.env.USER_B_PASSWORD || '');
+  const { access_token: userAToken, user_id: _userAId } = await login(
+    process.env.USER_A_EMAIL || '',
+    process.env.USER_A_PASSWORD || '',
+  );
+  const { access_token: userBToken, user_id: _userBId } = await login(
+    process.env.USER_B_EMAIL || '',
+    process.env.USER_B_PASSWORD || '',
+  );
 
   walletSignerA = signer(process.env.USER_A_PRIVATE_KEY || '0x');
   walletSignerB = signer(process.env.USER_B_PRIVATE_KEY || '0x');
@@ -45,16 +51,15 @@ test.beforeAll(async () => {
   //link wallet
   await sdkA.linkWallet();
   await sdkB.linkWallet();
-
 });
 
 test.describe('Multi user Interaction - Fixed', async () => {
   test('Deposit and redeem flow', async () => {
     const depositAmount = BigNumber.from('100000000');
 
-    await test.step('Create upside vault', async() => {
+    await test.step('Create upside vault', async () => {
       await createFixedYieldVault();
-    })
+    });
 
     vaultAddress = await test.step('Get all vaults', async () => {
       const vaults = await sdkA.getAllVaults();
@@ -69,7 +74,7 @@ test.describe('Multi user Interaction - Fixed', async () => {
       return fixedVault.address;
     });
 
-    await test.step("Whitelist users", async() => {
+    await test.step('Whitelist users', async () => {
       await whitelist(userAddressA, userAId);
       await whitelist(userAddressB, userBId);
     });
@@ -80,9 +85,9 @@ test.describe('Multi user Interaction - Fixed', async () => {
       const usdc = await sdkA.getAssetInstance(vaultAddress);
       const userABalance = await usdc.balanceOf(await (walletSignerA as Signer).getAddress());
       const userBBalance = await usdc.balanceOf(await (walletSignerB as Signer).getAddress());
-      if(userABalance.lt(depositAmount))
+      if (userABalance.lt(depositAmount))
         await __mockMint(await (walletSignerA as Signer).getAddress(), depositAmount, vault, walletSignerA as Signer);
-      if(userBBalance.lt(depositAmount))
+      if (userBBalance.lt(depositAmount))
         await __mockMint(await (walletSignerB as Signer).getAddress(), depositAmount, vault, walletSignerB as Signer);
     });
 
@@ -122,7 +127,7 @@ test.describe('Multi user Interaction - Fixed', async () => {
       const usdc = await sdkA.getAssetInstance(vaultAddress);
 
       const totalDeposited = await vault.totalAssetDeposited();
-      const yeildAmount = (totalDeposited.mul(10)).div(100);
+      const yeildAmount = totalDeposited.mul(10).div(100);
 
       const mintAmount = totalDeposited.add(yeildAmount);
 
@@ -155,7 +160,6 @@ test.describe('Multi user Interaction - Fixed', async () => {
 
       expect(shareBalanceBeforeRedeemA.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemA.toString());
       expect(shareBalanceBeforeRedeemB.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemB.toString());
-
 
       // expect(usdcBalanceBeofreRedeemA.add(depositAmount).toString()).toEqual(usdcBalanceAfterRedeemA.toString());
       // expect(usdcBalanceBeofreRedeemB.add(redeemPreview).toString()).toEqual(usdcBalanceAfterRedeemB.toString());

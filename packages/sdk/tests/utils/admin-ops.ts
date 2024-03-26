@@ -3,20 +3,23 @@ import {
   CredbullFixedYieldVaultWithUpside,
   MockStablecoin__factory,
 } from '@credbull/contracts';
+import * as ChildProcess from 'child_process';
 import { config } from 'dotenv';
 import { BigNumber, Signer, Wallet, providers } from 'ethers';
-
-import * as ChildProcess from 'child_process';
-import path from 'path'
+import path from 'path';
 
 config();
 
 export async function createFixedYieldVault() {
-  ChildProcess.execSync('yarn op --create-vault matured', { cwd: path.resolve(__dirname, "../../../../scripts/operation")});
+  ChildProcess.execSync('yarn op --create-vault matured', {
+    cwd: path.resolve(__dirname, '../../../../scripts/operation'),
+  });
 }
 
 export async function createUpsideVaultVault() {
-  ChildProcess.execSync('yarn op --create-vault upside upsideVault:self', { cwd: path.resolve(__dirname, "../../../../scripts/operation")});
+  ChildProcess.execSync('yarn op --create-vault upside upsideVault:self', {
+    cwd: path.resolve(__dirname, '../../../../scripts/operation'),
+  });
 }
 
 export async function getVaultEntities(id: string) {
@@ -27,13 +30,12 @@ export async function getVaultEntities(id: string) {
   });
 
   return await res.json();
-
 }
 
 export async function distributeFixedYieldVault() {
-    const res = await fetch(`${process.env.BASE_URL}/vaults/mature-outstanding`, {
+  const res = await fetch(`${process.env.BASE_URL}/vaults/mature-outstanding`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.CRON_SECRET || ''}` },
   });
 }
 
