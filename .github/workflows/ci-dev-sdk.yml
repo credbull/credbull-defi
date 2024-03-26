@@ -89,7 +89,7 @@ jobs:
       #     ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
       #     ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
       - name: Logs
-        run: docker logs --tail api
+        run: docker logs api --tail all
 
       - name: Run SDK tests
         run: cd packages/sdk/ && yarn test
