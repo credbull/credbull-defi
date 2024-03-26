@@ -78,7 +78,7 @@ test.describe('Multi user Interaction - Upside', async () => {
       const upsideVault = vaults.data.find((vault: any) => vault.type === 'fixed_yield_upside');
       expect(upsideVault).toBeTruthy();
 
-      vaultAddress = upsideVault.address;
+      vaultAddress = upsideVault.address; 
 
       return upsideVault;
     });
