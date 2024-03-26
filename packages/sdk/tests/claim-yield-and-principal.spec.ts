@@ -169,12 +169,12 @@ test.describe('Claim yield and principal - Fixed', async () => {
 
       console.log(treasuryBalanceAfterDistribution.toString(), activityRewardBalanceAfterDistribution.toString());
 
-      // expect(treasuryBalanceAfterDistribution.toString()).toEqual(
-      //   treasuryBalances[i].add(BigNumber.from('640000000').mul(2)).toString(),
-      // );
-      // expect(activityRewardBalanceAfterDistribution.toString()).toEqual(
-      //   activityRewardBalances[i].add(BigNumber.from('160000000').mul(2)).toString(),
-      // );
+      expect(treasuryBalanceAfterDistribution.toString()).toEqual(
+        treasuryBalances[i].add(BigNumber.from('640000000').mul(2)).toString(),
+      );
+      expect(activityRewardBalanceAfterDistribution.toString()).toEqual(
+        activityRewardBalances[i].add(BigNumber.from('160000000').mul(2)).toString(),
+      );
     }
   });
 });
