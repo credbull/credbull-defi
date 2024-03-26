@@ -29,7 +29,9 @@ export function calculateProportions(data: CalculateProportionsData[]) {
 
   return data
     .map((cur, i) => ((toNumber(cur.custodianAmount) - totalExpected) * percentages[i]) / 100)
-    .map((n) => parseUnits(Math.round(n).toString(), 'mwei'));
+    .map((n) => {
+      return parseUnits(Math.round(n).toString(), 'mwei');
+    });
 }
 
 export function prepareDistributionTransfers(

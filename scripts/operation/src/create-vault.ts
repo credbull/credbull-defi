@@ -111,7 +111,7 @@ export const main = (
     const adminSigner = signer(process.env.ADMIN_PRIVATE_KEY);
 
     // allow custodian address
-    let custodian = scenarios.matured ? process.env.ADDRESSES_CUSTODIAN! : generateAddress();
+    let custodian = scenarios.matured ? process.env.ADDRESSES_CUSTODIAN! : process.env.ADDRESSES_CUSTODIAN || "";
 
     if (params?.upsideVault && !scenarios.upside) {
       const vault = await supabaseClient.from('vaults').select().eq('address', params.upsideVault).single();

@@ -7,15 +7,17 @@ import {
   Get,
   InternalServerErrorException,
   NotFoundException,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { SupabaseGuard, SupabaseRoles } from '../../clients/supabase/auth/supabase.guard';
 import { isKnownError } from '../../utils/errors';
 import { CronGuard } from '../../utils/guards';
 
+import { EntitiesDto } from './entities.dto';
 import { MatureVaultsService } from './mature-vaults.service';
 import { UpsideVaultParamsDto, VaultParamsDto, VaultsDto } from './vaults.dto';
 import { VaultsService } from './vaults.service';
@@ -47,7 +49,7 @@ export class VaultsController {
     return new VaultsDto({ data });
   }
 
-  @Get('/mature-outstanding')
+  @Post('/mature-outstanding')
   @UseGuards(CronGuard)
   @ApiOperation({ summary: 'Matures any outstanding vault and returns them' })
   @ApiResponse({ status: 200, description: 'Success', type: VaultsDto })
@@ -77,6 +79,22 @@ export class VaultsController {
     if (!data) throw new NotFoundException();
 
     return new VaultsDto({ data: [data] });
+  }
+
+  @Get('/vault-entities/:id')
+  @UseGuards(SupabaseGuard)
+  @ApiParam({ name: 'id', required: true, type: String })
+  @ApiOperation({ summary: 'Get entities detail of a vault' })
+  @ApiResponse({ status: 200, description: 'Success', type: EntitiesDto })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 500, description: 'Internal Error' })
+  async vaultEntities(@Param('id') id: string): Promise<EntitiesDto> {
+    const { data, error } = await this.vaults.vaultEntities(Number(id));
+
+    if (error) throw new InternalServerErrorException(error);
+    if (!data) throw new NotFoundException();
+
+    return new EntitiesDto({ data });
   }
 
   @Post('/create-vault-upside')

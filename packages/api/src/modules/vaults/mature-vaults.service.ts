@@ -177,7 +177,6 @@ export class MatureVaultsService {
 
   private async mature(vault: Tables<'vaults'>): Promise<ServiceResponse<Tables<'vaults'>[]>> {
     const strategy = await this.strategy(vault);
-
     const maturedOnChain = await responseFromWrite(strategy.mature(this.ethers.overrides()));
     if (maturedOnChain.error) return maturedOnChain;
 

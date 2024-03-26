@@ -46,6 +46,13 @@ export class VaultsService {
     return { data: unPausedVaults, error: null };
   }
 
+  async vaultEntities(vaultId: number): Promise<ServiceResponse<Tables<'vault_entities'>[]>> {
+    const { data, error } = await this.supabase.client().from('vault_entities').select('*').eq('vault_id', vaultId);
+
+    if (error) return { data, error };
+    return { data: data, error: null };
+  }
+
   async createVault(
     params: VaultParamsDto,
     upside?: boolean,

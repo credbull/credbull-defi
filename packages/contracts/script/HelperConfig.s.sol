@@ -125,7 +125,7 @@ contract HelperConfig is Script {
         }
 
         // TODO: because we dont have a real custodian, we need to fix one that we have a private key for testing.
-        address custodian = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+        address custodian = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
         address owner = test ? 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 : vm.envAddress("PUBLIC_OWNER_ADDRESS"); // use a owner that we have a private key for testing
         address operator = test ? 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 : vm.envAddress("PUBLIC_OPERATOR_ADDRESS");
 

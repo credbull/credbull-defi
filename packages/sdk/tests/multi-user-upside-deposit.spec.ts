@@ -6,32 +6,41 @@ import { BigNumber, Signer } from 'ethers';
 import { CredbullSDK } from '../index';
 import { signer } from '../mock/utils/helpers';
 
-import { __mockMint, __mockMintToken, login, toggleMaturityCheck, toggleWindowCheck } from './utils/admin-ops';
+import { __mockMint, __mockMintToken, login, whitelist, toggleWindowCheck, createUpsideVaultVault } from './utils/admin-ops';
 
 config();
 
 let walletSignerA: Signer | undefined = undefined;
 let walletSignerB: Signer | undefined = undefined;
+let operatorSigner: Signer | undefined = undefined;
+
 let sdkA: CredbullSDK;
 let sdkB: CredbullSDK;
 
 let userAddressA: string;
 let userAddressB: string;
 
+let userAId: string;
+let userBId: string;
+
 let vaultAddress: string;
 
 test.beforeAll(async () => {
-  const { access_token: userAToken } = await login(process.env.USER_A_EMAIL || '', process.env.USER_A_PASSWORD || '');
-  const { access_token: userBToken } = await login(process.env.USER_B_EMAIL || '', process.env.USER_B_PASSWORD || '');
+  const { access_token: userAToken, user_id: _userAId } = await login(process.env.USER_A_EMAIL || '', process.env.USER_A_PASSWORD || '');
+  const { access_token: userBToken, user_id: _userBId } = await login(process.env.USER_B_EMAIL || '', process.env.USER_B_PASSWORD || '');
 
   walletSignerA = signer(process.env.USER_A_PRIVATE_KEY || '0x');
   walletSignerB = signer(process.env.USER_B_PRIVATE_KEY || '0x');
+  operatorSigner = signer(process.env.OPERATOR_PRIVATE_KEY || '0x');
 
   sdkA = new CredbullSDK(userAToken, walletSignerA as Signer);
   sdkB = new CredbullSDK(userBToken, walletSignerB as Signer);
 
   userAddressA = await (walletSignerA as Signer).getAddress();
   userAddressB = await (walletSignerB as Signer).getAddress();
+
+  userAId = _userAId;
+  userBId = _userBId;
 
   //link wallet
   await sdkA.linkWallet();
@@ -41,6 +50,10 @@ test.beforeAll(async () => {
 test.describe('Multi user Interaction - Upside', async () => {
   test('Deposit and redeem flow', async () => {
     const depositAmount = BigNumber.from('100000000');
+
+    await test.step('Create upside vault', async() => {
+      await createUpsideVaultVault();
+    });
 
     await test.step('Get all vaults and filter upside', async () => {
       const vaults = await sdkA.getAllVaults();
@@ -57,27 +70,28 @@ test.describe('Multi user Interaction - Upside', async () => {
       return upsideVault;
     });
 
+    await test.step("Whitelist users", async() => {
+      await whitelist(userAddressA, userAId);
+      await whitelist(userAddressB, userBId);
+    });
+
     //MINT USDC for user
     const collateralRequired = await test.step('MINT USDC and CBL token for user', async () => {
       const vault = await sdkA.getUpsideVaultInstance(vaultAddress);
+      const usdc = await sdkA.getAssetInstance(vaultAddress);
 
       const collateralRequired = await vault.getCollateralAmount(depositAmount);
 
-      await __mockMintToken(
-        await (walletSignerA as Signer).getAddress(),
-        collateralRequired,
-        vault,
-        walletSignerA as Signer,
-      );
-      await __mockMintToken(
-        await (walletSignerB as Signer).getAddress(),
-        collateralRequired,
-        vault,
-        walletSignerB as Signer,
-      );
+      const userABalance = await usdc.balanceOf(await (walletSignerA as Signer).getAddress());
+      const userBBalance = await usdc.balanceOf(await (walletSignerB as Signer).getAddress());
 
-      await __mockMint(await (walletSignerA as Signer).getAddress(), depositAmount, vault, walletSignerA as Signer);
-      await __mockMint(await (walletSignerB as Signer).getAddress(), depositAmount, vault, walletSignerB as Signer);
+      if(userABalance.lt(depositAmount))
+        await __mockMint(await (walletSignerA as Signer).getAddress(), depositAmount, vault, walletSignerA as Signer);
+      if(userBBalance.lt(depositAmount))
+        await __mockMint(await (walletSignerB as Signer).getAddress(), depositAmount, vault, walletSignerB as Signer);
+
+      await __mockMintToken(await (walletSignerA as Signer).getAddress(), collateralRequired, vault, walletSignerA as Signer);
+      await __mockMintToken(await (walletSignerB as Signer).getAddress(), collateralRequired, vault, walletSignerB as Signer);
 
       return collateralRequired;
     });
@@ -117,6 +131,8 @@ test.describe('Multi user Interaction - Upside', async () => {
       await sdkA.deposit(vaultAddress, depositAmount, userAddressA);
       await sdkB.deposit(vaultAddress, depositAmount, userAddressB);
 
+      const depositPreview = await vault.previewDeposit(depositAmount);
+
       const shareBalanceAfterDepositA = await vault.balanceOf(userAddressA);
       const shareBalanceAfterDepositB = await vault.balanceOf(userAddressB);
 
@@ -126,34 +142,48 @@ test.describe('Multi user Interaction - Upside', async () => {
         vaultTokenBalanceAfterDeposit.toString(),
       );
 
-      expect(shareBalanceBeforeDepositA.add(depositAmount).toString()).toEqual(shareBalanceAfterDepositA.toString());
-      expect(shareBalanceBeforeDepositB.add(depositAmount).toString()).toEqual(shareBalanceAfterDepositB.toString());
+      expect(shareBalanceBeforeDepositA.add(depositPreview).toString()).toEqual(shareBalanceAfterDepositA.toString());
+      expect(shareBalanceBeforeDepositB.add(depositPreview).toString()).toEqual(shareBalanceAfterDepositB.toString());
     });
 
     //Redeem through SDK
     await test.step('Redeem through SDK', async () => {
       const vault = await sdkA.getUpsideVaultInstance(vaultAddress);
+      // const usdc = await sdkA.getAssetInstance(vaultAddress);
       const token = await sdkA.getTokenInstance(vaultAddress);
 
-      //Mature vault
-      await __mockMint(vaultAddress, depositAmount.mul(2), vault, walletSignerA as Signer);
+      const totalDeposited = await vault.totalAssetDeposited();
 
-      const shares = depositAmount;
+      const yeildAmount = (totalDeposited.mul(10)).div(100);
+
+      const upsideYieldAmount = ((await token.balanceOf(vaultAddress)).mul(10).div(100)).div(1e12);
+
+      const mintAmount = totalDeposited.add(yeildAmount).add(upsideYieldAmount);
+
+      //Mature vault
+      await __mockMint(vaultAddress, mintAmount, vault, walletSignerA as Signer);
+
       const shareBalanceBeforeRedeemA = await vault.balanceOf(userAddressA);
       const shareBalanceBeforeRedeemB = await vault.balanceOf(userAddressB);
 
       const tokenBalanceBeforeRedeemA = await token.balanceOf(userAddressA);
       const tokenBalanceBeforeRedeemB = await token.balanceOf(userAddressB);
 
-      const redemptionAmountA = await vault.calculateTokenRedemption(depositAmount, userAddressA);
-      const redemptionAmountB = await vault.calculateTokenRedemption(depositAmount, userAddressB);
+      // const usdcBalanceBeforeRedeemA = await usdc.balanceOf(userAddressA);
+      // const usdcBalanceBeforeRedeemB = await usdc.balanceOf(userAddressB);
+
+      const previewDeposit = await vault.previewDeposit(depositAmount);
+      const redemptionAmountA = await vault.calculateTokenRedemption(previewDeposit, userAddressA);
+      const redemptionAmountB = await vault.calculateTokenRedemption(previewDeposit, userAddressB);
 
       //Skip checks
-      await toggleMaturityCheck(vault, false);
+      await vault.connect(operatorSigner as Signer).mature();
       await toggleWindowCheck(vault, false);
 
-      await sdkA.redeem(vaultAddress, shares, userAddressA);
-      await sdkB.redeem(vaultAddress, shares, userAddressB);
+      //const previewRedeem = await vault.previewRedeem(previewDeposit);
+
+      await sdkA.redeem(vaultAddress, previewDeposit, userAddressA);
+      await sdkB.redeem(vaultAddress, previewDeposit, userAddressB);
 
       const shareBalanceAfterRedeemA = await vault.balanceOf(userAddressA);
       const shareBalanceAfterRedeemB = await vault.balanceOf(userAddressB);
@@ -164,8 +194,8 @@ test.describe('Multi user Interaction - Upside', async () => {
       expect(tokenBalanceBeforeRedeemA.add(redemptionAmountA).toString()).toEqual(tokenBalanceAfterRedeemA.toString());
       expect(tokenBalanceBeforeRedeemB.add(redemptionAmountB).toString()).toEqual(tokenBalanceAfterRedeemB.toString());
 
-      expect(shareBalanceBeforeRedeemA.sub(shares).toString()).toEqual(shareBalanceAfterRedeemA.toString());
-      expect(shareBalanceBeforeRedeemB.sub(shares).toString()).toEqual(shareBalanceAfterRedeemB.toString());
+      expect(shareBalanceBeforeRedeemA.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemA.toString());
+      expect(shareBalanceBeforeRedeemB.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemB.toString());
     });
   });
 });

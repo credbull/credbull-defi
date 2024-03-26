@@ -6,9 +6,38 @@ import {
 import { config } from 'dotenv';
 import { BigNumber, Signer, Wallet, providers } from 'ethers';
 
+import * as ChildProcess from 'child_process';
+import path from 'path'
+
 config();
 
-export async function whtielist(address: string, user_id: string) {
+export async function createFixedYieldVault() {
+  ChildProcess.execSync('yarn op --create-vault matured', { cwd: path.resolve(__dirname, "../../../../scripts/operation")});
+}
+
+export async function createUpsideVaultVault() {
+  ChildProcess.execSync('yarn op --create-vault upside upsideVault:self', { cwd: path.resolve(__dirname, "../../../../scripts/operation")});
+}
+
+export async function getVaultEntities(id: string) {
+  const { access_token } = await login(process.env.ADMIN_EMAIL || '', process.env.ADMIN_PASSWORD || '');
+
+  const res = await fetch(`${process.env.BASE_URL}/vaults/vault-entities/${id}`, {
+    headers: { Authorization: `Bearer ${access_token}` },
+  });
+
+  return await res.json();
+
+}
+
+export async function distributeFixedYieldVault() {
+    const res = await fetch(`${process.env.BASE_URL}/vaults/mature-outstanding`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
+  });
+}
+
+export async function whitelist(address: string, user_id: string) {
   const { access_token } = await login(process.env.ADMIN_EMAIL || '', process.env.ADMIN_PASSWORD || '');
 
   const whistelistRes = await fetch(`${process.env.BASE_URL}/accounts/whitelist`, {
@@ -17,7 +46,7 @@ export async function whtielist(address: string, user_id: string) {
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${access_token}` },
   });
 
-  await whistelistRes.json();
+  const res = await whistelistRes.json();
 }
 
 export async function login(email: string, password: string) {
