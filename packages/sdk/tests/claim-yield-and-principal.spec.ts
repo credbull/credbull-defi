@@ -21,6 +21,7 @@ config();
 let walletSignerA: Signer | undefined = undefined;
 let walletSignerB: Signer | undefined = undefined;
 let operatorSigner: Signer | undefined = undefined;
+let custodianSigner: Signer | undefined = undefined;
 
 let sdkA: CredbullSDK;
 let sdkB: CredbullSDK;
@@ -46,6 +47,7 @@ test.beforeAll(async () => {
   walletSignerA = signer(process.env.USER_A_PRIVATE_KEY || '0x');
   walletSignerB = signer(process.env.USER_B_PRIVATE_KEY || '0x');
   operatorSigner = signer(process.env.OPERATOR_PRIVATE_KEY || '0x');
+  custodianSigner = signer(process.env.CUSTODIAN_PRIVATE_KEY || '0x');
 
   sdkA = new CredbullSDK(userAToken, walletSignerA as Signer);
   sdkB = new CredbullSDK(userBToken, walletSignerB as Signer);
@@ -61,7 +63,7 @@ test.beforeAll(async () => {
   await sdkB.linkWallet();
 });
 
-test.describe('Claim yield and principal - Fixed', async () => {
+test.describe.only('Claim yield and principal - Fixed', async () => {
   test('create vault', async () => {
     await createFixedYieldVault();
     await createFixedYieldVault();
@@ -83,12 +85,30 @@ test.describe('Claim yield and principal - Fixed', async () => {
       expect(vaults).toBeTruthy();
 
       const fixedYieldVaults = vaults.data.filter((vault: any) => vault.type === 'fixed_yield');
+
+      //sort by created_at
+      fixedYieldVaults.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       expect(fixedYieldVaults).toBeTruthy();
 
       return [
         fixedYieldVaults[fixedYieldVaults.length - 1].address,
         fixedYieldVaults[fixedYieldVaults.length - 2].address,
       ];
+    });
+
+    await test.step('Empty custodian', async() => {
+      for (let i = 0; i < vaultAddress.length; i++) {
+      const vault = await sdkA.getVaultInstance(vaultAddress[i]);
+      const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
+      const custodian = await vault.CUSTODIAN();
+      const custodianBalance = await usdc.balanceOf(custodian);
+      console.log('custodian balance', custodianBalance.toString());
+      console.log('signer address', await custodianSigner?.getAddress());
+      if(custodianBalance.gt(0))
+        usdc.connect(custodianSigner as Signer).transfer("0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556", custodianBalance);
+      console.log('custodian address', custodian);
+      console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
+      }
     });
 
     await test.step('MINT USDC for user', async () => {

@@ -1,7 +1,7 @@
 // Multi user deposit test similar to deposit.spec.ts
 import { expect, test } from '@playwright/test';
 import { config } from 'dotenv';
-import { BigNumber, Signer } from 'ethers';
+import { BigNumber, Signer, constants } from 'ethers';
 
 import { CredbullSDK } from '../index';
 import { signer } from '../mock/utils/helpers';
@@ -13,6 +13,7 @@ config();
 let walletSignerA: Signer | undefined = undefined;
 let walletSignerB: Signer | undefined = undefined;
 let operatorSigner: Signer | undefined = undefined;
+let custodianSigner: Signer | undefined = undefined;
 
 let sdkA: CredbullSDK;
 let sdkB: CredbullSDK;
@@ -38,6 +39,7 @@ test.beforeAll(async () => {
   walletSignerA = signer(process.env.USER_A_PRIVATE_KEY || '0x');
   walletSignerB = signer(process.env.USER_B_PRIVATE_KEY || '0x');
   operatorSigner = signer(process.env.OPERATOR_PRIVATE_KEY || '0x');
+  custodianSigner = signer(process.env.CUSTODIAN_PRIVATE_KEY || '0x');
 
   sdkA = new CredbullSDK(userAToken, walletSignerA as Signer);
   sdkB = new CredbullSDK(userBToken, walletSignerB as Signer);
@@ -68,10 +70,11 @@ test.describe('Multi user Interaction - Fixed', async () => {
       expect(totalVaults).toBeGreaterThan(0);
       expect(vaults).toBeTruthy();
 
-      const fixedVault = vaults.data.find((vault: any) => vault.type === 'fixed_yield');
+      const fixedVault = vaults.data.filter((vault: any) => vault.type === 'fixed_yield');
+      fixedVault.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       expect(fixedVault).toBeTruthy();
 
-      return fixedVault.address;
+      return fixedVault[fixedVault.length - 1].address;
     });
 
     await test.step('Whitelist users', async () => {
@@ -79,10 +82,25 @@ test.describe('Multi user Interaction - Fixed', async () => {
       await whitelist(userAddressB, userBId);
     });
 
+    await test.step('Empty custodian', async() => {
+      const vault = await sdkA.getVaultInstance(vaultAddress);
+      const usdc = await sdkA.getAssetInstance(vaultAddress);
+      const custodian = await vault.CUSTODIAN();
+      const custodianBalance = await usdc.balanceOf(custodian);
+      console.log('custodian balance', custodianBalance.toString());
+      console.log('signer address', await custodianSigner?.getAddress());
+      usdc.connect(custodianSigner as Signer).transfer("0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556", custodianBalance);
+      console.log('custodian address', custodian);
+      console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
+    });
+
     //MINT USDC for user
     await test.step('MINT USDC for user', async () => {
       const vault = await sdkA.getVaultInstance(vaultAddress);
+      const custodian = await vault.CUSTODIAN();
+      console.log(custodian)
       const usdc = await sdkA.getAssetInstance(vaultAddress);
+      console.log('custodian balance',custodian, (await usdc.balanceOf(custodian)).toString());
       const userABalance = await usdc.balanceOf(await (walletSignerA as Signer).getAddress());
       const userBBalance = await usdc.balanceOf(await (walletSignerB as Signer).getAddress());
       if (userABalance.lt(depositAmount))
@@ -163,6 +181,8 @@ test.describe('Multi user Interaction - Fixed', async () => {
 
       // expect(usdcBalanceBeofreRedeemA.add(depositAmount).toString()).toEqual(usdcBalanceAfterRedeemA.toString());
       // expect(usdcBalanceBeofreRedeemB.add(redeemPreview).toString()).toEqual(usdcBalanceAfterRedeemB.toString());
+      const custodian = await vault.CUSTODIAN();
+      console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
     });
   });
 });

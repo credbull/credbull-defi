@@ -11,7 +11,6 @@ import path from 'path';
 config();
 
 export async function createFixedYieldVault() {
-  console.log({ ...process.env });
   ChildProcess.execSync('yarn op --create-vault matured', {
     env: { ...process.env },
     cwd: path.resolve(__dirname, '../../../../scripts/operation'),
