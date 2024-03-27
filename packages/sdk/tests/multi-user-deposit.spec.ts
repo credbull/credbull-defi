@@ -88,26 +88,21 @@ test.describe('Multi user Interaction - Fixed', async () => {
       const usdc = await sdkA.getAssetInstance(vaultAddress);
       const custodian = await vault.CUSTODIAN();
       const custodianBalance = await usdc.balanceOf(custodian);
-      console.log('custodian balance', custodianBalance.toString());
-      console.log('signer address', await custodianSigner?.getAddress());
-      usdc.connect(custodianSigner as Signer).transfer(TRASH_ADDRESS, custodianBalance);
-      console.log('custodian address', custodian);
-      console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
+      await usdc.connect(custodianSigner as Signer).transfer(TRASH_ADDRESS, custodianBalance);
     });
 
     //MINT USDC for user
     await test.step('MINT USDC for user', async () => {
       const vault = await sdkA.getVaultInstance(vaultAddress);
-      const custodian = await vault.CUSTODIAN();
-      console.log(custodian);
       const usdc = await sdkA.getAssetInstance(vaultAddress);
-      console.log('custodian balance', custodian, (await usdc.balanceOf(custodian)).toString());
       const userABalance = await usdc.balanceOf(await (walletSignerA as Signer).getAddress());
       const userBBalance = await usdc.balanceOf(await (walletSignerB as Signer).getAddress());
-      if (userABalance.lt(depositAmount))
+      if (userABalance.lt(depositAmount)) {
         await __mockMint(await (walletSignerA as Signer).getAddress(), depositAmount, vault, walletSignerA as Signer);
-      if (userBBalance.lt(depositAmount))
+      }
+      if (userBBalance.lt(depositAmount)) {
         await __mockMint(await (walletSignerB as Signer).getAddress(), depositAmount, vault, walletSignerB as Signer);
+      }
     });
 
     //Get approval for deposit

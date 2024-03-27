@@ -86,7 +86,7 @@ export async function whitelist(address: string, user_id: string) {
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${access_token}` },
   });
 
-  const res = await whistelistRes.json();
+  return await whistelistRes.json();
 }
 
 export async function login(email: string, password: string) {

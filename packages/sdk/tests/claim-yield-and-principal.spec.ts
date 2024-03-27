@@ -98,8 +98,10 @@ test.describe('Claim yield and principal - Fixed', async () => {
     });
 
     await test.step('Whitelist users', async () => {
+      
       await whitelist(userAddressA, userAId);
       await whitelist(userAddressB, userBId);
+      await sleep(2000);
     });
 
     vaultAddress = await test.step("Get vault and filter", async () => {
@@ -127,10 +129,11 @@ test.describe('Claim yield and principal - Fixed', async () => {
         const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
         const custodian = await vault.CUSTODIAN();
         const custodianBalance = await usdc.balanceOf(custodian);
-        if (custodianBalance.gt(0))
-          usdc
+        if (custodianBalance.gt(0)) {
+          await usdc
             .connect(custodianSigner as Signer)
             .transfer(TRASH_ADDRESS, custodianBalance);
+        }
       }
     });
 
@@ -184,11 +187,14 @@ test.describe('Claim yield and principal - Fixed', async () => {
 
         const treasurySigner = signer(treasuryPrivateKey[i]);
         const activityRewardSigner = signer(activityRewardPrivateKey[i]);
-        if(treasuryBalance.gt(0))
+        if(treasuryBalance.gt(0)) {
           await usdc.connect(treasurySigner).transfer(TRASH_ADDRESS, treasuryBalance);
+        }
+          
         await sleep(1000);
-        if(activityRewardBalance.gt(0))
+        if(activityRewardBalance.gt(0)) {
           await usdc.connect(activityRewardSigner).transfer(TRASH_ADDRESS, activityRewardBalance);
+        }
         await sleep(1000);
       }
   
