@@ -65,6 +65,7 @@ test.beforeAll(async () => {
   //link wallet
   await sdkA.linkWallet();
   await sdkB.linkWallet();
+
 });
 
 test.describe('Claim yield and principal - Fixed', async () => {
