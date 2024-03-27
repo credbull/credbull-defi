@@ -173,7 +173,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
         treasuryBalances[i].add(BigNumber.from('640000000').mul(2)).toString(),
       );
       expect(activityRewardBalanceAfterDistribution.toString()).toEqual(
-        activityRewardBalances[i].add(BigNumber.from('160000000').mul(1)).toString(),
+        activityRewardBalances[i].add(BigNumber.from('160000000').mul(2)).toString(),
       );
     }
   });

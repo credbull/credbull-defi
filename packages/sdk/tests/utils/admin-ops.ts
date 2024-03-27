@@ -12,12 +12,14 @@ config();
 
 export async function createFixedYieldVault() {
   ChildProcess.execSync('yarn op --create-vault matured', {
+    env: { ...process.env },
     cwd: path.resolve(__dirname, '../../../../scripts/operation'),
   });
 }
 
 export async function createUpsideVaultVault() {
   ChildProcess.execSync('yarn op --create-vault upside upsideVault:self', {
+    env: { ...process.env },
     cwd: path.resolve(__dirname, '../../../../scripts/operation'),
   });
 }
