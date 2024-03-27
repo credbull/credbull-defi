@@ -133,7 +133,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
       ];
     });
 
-    const vaults = await sdkA.getAllVaults();  
+    const vaults = await sdkA.getAllVaults();
 
     let treasuryAddresses = [];
     let activityRewardAddresses = [];

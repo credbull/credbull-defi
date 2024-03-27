@@ -69,7 +69,7 @@ test.describe('Multi user Interaction - Upside', async () => {
     });
 
     await test.step('Get all vaults and filter upside', async () => {
-      const vaults = await sdkA.getAllVaults(); 
+      const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 
       expect(totalVaults).toBeGreaterThan(0);
@@ -78,7 +78,7 @@ test.describe('Multi user Interaction - Upside', async () => {
       const upsideVault = vaults.data.find((vault: any) => vault.type === 'fixed_yield_upside');
       expect(upsideVault).toBeTruthy();
 
-      vaultAddress = upsideVault.address; 
+      vaultAddress = upsideVault.address;
 
       return upsideVault;
     });
@@ -218,7 +218,7 @@ test.describe('Multi user Interaction - Upside', async () => {
       expect(tokenBalanceBeforeRedeemB.add(redemptionAmountB).toString()).toEqual(tokenBalanceAfterRedeemB.toString());
 
       expect(shareBalanceBeforeRedeemA.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemA.toString());
-      expect(shareBalanceBeforeRedeemB.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemB.toString()); 
+      expect(shareBalanceBeforeRedeemB.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemB.toString());
     });
   });
 });

@@ -3,6 +3,8 @@ import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 import { ethers } from 'ethers';
 import { abi } from "./utils/abi"
 
+console.log('operator address', process.env.PUBLIC_OPERATOR_ADDRESS);
+
 import { generateAddress, headers, login, signer, supabase, userByEmail } from './utils/helpers';
 
 const createParams = (params: {

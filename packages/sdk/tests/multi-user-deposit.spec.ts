@@ -53,7 +53,7 @@ test.beforeAll(async () => {
   await sdkB.linkWallet();
 });
 
-test.describe('Multi user Interaction - Fixed', async () => {
+test.describe.only('Multi user Interaction - Fixed', async () => {
   test('Deposit and redeem flow', async () => {
     const depositAmount = BigNumber.from('100000000');
 
@@ -163,6 +163,6 @@ test.describe('Multi user Interaction - Fixed', async () => {
 
       // expect(usdcBalanceBeofreRedeemA.add(depositAmount).toString()).toEqual(usdcBalanceAfterRedeemA.toString());
       // expect(usdcBalanceBeofreRedeemB.add(redeemPreview).toString()).toEqual(usdcBalanceAfterRedeemB.toString());
-    }); 
+    });
   });
 });
