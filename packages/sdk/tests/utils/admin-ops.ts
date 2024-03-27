@@ -23,7 +23,7 @@ export async function createUpsideVaultVault() {
 }
 
 export async function getVaultEntities(id: string) {
-  const { access_token } = await login(process.env.ADMIN_EMAIL || '', process.env.ADMIN_PASSWORD || '');
+  const { access_token } = await login(process.env.ADMIN_EMAIL_SDK || '', process.env.ADMIN_PASSWORD_SDK || '');
 
   const res = await fetch(`${process.env.BASE_URL}/vaults/vault-entities/${id}`, {
     headers: { Authorization: `Bearer ${access_token}` },
@@ -40,7 +40,7 @@ export async function distributeFixedYieldVault() {
 }
 
 export async function whitelist(address: string, user_id: string) {
-  const { access_token } = await login(process.env.ADMIN_EMAIL || '', process.env.ADMIN_PASSWORD || '');
+  const { access_token } = await login(process.env.ADMIN_EMAIL_SDK || '', process.env.ADMIN_PASSWORD_SDK || '');
 
   const whistelistRes = await fetch(`${process.env.BASE_URL}/accounts/whitelist`, {
     method: 'POST',
@@ -102,5 +102,5 @@ export async function toggleWindowCheck(
 }
 
 export async function getAdminSigner() {
-  return new Wallet(process.env.ADMIN_PRIVATE_KEY, new providers.JsonRpcProvider(`http://localhost:8545`));
+  return new Wallet(process.env.ADMIN_PRIVATE_KEY_SDK || "", new providers.JsonRpcProvider(`http://localhost:8545`));
 }
