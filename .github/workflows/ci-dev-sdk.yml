@@ -48,6 +48,7 @@ jobs:
           ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
           SLACK_TOKEN: ${{ secrets.SDK_SLACK_TOKEN }}
           WSS_PROVIDER_URLS: ${{ secrets.SDK_WSS_PROVIDER_URLS }}
+          OPERATOR_ADDRESS: ${{ secrets.SDK_OPERATOR_ADDRESS }}
           APP_PORT: 3001
           APP_VERSION: 0.0.1000
 

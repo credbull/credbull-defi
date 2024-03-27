@@ -35,6 +35,7 @@ services:
       ETHERS_PROVIDER_URLS: ${ETHERS_PROVIDER_URLS}
       WSS_PROVIDER_URLS: ${WSS_PROVIDER_URLS}
       SLACK_TOKEN: ${SLACK_TOKEN}
+      OPERATOR_ADDRESS: ${OPERATOR_ADDRESS}
 
   #   depends_on:
   #     - supabase
