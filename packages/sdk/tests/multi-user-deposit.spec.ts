@@ -1,12 +1,12 @@
 // Multi user deposit test similar to deposit.spec.ts
 import { expect, test } from '@playwright/test';
 import { config } from 'dotenv';
-import { BigNumber, Signer, constants } from 'ethers';
+import { BigNumber, Signer } from 'ethers';
 
 import { CredbullSDK } from '../index';
 import { signer } from '../mock/utils/helpers';
 
-import { __mockMint, createFixedYieldVault, login, toggleWindowCheck, whitelist } from './utils/admin-ops';
+import { TRASH_ADDRESS, __mockMint, createFixedYieldVault, generateAddress, login, toggleWindowCheck, whitelist } from './utils/admin-ops';
 
 config();
 
@@ -59,7 +59,8 @@ test.describe('Multi user Interaction - Fixed', async () => {
   test('Deposit and redeem flow', async () => {
     const depositAmount = BigNumber.from('100000000');
 
-    await test.step('Create upside vault', async () => {
+
+    await test.step('Create Fixed yeild vault', async () => {
       await createFixedYieldVault();
     });
 
@@ -89,7 +90,7 @@ test.describe('Multi user Interaction - Fixed', async () => {
       const custodianBalance = await usdc.balanceOf(custodian);
       console.log('custodian balance', custodianBalance.toString());
       console.log('signer address', await custodianSigner?.getAddress());
-      usdc.connect(custodianSigner as Signer).transfer('0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556', custodianBalance);
+      usdc.connect(custodianSigner as Signer).transfer(TRASH_ADDRESS, custodianBalance);
       console.log('custodian address', custodian);
       console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
     });

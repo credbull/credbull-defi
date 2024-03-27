@@ -12,8 +12,10 @@ import {
   distributeFixedYieldVault,
   getVaultEntities,
   login,
-  toggleWindowCheck,
+  generateAddress,
   whitelist,
+  TRASH_ADDRESS,
+  sleep
 } from './utils/admin-ops';
 
 config();
@@ -22,6 +24,8 @@ let walletSignerA: Signer | undefined = undefined;
 let walletSignerB: Signer | undefined = undefined;
 let operatorSigner: Signer | undefined = undefined;
 let custodianSigner: Signer | undefined = undefined;
+
+
 
 let sdkA: CredbullSDK;
 let sdkB: CredbullSDK;
@@ -64,36 +68,57 @@ test.beforeAll(async () => {
 });
 
 test.describe('Claim yield and principal - Fixed', async () => {
-  test('create vault', async () => {
-    await createFixedYieldVault();
-    await createFixedYieldVault();
-  });
-
-  test('Whitelist users', async () => {
-    await whitelist(userAddressA, userAId);
-    await whitelist(userAddressB, userBId);
-  });
-
-  test('Deposit to the vault', async () => {
+  test('Claim yield and principal - Fixed ', async () => {
     const depositAmount = BigNumber.from('1000000000');
 
-    vaultAddress = await test.step('Get all vaults', async () => {
-      const vaults = await sdkA.getAllVaults();
-      const totalVaults = vaults.data.length;
+    let treasuryAddresses: string[];
+    let activityRewardAddresses: string[];
+    let treasuryPrivateKey: string[];
+    let activityRewardPrivateKey: string[];
 
-      expect(totalVaults).toBeGreaterThan(0);
-      expect(vaults).toBeTruthy();
+    await test.step('Create fixed yield vault', async () => {
+      const { pkey: treasuryPkey, address: treasury } = generateAddress('treasury');
+      const { pkey: activityRewardPkey, address: activityReward } = generateAddress('activity_reward');
+      await createFixedYieldVault({
+        ADDRESSES_TREASURY: treasury,
+        ADDRESSES_ACTIVITY_REWARD: activityReward
+      });
 
-      const fixedYieldVaults = vaults.data.filter((vault: any) => vault.type === 'fixed_yield');
+      const { pkey: treasuryPkey2, address: treasury2 } = generateAddress('treasury2');
+      const { pkey: activityRewardPkey2, address: activityReward2 } = generateAddress('activity_reward2');
+      await createFixedYieldVault({
+        ADDRESSES_TREASURY: treasury2,
+        ADDRESSES_ACTIVITY_REWARD: activityReward2
+      });
 
-      //sort by created_at
-      fixedYieldVaults.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-      expect(fixedYieldVaults).toBeTruthy();
+      treasuryAddresses = [treasury, treasury2];
+      activityRewardAddresses = [activityReward, activityReward2];
+      treasuryPrivateKey = [treasuryPkey, treasuryPkey2];
+      activityRewardPrivateKey = [activityRewardPkey, activityRewardPkey2];
+    });
 
-      return [
-        fixedYieldVaults[fixedYieldVaults.length - 1].address,
-        fixedYieldVaults[fixedYieldVaults.length - 2].address,
-      ];
+    await test.step('Whitelist users', async () => {
+      await whitelist(userAddressA, userAId);
+      await whitelist(userAddressB, userBId);
+    });
+
+    vaultAddress = await test.step("Get vault and filter", async () => {
+        const vaults = await sdkA.getAllVaults();
+        const totalVaults = vaults.data.length;
+  
+        expect(totalVaults).toBeGreaterThan(0);
+        expect(vaults).toBeTruthy();
+  
+        const fixedYieldVaults = vaults.data.filter((vault: any) => vault.type === 'fixed_yield');
+  
+        //sort by created_at
+        fixedYieldVaults.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        expect(fixedYieldVaults).toBeTruthy();
+  
+        return [
+          fixedYieldVaults[fixedYieldVaults.length - 1].address,
+          fixedYieldVaults[fixedYieldVaults.length - 2].address,
+        ];
     });
 
     await test.step('Empty custodian', async () => {
@@ -102,23 +127,22 @@ test.describe('Claim yield and principal - Fixed', async () => {
         const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
         const custodian = await vault.CUSTODIAN();
         const custodianBalance = await usdc.balanceOf(custodian);
-        console.log('custodian balance', custodianBalance.toString());
-        console.log('signer address', await custodianSigner?.getAddress());
         if (custodianBalance.gt(0))
           usdc
             .connect(custodianSigner as Signer)
-            .transfer('0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556', custodianBalance);
-        console.log('custodian address', custodian);
-        console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
+            .transfer(TRASH_ADDRESS, custodianBalance);
       }
     });
 
     await test.step('MINT USDC for user', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
         const vault = await sdkA.getVaultInstance(vaultAddress[i]);
-
+        console.log('got vault instance at mint usdc')
+        
         await __mockMint(userAddressA, depositAmount, vault, walletSignerA as Signer);
+        await sleep(1000);
         await __mockMint(userAddressB, depositAmount, vault, walletSignerB as Signer);
+        await sleep(1000);
       }
     });
 
@@ -136,67 +160,54 @@ test.describe('Claim yield and principal - Fixed', async () => {
         await sdkB.deposit(vaultAddress[i], depositAmount, userAddressB);
       }
     });
-  });
 
-  test('Distributioin of yield', async () => {
-    vaultAddress = await test.step('Get all vaults', async () => {
+    await test.step('Distribute yield', async () => {
       const vaults = await sdkA.getAllVaults();
-      const totalVaults = vaults.data.length;
 
-      expect(totalVaults).toBeGreaterThan(0);
-      expect(vaults).toBeTruthy();
+      for (let i = 0; i < vaultAddress.length; i++) {
+        const vault = await sdkA.getVaultInstance(vaultAddress[i]);
+        const custodian = await vault.CUSTODIAN();
+        await __mockMint(custodian, BigNumber.from('1000000000'), vault, walletSignerA as Signer);
+  
+        const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
 
-      const fixedYieldVaults = vaults.data.filter((vault: any) => vault.type === 'fixed_yield');
-      expect(fixedYieldVaults).toBeTruthy();
+        //Get vault id
+        const vaultId = vaults.data.find((v: any) => v.address === vaultAddress[i])?.id;
 
-      return [
-        fixedYieldVaults[fixedYieldVaults.length - 1].address,
-        fixedYieldVaults[fixedYieldVaults.length - 2].address,
-      ];
+        console.log('vault entities', await getVaultEntities(vaultId));
+
+        console.log(treasuryAddresses, activityRewardAddresses);
+  
+        //Clean up treasury and activity reward balances
+        const treasuryBalance = await usdc.balanceOf(treasuryAddresses[i]);
+        const activityRewardBalance = await usdc.balanceOf(activityRewardAddresses[i]);
+
+        const treasurySigner = signer(treasuryPrivateKey[i]);
+        const activityRewardSigner = signer(activityRewardPrivateKey[i]);
+        if(treasuryBalance.gt(0))
+          await usdc.connect(treasurySigner).transfer(TRASH_ADDRESS, treasuryBalance);
+        await sleep(1000);
+        if(activityRewardBalance.gt(0))
+          await usdc.connect(activityRewardSigner).transfer(TRASH_ADDRESS, activityRewardBalance);
+        await sleep(1000);
+      }
+  
+      await distributeFixedYieldVault();
+  
+      for (let i = 0; i < vaultAddress.length; i++) {
+        const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
+        const treasuryBalanceAfterDistribution = await usdc.balanceOf(treasuryAddresses[i]);
+        const activityRewardBalanceAfterDistribution = await usdc.balanceOf(activityRewardAddresses[i]);
+  
+        console.log(treasuryBalanceAfterDistribution.toString(), activityRewardBalanceAfterDistribution.toString());
+  
+        expect(treasuryBalanceAfterDistribution.toString()).toEqual(
+          (BigNumber.from('640000000')).toString(),
+        );
+        expect(activityRewardBalanceAfterDistribution.toString()).toEqual(
+          (BigNumber.from('160000000')).toString(),
+        );
+      }
     });
-
-    const vaults = await sdkA.getAllVaults();
-
-    let treasuryAddresses = [];
-    let activityRewardAddresses = [];
-    let treasuryBalances = [];
-    let activityRewardBalances = [];
-    for (let i = 0; i < vaultAddress.length; i++) {
-      const vault = await sdkA.getVaultInstance(vaultAddress[i]);
-      const custodian = await vault.CUSTODIAN();
-      await __mockMint(custodian, BigNumber.from('1000000000'), vault, walletSignerA as Signer);
-
-      const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
-      const id = vaults.data.find((vault: any) => vault.address === vaultAddress[i]).id;
-      const entities = await getVaultEntities(String(id));
-
-      const treasuryAddress = entities.data.find((entity: any) => entity.type === 'treasury').address;
-      const activityRewardAddress = entities.data.find((entity: any) => entity.type === 'activity_reward').address;
-
-      treasuryAddresses.push(treasuryAddress);
-      activityRewardAddresses.push(activityRewardAddress);
-
-      treasuryBalances.push(await usdc.balanceOf(treasuryAddress));
-      activityRewardBalances.push(await usdc.balanceOf(activityRewardAddress));
-
-      console.log(treasuryBalances[i].toString(), activityRewardBalances[i].toString());
-    }
-
-    await distributeFixedYieldVault();
-
-    for (let i = 0; i < vaultAddress.length; i++) {
-      const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
-      const treasuryBalanceAfterDistribution = await usdc.balanceOf(treasuryAddresses[i]);
-      const activityRewardBalanceAfterDistribution = await usdc.balanceOf(activityRewardAddresses[i]);
-
-      console.log(treasuryBalanceAfterDistribution.toString(), activityRewardBalanceAfterDistribution.toString());
-
-      expect(treasuryBalanceAfterDistribution.toString()).toEqual(
-        treasuryBalances[i].add(BigNumber.from('640000000').mul(2)).toString(),
-      );
-      expect(activityRewardBalanceAfterDistribution.toString()).toEqual(
-        activityRewardBalances[i].add(BigNumber.from('160000000').mul(2)).toString(),
-      );
-    }
   });
 });
