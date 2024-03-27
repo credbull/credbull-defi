@@ -63,7 +63,7 @@ test.beforeAll(async () => {
   await sdkB.linkWallet();
 });
 
-test.describe.only('Claim yield and principal - Fixed', async () => {
+test.describe('Claim yield and principal - Fixed', async () => {
   test('create vault', async () => {
     await createFixedYieldVault();
     await createFixedYieldVault();
