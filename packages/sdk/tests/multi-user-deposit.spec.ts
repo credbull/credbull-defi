@@ -163,6 +163,6 @@ test.describe('Multi user Interaction - Fixed', async () => {
 
       // expect(usdcBalanceBeofreRedeemA.add(depositAmount).toString()).toEqual(usdcBalanceAfterRedeemA.toString());
       // expect(usdcBalanceBeofreRedeemB.add(redeemPreview).toString()).toEqual(usdcBalanceAfterRedeemB.toString());
-    });
+    }); 
   });
 });

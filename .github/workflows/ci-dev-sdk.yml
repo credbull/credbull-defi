@@ -111,6 +111,8 @@ jobs:
 
           NODE_ENV: development
           BASE_URL: http://localhost:3001
+          CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
+          OPERATOR_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
 
       - name: Clean vault data
         run: cd scripts/operation/ && yarn op --clean-vault-table
