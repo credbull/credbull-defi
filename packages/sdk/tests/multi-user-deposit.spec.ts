@@ -53,7 +53,7 @@ test.beforeAll(async () => {
   await sdkB.linkWallet();
 });
 
-test.describe.only('Multi user Interaction - Fixed', async () => {
+test.describe('Multi user Interaction - Fixed', async () => {
   test('Deposit and redeem flow', async () => {
     const depositAmount = BigNumber.from('100000000');
 
