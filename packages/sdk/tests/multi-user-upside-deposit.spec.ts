@@ -79,7 +79,7 @@ test.describe('Multi user Interaction - Upside', async () => {
 
       const upsideVault = vaults.data.filter((vault: any) => vault.type === 'fixed_yield_upside');
       upsideVault.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-      
+
       expect(upsideVault).toBeTruthy();
 
       vaultAddress = upsideVault[upsideVault.length - 1].address;
@@ -90,14 +90,14 @@ test.describe('Multi user Interaction - Upside', async () => {
       await whitelist(userAddressB, userBId);
     });
 
-    await test.step('Empty custodian', async() => {
+    await test.step('Empty custodian', async () => {
       const vault = await sdkA.getVaultInstance(vaultAddress);
       const usdc = await sdkA.getAssetInstance(vaultAddress);
       const custodian = await vault.CUSTODIAN();
       const custodianBalance = await usdc.balanceOf(custodian);
       console.log('custodian balance', custodianBalance.toString());
       console.log('signer address', await custodianSigner?.getAddress());
-      usdc.connect(custodianSigner as Signer).transfer("0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556", custodianBalance);
+      usdc.connect(custodianSigner as Signer).transfer('0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556', custodianBalance);
       console.log('custodian address', custodian);
       console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
     });

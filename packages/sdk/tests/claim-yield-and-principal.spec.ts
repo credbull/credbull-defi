@@ -1,5 +1,5 @@
 // Multi user deposit test similar to deposit.spec.ts
-import { expect, test } from '@playwright/test'; 
+import { expect, test } from '@playwright/test';
 import { config } from 'dotenv';
 import { BigNumber, Signer } from 'ethers';
 
@@ -96,18 +96,20 @@ test.describe('Claim yield and principal - Fixed', async () => {
       ];
     });
 
-    await test.step('Empty custodian', async() => {
+    await test.step('Empty custodian', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
-      const vault = await sdkA.getVaultInstance(vaultAddress[i]);
-      const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
-      const custodian = await vault.CUSTODIAN();
-      const custodianBalance = await usdc.balanceOf(custodian);
-      console.log('custodian balance', custodianBalance.toString());
-      console.log('signer address', await custodianSigner?.getAddress());
-      if(custodianBalance.gt(0))
-        usdc.connect(custodianSigner as Signer).transfer("0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556", custodianBalance);
-      console.log('custodian address', custodian);
-      console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
+        const vault = await sdkA.getVaultInstance(vaultAddress[i]);
+        const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
+        const custodian = await vault.CUSTODIAN();
+        const custodianBalance = await usdc.balanceOf(custodian);
+        console.log('custodian balance', custodianBalance.toString());
+        console.log('signer address', await custodianSigner?.getAddress());
+        if (custodianBalance.gt(0))
+          usdc
+            .connect(custodianSigner as Signer)
+            .transfer('0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556', custodianBalance);
+        console.log('custodian address', custodian);
+        console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
       }
     });
 

@@ -82,14 +82,14 @@ test.describe('Multi user Interaction - Fixed', async () => {
       await whitelist(userAddressB, userBId);
     });
 
-    await test.step('Empty custodian', async() => {
+    await test.step('Empty custodian', async () => {
       const vault = await sdkA.getVaultInstance(vaultAddress);
       const usdc = await sdkA.getAssetInstance(vaultAddress);
       const custodian = await vault.CUSTODIAN();
       const custodianBalance = await usdc.balanceOf(custodian);
       console.log('custodian balance', custodianBalance.toString());
       console.log('signer address', await custodianSigner?.getAddress());
-      usdc.connect(custodianSigner as Signer).transfer("0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556", custodianBalance);
+      usdc.connect(custodianSigner as Signer).transfer('0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556', custodianBalance);
       console.log('custodian address', custodian);
       console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
     });
@@ -98,9 +98,9 @@ test.describe('Multi user Interaction - Fixed', async () => {
     await test.step('MINT USDC for user', async () => {
       const vault = await sdkA.getVaultInstance(vaultAddress);
       const custodian = await vault.CUSTODIAN();
-      console.log(custodian)
+      console.log(custodian);
       const usdc = await sdkA.getAssetInstance(vaultAddress);
-      console.log('custodian balance',custodian, (await usdc.balanceOf(custodian)).toString());
+      console.log('custodian balance', custodian, (await usdc.balanceOf(custodian)).toString());
       const userABalance = await usdc.balanceOf(await (walletSignerA as Signer).getAddress());
       const userBBalance = await usdc.balanceOf(await (walletSignerB as Signer).getAddress());
       if (userABalance.lt(depositAmount))
