@@ -7,6 +7,7 @@ import { CredbullSDK } from '../index';
 import { signer } from '../mock/utils/helpers';
 
 import {
+  TRASH_ADDRESS,
   __mockMint,
   __mockMintToken,
   createUpsideVaultVault,
@@ -98,11 +99,7 @@ test.describe('Multi user Interaction - Upside', async () => {
       const usdc = await sdkA.getAssetInstance(vaultAddress);
       const custodian = await vault.CUSTODIAN();
       const custodianBalance = await usdc.balanceOf(custodian);
-      console.log('custodian balance', custodianBalance.toString());
-      console.log('signer address', await custodianSigner?.getAddress());
-      usdc.connect(custodianSigner as Signer).transfer('0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556', custodianBalance);
-      console.log('custodian address', custodian);
-      console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
+      usdc.connect(custodianSigner as Signer).transfer(TRASH_ADDRESS, custodianBalance);
     });
 
     //MINT USDC for user
