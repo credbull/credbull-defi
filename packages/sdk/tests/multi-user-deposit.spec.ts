@@ -65,7 +65,7 @@ test.describe('Multi user Interaction - Fixed', async () => {
     });
 
     vaultAddress = await test.step('Get all vaults', async () => {
-      try{ await sdkA.getAllVaults(); } catch(e) { console.log(e); }
+      try{ await sdkA.getAllVaults(); } catch(e) { }
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 
