@@ -6,7 +6,7 @@ defaults:
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "*" ]
     paths:
       - "packages/sdk/**"
 
@@ -46,6 +46,9 @@ jobs:
           CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
           NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
           ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
+          SLACK_TOKEN: ${{ secrets.SDK_SLACK_TOKEN }}
+          WSS_PROVIDER_URLS: ${{ secrets.SDK_WSS_PROVIDER_URLS }}
+          OPERATOR_ADDRESS: ${{ secrets.SDK_OPERATOR_ADDRESS }}
           APP_PORT: 3001
           APP_VERSION: 0.0.1000
 
@@ -88,13 +91,31 @@ jobs:
       #     PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
       #     ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
       #     ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+      - name: Make Admin
+        run: cd scripts/operation/ && yarn op --make-admin null email:admin@cbl.com
+        env:
+          API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
+          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
+          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
+          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+          ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+          ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+
+      - name: Logs
+        run: docker logs api --tail all
 
       - name: Run SDK tests
         run: cd packages/sdk/ && yarn test
         env:
-          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_DEFAULT_ANVIL_KEY }}
-          ADMIN_EMAIL: admin@cbl.com
-          ADMIN_PASSWORD: admin123
+          ADMIN_PRIVATE_KEY_SDK: ${{ secrets.SDK_DEFAULT_ANVIL_KEY }}
+          ADMIN_EMAIL_SDK: admin@cbl.com
+          ADMIN_PASSWORD_SDK: admin123
 
           USER_A_PRIVATE_KEY: ${{ secrets.SDK_USER_A_PRIVATE_KEY }}
           USER_A_EMAIL: usera@cbl.com
@@ -106,6 +127,24 @@ jobs:
 
           NODE_ENV: development
           BASE_URL: http://localhost:3001
+          CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
+          OPERATOR_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
+          CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_CUSTODIAN_PRIVATE_KEY }}
+    
+          API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
+          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
+          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
+          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+          ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+          ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+          ADDRESSES_CUSTODIAN: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+          
 
       - name: Clean vault data
         run: cd scripts/operation/ && yarn op --clean-vault-table

@@ -6,13 +6,22 @@ import { BigNumber, Signer } from 'ethers';
 import { CredbullSDK } from '../index';
 import { signer } from '../mock/utils/helpers';
 
-import { __mockMint, createFixedYieldVault, login, toggleWindowCheck, whitelist } from './utils/admin-ops';
+import {
+  TRASH_ADDRESS,
+  __mockMint,
+  createFixedYieldVault,
+  generateAddress,
+  login,
+  toggleWindowCheck,
+  whitelist,
+} from './utils/admin-ops';
 
 config();
 
 let walletSignerA: Signer | undefined = undefined;
 let walletSignerB: Signer | undefined = undefined;
 let operatorSigner: Signer | undefined = undefined;
+let custodianSigner: Signer | undefined = undefined;
 
 let sdkA: CredbullSDK;
 let sdkB: CredbullSDK;
@@ -38,6 +47,7 @@ test.beforeAll(async () => {
   walletSignerA = signer(process.env.USER_A_PRIVATE_KEY || '0x');
   walletSignerB = signer(process.env.USER_B_PRIVATE_KEY || '0x');
   operatorSigner = signer(process.env.OPERATOR_PRIVATE_KEY || '0x');
+  custodianSigner = signer(process.env.CUSTODIAN_PRIVATE_KEY || '0x');
 
   sdkA = new CredbullSDK(userAToken, walletSignerA as Signer);
   sdkB = new CredbullSDK(userBToken, walletSignerB as Signer);
@@ -57,26 +67,38 @@ test.describe('Multi user Interaction - Fixed', async () => {
   test('Deposit and redeem flow', async () => {
     const depositAmount = BigNumber.from('100000000');
 
-    await test.step('Create upside vault', async () => {
+    await test.step('Create Fixed yeild vault', async () => {
       await createFixedYieldVault();
     });
 
     vaultAddress = await test.step('Get all vaults', async () => {
+      try {
+        await sdkA.getAllVaults();
+      } catch (e) {}
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 
       expect(totalVaults).toBeGreaterThan(0);
       expect(vaults).toBeTruthy();
 
-      const fixedVault = vaults.data.find((vault: any) => vault.type === 'fixed_yield');
+      const fixedVault = vaults.data.filter((vault: any) => vault.type === 'fixed_yield');
+      fixedVault.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       expect(fixedVault).toBeTruthy();
 
-      return fixedVault.address;
+      return fixedVault[fixedVault.length - 1].address;
     });
 
     await test.step('Whitelist users', async () => {
       await whitelist(userAddressA, userAId);
       await whitelist(userAddressB, userBId);
+    });
+
+    await test.step('Empty custodian', async () => {
+      const vault = await sdkA.getVaultInstance(vaultAddress);
+      const usdc = await sdkA.getAssetInstance(vaultAddress);
+      const custodian = await vault.CUSTODIAN();
+      const custodianBalance = await usdc.balanceOf(custodian);
+      await usdc.connect(custodianSigner as Signer).transfer(TRASH_ADDRESS, custodianBalance);
     });
 
     //MINT USDC for user
@@ -85,10 +107,12 @@ test.describe('Multi user Interaction - Fixed', async () => {
       const usdc = await sdkA.getAssetInstance(vaultAddress);
       const userABalance = await usdc.balanceOf(await (walletSignerA as Signer).getAddress());
       const userBBalance = await usdc.balanceOf(await (walletSignerB as Signer).getAddress());
-      if (userABalance.lt(depositAmount))
+      if (userABalance.lt(depositAmount)) {
         await __mockMint(await (walletSignerA as Signer).getAddress(), depositAmount, vault, walletSignerA as Signer);
-      if (userBBalance.lt(depositAmount))
+      }
+      if (userBBalance.lt(depositAmount)) {
         await __mockMint(await (walletSignerB as Signer).getAddress(), depositAmount, vault, walletSignerB as Signer);
+      }
     });
 
     //Get approval for deposit
@@ -163,6 +187,8 @@ test.describe('Multi user Interaction - Fixed', async () => {
 
       // expect(usdcBalanceBeofreRedeemA.add(depositAmount).toString()).toEqual(usdcBalanceAfterRedeemA.toString());
       // expect(usdcBalanceBeofreRedeemB.add(redeemPreview).toString()).toEqual(usdcBalanceAfterRedeemB.toString());
+      const custodian = await vault.CUSTODIAN();
+      console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
     });
   });
 });

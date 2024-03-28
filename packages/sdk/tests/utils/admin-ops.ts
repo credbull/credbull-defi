@@ -5,25 +5,63 @@ import {
 } from '@credbull/contracts';
 import * as ChildProcess from 'child_process';
 import { config } from 'dotenv';
-import { BigNumber, Signer, Wallet, providers } from 'ethers';
+import { BigNumber, Signer, Wallet, providers, utils } from 'ethers';
 import path from 'path';
 
 config();
 
-export async function createFixedYieldVault() {
+export const TRASH_ADDRESS = '0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556';
+
+export const generateAddress = (name: string) => {
+  const hash = utils.id(name);
+  const hashBuffer = Buffer.from(hash.slice(2), 'hex');
+  const paddedHash = utils.hexlify(utils.zeroPad(hashBuffer, 32));
+  const privateKey = `${utils.hexlify(paddedHash)}`;
+  const wallet = new Wallet(privateKey);
+  return { pkey: privateKey, address: wallet.address };
+};
+
+function envCleanup(existing: any, newEnv: any) {
+  //Find keys of newEnv that are in existing and replace it with the new value
+  for (const key in newEnv) {
+    if (Object.prototype.hasOwnProperty.call(existing, key)) {
+      if (existing.hasOwnProperty(key)) {
+        existing[key] = newEnv[key];
+      }
+    } else {
+      existing[key] = newEnv[key];
+    }
+  }
+
+  return existing;
+}
+
+export async function createFixedYieldVault(envs?: any) {
+  let cleanedUpEnvs = JSON.parse(JSON.stringify(process.env));
+  if (envs !== undefined) {
+    cleanedUpEnvs = JSON.parse(JSON.stringify(envCleanup(cleanedUpEnvs, envs)));
+  }
+
   ChildProcess.execSync('yarn op --create-vault matured', {
+    env: { ...cleanedUpEnvs },
     cwd: path.resolve(__dirname, '../../../../scripts/operation'),
   });
 }
 
-export async function createUpsideVaultVault() {
+export async function createUpsideVaultVault(envs?: any) {
+  let cleanedUpEnvs = JSON.parse(JSON.stringify(process.env));
+  if (envs !== undefined) {
+    cleanedUpEnvs = JSON.parse(JSON.stringify(envCleanup(cleanedUpEnvs, envs)));
+  }
+
   ChildProcess.execSync('yarn op --create-vault upside upsideVault:self', {
+    env: { ...cleanedUpEnvs },
     cwd: path.resolve(__dirname, '../../../../scripts/operation'),
   });
 }
 
 export async function getVaultEntities(id: string) {
-  const { access_token } = await login(process.env.ADMIN_EMAIL || '', process.env.ADMIN_PASSWORD || '');
+  const { access_token } = await login(process.env.ADMIN_EMAIL_SDK || '', process.env.ADMIN_PASSWORD_SDK || '');
 
   const res = await fetch(`${process.env.BASE_URL}/vaults/vault-entities/${id}`, {
     headers: { Authorization: `Bearer ${access_token}` },
@@ -40,8 +78,9 @@ export async function distributeFixedYieldVault() {
 }
 
 export async function whitelist(address: string, user_id: string) {
-  const { access_token } = await login(process.env.ADMIN_EMAIL || '', process.env.ADMIN_PASSWORD || '');
+  const { access_token } = await login(process.env.ADMIN_EMAIL_SDK || '', process.env.ADMIN_PASSWORD_SDK || '');
 
+  console.log(address);
   const whistelistRes = await fetch(`${process.env.BASE_URL}/accounts/whitelist`, {
     method: 'POST',
     body: JSON.stringify({ address, user_id }),
@@ -49,6 +88,9 @@ export async function whitelist(address: string, user_id: string) {
   });
 
   const res = await whistelistRes.json();
+  console.log(res);
+
+  return res;
 }
 
 export async function login(email: string, password: string) {
@@ -102,5 +144,9 @@ export async function toggleWindowCheck(
 }
 
 export async function getAdminSigner() {
-  return new Wallet(process.env.ADMIN_PRIVATE_KEY, new providers.JsonRpcProvider(`http://localhost:8545`));
+  return new Wallet(process.env.ADMIN_PRIVATE_KEY_SDK || '', new providers.JsonRpcProvider(`http://localhost:8545`));
+}
+
+export async function sleep(ms: number) {
+  new Promise((resolve) => setTimeout(resolve, ms));
 }

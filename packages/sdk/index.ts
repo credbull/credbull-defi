@@ -59,6 +59,7 @@ export class CredbullSDK {
 
   /// Link user wallet
   async linkWallet(discriminator?: string) {
+    console.log('in link wallet');
     const message = await this.linkWalletMessage(this.signer);
     const signature = await this.signer.signMessage(message);
 
