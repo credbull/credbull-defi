@@ -80,7 +80,6 @@ export async function distributeFixedYieldVault() {
 export async function whitelist(address: string, user_id: string) {
   const { access_token } = await login(process.env.ADMIN_EMAIL_SDK || '', process.env.ADMIN_PASSWORD_SDK || '');
 
-  console.log(address);
   const whistelistRes = await fetch(`${process.env.BASE_URL}/accounts/whitelist`, {
     method: 'POST',
     body: JSON.stringify({ address, user_id }),
@@ -88,8 +87,6 @@ export async function whitelist(address: string, user_id: string) {
   });
 
   const res = await whistelistRes.json();
-  console.log(res);
-
   return res;
 }
 

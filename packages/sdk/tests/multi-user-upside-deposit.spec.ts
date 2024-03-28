@@ -186,15 +186,13 @@ test.describe('Multi user Interaction - Upside', async () => {
     //Redeem through SDK
     await test.step('Redeem through SDK', async () => {
       const vault = await sdkA.getUpsideVaultInstance(vaultAddress);
-      // const usdc = await sdkA.getAssetInstance(vaultAddress);
+      const usdc = await sdkA.getAssetInstance(vaultAddress);
       const token = await sdkA.getTokenInstance(vaultAddress);
+      const shares = depositAmount;
 
       const totalDeposited = await vault.totalAssetDeposited();
-
       const yeildAmount = totalDeposited.mul(10).div(100);
-
       const upsideYieldAmount = (await token.balanceOf(vaultAddress)).mul(10).div(100).div(1e12);
-
       const mintAmount = totalDeposited.add(yeildAmount).add(upsideYieldAmount);
 
       //Mature vault
@@ -206,8 +204,8 @@ test.describe('Multi user Interaction - Upside', async () => {
       const tokenBalanceBeforeRedeemA = await token.balanceOf(userAddressA);
       const tokenBalanceBeforeRedeemB = await token.balanceOf(userAddressB);
 
-      // const usdcBalanceBeforeRedeemA = await usdc.balanceOf(userAddressA);
-      // const usdcBalanceBeforeRedeemB = await usdc.balanceOf(userAddressB);
+      const usdcBalanceBeforeRedeemA = await usdc.balanceOf(userAddressA);
+      const usdcBalanceBeforeRedeemB = await usdc.balanceOf(userAddressB);
 
       const previewDeposit = await vault.previewDeposit(depositAmount);
       const redemptionAmountA = await vault.calculateTokenRedemption(previewDeposit, userAddressA);
@@ -217,10 +215,11 @@ test.describe('Multi user Interaction - Upside', async () => {
       await vault.connect(operatorSigner as Signer).mature();
       await toggleWindowCheck(vault, false);
 
-      //const previewRedeem = await vault.previewRedeem(previewDeposit);
+      const redeemPreviewA = await vault.previewRedeem(shares);
+      await sdkA.redeem(vaultAddress, shares, userAddressA);
 
-      await sdkA.redeem(vaultAddress, previewDeposit, userAddressA);
-      await sdkB.redeem(vaultAddress, previewDeposit, userAddressB);
+      const redeemPreviewB = await vault.previewRedeem(shares);
+      await sdkB.redeem(vaultAddress, shares, userAddressB);
 
       const shareBalanceAfterRedeemA = await vault.balanceOf(userAddressA);
       const shareBalanceAfterRedeemB = await vault.balanceOf(userAddressB);
@@ -228,11 +227,17 @@ test.describe('Multi user Interaction - Upside', async () => {
       const tokenBalanceAfterRedeemA = await token.balanceOf(userAddressA);
       const tokenBalanceAfterRedeemB = await token.balanceOf(userAddressB);
 
+      const usdcBalanceAfterRedeemA = await usdc.balanceOf(userAddressA);
+      const usdcBalanceAfterRedeemB = await usdc.balanceOf(userAddressB);
+
       expect(tokenBalanceBeforeRedeemA.add(redemptionAmountA).toString()).toEqual(tokenBalanceAfterRedeemA.toString());
       expect(tokenBalanceBeforeRedeemB.add(redemptionAmountB).toString()).toEqual(tokenBalanceAfterRedeemB.toString());
 
       expect(shareBalanceBeforeRedeemA.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemA.toString());
       expect(shareBalanceBeforeRedeemB.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemB.toString());
+
+      expect(usdcBalanceBeforeRedeemA.add(redeemPreviewA).toString()).toEqual(usdcBalanceAfterRedeemA.toString());
+      expect(usdcBalanceBeforeRedeemB.add(redeemPreviewB).toString()).toEqual(usdcBalanceAfterRedeemB.toString());
     });
   });
 });

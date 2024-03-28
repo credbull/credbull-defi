@@ -134,12 +134,9 @@ test.describe('Claim yield and principal - Fixed', async () => {
     await test.step('MINT USDC for user', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
         const vault = await sdkA.getVaultInstance(vaultAddress[i]);
-        console.log('got vault instance at mint usdc');
 
         await __mockMint(userAddressA, depositAmount, vault, walletSignerA as Signer);
-        await sleep(1000);
         await __mockMint(userAddressB, depositAmount, vault, walletSignerB as Signer);
-        await sleep(1000);
       }
     });
 
@@ -168,13 +165,6 @@ test.describe('Claim yield and principal - Fixed', async () => {
 
         const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
 
-        //Get vault id
-        const vaultId = vaults.data.find((v: any) => v.address === vaultAddress[i])?.id;
-
-        console.log('vault entities', await getVaultEntities(vaultId));
-
-        console.log(treasuryAddresses, activityRewardAddresses);
-
         //Clean up treasury and activity reward balances
         const treasuryBalance = await usdc.balanceOf(treasuryAddresses[i]);
         const activityRewardBalance = await usdc.balanceOf(activityRewardAddresses[i]);
@@ -199,8 +189,6 @@ test.describe('Claim yield and principal - Fixed', async () => {
         const treasuryBalanceAfterDistribution = await usdc.balanceOf(treasuryAddresses[i]);
         const activityRewardBalanceAfterDistribution = await usdc.balanceOf(activityRewardAddresses[i]);
 
-        console.log(treasuryBalanceAfterDistribution.toString(), activityRewardBalanceAfterDistribution.toString());
-
         expect(treasuryBalanceAfterDistribution.toString()).toEqual(BigNumber.from('640000000').mul(2).toString());
         expect(activityRewardBalanceAfterDistribution.toString()).toEqual(BigNumber.from('160000000').toString());
       }
@@ -220,7 +208,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
       const { pkey: activityRewardPkey, address: activityReward } = generateAddress('activity_reward-test2');
       await createFixedYieldVault({
         ADDRESSES_TREASURY: treasury,
-        ADDRESSES_ACTIVITY_REWARD: activityReward
+        ADDRESSES_ACTIVITY_REWARD: activityReward,
       });
 
       const { pkey: treasuryPkey2, address: treasury2 } = generateAddress('treasury-test2');
@@ -228,7 +216,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
 
       await createFixedYieldVault({
         ADDRESSES_TREASURY: treasury2,
-        ADDRESSES_ACTIVITY_REWARD: activityReward2
+        ADDRESSES_ACTIVITY_REWARD: activityReward2,
       });
 
       treasuryAddresses = [treasury, treasury2];
@@ -236,7 +224,6 @@ test.describe('Claim yield and principal - Fixed', async () => {
       treasuryPrivateKey = [treasuryPkey, treasuryPkey2];
       activityRewardPrivateKey = [activityRewardPkey, activityRewardPkey2];
     });
-
 
     vaultAddress = await test.step('Get vault and filter', async () => {
       try {
@@ -275,7 +262,6 @@ test.describe('Claim yield and principal - Fixed', async () => {
     await test.step('MINT USDC for user', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
         const vault = await sdkA.getVaultInstance(vaultAddress[i]);
-        console.log('got vault instance at mint usdc');
 
         await __mockMint(userAddressA, depositAmount, vault, walletSignerA as Signer);
         await sleep(1000);
@@ -309,13 +295,6 @@ test.describe('Claim yield and principal - Fixed', async () => {
 
         const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
 
-        //Get vault id
-        const vaultId = vaults.data.find((v: any) => v.address === vaultAddress[i])?.id;
-
-        console.log('vault entities', await getVaultEntities(vaultId));
-
-        console.log(treasuryAddresses, activityRewardAddresses);
-
         //Clean up treasury and activity reward balances
         const treasuryBalance = await usdc.balanceOf(treasuryAddresses[i]);
         const activityRewardBalance = await usdc.balanceOf(activityRewardAddresses[i]);
@@ -340,10 +319,10 @@ test.describe('Claim yield and principal - Fixed', async () => {
         const treasuryBalanceAfterDistribution = await usdc.balanceOf(treasuryAddresses[i]);
         const activityRewardBalanceAfterDistribution = await usdc.balanceOf(activityRewardAddresses[i]);
 
-        console.log(treasuryBalanceAfterDistribution.toString(), activityRewardBalanceAfterDistribution.toString());
-
         expect(treasuryBalanceAfterDistribution.toString()).toEqual(BigNumber.from('640000000').mul(2).toString());
-        expect(activityRewardBalanceAfterDistribution.toString()).toEqual(BigNumber.from('160000000').mul(2).toString());
+        expect(activityRewardBalanceAfterDistribution.toString()).toEqual(
+          BigNumber.from('160000000').mul(2).toString(),
+        );
       }
     });
   });
