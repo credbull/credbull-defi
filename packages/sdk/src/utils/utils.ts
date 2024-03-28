@@ -17,4 +17,4 @@ export function decodeContractError(contract: ethers.Contract, errorData: string
   }
 
   throw new Error(`${errorFragment.name} | ${message ? message : ''}`);
-} 
+}

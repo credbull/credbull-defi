@@ -6,7 +6,15 @@ import { BigNumber, Signer } from 'ethers';
 import { CredbullSDK } from '../index';
 import { signer } from '../mock/utils/helpers';
 
-import { TRASH_ADDRESS, __mockMint, createFixedYieldVault, generateAddress, login, toggleWindowCheck, whitelist } from './utils/admin-ops';
+import {
+  TRASH_ADDRESS,
+  __mockMint,
+  createFixedYieldVault,
+  generateAddress,
+  login,
+  toggleWindowCheck,
+  whitelist,
+} from './utils/admin-ops';
 
 config();
 
@@ -59,13 +67,14 @@ test.describe('Multi user Interaction - Fixed', async () => {
   test('Deposit and redeem flow', async () => {
     const depositAmount = BigNumber.from('100000000');
 
-
     await test.step('Create Fixed yeild vault', async () => {
       await createFixedYieldVault();
     });
 
     vaultAddress = await test.step('Get all vaults', async () => {
-      try{ await sdkA.getAllVaults(); } catch(e) { }
+      try {
+        await sdkA.getAllVaults();
+      } catch (e) {}
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 
