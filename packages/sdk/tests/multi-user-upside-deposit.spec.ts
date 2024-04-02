@@ -99,7 +99,7 @@ test.describe('Multi user Interaction - Upside', async () => {
       const usdc = await sdkA.getAssetInstance(vaultAddress);
       const custodian = await vault.CUSTODIAN();
       const custodianBalance = await usdc.balanceOf(custodian);
-      usdc.connect(custodianSigner as Signer).transfer(TRASH_ADDRESS, custodianBalance);
+      await usdc.connect(custodianSigner as Signer).transfer(TRASH_ADDRESS, custodianBalance);
     });
 
     //MINT USDC for user

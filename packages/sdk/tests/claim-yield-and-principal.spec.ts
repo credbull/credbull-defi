@@ -175,11 +175,9 @@ test.describe('Claim yield and principal - Fixed', async () => {
           await usdc.connect(treasurySigner).transfer(TRASH_ADDRESS, treasuryBalance);
         }
 
-        await sleep(1000);
         if (activityRewardBalance.gt(0)) {
           await usdc.connect(activityRewardSigner).transfer(TRASH_ADDRESS, activityRewardBalance);
         }
-        await sleep(1000);
       }
 
       await distributeFixedYieldVault();
@@ -264,9 +262,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
         const vault = await sdkA.getVaultInstance(vaultAddress[i]);
 
         await __mockMint(userAddressA, depositAmount, vault, walletSignerA as Signer);
-        await sleep(1000);
         await __mockMint(userAddressB, depositAmount, vault, walletSignerB as Signer);
-        await sleep(1000);
       }
     });
 

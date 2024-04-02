@@ -54,7 +54,7 @@ export async function createUpsideVaultVault(envs?: any) {
     cleanedUpEnvs = JSON.parse(JSON.stringify(envCleanup(cleanedUpEnvs, envs)));
   }
 
-  ChildProcess.execSync('yarn op --create-vault upside upsideVault:self', {
+  ChildProcess.execSync('yarn op --create-vault matured,upside upsideVault:self', {
     env: { ...cleanedUpEnvs },
     cwd: path.resolve(__dirname, '../../../../scripts/operation'),
   });
