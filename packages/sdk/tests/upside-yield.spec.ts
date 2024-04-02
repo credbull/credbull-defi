@@ -119,7 +119,6 @@ test.describe('Upside Yield', async () => {
       const usdc = await sdkA.getAssetInstance(vaultAddress);
 
       const collateralRequired = await vault.getCollateralAmount(depositAmount);
-      console.log('collateral required', collateralRequired.toString());
 
       const userABalance = await usdc.balanceOf(await (walletSignerA as Signer).getAddress());
       const userBBalance = await usdc.balanceOf(await (walletSignerB as Signer).getAddress());
@@ -300,7 +299,6 @@ test.describe('Upside Yield', async () => {
       const usdc = await sdkA.getAssetInstance(vaultAddress);
 
       const collateralRequired = await vault.getCollateralAmount(depositAmount);
-      console.log('collateral required', collateralRequired.toString());
 
       const userABalance = await usdc.balanceOf(await (walletSignerA as Signer).getAddress());
       const userBBalance = await usdc.balanceOf(await (walletSignerB as Signer).getAddress());
