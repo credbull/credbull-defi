@@ -68,7 +68,9 @@ test.describe('Multi user Interaction - Fixed', async () => {
     const depositAmount = BigNumber.from('100000000');
 
     await test.step('Create Fixed yeild vault', async () => {
-      await createFixedYieldVault();
+      await createFixedYieldVault({
+        COLLATERAL_PERCENTAGE: 200,
+      });
     });
 
     vaultAddress = await test.step('Get all vaults', async () => {
@@ -93,12 +95,16 @@ test.describe('Multi user Interaction - Fixed', async () => {
       await whitelist(userAddressB, userBId);
     });
 
-    await test.step('Empty custodian', async () => {
+    await test.step('Empty custodian and user', async () => {
       const vault = await sdkA.getVaultInstance(vaultAddress);
       const usdc = await sdkA.getAssetInstance(vaultAddress);
       const custodian = await vault.CUSTODIAN();
       const custodianBalance = await usdc.balanceOf(custodian);
+      const userABalance = await usdc.balanceOf(userAddressA);
+      const userBBalance = await usdc.balanceOf(userAddressB);
       await usdc.connect(custodianSigner as Signer).transfer(TRASH_ADDRESS, custodianBalance);
+      await usdc.connect(walletSignerA as Signer).transfer(TRASH_ADDRESS, userABalance);
+      await usdc.connect(walletSignerB as Signer).transfer(TRASH_ADDRESS, userBBalance);
     });
 
     //MINT USDC for user
@@ -165,16 +171,16 @@ test.describe('Multi user Interaction - Fixed', async () => {
       const usdcBalanceBeofreRedeemA = await usdc.balanceOf(userAddressA);
       const usdcBalanceBeofreRedeemB = await usdc.balanceOf(userAddressB);
 
-      //await vault.connect(operatorSigner as Signer).mature();
       await vault.connect(operatorSigner as Signer).mature();
       await toggleWindowCheck(vault, false);
 
-      const previewDeposit = await vault.previewDeposit(depositAmount);
+      const redeemPreviewA = await vault.previewRedeem(shares);
 
-      await sdkA.redeem(vaultAddress, previewDeposit, userAddressA);
-      await sdkB.redeem(vaultAddress, previewDeposit, userAddressB);
+      await sdkA.redeem(vaultAddress, shares, userAddressA);
 
-      const redeemPreview = await vault.previewRedeem(previewDeposit);
+      const redeemPreviewB = await vault.previewRedeem(shares);
+
+      await sdkB.redeem(vaultAddress, shares, userAddressB);
 
       const shareBalanceAfterRedeemA = await vault.balanceOf(userAddressA);
       const shareBalanceAfterRedeemB = await vault.balanceOf(userAddressB);
@@ -182,13 +188,11 @@ test.describe('Multi user Interaction - Fixed', async () => {
       const usdcBalanceAfterRedeemA = await usdc.balanceOf(userAddressA);
       const usdcBalanceAfterRedeemB = await usdc.balanceOf(userAddressB);
 
-      expect(shareBalanceBeforeRedeemA.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemA.toString());
-      expect(shareBalanceBeforeRedeemB.sub(previewDeposit).toString()).toEqual(shareBalanceAfterRedeemB.toString());
+      expect(shareBalanceBeforeRedeemA.sub(shares).toString()).toEqual(shareBalanceAfterRedeemA.toString());
+      expect(shareBalanceBeforeRedeemB.sub(shares).toString()).toEqual(shareBalanceAfterRedeemB.toString());
 
-      // expect(usdcBalanceBeofreRedeemA.add(depositAmount).toString()).toEqual(usdcBalanceAfterRedeemA.toString());
-      // expect(usdcBalanceBeofreRedeemB.add(redeemPreview).toString()).toEqual(usdcBalanceAfterRedeemB.toString());
-      const custodian = await vault.CUSTODIAN();
-      console.log('custodian balance', (await usdc.balanceOf(custodian)).toString());
+      expect(usdcBalanceBeofreRedeemA.add(redeemPreviewA).toString()).toEqual(usdcBalanceAfterRedeemA.toString());
+      expect(usdcBalanceBeofreRedeemB.add(redeemPreviewB).toString()).toEqual(usdcBalanceAfterRedeemB.toString());
     });
   });
 });

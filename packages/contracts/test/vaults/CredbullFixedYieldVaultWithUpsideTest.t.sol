@@ -11,6 +11,7 @@ import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { MockToken } from "../mocks/MockToken.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
+import { console2 } from "forge-std/console2.sol";
 
 contract CredbullFixedYieldVaultWithUpsideTest is Test {
     using Math for uint256;
@@ -151,8 +152,12 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
         uint256 collateralToRedeem = vault.calculateTokenRedemption(shares, alice);
 
+        console2.log(collateralToRedeem);
+
         vm.prank(alice);
         uint256 assets = vault.redeem(shares, alice, alice);
+
+        console2.log("assets", assets);
 
         assertEq(vaultParams.token.balanceOf(alice), collateralToRedeem, "Alice should now have the Tokens");
         assertEq(

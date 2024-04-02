@@ -1,7 +1,6 @@
 import { CredbullFixedYieldVault__factory, CredbullVaultFactory__factory } from '@credbull/contracts';
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 
-console.log('operator address', process.env.PUBLIC_OPERATOR_ADDRESS);
 
 import { generateAddress, headers, login, signer, supabase, userByEmail } from './utils/helpers';
 
@@ -19,6 +18,7 @@ const createParams = (params: {
 
   const treasury = process.env.ADDRESSES_TREASURY;
   const activityReward = process.env.ADDRESSES_ACTIVITY_REWARD;
+  const collateralPercentage = Number(process.env.COLLATERAL_PERCENTAGE);
 
   const asset = params.asset;
   const token = params.token;
@@ -66,7 +66,7 @@ const createParams = (params: {
     tenant: params.tenant,
     maxCap: (1e6 * 1e6).toString(),
     depositThresholdForWhitelisting: (1000e6).toString(),
-    collateralPercentage: 200,
+    collateralPercentage: collateralPercentage
   };
 };
 
