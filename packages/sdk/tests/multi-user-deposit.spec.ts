@@ -68,7 +68,9 @@ test.describe('Multi user Interaction - Fixed', async () => {
     const depositAmount = BigNumber.from('100000000');
 
     await test.step('Create Fixed yeild vault', async () => {
-      await createFixedYieldVault();
+      await createFixedYieldVault({
+        COLLATERAL_PERCENTAGE: 200,
+      });
     });
 
     vaultAddress = await test.step('Get all vaults', async () => {

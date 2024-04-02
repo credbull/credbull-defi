@@ -80,6 +80,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
       await createFixedYieldVault({
         ADDRESSES_TREASURY: treasury,
         ADDRESSES_ACTIVITY_REWARD: activityReward,
+        COLLATERAL_PERCENTAGE: 200,
       });
 
       const { pkey: treasuryPkey2, address: treasury2 } = generateAddress('treasury');
@@ -87,6 +88,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
       await createFixedYieldVault({
         ADDRESSES_TREASURY: treasury2,
         ADDRESSES_ACTIVITY_REWARD: activityReward2,
+        COLLATERAL_PERCENTAGE: 200,
       });
 
       treasuryAddresses = [treasury, treasury2];
@@ -207,6 +209,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
       await createFixedYieldVault({
         ADDRESSES_TREASURY: treasury,
         ADDRESSES_ACTIVITY_REWARD: activityReward,
+        COLLATERAL_PERCENTAGE: 200,
       });
 
       const { pkey: treasuryPkey2, address: treasury2 } = generateAddress('treasury-test2');
@@ -215,6 +218,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
       await createFixedYieldVault({
         ADDRESSES_TREASURY: treasury2,
         ADDRESSES_ACTIVITY_REWARD: activityReward2,
+        COLLATERAL_PERCENTAGE: 200,
       });
 
       treasuryAddresses = [treasury, treasury2];
