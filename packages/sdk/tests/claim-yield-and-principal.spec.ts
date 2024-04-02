@@ -1,5 +1,5 @@
 // Multi user deposit test similar to deposit.spec.ts
-import { expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test'; 
 import { config } from 'dotenv';
 import { BigNumber, Signer } from 'ethers';
 
@@ -136,9 +136,12 @@ test.describe('Claim yield and principal - Fixed', async () => {
     await test.step('MINT USDC for user', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
         const vault = await sdkA.getVaultInstance(vaultAddress[i]);
+        console.log('got vault instance at mint usdc');
 
         await __mockMint(userAddressA, depositAmount, vault, walletSignerA as Signer);
+        await sleep(1000);
         await __mockMint(userAddressB, depositAmount, vault, walletSignerB as Signer);
+        await sleep(1000);
       }
     });
 
@@ -227,10 +230,12 @@ test.describe('Claim yield and principal - Fixed', async () => {
       activityRewardPrivateKey = [activityRewardPkey, activityRewardPkey2];
     });
 
+    await test.step('Whitelist users', async () => {
+      await whitelist(userAddressA, userAId);
+      await whitelist(userAddressB, userBId);
+    });
+
     vaultAddress = await test.step('Get vault and filter', async () => {
-      try {
-        await sdkA.getAllVaults();
-      } catch (e) {}
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 
