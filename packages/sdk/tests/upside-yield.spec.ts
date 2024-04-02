@@ -11,10 +11,10 @@ import {
   __mockMint,
   __mockMintToken,
   createUpsideVaultVault,
+  distributeFixedYieldVault,
+  generateAddress,
   login,
   whitelist,
-  distributeFixedYieldVault,
-  generateAddress
 } from './utils/admin-ops';
 
 config();
@@ -74,7 +74,7 @@ test.describe('Upside Yield', async () => {
       await createUpsideVaultVault({
         ADDRESSES_TREASURY: treasury,
         ADDRESSES_ACTIVITY_REWARD: activityReward,
-        COLLATERAL_PERCENTAGE: 200
+        COLLATERAL_PERCENTAGE: 200,
       });
     });
 
@@ -246,7 +246,6 @@ test.describe('Upside Yield', async () => {
     });
   });
 
-
   test('10% + 30% upside', async () => {
     const depositAmount = BigNumber.from('100000000');
 
@@ -256,7 +255,7 @@ test.describe('Upside Yield', async () => {
       await createUpsideVaultVault({
         ADDRESSES_TREASURY: treasury,
         ADDRESSES_ACTIVITY_REWARD: activityReward,
-        COLLATERAL_PERCENTAGE: 300
+        COLLATERAL_PERCENTAGE: 300,
       });
     });
 
