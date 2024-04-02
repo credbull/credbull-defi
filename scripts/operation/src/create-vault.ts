@@ -1,10 +1,6 @@
 import { CredbullFixedYieldVault__factory, CredbullVaultFactory__factory } from '@credbull/contracts';
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 
-<<<<<<< HEAD
-=======
-console.log('operator address', process.env.PUBLIC_OPERATOR_ADDRESS);
->>>>>>> 1a8f76e6919dbeb3185382c88363d9e97673b6aa
 
 import { generateAddress, headers, login, signer, supabase, userByEmail } from './utils/helpers';
 
