@@ -68,7 +68,11 @@ test.describe('Multi user Interaction - Upside', async () => {
     const depositAmount = BigNumber.from('100000000');
 
     await test.step('Create upside vault', async () => {
-      await createUpsideVaultVault();
+      await createUpsideVaultVault(
+        {
+          COLLATERAL_PERCENTAGE: 200
+        }
+      );
     });
 
     await test.step('Get all vaults and filter upside', async () => {

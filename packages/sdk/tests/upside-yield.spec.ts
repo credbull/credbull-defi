@@ -74,6 +74,7 @@ test.describe('Upside Yield', async () => {
       await createUpsideVaultVault({
         ADDRESSES_TREASURY: treasury,
         ADDRESSES_ACTIVITY_REWARD: activityReward,
+        COLLATERAL_PERCENTAGE: 200
       });
     });
 
