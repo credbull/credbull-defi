@@ -1,8 +1,7 @@
 import { CredbullFixedYieldVault__factory, CredbullVaultFactory__factory } from '@credbull/contracts';
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 
-
-import { generateAddress, headers, login, signer, supabase, userByEmail } from './utils/helpers';
+import { headers, login, signer, supabase, userByEmail } from './utils/helpers';
 
 const createParams = (params: {
   custodian: string;
@@ -66,7 +65,7 @@ const createParams = (params: {
     tenant: params.tenant,
     maxCap: (1e6 * 1e6).toString(),
     depositThresholdForWhitelisting: (1000e6).toString(),
-    collateralPercentage: collateralPercentage
+    collateralPercentage: collateralPercentage,
   };
 };
 
@@ -74,7 +73,6 @@ export const main = (
   scenarios: { matured: boolean; upside: boolean; tenant: boolean },
   params?: { upsideVault: string; tenantEmail: string },
 ) => {
-
   // function decodeContractError(contract: ethers.Contract, errorData: string) {
   //   const contractInterface = contract.interface;
   //   const selecter = errorData.slice(0, 10);
@@ -111,7 +109,7 @@ export const main = (
     const adminSigner = signer(process.env.ADMIN_PRIVATE_KEY);
 
     // allow custodian address
-    let custodian = scenarios.matured ? process.env.ADDRESSES_CUSTODIAN! : process.env.ADDRESSES_CUSTODIAN || "";
+    let custodian = scenarios.matured ? process.env.ADDRESSES_CUSTODIAN! : process.env.ADDRESSES_CUSTODIAN || '';
 
     if (params?.upsideVault && !scenarios.upside) {
       const vault = await supabaseClient.from('vaults').select().eq('address', params.upsideVault).single();

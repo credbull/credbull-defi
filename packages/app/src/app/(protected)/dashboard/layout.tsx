@@ -66,7 +66,7 @@ const AppNavbar = ({ opened }: { opened: boolean }) => {
       <Navbar.Section mx="-xs" px="xs">
         <NavLink
           component={Link}
-          href={Routes.DASHBOARD_WITH_UPSIDE}
+          href={Routes.DASHBOARD}
           label="Lend"
           icon={<IconBusinessplan size={16} stroke={1.5} />}
           rightSection={<IconChevronRight size={12} stroke={1.5} />}
