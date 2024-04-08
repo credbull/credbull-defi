@@ -1,5 +1,5 @@
 // Multi user deposit test similar to deposit.spec.ts
-import { expect, test } from '@playwright/test'; 
+import { expect, test } from '@playwright/test';
 import { config } from 'dotenv';
 import { BigNumber, Signer } from 'ethers';
 
@@ -12,7 +12,6 @@ import {
   createFixedYieldVault,
   distributeFixedYieldVault,
   generateAddress,
-  getVaultEntities,
   login,
   sleep,
   whitelist,
@@ -105,7 +104,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
     vaultAddress = await test.step('Get vault and filter', async () => {
       try {
         await sdkA.getAllVaults();
-      } catch(e) {}
+      } catch (e) {}
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 
@@ -161,7 +160,6 @@ test.describe('Claim yield and principal - Fixed', async () => {
     });
 
     await test.step('Distribute yield', async () => {
-
       for (let i = 0; i < vaultAddress.length; i++) {
         const vault = await sdkA.getVaultInstance(vaultAddress[i]);
         const custodian = await vault.CUSTODIAN();
@@ -230,9 +228,9 @@ test.describe('Claim yield and principal - Fixed', async () => {
     });
 
     vaultAddress = await test.step('Get vault and filter', async () => {
-      try{
+      try {
         await sdkA.getAllVaults();
-      } catch(e) {}
+      } catch (e) {}
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 
