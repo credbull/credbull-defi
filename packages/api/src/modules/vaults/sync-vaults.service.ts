@@ -38,7 +38,7 @@ export class SyncVaultsService {
   @Cron(CronExpression.EVERY_MINUTE)
   async syncEventData() {
     this.logger.log('Syncing vault data...');
-    //await this.sync();
+    await this.sync();
   }
 
   private async sync() {

@@ -1,9 +1,11 @@
 import { ConsoleLogger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { Signer } from 'ethers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeepMockProxy, mockDeep } from 'vitest-mock-extended';
 
+import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
@@ -22,6 +24,7 @@ vi.mock('./vaults.repository', async (importOriginal) => {
 
 describe('VaultsController', () => {
   let controller: VaultsController;
+  let ethersService: EthersService;
   let client: DeepMockProxy<SupabaseClient>;
 
   beforeEach(async () => {
@@ -38,6 +41,7 @@ describe('VaultsController', () => {
       .compile();
 
     controller = await module.resolve<VaultsController>(VaultsController);
+    ethersService = await module.resolve<EthersService>(EthersService);
   });
 
   it('should return all current ready/matured vaults', async () => {
@@ -61,6 +65,7 @@ describe('VaultsController', () => {
     builder.lt.mockReturnValueOnce({ data: [vault] } as any);
 
     client.from.mockReturnValue(builder as any);
+    vi.spyOn(ethersService, 'operator').mockResolvedValue({} as Signer);
 
     const { data } = await controller.current();
 
