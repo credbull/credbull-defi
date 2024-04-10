@@ -10,7 +10,6 @@ import {
   TRASH_ADDRESS,
   __mockMint,
   createFixedYieldVault,
-  generateAddress,
   login,
   toggleWindowCheck,
   whitelist,

@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { BigNumber, providers } from 'ethers';
+import { BigNumber } from 'ethers';
 
 import { CredbullSDK } from '..';
 import { __mockMint, login, signer } from './utils/helpers';

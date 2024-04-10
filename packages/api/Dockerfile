@@ -13,10 +13,10 @@ WORKDIR /app
 ENV NODE_ENV="production"
 
 # Copy built application
-COPY ../contracts/ /app/contracts
-COPY . /app/api
+COPY packages/contracts /app/contracts
+COPY packages/api /app/api
 
 # Start the server by default, this can be overwritten at runtime
 WORKDIR /app/api
-EXPOSE 3001
+EXPOSE 3000
 CMD [ "yarn", "run", "start:prod" ]
