@@ -10,7 +10,7 @@ import { SiweMessage, generateNonce } from 'siwe';
 import { decodeContractError } from './src/utils/utils';
 
 export class CredbullSDK {
-  private SERVICE_URL = 'http://localhost:3001';
+  private SERVICE_URL = process.env.API_BASE_URL || "";
   constructor(
     private access_token: string,
     private signer: Signer,
@@ -31,7 +31,7 @@ export class CredbullSDK {
       domain: this.SERVICE_URL.split('//')[1],
       address: await signer.getAddress(),
       statement: 'By connecting your wallet, you agree to the Terms of Service and Privacy Policy.',
-      uri: 'http://localhost:3001',
+      uri: this.SERVICE_URL,
       version: '1',
       chainId,
       nonce: generateNonce(),

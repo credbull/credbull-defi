@@ -126,7 +126,7 @@ jobs:
           USER_B_PASSWORD: userb123
 
           NODE_ENV: development
-          BASE_URL: http://localhost:3001
+          RPC_PROVIDER: http://localhost:8545
           CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
           OPERATOR_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
           CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_CUSTODIAN_PRIVATE_KEY }}

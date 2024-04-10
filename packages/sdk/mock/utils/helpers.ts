@@ -17,12 +17,12 @@ export const login = async (email: string, password: string): Promise<{ access_t
     password: password,
   });
 
-  const signIn = await fetch(`http://localhost:3001/auth/api/sign-in`, { method: 'POST', body, ...headers() });
+  const signIn = await fetch(`${process.env.API_BASE_URL}/auth/api/sign-in`, { method: 'POST', body, ...headers() });
   return signIn.json();
 };
 
 export const signer = (privateKey: string) => {
-  return new Wallet(privateKey, new providers.JsonRpcProvider(`http://localhost:8545`));
+  return new Wallet(privateKey, new providers.JsonRpcProvider(`${process.env.RPC_PROVIDER}`));
 };
 
 export const generateAddress = () => {
@@ -37,7 +37,7 @@ export const generateSigner = () => {
   const id = crypto.randomBytes(32).toString('hex');
   const privateKey = '0x' + id;
 
-  return new Wallet(privateKey, new providers.JsonRpcProvider(`http://localhost:8545`));
+  return new Wallet(privateKey, new providers.JsonRpcProvider(`${process.env.RPC_PROVIDER}`));
 };
 
 export const decodeError = (contract: any, err: string) => {
