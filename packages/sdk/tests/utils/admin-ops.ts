@@ -63,7 +63,7 @@ export async function createUpsideVaultVault(envs?: any) {
 export async function getVaultEntities(id: string) {
   const { access_token } = await login(process.env.ADMIN_EMAIL_SDK || '', process.env.ADMIN_PASSWORD_SDK || '');
 
-  const res = await fetch(`${process.env.BASE_URL}/vaults/vault-entities/${id}`, {
+  const res = await fetch(`${process.env.API_BASE_URL}/vaults/vault-entities/${id}`, {
     headers: { Authorization: `Bearer ${access_token}` },
   });
 
@@ -71,7 +71,7 @@ export async function getVaultEntities(id: string) {
 }
 
 export async function distributeFixedYieldVault() {
-  const res = await fetch(`${process.env.BASE_URL}/vaults/mature-outstanding`, {
+  const res = await fetch(`${process.env.API_BASE_URL}/vaults/mature-outstanding`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.CRON_SECRET || ''}` },
   });
@@ -80,7 +80,7 @@ export async function distributeFixedYieldVault() {
 export async function whitelist(address: string, user_id: string) {
   const { access_token } = await login(process.env.ADMIN_EMAIL_SDK || '', process.env.ADMIN_PASSWORD_SDK || '');
 
-  const whistelistRes = await fetch(`${process.env.BASE_URL}/accounts/whitelist`, {
+  const whistelistRes = await fetch(`${process.env.API_BASE_URL}/accounts/whitelist`, {
     method: 'POST',
     body: JSON.stringify({ address, user_id }),
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${access_token}` },
@@ -91,7 +91,7 @@ export async function whitelist(address: string, user_id: string) {
 }
 
 export async function login(email: string, password: string) {
-  const res = await fetch(`${process.env.BASE_URL}/auth/api/sign-in`, {
+  const res = await fetch(`${process.env.API_BASE_URL}/auth/api/sign-in`, {
     method: 'POST',
     body: JSON.stringify({ email, password }),
     headers: { 'Content-Type': 'application/json' },
@@ -141,7 +141,7 @@ export async function toggleWindowCheck(
 }
 
 export async function getAdminSigner() {
-  return new Wallet(process.env.ADMIN_PRIVATE_KEY_SDK || '', new providers.JsonRpcProvider(`http://localhost:8545`));
+  return new Wallet(process.env.ADMIN_PRIVATE_KEY_SDK || '', new providers.JsonRpcProvider(`${process.env.RPC_PROVIDER}`));
 }
 
 export async function sleep(ms: number) {
