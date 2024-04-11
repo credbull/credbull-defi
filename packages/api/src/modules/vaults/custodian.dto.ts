@@ -22,6 +22,6 @@ export class CustodianTransferDto {
     this.vault_id = partial.vault_id;
     this.address = partial.address;
     this.asset_address = partial.asset_address;
-    this.asset_address = partial.custodian_address;
+    this.custodian_address = partial.custodian_address;
   }
 }
