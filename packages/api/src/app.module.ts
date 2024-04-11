@@ -7,7 +7,7 @@ import { AppController } from './app.controller';
 import { SupabaseModule } from './clients/supabase/supabase.module';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { AuthenticationModule } from './modules/authentication/authentication.module';
-// import { NotificationsModule } from './modules/notification/notifications.module';
+import { NotificationsModule } from './modules/notification/notifications.module';
 import { VaultsModule } from './modules/vaults/vaults.module';
 import * as logger from './utils/logger';
 import { Config } from './utils/module';
@@ -19,7 +19,7 @@ import { Config } from './utils/module';
     SupabaseModule,
     AuthenticationModule,
     VaultsModule,
-    // NotificationsModule,
+    NotificationsModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

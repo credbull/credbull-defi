@@ -19,8 +19,7 @@ export class NotificationsService implements OnModuleInit {
   }
 
   onModuleInit() {
-    console.log('Notifications has been initialized.');
-    //this.startListeningForBlockEvents();
+    this.startListeningForBlockEvents();
   }
 
   async startListeningForBlockEvents() {
