@@ -47,6 +47,8 @@ jobs:
           ETHERS_INFURA_API_KEY: your_infura_api_key
           CRON_SECRET: any_string_will_do
           NEXT_PUBLIC_TARGET_NETWORK_WSS: ws://localhost:8545
+          OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
 
       - name: Build API
         run: yarn build && yarn run sentry:sourcemaps
