@@ -79,6 +79,14 @@ function Vault(props: VaultProps) {
     enabled: !!props.data.address,
   });
 
+  const { data: vaultPaused } = useContractRead({
+    address: props.data.address as Address,
+    abi: FixedYieldVault__factory.abi,
+    functionName: 'paused',
+    watch: true,
+    enabled: !!props.data.address,
+  });
+
   const form = useForm({
     validate: zodResolver(schema),
     initialValues: {
@@ -160,7 +168,7 @@ function Vault(props: VaultProps) {
   const depositsClose = parseISO(props.data.deposits_closed_at);
   const opened = isAfter(new Date(), depositsOpen) && isBefore(new Date(), depositsClose);
 
-  return (
+  return vaultPaused ? null : (
     <Card shadow="sm" p="xl" radius="md" withBorder>
       <Group position="apart" mt="md" mb="xs">
         <Button variant="white" p="0" onClick={() => clipboard.copy(props.data?.address)}>
