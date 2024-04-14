@@ -1,10 +1,10 @@
 import {
-  type CredbullFixedYieldVault,
   CredbullFixedYieldVaultFactory,
   CredbullFixedYieldVaultFactory__factory,
-  CredbullFixedYieldVault__factory,
   CredbullUpsideVaultFactory,
   CredbullUpsideVaultFactory__factory,
+  FixedYieldVault,
+  FixedYieldVault__factory,
 } from '@credbull/contracts';
 import { VaultDeployedEvent } from '@credbull/contracts/types/CredbullVaultFactory';
 import { ConsoleLogger, Injectable } from '@nestjs/common';
@@ -94,7 +94,7 @@ export class SyncVaultsService {
       const vaultsToBeAdded = events.data
         .filter((event) => !vaultsInDB.includes(event.args.vault))
         .filter(async (v) => {
-          const contract = await this.getVautContract(v.address);
+          const contract = await this.getVaultContract(v.address);
           return !(await contract.paused());
         });
 
@@ -143,9 +143,10 @@ export class SyncVaultsService {
     });
   }
 
-  private async getVautContract(addr: string): Promise<CredbullFixedYieldVault> {
-    return CredbullFixedYieldVault__factory.connect(addr, await this.ethers.operator());
+  private async getVaultContract(addr: string): Promise<FixedYieldVault> {
+    return FixedYieldVault__factory.connect(addr, await this.ethers.operator());
   }
+
   private async getFactoryContract(addr: string): Promise<CredbullFixedYieldVaultFactory> {
     return CredbullFixedYieldVaultFactory__factory.connect(addr, await this.ethers.operator());
   }
