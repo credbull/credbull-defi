@@ -1,6 +1,8 @@
 import {
+  type CredbullFixedYieldVault,
   CredbullFixedYieldVaultFactory,
   CredbullFixedYieldVaultFactory__factory,
+  CredbullFixedYieldVault__factory,
   CredbullUpsideVaultFactory,
   CredbullUpsideVaultFactory__factory,
 } from '@credbull/contracts';
@@ -65,7 +67,7 @@ export class SyncVaultsService {
       return;
     }
 
-    const upsideFactoryContract = await this.factoryUpsideContract(factoryAddress.data.address);
+    const upsideFactoryContract = await this.getFactoryUpsideContract(factoryAddress.data.address);
     const factoryContract = await this.getFactoryContract(factoryAddress.data.address);
 
     const eventFilter = upside
@@ -88,7 +90,13 @@ export class SyncVaultsService {
       }
 
       const vaultsInDB = vaults.data.map((vault) => vault.address);
-      const vaultsToBeAdded = events.data.filter((event) => !vaultsInDB.includes(event.args.vault));
+
+      const vaultsToBeAdded = events.data
+        .filter((event) => !vaultsInDB.includes(event.args.vault))
+        .filter(async (v) => {
+          const contract = await this.getVautContract(v.address);
+          return !(await contract.paused());
+        });
 
       const processedEvents = await this.processEventData(vaultsToBeAdded, upside);
       if (processedEvents.error) this.logger.error(processedEvents.error);
@@ -135,11 +143,14 @@ export class SyncVaultsService {
     });
   }
 
+  private async getVautContract(addr: string): Promise<CredbullFixedYieldVault> {
+    return CredbullFixedYieldVault__factory.connect(addr, await this.ethers.operator());
+  }
   private async getFactoryContract(addr: string): Promise<CredbullFixedYieldVaultFactory> {
     return CredbullFixedYieldVaultFactory__factory.connect(addr, await this.ethers.operator());
   }
 
-  private async factoryUpsideContract(addr: string): Promise<CredbullUpsideVaultFactory> {
+  private async getFactoryUpsideContract(addr: string): Promise<CredbullUpsideVaultFactory> {
     return CredbullUpsideVaultFactory__factory.connect(addr, await this.ethers.operator());
   }
 }
