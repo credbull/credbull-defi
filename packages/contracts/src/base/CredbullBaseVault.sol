@@ -130,18 +130,13 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
 
     /// @notice The share token should be soul bound. Should be transferable only to vault to receive assets back
     function transfer(address to, uint256 value) public override(ERC20, IERC20) returns (bool) {
-        if (to != address(this)) revert CredbullVault__TransferOutsideEcosystem();
-        address owner = _msgSender();
-        _transfer(owner, to, value);
+        revert CredbullVault__TransferOutsideEcosystem();
         return true;
     }
 
     /// @notice The share token should be soul bound. Should be transferable only to vault to receive assets back
     function transferFrom(address from, address to, uint256 value) public override(ERC20, IERC20) returns (bool) {
-        if (to != address(this)) revert CredbullVault__TransferOutsideEcosystem();
-        address spender = _msgSender();
-        _spendAllowance(from, spender, value);
-        _transfer(from, to, value);
+        revert CredbullVault__TransferOutsideEcosystem();
         return true;
     }
 

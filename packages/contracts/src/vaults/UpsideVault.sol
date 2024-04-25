@@ -20,7 +20,7 @@ contract UpsideVault is FixedYieldVault {
     /// @notice Percentage of collateral (100_00) is 100%
     uint256 public collateralPercentage;
 
-    mapping(address account => uint256) private _balances;
+    mapping(address account => uint256) private _collateralBalance;
 
     /// @notice Total collateral deposited
     // uint256 public totalCollateralDeposited;
@@ -53,6 +53,7 @@ contract UpsideVault is FixedYieldVault {
         internal
         override
         depositModifier(caller, receiver, assets, shares)
+        whenNotPaused
     {
         (, uint256 reminder) = assets.tryMod(10 ** VAULT_DECIMALS);
         if (reminder > 0) {
@@ -61,14 +62,14 @@ contract UpsideVault is FixedYieldVault {
 
         uint256 collateral = getCollateralAmount(assets);
 
-        _balances[receiver] += collateral;
+        _collateralBalance[receiver] += collateral;
         totalAssetDeposited += assets;
 
         if (totalAssetDeposited > maxCap) {
             revert CredbullVault__MaxCapReached();
         }
 
-        SafeERC20.safeTransferFrom(token, _msgSender(), address(this), collateral);
+        SafeERC20.safeTransferFrom(token, caller, address(this), collateral);
         SafeERC20.safeTransferFrom(IERC20(asset()), caller, CUSTODIAN, assets);
 
         _mint(receiver, shares);
@@ -81,6 +82,7 @@ contract UpsideVault is FixedYieldVault {
         internal
         override
         withdrawModifier(caller, receiver, owner, assets, shares)
+        whenNotPaused
     {
         if (caller != owner) {
             _spendAllowance(owner, caller, shares);
@@ -88,7 +90,7 @@ contract UpsideVault is FixedYieldVault {
 
         uint256 collateral = calculateTokenRedemption(shares, owner);
 
-        _balances[owner] -= collateral;
+        _collateralBalance[owner] -= collateral;
         totalAssetDeposited -= assets;
 
         SafeERC20.safeTransfer(token, receiver, collateral);
@@ -112,7 +114,7 @@ contract UpsideVault is FixedYieldVault {
         }
 
         uint256 sharePercent = shares.mulDiv(PRECISION, balanceOf(account));
-        return _balances[account].mulDiv(sharePercent, PRECISION);
+        return _collateralBalance[account].mulDiv(sharePercent, PRECISION);
     }
 
     /// @notice - Update the twap value
