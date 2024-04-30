@@ -22,3 +22,11 @@ deploy-sepolia:
 
 deploy-sepolia-keystore:
 	rm -rf out && forge script script/Counter.s.sol:CounterScript -vvv --rpc-url ${RPC_URL} --account bob  --password "" --broadcast -vvvv
+
+
+# TODO: below are work in progress !!
+deploy-sepolia-ledger:
+	rm -rf out && forge script script/Counter.s.sol:CounterScript -vvv --rpc-url ${RPC_URL} --ledger --broadcast -vvvv
+
+deploy-sepolia-aws:
+	rm -rf out && forge script script/Counter.s.sol:CounterScript -vvv --rpc-url ${RPC_URL} --aws --broadcast -vvvv
