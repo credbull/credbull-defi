@@ -8,7 +8,7 @@
     "deposit": "ts-node mock/deposit.ts",
     "format": "prettier . --write",
     "build": "tsc",
-    "test-playwright": "playwright test",
+    "test": "playwright test",
     "report": "playwright show-report"
   },
   "dependencies": {
