@@ -3,8 +3,9 @@
 pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
-import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
-import { MockToken } from "../test/mocks/MockToken.sol";
+
+import { DeployMocks } from "./DeployMocks.s.sol";
+
 import { ICredbull } from "../src/interface/ICredbull.sol";
 import { stdJson } from "forge-std/StdJson.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
@@ -54,7 +55,8 @@ contract HelperConfig is Script {
             collateralPercentage: vm.envUint("COLLATERAL_PERCENTAGE")
         });
 
-        (address token, address usdc) = deployMocks();
+        DeployMocks deployMocks = new DeployMocks();
+        (address token, address usdc) = deployMocks.deployMocksOrSkipIfPreviouslyDeployed();
 
         // no need for vault params when using a real network
         ICredbull.VaultParams memory empty = ICredbull.VaultParams({
@@ -79,46 +81,6 @@ contract HelperConfig is Script {
         return sepoliaConfig;
     }
 
-    function deployMocks() internal returns (address, address) {
-        MockToken token;
-        MockStablecoin usdc;
-
-        bool deployMockToken = true;
-        bool deployMockStableCoin = true;
-
-        string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/script/output/dbdata.json");
-
-        if (vm.exists(path)) {
-            string memory json = vm.readFile(path);
-
-            bytes memory mockToken = json.parseRaw(".MockToken");
-            bytes memory mockStableCoin = json.parseRaw(".MockStablecoin");
-
-            deployMockToken = test || mockToken.length == 0;
-            deployMockStableCoin = test || mockStableCoin.length == 0;
-        }
-
-        vm.startBroadcast();
-        if (deployMockToken) {
-            token = new MockToken(type(uint128).max);
-            console2.log("!!!!! Deploying MockToken !!!!!");
-        } else {
-            console2.log("!!!!! Deployment skipped for MockToken !!!!!");
-        }
-
-        if (deployMockStableCoin) {
-            usdc = new MockStablecoin(type(uint128).max);
-            console2.log("!!!!! Deploying MockStablecoin !!!!!");
-        } else {
-            console2.log("!!!!! Deployment skipped for MockStablecoin !!!!!");
-        }
-
-        vm.stopBroadcast();
-
-        return (address(token), address(usdc));
-    }
-
     function getAnvilEthConfig() internal returns (NetworkConfig memory) {
         if (address(activeNetworkConfig.vaultParams.asset) != address(0)) {
             return activeNetworkConfig;
@@ -132,7 +94,8 @@ contract HelperConfig is Script {
         (uint256 opensAt, uint256 closesAt) = getTimeConfig();
         uint256 year = 365 days;
 
-        (address token, address usdc) = deployMocks();
+        DeployMocks deployMocks = new DeployMocks();
+        (address token, address usdc) = deployMocks.deployMocksOrSkipIfPreviouslyDeployed();
 
         ICredbull.VaultParams memory anvilVaultParams = ICredbull.VaultParams({
             asset: IERC20(usdc),
