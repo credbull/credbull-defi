@@ -36,7 +36,7 @@ abstract contract ConditionalDeploy is Script {
 
     /// Logic to determine whether or not to deploy
     /// @return whether to deploy or not
-    function shouldDeploy() public returns (bool) {
+    function shouldDeploy() public virtual returns (bool) {
         return !deployedContract.isFoundInContractDb(contractName);
     }
 }

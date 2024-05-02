@@ -21,4 +21,8 @@ deployments
 types
 index.js
 
+# supabase export
 /script/output/dbdata.json
+
+# code coverage
+lcov.info

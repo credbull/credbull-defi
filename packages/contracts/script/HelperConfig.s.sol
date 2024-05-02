@@ -158,7 +158,7 @@ contract HelperConfig is Script {
 
     /// Get the Anvil (local) mnemonic passphrase
     /// @return the mnemonic passphrase
-    function getAnvilMnemonic() internal returns (string memory) {
+    function getAnvilMnemonic() public returns (string memory) {
         // if anvil was run, get the mnemonic from the config output
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/localhost.json");
