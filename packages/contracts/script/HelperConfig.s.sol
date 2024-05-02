@@ -9,7 +9,6 @@ import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
 import { MockToken } from "../test/mocks/MockToken.sol";
 
 import { ICredbull } from "../src/interface/ICredbull.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 struct FactoryParams {
     address owner;
