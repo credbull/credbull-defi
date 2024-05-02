@@ -8,7 +8,6 @@ import { DeployMockToken, DeployMockStablecoin } from "./DeployMocks.s.sol";
 
 import { ICredbull } from "../src/interface/ICredbull.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { console2 } from "forge-std/console2.sol";
 
 struct FactoryParams {
     address owner;

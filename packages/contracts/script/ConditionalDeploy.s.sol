@@ -3,9 +3,6 @@
 pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
-import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
-import { MockToken } from "../test/mocks/MockToken.sol";
-import { stdJson } from "forge-std/StdJson.sol";
 import { console2 } from "forge-std/console2.sol";
 import { DeployedContracts } from "./DeployedContracts.s.sol";
 

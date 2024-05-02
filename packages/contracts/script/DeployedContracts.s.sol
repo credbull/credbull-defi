@@ -3,8 +3,6 @@
 pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
-import { console2 } from "forge-std/console2.sol";
-
 import { stdJson } from "forge-std/StdJson.sol";
 
 /// @author ian lucas
