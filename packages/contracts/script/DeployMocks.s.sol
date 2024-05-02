@@ -36,7 +36,7 @@ contract DeployMockStablecoin is ConditionalDeploy {
     function run() public returns (MockStablecoin) {
         vm.startBroadcast();
         MockStablecoin usdc = new MockStablecoin(type(uint128).max);
-        console2.log("!!!!! Deploying MockStablecoin !!!!!");
+        console2.log("!!!!! Deploying ", MOCK_STABLECOIN, "!!!!!");
         vm.stopBroadcast();
 
         return usdc;

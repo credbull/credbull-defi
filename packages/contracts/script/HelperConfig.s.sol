@@ -158,14 +158,19 @@ contract HelperConfig is Script {
 
     /// Get the Anvil (local) mnemonic passphrase
     /// @return the mnemonic passphrase
-    function getAnvilMnemonic() internal view returns (string memory) {
+    function getAnvilMnemonic() internal returns (string memory) {
+        // if anvil was run, get the mnemonic from the config output
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/localhost.json");
-        string memory json = vm.readFile(path);
-        bytes memory mnemonicBytes = vm.parseJson(json, ".wallet.mnemonic");
 
-        string memory mnemonic = abi.decode(mnemonicBytes, (string));
+        if (vm.exists(path)) {
+            string memory json = vm.readFile(path);
+            bytes memory mnemonicBytes = vm.parseJson(json, ".wallet.mnemonic");
 
-        return mnemonic;
+            return abi.decode(mnemonicBytes, (string));
+        } else {
+            // Anvil not run previously - use the test mnemonic
+            return "test test test test test test test test test test test junk";
+        }
     }
 }
