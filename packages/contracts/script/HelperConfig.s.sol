@@ -4,7 +4,9 @@ pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
 
-import { DeployMockToken, DeployMockStablecoin } from "./DeployMocks.s.sol";
+import { DeployMocks } from "./DeployMocks.s.sol";
+import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
+import { MockToken } from "../test/mocks/MockToken.sol";
 
 import { ICredbull } from "../src/interface/ICredbull.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
@@ -61,16 +63,13 @@ contract HelperConfig is Script {
             collateralPercentage: vm.envUint("COLLATERAL_PERCENTAGE")
         });
 
-        DeployMockToken deployMockToken = new DeployMockToken();
-        address tokenAddress = deployMockToken.deployIfNeeded();
-
-        DeployMockStablecoin deployMockStablecoin = new DeployMockStablecoin();
-        address stablecoinAddress = deployMockStablecoin.deployIfNeeded();
+        DeployMocks deployMocks = new DeployMocks(testMode);
+        (MockToken mockToken, MockStablecoin mockStablecoin) = deployMocks.run();
 
         // no need for vault params when using a real network
         ICredbull.VaultParams memory empty = ICredbull.VaultParams({
-            asset: IERC20(stablecoinAddress),
-            token: IERC20(tokenAddress),
+            asset: mockStablecoin,
+            token: mockToken,
             owner: address(0),
             operator: address(0),
             custodian: address(0),
@@ -101,18 +100,14 @@ contract HelperConfig is Script {
         (uint256 opensAt, uint256 closesAt) = getTimeConfig();
         uint256 year = 365 days;
 
-        DeployMockToken deployMockToken = new DeployMockToken();
-        address tokenAddress = testMode ? deployMockToken.deployAlways() : deployMockToken.deployIfNeeded();
-
-        DeployMockStablecoin deployMockStablecoin = new DeployMockStablecoin();
-        address stablecoinAddress =
-            testMode ? deployMockStablecoin.deployAlways() : deployMockStablecoin.deployIfNeeded();
+        DeployMocks deployMocks = new DeployMocks(testMode);
+        (MockToken mockToken, MockStablecoin mockStablecoin) = deployMocks.run();
 
         ContractRoles memory contractRoles = createRolesFromMnemonic(getAnvilMnemonic());
 
         ICredbull.VaultParams memory anvilVaultParams = ICredbull.VaultParams({
-            asset: IERC20(stablecoinAddress),
-            token: IERC20(tokenAddress),
+            asset: mockStablecoin,
+            token: mockToken,
             shareName: "Share_sep",
             shareSymbol: "SYM_sep",
             owner: contractRoles.owner,

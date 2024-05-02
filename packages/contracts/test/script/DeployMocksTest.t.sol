@@ -3,14 +3,17 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
-import { DeployMockToken, DeployMockStablecoin } from "../../script/DeployMocks.s.sol";
+
+import { DeployMocks } from "../../script/DeployMocks.s.sol";
+import { MockStablecoin } from "../mocks/MockStablecoin.sol";
+import { MockToken } from "../mocks/MockToken.sol";
 
 contract DeployMocksTest is Test {
     function test__DeployMocksTest__DeployMockToken() public {
-        DeployMockToken deployToken = new DeployMockToken();
-        assertNotEq(address(0), deployToken.deployAlways());
+        DeployMocks deployMocks = new DeployMocks(true);
+        (MockToken mockToken, MockStablecoin mockStablecoin) = deployMocks.run();
 
-        DeployMockStablecoin deployStablecoin = new DeployMockStablecoin();
-        assertNotEq(address(0), deployStablecoin.deployAlways());
+        assertNotEq(address(0), address(mockToken));
+        assertNotEq(address(0), address(mockStablecoin));
     }
 }

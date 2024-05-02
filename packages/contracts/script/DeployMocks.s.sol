@@ -2,27 +2,41 @@
 
 pragma solidity ^0.8.19;
 
+import { Script } from "forge-std/Script.sol";
+
 import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
 import { MockToken } from "../test/mocks/MockToken.sol";
+
 import { console2 } from "forge-std/console2.sol";
-import { ConditionalDeploy } from "./ConditionalDeploy.s.sol";
+import { DeployedContracts } from "./DeployedContracts.s.sol";
 
-/// @title Deploy the MockToken contract
-contract DeployMockToken is ConditionalDeploy {
-    constructor() ConditionalDeploy("MockToken") { }
+contract DeployMocks is Script {
+    bool public isTestMode;
 
-    function newInstance() public override returns (address) {
-        MockToken token = new MockToken(type(uint128).max);
-        return address(token);
+    constructor(bool _isTestMode) {
+        isTestMode = _isTestMode;
     }
-}
 
-/// @title Deploy the MockStablecoin contract.
-contract DeployMockStablecoin is ConditionalDeploy {
-    constructor() ConditionalDeploy("MockStablecoin") { }
+    function run() public returns (MockToken, MockStablecoin) {
+        DeployedContracts deployChecker = new DeployedContracts();
 
-    function newInstance() public override returns (address) {
-        MockStablecoin mockStablecoin = new MockStablecoin(type(uint128).max);
-        return address(mockStablecoin);
+        MockToken mockToken;
+        MockStablecoin mockStablecoin;
+
+        vm.startBroadcast();
+
+        if (isTestMode || deployChecker.isDeployRequired("MockToken")) {
+            mockToken = new MockToken(type(uint128).max);
+            console2.log("!!!!! Deploying MockToken !!!!!");
+        }
+
+        if (isTestMode || deployChecker.isDeployRequired("MockStablecoin")) {
+            mockStablecoin = new MockStablecoin(type(uint128).max);
+            console2.log("!!!!! Deploying MockStablecoin !!!!!");
+        }
+
+        vm.stopBroadcast();
+
+        return (mockToken, mockStablecoin);
     }
 }

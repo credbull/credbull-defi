@@ -5,12 +5,26 @@ pragma solidity ^0.8.19;
 import { Script } from "forge-std/Script.sol";
 import { stdJson } from "forge-std/StdJson.sol";
 
+import { console2 } from "forge-std/console2.sol";
+
 /// @author ian lucas
 /// @title Helper to find previously deployed contracts.  For example, within a supabase db export.
 contract DeployedContracts is Script {
     string private EMPTY_STRING = "";
 
     using stdJson for string;
+
+    /// Logic to determine whether or not to deploy
+    /// @return whether to deploy or not
+    function isDeployRequired(string memory contractName) public virtual returns (bool) {
+        bool shouldDeploy = !isFoundInContractDb(contractName);
+
+        if (!shouldDeploy) {
+            console2.log("!!!!! Deployment not required for ", contractName, " !!!!!");
+        }
+
+        return shouldDeploy;
+    }
 
     /// Check if the Contract is found
     /// @param json the json with a list of contracts or empty

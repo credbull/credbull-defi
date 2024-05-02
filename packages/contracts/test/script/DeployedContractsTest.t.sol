@@ -42,4 +42,13 @@ contract DeployedContractsTest is Test {
         vm.expectRevert();
         assertFalse(deployedContracts.isFound("", "AnotherContract"));
     }
+
+    function test__DeployedContracts__IsDeployRequired() public {
+        string memory contractName = "ZZContract";
+
+        DeployedContracts deployedContracts = new DeployedContracts();
+
+        assertFalse(deployedContracts.isFoundInContractDb(contractName));
+        assertTrue(deployedContracts.isDeployRequired(contractName));
+    }
 }
