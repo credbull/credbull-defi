@@ -8,8 +8,9 @@ import { ConditionalDeploy } from "../../script/ConditionalDeploy.s.sol";
 contract ConditionalDeployTest is Test {
     function test__ConditionalDeploy() public {
         ConditionalDeployMock conditionalDeploy = new ConditionalDeployMock(false);
+
         assertEq(address(0), conditionalDeploy.deployIfNeeded());
-        assertFalse(conditionalDeploy.parentShouldDeploy());
+        assertTrue(conditionalDeploy.parentShouldDeploy());
 
         conditionalDeploy.setShouldDeployFlag(true);
         assertEq(conditionalDeploy.newAddress(), conditionalDeploy.deployIfNeeded());
@@ -34,7 +35,7 @@ contract ConditionalDeployMock is ConditionalDeploy {
         return super.shouldDeploy();
     }
 
-    function shouldDeploy() public override returns (bool) {
+    function shouldDeploy() public view override returns (bool) {
         return shouldDeployFlag;
     }
 
