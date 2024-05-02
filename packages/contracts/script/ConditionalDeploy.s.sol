@@ -30,9 +30,18 @@ abstract contract ConditionalDeploy is Script {
         }
     }
 
+    function deployAlways() public returns (address) {
+        vm.startBroadcast();
+        address newInstanceAddr = newInstance();
+        console2.log("!!!!! Deploying ", contractName, "!!!!!");
+        vm.stopBroadcast();
+
+        return newInstanceAddr;
+    }
+
     /// Deploys always (ignores the condition)
     /// @return the deployed contract's address
-    function deployAlways() public virtual returns (address);
+    function newInstance() public virtual returns (address);
 
     /// Logic to determine whether or not to deploy
     /// @return whether to deploy or not

@@ -8,9 +8,9 @@ import { DeployMockToken, DeployMockStablecoin } from "../../script/DeployMocks.
 contract DeployMocksTest is Test {
     function test__DeployMocksTest__DeployMockToken() public {
         DeployMockToken deployToken = new DeployMockToken();
-        assertNotEq(address(0), address(deployToken.run()));
+        assertNotEq(address(0), deployToken.deployAlways());
 
         DeployMockStablecoin deployStablecoin = new DeployMockStablecoin();
-        assertNotEq(address(0), address(deployStablecoin.run()));
+        assertNotEq(address(0), deployStablecoin.deployAlways());
     }
 }

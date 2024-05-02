@@ -27,7 +27,7 @@ contract ConditionalDeployMock is ConditionalDeploy {
         shouldDeployFlag = _shouldDeployFlag;
     }
 
-    function deployAlways() public view override returns (address) {
+    function newInstance() public view override returns (address) {
         return newAddress;
     }
 
