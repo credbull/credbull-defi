@@ -44,17 +44,18 @@ contract DeployVaultFactory is Script {
         helperConfig = new HelperConfig(test);
         NetworkConfig memory config = helperConfig.getNetworkConfig();
 
-        address owner;
-        address operator;
+        address owner = config.factoryParams.owner;
+        address operator = config.factoryParams.operator;
+
         if (test) {
-            owner = config.factoryParams.owner;
-            operator = config.factoryParams.operator;
+            //            owner = config.factoryParams.owner;
+            //            operator = config.factoryParams.operator;
             deployFixedYieldFactory = true;
             deployUpsideFactory = true;
             deployCredbullKYCProvider = true;
         } else {
-            owner = vm.envAddress("PUBLIC_OWNER_ADDRESS");
-            operator = vm.envAddress("PUBLIC_OPERATOR_ADDRESS");
+            //            owner = vm.envAddress("PUBLIC_OWNER_ADDRESS");
+            //            operator = vm.envAddress("PUBLIC_OPERATOR_ADDRESS");
 
             string memory root = vm.projectRoot();
             string memory path = string.concat(root, "/script/output/dbdata.json");

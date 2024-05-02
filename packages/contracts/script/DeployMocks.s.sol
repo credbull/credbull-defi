@@ -5,26 +5,38 @@ pragma solidity ^0.8.19;
 import { Script } from "forge-std/Script.sol";
 import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
 import { MockToken } from "../test/mocks/MockToken.sol";
-import { ICredbull } from "../src/interface/ICredbull.sol";
 import { stdJson } from "forge-std/StdJson.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { console2 } from "forge-std/console2.sol";
+import { DeployedContracts } from "./DeployedContracts.s.sol";
+import { ConditionalDeploy } from "./ConditionalDeploy.s.sol";
 
-contract DeployMocks is Script {
-    bool private test = true;
+/// @title Deploy the MockToken contract
+contract DeployMockToken is ConditionalDeploy {
+    string public constant MOCK_TOKEN = "MockToken";
 
-    using stdJson for string;
+    constructor() ConditionalDeploy(MOCK_TOKEN) { }
 
-    function deployMockToken() public returns (MockToken) {
+    function run() public returns (MockToken) {
         vm.startBroadcast();
         MockToken token = new MockToken(type(uint128).max);
-        console2.log("!!!!! Deploying MockToken !!!!!");
+        console2.log("!!!!! Deploying ", MOCK_TOKEN, "!!!!!");
         vm.stopBroadcast();
 
         return token;
     }
 
-    function deployMockStablecoin() public returns (MockStablecoin) {
+    function deployAlways() public override returns (address) {
+        return address(run());
+    }
+}
+
+/// @title Deploy the MockStablCoin contract.
+contract DeployMockStablecoin is ConditionalDeploy {
+    string public constant MOCK_STABLECOIN = "MockStablecoin";
+
+    constructor() ConditionalDeploy(MOCK_STABLECOIN) { }
+
+    function run() public returns (MockStablecoin) {
         vm.startBroadcast();
         MockStablecoin usdc = new MockStablecoin(type(uint128).max);
         console2.log("!!!!! Deploying MockStablecoin !!!!!");
@@ -33,38 +45,7 @@ contract DeployMocks is Script {
         return usdc;
     }
 
-    // TODO: change this to return the previously deployed contract
-    function isPreviouslyDeployed(string memory contractName) public returns (bool) {
-        string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/script/output/dbdata.json");
-
-        if (vm.exists(path)) {
-            string memory json = vm.readFile(path);
-
-            bytes memory jsonContract = json.parseRaw(string.concat(".", contractName));
-
-            return jsonContract.length > 0;
-        }
-
-        return false;
-    }
-
-    function deployMocksOrSkipIfPreviouslyDeployed() public returns (address, address) {
-        MockToken token;
-        MockStablecoin usdc;
-
-        if (isPreviouslyDeployed("MockToken")) {
-            console2.log("!!!!! Deployment skipped for MockToken !!!!!");
-        } else {
-            token = deployMockToken();
-        }
-
-        if (isPreviouslyDeployed("MockStablecoin")) {
-            console2.log("!!!!! Deployment skipped for MockStablecoin !!!!!");
-        } else {
-            usdc = deployMockStablecoin();
-        }
-
-        return (address(token), address(usdc));
+    function deployAlways() public override returns (address) {
+        return address(run());
     }
 }
