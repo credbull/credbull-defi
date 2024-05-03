@@ -3,6 +3,7 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
+import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { MaxCapVaultMock } from "../mocks/vaults/MaxCapVaultMock.m.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
@@ -24,8 +25,7 @@ contract MaxCapPluginTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        NetworkConfig memory config;
-        (config, vaultParams) = helperConfig.getAnvilEthConfig();
+        vaultParams = new HelperVaultTest(helperConfig).createAnvilTestVaultParams();
 
         vault = new MaxCapVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();

@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Test } from "forge-std/Test.sol";
+import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
@@ -35,11 +36,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     function setUp() public {
         deployer = new DeployVaultFactory();
         (,, kycProvider, helperConfig) = deployer.runTest();
-
-        helperConfig = new HelperConfig(true);
-
-        NetworkConfig memory config;
-        (config, vaultParams) = helperConfig.getAnvilEthConfig();
+        vaultParams = new HelperVaultTest(helperConfig).createAnvilTestVaultParams();
 
         if (vaultParams.kycProvider == address(0)) {
             vaultParams.kycProvider = address(kycProvider);

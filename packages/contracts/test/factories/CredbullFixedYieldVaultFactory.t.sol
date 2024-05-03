@@ -3,6 +3,7 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
+import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { CredbullFixedYieldVaultFactory } from "../../src/factories/CredbullFixedYieldVaultFactory.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { HelperConfig, NetworkConfig } from "../../script/HelperConfig.s.sol";
@@ -25,7 +26,8 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     function setUp() public {
         deployer = new DeployVaultFactory();
         (factory,, kycProvider, helperConfig) = deployer.runTest();
-        (config, params) = helperConfig.getAnvilEthConfig();
+        config = helperConfig.getNetworkConfig();
+        params = new HelperVaultTest(helperConfig).createAnvilTestVaultParams();
 
         params.kycProvider = address(kycProvider);
     }

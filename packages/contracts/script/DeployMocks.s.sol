@@ -12,6 +12,9 @@ import { DeployedContracts } from "./DeployedContracts.s.sol";
 
 contract DeployMocks is Script {
     bool public isTestMode;
+    uint128 public constant MAX_UINT128_SIZE = type(uint128).max;
+
+    uint128 public totalSupply = MAX_UINT128_SIZE;
 
     constructor(bool _isTestMode) {
         isTestMode = _isTestMode;
@@ -26,12 +29,12 @@ contract DeployMocks is Script {
         vm.startBroadcast();
 
         if (isTestMode || deployChecker.isDeployRequired("MockToken")) {
-            mockToken = new MockToken(type(uint128).max);
+            mockToken = new MockToken(totalSupply);
             console2.log("!!!!! Deploying MockToken !!!!!");
         }
 
         if (isTestMode || deployChecker.isDeployRequired("MockStablecoin")) {
-            mockStablecoin = new MockStablecoin(type(uint128).max);
+            mockStablecoin = new MockStablecoin(totalSupply);
             console2.log("!!!!! Deploying MockStablecoin !!!!!");
         }
 

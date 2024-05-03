@@ -3,6 +3,8 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
+
+import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { CredbullUpsideVaultFactory } from "../../src/factories/CredbullUpsideVaultFactory.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { HelperConfig, NetworkConfig } from "../../script/HelperConfig.s.sol";
@@ -24,9 +26,8 @@ contract CredbullVaultWithUpsideFactoryTest is Test {
     }
 
     function test__CreateUpsideVaultFromFactory() public {
-        NetworkConfig memory config;
-        ICredbull.VaultParams memory params;
-        (config, params) = helperConfig.getAnvilEthConfig();
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+        ICredbull.VaultParams memory params = new HelperVaultTest(helperConfig).createAnvilTestVaultParams();
 
         params.kycProvider = address(kycProvider);
 

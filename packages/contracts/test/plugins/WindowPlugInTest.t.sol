@@ -3,6 +3,7 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
+import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { WindowVaultMock } from "../mocks/vaults/WindowVaultMock.m.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
@@ -23,9 +24,7 @@ contract WindowPlugInTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-
-        NetworkConfig memory config;
-        (config, vaultParams) = helperConfig.getAnvilEthConfig();
+        vaultParams = new HelperVaultTest(helperConfig).createAnvilTestVaultParams();
 
         vault = new WindowVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();

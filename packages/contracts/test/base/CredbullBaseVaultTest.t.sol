@@ -3,6 +3,7 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
+import { HelperVaultTest } from "./HelperVaultTest.t.sol";
 import { CredbullBaseVaultMock } from "../mocks/vaults/CredbullBaseVaultMock.m.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
@@ -30,8 +31,7 @@ contract CredbullBaseVaultTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        NetworkConfig memory config;
-        (config, vaultParams) = helperConfig.getAnvilEthConfig();
+        vaultParams = new HelperVaultTest(helperConfig).createAnvilTestVaultParams();
 
         vault = new CredbullBaseVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();

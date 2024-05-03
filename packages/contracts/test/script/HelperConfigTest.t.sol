@@ -20,24 +20,16 @@ contract HelperConfigTest is Test {
         assertEq(vm.addr(vm.deriveKey(mnemonic, 2)), contractRoles.additionalRoles[0]);
     }
 
-    function test__HelperConfig__AnvilConfig() public {
-        HelperConfig helperConfig = new HelperConfig(true);
-        NetworkConfig memory config;
-        ICredbull.VaultParams memory vaultParams;
-        (config, vaultParams) = helperConfig.getAnvilEthConfig();
-
-        assertNotEq(address(0), vaultParams.operator);
-
-        FactoryParams memory factoryParams = config.factoryParams;
-        assertNotEq(address(0), factoryParams.operator);
-    }
-
-    function test__HelperConfig__SepoliaConfig() public {
+    function test__HelperConfig__NetworkConfigShouldBeSame() public {
         HelperConfig helperConfig = new HelperConfig(false);
 
         NetworkConfig memory config = helperConfig.getNetworkConfig();
 
         FactoryParams memory factoryParams = config.factoryParams;
         assertNotEq(address(0), factoryParams.operator);
+
+        // subsequent calls should fetch the same config
+        NetworkConfig memory config2 = helperConfig.getNetworkConfig();
+        assertEq(factoryParams.operator, config2.factoryParams.operator);
     }
 }

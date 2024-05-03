@@ -15,5 +15,8 @@ contract DeployMocksTest is Test {
 
         assertNotEq(address(0), address(mockToken));
         assertNotEq(address(0), address(mockStablecoin));
+
+        assertEq(deployMocks.totalSupply(), mockToken.totalSupply());
+        assertEq(deployMocks.totalSupply(), mockStablecoin.totalSupply());
     }
 }

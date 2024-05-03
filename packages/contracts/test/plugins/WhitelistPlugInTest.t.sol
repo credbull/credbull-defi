@@ -3,6 +3,7 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
+import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { WhitelistVaultMock } from "../mocks/vaults/WhitelistVaultMock.m.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
@@ -28,9 +29,7 @@ contract WhitelistPlugInTest is Test {
     function setUp() public {
         deployer = new DeployVaultFactory();
         (,, kycProvider, helperConfig) = deployer.runTest();
-
-        NetworkConfig memory config;
-        (config, vaultParams) = helperConfig.getAnvilEthConfig();
+        vaultParams = new HelperVaultTest(helperConfig).createAnvilTestVaultParams();
 
         if (vaultParams.kycProvider == address(0)) {
             vaultParams.kycProvider = address(kycProvider);

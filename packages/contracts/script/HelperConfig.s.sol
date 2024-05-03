@@ -7,7 +7,6 @@ import { Script } from "forge-std/Script.sol";
 import { DeployMocks } from "./DeployMocks.s.sol";
 import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
 import { MockToken } from "../test/mocks/MockToken.sol";
-
 import { ICredbull } from "../src/interface/ICredbull.sol";
 
 struct FactoryParams {
@@ -16,6 +15,7 @@ struct FactoryParams {
     uint256 collateralPercentage;
 }
 
+// TODO - add other contract addresses here, including USDC
 struct NetworkConfig {
     FactoryParams factoryParams;
 }
@@ -26,9 +26,16 @@ struct ContractRoles {
     address[] additionalRoles;
 }
 
+/// @author
+/// Each chain has different addresses for contracts such as USDC and Safe
+/// The purpose of this contract is to centralize any chain-specific config and code into one place
+/// This is the only place in the code that should know about different chains
+/// This should be the only place where we retrieve variables from the Environment ???
+/// TODO: move the test specific helpers into the test package
+/// @title Helper to centralize any chain-specific config and code into one place
 contract HelperConfig is Script {
     NetworkConfig private activeNetworkConfig;
-    uint256 private constant PROMISED_FIXED_YIELD = 10;
+    uint256 public constant PROMISED_FIXED_YIELD = 10;
     uint256 private constant COLLATERAL_PERCENTAGE = 20_00;
 
     bool private testMode = false;
@@ -39,7 +46,7 @@ contract HelperConfig is Script {
         if (block.chainid == 421614 || block.chainid == 80001 || block.chainid == 84532) {
             activeNetworkConfig = getSepoliaEthConfig();
         } else if (block.chainid == 31337) {
-            (activeNetworkConfig,) = getAnvilEthConfig();
+            activeNetworkConfig = getAnvilEthConfig();
         } else {
             revert(string.concat("Unsupported chain with chainId ", vm.toString(block.chainid)));
         }
@@ -49,20 +56,18 @@ contract HelperConfig is Script {
         return activeNetworkConfig;
     }
 
-    function getTimeConfig() internal view returns (uint256 opensAt, uint256 closesAt) {
+    // TODO: create sensible defaults for these in case no params set
+    function getTimeConfig() public view returns (uint256 opensAt, uint256 closesAt) {
         opensAt = vm.envUint("VAULT_OPENS_AT_TIMESTAMP");
         closesAt = opensAt + vm.envUint("VAULT_CLOSES_DURATION_TIMESTAMP");
     }
 
-    function getSepoliaEthConfig() internal returns (NetworkConfig memory) {
+    function getSepoliaEthConfig() internal view returns (NetworkConfig memory) {
         FactoryParams memory factoryParams = FactoryParams({
             owner: vm.envAddress("PUBLIC_OWNER_ADDRESS"),
             operator: vm.envAddress("PUBLIC_OPERATOR_ADDRESS"),
             collateralPercentage: vm.envUint("COLLATERAL_PERCENTAGE")
         });
-
-        DeployMocks deployMocks = new DeployMocks(testMode);
-        deployMocks.run();
 
         NetworkConfig memory sepoliaConfig = NetworkConfig({ factoryParams: factoryParams });
 
@@ -72,14 +77,12 @@ contract HelperConfig is Script {
     // TODO: remove the VaultParams!  We should create Vaults using Factories.
     /// Create Config for Anvil (local) chain
     /// @return Network config and VaultParams template
-    function getAnvilEthConfig() public returns (NetworkConfig memory, ICredbull.VaultParams memory) {
+    function getAnvilEthConfig() private returns (NetworkConfig memory) {
         if (address(activeNetworkConfig.factoryParams.operator) != address(0)) {
-            return (activeNetworkConfig, createAnvilVaultParams());
+            return (activeNetworkConfig);
         }
 
         ContractRoles memory contractRoles = createRolesFromMnemonic(getAnvilMnemonic());
-
-        ICredbull.VaultParams memory anvilVaultParams = createAnvilVaultParams();
 
         FactoryParams memory factoryParams = FactoryParams({
             owner: contractRoles.owner,
@@ -89,36 +92,7 @@ contract HelperConfig is Script {
 
         NetworkConfig memory anvilConfig = NetworkConfig({ factoryParams: factoryParams });
 
-        return (anvilConfig, anvilVaultParams);
-    }
-
-    function createAnvilVaultParams() public returns (ICredbull.VaultParams memory) {
-        ContractRoles memory contractRoles = createRolesFromMnemonic(getAnvilMnemonic());
-        (uint256 opensAt, uint256 closesAt) = getTimeConfig();
-        uint256 year = 365 days;
-
-        DeployMocks deployMocks = new DeployMocks(testMode);
-        (MockToken mockToken, MockStablecoin mockStablecoin) = deployMocks.run();
-
-        ICredbull.VaultParams memory anvilVaultParams = ICredbull.VaultParams({
-            asset: mockStablecoin,
-            token: mockToken,
-            shareName: "Share_sep",
-            shareSymbol: "SYM_sep",
-            owner: contractRoles.owner,
-            operator: contractRoles.operator,
-            custodian: contractRoles.additionalRoles[0],
-            kycProvider: address(0),
-            promisedYield: PROMISED_FIXED_YIELD,
-            depositOpensAt: opensAt,
-            depositClosesAt: closesAt,
-            redemptionOpensAt: opensAt + year,
-            redemptionClosesAt: closesAt + year,
-            maxCap: 1e6 * 1e6,
-            depositThresholdForWhitelisting: 1000e6
-        });
-
-        return anvilVaultParams;
+        return anvilConfig;
     }
 
     /// Create Contract Roles from a mnemonic passphrase
