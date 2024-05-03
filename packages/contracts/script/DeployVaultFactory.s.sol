@@ -3,7 +3,6 @@
 pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
-import { stdJson } from "forge-std/StdJson.sol";
 import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
 import { CredbullFixedYieldVaultFactory } from "../src/factories/CredbullFixedYieldVaultFactory.sol";
 import { CredbullUpsideVaultFactory } from "../src/factories/CredbullUpsideVaultFactory.sol";

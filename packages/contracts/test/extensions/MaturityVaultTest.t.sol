@@ -8,7 +8,6 @@ import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { MaturityVault } from "../../src/extensions/MaturityVault.sol";
-import { console2 } from "forge-std/console2.sol";
 
 contract MaturityVaultTest is Test {
     MaturityVaultMock private vault;
