@@ -22,18 +22,22 @@ contract HelperConfigTest is Test {
 
     function test__HelperConfig__AnvilConfig() public {
         HelperConfig helperConfig = new HelperConfig(true);
+        NetworkConfig memory config;
+        ICredbull.VaultParams memory vaultParams;
+        (config, vaultParams) = helperConfig.getAnvilEthConfig();
 
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-
-        ICredbull.VaultParams memory vaultParams = config.vaultParams;
         assertNotEq(address(0), vaultParams.operator);
 
         FactoryParams memory factoryParams = config.factoryParams;
         assertNotEq(address(0), factoryParams.operator);
+    }
 
-        //    function test__HelperConfig_GetAnvilMnemonic() public {
-        //        HelperConfig helperConfig = new HelperConfig(true);
-        //
-        //        assertTrue(helperConfig.getAnvilMnemonic())
+    function test__HelperConfig__SepoliaConfig() public {
+        HelperConfig helperConfig = new HelperConfig(false);
+
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+
+        FactoryParams memory factoryParams = config.factoryParams;
+        assertNotEq(address(0), factoryParams.operator);
     }
 }

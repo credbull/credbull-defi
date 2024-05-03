@@ -24,10 +24,9 @@ contract MaturityVaultTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-        console2.log(address(config.vaultParams.asset));
-        console2.log(address(config.vaultParams.token));
-        vaultParams = config.vaultParams;
+        NetworkConfig memory config;
+        (config, vaultParams) = helperConfig.getAnvilEthConfig();
+
         vault = new MaturityVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
 

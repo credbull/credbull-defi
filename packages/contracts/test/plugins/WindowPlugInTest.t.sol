@@ -23,8 +23,10 @@ contract WindowPlugInTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-        vaultParams = config.vaultParams;
+
+        NetworkConfig memory config;
+        (config, vaultParams) = helperConfig.getAnvilEthConfig();
+
         vault = new WindowVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
 

@@ -29,8 +29,8 @@ contract WhitelistPlugInTest is Test {
         deployer = new DeployVaultFactory();
         (,, kycProvider, helperConfig) = deployer.runTest();
 
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-        vaultParams = config.vaultParams;
+        NetworkConfig memory config;
+        (config, vaultParams) = helperConfig.getAnvilEthConfig();
 
         if (vaultParams.kycProvider == address(0)) {
             vaultParams.kycProvider = address(kycProvider);

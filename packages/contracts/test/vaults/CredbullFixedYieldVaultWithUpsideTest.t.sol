@@ -37,8 +37,9 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         (,, kycProvider, helperConfig) = deployer.runTest();
 
         helperConfig = new HelperConfig(true);
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-        vaultParams = config.vaultParams;
+
+        NetworkConfig memory config;
+        (config, vaultParams) = helperConfig.getAnvilEthConfig();
 
         if (vaultParams.kycProvider == address(0)) {
             vaultParams.kycProvider = address(kycProvider);

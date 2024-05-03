@@ -24,8 +24,9 @@ contract MaxCapPluginTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-        vaultParams = config.vaultParams;
+        NetworkConfig memory config;
+        (config, vaultParams) = helperConfig.getAnvilEthConfig();
+
         vault = new MaxCapVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
 

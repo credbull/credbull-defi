@@ -30,8 +30,9 @@ contract CredbullBaseVaultTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-        vaultParams = config.vaultParams;
+        NetworkConfig memory config;
+        (config, vaultParams) = helperConfig.getAnvilEthConfig();
+
         vault = new CredbullBaseVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
 
@@ -40,9 +41,8 @@ contract CredbullBaseVaultTest is Test {
     }
 
     function test__BaseVault__ShareNameAndSymbol() public {
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-        assertEq(vault.name(), config.vaultParams.shareName);
-        assertEq(vault.symbol(), config.vaultParams.shareSymbol);
+        assertEq(vault.name(), vaultParams.shareName);
+        assertEq(vault.symbol(), vaultParams.shareSymbol);
     }
 
     function test__BaseVault__CustodianAddress() public {
@@ -130,8 +130,6 @@ contract CredbullBaseVaultTest is Test {
     }
 
     function test__ShouldRevertIfDecimalIsNotSupported() public {
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-        vaultParams = config.vaultParams;
         vm.expectRevert(abi.encodeWithSelector(CredbullBaseVault.CredbullVault__UnsupportedDecimalValue.selector, 24));
         vm.mockCall(address(vaultParams.asset), abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(24));
         new CredbullBaseVaultMock(vaultParams);

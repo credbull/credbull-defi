@@ -17,7 +17,6 @@ struct FactoryParams {
 }
 
 struct NetworkConfig {
-    ICredbull.VaultParams vaultParams; // TODO: remove this, only required for Testing.  Factory should be used to create Vaults.
     FactoryParams factoryParams;
 }
 
@@ -40,7 +39,7 @@ contract HelperConfig is Script {
         if (block.chainid == 421614 || block.chainid == 80001 || block.chainid == 84532) {
             activeNetworkConfig = getSepoliaEthConfig();
         } else if (block.chainid == 31337) {
-            activeNetworkConfig = getAnvilEthConfig();
+            (activeNetworkConfig,) = getAnvilEthConfig();
         } else {
             revert(string.concat("Unsupported chain with chainId ", vm.toString(block.chainid)));
         }
@@ -63,46 +62,42 @@ contract HelperConfig is Script {
         });
 
         DeployMocks deployMocks = new DeployMocks(testMode);
-        (MockToken mockToken, MockStablecoin mockStablecoin) = deployMocks.run();
+        deployMocks.run();
 
-        // no need for vault params when using a real network
-        ICredbull.VaultParams memory empty = ICredbull.VaultParams({
-            asset: mockStablecoin,
-            token: mockToken,
-            owner: address(0),
-            operator: address(0),
-            custodian: address(0),
-            kycProvider: address(0),
-            shareName: "",
-            shareSymbol: "",
-            promisedYield: 0,
-            depositOpensAt: 0,
-            depositClosesAt: 0,
-            redemptionOpensAt: 0,
-            redemptionClosesAt: 0,
-            maxCap: 1e6 * 1e6,
-            depositThresholdForWhitelisting: 1000e6
-        });
-
-        NetworkConfig memory sepoliaConfig = NetworkConfig({ factoryParams: factoryParams, vaultParams: empty });
+        NetworkConfig memory sepoliaConfig = NetworkConfig({ factoryParams: factoryParams });
 
         return sepoliaConfig;
     }
 
     /// Create Contract Roles from a mnemonic passphrase
     /// @return ContractRoles based on the phassphrase
-    function getAnvilEthConfig() public returns (NetworkConfig memory) {
-        if (address(activeNetworkConfig.vaultParams.asset) != address(0)) {
-            return activeNetworkConfig;
+    function getAnvilEthConfig() public returns (NetworkConfig memory, ICredbull.VaultParams memory) {
+        if (address(activeNetworkConfig.factoryParams.operator) != address(0)) {
+            return (activeNetworkConfig, createAnvilVaultParams());
         }
 
+        ContractRoles memory contractRoles = createRolesFromMnemonic(getAnvilMnemonic());
+
+        ICredbull.VaultParams memory anvilVaultParams = createAnvilVaultParams();
+
+        FactoryParams memory factoryParams = FactoryParams({
+            owner: contractRoles.owner,
+            operator: contractRoles.operator,
+            collateralPercentage: COLLATERAL_PERCENTAGE
+        });
+
+        NetworkConfig memory anvilConfig = NetworkConfig({ factoryParams: factoryParams });
+
+        return (anvilConfig, anvilVaultParams);
+    }
+
+    function createAnvilVaultParams() public returns (ICredbull.VaultParams memory) {
+        ContractRoles memory contractRoles = createRolesFromMnemonic(getAnvilMnemonic());
         (uint256 opensAt, uint256 closesAt) = getTimeConfig();
         uint256 year = 365 days;
 
         DeployMocks deployMocks = new DeployMocks(testMode);
         (MockToken mockToken, MockStablecoin mockStablecoin) = deployMocks.run();
-
-        ContractRoles memory contractRoles = createRolesFromMnemonic(getAnvilMnemonic());
 
         ICredbull.VaultParams memory anvilVaultParams = ICredbull.VaultParams({
             asset: mockStablecoin,
@@ -122,16 +117,7 @@ contract HelperConfig is Script {
             depositThresholdForWhitelisting: 1000e6
         });
 
-        FactoryParams memory factoryParams = FactoryParams({
-            owner: contractRoles.owner,
-            operator: contractRoles.operator,
-            collateralPercentage: COLLATERAL_PERCENTAGE
-        });
-
-        NetworkConfig memory anvilConfig =
-            NetworkConfig({ vaultParams: anvilVaultParams, factoryParams: factoryParams });
-
-        return anvilConfig;
+        return anvilVaultParams;
     }
 
     /// Create Contract Roles from a mnemonic passphrase

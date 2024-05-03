@@ -18,19 +18,19 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     HelperConfig private helperConfig;
     CredbullKYCProvider private kycProvider;
     NetworkConfig private config;
+    ICredbull.VaultParams private params;
 
     string private OPTIONS = "{}";
 
     function setUp() public {
         deployer = new DeployVaultFactory();
         (factory,, kycProvider, helperConfig) = deployer.runTest();
-        config = helperConfig.getNetworkConfig();
-        config.vaultParams.kycProvider = address(kycProvider);
+        (config, params) = helperConfig.getAnvilEthConfig();
+
+        params.kycProvider = address(kycProvider);
     }
 
     function test__CreateVaultFromFactory() public {
-        ICredbull.VaultParams memory params = config.vaultParams;
-
         vm.prank(config.factoryParams.owner);
         factory.allowCustodian(params.custodian);
 
@@ -47,14 +47,14 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     function test__ShouldRevertCreateVaultOnUnAuthorizedUser() public {
         vm.prank(config.factoryParams.owner);
         vm.expectRevert();
-        factory.createVault(config.vaultParams, OPTIONS);
+        factory.createVault(params, OPTIONS);
     }
 
     function test__ShouldAllowAdminToChangeOperator() public {
         address newOperator = makeAddr("new_operator");
 
         vm.startPrank(config.factoryParams.owner);
-        factory.allowCustodian(config.vaultParams.custodian);
+        factory.allowCustodian(params.custodian);
         factory.revokeRole(factory.OPERATOR_ROLE(), config.factoryParams.operator);
         factory.grantRole(factory.OPERATOR_ROLE(), newOperator);
         vm.stopPrank();
@@ -67,11 +67,11 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
                 factory.OPERATOR_ROLE()
             )
         );
-        factory.createVault(config.vaultParams, OPTIONS);
+        factory.createVault(params, OPTIONS);
         vm.stopPrank();
 
         vm.prank(newOperator);
-        factory.createVault(config.vaultParams, OPTIONS);
+        factory.createVault(params, OPTIONS);
     }
 
     function test__VaultCountShouldReturnCorrectVault() public {
@@ -90,10 +90,8 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     }
 
     function test__ShouldRevertOnNotAllowedCustodians() public {
-        ICredbull.VaultParams memory params = config.vaultParams;
-
         vm.prank(config.factoryParams.owner);
-        factory.allowCustodian(config.vaultParams.custodian);
+        factory.allowCustodian(params.custodian);
 
         params.custodian = makeAddr("randomCustodian");
 
@@ -104,32 +102,30 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
 
     function test__ShouldAllowAdminToAddCustodians() public {
         vm.prank(config.factoryParams.owner);
-        factory.allowCustodian(config.vaultParams.custodian);
+        factory.allowCustodian(params.custodian);
 
-        assertTrue(factory.isCustodianAllowed(config.vaultParams.custodian));
+        assertTrue(factory.isCustodianAllowed(params.custodian));
     }
 
     function test__ShoulRemoveCustodianIfExist() public {
         vm.startPrank(config.factoryParams.owner);
-        factory.allowCustodian(config.vaultParams.custodian);
-        assertTrue(factory.isCustodianAllowed(config.vaultParams.custodian));
+        factory.allowCustodian(params.custodian);
+        assertTrue(factory.isCustodianAllowed(params.custodian));
 
-        factory.removeCustodian(config.vaultParams.custodian);
-        assertTrue(!factory.isCustodianAllowed(config.vaultParams.custodian));
+        factory.removeCustodian(params.custodian);
+        assertTrue(!factory.isCustodianAllowed(params.custodian));
         vm.stopPrank();
     }
 
     function test__ShouldRevertAllowAdmingIfNotOwner() public {
         vm.prank(makeAddr("random_addr"));
         vm.expectRevert();
-        factory.allowCustodian(config.vaultParams.custodian);
+        factory.allowCustodian(params.custodian);
     }
 
     function createVault() internal returns (CredbullFixedYieldVault vault) {
-        ICredbull.VaultParams memory params = config.vaultParams;
-
         vm.prank(config.factoryParams.owner);
-        factory.allowCustodian(config.vaultParams.custodian);
+        factory.allowCustodian(params.custodian);
 
         vm.prank(config.factoryParams.operator);
         vault = CredbullFixedYieldVault(factory.createVault(params, OPTIONS));

@@ -8,16 +8,12 @@ import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
 import { CredbullFixedYieldVaultFactory } from "../src/factories/CredbullFixedYieldVaultFactory.sol";
 import { CredbullUpsideVaultFactory } from "../src/factories/CredbullUpsideVaultFactory.sol";
 import { CredbullKYCProvider } from "../src/CredbullKYCProvider.sol";
+import { DeployedContracts } from "./DeployedContracts.s.sol";
+
 import { console2 } from "forge-std/console2.sol";
 
 contract DeployVaultFactory is Script {
-    bool private test;
-
-    using stdJson for string;
-
-    bool private deployFixedYieldFactory;
-    bool private deployUpsideFactory;
-    bool private deployCredbullKYCProvider;
+    bool private isTestMode;
 
     function runTest()
         public
@@ -28,7 +24,7 @@ contract DeployVaultFactory is Script {
             HelperConfig helperConfig
         )
     {
-        test = true;
+        isTestMode = true;
         return run();
     }
 
@@ -41,63 +37,31 @@ contract DeployVaultFactory is Script {
             HelperConfig helperConfig
         )
     {
-        helperConfig = new HelperConfig(test);
+        helperConfig = new HelperConfig(isTestMode);
         NetworkConfig memory config = helperConfig.getNetworkConfig();
 
         address owner = config.factoryParams.owner;
         address operator = config.factoryParams.operator;
 
-        if (test) {
-            //            owner = config.factoryParams.owner;
-            //            operator = config.factoryParams.operator;
-            deployFixedYieldFactory = true;
-            deployUpsideFactory = true;
-            deployCredbullKYCProvider = true;
-        } else {
-            //            owner = vm.envAddress("PUBLIC_OWNER_ADDRESS");
-            //            operator = vm.envAddress("PUBLIC_OPERATOR_ADDRESS");
-
-            string memory root = vm.projectRoot();
-            string memory path = string.concat(root, "/script/output/dbdata.json");
-
-            if (vm.exists(path)) {
-                string memory json = vm.readFile(path);
-
-                bytes memory vaultFactory = json.parseRaw(".CredbullFixedYieldVaultFactory");
-                bytes memory upsideVaultFactory = json.parseRaw(".CredbullUpsideVaultFactory");
-                bytes memory kycProviderBytes = json.parseRaw(".CredbullKYCProvider");
-
-                deployFixedYieldFactory = vaultFactory.length == 0;
-                deployUpsideFactory = upsideVaultFactory.length == 0;
-                deployCredbullKYCProvider = kycProviderBytes.length == 0;
-            } else {
-                deployFixedYieldFactory = true;
-                deployUpsideFactory = true;
-                deployCredbullKYCProvider = true;
-            }
-        }
+        DeployedContracts deployChecker = new DeployedContracts();
 
         vm.startBroadcast();
-        if (deployFixedYieldFactory) {
+
+        if (isTestMode || deployChecker.isDeployRequired("CredbullFixedYieldVaultFactory")) {
             factory = new CredbullFixedYieldVaultFactory(owner, operator);
             console2.log("!!!!! Deploying CredbullFixedYieldVaultFactory !!!!!");
-        } else {
-            console2.log("!!!!! Deployment skipped for CredbullFixedYieldVaultFactory !!!!!");
         }
 
-        if (deployUpsideFactory) {
+        if (isTestMode || deployChecker.isDeployRequired("CredbullUpsideVaultFactory")) {
             upsideFactory = new CredbullUpsideVaultFactory(owner, operator);
             console2.log("!!!!! Deploying CredbullVaultWithUpsideFactory !!!!!");
-        } else {
-            console2.log("!!!!! Deployment skipped for CredbullVaultWithUpsideFactory !!!!!");
         }
 
-        if (deployCredbullKYCProvider) {
+        if (isTestMode || deployChecker.isDeployRequired("CredbullKYCProvider")) {
             kycProvider = new CredbullKYCProvider(operator);
             console2.log("!!!!! Deploying CredbullKYCProvider !!!!!");
-        } else {
-            console2.log("!!!!! Deployment skipped for CredbullKYCProvider !!!!!");
         }
+
         vm.stopBroadcast();
 
         return (factory, upsideFactory, kycProvider, helperConfig);
