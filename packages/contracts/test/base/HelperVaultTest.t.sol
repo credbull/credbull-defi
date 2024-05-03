@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.19;
 
-import { Test } from "forge-std/Test.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { HelperConfig, NetworkConfig, FactoryParams, ContractRoles } from "../../script/HelperConfig.s.sol";
 import { DeployMocks } from "../../script//DeployMocks.s.sol";
@@ -38,8 +37,7 @@ contract HelperVaultTest {
         (uint256 opensAt, uint256 closesAt) = helperConfig.getTimeConfig();
         uint256 year = 365 days;
 
-        // TODO: we should be using weell-known addreses for these from the config
-        // Need to add to the network config
+        // TODO: shouldn't redeploy here - need to grab from network config once added
         DeployMocks deployMocks = new DeployMocks(testMode);
         (MockToken mockToken, MockStablecoin mockStablecoin) = deployMocks.run();
 

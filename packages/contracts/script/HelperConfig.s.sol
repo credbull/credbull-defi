@@ -83,6 +83,9 @@ contract HelperConfig is Script {
 
         ContractRoles memory contractRoles = createRolesFromMnemonic(getAnvilMnemonic());
 
+        DeployMocks deployMocks = new DeployMocks(testMode);
+        deployMocks.run();
+
         FactoryParams memory factoryParams = FactoryParams({
             owner: contractRoles.owner,
             operator: contractRoles.operator,
