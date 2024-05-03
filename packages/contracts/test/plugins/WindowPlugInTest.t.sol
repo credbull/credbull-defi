@@ -24,7 +24,7 @@ contract WindowPlugInTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        vaultParams = new HelperVaultTest(helperConfig).createAnvilTestVaultParams();
+        vaultParams = new HelperVaultTest(helperConfig).createTestVaultParams();
 
         vault = new WindowVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
@@ -35,8 +35,12 @@ contract WindowPlugInTest is Test {
 
     function test__WindowVault__RevertDepositIfBehindWindow() public {
         // given that the vault's deposit window is in the future
+        vm.warp(vaultParams.depositOpensAt - 1);
+
         // when Alice try to deposit 10 tokens
         // then the deposit should be reverted
+        vm.startPrank(alice);
+        vaultParams.asset.approve(address(vault), 10 * precision);
         vm.expectRevert(
             abi.encodeWithSelector(
                 WindowPlugIn.CredbullVault__OperationOutsideRequiredWindow.selector,

@@ -3,31 +3,42 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
-import { HelperConfig, NetworkConfig, ContractRoles, FactoryParams } from "../../script/HelperConfig.s.sol";
+import { HelperConfig, NetworkConfig, FactoryParams } from "../../script/HelperConfig.s.sol";
+import { console2 } from "forge-std/console2.sol";
 
-contract HelperConfigTest is Test {
-    function test__HelperConfig_createRolesFromMnemonic() public {
-        HelperConfig helperConfig = new HelperConfig(true);
+contract HelperConfigTest is Test, HelperConfig {
+    constructor() HelperConfig(true) { }
 
-        string memory mnemonic = "region welcome ankle law galaxy nasty wisdom iron hazard lounge owner crowd";
-
-        ContractRoles memory contractRoles = helperConfig.createRolesFromMnemonic(mnemonic);
-
-        assertEq(vm.addr(vm.deriveKey(mnemonic, 0)), contractRoles.owner);
-        assertEq(vm.addr(vm.deriveKey(mnemonic, 1)), contractRoles.operator);
-        assertEq(vm.addr(vm.deriveKey(mnemonic, 2)), contractRoles.additionalRoles[0]);
-    }
-
-    function test__HelperConfig__NetworkConfigShouldBeSame() public {
+    function test__HelperConfig__NetworkConfig() public {
         HelperConfig helperConfig = new HelperConfig(false);
 
         NetworkConfig memory config = helperConfig.getNetworkConfig();
-
         FactoryParams memory factoryParams = config.factoryParams;
-        assertNotEq(address(0), factoryParams.operator);
 
-        // subsequent calls should fetch the same config
-        NetworkConfig memory config2 = helperConfig.getNetworkConfig();
-        assertEq(factoryParams.operator, config2.factoryParams.operator);
+        assertNotEq(address(0), factoryParams.operator);
+    }
+
+    function test__HelperConfig_createRolesFromMnemonic() public {
+        string memory mnemonic = "region welcome ankle law galaxy nasty wisdom iron hazard lounge owner crowd";
+
+        address[] memory walletKeys = deriveKeys(mnemonic);
+
+        assertEq(vm.addr(vm.deriveKey(mnemonic, 0)), walletKeys[0], "key 0 mismatch");
+        assertEq(vm.addr(vm.deriveKey(mnemonic, 1)), walletKeys[1], "key 1 mismatch");
+        assertEq(vm.addr(vm.deriveKey(mnemonic, 9)), walletKeys[9], "key 9 mismatch");
+    }
+
+    function test__HelperConfig_createFactoryParamsFromAnvilMnemonic() public {
+        string memory mnemonic = getAnvilMnemonic();
+        address[] memory walletKeys = deriveKeys(mnemonic);
+
+        assertNotEq(address(0), walletKeys[0], "key 0 not set");
+        assertNotEq(address(0), walletKeys[1], "key 1 not set");
+
+        NetworkConfig memory config = getNetworkConfig();
+        FactoryParams memory factoryParams = config.factoryParams;
+
+        assertEq(factoryParams.owner, walletKeys[0]);
+        assertEq(factoryParams.operator, walletKeys[1]);
     }
 }

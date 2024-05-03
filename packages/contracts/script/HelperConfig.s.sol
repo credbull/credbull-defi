@@ -8,7 +8,7 @@ import { DeployMocks } from "./DeployMocks.s.sol";
 struct FactoryParams {
     address owner;
     address operator;
-    uint256 collateralPercentage;
+    uint256 collateralPercentage; // TODO - is this required or can we remove it?
 }
 
 // TODO - add other contract addresses here, including USDC
@@ -16,19 +16,9 @@ struct NetworkConfig {
     FactoryParams factoryParams;
 }
 
-struct ContractRoles {
-    address owner;
-    address operator;
-    address[] additionalRoles;
-}
-
-/// @author
-/// Each chain has different addresses for contracts such as USDC and Safe
-/// The purpose of this contract is to centralize any chain-specific config and code into one place
-/// This is the only place in the code that should know about different chains
-/// This should be the only place where we retrieve variables from the Environment ???
-/// TODO: move the test specific helpers into the test package
 /// @title Helper to centralize any chain-specific config and code into one place
+/// Each chain has different addresses for contracts such as USDC and (Gnosis) Safe
+/// This is the only place in the contract code that knows about different chains and environment settings
 contract HelperConfig is Script {
     NetworkConfig private activeNetworkConfig;
     uint256 public constant PROMISED_FIXED_YIELD = 10;
@@ -52,17 +42,15 @@ contract HelperConfig is Script {
         return activeNetworkConfig;
     }
 
-    // TODO: create sensible defaults for these in case no params set
-    function getTimeConfig() public view returns (uint256 opensAt, uint256 closesAt) {
-        opensAt = vm.envUint("VAULT_OPENS_AT_TIMESTAMP");
-        closesAt = opensAt + vm.envUint("VAULT_CLOSES_DURATION_TIMESTAMP");
-    }
+    /// Create Config for Anvil (local) chain
+    /// @return Network config will chain specific config
+    function getSepoliaEthConfig() internal returns (NetworkConfig memory) {
+        uint256 collateralPercentage = vm.envOr("COLLATERAL_PERCENTAGE", COLLATERAL_PERCENTAGE);
 
-    function getSepoliaEthConfig() internal view returns (NetworkConfig memory) {
         FactoryParams memory factoryParams = FactoryParams({
             owner: vm.envAddress("PUBLIC_OWNER_ADDRESS"),
             operator: vm.envAddress("PUBLIC_OPERATOR_ADDRESS"),
-            collateralPercentage: vm.envUint("COLLATERAL_PERCENTAGE")
+            collateralPercentage: collateralPercentage
         });
 
         NetworkConfig memory sepoliaConfig = NetworkConfig({ factoryParams: factoryParams });
@@ -70,23 +58,24 @@ contract HelperConfig is Script {
         return sepoliaConfig;
     }
 
-    // TODO: remove the VaultParams!  We should create Vaults using Factories.
     /// Create Config for Anvil (local) chain
-    /// @return Network config and VaultParams template
-    function getAnvilEthConfig() private returns (NetworkConfig memory) {
+    /// @return Network config will chain specific config
+    function getAnvilEthConfig() internal returns (NetworkConfig memory) {
         if (address(activeNetworkConfig.factoryParams.operator) != address(0)) {
             return (activeNetworkConfig);
         }
 
-        ContractRoles memory contractRoles = createRolesFromMnemonic(getAnvilMnemonic());
+        address[] memory contractRoles = deriveKeys(getAnvilMnemonic());
 
         DeployMocks deployMocks = new DeployMocks(testMode);
         deployMocks.run();
 
+        uint256 collateralPercentage = vm.envOr("COLLATERAL_PERCENTAGE", COLLATERAL_PERCENTAGE);
+
         FactoryParams memory factoryParams = FactoryParams({
-            owner: contractRoles.owner,
-            operator: contractRoles.operator,
-            collateralPercentage: COLLATERAL_PERCENTAGE
+            owner: contractRoles[0],
+            operator: contractRoles[1],
+            collateralPercentage: collateralPercentage
         });
 
         NetworkConfig memory anvilConfig = NetworkConfig({ factoryParams: factoryParams });
@@ -94,25 +83,21 @@ contract HelperConfig is Script {
         return anvilConfig;
     }
 
-    /// Create Contract Roles from a mnemonic passphrase
-    /// @return ContractRoles based on the phassphrase
-    function createRolesFromMnemonic(string memory mnemonic) public pure returns (ContractRoles memory) {
-        address owner = vm.addr(vm.deriveKey(mnemonic, 0)); // account 0
-        address operator = vm.addr(vm.deriveKey(mnemonic, 1)); // account 1
-        address custodian = vm.addr(vm.deriveKey(mnemonic, 2)); // account 2
+    /// Derive keys from a mnemonic
+    /// @return Keys from the mnemonic
+    function deriveKeys(string memory mnemonic) internal pure returns (address[] memory) {
+        address[] memory walletKeys = new address[](10); // Create an array of addresses
 
-        address[] memory additionalRoles = new address[](1); // Create an array of addresses
-        additionalRoles[0] = custodian; // Add the custodian address to the array
+        for (uint32 i = 0; i < 10; i++) {
+            walletKeys[i] = vm.addr(vm.deriveKey(mnemonic, i));
+        }
 
-        ContractRoles memory contractRoles =
-            ContractRoles({ owner: owner, operator: operator, additionalRoles: additionalRoles });
-
-        return contractRoles;
+        return walletKeys;
     }
 
     /// Get the Anvil (local) mnemonic passphrase
     /// @return the mnemonic passphrase
-    function getAnvilMnemonic() public returns (string memory) {
+    function getAnvilMnemonic() internal returns (string memory) {
         // if anvil was run, get the mnemonic from the config output
         string memory root = vm.projectRoot();
         string memory path = string.concat(root, "/localhost.json");

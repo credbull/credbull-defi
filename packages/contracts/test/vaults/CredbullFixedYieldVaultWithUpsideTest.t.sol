@@ -36,7 +36,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     function setUp() public {
         deployer = new DeployVaultFactory();
         (,, kycProvider, helperConfig) = deployer.runTest();
-        vaultParams = new HelperVaultTest(helperConfig).createAnvilTestVaultParams();
+        vaultParams = new HelperVaultTest(helperConfig).createTestVaultParams();
 
         if (vaultParams.kycProvider == address(0)) {
             vaultParams.kycProvider = address(kycProvider);

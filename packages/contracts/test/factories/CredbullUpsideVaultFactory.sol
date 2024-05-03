@@ -27,7 +27,7 @@ contract CredbullVaultWithUpsideFactoryTest is Test {
 
     function test__CreateUpsideVaultFromFactory() public {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
-        ICredbull.VaultParams memory params = new HelperVaultTest(helperConfig).createAnvilTestVaultParams();
+        ICredbull.VaultParams memory params = new HelperVaultTest(helperConfig).createTestVaultParams();
 
         params.kycProvider = address(kycProvider);
 

@@ -2,18 +2,21 @@
 
 pragma solidity ^0.8.19;
 
+import { Test } from "forge-std/Test.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
-import { HelperConfig, NetworkConfig, FactoryParams, ContractRoles } from "../../script/HelperConfig.s.sol";
+import { HelperConfig, NetworkConfig, FactoryParams } from "../../script/HelperConfig.s.sol";
 import { DeployMocks } from "../../script//DeployMocks.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { MockToken } from "../mocks/MockToken.sol";
 
 /// Utility to help with testing vaults
-contract HelperVaultTest {
+contract HelperVaultTest is Test {
     bool private testMode = true;
 
     HelperConfig private helperConfig;
     NetworkConfig private networkConfig;
+
+    address private custodianAddress;
 
     constructor(HelperConfig _helperConfig) {
         helperConfig = _helperConfig;
@@ -21,25 +24,20 @@ contract HelperVaultTest {
     }
 
     /// this version is tied to Anvil - it is using Anvil's well known addresses
-    function createAnvilTestVaultParams() public returns (ICredbull.VaultParams memory) {
-        ContractRoles memory contractRoles = helperConfig.createRolesFromMnemonic(helperConfig.getAnvilMnemonic());
-
-        address cutodian = contractRoles.additionalRoles[0];
-
-        return createTestVaultParams(cutodian);
-    }
-
-    function createTestVaultParams(address custodian) public returns (ICredbull.VaultParams memory) {
+    function createTestVaultParams() public returns (ICredbull.VaultParams memory) {
         FactoryParams memory factoryParams = networkConfig.factoryParams;
 
+        address custodian = makeAddr("custodianAddress");
         uint256 promisedFixedYield = helperConfig.PROMISED_FIXED_YIELD();
-
-        (uint256 opensAt, uint256 closesAt) = helperConfig.getTimeConfig();
-        uint256 year = 365 days;
 
         // TODO: shouldn't redeploy here - need to grab from network config once added
         DeployMocks deployMocks = new DeployMocks(testMode);
         (MockToken mockToken, MockStablecoin mockStablecoin) = deployMocks.run();
+
+        // call this after deploying the mocks - we will definitely have block transactions then
+        uint256 opensAt = block.timestamp;
+        uint256 closesAt = 7 days;
+        uint256 year = 365 days;
 
         ICredbull.VaultParams memory testVaultParams = ICredbull.VaultParams({
             asset: mockStablecoin,

@@ -27,7 +27,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         deployer = new DeployVaultFactory();
         (factory,, kycProvider, helperConfig) = deployer.runTest();
         config = helperConfig.getNetworkConfig();
-        params = new HelperVaultTest(helperConfig).createAnvilTestVaultParams();
+        params = new HelperVaultTest(helperConfig).createTestVaultParams();
 
         params.kycProvider = address(kycProvider);
     }

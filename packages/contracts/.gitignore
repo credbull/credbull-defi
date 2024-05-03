@@ -12,7 +12,8 @@ broadcast
 docs/
 
 # Dotenv file
-.env
+!/.env.example
+.env*
 
 localhost.json
 .env*.local
