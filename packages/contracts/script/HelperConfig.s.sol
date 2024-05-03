@@ -3,10 +3,7 @@
 pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
-
 import { DeployMocks } from "./DeployMocks.s.sol";
-import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
-import { MockToken } from "../test/mocks/MockToken.sol";
 
 struct FactoryParams {
     address owner;
