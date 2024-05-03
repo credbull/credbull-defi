@@ -3,8 +3,6 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
-import { ICredbull } from "../../src/interface/ICredbull.sol";
-
 import { HelperConfig, NetworkConfig, ContractRoles, FactoryParams } from "../../script/HelperConfig.s.sol";
 
 contract HelperConfigTest is Test {

@@ -6,7 +6,7 @@ import { Test } from "forge-std/Test.sol";
 import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { WhitelistVaultMock } from "../mocks/vaults/WhitelistVaultMock.m.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
-import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
+import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";

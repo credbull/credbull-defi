@@ -7,7 +7,6 @@ import { Script } from "forge-std/Script.sol";
 import { DeployMocks } from "./DeployMocks.s.sol";
 import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
 import { MockToken } from "../test/mocks/MockToken.sol";
-import { ICredbull } from "../src/interface/ICredbull.sol";
 
 struct FactoryParams {
     address owner;

@@ -6,7 +6,7 @@ import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Test } from "forge-std/Test.sol";
 import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
-import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
+import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { MockToken } from "../mocks/MockToken.sol";

@@ -6,7 +6,7 @@ import { Test } from "forge-std/Test.sol";
 import { HelperVaultTest } from "./HelperVaultTest.t.sol";
 import { CredbullBaseVaultMock } from "../mocks/vaults/CredbullBaseVaultMock.m.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
-import { NetworkConfig, HelperConfig } from "../../script/HelperConfig.s.sol";
+import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { CredbullBaseVault } from "../../src/base/CredbullBaseVault.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
