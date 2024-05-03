@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
 import { DeployMocks } from "./DeployMocks.s.sol";
+import { console2 } from "forge-std/console2.sol";
 
 struct FactoryParams {
     address owner;

@@ -17,7 +17,7 @@ contract HelperConfigTest is Test, HelperConfig {
         assertNotEq(address(0), factoryParams.operator);
     }
 
-    function test__HelperConfig_createRolesFromMnemonic() public {
+    function test__HelperConfig_WalletsFromMnemonic() public {
         string memory mnemonic = "region welcome ankle law galaxy nasty wisdom iron hazard lounge owner crowd";
 
         address[] memory walletKeys = deriveKeys(mnemonic);
