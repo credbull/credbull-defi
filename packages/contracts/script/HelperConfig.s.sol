@@ -69,8 +69,9 @@ contract HelperConfig is Script {
         return sepoliaConfig;
     }
 
-    /// Create Contract Roles from a mnemonic passphrase
-    /// @return ContractRoles based on the phassphrase
+    // TODO: remove the VaultParams!  We should create Vaults using Factories.
+    /// Create Config for Anvil (local) chain
+    /// @return Network config and VaultParams template
     function getAnvilEthConfig() public returns (NetworkConfig memory, ICredbull.VaultParams memory) {
         if (address(activeNetworkConfig.factoryParams.operator) != address(0)) {
             return (activeNetworkConfig, createAnvilVaultParams());
