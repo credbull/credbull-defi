@@ -4,6 +4,7 @@
   "main": "index.js",
   "types": "index.ts",
   "scripts": {
+    "chain": "rm ./script/output/dbdata.json || true && anvil --config-out localhost.json",
     "dev": "rm ./script/output/dbdata.json || true && anvil --config-out localhost.json & make deploy-local",
     "build": "rm -rf out && forge build",
     "test": "forge test",
