@@ -4,17 +4,24 @@ build:; forge build
 
 anvil: anvil
 
-deploy-local:
-	rm -rf out && forge script script/DeployVaultFactory.s.sol:DeployVaultFactory -vvv --rpc-url localhost \
-		--private-key ${DEFAULT_ANVIL_KEY} --broadcast -vvvv \
+define DEPLOY_CMD
+	rm -rf out && forge script script/DeployVaultFactory.s.sol:DeployVaultFactory -vvv --rpc-url $(RPC_URL) \
+		--private-key $(PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv \
 		&& yarn gen-types && node script/utils/exporter.js
+endef
+
+deploy-local:
+	$(MAKE) generic-deploy RPC_URL=localhost PRIVATE_KEY=${DEFAULT_ANVIL_KEY} EXTRA_FLAGS=
 
 deploy-sepolia:
-	rm -rf out && forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url baseSepolia \
-		--private-key $(SEPOLIA_PRIVATE_KEY) --broadcast --verify --slow -vvvv \
-		&& yarn gen-types && node script/utils/exporter.js
+	$(MAKE) generic-deploy RPC_URL=baseSepolia PRIVATE_KEY=$(SEPOLIA_PRIVATE_KEY) EXTRA_FLAGS="--verify --slow"
+
+generic-deploy:
+	@$(DEPLOY_CMD)
 
 verify-sepolia:
 	rm -rf out && forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url baseSepolia \
 		--private-key $(SEPOLIA_PRIVATE_KEY) --verify --resume -vvvv \
 		&& yarn gen-types && node script/utils/exporter.js
+
+
