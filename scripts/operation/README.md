@@ -6,6 +6,12 @@
 yarn op --create-user channel:false email:<<user@domain.com>>
 ```
 
+```bash
+# make a user admin
+yarn op --make-admin null email:<<user@domain.com>>
+```
+
+
 ## Vault Related
 
 ```bash
@@ -18,3 +24,4 @@ yarn op --create-vault
 # create an matured and upside vault
 yarn op --create-vault matured,upside upsideVault:self
 ```
+
