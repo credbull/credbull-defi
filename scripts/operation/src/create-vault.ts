@@ -17,7 +17,7 @@ const createParams = (params: {
 
   const treasury = process.env.ADDRESSES_TREASURY;
   const activityReward = process.env.ADDRESSES_ACTIVITY_REWARD;
-  const collateralPercentage = Number(process.env.COLLATERAL_PERCENTAGE);
+  const collateralPercentage = Number(process.env.COLLATERAL_PERCENTAGE || 20);
 
   const asset = params.asset;
   const token = params.token;

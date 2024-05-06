@@ -36,7 +36,7 @@ contract HelperVaultTest is Test {
 
         // call this after deploying the mocks - we will definitely have block transactions then
         uint256 opensAt = block.timestamp;
-        uint256 closesAt = 7 days;
+        uint256 closesAt = opensAt + 7 days;
         uint256 year = 365 days;
 
         ICredbull.VaultParams memory testVaultParams = ICredbull.VaultParams({
