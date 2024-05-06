@@ -36,7 +36,7 @@ contract CredbullVaultWithUpsideFactoryTest is Test {
 
         vm.prank(config.factoryParams.operator);
         CredbullFixedYieldVaultWithUpside vault = CredbullFixedYieldVaultWithUpside(
-            factory.createVault(params, config.factoryParams.collateralPercentage, OPTIONS)
+            payable(factory.createVault(params, config.factoryParams.collateralPercentage, OPTIONS))
         );
 
         assertEq(vault.asset(), address(params.asset));

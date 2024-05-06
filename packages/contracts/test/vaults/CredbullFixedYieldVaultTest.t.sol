@@ -269,6 +269,21 @@ contract CredbullFixedYieldVaultTest is Test {
         vault.updateWindow(100, 200, 300, 400);
     }
 
+    function test__FixedYieldVault__ShouldAllowAdminToWithdrawERC20Tokens() public {
+        MockStablecoin token = MockStablecoin(address(vaultParams.asset));
+        vm.prank(alice);
+        token.transfer(address(vault), 100 * precision);
+
+        assertEq(token.balanceOf(address(vault)), 100 * precision);
+
+        vm.prank(vaultParams.owner);
+        address[] memory addresses = new address[](1);
+        addresses[0] = address(vaultParams.asset);
+        vault.withdrawERC20(addresses);
+
+        assertEq(token.balanceOf(address(vault)), 0);
+    }
+
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);

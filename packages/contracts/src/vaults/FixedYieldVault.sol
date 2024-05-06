@@ -92,4 +92,8 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCap
     function unpauseVault() public onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
     }
+
+    function withdrawERC20(address[] calldata _tokens) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _withdrawERC20(_tokens, msg.sender);
+    }
 }

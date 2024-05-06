@@ -37,7 +37,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         factory.allowCustodian(params.custodian);
 
         vm.prank(config.factoryParams.operator);
-        CredbullFixedYieldVault vault = CredbullFixedYieldVault(factory.createVault(params, OPTIONS));
+        CredbullFixedYieldVault vault = CredbullFixedYieldVault(payable(factory.createVault(params, OPTIONS)));
 
         assertEq(vault.asset(), address(params.asset));
         assertEq(vault.name(), params.shareName);
@@ -130,6 +130,6 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         factory.allowCustodian(params.custodian);
 
         vm.prank(config.factoryParams.operator);
-        vault = CredbullFixedYieldVault(factory.createVault(params, OPTIONS));
+        vault = CredbullFixedYieldVault(payable(factory.createVault(params, OPTIONS)));
     }
 }

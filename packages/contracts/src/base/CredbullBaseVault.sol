@@ -128,25 +128,39 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
         return decimal;
     }
 
-    /// @notice The share token should be soul bound. Should be transferable only to vault to receive assets back
+    /// @notice The share token should not be transferable.
     function transfer(address to, uint256 value) public override(ERC20, IERC20) returns (bool) {
-        if (to != address(this)) revert CredbullVault__TransferOutsideEcosystem();
-        address owner = _msgSender();
-        _transfer(owner, to, value);
+        revert CredbullVault__TransferOutsideEcosystem();
         return true;
     }
 
-    /// @notice The share token should be soul bound. Should be transferable only to vault to receive assets back
+    /// @notice The share token should not be transferable.
     function transferFrom(address from, address to, uint256 value) public override(ERC20, IERC20) returns (bool) {
-        if (to != address(this)) revert CredbullVault__TransferOutsideEcosystem();
-        address spender = _msgSender();
-        _spendAllowance(from, spender, value);
-        _transfer(from, to, value);
+        revert CredbullVault__TransferOutsideEcosystem();
         return true;
     }
 
     /// @notice Decimal value of share token is same as asset token
     function decimals() public view override returns (uint8) {
         return VAULT_DECIMALS;
+    }
+
+    /// @notice Revert any ETH transfer to contract
+    receive() external payable {
+        revert();
+    }
+
+    /// @notice Revert any ETH transfer to contract
+    fallback() external payable {
+        revert();
+    }
+
+    /// @notice Withdraw any ERC20 tokens sent directly to contract.
+    /// This should be implemented by the inherited contract and should be callable only by the admin.
+    function _withdrawERC20(address[] calldata _tokens, address _to) internal {
+        for (uint256 i = 0; i < _tokens.length; i++) {
+            uint256 balance = IERC20(_tokens[i]).balanceOf(address(this));
+            SafeERC20.safeTransfer(IERC20(_tokens[i]), _to, balance);
+        }
     }
 }
