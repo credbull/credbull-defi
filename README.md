@@ -14,7 +14,7 @@
 * [`scripts/`](./scripts) Scripts to automate any manual task we need
     * [`operation/`](./scripts/operation) Scripts for operational tasks
 
-* [`spikes/`](./scripts) Any POC or research we do
+* [`spikes/`](./spikes) Any POC or research we do
 
 ---
 
