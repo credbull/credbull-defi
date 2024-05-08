@@ -141,7 +141,10 @@ export async function toggleWindowCheck(
 }
 
 export async function getAdminSigner() {
-  return new Wallet(process.env.ADMIN_PRIVATE_KEY_SDK || '', new providers.JsonRpcProvider(`${process.env.RPC_PROVIDER}`));
+  return new Wallet(
+    process.env.ADMIN_PRIVATE_KEY_SDK || '',
+    new providers.JsonRpcProvider(`${process.env.RPC_PROVIDER}`),
+  );
 }
 
 export async function sleep(ms: number) {
