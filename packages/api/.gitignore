@@ -1,8 +1,6 @@
 # compiled output
 /dist
 
-.env.local
-
 coverage
 
 # Sentry Config File

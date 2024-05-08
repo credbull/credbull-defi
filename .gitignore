@@ -6,12 +6,13 @@ out/
 # Ignores development broadcast logs
 broadcast
 
-# Dotenv file
-*.env
+# Dotenv files
+**/.env*
+!**/.env*.sample
 
 # IDE files
-.idea
-*.iml
+**/.idea
+**/*.iml
 
 # yarn files
 .yarn/*
