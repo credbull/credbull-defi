@@ -13,7 +13,7 @@ import { ICredbull } from "../interface/ICredbull.sol";
 abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
     using Math for uint256;
 
-    error CredbullVault__TransferOutsideEcosystem();
+    error CredbullVault__TransferOutsideEcosystem(address);
     error CredbullVault__InvalidAssetAmount(uint256);
     error CredbullVault__UnsupportedDecimalValue(uint8);
 
@@ -129,15 +129,18 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
     }
 
     /// @notice The share token should not be transferable.
-    function transfer(address to, uint256 value) public override(ERC20, IERC20) returns (bool) {
-        revert CredbullVault__TransferOutsideEcosystem();
-        return true;
+    function transfer(address, /* to */ uint256 /* value */ ) public view override(ERC20, IERC20) returns (bool) {
+        revert CredbullVault__TransferOutsideEcosystem(msg.sender);
     }
 
     /// @notice The share token should not be transferable.
-    function transferFrom(address from, address to, uint256 value) public override(ERC20, IERC20) returns (bool) {
-        revert CredbullVault__TransferOutsideEcosystem();
-        return true;
+    function transferFrom(address from, address, /* to */ uint256 /* value */ )
+        public
+        pure
+        override(ERC20, IERC20)
+        returns (bool)
+    {
+        revert CredbullVault__TransferOutsideEcosystem(from);
     }
 
     /// @notice Decimal value of share token is same as asset token

@@ -115,7 +115,9 @@ contract CredbullBaseVaultTest is Test {
         deposit(alice, depositAmount, true);
 
         vm.prank(alice);
-        vm.expectRevert(CredbullBaseVault.CredbullVault__TransferOutsideEcosystem.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(CredbullBaseVault.CredbullVault__TransferOutsideEcosystem.selector, address(alice))
+        );
         vault.transfer(bob, 100 * precision);
     }
 
