@@ -15,8 +15,9 @@ endef
 deploy-local:
 	$(MAKE) generic-deploy RPC_URL=localhost PRIVATE_KEY=$(DEFAULT_ANVIL_KEY) EXTRA_FLAGS= ETHERSCAN_API_KEY=
 
+# TODO: change this to use the network config from foundry.toml
 deploy-sepolia:
-	$(MAKE) generic-deploy RPC_URL=arbitrumSepolia PRIVATE_KEY=$(SEPOLIA_PRIVATE_KEY) EXTRA_FLAGS="--verify --slow"
+	$(MAKE) generic-deploy RPC_URL=$(SEPOLIA_RPC_URL) PRIVATE_KEY=$(SEPOLIA_PRIVATE_KEY) EXTRA_FLAGS="--verify --slow"
 
 deploy-baseSepolia:
 	$(MAKE) generic-deploy RPC_URL=baseSepolia PRIVATE_KEY=$(SEPOLIA_PRIVATE_KEY) EXTRA_FLAGS="--verify --slow"
