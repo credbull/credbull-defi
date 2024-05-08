@@ -10,7 +10,7 @@ import { SiweMessage, generateNonce } from 'siwe';
 import { decodeContractError } from './src/utils/utils';
 
 export class CredbullSDK {
-  private SERVICE_URL = process.env.API_BASE_URL || "";
+  private SERVICE_URL = process.env.API_BASE_URL || '';
   constructor(
     private access_token: string,
     private signer: Signer,
