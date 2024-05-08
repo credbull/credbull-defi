@@ -5,6 +5,7 @@ const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 
 async function exportAddress() {
+  await clearDB();
   const contracts = {};
 
   const folderPath = path.resolve(__dirname, '../../broadcast');
@@ -73,6 +74,24 @@ async function exportToSupabase(dataToStoreOnDB) {
     console.log(config.error);
     throw config.error;
   }
+}
+
+async function clearDB() {
+  console.log('Crearing DB......')
+  const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  const contractAddresses = await client.from('contracts_addresses').delete().neq('id', 0);
+  if (contractAddresses.error) {
+    console.log(contractAddresses.error);
+    throw contractAddresses.error;
+  }
+
+  const vaults = await client.from('vaults').delete().neq('id', 0);
+  if (vaults.error) {
+    console.log(vaults.error);
+    throw vaults.error;
+  }
+  console.log('DB Cleared successfully!')
 }
 
 (async () => {
