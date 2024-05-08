@@ -96,7 +96,7 @@ jobs:
         run: docker logs api --tail all
 
       - name: Run SDK tests
-        run: cd packages/sdk/ && yarn test
+        run: cd packages/sdk/ && yarn int-test
         env:
           ADMIN_PRIVATE_KEY_SDK: ${{ secrets.SDK_DEFAULT_ANVIL_KEY }}
           ADMIN_EMAIL_SDK: admin@cbl.com
