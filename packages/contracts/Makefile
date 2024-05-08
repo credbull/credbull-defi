@@ -16,6 +16,9 @@ deploy-local:
 	$(MAKE) generic-deploy RPC_URL=localhost PRIVATE_KEY=$(DEFAULT_ANVIL_KEY) EXTRA_FLAGS= ETHERSCAN_API_KEY=
 
 deploy-sepolia:
+	$(MAKE) generic-deploy RPC_URL=arbitrumSepolia PRIVATE_KEY=$(SEPOLIA_PRIVATE_KEY) EXTRA_FLAGS="--verify --slow"
+
+deploy-baseSepolia:
 	$(MAKE) generic-deploy RPC_URL=baseSepolia PRIVATE_KEY=$(SEPOLIA_PRIVATE_KEY) EXTRA_FLAGS="--verify --slow"
 
 generic-deploy:
