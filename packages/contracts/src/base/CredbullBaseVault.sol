@@ -16,6 +16,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
     error CredbullVault__TransferOutsideEcosystem(address);
     error CredbullVault__InvalidAssetAmount(uint256);
     error CredbullVault__UnsupportedDecimalValue(uint8);
+    error CredbullVault__NativeTransferNotAllowed();
 
     /// @notice Address of the CUSTODIAN to receive the assets on deposit and mint
     address public immutable CUSTODIAN;
@@ -150,12 +151,12 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
 
     /// @notice Revert any ETH transfer to contract
     receive() external payable {
-        revert();
+        revert CredbullVault__NativeTransferNotAllowed();
     }
 
     /// @notice Revert any ETH transfer to contract
     fallback() external payable {
-        revert();
+        revert CredbullVault__NativeTransferNotAllowed();
     }
 
     /// @notice Withdraw any ERC20 tokens sent directly to contract.

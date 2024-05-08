@@ -121,6 +121,17 @@ contract CredbullBaseVaultTest is Test {
         vault.transfer(bob, 100 * precision);
     }
 
+    function test__BaseVault__ShouldRevertOnNativeTokenTransfer() public {
+        vm.expectRevert(CredbullBaseVault.CredbullVault__TransferOutsideEcosystem.selector);
+        (bool isReceivedSuccess,) = address(vault).call{ value: 5 wei }("");
+        assertFalse(isReceivedSuccess, "Should fail: receive function is not allowed to accept Native tokens.");
+
+        vm.expectRevert(CredbullBaseVault.CredbullVault__TransferOutsideEcosystem.selector);
+        (bool isFallbackSuccess,) =
+            address(vault).call{ value: 8 wei }(abi.encodeWithSignature("nonExistentFunction()"));
+        assertFalse(isFallbackSuccess, "Should fail: fallback function is not allowed to accept Native tokens.");
+    }
+
     function test__BaseVault__ShouldRevertOnFractionalDepositAmount_Fuzz(uint256 depositAmount) public {
         depositAmount = bound(depositAmount, 1, 1e6 * 1e6);
 
