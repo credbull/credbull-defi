@@ -1,0 +1,24 @@
+# see https://github.com/toml-lang/toml#implementations
+# more complex example: https://doc.rust-lang.org/cargo/reference/config.html
+title = "Credbull Configuration"
+blockchain=31337
+
+[contracts]
+    deployerPrivateKey=11
+    vaultName="FixedVault"
+    operatorAddress="0x0000000000000000000000000000000000000001"
+    ownerAddress="0x0000000000000000000000000000000000000002"
+
+[evmServices]
+    alchemy.apiKey=""
+    etherScan.URL=""
+    etherScan.apiKey=""
+
+[supabase]
+    url="http://127.0.0.1:54321"
+    exportData=true
+    serviceRoleKey=""
+
+[env]
+    FOO_ENV_VARIABLE="bar"
+
