@@ -1,24 +1,75 @@
 # see https://github.com/toml-lang/toml#implementations
 # more complex example: https://doc.rust-lang.org/cargo/reference/config.html
+# parsing help: https://crates.io/crates/jsonpath-rust
+
 title = "Credbull Configuration"
-blockchain=31337
+
+# =====================================================
+# ======== Option1: Separate toml File per Env ========
+# =====================================================
+# key-thought: looks good.  some overhead in keeping seperate files in sync, but we can test for this.
 
 [contracts]
-    deployerPrivateKey=11
-    vaultName="FixedVault"
-    operatorAddress="0x0000000000000000000000000000000000000001"
-    ownerAddress="0x0000000000000000000000000000000000000002"
+    chainName = "localChain1"
+    deployerPrivateKey = 11
+    operatorAddress = "0x0000000000000000000000000000000000000001"
+    ownerAddress = "0x0000000000000000000000000000000000000002"
 
 [evmServices]
-    alchemy.apiKey=""
-    etherScan.URL=""
-    etherScan.apiKey=""
+    alchemy.apiKey = ""
 
-[supabase]
-    url="http://127.0.0.1:54321"
-    exportData=true
-    serviceRoleKey=""
+[api]
+    url = "http://localhost:3001/"
 
-[env]
-    FOO_ENV_VARIABLE="bar"
+[env_variable]
+    FOO_ENV_VARIABLE = "bar"
+
+# =====================================================
+# ======== Option2: One toml File - Seperate Env Tables
+# =====================================================
+# key-thought: looks good.  if we are okay with a single file to rule them all. :)
+
+# --- LOCAL ---
+[local]
+[local.contracts]
+    chainName = "localChain2"
+
+[local.api]
+    url = "http://localhost:3002/"
+
+# --- TESTNET ---
+[testnet]
+name = "testnet"
+
+[testnet.contracts]
+    chainName = "testnet2"
+
+[testnet.api]
+    url = "https://uat:3002"
+
+# =====================================================
+# ======== Option3: One toml File - Array of Tables ===
+# =====================================================
+# cons: not as obvious as other options.  too generic.
+
+# --- LOCAL ---
+[[env]]
+name = "development"
+
+[env.contracts]
+    chainName = "localChain3"
+
+[env.api]
+    url = "http://localhost:3003/"
+
+# --- TESTNET ---
+[[env]]
+name = "testnet"
+
+[env.contracts]
+    chainName = "testnet3"
+
+[env.api]
+    url = "https://uat:3003"
+
 
