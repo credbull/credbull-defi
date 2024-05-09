@@ -45,6 +45,7 @@
 ## Test Locally
 
 - After the project has been setup locally you can just ```yarn test```
+- NOTE: JL 2024-05-08, `test` for the `sdk` package has been re-named to `int-test` as it was interfering with developer workflow. The Notion [issue](https://www.notion.so/Task-Ensure-sdk-test-does-not-impact-developer-workflow-on-push-etc-b51ce2df722a4b70a74fcaab6134ad66?pvs=4).
 
 ---
 
@@ -52,3 +53,15 @@
 
 - Run ``yarn dev``
 - Run ```open http://localhost:3000```
+
+## Slack Integration
+For subscribing to notifications of interest from the GitHub repository.
+This is covered in detail [here](https://github.com/integrations/slack).
+
+### TL;DR
+* Install the GitHub app within your Slack Workspace using this [link](https://slack.com/apps/A01BP7R4KNY-github).
+* Connect your Slack & GitHub accounts as per instructions (it's time-limited).
+* Setup your GitHub subscriptions as desired. For example, to receive notifications for Issue and Pull Request changes, for `credbull-defi`, enter the following in the GitHub app:
+
+  ```/github credbull/credbull-defi unsubscribe commits releases deployments```
+* Tune your notifications to taste and enjoy the plethora of information at your fingertips! 
