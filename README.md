@@ -45,6 +45,7 @@
 ## Test Locally
 
 - After the project has been setup locally you can just ```yarn test```
+- NOTE: JL 2024-05-08, `test` for the `sdk` package has been re-named to `int-test` as it was interfering with developer workflow. The Notion [issue](https://www.notion.so/Task-Ensure-sdk-test-does-not-impact-developer-workflow-on-push-etc-b51ce2df722a4b70a74fcaab6134ad66?pvs=4).
 
 ---
 
