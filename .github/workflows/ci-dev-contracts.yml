@@ -12,6 +12,34 @@ on:
       - "packages/contracts/**"
 
 jobs:
+  unit_test:
+    runs-on: ubuntu-latest
+    environment: local
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run tests
+        run: forge test -vvv
+        env:
+          # the environment variables below should be removed when we configure the secrets in github
+          VAULT_OPENS_AT_TIMESTAMP: 1705276800
+          VAULT_CLOSES_DURATION_TIMESTAMP: 60
+
+      - name: Run coverage report
+        run: forge coverage
+        env:
+          # the environment variables below should be removed when we configure the secrets in github
+          VAULT_OPENS_AT_TIMESTAMP: 1705276800
+          VAULT_CLOSES_DURATION_TIMESTAMP: 60
+
   deploy:
     runs-on: ubuntu-latest
     environment: dev
@@ -60,4 +88,6 @@ jobs:
           PUBLIC_OWNER_ADDRESS: ${{ secrets.PUBLIC_OWNER_ADDRESS }}
           SEPOLIA_PRIVATE_KEY: ${{ secrets.SEPOLIA_PRIVATE_KEY }}
           SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}          
+
+          
