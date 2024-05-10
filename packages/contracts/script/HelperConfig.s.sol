@@ -5,6 +5,8 @@ pragma solidity ^0.8.19;
 import { Script } from "forge-std/Script.sol";
 import { DeployMocks } from "./DeployMocks.s.sol";
 
+import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+
 struct FactoryParams {
     address owner;
     address operator;
@@ -14,6 +16,8 @@ struct FactoryParams {
 // TODO - add other contract addresses here, including USDC
 struct NetworkConfig {
     FactoryParams factoryParams;
+    IERC20 usdcToken;
+    IERC20 cblToken;
 }
 
 /// @title Helper to centralize any chain-specific config and code into one place
@@ -53,7 +57,12 @@ contract HelperConfig is Script {
             collateralPercentage: collateralPercentage
         });
 
-        NetworkConfig memory sepoliaConfig = NetworkConfig({ factoryParams: factoryParams });
+        // TODO - replace this with USDC and CBL actual contract addresses
+        DeployMocks deployMocks = new DeployMocks(testMode);
+        (IERC20 mockToken, IERC20 mockStablecoin) = deployMocks.run();
+
+        NetworkConfig memory sepoliaConfig =
+            NetworkConfig({ factoryParams: factoryParams, usdcToken: mockStablecoin, cblToken: mockToken });
 
         return sepoliaConfig;
     }
@@ -67,9 +76,6 @@ contract HelperConfig is Script {
 
         address[] memory contractRoles = deriveKeys(getAnvilMnemonic());
 
-        DeployMocks deployMocks = new DeployMocks(testMode);
-        deployMocks.run();
-
         uint256 collateralPercentage = vm.envOr("COLLATERAL_PERCENTAGE", COLLATERAL_PERCENTAGE);
 
         FactoryParams memory factoryParams = FactoryParams({
@@ -78,7 +84,11 @@ contract HelperConfig is Script {
             collateralPercentage: collateralPercentage
         });
 
-        NetworkConfig memory anvilConfig = NetworkConfig({ factoryParams: factoryParams });
+        DeployMocks deployMocks = new DeployMocks(testMode);
+        (IERC20 mockToken, IERC20 mockStablecoin) = deployMocks.run();
+
+        NetworkConfig memory anvilConfig =
+            NetworkConfig({ factoryParams: factoryParams, usdcToken: mockStablecoin, cblToken: mockToken });
 
         return anvilConfig;
     }

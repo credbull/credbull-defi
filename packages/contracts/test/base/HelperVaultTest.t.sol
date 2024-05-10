@@ -5,9 +5,8 @@ pragma solidity ^0.8.19;
 import { Test } from "forge-std/Test.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { HelperConfig, NetworkConfig, FactoryParams } from "../../script/HelperConfig.s.sol";
-import { DeployMocks } from "../../script//DeployMocks.s.sol";
-import { MockStablecoin } from "../mocks/MockStablecoin.sol";
-import { MockToken } from "../mocks/MockToken.sol";
+
+import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 /// Utility to help with testing vaults
 contract HelperVaultTest is Test {
@@ -30,18 +29,14 @@ contract HelperVaultTest is Test {
         address custodian = makeAddr("custodianAddress");
         uint256 promisedFixedYield = helperConfig.PROMISED_FIXED_YIELD();
 
-        // TODO: shouldn't redeploy here - need to grab from network config once added
-        DeployMocks deployMocks = new DeployMocks(testMode);
-        (MockToken mockToken, MockStablecoin mockStablecoin) = deployMocks.run();
-
         // call this after deploying the mocks - we will definitely have block transactions then
         uint256 opensAt = block.timestamp;
         uint256 closesAt = opensAt + 7 days;
         uint256 year = 365 days;
 
         ICredbull.VaultParams memory testVaultParams = ICredbull.VaultParams({
-            asset: mockStablecoin,
-            token: mockToken,
+            asset: networkConfig.usdcToken,
+            token: networkConfig.cblToken,
             shareName: "Share_sep",
             shareSymbol: "SYM_sep",
             owner: factoryParams.owner,
