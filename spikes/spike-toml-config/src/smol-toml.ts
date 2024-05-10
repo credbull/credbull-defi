@@ -1,7 +1,5 @@
-import { parse } from 'smol-toml'
-import fs from 'fs';
-import { verify } from "./verifier"; 
+import { parse as smol_parse } from 'smol-toml'
 
-const sample = fs.readFileSync('resource/sample.toml', 'utf8');
-const toml = parse(sample)
-verify('smol-toml', toml)
+export function parse(sample: string) {
+    return smol_parse(sample);
+}
