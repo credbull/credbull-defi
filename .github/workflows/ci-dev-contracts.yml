@@ -12,7 +12,7 @@ on:
       - "packages/contracts/**"
 
 jobs:
-  unit_test:
+  test:
     runs-on: ubuntu-latest
     environment: local
 
@@ -42,31 +42,13 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    needs: test
     environment: dev
 
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-
-      - name: Run tests
-        run: forge test -vvv
-        env:
-          # the environment variables below should be removed when we configure the secrets in github
-          VAULT_OPENS_AT_TIMESTAMP: 1705276800
-          VAULT_CLOSES_DURATION_TIMESTAMP: 60
-
-      - name: Run coverage report
-        run: forge coverage
-        env:
-          # the environment variables below should be removed when we configure the secrets in github
-          VAULT_OPENS_AT_TIMESTAMP: 1705276800
-          VAULT_CLOSES_DURATION_TIMESTAMP: 60
 
       - uses: actions/setup-node@v4
         with:
