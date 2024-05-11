@@ -41,6 +41,9 @@ contract DeployMocks is Script {
         if (isTestMode || deployChecker.isDeployRequired("MockStablecoin")) {
             mockStablecoin = new MockStablecoin(totalSupply);
             console2.log("!!!!! Deploying MockStablecoin !!!!!");
+        } else {
+            address mockTokenAddress = deployChecker.getContractAddress("MockStablecoin");
+            mockToken = MockToken(mockTokenAddress);
         }
 
         if (isTestMode || deployChecker.isDeployRequired("CredbullBaseVaultMock")) {

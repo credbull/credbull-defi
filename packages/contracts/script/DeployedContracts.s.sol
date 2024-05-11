@@ -26,6 +26,19 @@ contract DeployedContracts is Script {
         return shouldDeploy;
     }
 
+    /// Read the contract Address from the database.  will revert if the contract is not found in json.
+    /// @param contractName the contractName to find
+    /// @return contract address if found, or revert
+    function getContractAddress(string memory contractName) public returns (address) {
+        string memory json = parseDeployedContracts();
+
+        if (bytes(json).length == 0) {
+            return address(0);
+        }
+
+        return getContractAddress(json, contractName);
+    }
+
     /// Check if the Contract is found
     /// @param json the json with a list of contracts or empty
     /// @param contractName the contractName to find
