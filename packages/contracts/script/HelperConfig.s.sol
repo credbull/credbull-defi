@@ -58,7 +58,7 @@ contract HelperConfig is Script {
         });
 
         // TODO - replace this with USDC and CBL actual contract addresses
-        DeployMocks deployMocks = new DeployMocks(testMode);
+        DeployMocks deployMocks = new DeployMocks(testMode, factoryParams.owner);
         (IERC20 mockToken, IERC20 mockStablecoin) = deployMocks.run();
 
         NetworkConfig memory sepoliaConfig =
@@ -84,7 +84,7 @@ contract HelperConfig is Script {
             collateralPercentage: collateralPercentage
         });
 
-        DeployMocks deployMocks = new DeployMocks(testMode);
+        DeployMocks deployMocks = new DeployMocks(testMode, factoryParams.owner);
         (IERC20 mockToken, IERC20 mockStablecoin) = deployMocks.run();
 
         NetworkConfig memory anvilConfig =

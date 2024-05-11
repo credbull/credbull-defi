@@ -8,30 +8,13 @@ import { ICredbull } from "../../../src/interface/ICredbull.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract CredbullBaseVaultMock is CredbullBaseVault {
-    //    struct VaultParams {
-    //        address owner;
-    //        address operator;
-    //        IERC20 asset;
-    //        IERC20 token;
-    //        string shareName;
-    //        string shareSymbol;
-    //        uint256 promisedYield;
-    //        uint256 depositOpensAt;
-    //        uint256 depositClosesAt;
-    //        uint256 redemptionOpensAt;
-    //        uint256 redemptionClosesAt;
-    //        address custodian;
-    //        address kycProvider;
-    //        uint256 maxCap;
-    //        uint256 depositThresholdForWhitelisting;
-    //    }
-
     constructor(IERC20 asset, string memory shareName, string memory shareSymbol, address custodian)
         CredbullBaseVault(createVaultParams(asset, shareName, shareSymbol, custodian))
     { }
 
     function createVaultParams(IERC20 asset, string memory shareName, string memory shareSymbol, address custodian)
         internal
+        pure
         returns (ICredbull.VaultParams memory)
     {
         ICredbull.VaultParams memory vaultParams = ICredbull.VaultParams({

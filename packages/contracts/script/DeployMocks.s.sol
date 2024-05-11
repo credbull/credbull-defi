@@ -13,14 +13,16 @@ import { CredbullBaseVaultMock } from "../test/mocks/vaults/CredbullBaseVaultMoc
 
 contract DeployMocks is Script {
     bool public isTestMode;
+    address private custodian;
     uint128 public constant MAX_UINT128_SIZE = type(uint128).max;
 
     uint128 public totalSupply = MAX_UINT128_SIZE;
 
-    CredbullBaseVaultMock private credbullBaseVaultMock;
+    CredbullBaseVaultMock internal credbullBaseVaultMock;
 
-    constructor(bool _isTestMode) {
+    constructor(bool _isTestMode, address _custodian) {
         isTestMode = _isTestMode;
+        custodian = _custodian;
     }
 
     function run() public returns (MockToken, MockStablecoin) {
@@ -43,8 +45,6 @@ contract DeployMocks is Script {
 
         if (isTestMode || deployChecker.isDeployRequired("CredbullBaseVaultMock")) {
             // HACK TODO: this only works if the MockToken was re-deployed.  Proper solution would be to fetch the MockToken address from supabase.
-
-            address custodian = msg.sender; // custodian needs to be set in the constuctor.  for a mock token, owner address is fine.
             credbullBaseVaultMock = new CredbullBaseVaultMock(mockToken, "Mock Vault", "mVault", custodian);
             console2.log("!!!!! Deploying CredbullBaseVaultMock !!!!!");
         }
