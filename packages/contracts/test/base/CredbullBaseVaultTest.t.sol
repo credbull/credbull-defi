@@ -33,7 +33,7 @@ contract CredbullBaseVaultTest is Test {
         helperConfig = new HelperConfig(true);
         vaultParams = new HelperVaultTest(helperConfig).createTestVaultParams();
 
-        vault = new CredbullBaseVaultMock(vaultParams);
+        vault = createBaseVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
 
         MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
@@ -145,7 +145,7 @@ contract CredbullBaseVaultTest is Test {
     function test__ShouldRevertIfDecimalIsNotSupported() public {
         vm.expectRevert(abi.encodeWithSelector(CredbullBaseVault.CredbullVault__UnsupportedDecimalValue.selector, 24));
         vm.mockCall(address(vaultParams.asset), abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(24));
-        new CredbullBaseVaultMock(vaultParams);
+        createBaseVaultMock(vaultParams);
     }
 
     function test__BaseVault__Deposit__Fuzz(uint256 depositAmount) public {
@@ -291,5 +291,11 @@ contract CredbullBaseVaultTest is Test {
         vm.warp(vaultParams.depositOpensAt);
         shares = vault.deposit(assets, alice);
         vm.stopPrank();
+    }
+
+    function createBaseVaultMock(ICredbull.VaultParams memory _vaultParams) internal returns (CredbullBaseVaultMock) {
+        return new CredbullBaseVaultMock(
+            _vaultParams.asset, _vaultParams.shareName, _vaultParams.shareSymbol, _vaultParams.custodian
+        );
     }
 }
