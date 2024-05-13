@@ -10,10 +10,6 @@ import { HelperVaultTest } from "../test/base/HelperVaultTest.t.sol";
 import { ICredbull } from "../src/interface/ICredbull.sol";
 
 import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
-import { MockToken } from "../test/mocks/MockToken.sol";
-
-import { console2 } from "forge-std/console2.sol";
-import { DeployedContracts } from "./DeployedContracts.s.sol";
 import { CredbullBaseVaultMock } from "../test/mocks/vaults/CredbullBaseVaultMock.m.sol";
 
 import { CredbullFixedYieldVaultFactory } from "../src/factories/CredbullFixedYieldVaultFactory.sol";
@@ -21,6 +17,7 @@ import { CredbullFixedYieldVault } from "../src/CredbullFixedYieldVault.sol";
 import { HelperVaultTest } from "../test/base/HelperVaultTest.t.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { console2 } from "forge-std/console2.sol";
 
 contract DebugDeploy is Script {
     address private mockStablecoinAddr = address(10); // from supabase

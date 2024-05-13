@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
-import { HelperConfig, NetworkConfig, FactoryParams } from "../../script/HelperConfig.s.sol";
+import { NetworkConfig, FactoryParams } from "../../script/HelperConfig.s.sol";
 
 /// Utility to help with testing vaults
 contract HelperVaultTest is Test {
