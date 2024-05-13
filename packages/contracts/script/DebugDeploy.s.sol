@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
 
-import { HelperConfig, NetworkConfig, FactoryParams } from "../script/HelperConfig.s.sol";
+import { NetworkConfig, FactoryParams } from "../script/HelperConfig.s.sol";
 import { HelperVaultTest } from "../test/base/HelperVaultTest.t.sol";
 
 import { ICredbull } from "../src/interface/ICredbull.sol";
@@ -38,17 +38,9 @@ contract DebugDeploy is Script {
         // address fixedYieldVaultFactoryAddr = deployChecker.getContractAddress("CredbullFixedYieldVaultFactory"); // output file missing ?!?
 
         MockStablecoin mockStablecoin = MockStablecoin(mockStablecoinAddr);
-        require(address(mockStablecoin) != address(0), "MockStableCoin not bound");
-        console2.log("MockStableCoin owner=", mockStablecoin.owner());
-
         CredbullBaseVaultMock mockBaseVault = CredbullBaseVaultMock(mockBaseVaultAddr);
-        require(address(mockBaseVault) != address(0), "CredbullBaseVaultMock not bound");
-        console2.log("CredbullBaseVaultMock asset=", mockBaseVault.asset());
-
         CredbullFixedYieldVaultFactory fixedYieldVaultFactory =
             CredbullFixedYieldVaultFactory(fixedYieldVaultFactoryAddr);
-        require(address(fixedYieldVaultFactory) != address(0), "CredbullFixedYieldVaultFactory not bound");
-        console2.log("Vault Count=", fixedYieldVaultFactory.getTotalVaultCount());
 
         FactoryParams memory factoryParams = FactoryParams({
             owner: vm.addr(ownerPrivateKey),
