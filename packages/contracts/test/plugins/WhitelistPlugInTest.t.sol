@@ -29,7 +29,7 @@ contract WhitelistPlugInTest is Test {
     function setUp() public {
         deployer = new DeployVaultFactory();
         (,, kycProvider, helperConfig) = deployer.runTest();
-        vaultParams = new HelperVaultTest(helperConfig).createTestVaultParams();
+        vaultParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createTestVaultParams();
 
         if (vaultParams.kycProvider == address(0)) {
             vaultParams.kycProvider = address(kycProvider);

@@ -25,7 +25,6 @@ struct NetworkConfig {
 /// This is the only place in the contract code that knows about different chains and environment settings
 contract HelperConfig is Script {
     NetworkConfig private activeNetworkConfig;
-    uint256 public constant PROMISED_FIXED_YIELD = 10;
     uint256 private constant COLLATERAL_PERCENTAGE = 20_00;
 
     bool private testMode = false;

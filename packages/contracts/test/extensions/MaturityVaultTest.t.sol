@@ -25,7 +25,7 @@ contract MaturityVaultTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        vaultParams = new HelperVaultTest(helperConfig).createTestVaultParams();
+        vaultParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createTestVaultParams();
 
         vault = new MaturityVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();

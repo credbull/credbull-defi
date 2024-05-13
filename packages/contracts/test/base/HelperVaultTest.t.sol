@@ -8,24 +8,25 @@ import { HelperConfig, NetworkConfig, FactoryParams } from "../../script/HelperC
 
 /// Utility to help with testing vaults
 contract HelperVaultTest is Test {
-    bool private testMode = true;
-
-    HelperConfig private helperConfig;
+    uint256 private constant PROMISED_FIXED_YIELD = 10;
     NetworkConfig private networkConfig;
 
-    address private custodianAddress;
-
-    constructor(HelperConfig _helperConfig) {
-        helperConfig = _helperConfig;
-        networkConfig = helperConfig.getNetworkConfig();
+    constructor(NetworkConfig memory _networkConfig) {
+        networkConfig = _networkConfig;
     }
 
     /// this version is tied to Anvil - it is using Anvil's well known addresses
     function createTestVaultParams() public returns (ICredbull.VaultParams memory) {
+        address custodian = makeAddr("custodianAddress");
+
+        return createTestVaultParams(custodian);
+    }
+
+    /// this version is tied to Anvil - it is using Anvil's well known addresses
+    function createTestVaultParams(address custodian) public returns (ICredbull.VaultParams memory) {
         FactoryParams memory factoryParams = networkConfig.factoryParams;
 
-        address custodian = makeAddr("custodianAddress");
-        uint256 promisedFixedYield = helperConfig.PROMISED_FIXED_YIELD();
+        uint256 promisedFixedYield = PROMISED_FIXED_YIELD;
 
         // call this after deploying the mocks - we will definitely have block transactions then
         uint256 opensAt = block.timestamp;

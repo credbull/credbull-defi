@@ -12,6 +12,9 @@ define DEPLOY_CMD
 	node script/utils/exporter.js
 endef
 
+debug-local:
+	forge script script/DebugDeploy.s.sol:DebugDeploy --rpc-url localhost PRIVATE_KEY=$(DEFAULT_ANVIL_KEY) -vvvv
+
 deploy-local:
 	$(MAKE) generic-deploy RPC_URL=localhost PRIVATE_KEY=$(DEFAULT_ANVIL_KEY) EXTRA_FLAGS= ETHERSCAN_API_KEY=
 

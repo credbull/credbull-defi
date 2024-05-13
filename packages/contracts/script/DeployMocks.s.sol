@@ -36,19 +36,19 @@ contract DeployMocks is Script {
         if (isTestMode || deployChecker.isDeployRequired("MockToken")) {
             mockToken = new MockToken(totalSupply);
             console2.log("!!!!! Deploying MockToken !!!!!");
+        } else {
+            mockStablecoin = MockStablecoin(deployChecker.getContractAddress("MockStablecoin"));
         }
 
         if (isTestMode || deployChecker.isDeployRequired("MockStablecoin")) {
             mockStablecoin = new MockStablecoin(totalSupply);
             console2.log("!!!!! Deploying MockStablecoin !!!!!");
         } else {
-            address mockTokenAddress = deployChecker.getContractAddress("MockStablecoin");
-            mockToken = MockToken(mockTokenAddress);
+            mockToken = MockToken(deployChecker.getContractAddress("MockStablecoin"));
         }
 
         if (isTestMode || deployChecker.isDeployRequired("CredbullBaseVaultMock")) {
-            // HACK TODO: this only works if the MockToken was re-deployed.  Proper solution would be to fetch the MockToken address from supabase.
-            credbullBaseVaultMock = new CredbullBaseVaultMock(mockToken, "Mock Vault", "mVault", custodian);
+            credbullBaseVaultMock = new CredbullBaseVaultMock(mockStablecoin, "Mock Vault", "mVault", custodian);
             console2.log("!!!!! Deploying CredbullBaseVaultMock !!!!!");
         }
 
