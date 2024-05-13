@@ -17,15 +17,14 @@ import { CredbullFixedYieldVault } from "../src/CredbullFixedYieldVault.sol";
 import { HelperVaultTest } from "../test/base/HelperVaultTest.t.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { console2 } from "forge-std/console2.sol";
 
 contract DebugDeploy is Script {
     address private mockStablecoinAddr = address(10); // from supabase
     address payable private mockBaseVaultAddr = payable(address(11)); // from supabase
     address payable private fixedYieldVaultFactoryAddr = payable(address(12)); // from supabase
 
-    uint256 ownerPrivateKey = 0; // ..ff80 is anvil-0
-    uint256 operatorPrivateKey = 1; // ..690d is anvil-1
+    uint256 private ownerPrivateKey = 0; // ..ff80 is anvil-0
+    uint256 private operatorPrivateKey = 1; // ..690d is anvil-1
 
     function run()
         public
