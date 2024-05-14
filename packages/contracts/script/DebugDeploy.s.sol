@@ -66,7 +66,7 @@ abstract contract DebugDeploy is Script {
         console2.log(
             "cast send --private-key $DEFAULT_ANVIL_KEY",
             address(_fixedYieldVaultFactory),
-            "'allowCustodian(address)'",
+            "" "allowCustodian(address)" "",
             _custodianAddr
         );
     }
