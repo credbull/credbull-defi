@@ -19,11 +19,15 @@ contract HelperVaultTest is Test {
     function createTestVaultParams() public returns (ICredbull.VaultParams memory) {
         address custodian = makeAddr("custodianAddress");
 
-        return createTestVaultParams(custodian);
+        return createTestVaultParams(custodian, address(0));
     }
 
     /// this version is tied to Anvil - it is using Anvil's well known addresses
-    function createTestVaultParams(address custodian) public returns (ICredbull.VaultParams memory) {
+    function createTestVaultParams(address custodian, address kycProvider)
+        public
+        view
+        returns (ICredbull.VaultParams memory)
+    {
         FactoryParams memory factoryParams = networkConfig.factoryParams;
 
         uint256 promisedFixedYield = PROMISED_FIXED_YIELD;
@@ -41,7 +45,7 @@ contract HelperVaultTest is Test {
             owner: factoryParams.owner,
             operator: factoryParams.operator,
             custodian: custodian,
-            kycProvider: address(0),
+            kycProvider: kycProvider,
             promisedYield: promisedFixedYield,
             depositOpensAt: opensAt,
             depositClosesAt: closesAt,

@@ -33,7 +33,10 @@ contract DeployedContracts is Script {
         string memory json = parseDeployedContracts();
 
         if (bytes(json).length == 0) {
-            return address(0);
+            // return address(0);
+            revert(
+                string.concat("Contract ", contractName, "not found in db export.  Were deploy and export successfull?")
+            );
         }
 
         return getContractAddress(json, contractName);
