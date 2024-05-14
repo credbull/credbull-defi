@@ -62,8 +62,13 @@ abstract contract DebugDeploy is Script {
         //        _fixedYieldVaultFactory.allowCustodian(custodian);
         //        vm.stopBroadcast();
 
-        // console2.log("Make sure custodian is allowed, e.g. by running the following cast command:");
-        // console2.log("cast send --private-key $DEFAULT_ANVIL_KEY", address(_fixedYieldVaultFactory), "'allowCustodian(address)'", _custodianAddr);
+        console2.log("Make sure custodian is allowed, e.g. by running the following cast command:");
+        console2.log(
+            "cast send --private-key $DEFAULT_ANVIL_KEY",
+            address(_fixedYieldVaultFactory),
+            "'allowCustodian(address)'",
+            _custodianAddr
+        );
     }
 
     function addVault(CredbullFixedYieldVaultFactory fixedYieldVaultFactory, ICredbull.VaultParams memory vaultParams)
