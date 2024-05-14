@@ -43,7 +43,7 @@ abstract contract DebugDeploy is Script {
         });
 
         HelperVaultTest helperVaultTest = new HelperVaultTest(configFromDatabase);
-        address custodianAddr = address(4);
+        address custodianAddr = vm.envAddress("ADDRESSES_CUSTODIAN");
         allowCustodian(custodianAddr, fixedYieldVaultFactory);
 
         ICredbull.VaultParams memory vaultParams = helperVaultTest.createTestVaultParams(custodianAddr, kycProviderAddr);
@@ -62,9 +62,9 @@ abstract contract DebugDeploy is Script {
         //        _fixedYieldVaultFactory.allowCustodian(custodian);
         //        vm.stopBroadcast();
 
-        console2.log("Make sure custodian is allowed, e.g. by running the following cast command:");
+        console2.log("Make sure custodian is allowed, e.g. by running the following command");
         console2.log(
-            "cast send --private-key $DEFAULT_ANVIL_KEY",
+            "source .env && cast send --private-key $DEFAULT_ANVIL_KEY",
             address(_fixedYieldVaultFactory),
             "" "allowCustodian(address)" "",
             _custodianAddr
