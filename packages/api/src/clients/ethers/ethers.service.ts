@@ -12,7 +12,7 @@ export class EthersService {
     private readonly logger: ConsoleLogger,
   ) {
     this.logger.setContext(this.constructor.name);
-    this.deployerKey = config.getOrThrow('ETHERS_DEPLOYER_PRIVATE_KEY');
+    this.deployerKey = config.getOrThrow('ETHERS_DEPLOYER_PRIVATE_KEY'); // woohoo - this is where the private key is coming from
   }
 
   async operator(): Promise<Signer> {
