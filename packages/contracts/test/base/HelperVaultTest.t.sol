@@ -58,7 +58,7 @@ contract HelperVaultTest is Test {
         return testVaultParams;
     }
 
-    function toString(ICredbull.VaultParams memory params) public returns (string memory) {
+    function toString(ICredbull.VaultParams memory params) public pure returns (string memory) {
         string memory part1 = string.concat(
             "\nVaultParams {\n",
             "  owner: ",
@@ -114,8 +114,6 @@ contract HelperVaultTest is Test {
             "\n",
             "}"
         );
-
-        return string.concat(part1, part2, part3);
 
         return string.concat(part1, part2, part3);
     }

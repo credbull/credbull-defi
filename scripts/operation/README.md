@@ -1,10 +1,11 @@
 # Helper Scripts
 
 ## OVERALL
-Set of operator scripts.  
-* Mix of own API calls and direct ethers.js  Environment setup is not always intuitive as a result.
-* For create-vault, it is using the ADMIN key from scripts.  Under the covers it calls to the create-vault API 
-* This is important as some .env is coming from operation package and others will come from api
+**PREREQUISITES**:
+1. api/supabase start
+1. api/yarn dev 
+1. contracts/yarn chain
+1. contracts/yarn deploy
 
 
 ## Setup Users
