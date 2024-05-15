@@ -1,0 +1,17 @@
+##
+# The Application Configuration for the DEV Environment (GitHub Actions). 
+##
+
+[services.supabase]
+url = "http://127.0.0.1:54321"
+api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
+
+[application]
+# The Next Public Target Network Id.
+network_id = 421614
+
+# 2 decimal place percentage (meaining value divided by 100) as integer.
+collateral_percentage = 200
+
+# Export contract details to supabase.
+export_contracts = true
