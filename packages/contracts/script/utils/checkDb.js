@@ -3,12 +3,26 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
+const { load } = require('js-toml');
 
-const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const outputFileName = path.resolve(__dirname, '../output/dbdata.json');
 
-async function checkDb() {
-  const { data, error } = await client.from('contracts_addresses').select().is('outdated', false);
+// Loads the environment-specified TOML configuration file. 
+async function loadConfiguration() {
+  const env = process.env.ENVIRONMENT;
+  const configFile = path.resolve(__dirname, `../../resource/${env}.toml`);
+  console.log(`Loading configuration from: '${configFile}'`);
+  const toml = fs.readFileSync(configFile, 'utf8');
+  return load(toml);
+}
+
+async function checkDb(config) {
+  const client = createClient(config.services.supabase.url, config.services.supabase.api_key);
+
+  const { data, error } = await client
+    .from('contracts_addresses')
+    .select()
+    .is('outdated', false);
 
   if (error) {
     throw error;
@@ -27,7 +41,7 @@ async function checkDb() {
 
 (async () => {
   try {
-    await checkDb();
+    await checkDb(loadConfiguration());
   } catch (e) {
     console.log(e);
   } finally {

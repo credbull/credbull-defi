@@ -3,19 +3,31 @@ require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
+const { load } = require('js-toml');
 
-async function exportAddress() {
-  await clearExistingData();
+// Loads the environment-specified TOML configuration file. 
+async function loadConfiguration() {
+  const env = process.env.ENVIRONMENT;
+  const configFile = path.resolve(__dirname, `../../resource/${env}.toml`);
+  console.log(`Loading configuration from: '${configFile}'`);
+  const toml = fs.readFileSync(configFile, 'utf8');
+  return load(toml);
+}
+
+async function exportAddress(config) {
+  const client = createClient(config.services.supabase.url, config.services.supabase.api_key);
+  await clearExistingData(client);
+
   const contracts = {};
 
   const folderPath = path.resolve(__dirname, '../../broadcast');
   const outputPath = path.resolve(__dirname, '../../deployments/');
   const outputFileName = path.resolve(__dirname, '../../deployments/index.json');
 
+  const chainDir = config.application.network_id;
   const deployFiles = await fs.promises.readdir(folderPath);
   for (const deployFile of deployFiles) {
     const deployFilePath = path.resolve(folderPath, deployFile);
-    const chainDir = process.env.NEXT_PUBLIC_TARGET_NETWORK_ID;
 
     contracts[chainDir] = contracts[chainDir] || {};
     const runBuffer = fs.readFileSync(path.resolve(deployFilePath, chainDir, 'run-latest.json'));
@@ -54,50 +66,56 @@ async function exportAddress() {
         dataToStoreOnDB.push(data);
       }
     }
-    if (process.env.EXPORT_TO_SUPABASE === 'true') {
-      await exportToSupabase(dataToStoreOnDB);
+    if (config.application.export_contracts === 'true') {
+      await exportToSupabase(client, dataToStoreOnDB);
     }
   }
   return contracts;
 }
 
-async function exportToSupabase(dataToStoreOnDB) {
-  const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-
-  const config = await client
+async function exportToSupabase(client, dataToStoreOnDB) {
+  const wasExported = await client
     .from('contracts_addresses')
     .upsert(dataToStoreOnDB, { onConflict: 'contract_name' })
     .is('outdated', true)
     .select();
 
-  if (config.error || !config.data) {
-    console.log(config.error);
-    throw config.error;
+  if (wasExported.error || !wasExported.data) {
+    console.log(wasExported.error);
+    throw wasExported.error;
   }
 }
 
 // Function to clear the existing data in the DB before exporting the new data
-async function clearExistingData() {
-  console.log('Clearing DB......');
-  const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+async function clearExistingData(client) {
+  console.log('Clearing \'contract_addresses\' table.');
+  const contractAddresses = await client
+    .from('contracts_addresses')
+    .delete()
+    .neq('id', 0);
 
-  const contractAddresses = await client.from('contracts_addresses').delete().neq('id', 0);
   if (contractAddresses.error) {
-    console.log(`Error in clearing contract address table ${contractAddresses.error}`);
+    console.log(`Error in clearing 'contract_addresses' table ${contractAddresses.error}`);
     throw contractAddresses.error;
   }
 
-  const vaults = await client.from('vaults').delete().neq('id', 0);
+  console.log('Clearing \'vaults\' table.');
+  const vaults = await client
+    .from('vaults')
+    .delete()
+    .neq('id', 0);
+
   if (vaults.error) {
-    console.log(`Error in clearning vaults table ${vaults.error}`);
+    console.log(`Error in clearning 'vaults' table ${vaults.error}`);
     throw vaults.error;
   }
-  console.log('DB Cleared successfully!');
+
+  console.log('Database tables cleared successfully!');
 }
 
 (async () => {
   try {
-    await exportAddress();
+    await exportAddress(loadConfiguration());
   } catch (e) {
     console.log(e);
   } finally {
