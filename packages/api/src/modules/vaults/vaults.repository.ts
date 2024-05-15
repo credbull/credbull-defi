@@ -6,6 +6,7 @@ import * as _ from 'lodash';
 
 import { ServiceResponse } from '../../types/responses';
 import { Database, Tables } from '../../types/supabase';
+import { responseFromRead } from '../../utils/contracts';
 
 import { EntitiesDto } from './vaults.dto';
 
@@ -71,8 +72,9 @@ export async function getUnpausedVaults(vaults: ServiceResponse<Tables<'vaults'>
     await Promise.all(
       (vaults.data || []).map(async (vault) => {
         const vaultContract = CredbullFixedYieldVault__factory.connect(vault.address, operator);
-        const paused = await vaultContract.paused();
-        return paused ? null : vault;
+        const paused = await responseFromRead(vaultContract, vaultContract.paused());
+        if (paused.error) throw paused.error;
+        return paused.data ? vault : null;
       }),
     ),
   );

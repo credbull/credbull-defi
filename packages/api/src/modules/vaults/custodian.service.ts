@@ -19,16 +19,17 @@ export class CustodianService {
 
   async totalAssets(vault: Tables<'vaults'>, custodianAddress: string): Promise<ServiceResponse<BigNumber>> {
     const asset = await this.asset(vault);
-    return responseFromRead(asset.balanceOf(custodianAddress));
+    return responseFromRead(asset, asset.balanceOf(custodianAddress));
   }
 
   async transfer(dto: CustodianTransferDto): Promise<ServiceResponse<CustodianTransferDto>> {
     const asset = await this.asset(dto);
 
-    const approve = await responseFromWrite(asset.approve(dto.custodian_address, dto.amount));
+    const approve = await responseFromWrite(asset, asset.approve(dto.custodian_address, dto.amount));
     if (approve.error) return approve;
 
     const transfer = await responseFromWrite(
+      asset,
       asset.transferFrom(dto.custodian_address, dto.address, dto.amount, this.ethers.overrides()),
     );
     if (transfer.error) return transfer;

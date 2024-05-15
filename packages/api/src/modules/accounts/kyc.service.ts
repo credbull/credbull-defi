@@ -64,14 +64,14 @@ export class KycService {
 
     for (const { address } of distinctProviders) {
       const provider = await this.getOnChainProvider(address);
-      const { error, data } = await responseFromRead(provider.status(dto.address));
+      const { error, data } = await responseFromRead(provider, provider.status(dto.address));
       if (error) {
         errors.push(error);
         continue;
       }
 
       if (!data) {
-        const { error } = await responseFromWrite(provider.updateStatus([dto.address], [true]));
+        const { error } = await responseFromWrite(provider, provider.updateStatus([dto.address], [true]));
         if (error) errors.push(error);
       }
     }
@@ -103,7 +103,7 @@ export class KycService {
 
     for (const kyc of kycProviders) {
       const provider = await this.getOnChainProvider(kyc.address);
-      const { error, data } = await responseFromRead(provider.status(address));
+      const { error, data } = await responseFromRead(provider, provider.status(address));
       if (error) {
         errors.push(error);
         continue;
