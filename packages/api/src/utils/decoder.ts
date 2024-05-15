@@ -16,16 +16,17 @@ export function decodeContractError(contract: ethers.Contract, errorData: string
       .join(', ');
   }
 
-  throw new Error(`${errorFragment.name} | ${message ? message : ''}`);
+  return new Error(`${errorFragment.name} | ${message ? message : ''}`);
 }
 
 export function handleError(contract: ethers.Contract, error: any) {
   if (error.error?.data?.data) {
-    decodeContractError(contract, error.error.data.data);
+    return decodeContractError(contract, error.error.data.data);
   } else if (error.error?.error?.error?.data) {
-    decodeContractError(contract, error.error.error.error.data);
+    return decodeContractError(contract, error.error.error.error.data);
+  } else if (error.error?.error?.data) {
+    return decodeContractError(contract, error.error.error.data);
   } else {
-    console.log(error);
-    throw error;
+    return new Error(error);
   }
 }
