@@ -172,12 +172,15 @@ export class MatureVaultsService {
 
   private async requiredDataForVaults(vault: Tables<'vaults'>, custodianAddress: string) {
     const contract = await this.contract(vault);
-    return [responseFromRead(contract.expectedAssetsOnMaturity()), this.custodian.totalAssets(vault, custodianAddress)];
+    return [
+      responseFromRead(contract, contract.expectedAssetsOnMaturity()),
+      this.custodian.totalAssets(vault, custodianAddress),
+    ];
   }
 
   private async mature(vault: Tables<'vaults'>): Promise<ServiceResponse<Tables<'vaults'>[]>> {
     const strategy = await this.strategy(vault);
-    const maturedOnChain = await responseFromWrite(strategy.mature(this.ethers.overrides()));
+    const maturedOnChain = await responseFromWrite(strategy, strategy.mature(this.ethers.overrides()));
     if (maturedOnChain.error) return maturedOnChain;
 
     return this.supabaseAdmin.admin().from('vaults').update({ status: 'matured' }).eq('id', vault.id).select();

@@ -42,7 +42,6 @@ export class VaultsService {
     if (vaults.error || !vaults.data) return vaults;
 
     const unPausedVaults = await getUnpausedVaults(vaults, await this.ethers.operator());
-
     return { data: unPausedVaults, error: null };
   }
 
@@ -77,7 +76,7 @@ export class VaultsService {
       ? upsideFactory.estimateGas.createVault(params, collateralPercentage, options)
       : factory.estimateGas.createVault(params, options);
 
-    const estimation = await responseFromRead(readMethod);
+    const estimation = await responseFromRead(upside ? upsideFactory : factory, readMethod);
     if (estimation.error) {
       return estimation;
     }
@@ -86,7 +85,7 @@ export class VaultsService {
       ? upsideFactory.createVault(params, collateralPercentage, options, { gasLimit: estimation.data })
       : factory.createVault(params, options, { gasLimit: estimation.data });
 
-    const response = await responseFromWrite(writeMethod);
+    const response = await responseFromWrite(upside ? upsideFactory : factory, writeMethod);
     if (response.error) return response;
 
     console.log(response);
