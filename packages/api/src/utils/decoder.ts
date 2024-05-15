@@ -20,13 +20,11 @@ export function decodeContractError(contract: ethers.Contract, errorData: string
 }
 
 export function handleError(contract: ethers.Contract, error: any) {
-  if (error.error?.data?.data) {
-    return decodeContractError(contract, error.error.data.data);
-  } else if (error.error?.error?.error?.data) {
-    return decodeContractError(contract, error.error.error.error.data);
-  } else if (error.error?.error?.data) {
-    return decodeContractError(contract, error.error.error.data);
-  } else {
-    return new Error(error);
+  const errorToDecode = error.error?.data?.data ?? error.error?.error?.error?.data ?? error.error?.error?.data ?? '';
+
+  if (errorToDecode != '') {
+    return decodeContractError(contract, errorToDecode);
   }
+
+  return new Error(error);
 }
