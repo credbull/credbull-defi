@@ -51,16 +51,20 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
 
     /**
      *
-     * @param params - Vault parameters
+     * @param baseVaultParams - Base vault parameters
+     * @param contractRoles - Roles for the contract
      */
-    constructor(VaultParams memory params) ERC4626(params.asset) ERC20(params.shareName, params.shareSymbol) {
-        if (params.custodian == address(0) || address(params.asset) == address(0)) {
+    constructor(BaseVaultParams memory baseVaultParams, ContractRoles memory contractRoles)
+        ERC4626(baseVaultParams.asset)
+        ERC20(baseVaultParams.shareName, baseVaultParams.shareSymbol)
+    {
+        if (contractRoles.custodian == address(0) || address(baseVaultParams.asset) == address(0)) {
             revert ZeroAddress();
         }
 
-        CUSTODIAN = params.custodian;
+        CUSTODIAN = contractRoles.custodian;
 
-        VAULT_DECIMALS = _checkValidDecimalValue(address(params.asset));
+        VAULT_DECIMALS = _checkValidDecimalValue(address(baseVaultParams.asset));
     }
 
     /**

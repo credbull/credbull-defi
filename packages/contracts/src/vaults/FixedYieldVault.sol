@@ -13,14 +13,19 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCap
     /// @notice - Hash of operator role
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-    constructor(VaultParams memory params)
+    constructor(FixedYieldVaultParams memory params)
         MaturityVault(params)
-        WhitelistPlugIn(params.kycProvider, params.depositThresholdForWhitelisting)
-        MaxCapPlugIn(params.maxCap)
-        WindowPlugIn(params.depositOpensAt, params.depositClosesAt, params.redemptionOpensAt, params.redemptionClosesAt)
+        WhitelistPlugIn(params.kycParams.kycProvider, params.kycParams.depositThresholdForWhitelisting)
+        MaxCapPlugIn(params.maxCapParams.maxCap)
+        WindowPlugIn(
+            params.windowVaultParams.depositWindow.opensAt,
+            params.windowVaultParams.depositWindow.closesAt,
+            params.windowVaultParams.matureWindow.opensAt,
+            params.windowVaultParams.matureWindow.closesAt
+        )
     {
-        _grantRole(DEFAULT_ADMIN_ROLE, params.owner);
-        _grantRole(OPERATOR_ROLE, params.operator);
+        _grantRole(DEFAULT_ADMIN_ROLE, params.contractRoles.owner);
+        _grantRole(OPERATOR_ROLE, params.contractRoles.operator);
     }
 
     /// @dev - Overridden deposit modifer
