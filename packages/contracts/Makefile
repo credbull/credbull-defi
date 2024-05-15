@@ -14,7 +14,7 @@ endef
 
 addVault-local:
 	node ./script/utils/checkDb.js && \
-	forge script script/DeployVaultFactory.s.sol:DeployVault --rpc-url localhost --private-key $(DEFAULT_ANVIL_KEY) --broadcast -vvvv
+	forge script test/script/DeployTestVault.s.sol:DeployTestVault --rpc-url localhost --private-key $(DEFAULT_ANVIL_KEY) --broadcast -vvvv
 
 deploy-local:
 	$(MAKE) generic-deploy RPC_URL=localhost PRIVATE_KEY=$(DEFAULT_ANVIL_KEY) EXTRA_FLAGS= ETHERSCAN_API_KEY=
