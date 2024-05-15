@@ -40,12 +40,12 @@ contract CredbullBaseVaultTest is Test {
         MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
     }
 
-    function test__BaseVault__ShareNameAndSymbol() public {
+    function test__BaseVault__ShareNameAndSymbol() public view {
         assertEq(vault.name(), vaultParams.shareName);
         assertEq(vault.symbol(), vaultParams.shareSymbol);
     }
 
-    function test__BaseVault__CustodianAddress() public {
+    function test__BaseVault__CustodianAddress() public view {
         assertEq(vault.CUSTODIAN(), vaultParams.custodian);
     }
 
