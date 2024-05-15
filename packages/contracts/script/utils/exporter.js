@@ -5,7 +5,7 @@ const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const { load } = require('js-toml');
 
-// Loads the environment-specified TOML configuration file. 
+// Loads the environment-specified TOML configuration file.
 async function loadConfiguration() {
   const env = process.env.ENVIRONMENT;
   const configFile = path.resolve(__dirname, `../../resource/${env}.toml`);
@@ -88,22 +88,16 @@ async function exportToSupabase(client, dataToStoreOnDB) {
 
 // Function to clear the existing data in the DB before exporting the new data
 async function clearExistingData(client) {
-  console.log('Clearing \'contract_addresses\' table.');
-  const contractAddresses = await client
-    .from('contracts_addresses')
-    .delete()
-    .neq('id', 0);
+  console.log("Clearing 'contract_addresses' table.");
+  const contractAddresses = await client.from('contracts_addresses').delete().neq('id', 0);
 
   if (contractAddresses.error) {
     console.log(`Error in clearing 'contract_addresses' table ${contractAddresses.error}`);
     throw contractAddresses.error;
   }
 
-  console.log('Clearing \'vaults\' table.');
-  const vaults = await client
-    .from('vaults')
-    .delete()
-    .neq('id', 0);
+  console.log("Clearing 'vaults' table.");
+  const vaults = await client.from('vaults').delete().neq('id', 0);
 
   if (vaults.error) {
     console.log(`Error in clearning 'vaults' table ${vaults.error}`);
