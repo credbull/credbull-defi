@@ -1,18 +1,8 @@
-require('dotenv').config();
-
 const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
-const { load } = require('js-toml');
 
-// Loads the environment-specified TOML configuration file.
-async function loadConfiguration() {
-  const env = process.env.ENVIRONMENT;
-  const configFile = path.resolve(__dirname, `../../resource/${env}.toml`);
-  console.log(`Loading configuration from: '${configFile}'`);
-  const toml = fs.readFileSync(configFile, 'utf8');
-  return load(toml);
-}
+const { loadConfiguration } = require('./config')
 
 async function exportAddress(config) {
   const client = createClient(config.services.supabase.url, config.services.supabase.api_key);
