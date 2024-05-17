@@ -1,5 +1,5 @@
 ##
-# The Application Configuration for the DEV Environment (GitHub Actions). 
+# The Application Configuration for the TestNet Environment. 
 ##
 
 [ethereum.vm]
