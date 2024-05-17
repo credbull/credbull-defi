@@ -64,8 +64,8 @@ contract HelperConfig is Script {
     /// @return Network config will chain specific config
     function getSepoliaEthConfig() internal returns (NetworkConfig memory) {
         FactoryParams memory factoryParams = FactoryParams({
-            owner: vm.envAddress("PUBLIC_OWNER_ADDRESS"),
-            operator: vm.envAddress("PUBLIC_OPERATOR_ADDRESS"),
+            owner: config.readAddress(".ethereum.vm.owner.public_address"),
+            operator: config.readAddress(".ethereum.vm.operator.public_address"),
             collateralPercentage: config.readUint(".application.collateral_percentage")
         });
 
