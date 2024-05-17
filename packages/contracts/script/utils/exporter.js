@@ -14,7 +14,7 @@ async function exportAddress(config) {
   const outputPath = path.resolve(__dirname, '../../deployments/');
   const outputFileName = path.resolve(__dirname, '../../deployments/index.json');
 
-  const chainDir = config.application.network_id;
+  const chainDir = config.application.network_id.toString();
   const deployFiles = await fs.promises.readdir(folderPath);
   for (const deployFile of deployFiles) {
     const deployFilePath = path.resolve(folderPath, deployFile);
@@ -56,7 +56,7 @@ async function exportAddress(config) {
         dataToStoreOnDB.push(data);
       }
     }
-    if (config.application.export_contracts === 'true') {
+    if (config.application.export_contracts === true) {
       await exportToSupabase(client, dataToStoreOnDB);
     }
   }
