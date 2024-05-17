@@ -6,14 +6,14 @@
   "scripts": {
     "chain": "rm ./script/output/dbdata.json || true && anvil --config-out localhost.json",
     "dev": "rm ./script/output/dbdata.json || true && anvil --config-out localhost.json & make deploy-local",
-    "build": "rm -rf out && forge build",
+    "build": "rm -rf out && forge build --skip test --skip script",
     "test": "forge test",
     "format": "forge fmt && prettier './script/**/*.js' --write",
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint  './*(test|src)/**/*.sol'",
     "deploy": "make deploy-local",
     "deploy:ci": "node ./script/utils/checkDb.js && make deploy-sepolia",
     "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/**/*.json && tsc",
-    "postinstall": "yarn build && yarn gen-types"
+    "postinstall": "yarn build --skip test --skip script && yarn gen-types"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
