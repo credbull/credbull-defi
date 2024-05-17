@@ -11,7 +11,7 @@ module.exports = {
     console.log(`Loading configuration from: '${configFile}'`);
     const toml = fs.readFileSync(configFile, 'utf8');
     const config = load(toml);
-    console.log(`Loaded: '${config}'`);
+    console.log(`Successfully loaded configuration: '${config}'`);
     return config;
-  },
+  }
 };
