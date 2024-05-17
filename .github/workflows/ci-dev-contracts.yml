@@ -31,16 +31,12 @@ jobs:
       - name: Run tests
         run: forge test -vvv
         env:
-          # the environment variables below should be removed when we configure the secrets in github
-          VAULT_OPENS_AT_TIMESTAMP: 1705276800
-          VAULT_CLOSES_DURATION_TIMESTAMP: 60
+          ENVIRONMENT: local
 
       - name: Run coverage report
         run: forge coverage
         env:
-          # the environment variables below should be removed when we configure the secrets in github
-          VAULT_OPENS_AT_TIMESTAMP: 1705276800
-          VAULT_CLOSES_DURATION_TIMESTAMP: 60
+          ENVIRONMENT: local
 
   deploy:
     runs-on: ubuntu-latest

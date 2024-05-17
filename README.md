@@ -42,12 +42,13 @@ yarn install
     cd package/contracts && cp -v .env.sample .env && cd - 
     cd package/sdk && cp -v .env.sample .env && cd - 
     ```
-1. Setup sdk, see [sdk/README.md](packages/sdk/README.md)
-1. Setup op scripts, see [operations/README.md](scripts/operation/README.md). 
 1. Start the database (Supabase)
     ```bash
     cd packages/api && supabase start && cd -
     ```
+1. Setup sdk, see [sdk/README.md](packages/sdk/README.md)
+1. Setup op scripts, see [operations/README.md](scripts/operation/README.md). 
+
 
 ## Rum and Test Locally
 After completing the above setup, simply run:
