@@ -74,7 +74,10 @@ export class SyncVaultsService {
       ? upsideFactoryContract.filters.VaultDeployed()
       : factoryContract.filters.VaultDeployed();
 
-    const events = await responseFromRead(factoryContract.queryFilter(eventFilter));
+    const events = await responseFromRead(
+      upside ? upsideFactoryContract : factoryContract,
+      factoryContract.queryFilter(eventFilter),
+    );
     if (events.error) {
       this.logger.error(events.error);
       return;

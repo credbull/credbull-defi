@@ -12,11 +12,12 @@ define DEPLOY_CMD
 	node script/utils/exporter.js
 endef
 
-debug-local:
-	forge script script/DebugDeploy.s.sol:DebugDeploy --rpc-url localhost PRIVATE_KEY=$(DEFAULT_ANVIL_KEY) -vvvv
+addVault-local:
+	node ./script/utils/checkDb.js && \
+	forge script test/script/DeployTestVault.s.sol:DeployTestVault --rpc-url localhost --private-key $(DEFAULT_ANVIL_KEY) --broadcast -vvvv
 
 deploy-local:
-	$(MAKE) generic-deploy RPC_URL=localhost PRIVATE_KEY=$(DEFAULT_ANVIL_KEY) EXTRA_FLAGS= ETHERSCAN_API_KEY=
+	$(MAKE) generic-deploy RPC_URL=localhost PRIVATE_KEY=$(DEFAULT_ANVIL_KEY) EXTRA_FLAGS= ETHERSCAN_API_KEY= BASE_SEPOLIA_ETHERSCAN_API_KEY=
 
 # TODO: change this to use the network config from foundry.toml
 deploy-sepolia:

@@ -41,7 +41,7 @@ export class UpdateUpsideTwapService {
 
     for (const { address } of vaults.data) {
       const vault = await this.contract(address);
-      const updated = await responseFromWrite(vault.setTWAP(twap.data));
+      const updated = await responseFromWrite(vault, vault.setTWAP(twap.data));
       if (updated.error) this.logger.error(updated.error);
     }
 

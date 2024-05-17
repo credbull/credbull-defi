@@ -1,21 +1,36 @@
 # Helper Scripts
 
-## User Related
+## OVERALL
+**PREREQUISITES**:
+1. api/supabase start
+1. api/yarn dev 
+1. contracts/yarn chain
+1. contracts/yarn deploy
+
+
+## Setup Users
 ```bash
-# create a user
-yarn op --create-user channel:false email:<<user@domain.com>>
+# AND/OR create some sample users (these should be reflected in your .env.local)
+yarn op --create-default-users
+
+# create a named user, e.g. admin-user@credbull.io
+yarn op --create-user channel:false email:admin-user@credbull.io
+
+# make a user an admin, e.g. e.g. admin-user@credbull.io
+yarn op --make-admin null email:admin-user@credbull.io
+
+# manually link a wallet via front-end   
+# TODO - automate this step
 ```
 
-```bash
-# make a user admin
-yarn op --make-admin null email:<<user@domain.com>>
-```
-
-
-## Vault Related
+## Create Vaults
+**PREREQUISITES**:
+1. Setup users as per above or equivalent
+1. Ensure create-vault op script runs as a VaultFactory ADMIN to allow custodians (set Env ADMIN_* variables in scripts/operations/.env) 
+1. Ensure create-vault API runs as the Vault OPERATOR to Create Vaults (see Env use in [`ethers.service.ts/`](../../api/src/clients/ethers/ethers.service.ts))
 
 ```bash
-# create a "default" vault (open, not matured)
+# create a vault with minimal config (open vault, not matured)
 yarn op --create-vault
 ```
 

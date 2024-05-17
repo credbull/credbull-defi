@@ -19,11 +19,15 @@ contract HelperVaultTest is Test {
     function createTestVaultParams() public returns (ICredbull.VaultParams memory) {
         address custodian = makeAddr("custodianAddress");
 
-        return createTestVaultParams(custodian);
+        return createTestVaultParams(custodian, address(0));
     }
 
     /// this version is tied to Anvil - it is using Anvil's well known addresses
-    function createTestVaultParams(address custodian) public returns (ICredbull.VaultParams memory) {
+    function createTestVaultParams(address custodian, address kycProvider)
+        public
+        view
+        returns (ICredbull.VaultParams memory)
+    {
         FactoryParams memory factoryParams = networkConfig.factoryParams;
 
         uint256 promisedFixedYield = PROMISED_FIXED_YIELD;
@@ -41,7 +45,7 @@ contract HelperVaultTest is Test {
             owner: factoryParams.owner,
             operator: factoryParams.operator,
             custodian: custodian,
-            kycProvider: address(0),
+            kycProvider: kycProvider,
             promisedYield: promisedFixedYield,
             depositOpensAt: opensAt,
             depositClosesAt: closesAt,
@@ -52,5 +56,65 @@ contract HelperVaultTest is Test {
         });
 
         return testVaultParams;
+    }
+
+    function toString(ICredbull.VaultParams memory params) public pure returns (string memory) {
+        string memory part1 = string.concat(
+            "\nVaultParams {\n",
+            "  owner: ",
+            vm.toString(params.owner),
+            ",\n",
+            "  operator: ",
+            vm.toString(params.operator),
+            ",\n",
+            "  asset: ",
+            vm.toString(address(params.asset)),
+            ",\n",
+            "  token: ",
+            vm.toString(address(params.token)),
+            ",\n",
+            "  shareName: ",
+            params.shareName,
+            ",\n",
+            "  shareSymbol: ",
+            params.shareSymbol,
+            ",\n",
+            "  promisedYield: ",
+            vm.toString(params.promisedYield),
+            ",\n"
+        );
+
+        string memory part2 = string.concat(
+            "  depositOpensAt: ",
+            vm.toString(params.depositOpensAt),
+            ",\n",
+            "  depositClosesAt: ",
+            vm.toString(params.depositClosesAt),
+            ",\n",
+            "  redemptionOpensAt: ",
+            vm.toString(params.redemptionOpensAt),
+            ",\n",
+            "  redemptionClosesAt: ",
+            vm.toString(params.redemptionClosesAt),
+            ",\n",
+            "  custodian: ",
+            vm.toString(params.custodian),
+            ",\n"
+        );
+
+        string memory part3 = string.concat(
+            "  kycProvider: ",
+            vm.toString(params.kycProvider),
+            ",\n",
+            "  maxCap: ",
+            vm.toString(params.maxCap),
+            ",\n",
+            "  depositThresholdForWhitelisting: ",
+            vm.toString(params.depositThresholdForWhitelisting),
+            "\n",
+            "}"
+        );
+
+        return string.concat(part1, part2, part3);
     }
 }
