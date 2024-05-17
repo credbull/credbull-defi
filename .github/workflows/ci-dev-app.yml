@@ -9,8 +9,9 @@ defaults:
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "main*" ]
+    branches:
+      - "main*"
+      - "development*"
     paths:
       - "packages/app/**"
       - "packages/contracts/**"
