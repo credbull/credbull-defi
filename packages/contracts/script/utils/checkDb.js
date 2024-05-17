@@ -7,7 +7,7 @@ const { loadConfiguration } = require('./config')
 const outputFileName = path.resolve(__dirname, '../output/dbdata.json');
 
 async function checkDb(config) {
-  const client = createClient(config.services.supabase.url, config.services.supabase.api_key);
+  const client = createClient(config.services.supabase.url, config.services.supabase.service_role.api_key);
 
   const { data, error } = await client.from('contracts_addresses').select().is('outdated', false);
 

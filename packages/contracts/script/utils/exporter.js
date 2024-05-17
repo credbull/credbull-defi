@@ -5,7 +5,7 @@ const { createClient } = require('@supabase/supabase-js');
 const { loadConfiguration } = require('./config')
 
 async function exportAddress(config) {
-  const client = createClient(config.services.supabase.url, config.services.supabase.api_key);
+  const client = createClient(config.services.supabase.url, config.services.supabase.service_role.api_key);
   await clearExistingData(client);
 
   const contracts = {};
