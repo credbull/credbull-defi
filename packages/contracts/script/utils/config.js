@@ -12,5 +12,5 @@ export async function loadConfiguration() {
   const toml = fs.readFileSync(configFile, 'utf8');
   const config = load(toml);
   console.log(`Loaded: '${config}'`);
-  return config
+  return config;
 }

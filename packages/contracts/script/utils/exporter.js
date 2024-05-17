@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 
-const { loadConfiguration } = require('./config')
+const { loadConfiguration } = require('./config');
 
 async function exportAddress(config) {
   const client = createClient(config.services.supabase.url, config.services.supabase.service_role.api_key);
