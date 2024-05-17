@@ -13,5 +13,5 @@ module.exports = {
     const config = load(toml);
     console.log(`Successfully loaded configuration: '${config}'`);
     return config;
-  }
+  },
 };
