@@ -14,7 +14,7 @@ endef
 
 addVault-local:
 	node ./script/utils/checkDb.js && \
-	forge script script/DeployVaultFactory.s.sol:DeployVault --rpc-url localhost \
+	forge script test/script/DeployTestVault.s.sol:DeployTestVault --rpc-url localhost \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast -vvvv
 
 # TODO (JL,2024-05-15): Why ETHERSCAN_API_KEY and BASE_SEPOLIA_ETHERSCAN_API_KEY 
