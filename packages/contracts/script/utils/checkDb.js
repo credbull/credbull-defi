@@ -1,13 +1,14 @@
-require('dotenv').config();
-
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
-const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const { loadConfiguration } = require('./config');
+
 const outputFileName = path.resolve(__dirname, '../output/dbdata.json');
 
-async function checkDb() {
+async function checkDb(config) {
+  const client = createClient(config.services.supabase.url, config.services.supabase.service_role.api_key);
+
   const { data, error } = await client.from('contracts_addresses').select().is('outdated', false);
 
   if (error) {
@@ -27,7 +28,7 @@ async function checkDb() {
 
 (async () => {
   try {
-    await checkDb();
+    await checkDb(loadConfiguration());
   } catch (e) {
     console.log(e);
   } finally {

@@ -1,0 +1,22 @@
+##
+# The Application Configuration for the DEV Environment (GitHub Actions). 
+##
+
+[ethereum.vm]
+deployer.private_key = ""
+operator.public_address = ""
+owner.public_address = ""
+
+[services.supabase]
+url = "https://kyvvhlnmoqibdihqrlmc.supabase.co:54321"
+service_role.api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dnZobG5tb3FpYmRpaHFybG1jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxMDQxNjQ5NSwiZXhwIjoyMDI1OTkyNDk1fQ.0BCQ0uYJd3eHIZK8TV6XSUksm0lvKIC4dvZBiT8CBnY"
+
+[application]
+# The Next Public Target Network Id.
+network_id = 421614
+
+# 2 decimal place percentage (meaining value divided by 100) as integer.
+collateral_percentage = 200
+
+# Export contract details to supabase.
+export_contracts = true
