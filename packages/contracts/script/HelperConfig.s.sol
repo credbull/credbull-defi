@@ -63,11 +63,11 @@ contract HelperConfig is Script {
     /// Create Config for Anvil (local) chain
     /// @return Network config will chain specific config
     function getSepoliaEthConfig() internal returns (NetworkConfig memory) {
-        FactoryParams memory factoryParams = FactoryParams({
-            owner: config.readAddress(".ethereum.vm.owner.public_address"),
-            operator: config.readAddress(".ethereum.vm.operator.public_address"),
-            collateralPercentage: config.readUint(".application.collateral_percentage")
-        });
+        if (address(activeNetworkConfig.factoryParams.operator) != address(0)) {
+            return (activeNetworkConfig);
+        }
+
+        FactoryParams memory factoryParams = createFactoryParamsFromConfig();
 
         // TODO - replace this with USDC and CBL actual contract addresses
         DeployMocks deployMocks = new DeployMocks(testMode, factoryParams.owner);
@@ -86,13 +86,7 @@ contract HelperConfig is Script {
             return (activeNetworkConfig);
         }
 
-        address[] memory contractRoles = deriveKeys(getAnvilMnemonic());
-
-        FactoryParams memory factoryParams = FactoryParams({
-            owner: contractRoles[0],
-            operator: contractRoles[1],
-            collateralPercentage: config.readUint(".application.collateral_percentage")
-        });
+        FactoryParams memory factoryParams = createFactoryParamsFromConfig();
 
         DeployMocks deployMocks = new DeployMocks(testMode, factoryParams.owner);
         (IERC20 mockToken, IERC20 mockStablecoin) = deployMocks.run();
@@ -103,33 +97,15 @@ contract HelperConfig is Script {
         return anvilConfig;
     }
 
-    /// Derive keys from a mnemonic
-    /// @return Keys from the mnemonic
-    function deriveKeys(string memory mnemonic) internal pure returns (address[] memory) {
-        address[] memory walletKeys = new address[](10); // Create an array of addresses
+    /// Create Config for Anvil (local) chain
+    /// @return Network config will chain specific config
+    function createFactoryParamsFromConfig() internal returns (FactoryParams memory) {
+        FactoryParams memory factoryParams = FactoryParams({
+            owner: config.readAddress(".ethereum.vm.owner.public_address"),
+            operator: config.readAddress(".ethereum.vm.operator.public_address"),
+            collateralPercentage: config.readUint(".application.collateral_percentage")
+        });
 
-        for (uint32 i = 0; i < 10; i++) {
-            walletKeys[i] = vm.addr(vm.deriveKey(mnemonic, i));
-        }
-
-        return walletKeys;
-    }
-
-    /// Get the Anvil (local) mnemonic passphrase
-    /// @return the mnemonic passphrase
-    function getAnvilMnemonic() internal returns (string memory) {
-        // if anvil was run, get the mnemonic from the config output
-        string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/localhost.json");
-
-        if (vm.exists(path)) {
-            string memory json = vm.readFile(path);
-            bytes memory mnemonicBytes = vm.parseJson(json, ".wallet.mnemonic");
-
-            return abi.decode(mnemonicBytes, (string));
-        } else {
-            // Anvil not run previously - use the test mnemonic
-            return "test test test test test test test test test test test junk";
-        }
+        return factoryParams;
     }
 }

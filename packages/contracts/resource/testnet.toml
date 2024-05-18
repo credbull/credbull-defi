@@ -8,11 +8,7 @@ operator.public_address = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 owner.public_address = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 
 [services.supabase]
-# url = "https://kyvvhlnmoqibdihqrlmc.supabase.co:54321"
 url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
-
-# TODO: change this API key and move to secrets
-service_role.api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dnZobG5tb3FpYmRpaHFybG1jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxMDQxNjQ5NSwiZXhwIjoyMDI1OTkyNDk1fQ.0BCQ0uYJd3eHIZK8TV6XSUksm0lvKIC4dvZBiT8CBnY"
 
 [application]
 # The Next Public Target Network Id.
