@@ -41,7 +41,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: test
-    environment: dev
+    environment: testnet
 
     steps:
       - uses: actions/checkout@v3
@@ -64,15 +64,9 @@ jobs:
       - name: Deploy contracts
         run: yarn deploy:ci
         env:
-          EXPORT_TO_SUPABASE: true
-          NEXT_PUBLIC_TARGET_NETWORK_ID: 421614
-          COLLATERAL_PERCENTAGE: 200
-          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          PUBLIC_OPERATOR_ADDRESS: ${{ secrets.PUBLIC_OPERATOR_ADDRESS }}
-          PUBLIC_OWNER_ADDRESS: ${{ secrets.PUBLIC_OWNER_ADDRESS }}
-          SEPOLIA_PRIVATE_KEY: ${{ secrets.SEPOLIA_PRIVATE_KEY }}
-          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}          
+          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
+          BASE_SEPOLIA_ETHERSCAN_API_KEY: ${{ secrets.BASE_SEPOLIA_ETHERSCAN_API_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
           
