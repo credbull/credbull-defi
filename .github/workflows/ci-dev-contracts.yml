@@ -53,9 +53,6 @@ jobs:
         with:
           version: nightly
 
-      - name: Install yarn
-        run: npm install -g yarn
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -71,7 +68,3 @@ jobs:
           DEPLOYER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
           BASE_SEPOLIA_ETHERSCAN_API_KEY: ${{ secrets.BASE_SEPOLIA_ETHERSCAN_API_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
-
-      - name: Cleanup
-        if: always()
-        run: npm uninstall -g yarn
