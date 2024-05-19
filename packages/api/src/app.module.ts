@@ -9,6 +9,7 @@ import { AccountsModule } from './modules/accounts/accounts.module';
 import { AuthenticationModule } from './modules/authentication/authentication.module';
 import { NotificationsModule } from './modules/notification/notifications.module';
 import { VaultsModule } from './modules/vaults/vaults.module';
+import { TomlConfigService } from './utils/config';
 import * as logger from './utils/logger';
 import { Config } from './utils/module';
 
@@ -24,6 +25,7 @@ import { Config } from './utils/module';
   ],
   controllers: [AppController],
   providers: [
+    TomlConfigService,
     { provide: APP_INTERCEPTOR, useValue: logger.interceptor },
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
     {

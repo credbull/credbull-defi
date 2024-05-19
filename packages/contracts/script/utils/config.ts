@@ -20,6 +20,8 @@ module.exports = {
     config.env.ENVIRONMENT = env;
     config.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+    console.log('Successfully loaded configuration:', JSON.stringify(config, null, 2));
+
     return config;
   },
 };
