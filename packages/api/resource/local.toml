@@ -2,6 +2,8 @@
 # The Application Configuration for the Local Environment (local development). 
 ##
 
+node_env="development"
+
 [api]
 port=3001
 version="0.0.1"

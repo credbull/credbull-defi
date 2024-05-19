@@ -6,12 +6,14 @@
   "scripts": {
     "chain": "rm ./script/output/dbdata.json || true && anvil --config-out localhost.json",
     "dev": "rm ./script/output/dbdata.json || true && anvil --config-out localhost.json & make deploy-local",
-    "build": "forge clean && forge build",
+    "build": "forge clean && forge build && tsc",
     "test": "forge test",
     "format": "forge fmt && prettier './script/**/*.js' --write",
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint  './*(test|src)/**/*.sol'",
+    "db-check": "tsc && node ./script/utils/checkDb.js",
+    "db-export": "tsc && node ./script/utils/exporter.js",
     "deploy": "make deploy-local",
-    "deploy:ci": "node ./script/utils/checkDb.js && make deploy-baseSepolia",
+    "deploy:ci": "yarn db-export && make deploy-baseSepolia",
     "gen-types": "echo 'TODO: Exclude forge-std/src/interfaces/IERC20.sol from gen-type (deleting to work-around)' && rm -rf ./out/IERC20.sol && yarn typechain --target ethers-v5 --out-dir ./types ./out/**/*.json && tsc",
     "postinstall": "yarn build && yarn gen-types"
   },

@@ -6,7 +6,6 @@ import * as path from 'path';
 interface Config {
   env?: {
     ENVIRONMENT?: string;
-    SUPABASE_SERVICE_ROLE_KEY?: string;
   };
   [key: string]: any;
 }
@@ -29,14 +28,9 @@ export class TomlConfigService {
     // NB - call this after the log statement to avoid logging keys!
     this.config.env = this.config.env || {}; // ensure config.env exists
     this.config.env.ENVIRONMENT = env;
-    this.config.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    console.log('Successfully loaded configuration:', JSON.stringify(this.config, null, 2));
   }
 
   get getConfig(): Config {
     return this.config;
   }
-
-  // Add other getter methods for different configuration sections if needed
 }

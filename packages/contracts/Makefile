@@ -8,8 +8,7 @@ define DEPLOY_CMD
 	rm -rf out && \
 	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
-	yarn gen-types && \
-	node script/utils/exporter.js
+	yarn gen-types && yarn db-export
 endef
 
 
