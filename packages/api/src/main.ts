@@ -7,13 +7,11 @@ import { ProfilingIntegration } from '@sentry/profiling-node';
 import helmet from 'helmet';
 
 import { AppModule } from './app.module';
-import { loadConfiguration } from './utils/config';
 import { logger } from './utils/logger';
+import { TomlConfigService } from './utils/tomlConfig';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const compression = require('compression');
-
-const config = loadConfiguration();
 
 // TODO: move this to config
 if (process.env.SENTRY_DSN) {
@@ -27,6 +25,8 @@ if (process.env.SENTRY_DSN) {
 
 (async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: false });
+
+  const tomlConfigService = new TomlConfigService();
 
   app.useLogger(logger);
 
@@ -45,12 +45,12 @@ if (process.env.SENTRY_DSN) {
   const docConfig = new DocumentBuilder()
     .setTitle('Credbull API')
     .setDescription('Backend api for Credbull services')
-    .setVersion(config.api.version!)
+    .setVersion(tomlConfigService.config.api.version!)
     .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, docConfig);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(config.api.port!, '0.0.0.0');
+  await app.listen(tomlConfigService.config.api.port!, '0.0.0.0');
 })();
