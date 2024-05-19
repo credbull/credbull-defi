@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { load } from 'js-toml';
 import * as path from 'path';
 
-interface Config {
+interface TomlConfig {
   env?: {
     ENVIRONMENT?: string;
   };
@@ -12,7 +12,7 @@ interface Config {
 
 @Injectable()
 export class TomlConfigService {
-  private readonly config: Config;
+  private readonly tomlConfig: TomlConfig;
 
   constructor() {
     const env = process.env.ENVIRONMENT || 'local';
@@ -20,17 +20,17 @@ export class TomlConfigService {
     console.log(`Loading configuration from: '${configFile}'`);
 
     const toml = fs.readFileSync(configFile, 'utf8');
-    this.config = load(toml) as Config;
+    this.tomlConfig = load(toml) as TomlConfig;
 
-    console.log('Successfully loaded configuration:', JSON.stringify(this.config, null, 2));
+    console.log('Successfully loaded configuration:', JSON.stringify(this.tomlConfig, null, 2));
 
     // include Environment into config
     // NB - call this after the log statement to avoid logging keys!
-    this.config.env = this.config.env || {}; // ensure config.env exists
-    this.config.env.ENVIRONMENT = env;
+    this.tomlConfig.env = this.tomlConfig.env || {}; // ensure config.env exists
+    this.tomlConfig.env.ENVIRONMENT = env;
   }
 
-  get getConfig(): Config {
-    return this.config;
+  get config(): TomlConfig {
+    return this.tomlConfig;
   }
 }

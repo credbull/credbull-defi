@@ -9,9 +9,9 @@ import { AccountsModule } from './modules/accounts/accounts.module';
 import { AuthenticationModule } from './modules/authentication/authentication.module';
 import { NotificationsModule } from './modules/notification/notifications.module';
 import { VaultsModule } from './modules/vaults/vaults.module';
-import { TomlConfigService } from './utils/config';
 import * as logger from './utils/logger';
 import { Config } from './utils/module';
+import { TomlConfigService } from './utils/tomlConfig';
 
 @Module({
   imports: [

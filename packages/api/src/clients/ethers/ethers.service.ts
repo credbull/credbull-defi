@@ -2,7 +2,7 @@ import { Signer } from '@ethersproject/abstract-signer';
 import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { Overrides, Wallet, providers } from 'ethers';
 
-import { TomlConfigService } from '../../utils/config';
+import { TomlConfigService } from '../../utils/tomlConfig';
 
 @Injectable()
 export class EthersService {
@@ -13,7 +13,7 @@ export class EthersService {
     private readonly logger: ConsoleLogger,
   ) {
     this.logger.setContext(this.constructor.name);
-    this.deployerKey = this.tomlConfigService.getConfig.services.ethers.operator.private_key;
+    this.deployerKey = this.tomlConfigService.config.services.ethers.operator.private_key;
   }
 
   async operator(): Promise<Signer> {
@@ -28,17 +28,17 @@ export class EthersService {
 
   // TODO: this is only needed while we dont have a real custodian
   async custodian(): Promise<Signer> {
-    const custodianKey = this.tomlConfigService.getConfig.services.ethers.custodian.private_key;
+    const custodianKey = this.tomlConfigService.config.services.ethers.custodian.private_key;
     return new Wallet(custodianKey, await this.provider());
   }
 
   overrides(): Overrides {
-    const nodeEnv = this.tomlConfigService.getConfig.node_env;
+    const nodeEnv = this.tomlConfigService.config.node_env;
     return nodeEnv === 'development' ? { gasLimit: 1000000 } : {};
   }
 
   public async wssProvider(): Promise<providers.WebSocketProvider> {
-    const wssUrl = this.tomlConfigService.getConfig.services.ethers.wss;
+    const wssUrl = this.tomlConfigService.config.services.ethers.wss;
     console.log(wssUrl);
     const provider = new providers.WebSocketProvider(wssUrl);
     provider._websocket.on('open', () => {
@@ -57,7 +57,7 @@ export class EthersService {
   }
 
   private async provider(): Promise<providers.Provider> {
-    const ethersUrl = this.tomlConfigService.getConfig.services.ethers.url;
+    const ethersUrl = this.tomlConfigService.config.services.ethers.url;
 
     const networkProviders = String(ethersUrl).split(',');
 

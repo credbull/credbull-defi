@@ -2,8 +2,8 @@ import { ConsoleLogger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { TomlConfigService } from '../../utils/config';
 import { logger } from '../../utils/logger';
+import { TomlConfigService } from '../../utils/tomlConfig';
 
 import { EthersService } from './ethers.service';
 

@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { TomlConfigService } from './utils/config';
+import { TomlConfigService } from './utils/tomlConfig';
 
 @Controller()
 @ApiTags('Version')
@@ -12,6 +12,6 @@ export class AppController {
   @ApiOperation({ summary: 'Returns the api version' })
   @ApiResponse({ status: 200, description: 'Success', type: String })
   version(): string {
-    return this.tomlConfigService.getConfig.api.version;
+    return this.tomlConfigService.config.api.version;
   }
 }

@@ -1,7 +1,7 @@
 import { ConsoleLogger, Module, Scope } from '@nestjs/common';
 
-import { TomlConfigService } from '../../utils/config';
 import * as logger from '../../utils/logger';
+import { TomlConfigService } from '../../utils/tomlConfig';
 
 import { EthersService } from './ethers.service';
 
