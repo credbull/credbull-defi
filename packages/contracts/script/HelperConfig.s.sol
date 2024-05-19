@@ -99,7 +99,7 @@ contract HelperConfig is Script {
 
     /// Create Config for Anvil (local) chain
     /// @return Network config will chain specific config
-    function createFactoryParamsFromConfig() internal returns (FactoryParams memory) {
+    function createFactoryParamsFromConfig() internal view returns (FactoryParams memory) {
         FactoryParams memory factoryParams = FactoryParams({
             owner: config.readAddress(".ethereum.vm.owner.public_address"),
             operator: config.readAddress(".ethereum.vm.operator.public_address"),

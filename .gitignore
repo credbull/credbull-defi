@@ -10,6 +10,9 @@ broadcast
 **/.env*
 !**/.env*.sample
 
+# Secrets
+**/.secret*
+
 # IDE files
 **/.idea
 **/*.iml
