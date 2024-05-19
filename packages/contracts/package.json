@@ -6,7 +6,7 @@
   "scripts": {
     "chain": "rm ./script/output/dbdata.json || true && anvil --config-out localhost.json",
     "dev": "rm ./script/output/dbdata.json || true && anvil --config-out localhost.json & make deploy-local",
-    "build": "forge clean && forge build && tsc",
+    "build": "forge clean && forge build",
     "test": "forge test",
     "format": "forge fmt && prettier './script/**/*.js' --write",
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint  './*(test|src)/**/*.sol'",
