@@ -17,10 +17,13 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: dev
+    environment: testnet
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install yarn
+        run: npm install -g yarn
 
       - uses: actions/setup-node@v4
         with:
@@ -68,3 +71,7 @@ jobs:
           SENTRY_ORG: credbull
           SENTRY_PROJECT: credbull-defi-api
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+      - name: Cleanup
+        if: always()
+        run: npm uninstall -g yarn
