@@ -1,4 +1,4 @@
-name: ci-dev-contracts
+name: ci-check-env
 
 defaults:
   run:
