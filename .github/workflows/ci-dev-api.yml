@@ -17,10 +17,13 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: dev
+    environment: testnet
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install yarn
+        run: npm install -g yarn
 
       - uses: actions/setup-node@v4
         with:
@@ -38,19 +41,9 @@ jobs:
       - name: Run Tests
         run: yarn run test
         env:
-          # the environment variables below should be removed when we configure the secrets in github
-          APP_PORT: 3001
-          APP_VERSION: 0.0.1
-          NEXT_PUBLIC_SUPABASE_URL: your_supabase_url
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: your_supabase_anon_key
-          SUPABASE_SERVICE_ROLE_KEY: your_supabase_service_role_key
-          SUPABASE_JWT_SECRET: your_supabase_jwt_secret
-          ETHERS_DEPLOYER_PRIVATE_KEY: your_deployer_private_key
-          ETHERS_INFURA_API_KEY: your_infura_api_key
-          CRON_SECRET: any_string_will_do
-          NEXT_PUBLIC_TARGET_NETWORK_WSS: ws://localhost:8545
-          OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
-          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          SUPABASE_JWT_SECRET: anything-testing-only
+          CRON_SECRET : anything-testing-only
+          SLACK_TOKEN: anything-testing-only
 
       - name: Build API
         run: yarn build && yarn run sentry:sourcemaps
@@ -60,7 +53,7 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy ../.. --remote-only
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_API_TOKEN: ${{ secrets.FLY_DEPLOY_TOKEN }}
 
       - name: Create Sentry release
         uses: getsentry/action-release@v1
@@ -68,3 +61,6 @@ jobs:
           SENTRY_ORG: credbull
           SENTRY_PROJECT: credbull-defi-api
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+      - name: Install yarn
+        run: npm install -g yarn
