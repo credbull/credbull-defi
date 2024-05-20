@@ -5,6 +5,7 @@ defaults:
     working-directory: .
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "*" ]
     paths:

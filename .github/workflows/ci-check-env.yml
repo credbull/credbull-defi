@@ -6,12 +6,6 @@ defaults:
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "main*"
-      - "development*"
-    paths:
-      - "packages/contracts/**"
 
 jobs:
   check-env:
