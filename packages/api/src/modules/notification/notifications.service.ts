@@ -1,21 +1,23 @@
 import { CredbullVaultFactory__factory } from '@credbull/contracts';
 import { Injectable, OnModuleInit, Scope } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { WebClient } from '@slack/web-api';
 import { ethers } from 'ethers';
 
 import { EthersService } from '../../clients/ethers/ethers.service';
+import { TomlConfigService } from '../../utils/tomlConfig';
 
 @Injectable({ scope: Scope.DEFAULT })
 export class NotificationsService implements OnModuleInit {
   private operator: string;
+
   private slack: WebClient;
+
   constructor(
     private readonly ethers: EthersService,
-    private readonly config: ConfigService,
+    private readonly tomlConfigService: TomlConfigService,
   ) {
-    this.operator = this.config.getOrThrow('OPERATOR_ADDRESS');
-    this.slack = new WebClient(this.config.getOrThrow('SLACK_TOKEN'));
+    this.operator = tomlConfigService.config.services.ethers.operator.public_key;
+    this.slack = new WebClient(tomlConfigService.config.env.SLACK_TOKEN);
   }
 
   onModuleInit() {

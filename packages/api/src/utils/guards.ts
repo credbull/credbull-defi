@@ -1,11 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { AuthGuard, PassportStrategy } from '@nestjs/passport';
 import { HeaderAPIKeyStrategy } from 'passport-headerapikey';
 
+import { TomlConfigService } from './tomlConfig';
+
 @Injectable()
 export class CronStrategy extends PassportStrategy(HeaderAPIKeyStrategy, 'cron-secret') {
-  constructor(private readonly config: ConfigService) {
+  constructor(private readonly config: TomlConfigService) {
     super(
       { prefix: 'Bearer ', header: 'Authorization' },
       true,
@@ -14,7 +15,7 @@ export class CronStrategy extends PassportStrategy(HeaderAPIKeyStrategy, 'cron-s
   }
 
   public validate = (apiKey: string, done: (error?: Error, data?: boolean) => void) => {
-    if (apiKey !== this.config.getOrThrow('CRON_SECRET')) {
+    if (apiKey !== this.config.config.env.CRON_SECRET) {
       done(new UnauthorizedException(), false);
       return;
     }
