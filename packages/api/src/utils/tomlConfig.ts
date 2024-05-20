@@ -19,8 +19,7 @@ export class TomlConfigService {
   private readonly tomlConfig: TomlConfig;
 
   constructor(configService: ConfigService) {
-    //     const env = process.env.ENVIRONMENT || 'local';
-    const env = configService.getOrThrow('ENVIRONMENT');
+    const env = configService.get('ENVIRONMENT', 'local');
 
     const configFile = path.resolve(__dirname, `../../resource/${env}.toml`);
     console.log(`Loading configuration from: '${configFile}'`);
