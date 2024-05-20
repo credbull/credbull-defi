@@ -52,7 +52,7 @@ jobs:
 
       - name: Deploying to fly.io
         uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy ../.. --remote-only -t "${{ secrets.FLY_DEPLOY_TOKEN }}"
+      - run: flyctl deploy ../.. --remote-only -t ${{ secrets.FLY_DEPLOY_TOKEN }}
 
       - name: Create Sentry release
         uses: getsentry/action-release@v1
