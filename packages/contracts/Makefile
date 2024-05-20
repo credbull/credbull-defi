@@ -32,10 +32,9 @@ deploy-baseSepolia:
 generic-deploy:
 	@$(DEPLOY_CMD)
 
-# TODO (JL,2024-05-20): Should the below command chain use `yarn db-export` instead of directly calling the script?
 verify-sepolia:
 	rm -rf out && \
 	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url baseSepolia \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume -vvvv && \
 	yarn gen-types && \
-	node script/utils/exporter.js
+	yarn db-export
