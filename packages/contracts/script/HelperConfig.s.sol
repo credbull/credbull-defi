@@ -40,7 +40,11 @@ contract HelperConfig is Script {
 
         config = loadConfiguration();
 
-        if (block.chainid == 31337 || block.chainid == 421614 || block.chainid == 80001 || block.chainid == 84532) {
+        // TODO: move to using StdChains, e.g. `getChain(block.chainid) == "Arbitrum"`
+        if (
+            block.chainid == 31337 || block.chainid == 421614 || block.chainid == 80001 || block.chainid == 84532
+                || block.chainid == 200810
+        ) {
             activeNetworkConfig = createNetworkConfig();
         } else {
             revert(string.concat("Unsupported chain with chainId ", vm.toString(block.chainid)));
