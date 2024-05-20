@@ -1,0 +1,26 @@
+##
+# The Application Configuration for the Local Environment (local development). 
+##
+
+node_env="development"
+
+[api]
+port=3001
+version="0.0.1"
+
+[services.supabase]
+url = "http://127.0.0.1:54321"
+
+# these are EVM wallets but in API they are accessed through RPC via ethers.js
+# we could call them ethereum.vm or ethers.service - either would be correct
+[services.ethers]
+url="http://127.0.0.1:8545"
+wss="wss://127.0.0.1:8545"
+
+# All keys here a base local development public keys so you can use them to test the app locally and should not be considered a security risk.
+
+# Dev/Anvil Wallet, PrivateKey[1] # NB - wallet used by API in ethers.service.ts
+operator.private_key = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+
+# Dev/Anvil Wallet, PrivateKey[2]
+custodian.private_key = "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"

@@ -1,0 +1,26 @@
+##
+# The Application Configuration for the Local Environment (local development). 
+##
+
+[ethereum.vm]
+# Dev/Anvil Wallet, PrivateKey[0] (0xac097...ff80) - okay to share
+deployer.private_key = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+
+# Dev/Anvil Wallet, Account[1]
+operator.public_address = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+
+# Dev/Anvil Wallet, Account[0]
+owner.public_address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+
+[services.supabase]
+url = "http://127.0.0.1:54321"
+
+[application]
+# The Target Network Id.
+network_id = 31337
+
+# 2 decimal place percentage (meaining value divided by 100) as integer.
+collateral_percentage = 20_00
+
+# Export contract details to supabase.
+export_contracts = true

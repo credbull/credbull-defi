@@ -11,6 +11,7 @@ import { NotificationsModule } from './modules/notification/notifications.module
 import { VaultsModule } from './modules/vaults/vaults.module';
 import * as logger from './utils/logger';
 import { Config } from './utils/module';
+import { TomlConfigService } from './utils/tomlConfig';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Config } from './utils/module';
   ],
   controllers: [AppController],
   providers: [
+    TomlConfigService,
     { provide: APP_INTERCEPTOR, useValue: logger.interceptor },
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
     {
