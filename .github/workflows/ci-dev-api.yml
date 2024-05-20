@@ -17,7 +17,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: testnet
+    environment: dev
 
     steps:
       - uses: actions/checkout@v3
