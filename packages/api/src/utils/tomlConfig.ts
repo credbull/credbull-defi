@@ -4,8 +4,9 @@ import { load } from 'js-toml';
 import * as path from 'path';
 
 interface TomlConfig {
-  env?: {
-    ENVIRONMENT?: string;
+  env: {
+    ENVIRONMENT: string;
+    SUPABASE_JWT_SECRET: string;
   };
   [key: string]: any;
 }

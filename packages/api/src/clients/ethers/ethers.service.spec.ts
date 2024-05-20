@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { logger } from '../../utils/logger';
-import { TomlConfigService } from '../../utils/tomlConfig';
+import { ConfigurationModule } from '../../utils/module';
 
 import { EthersService } from './ethers.service';
 
@@ -12,7 +12,8 @@ describe('EthersService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [EthersService, TomlConfigService, { provide: ConsoleLogger, useValue: logger }],
+      imports: [ConfigurationModule],
+      providers: [EthersService, { provide: ConsoleLogger, useValue: logger }],
     }).compile();
 
     service = await module.resolve<EthersService>(EthersService);

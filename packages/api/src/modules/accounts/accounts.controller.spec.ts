@@ -7,7 +7,7 @@ import { DeepMockProxy, mockDeep } from 'vitest-mock-extended';
 import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
-import { Config } from '../../utils/module';
+import { ConfigurationModule } from '../../utils/module';
 
 import { AccountsController } from './accounts.controller';
 import { AccountsModule } from './accounts.module';
@@ -31,7 +31,7 @@ describe('AccountsController', () => {
     const service = { client: () => client, admin: () => admin };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [Config.module(), AccountsModule],
+      imports: [ConfigurationModule, AccountsModule],
     })
       .overrideProvider(SupabaseAdminService)
       .useValue(service)

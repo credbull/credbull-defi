@@ -1,10 +1,10 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt } from 'passport-jwt';
 
+import { TomlConfigService } from '../../../utils/tomlConfig';
 import { SupabaseService } from '../supabase.service';
 
 export const SupabaseRoles = Reflector.createDecorator<string[]>();
@@ -12,8 +12,8 @@ export const SupabaseRoles = Reflector.createDecorator<string[]>();
 @Injectable()
 export class SupabaseGuard extends AuthGuard('jwt') {
   constructor(
+    private readonly tomlConfigService: TomlConfigService,
     private readonly reflector: Reflector,
-    private readonly config: ConfigService,
   ) {
     super();
   }
@@ -33,8 +33,8 @@ export class SupabaseGuard extends AuthGuard('jwt') {
 
   private async getUserRoles(request: Request): Promise<string[]> {
     const client = SupabaseService.createClientFromToken(
-      this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_URL'),
-      this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+      this.tomlConfigService.config.services.supabase.url,
+      this.tomlConfigService.config.services.supabase.anon_key,
       ExtractJwt.fromAuthHeaderAsBearerToken()(request),
     );
 

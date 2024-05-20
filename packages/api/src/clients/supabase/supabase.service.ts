@@ -1,16 +1,16 @@
 import { Inject, Injectable, Scope } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { REQUEST } from '@nestjs/core';
 import { createClient } from '@supabase/supabase-js';
 import { Request } from 'express';
 import { ExtractJwt } from 'passport-jwt';
 
 import { Database } from '../../types/supabase';
+import { TomlConfigService } from '../../utils/tomlConfig';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class SupabaseService {
   constructor(
-    private readonly config: ConfigService,
+    private readonly tomlConfigService: TomlConfigService,
     @Inject(REQUEST) private readonly request: Request,
   ) {}
 
@@ -27,8 +27,8 @@ export class SupabaseService {
 
   client() {
     return SupabaseService.createClientFromToken(
-      this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_URL'),
-      this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+      this.tomlConfigService.config.services.supabase.url,
+      this.tomlConfigService.config.services.supabase.anon_key,
       ExtractJwt.fromAuthHeaderAsBearerToken()(this.request),
     );
   }

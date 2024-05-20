@@ -11,6 +11,9 @@ version="0.0.1"
 [services.supabase]
 url = "http://127.0.0.1:54321"
 
+# Anon Key can be shared ONLY if Row Level Security in enabled on all sensitive tables
+anon.key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
+
 # these are EVM wallets but in API they are accessed through RPC via ethers.js
 # we could call them ethereum.vm or ethers.service - either would be correct
 [services.ethers]

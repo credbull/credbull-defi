@@ -5,7 +5,7 @@ import { DeepMockProxy, mockDeep } from 'vitest-mock-extended';
 
 import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { SupabaseService } from '../../clients/supabase/supabase.service';
-import { Config } from '../../utils/module';
+import { ConfigurationModule } from '../../utils/module';
 
 import { AuthenticationController } from './authentication.controller';
 import { AuthenticationModule } from './authentication.module';
@@ -20,7 +20,7 @@ describe('AuthenticationController', () => {
     const service = { client: () => ({}), admin: () => admin };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [Config.module(), AuthenticationModule],
+      imports: [ConfigurationModule, AuthenticationModule],
     })
       .overrideProvider(SupabaseService)
       .useValue(service)

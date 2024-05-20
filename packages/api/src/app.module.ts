@@ -10,12 +10,11 @@ import { AuthenticationModule } from './modules/authentication/authentication.mo
 import { NotificationsModule } from './modules/notification/notifications.module';
 import { VaultsModule } from './modules/vaults/vaults.module';
 import * as logger from './utils/logger';
-import { Config } from './utils/module';
-import { TomlConfigService } from './utils/tomlConfig';
+import { ConfigurationModule } from './utils/module';
 
 @Module({
   imports: [
-    Config.module(),
+    ConfigurationModule,
     AccountsModule,
     SupabaseModule,
     AuthenticationModule,
@@ -25,7 +24,6 @@ import { TomlConfigService } from './utils/tomlConfig';
   ],
   controllers: [AppController],
   providers: [
-    TomlConfigService,
     { provide: APP_INTERCEPTOR, useValue: logger.interceptor },
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
     {
