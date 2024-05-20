@@ -5,10 +5,9 @@ import { load } from 'js-toml';
 
 // NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the grandparent directory (../..), 
 //  then the parent (..) and finally the current directory (.). Override is enabled so that the most 
-//  specific configuration wins. This mechanism only applies for local development, so we ignore 
-//  '.env' files.
+//  specific configuration wins.
 dotenv.config({
-  path: ['../../.env.local', '../.env.local', '.env.local' ],
+  path: ['../../.env', '../.env', '.env' ],
   override: true
 });
 
