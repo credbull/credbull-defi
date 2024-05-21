@@ -41,6 +41,8 @@ jobs:
       - name: Run Tests
         run: yarn run test
         env:
+          # Dev/Anvil Wallet, PrivateKey[1] - okay to share
+          OPERATOR_PRIVATE_KEY: "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
           SUPABASE_JWT_SECRET: anything-testing-only
           CRON_SECRET : anything-testing-only
           SLACK_TOKEN: anything-testing-only
