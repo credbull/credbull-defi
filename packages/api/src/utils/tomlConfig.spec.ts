@@ -8,8 +8,10 @@ import { TomlConfigService } from './tomlConfig';
 
 vi.mock('fs');
 
-function loadConfig(envString: string) {
-  const configFile = path.resolve(__dirname, `../../resource/${envString}.toml`);
+const env = 'local';
+
+function loadConfig() {
+  const configFile = path.resolve(__dirname, `../../resource/${env}.toml`);
 
   return fs.readFileSync(configFile, 'utf8');
 }
@@ -23,13 +25,15 @@ describe('TomlConfigService', () => {
 
     configService = mockDeep<ConfigService>();
 
-    // simple mock that just adds -val to any key
     configService.getOrThrow.mockImplementation((key: string) => {
       return key + '-val';
     });
 
-    // simple mock that just adds -val to any key
     configService.get.mockImplementation((key: string) => {
+      if ('ENVIRONMENT' == key) {
+        return env;
+      }
+
       return key + '-val';
     });
   });
@@ -41,7 +45,7 @@ describe('TomlConfigService', () => {
     `;
 
     (fs.readFileSync as vi.Mock).mockReturnValue(mockTomlContent);
-    const config = loadConfig('local');
+    const config = loadConfig();
 
     expect(config).toBe(mockTomlContent);
 
