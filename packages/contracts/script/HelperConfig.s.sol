@@ -31,14 +31,14 @@ contract HelperConfig is Script {
 
     NetworkConfig private activeNetworkConfig;
 
-    string private config;
+    string private tomlConfig;
 
     bool private testMode = false;
 
     constructor(bool _test) {
         testMode = _test;
 
-        config = loadConfiguration();
+        tomlConfig = loadTomlConfiguration();
 
         // TODO: move to using StdChains, e.g. `getChain(block.chainid) == "Arbitrum"`
         if (
@@ -55,10 +55,10 @@ contract HelperConfig is Script {
         return activeNetworkConfig;
     }
 
-    function loadConfiguration() internal view returns (string memory) {
+    function loadTomlConfiguration() internal view returns (string memory) {
         string memory environment = vm.envString("ENVIRONMENT");
         string memory path = string.concat(vm.projectRoot(), "/resource/", environment, ".toml");
-        console2.log(string.concat("Loading configuration from: ", path));
+        console2.log(string.concat("Loading toml configuration from: ", path));
         return vm.readFile(path);
     }
 
@@ -85,9 +85,9 @@ contract HelperConfig is Script {
     /// @return The active Factory Parameters
     function createFactoryParamsFromConfig() internal view returns (FactoryParams memory) {
         FactoryParams memory factoryParams = FactoryParams({
-            owner: config.readAddress(".ethereum.vm.owner.public_address"),
-            operator: config.readAddress(".ethereum.vm.operator.public_address"),
-            collateralPercentage: config.readUint(".application.collateral_percentage")
+            owner: tomlConfig.readAddress(".ethereum.vm.owner.public_address"),
+            operator: tomlConfig.readAddress(".ethereum.vm.operator.public_address"),
+            collateralPercentage: tomlConfig.readUint(".application.collateral_percentage")
         });
 
         return factoryParams;
