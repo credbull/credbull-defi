@@ -28,7 +28,7 @@ export class SupabaseService {
   client() {
     return SupabaseService.createClientFromToken(
       this.tomlConfigService.config.services.supabase.url,
-      this.tomlConfigService.config.services.supabase.anon_key,
+      this.tomlConfigService.config.secret.SUPABASE_SERVICE_ROLE_KEY.value,
       ExtractJwt.fromAuthHeaderAsBearerToken()(this.request),
     );
   }

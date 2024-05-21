@@ -34,7 +34,7 @@ export class SupabaseGuard extends AuthGuard('jwt') {
   private async getUserRoles(request: Request): Promise<string[]> {
     const client = SupabaseService.createClientFromToken(
       this.tomlConfigService.config.services.supabase.url,
-      this.tomlConfigService.config.services.supabase.anon_key,
+      this.tomlConfigService.config.secret.SUPABASE_SERVICE_ROLE_KEY.value,
       ExtractJwt.fromAuthHeaderAsBearerToken()(request),
     );
 
