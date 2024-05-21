@@ -6,8 +6,6 @@ import { DeepMockProxy, mockDeep } from 'vitest-mock-extended';
 
 import { TomlConfigService } from './tomlConfig';
 
-vi.mock('fs');
-
 const env = 'local';
 
 function loadConfig() {
@@ -44,6 +42,7 @@ describe('TomlConfigService', () => {
     key = "val"
     `;
 
+    vi.mock('fs');
     (fs.readFileSync as vi.Mock).mockReturnValue(mockTomlContent);
     const config = loadConfig();
 
