@@ -20,7 +20,7 @@ deploy-baseSepolia:
 # NOTE (JL,2024-05-20): `forge` auto-includes any `.env` file in the invocation directory.
 deploy:
 	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
-	rm -rf out && \
+	@rm -rf out && \
 	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
 	yarn gen-types && \
