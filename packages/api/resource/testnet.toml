@@ -11,9 +11,6 @@ version="0.0.1"
 [services.supabase]
 url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
 
-# anon key can be shared only if Row Level Security in enabled on ALL tables.  confirm here <supabaseurl>/auth/policies
-anon.key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dnZobG5tb3FpYmRpaHFybG1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYwNjc4NzYsImV4cCI6MjAzMTY0Mzg3Nn0.DXW_7jR211BQrNOEGpXiB9xioye-rXp_znF_l_1KAiE"
-
 [services.ethers]
 # settings for baseSepolia, see others: https://chainlist.org/
 url="https://sepolia.base.org"

@@ -11,9 +11,6 @@ version="0.0.1"
 [services.supabase]
 url = "http://127.0.0.1:54321"
 
-# supabase local anon key (ey...Tn_I0) - okay to share
-anon.key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
-
 [services.ethers]
 url="http://127.0.0.1:8545"
 wss="wss://127.0.0.1:8545"

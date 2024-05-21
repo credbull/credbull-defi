@@ -11,7 +11,7 @@ export class SupabaseAdminService {
   admin() {
     return createClient<Database, 'public'>(
       this.tomlConfigService.config.services.supabase.url,
-      this.tomlConfigService.config.services.supabase.anon_key,
+      this.tomlConfigService.config.secret.SUPABASE_SERVICE_ROLE_KEY.value,
 
       {
         auth: { persistSession: false },

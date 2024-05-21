@@ -23,6 +23,7 @@ interface TomlConfig {
   secret: {
     OPERATOR_PRIVATE_KEY: Secret;
     CUSTODIAN_PRIVATE_KEY: Secret; // TODO - we shouldn't need this in the API
+    SUPABASE_SERVICE_ROLE_KEY: Secret;
     SUPABASE_JWT_SECRET: Secret;
     CRON_SECRET: Secret;
     SLACK_TOKEN?: Secret;
@@ -51,6 +52,9 @@ export class TomlConfigService {
     this.tomlConfig.secret = this.tomlConfig.secret || {}; // ensure config.env exists
     this.tomlConfig.secret.OPERATOR_PRIVATE_KEY = new Secret(configService.getOrThrow('OPERATOR_PRIVATE_KEY'));
     this.tomlConfig.secret.CUSTODIAN_PRIVATE_KEY = new Secret(configService.get('CUSTODIAN_PRIVATE_KEY') || '');
+    this.tomlConfig.secret.SUPABASE_SERVICE_ROLE_KEY = new Secret(
+      configService.getOrThrow('SUPABASE_SERVICE_ROLE_KEY'),
+    );
     this.tomlConfig.secret.SUPABASE_JWT_SECRET = new Secret(configService.getOrThrow('SUPABASE_JWT_SECRET'));
     this.tomlConfig.secret.CRON_SECRET = new Secret(configService.getOrThrow('CRON_SECRET'));
     this.tomlConfig.secret.SLACK_TOKEN = new Secret(configService.get('SLACK_TOKEN') || '');
