@@ -38,7 +38,7 @@ export class TomlConfigService {
   constructor(configService: ConfigService) {
     const env = configService.get('ENVIRONMENT', 'local');
 
-    const configFile = path.resolve(__dirname, `./resource/${env}.toml`); // storing here to keep fly.io happy
+    const configFile = path.resolve(__dirname, `./api-${env}.toml`); // storing here to keep fly.io happy
 
     console.log(`Loading configuration from: '${configFile}'`);
 
