@@ -4,12 +4,28 @@ import * as fs from 'fs';
 import { load } from 'js-toml';
 import * as path from 'path';
 
+class Secret {
+  constructor(public value: string) {}
+
+  toString(): string {
+    return '***';
+  }
+
+  toJSON(): string {
+    return this.toString();
+  }
+}
+
 interface TomlConfig {
   env: {
     ENVIRONMENT: string;
-    SUPABASE_JWT_SECRET: string;
-    CRON_SECRET: string;
-    SLACK_TOKEN?: string;
+  };
+  secret: {
+    OPERATOR_PRIVATE_KEY: Secret;
+    CUSTODIAN_PRIVATE_KEY: Secret; // TODO - we shouldn't need this in the API
+    SUPABASE_JWT_SECRET: Secret;
+    CRON_SECRET: Secret;
+    SLACK_TOKEN?: Secret;
   };
   [key: string]: any;
 }
@@ -27,15 +43,19 @@ export class TomlConfigService {
     const toml = fs.readFileSync(configFile, 'utf8');
     this.tomlConfig = load(toml) as TomlConfig;
 
-    console.log('Successfully loaded configuration:', JSON.stringify(this.tomlConfig, null, 2));
-
     // include Environment into config
-    // NB - call this after the log statement to avoid logging keys!
     this.tomlConfig.env = this.tomlConfig.env || {}; // ensure config.env exists
     this.tomlConfig.env.ENVIRONMENT = env;
-    this.tomlConfig.env.SUPABASE_JWT_SECRET = configService.getOrThrow('SUPABASE_JWT_SECRET');
-    this.tomlConfig.env.CRON_SECRET = configService.getOrThrow('CRON_SECRET');
-    this.tomlConfig.env.SLACK_TOKEN = configService.get('SLACK_TOKEN');
+
+    // add secrets to the Environment
+    this.tomlConfig.secret = this.tomlConfig.secret || {}; // ensure config.env exists
+    this.tomlConfig.secret.OPERATOR_PRIVATE_KEY = new Secret(configService.getOrThrow('OPERATOR_PRIVATE_KEY'));
+    this.tomlConfig.secret.CUSTODIAN_PRIVATE_KEY = new Secret(configService.get('CUSTODIAN_PRIVATE_KEY') || '');
+    this.tomlConfig.secret.SUPABASE_JWT_SECRET = new Secret(configService.getOrThrow('SUPABASE_JWT_SECRET'));
+    this.tomlConfig.secret.CRON_SECRET = new Secret(configService.getOrThrow('CRON_SECRET'));
+    this.tomlConfig.secret.SLACK_TOKEN = new Secret(configService.get('SLACK_TOKEN') || '');
+
+    console.log('Successfully loaded configuration:', JSON.stringify(this.tomlConfig, null, 2));
   }
 
   get config(): TomlConfig {

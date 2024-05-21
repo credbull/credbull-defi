@@ -17,7 +17,7 @@ export class NotificationsService implements OnModuleInit {
     private readonly tomlConfigService: TomlConfigService,
   ) {
     this.operator = tomlConfigService.config.services.ethers.operator.public_key;
-    this.slack = new WebClient(tomlConfigService.config.env.SLACK_TOKEN);
+    this.slack = new WebClient(tomlConfigService.config.secret.SLACK_TOKEN?.value);
   }
 
   onModuleInit() {

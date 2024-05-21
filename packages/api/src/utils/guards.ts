@@ -15,7 +15,7 @@ export class CronStrategy extends PassportStrategy(HeaderAPIKeyStrategy, 'cron-s
   }
 
   public validate = (apiKey: string, done: (error?: Error, data?: boolean) => void) => {
-    if (apiKey !== this.config.config.env.CRON_SECRET) {
+    if (apiKey !== this.config.config.secret.CRON_SECRET.value) {
       done(new UnauthorizedException(), false);
       return;
     }

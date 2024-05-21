@@ -1,0 +1,23 @@
+##
+# The Application Configuration for the TestNet Environment.
+##
+
+node_env="testnet"
+
+[api]
+port=3001 # TODO - confirm port
+version="0.0.1"
+
+[services.supabase]
+url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
+
+# anon key can be shared only if Row Level Security in enabled on ALL tables.  confirm here <supabaseurl>/auth/policies
+anon.key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dnZobG5tb3FpYmRpaHFybG1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYwNjc4NzYsImV4cCI6MjAzMTY0Mzg3Nn0.DXW_7jR211BQrNOEGpXiB9xioye-rXp_znF_l_1KAiE"
+
+[services.ethers]
+# settings for baseSepolia, see others: https://chainlist.org/
+url="https://sepolia.base.org"
+wss="https://sepolia.base.org"
+
+# devops operator (wallet 2) - public address, okay to share
+operator.public_address = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
