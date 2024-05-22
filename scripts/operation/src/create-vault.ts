@@ -29,7 +29,7 @@ function createParams(params: {
     matured?: boolean;
     upside?: string;
     tenant?: string;
-}): [ICredbull.VaultParamsStruct, CreateVaultParams] {
+}): [ICredbull.FixedYieldVaultParamsStruct, CreateVaultParams] {
     const treasury = process.env.ADDRESSES_TREASURY;
     const activityReward = process.env.ADDRESSES_ACTIVITY_REWARD;
 
@@ -57,7 +57,7 @@ function createParams(params: {
         ? [{type: 'vault', address: params.upside, percentage: 0.2}, ...baseEntities]
         : baseEntities;
 
-    const vaultParams: ICredbull.VaultParamsStruct = {
+    const tempParams = {
         owner: process.env.PUBLIC_OWNER_ADDRESS!,
         operator: process.env.PUBLIC_OPERATOR_ADDRESS!,
         asset: params.asset || '',
@@ -75,6 +75,39 @@ function createParams(params: {
         depositThresholdForWhitelisting: (1000e6).toString(),
     };
 
+    const fixedYieldVaultParams: ICredbull.FixedYieldVaultParamsStruct = {
+        baseVaultParams: {
+            asset: tempParams.asset,
+            shareName: tempParams.shareName,
+            shareSymbol: tempParams.shareSymbol,
+            custodian: tempParams.custodian,
+        },
+        contractRoles: {
+            owner: tempParams.owner,
+            operator: tempParams.operator,
+            custodian: tempParams.custodian,
+        },
+        windowVaultParams: {
+            depositWindow: {
+                opensAt: tempParams.depositOpensAt,
+                closesAt: tempParams.depositClosesAt,
+            },
+            matureWindow: {
+                opensAt: tempParams.redemptionOpensAt,
+                closesAt: tempParams.redemptionClosesAt,
+            },
+        },
+        kycParams: {
+            kycProvider: tempParams.kycProvider,
+            depositThresholdForWhitelisting: tempParams.depositThresholdForWhitelisting,
+        },
+        maxCapParams: {
+            maxCap: tempParams.maxCap,
+        },
+        promisedYield: tempParams.promisedYield,
+    }
+
+
     const vaultExtraParams: CreateVaultParams = {
         treasury: process.env.ADDRESSES_TREASURY,
         activityReward: process.env.ADDRESSES_ACTIVITY_REWARD,
@@ -83,10 +116,10 @@ function createParams(params: {
         tenant: params.tenant,
     };
 
-    console.log('Vault Params:', vaultParams);
+    console.log('Vault Params:', fixedYieldVaultParams);
     console.log('Vault Extra Params:', vaultExtraParams);
 
-    return [vaultParams, vaultExtraParams];
+    return [fixedYieldVaultParams, vaultExtraParams];
 }
 
 export const main = (
@@ -190,7 +223,7 @@ export const main = (
 };
 
 // alternative option to calling the create-vault API.  not fully compatible with our arch (missing tenant information, maybe others)
-async function createVaultUsingEthers(factoryAddress: string, operatorSignerKey: string, vaultParams: ICredbull.VaultParamsStruct) {
+async function createVaultUsingEthers(factoryAddress: string, operatorSignerKey: string, vaultParams: ICredbull.FixedYieldVaultParamsStruct) {
     const factoryAsVaultOper = CredbullFixedYieldVaultFactory__factory.connect(factoryAddress!, signer(operatorSignerKey));
     const createVaultTx = await factoryAsVaultOper.createVault(vaultParams, "{}");
     await createVaultTx.wait();

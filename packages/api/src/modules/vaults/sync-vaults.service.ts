@@ -6,7 +6,7 @@ import {
   FixedYieldVault,
   FixedYieldVault__factory,
 } from '@credbull/contracts';
-import { VaultDeployedEvent } from '@credbull/contracts/types/CredbullVaultFactory';
+import { VaultDeployedEvent } from '@credbull/contracts/types/CredbullFixedYieldVaultFactory';
 import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -128,13 +128,21 @@ export class SyncVaultsService {
     return {
       type: upside ? 'fixed_yield_upside' : 'fixed_yield',
       status: 'created' as const,
-      deposits_opened_at: new Date(Number(event.args.params.depositOpensAt) * 1000).toISOString(),
-      deposits_closed_at: new Date(Number(event.args.params.depositClosesAt) * 1000).toISOString(),
-      redemptions_opened_at: new Date(Number(event.args.params.redemptionOpensAt) * 1000).toISOString(),
-      redemptions_closed_at: new Date(Number(event.args.params.redemptionClosesAt) * 1000).toISOString(),
+      deposits_opened_at: new Date(
+        Number(event.args.params.windowVaultParams.depositWindow.opensAt) * 1000,
+      ).toISOString(),
+      deposits_closed_at: new Date(
+        Number(event.args.params.windowVaultParams.depositWindow.closesAt) * 1000,
+      ).toISOString(),
+      redemptions_opened_at: new Date(
+        Number(event.args.params.windowVaultParams.matureWindow.opensAt) * 1000,
+      ).toISOString(),
+      redemptions_closed_at: new Date(
+        Number(event.args.params.windowVaultParams.matureWindow.opensAt) * 1000,
+      ).toISOString(),
       address: event.args.vault,
       strategy_address: event.args.vault,
-      asset_address: event.args.params.asset,
+      asset_address: event.args.params.baseVaultParams.asset,
       tenant,
     } as Tables<'vaults'>;
   }

@@ -6,6 +6,7 @@ import {
   CredbullUpsideVaultFactory,
   CredbullUpsideVaultFactory__factory,
 } from '@credbull/contracts';
+import { ICredbull } from '@credbull/contracts/types/CredbullFixedYieldVault';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BigNumber, type ContractTransaction } from 'ethers';
 
@@ -72,9 +73,11 @@ export class VaultsService {
 
     if (!collateralPercentage) collateralPercentage = 0;
 
+    const fixedYieldVaultParams = this.createVaultParams(params);
+
     const readMethod: Promise<BigNumber> = upside
-      ? upsideFactory.estimateGas.createVault(params, collateralPercentage, options)
-      : factory.estimateGas.createVault(params, options);
+      ? upsideFactory.estimateGas.createVault(fixedYieldVaultParams, params.token, collateralPercentage, options)
+      : factory.estimateGas.createVault(fixedYieldVaultParams, options);
 
     const estimation = await responseFromRead(upside ? upsideFactory : factory, readMethod);
     if (estimation.error) {
@@ -82,8 +85,10 @@ export class VaultsService {
     }
 
     const writeMethod: Promise<ContractTransaction> = upside
-      ? upsideFactory.createVault(params, collateralPercentage, options, { gasLimit: estimation.data })
-      : factory.createVault(params, options, { gasLimit: estimation.data });
+      ? upsideFactory.createVault(fixedYieldVaultParams, params.token, collateralPercentage, options, {
+          gasLimit: estimation.data,
+        })
+      : factory.createVault(fixedYieldVaultParams, options, { gasLimit: estimation.data });
 
     const response = await responseFromWrite(upside ? upsideFactory : factory, writeMethod);
     if (response.error) return response;
@@ -98,6 +103,54 @@ export class VaultsService {
     if (entities.error) return entities;
 
     return await this.readyVaultInDB(createdVault.data);
+  }
+
+  private createVaultParams(params: VaultParamsDto): ICredbull.FixedYieldVaultParamsStruct {
+    const baseVaultParams = {
+      asset: params.asset,
+      shareName: params.shareName,
+      shareSymbol: params.shareSymbol,
+      custodian: params.custodian,
+    };
+
+    const contractRoles = {
+      owner: params.owner,
+      operator: params.operator,
+      custodian: params.custodian,
+    };
+
+    const depositWindowParam = {
+      opensAt: params.depositOpensAt,
+      closesAt: params.depositClosesAt,
+    };
+
+    const matureWindowParam = {
+      opensAt: params.redemptionOpensAt,
+      closesAt: params.redemptionClosesAt,
+    };
+
+    const windowVaultParams = {
+      depositWindow: depositWindowParam,
+      matureWindow: matureWindowParam,
+    };
+
+    const kycParams = {
+      kycProvider: params.kycProvider,
+      depositThresholdForWhitelisting: params.depositThresholdForWhitelisting,
+    };
+
+    const maxCapParams = {
+      maxCap: params.maxCap,
+    };
+
+    return {
+      baseVaultParams,
+      contractRoles,
+      windowVaultParams,
+      kycParams,
+      maxCapParams,
+      promisedYield: params.promisedYield,
+    };
   }
 
   private async createVaultInDB(params: VaultParamsDto, vaultAddress: string, upside: boolean) {
