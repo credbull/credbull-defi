@@ -10,7 +10,7 @@ primary_region = 'cdg'
   image = "credbull-defi-api:latest"
 
 [deploy]
-  strategy = "bluegreen"
+  strategy = "canary"
 
 [env]
   ENVIRONMENT = "testnet"
