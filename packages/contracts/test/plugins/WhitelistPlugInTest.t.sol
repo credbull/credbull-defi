@@ -11,7 +11,6 @@ import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
-import { console2 } from "forge-std/console2.sol";
 
 contract WhitelistPlugInTest is Test {
     WhitelistVaultMock private vault;

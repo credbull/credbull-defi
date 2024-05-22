@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { ICredbull } from "../interface/ICredbull.sol";
 
 /**
  * @notice - A factory contract to create vault contract

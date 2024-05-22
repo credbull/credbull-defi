@@ -182,6 +182,7 @@ contract WindowPlugInTest is Test {
         vaultParams.asset.approve(address(vault), assets);
 
         // now we can deposit, alice is the caller and receiver
+        //TODO: Clean up this code
         if (warp) {
             // vm.warp(vaultParams.depositOpensAt);
         }
