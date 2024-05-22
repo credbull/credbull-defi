@@ -21,7 +21,7 @@ contract CredbullFixedYieldVaultTest is Test {
     DeployVaultFactory private deployer;
     CredbullKYCProvider private kycProvider;
 
-    ICredbull.VaultParams private vaultParams;
+    ICredbull.FixedYieldVaultParams private vaultParams;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
@@ -33,15 +33,12 @@ contract CredbullFixedYieldVaultTest is Test {
     function setUp() public {
         deployer = new DeployVaultFactory();
         (,, kycProvider, helperConfig) = deployer.runTest();
-        vaultParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createTestVaultParams();
-
-        if (vaultParams.kycProvider == address(0)) {
-            vaultParams.kycProvider = address(kycProvider);
-        }
+        vaultParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createFixedYieldVaultParams();
+        vaultParams.kycParams.kycProvider = address(kycProvider);
 
         vault = new CredbullFixedYieldVault(vaultParams);
 
-        precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
+        precision = 10 ** MockStablecoin(address(vaultParams.baseVaultParams.asset)).decimals();
 
         address[] memory whitelistAddresses = new address[](2);
         whitelistAddresses[0] = alice;
@@ -51,26 +48,28 @@ contract CredbullFixedYieldVaultTest is Test {
         statuses[0] = true;
         statuses[1] = true;
 
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
-        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
-        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
+        MockStablecoin(address(vaultParams.baseVaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
+        MockStablecoin(address(vaultParams.baseVaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__FixedYieldVault__ShouldAllowOwnerToChangeOperator() public {
         address newOperator = makeAddr("new_operator");
 
-        vm.startPrank(vaultParams.owner);
-        vault.revokeRole(vault.OPERATOR_ROLE(), vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.owner);
+        vault.revokeRole(vault.OPERATOR_ROLE(), vaultParams.contractRoles.operator);
         vault.grantRole(vault.OPERATOR_ROLE(), newOperator);
         vm.stopPrank();
 
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector, vaultParams.operator, vault.OPERATOR_ROLE()
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                vaultParams.contractRoles.operator,
+                vault.OPERATOR_ROLE()
             )
         );
         vault.mature();
@@ -82,10 +81,12 @@ contract CredbullFixedYieldVaultTest is Test {
     }
 
     function test__FixedYieldVault__RevertMatureIfNotOperator() public {
-        vm.startPrank(vaultParams.owner);
+        vm.startPrank(vaultParams.contractRoles.owner);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector, vaultParams.owner, vault.OPERATOR_ROLE()
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                vaultParams.contractRoles.owner,
+                vault.OPERATOR_ROLE()
             )
         );
         vault.mature();
@@ -93,50 +94,50 @@ contract CredbullFixedYieldVaultTest is Test {
     }
 
     function test__FixedYieldVault__RevertMaturityToggleIfNotAdmin() public {
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAccessControl.AccessControlUnauthorizedAccount.selector,
-                vaultParams.operator,
+                vaultParams.contractRoles.operator,
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
         vault.toggleMaturityCheck(false);
         vm.stopPrank();
 
-        vm.prank(vaultParams.owner);
+        vm.prank(vaultParams.contractRoles.owner);
         vault.toggleMaturityCheck(false);
     }
 
     function test__FixedYieldVault__RevertWhitelistToggleIfNotAdmin() public {
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAccessControl.AccessControlUnauthorizedAccount.selector,
-                vaultParams.operator,
+                vaultParams.contractRoles.operator,
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
         vault.toggleWhitelistCheck(false);
         vm.stopPrank();
 
-        vm.prank(vaultParams.owner);
+        vm.prank(vaultParams.contractRoles.owner);
         vault.toggleWhitelistCheck(false);
     }
 
     function test__FixedYieldVault__RevertWindowToggleIfNotAdmin() public {
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAccessControl.AccessControlUnauthorizedAccount.selector,
-                vaultParams.operator,
+                vaultParams.contractRoles.operator,
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
         vault.toggleWindowCheck(false);
         vm.stopPrank();
 
-        vm.prank(vaultParams.owner);
+        vm.prank(vaultParams.contractRoles.owner);
         vault.toggleWindowCheck(false);
     }
 
@@ -147,7 +148,7 @@ contract CredbullFixedYieldVaultTest is Test {
         bool[] memory statuses = new bool[](1);
         statuses[0] = false;
 
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
         uint256 depositAmount = 1000 * precision;
@@ -165,7 +166,7 @@ contract CredbullFixedYieldVaultTest is Test {
         bool[] memory statuses = new bool[](1);
         statuses[0] = false;
 
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
@@ -173,112 +174,112 @@ contract CredbullFixedYieldVaultTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector, alice, depositAmount)
         );
-        vm.expectCall(address(vaultParams.kycProvider), abi.encodeCall(CredbullKYCProvider.status, alice));
+        vm.expectCall(address(vaultParams.kycParams.kycProvider), abi.encodeCall(CredbullKYCProvider.status, alice));
         vault.deposit(depositAmount, alice);
     }
 
     function test__FixedYieldVault__RevertMaxCapToggleIfNotAdmin() public {
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAccessControl.AccessControlUnauthorizedAccount.selector,
-                vaultParams.operator,
+                vaultParams.contractRoles.operator,
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
         vault.toggleMaxCapCheck(false);
         vm.stopPrank();
 
-        vm.prank(vaultParams.owner);
+        vm.prank(vaultParams.contractRoles.owner);
         vault.toggleMaxCapCheck(false);
     }
 
     function test__FixedYieldVault__RevertUdpateMaxCapIfNotAdmin() public {
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAccessControl.AccessControlUnauthorizedAccount.selector,
-                vaultParams.operator,
+                vaultParams.contractRoles.operator,
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
         vault.updateMaxCap(100 * precision);
         vm.stopPrank();
 
-        vm.prank(vaultParams.owner);
+        vm.prank(vaultParams.contractRoles.owner);
         vault.updateMaxCap(100 * precision);
     }
 
     function test__FixedYieldVault__RevertOpsIfVaultIsPaused() public {
-        vm.startPrank(vaultParams.owner);
+        vm.startPrank(vaultParams.contractRoles.owner);
         vault.toggleWindowCheck(false);
         vault.pauseVault();
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         vault.deposit(1000 * precision, alice);
         vm.stopPrank();
 
-        vm.startPrank(vaultParams.owner);
+        vm.startPrank(vaultParams.contractRoles.owner);
         vault.unpauseVault();
         vm.stopPrank();
     }
 
     function test__FixedYieldVault__ShouldAllowAdminToUnpauseVault() public {
-        vm.startPrank(vaultParams.owner);
+        vm.startPrank(vaultParams.contractRoles.owner);
         vault.toggleWindowCheck(false);
         vault.pauseVault();
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         vault.deposit(1000 * precision, alice);
         vm.stopPrank();
 
-        vm.startPrank(vaultParams.owner);
+        vm.startPrank(vaultParams.contractRoles.owner);
         vault.unpauseVault();
         deposit(alice, 1000 * precision, true);
         vm.stopPrank();
     }
 
     function test__FixedYieldVault__ShouldAllowOnlyAdminToPauseVault() public {
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAccessControl.AccessControlUnauthorizedAccount.selector,
-                vaultParams.operator,
+                vaultParams.contractRoles.operator,
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
         vault.pauseVault();
         vm.stopPrank();
 
-        vm.startPrank(vaultParams.owner);
+        vm.startPrank(vaultParams.contractRoles.owner);
         vault.pauseVault();
         vm.stopPrank();
     }
 
     function test__FixedYieldVault__RevertWindowUpdateIfNotAdmin() public {
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAccessControl.AccessControlUnauthorizedAccount.selector,
-                vaultParams.operator,
+                vaultParams.contractRoles.operator,
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
         vault.updateWindow(100, 200, 300, 400);
         vm.stopPrank();
 
-        vm.prank(vaultParams.owner);
+        vm.prank(vaultParams.contractRoles.owner);
         vault.updateWindow(100, 200, 300, 400);
     }
 
     function test__FixedYieldVault__ShouldAllowAdminToWithdrawERC20Tokens() public {
-        MockStablecoin token = MockStablecoin(address(vaultParams.asset));
+        MockStablecoin token = MockStablecoin(address(vaultParams.baseVaultParams.asset));
         vm.prank(alice);
         token.transfer(address(vault), 100 * precision);
 
         assertEq(token.balanceOf(address(vault)), 100 * precision);
 
-        vm.prank(vaultParams.owner);
+        vm.prank(vaultParams.contractRoles.owner);
         address[] memory addresses = new address[](1);
-        addresses[0] = address(vaultParams.asset);
+        addresses[0] = address(vaultParams.baseVaultParams.asset);
         vault.withdrawERC20(addresses);
 
         assertEq(token.balanceOf(address(vault)), 0);
@@ -287,12 +288,12 @@ contract CredbullFixedYieldVaultTest is Test {
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
-        vaultParams.asset.approve(address(vault), assets);
-        vaultParams.token.approve(address(vault), assets * ADDITIONAL_PRECISION);
+        vaultParams.baseVaultParams.asset.approve(address(vault), assets);
+        // vaultParams.token.approve(address(vault), assets * ADDITIONAL_PRECISION);
 
         // wrap if set to true
         if (warp) {
-            vm.warp(vaultParams.depositOpensAt);
+            vm.warp(vaultParams.windowVaultParams.depositWindow.opensAt);
         }
 
         shares = vault.deposit(assets, user);

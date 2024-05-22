@@ -14,7 +14,8 @@ import { console2 } from "forge-std/console2.sol";
 contract MaxCapPluginTest is Test {
     MaxCapVaultMock private vault;
 
-    ICredbull.VaultParams private vaultParams;
+    ICredbull.BaseVaultParams private vaultParams;
+    ICredbull.MaxCapParams private maxCapParams;
     HelperConfig private helperConfig;
 
     address private alice = makeAddr("alice");
@@ -25,9 +26,10 @@ contract MaxCapPluginTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        vaultParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createTestVaultParams();
+        vaultParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createBaseVaultTestParams();
+        maxCapParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createMaxCapParams();
 
-        vault = new MaxCapVaultMock(vaultParams);
+        vault = new MaxCapVaultMock(vaultParams, maxCapParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
 
         MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
@@ -54,7 +56,7 @@ contract MaxCapPluginTest is Test {
         vaultParams.asset.approve(address(vault), additionalDepositAmount);
 
         vm.expectRevert(MaxCapPlugIn.CredbullVault__MaxCapReached.selector);
-        vm.warp(vaultParams.depositOpensAt);
+        //vm.warp(vaultParams.windowVaultParams.depositWindow.opensAt);
         vault.deposit(additionalDepositAmount, alice);
         vm.stopPrank();
     }
@@ -77,7 +79,7 @@ contract MaxCapPluginTest is Test {
 
         // wrap if set to true
         if (warp) {
-            vm.warp(vaultParams.depositOpensAt);
+            // vm.warp(vaultParams.depositOpensAt);
         }
 
         shares = vault.deposit(assets, user);

@@ -11,7 +11,6 @@ import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { CredbullBaseVault } from "../../src/base/CredbullBaseVault.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-//import { console2 } from "forge-std/console2.sol";
 
 contract CredbullBaseVaultTest is Test {
     using Math for uint256;
@@ -19,7 +18,7 @@ contract CredbullBaseVaultTest is Test {
     CredbullBaseVaultMock private vault;
     HelperConfig private helperConfig;
 
-    ICredbull.VaultParams private vaultParams;
+    ICredbull.BaseVaultParams private vaultParams;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
@@ -31,7 +30,7 @@ contract CredbullBaseVaultTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        vaultParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createTestVaultParams();
+        vaultParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createBaseVaultTestParams();
 
         vault = createBaseVaultMock(vaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
@@ -277,7 +276,7 @@ contract CredbullBaseVaultTest is Test {
 
         // wrap if set to true
         if (warp) {
-            vm.warp(vaultParams.depositOpensAt);
+            // vm.warp(vaultParams.depositOpensAt);
         }
 
         shares = vault.deposit(assets, user);
@@ -288,12 +287,15 @@ contract CredbullBaseVaultTest is Test {
         vm.startPrank(user);
         vaultParams.asset.approve(address(vault), assets);
         vm.expectRevert(abi.encodeWithSelector(CredbullBaseVault.CredbullVault__InvalidAssetAmount.selector, assets));
-        vm.warp(vaultParams.depositOpensAt);
+        //vm.warp(vaultParams.depositOpensAt);
         shares = vault.deposit(assets, alice);
         vm.stopPrank();
     }
 
-    function createBaseVaultMock(ICredbull.VaultParams memory _vaultParams) internal returns (CredbullBaseVaultMock) {
+    function createBaseVaultMock(ICredbull.BaseVaultParams memory _vaultParams)
+        internal
+        returns (CredbullBaseVaultMock)
+    {
         return new CredbullBaseVaultMock(
             _vaultParams.asset, _vaultParams.shareName, _vaultParams.shareSymbol, _vaultParams.custodian
         );

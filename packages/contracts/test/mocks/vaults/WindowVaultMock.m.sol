@@ -4,11 +4,17 @@ pragma solidity ^0.8.19;
 
 import { CredbullBaseVault } from "../../../src/base/CredbullBaseVault.sol";
 import { WindowPlugIn } from "../../../src/plugins/WindowPlugIn.sol";
+import { ICredbull } from "../../../src/interface/ICredbull.sol";
 
 contract WindowVaultMock is CredbullBaseVault, WindowPlugIn {
-    constructor(VaultParams memory params)
+    constructor(ICredbull.BaseVaultParams memory params, ICredbull.WindowVaultParams memory windowParams)
         CredbullBaseVault(params)
-        WindowPlugIn(params.depositOpensAt, params.depositClosesAt, params.redemptionOpensAt, params.redemptionClosesAt)
+        WindowPlugIn(
+            windowParams.depositWindow.opensAt,
+            windowParams.depositWindow.closesAt,
+            windowParams.matureWindow.opensAt,
+            windowParams.matureWindow.closesAt
+        )
     { }
 
     modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {

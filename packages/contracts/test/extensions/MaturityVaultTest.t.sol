@@ -14,7 +14,7 @@ import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 contract MaturityVaultTest is Test {
     MaturityVaultMock private vault;
 
-    ICredbull.VaultParams private vaultParams;
+    ICredbull.FixedYieldVaultParams private params;
     HelperConfig private helperConfig;
     uint256 private precision;
 
@@ -25,13 +25,13 @@ contract MaturityVaultTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        vaultParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createTestVaultParams();
+        params = new HelperVaultTest(helperConfig.getNetworkConfig()).createMaturityVaultTestParams();
 
-        vault = new MaturityVaultMock(vaultParams);
-        precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
+        vault = new MaturityVaultMock(params);
+        precision = 10 ** MockStablecoin(address(params.baseVaultParams.asset)).decimals();
 
-        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
-        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
+        MockStablecoin(address(params.baseVaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
+        MockStablecoin(address(params.baseVaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__MaturityVault__WithdrawAssetAndBurnShares() public {
@@ -41,23 +41,24 @@ contract MaturityVaultTest is Test {
         uint256 shares = deposit(alice, depositAmount, true);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(address(vaultParams.asset)).mint(vaultParams.custodian, 1 * precision);
-        uint256 finalBalance = MockStablecoin(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
+        MockStablecoin(address(params.baseVaultParams.asset)).mint(params.baseVaultParams.custodian, 1 * precision);
+        uint256 finalBalance =
+            MockStablecoin(address(params.baseVaultParams.asset)).balanceOf(params.baseVaultParams.custodian);
 
-        vm.startPrank(vaultParams.custodian);
-        vaultParams.asset.approve(vaultParams.custodian, finalBalance);
-        vaultParams.asset.transferFrom(vaultParams.custodian, address(vault), finalBalance);
+        vm.startPrank(params.baseVaultParams.custodian);
+        params.baseVaultParams.asset.approve(params.baseVaultParams.custodian, finalBalance);
+        params.baseVaultParams.asset.transferFrom(params.baseVaultParams.custodian, address(vault), finalBalance);
         vm.stopPrank();
 
-        vm.prank(vaultParams.operator);
+        vm.prank(params.contractRoles.operator);
         vault.mature();
 
         // ---- Assert Vault burns shares and Alice receive asset with additional 10% ---
-        uint256 balanceBeforeRedeem = vaultParams.asset.balanceOf(alice);
+        uint256 balanceBeforeRedeem = params.baseVaultParams.asset.balanceOf(alice);
         vm.startPrank(alice);
         vault.approve(address(vault), shares);
         uint256 assets = vault.redeem(shares, alice, alice);
-        uint256 balanceAfterRedeem = vaultParams.asset.balanceOf(alice);
+        uint256 balanceAfterRedeem = params.baseVaultParams.asset.balanceOf(alice);
         vm.stopPrank();
 
         assertEq(balanceAfterRedeem, balanceBeforeRedeem + assets, "Alice should recieve finalBalance with 10% yeild");
@@ -72,7 +73,7 @@ contract MaturityVaultTest is Test {
         vm.startPrank(alice);
         vault.approve(address(vault), shares);
 
-        vm.warp(vaultParams.redemptionOpensAt);
+        vm.warp(params.windowVaultParams.depositWindow.opensAt);
 
         vm.expectRevert(MaturityVault.CredbullVault__NotMatured.selector);
         vault.redeem(shares, alice, alice);
@@ -86,13 +87,13 @@ contract MaturityVaultTest is Test {
         uint256 finalBalance = depositAmount;
 
         // ---- Transfer assets to vault ---
-        vm.startPrank(vaultParams.custodian);
-        vaultParams.asset.approve(vaultParams.custodian, finalBalance);
-        vaultParams.asset.transferFrom(vaultParams.custodian, address(vault), finalBalance);
+        vm.startPrank(params.baseVaultParams.custodian);
+        params.baseVaultParams.asset.approve(params.baseVaultParams.custodian, finalBalance);
+        params.baseVaultParams.asset.transferFrom(params.baseVaultParams.custodian, address(vault), finalBalance);
         vm.stopPrank();
 
         // ---- Assert it can't be matured yet ---
-        vm.prank(vaultParams.operator);
+        vm.prank(params.contractRoles.operator);
         vm.expectRevert(MaturityVault.CredbullVault__NotEnoughBalanceToMature.selector);
         vault.mature();
     }
@@ -101,7 +102,7 @@ contract MaturityVaultTest is Test {
         uint256 depositAmount = 10 * precision;
         deposit(alice, depositAmount, true);
 
-        uint256 expectedAssetVaulue = ((depositAmount * (100 + vaultParams.promisedYield)) / 100);
+        uint256 expectedAssetVaulue = ((depositAmount * (100 + params.promisedYield)) / 100);
 
         assertEq(vault.expectedAssetsOnMaturity(), expectedAssetVaulue);
     }
@@ -110,8 +111,8 @@ contract MaturityVaultTest is Test {
         uint256 depositAmount = 10 * precision;
         uint256 shares = deposit(alice, depositAmount, true);
 
-        vm.prank(vaultParams.custodian);
-        vaultParams.asset.transfer(address(vault), depositAmount);
+        vm.prank(params.baseVaultParams.custodian);
+        params.baseVaultParams.asset.transfer(address(vault), depositAmount);
 
         vm.startPrank(alice);
         vault.approve(address(vault), shares);
@@ -119,7 +120,7 @@ contract MaturityVaultTest is Test {
         vault.toogleMaturityCheck(false);
 
         vault.redeem(shares, alice, alice);
-        assertEq(vaultParams.asset.balanceOf(alice), INITIAL_BALANCE * precision);
+        assertEq(params.baseVaultParams.asset.balanceOf(alice), INITIAL_BALANCE * precision);
         vm.stopPrank();
     }
 
@@ -133,11 +134,11 @@ contract MaturityVaultTest is Test {
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
-        vaultParams.asset.approve(address(vault), assets);
+        params.baseVaultParams.asset.approve(address(vault), assets);
 
         // wrap if set to true
         if (warp) {
-            vm.warp(vaultParams.depositOpensAt);
+            vm.warp(params.windowVaultParams.depositWindow.opensAt);
         }
 
         shares = vault.deposit(assets, user);

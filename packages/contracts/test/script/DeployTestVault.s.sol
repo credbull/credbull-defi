@@ -52,7 +52,7 @@ contract DeployTestVault is Script {
         address custodianAddr = vm.envAddress("ADDRESSES_CUSTODIAN");
         allowCustodian(custodianAddr, fixedYieldVaultFactory);
 
-        ICredbull.VaultParams memory vaultParams = helperVaultTest.createTestVaultParams(custodianAddr, kycProviderAddr);
+        ICredbull.FixedYieldVaultParams memory vaultParams = helperVaultTest.createFixedYieldVaultParams();
 
         CredbullFixedYieldVault credbullFixedYieldVault = addVault(fixedYieldVaultFactory, vaultParams);
 
@@ -78,10 +78,10 @@ contract DeployTestVault is Script {
         );
     }
 
-    function addVault(CredbullFixedYieldVaultFactory fixedYieldVaultFactory, ICredbull.VaultParams memory vaultParams)
-        internal
-        returns (CredbullFixedYieldVault)
-    {
+    function addVault(
+        CredbullFixedYieldVaultFactory fixedYieldVaultFactory,
+        ICredbull.FixedYieldVaultParams memory vaultParams
+    ) internal returns (CredbullFixedYieldVault) {
         vm.startBroadcast(vaultDeployerKey); // vaults are actually deployed by VaultFactoryOperators
 
         address newVaultAddr = fixedYieldVaultFactory.createVault(vaultParams, "{}");

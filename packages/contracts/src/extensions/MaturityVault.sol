@@ -26,7 +26,7 @@ abstract contract MaturityVault is CredbullBaseVault {
     /**
      * @param params - Vault parameters
      */
-    constructor(FixedYieldVaultParams memory params) CredbullBaseVault(params.baseVaultParams, params.contractRoles) {
+    constructor(FixedYieldVaultParams memory params) CredbullBaseVault(params.baseVaultParams) {
         checkMaturity = true;
         _fixedYield = params.promisedYield;
     }

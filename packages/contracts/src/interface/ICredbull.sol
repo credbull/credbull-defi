@@ -31,6 +31,7 @@ interface ICredbull {
         IERC20 asset;
         string shareName;
         string shareSymbol;
+        address custodian;
     }
 
     struct ContractRoles {

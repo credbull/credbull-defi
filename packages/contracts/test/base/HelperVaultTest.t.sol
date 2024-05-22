@@ -5,6 +5,7 @@ pragma solidity ^0.8.19;
 import { Test } from "forge-std/Test.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, FactoryParams } from "../../script/HelperConfig.s.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// Utility to help with testing vaults
 contract HelperVaultTest is Test {
@@ -20,6 +21,72 @@ contract HelperVaultTest is Test {
         address custodian = makeAddr("custodianAddress");
 
         return createTestVaultParams(custodian, address(0));
+    }
+
+    function createBaseVaultTestParams() public returns (ICredbull.BaseVaultParams memory params) {
+        address custodian = makeAddr("custodianAddress");
+
+        params = ICredbull.BaseVaultParams({
+            asset: networkConfig.usdcToken,
+            shareName: "Share_sep",
+            shareSymbol: "SYM_sep",
+            custodian: custodian
+        });
+    }
+
+    function createFixedYieldWithUpsideVaultParams()
+        public
+        returns (ICredbull.FixedYieldVaultParams memory params, IERC20 token)
+    {
+        params = createFixedYieldVaultParams();
+        token = networkConfig.cblToken;
+    }
+
+    function createFixedYieldVaultParams() public returns (ICredbull.FixedYieldVaultParams memory params) {
+        params = ICredbull.FixedYieldVaultParams({
+            baseVaultParams: createBaseVaultTestParams(),
+            contractRoles: createContractRoles(),
+            windowVaultParams: createWindowVaultParams(),
+            kycParams: createKycParams(),
+            maxCapParams: createMaxCapParams(),
+            promisedYield: PROMISED_FIXED_YIELD
+        });
+    }
+
+    function createMaturityVaultTestParams() public returns (ICredbull.FixedYieldVaultParams memory params) {
+        return createFixedYieldVaultParams();
+    }
+
+    function createMaxCapParams() public pure returns (ICredbull.MaxCapParams memory params) {
+        params = ICredbull.MaxCapParams({ maxCap: 1e6 * 1e6 });
+    }
+
+    function createKycParams() public returns (ICredbull.KycParams memory params) {
+        params = ICredbull.KycParams({
+            kycProvider: makeAddr("kycProviderAddress"),
+            depositThresholdForWhitelisting: 1000e6
+        });
+    }
+
+    function createWindowVaultParams() public view returns (ICredbull.WindowVaultParams memory params) {
+        uint256 opensAt = block.timestamp;
+        uint256 closesAt = opensAt + 7 days;
+        uint256 year = 365 days;
+
+        ICredbull.WindowParams memory depositWindow = ICredbull.WindowParams({ opensAt: opensAt, closesAt: closesAt });
+
+        ICredbull.WindowParams memory matureWindow =
+            ICredbull.WindowParams({ opensAt: opensAt + year, closesAt: closesAt + year });
+
+        params = ICredbull.WindowVaultParams({ depositWindow: depositWindow, matureWindow: matureWindow });
+    }
+
+    function createContractRoles() public returns (ICredbull.ContractRoles memory roles) {
+        roles = ICredbull.ContractRoles({
+            owner: networkConfig.factoryParams.owner,
+            operator: networkConfig.factoryParams.operator,
+            custodian: makeAddr("custodianAddress")
+        });
     }
 
     /// this version is tied to Anvil - it is using Anvil's well known addresses

@@ -11,6 +11,7 @@ import { HelperConfig, NetworkConfig } from "../../script/HelperConfig.s.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract CredbullVaultWithUpsideFactoryTest is Test {
     CredbullUpsideVaultFactory private factory;
@@ -27,22 +28,23 @@ contract CredbullVaultWithUpsideFactoryTest is Test {
 
     function test__CreateUpsideVaultFromFactory() public {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
-        ICredbull.VaultParams memory params = new HelperVaultTest(config).createTestVaultParams();
+        (ICredbull.FixedYieldVaultParams memory params, IERC20 token) =
+            new HelperVaultTest(config).createFixedYieldWithUpsideVaultParams();
 
-        params.kycProvider = address(kycProvider);
+        params.kycParams.kycProvider = address(kycProvider);
 
         vm.prank(config.factoryParams.owner);
-        factory.allowCustodian(params.custodian);
+        factory.allowCustodian(params.baseVaultParams.custodian);
 
         vm.prank(config.factoryParams.operator);
         CredbullFixedYieldVaultWithUpside vault = CredbullFixedYieldVaultWithUpside(
-            payable(factory.createVault(params, config.factoryParams.collateralPercentage, OPTIONS))
+            payable(factory.createVault(params, token, config.factoryParams.collateralPercentage, OPTIONS))
         );
 
-        assertEq(vault.asset(), address(params.asset));
-        assertEq(vault.name(), params.shareName);
-        assertEq(vault.symbol(), params.shareSymbol);
-        assertEq(address(vault.kycProvider()), params.kycProvider);
-        assertEq(vault.CUSTODIAN(), params.custodian);
+        assertEq(vault.asset(), address(params.baseVaultParams.asset));
+        assertEq(vault.name(), params.baseVaultParams.shareName);
+        assertEq(vault.symbol(), params.baseVaultParams.shareSymbol);
+        assertEq(address(vault.kycProvider()), params.kycParams.kycProvider);
+        assertEq(vault.CUSTODIAN(), params.baseVaultParams.custodian);
     }
 }
