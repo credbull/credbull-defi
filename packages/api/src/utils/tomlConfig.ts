@@ -42,8 +42,23 @@ export class TomlConfigService {
 
     console.log(`Loading configuration from: '${configFile}'`);
 
-    const toml = fs.readFileSync(configFile, 'utf8');
+    let toml;
+    console.log(`!!!! 1.`);
+    console.log(`!!!! 2. ${fs.existsSync(configFile)}`);
+    try {
+      toml = fs.readFileSync(configFile, 'utf8');
+    } catch (error) {
+      console.error(`Error reading configuration file: ${error.message}`);
+      console.error(`File path: ${configFile}`);
+
+      throw Error(error);
+    }
+
+    console.log(`!!!! 1. ${fs.realpath}`);
+
     this.tomlConfig = load(toml) as TomlConfig;
+
+    console.log(`Here 3... '`);
 
     // include Environment into config
     this.tomlConfig.env = this.tomlConfig.env || {}; // ensure config.env exists

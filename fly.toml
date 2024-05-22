@@ -7,9 +7,7 @@ app = 'credbull-defi-api'
 primary_region = 'fra'
 
 [deploy]
-# TODO: change back to bluegreen
   strategy = "immediate"
-  wait_timeout = "10m"
 
 [env]
   ENVIRONMENT = "testnet"
