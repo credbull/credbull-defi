@@ -14,7 +14,7 @@ on:
       - "packages/contracts/**"
 
 jobs:
-  test:
+  contracts-test:
     runs-on: ubuntu-latest
     environment: local
 
@@ -38,7 +38,7 @@ jobs:
         env:
           ENVIRONMENT: local
 
-  deploy-testnet:
+  contracts-deploy-testnet:
     runs-on: ubuntu-latest
     needs: test
     environment: testnet
@@ -52,6 +52,12 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+
+      # re-run the tests here on purpose to ensure quality.
+      - name: Run tests
+        run: forge test -vv
+        env:
+          ENVIRONMENT: local
 
       - uses: actions/setup-node@v4
         with:
