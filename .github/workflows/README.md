@@ -1,6 +1,6 @@
 # Github Actions
 
-## Running ctions Locally
+## Running Actions Locally
 
 ### Pre-requisite
 1. Install act https://nektosact.com/installation/index.html

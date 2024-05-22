@@ -37,6 +37,7 @@ yarn install
 ## Onetime Setup
 1. Setup environment variables in each package
     ```bash
+    cp -v .env.sample .env
     cd package/api && cp -v .env.local.sample .env.local && cd -
     cd package/app && cp -v .env.local.sample .env.local && cd -
     cd package/contracts && cp -v .env.sample .env && cd - 

@@ -33,7 +33,7 @@
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
     "@supabase/supabase-js": "^2.39.3",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.4.5",
     "ethers": "^5.7.2",
     "js-toml": "^1.0.0",
     "solhint": "^4.1.1"

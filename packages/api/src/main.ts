@@ -26,7 +26,7 @@ if (process.env.SENTRY_DSN) {
 (async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: false });
 
-  const tomlConfigService = new TomlConfigService();
+  const tomlConfigService = app.get(TomlConfigService);
 
   app.useLogger(logger);
 

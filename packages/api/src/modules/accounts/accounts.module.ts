@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { EthersModule } from '../../clients/ethers/ethers.module';
 import { SupabaseModule } from '../../clients/supabase/supabase.module';
+import { ConfigurationModule } from '../../utils/module';
 import { VaultsModule } from '../vaults/vaults.module';
 import { VaultsService } from '../vaults/vaults.service';
 
@@ -10,7 +11,7 @@ import { KycService } from './kyc.service';
 import { WalletsService } from './wallets.service';
 
 @Module({
-  imports: [SupabaseModule, EthersModule, VaultsModule],
+  imports: [ConfigurationModule, SupabaseModule, EthersModule, VaultsModule],
   providers: [KycService, WalletsService, VaultsService],
   controllers: [AccountsController],
   exports: [KycService, WalletsService],

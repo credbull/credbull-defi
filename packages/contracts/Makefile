@@ -1,33 +1,40 @@
+# NOTE (JL,2024-05-20): Hierarchical Environment loading does not simply work with `make`. A custom 
+#	solution may be possible, but given that `forge` auto-loads any `.env` file in the invocation 
+#	directory and our deployment scripts depend on this, it seems unnecessary to change this now.
 -include .env
 
 build:; forge build
 
 anvil: anvil
 
-define DEPLOY_CMD
-	rm -rf out && \
-	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
-	yarn gen-types && yarn db-export
-endef
-
-
 deploy-local:
-	$(MAKE) generic-deploy RPC_URL=localhost EXTRA_FLAGS=
+	$(MAKE) deploy RPC_URL=localhost EXTRA_FLAGS=
 
 # TODO: change this to use the network config from foundry.toml
-deploy-sepolia:
-	$(MAKE) generic-deploy RPC_URL=$(SEPOLIA_RPC_URL) EXTRA_FLAGS="--verify --slow"
+deploy-arbSepolia:
+	$(MAKE) deploy RPC_URL=$(SEPOLIA_RPC_URL) EXTRA_FLAGS="--verify --slow"
 
 deploy-baseSepolia:
-	$(MAKE) generic-deploy RPC_URL=baseSepolia EXTRA_FLAGS="--verify --slow"
+	$(MAKE) deploy RPC_URL=baseSepolia EXTRA_FLAGS="--verify --slow"
 
-generic-deploy:
-	@$(DEPLOY_CMD)
+# NOTE (JL,2024-05-20): `forge` auto-includes any `.env` file in the invocation directory.
+deploy:
+	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
+	@rm -rf out && \
+	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
+	yarn gen-types && \
+	yarn db-export
 
-verify-sepolia:
+# TODO: add --verifier flag.  forge isn't happy --etherscan-api-key is empty.
+deploy-bitlayerTestnet:
+	$(MAKE) deploy RPC_URL="https://testnet-rpc.bitlayer.org" \
+	EXTRA_FLAGS='--etherscan-api-key "" --verifier-url "https://testnet-scan.bitlayer.org" --legacy --slow'
+
+verify:
+	@echo "Running verify '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	rm -rf out && \
-	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url baseSepolia \
+	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume -vvvv && \
 	yarn gen-types && \
-	node script/utils/exporter.js
+	yarn db-export

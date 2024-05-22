@@ -31,19 +31,21 @@ contract HelperConfig is Script {
 
     NetworkConfig private activeNetworkConfig;
 
-    string private config;
+    string private tomlConfig;
 
     bool private testMode = false;
 
     constructor(bool _test) {
         testMode = _test;
 
-        config = loadConfiguration();
+        tomlConfig = loadTomlConfiguration();
 
-        if (block.chainid == 421614 || block.chainid == 80001 || block.chainid == 84532) {
-            activeNetworkConfig = getSepoliaEthConfig();
-        } else if (block.chainid == 31337) {
-            activeNetworkConfig = getAnvilEthConfig();
+        // TODO: move to using StdChains, e.g. `getChain(block.chainid) == "Arbitrum"`
+        if (
+            block.chainid == 31337 || block.chainid == 421614 || block.chainid == 80001 || block.chainid == 84532
+                || block.chainid == 200810
+        ) {
+            activeNetworkConfig = createNetworkConfig();
         } else {
             revert(string.concat("Unsupported chain with chainId ", vm.toString(block.chainid)));
         }
@@ -53,35 +55,17 @@ contract HelperConfig is Script {
         return activeNetworkConfig;
     }
 
-    function loadConfiguration() internal view returns (string memory) {
+    function loadTomlConfiguration() internal view returns (string memory) {
         string memory environment = vm.envString("ENVIRONMENT");
         string memory path = string.concat(vm.projectRoot(), "/resource/", environment, ".toml");
-        console2.log(string.concat("Loading configuration from: ", path));
+        console2.log(string.concat("Loading toml configuration from: ", path));
         return vm.readFile(path);
     }
 
-    /// Create Config for Anvil (local) chain
-    /// @return Network config will chain specific config
-    function getSepoliaEthConfig() internal returns (NetworkConfig memory) {
-        if (address(activeNetworkConfig.factoryParams.operator) != address(0)) {
-            return (activeNetworkConfig);
-        }
-
-        FactoryParams memory factoryParams = createFactoryParamsFromConfig();
-
-        // TODO - replace this with USDC and CBL actual contract addresses
-        DeployMocks deployMocks = new DeployMocks(testMode, factoryParams.owner);
-        (IERC20 mockToken, IERC20 mockStablecoin) = deployMocks.run();
-
-        NetworkConfig memory sepoliaConfig =
-            NetworkConfig({ factoryParams: factoryParams, usdcToken: mockStablecoin, cblToken: mockToken });
-
-        return sepoliaConfig;
-    }
-
-    /// Create Config for Anvil (local) chain
-    /// @return Network config will chain specific config
-    function getAnvilEthConfig() internal returns (NetworkConfig memory) {
+    /// Creates the active Network Config, or returns it if already created.
+    /// @return The active Network Config
+    function createNetworkConfig() internal returns (NetworkConfig memory) {
+        // NOTE (JL,2024-05-20): As function is only called from the constructor, do we need the 'exists' check?
         if (address(activeNetworkConfig.factoryParams.operator) != address(0)) {
             return (activeNetworkConfig);
         }
@@ -91,19 +75,19 @@ contract HelperConfig is Script {
         DeployMocks deployMocks = new DeployMocks(testMode, factoryParams.owner);
         (IERC20 mockToken, IERC20 mockStablecoin) = deployMocks.run();
 
-        NetworkConfig memory anvilConfig =
+        NetworkConfig memory networkConfig =
             NetworkConfig({ factoryParams: factoryParams, usdcToken: mockStablecoin, cblToken: mockToken });
 
-        return anvilConfig;
+        return networkConfig;
     }
 
-    /// Create Config for Anvil (local) chain
-    /// @return Network config will chain specific config
+    /// Create the Factory Parameters instance from configuration.
+    /// @return The active Factory Parameters
     function createFactoryParamsFromConfig() internal view returns (FactoryParams memory) {
         FactoryParams memory factoryParams = FactoryParams({
-            owner: config.readAddress(".ethereum.vm.owner.public_address"),
-            operator: config.readAddress(".ethereum.vm.operator.public_address"),
-            collateralPercentage: config.readUint(".application.collateral_percentage")
+            owner: tomlConfig.readAddress(".evm.contracts.owner.public_address"),
+            operator: tomlConfig.readAddress(".evm.contracts.operator.public_address"),
+            collateralPercentage: tomlConfig.readUint(".evm.contracts.upside_vault.collateral_percentage")
         });
 
         return factoryParams;

@@ -6,12 +6,6 @@ defaults:
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "main*"
-      - "development*"
-    paths:
-      - "packages/contracts/**"
 
 jobs:
   check-env:
@@ -19,7 +13,7 @@ jobs:
     environment: testnet
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Hello world!
         run: echo "hello world!"
@@ -30,7 +24,7 @@ jobs:
           echo "Environment is: $ENVIRONMENT"
           echo "A secret is: $SOME_SECRET"
         env:
-          # in github, these will come fromthe environment
+          # in github, these will come from the environment
           # locally, load using ```act --var-file my.variables``` (see https://nektosact.com/usage/index.html)
           ENVIRONMENT: ${{ vars.ENVIRONMENT }}
           SOME_SECRET: ${{ secrets.SOME_SECRET }}

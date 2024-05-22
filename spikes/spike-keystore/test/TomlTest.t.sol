@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test } from "forge-std/Test.sol";
 import { stdToml } from "forge-std/StdToml.sol";
+import { console2 } from "forge-std/console2.sol";
+
 
 contract TomlTest is Test {
     using stdToml for string;
@@ -30,7 +32,7 @@ contract TomlTest is Test {
     }
 
 
-    function test__TomlTest_ReadTableKeys() public view {
+    function test__TomlTest_ReadTableKeys() public {
 
         logKeyAndVals(".contracts"); // 1 - separate key file
 
@@ -43,17 +45,30 @@ contract TomlTest is Test {
     }
 
 
-    function logKeyAndVals(string memory tomlPath) public view {
+    function logKeyAndVals(string memory tomlPath) public {
         string memory toml = vm.readFile(path);
+
+        logKeyAndVals(toml, tomlPath);
+    }
+
+    function logKeyAndVals(string memory toml, string memory tomlPath) public {
+
+        TomlStringReader tomlStringReader = new TomlStringReader();
+
         string [] memory contractKeys = vm.parseTomlKeys(toml, tomlPath);
 
-        console.log('========== logging key/vals in path: "', tomlPath, '"');
+        console2.log('========== logging key/vals in path: "', tomlPath, '"');
 
         for (uint256 i = 0; i < contractKeys.length; i++) {
-            string memory key = contractKeys[i];
-            string memory val = toml.readString(string.concat(tomlPath, ".", key));
 
-            console.log(string.concat(vm.toString(i), ": ", key, "=", val));
+            string memory key = contractKeys[i];
+            string memory keyPath = string.concat(tomlPath, ".", key);
+
+            try tomlStringReader.readString(toml, keyPath) returns (string memory val) {
+                console2.log(string.concat(vm.toString(i), ": ", key, "=", val));
+            } catch {
+                logKeyAndVals(toml, keyPath); // assume a nested structure, recurse
+            }
         }
     }
 
@@ -82,4 +97,15 @@ contract TomlTest is Test {
         assertEq(toml.readAddress(".contracts.ownerAddress"), contracts.ownerAddress);
     }
 
+}
+
+
+// read Toml - using external contract so we can try/catch on results
+contract TomlStringReader {
+    using stdToml for string;
+
+    // readString - reverts if not a string
+    function readString(string memory toml, string memory path) public pure returns (string memory){
+        return toml.readString(path);
+    }
 }

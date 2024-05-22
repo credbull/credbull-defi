@@ -5,7 +5,7 @@ import { Strategy } from 'passport-jwt';
 import { Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeepMockProxy, mockDeep } from 'vitest-mock-extended';
 
-import { Config } from '../../../utils/module';
+import { ConfigurationModule } from '../../../utils/module';
 import { SupabaseModule } from '../supabase.module';
 import { SupabaseService } from '../supabase.service';
 
@@ -27,7 +27,7 @@ describe('SupabaseGuard', () => {
     (Strategy as any).JwtVerifier = verifier;
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [Config.module(), SupabaseModule],
+      imports: [ConfigurationModule, SupabaseModule],
       providers: [SupabaseGuard],
     }).compile();
 

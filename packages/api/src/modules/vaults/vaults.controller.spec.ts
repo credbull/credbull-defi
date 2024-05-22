@@ -10,7 +10,7 @@ import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
 import { logger } from '../../utils/logger';
-import { Config } from '../../utils/module';
+import { ConfigurationModule } from '../../utils/module';
 
 import { VaultsController } from './vaults.controller';
 import { VaultsModule } from './vaults.module';
@@ -33,7 +33,7 @@ describe('VaultsController', () => {
     const service = { admin: () => ({}), client: () => client };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [Config.module(), VaultsModule],
+      imports: [ConfigurationModule, VaultsModule],
       providers: [{ provide: ConsoleLogger, useValue: logger }],
     })
       .overrideProvider(SupabaseService)

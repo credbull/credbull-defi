@@ -6,18 +6,18 @@ import { TomlConfigService } from '../../utils/tomlConfig';
 
 @Injectable()
 export class EthersService {
-  private readonly deployerKey: string;
+  private readonly operatorPrivateKey: string;
 
   constructor(
     private readonly tomlConfigService: TomlConfigService,
     private readonly logger: ConsoleLogger,
   ) {
     this.logger.setContext(this.constructor.name);
-    this.deployerKey = this.tomlConfigService.config.services.ethers.operator.private_key;
+    this.operatorPrivateKey = this.tomlConfigService.config.secret.OPERATOR_PRIVATE_KEY.value;
   }
 
   async operator(): Promise<Signer> {
-    return new Wallet(this.deployerKey, await this.provider());
+    return new Wallet(this.operatorPrivateKey, await this.provider());
   }
 
   async networkId(): Promise<number> {
@@ -28,7 +28,7 @@ export class EthersService {
 
   // TODO: this is only needed while we dont have a real custodian
   async custodian(): Promise<Signer> {
-    const custodianKey = this.tomlConfigService.config.services.ethers.custodian.private_key;
+    const custodianKey = this.tomlConfigService.config.secret.CUSTODIAN_PRIVATE_KEY.value;
     return new Wallet(custodianKey, await this.provider());
   }
 
