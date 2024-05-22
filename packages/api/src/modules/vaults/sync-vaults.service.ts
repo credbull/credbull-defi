@@ -15,8 +15,8 @@ import { EthersService } from '../../clients/ethers/ethers.service';
 import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.service';
 import { ServiceResponse } from '../../types/responses';
 import { Database, Tables } from '../../types/supabase';
-import { responseFromRead } from '../../utils/contracts';
 import { NoDataFound } from '../../utils/errors';
+import { TomlConfigService } from '../../utils/tomlConfig';
 
 import { VaultParamsDto } from './vaults.dto';
 import {
@@ -30,6 +30,7 @@ export class SyncVaultsService {
   private supabaseAdmin: SupabaseClient<Database>;
 
   constructor(
+    private readonly tomlConfigService: TomlConfigService,
     private readonly ethers: EthersService,
     private readonly supabase: SupabaseAdminService,
     private readonly logger: ConsoleLogger,
@@ -74,17 +75,10 @@ export class SyncVaultsService {
       ? upsideFactoryContract.filters.VaultDeployed()
       : factoryContract.filters.VaultDeployed();
 
-    const events = await responseFromRead(
-      upside ? upsideFactoryContract : factoryContract,
-      factoryContract.queryFilter(eventFilter),
-    );
-    if (events.error) {
-      this.logger.error(events.error);
-      return;
-    }
+    const events = await this.fetchLogsFromLastBlocks(upside ? upsideFactoryContract : factoryContract, eventFilter);
 
     //Add all past events if any
-    if (events.data.length > 0) {
+    if (events.length > 0) {
       const vaults = await this.supabaseAdmin.from('vaults').select('address');
 
       if (vaults.error) {
@@ -94,7 +88,7 @@ export class SyncVaultsService {
 
       const vaultsInDB = vaults.data.map((vault) => vault.address);
 
-      const vaultsToBeAdded = events.data
+      const vaultsToBeAdded = events
         .filter((event) => !vaultsInDB.includes(event.args.vault))
         .filter(async (v) => {
           const contract = await this.getVaultContract(v.address);
@@ -103,6 +97,22 @@ export class SyncVaultsService {
 
       const processedEvents = await this.processEventData(vaultsToBeAdded, upside);
       if (processedEvents.error) this.logger.error(processedEvents.error);
+    }
+  }
+
+  private async fetchLogsFromLastBlocks(contract: any, eventFilter: any): Promise<VaultDeployedEvent[]> {
+    const latestBlock = await this.ethers.getBlockNumber();
+
+    const blockHistory: number = this.tomlConfigService.config.services.sync_vaults.block_history;
+
+    const fromBlock = latestBlock - blockHistory;
+
+    try {
+      const logs = await contract.queryFilter(eventFilter, fromBlock, latestBlock);
+      return logs;
+    } catch (error) {
+      this.logger.error(`Error fetching logs from ${fromBlock} to ${latestBlock}:`, error);
+      throw error;
     }
   }
 

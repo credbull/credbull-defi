@@ -81,6 +81,11 @@ export class EthersService {
     return provider as providers.Provider;
   }
 
+  public async getBlockNumber(): Promise<number> {
+    const provider = await this.provider();
+    return await provider.getBlockNumber();
+  }
+
   private async retryConnection(
     endpoint: string,
     maxRetries = 10,

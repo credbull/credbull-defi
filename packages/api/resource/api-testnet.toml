@@ -9,6 +9,9 @@ node_env="testnet"
 port=3001
 version="0.0.1"
 
+[services.sync_vaults]
+block_history=10000
+
 [services.supabase]
 url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
 
