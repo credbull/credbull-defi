@@ -1,6 +1,6 @@
 # Credbull API layer
 
-## Run
+## Run Locally
 
 ```bash
 yarn dev
