@@ -4,19 +4,19 @@
 #
 
 app = 'credbull-defi-api'
-primary_region = 'cdg'
+primary_region = 'fra'
 
 [build]
   image = "credbull-defi-api:latest"
 
 [deploy]
-  strategy = "canary"
+  strategy = "bluegreen"
 
 [env]
   ENVIRONMENT = "testnet"
 
 [http_service]
-  internal_port = 3000
+  internal_port = 3001
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true
