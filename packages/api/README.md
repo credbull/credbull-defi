@@ -31,30 +31,29 @@ supabase stop --no-backup
 1. Authenticate using Swagger http://localhost:3001/api/docs#/Authentication
 1. Click "Authorize" button and provide the bearer token from step #2
 
-
 ## Docker
 
-## Build Docker Image 
-```bash
-# needs to be run from <projectRootDir> as also Docker includes packages/contracts too
-cd ../..
+## Build Docker Image
 
-# build the docker file
-docker build -f packages/api/Dockerfile -t credbull-local-api .
+```bash
+# build the docker file - --platform needs to match the fly.io instances.  currently linux/amd64.
+docker build --platform linux/amd64 -f Dockerfile -t credbull-local-api ../..
 
 # list docker images
 docker images
 ```
 
 Docker Interactive shell, e.g. run `ls` to see image folder contents
+
 ```bash
 docker run -it credbull-local-api /bin/sh
 
 # exit interactive shell
-exit 
+exit
 ```
 
 ## Run via Docker
+
 ```bash
 # run docker
 docker run -d -p 3001:3001 --name credbull-local-container credbull-local-api
@@ -63,10 +62,11 @@ docker run -d -p 3001:3001 --name credbull-local-container credbull-local-api
 docker ps
 
 # view docker logs
-docker logs credbull-local-api
+docker logs credbull-local-container
 ```
 
 ## Teardown
+
 ```bash
 # stop the container
 docker stop credbull-local-container
