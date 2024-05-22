@@ -40,7 +40,7 @@ jobs:
 
   contracts-deploy-testnet:
     runs-on: ubuntu-latest
-    needs: test
+    needs: contracts-test
     environment: testnet
 
     steps:
