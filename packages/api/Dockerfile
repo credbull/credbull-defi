@@ -9,9 +9,6 @@ LABEL fly_launch_runtime="NestJS"
 # NestJS app lives here
 WORKDIR /app
 
-# output the working directory
-RUN echo "Docker working directory:" && pwd && echo "Contents:" && ls -al
-
 # Set production environment
 ENV NODE_ENV="production"
 

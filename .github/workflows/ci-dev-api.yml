@@ -50,20 +50,12 @@ jobs:
           CRON_SECRET : anything-testing-only
           SLACK_TOKEN: anything-testing-only
 
-      - name: Install dependencies
-        run: yarn install
-
-      - name: Print working directory
-        run: |
-          echo "Current working directory:"
-          pwd
-
       - name: Build API
         run: yarn build && yarn run sentry:sourcemaps
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
-      # docker build --platform needs to match the fly.io instances.  currently linux/amd64.
+       # docker build --platform needs to match the fly.io instances.  currently linux/amd64.
       - name: Build Docker image
         run: docker build --platform linux/amd64 -f Dockerfile -t credbull-defi-api ../..
 
@@ -72,7 +64,7 @@ jobs:
 
       - name: Deploying to fly.io
         uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy ../.. --local-only --image credbull-defi-api:latest -t ${{ secrets.FLY_DEPLOY_TOKEN }}
+      - run: flyctl deploy ../.. --local-only -t ${{ secrets.FLY_DEPLOY_TOKEN }}
 
       - name: Create Sentry release
         uses: getsentry/action-release@v1

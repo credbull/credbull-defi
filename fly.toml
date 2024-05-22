@@ -4,10 +4,13 @@
 #
 
 app = 'credbull-defi-api'
-primary_region = 'fra'
+primary_region = 'cdg'
+
+[build]
+  image = "credbull-defi-api:latest"
 
 [deploy]
-  strategy = "immediate"
+  strategy = "bluegreen"
 
 [env]
   ENVIRONMENT = "testnet"
