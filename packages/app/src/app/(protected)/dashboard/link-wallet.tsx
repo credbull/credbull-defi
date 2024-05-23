@@ -4,7 +4,7 @@ import { Tables } from '@credbull/api';
 import { Flex } from '@mantine/core';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useList } from '@refinedev/core';
-import { User } from '@supabase/gotrue-js/dist/module/lib/types';
+import { User } from '@supabase/auth-js';
 import { useTransition } from 'react';
 import { SiweMessage, generateNonce } from 'siwe';
 import { useAccount, useSignMessage } from 'wagmi';

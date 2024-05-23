@@ -11,8 +11,7 @@ import {
 import { Button, Card, Flex, Group, NumberInput, SimpleGrid, Text, TextInput } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useClipboard } from '@mantine/hooks';
-import { useList, useNotification, useOne } from '@refinedev/core';
-import { OpenNotificationParams } from '@refinedev/core/dist/contexts/notification/INotificationContext';
+import { OpenNotificationParams, useList, useNotification, useOne } from '@refinedev/core';
 import { useForm } from '@refinedev/mantine';
 import { IconCopy } from '@tabler/icons';
 import { getPublicClient } from '@wagmi/core';
