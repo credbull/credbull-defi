@@ -29,7 +29,7 @@ function createParams(params: {
     matured?: boolean;
     upside?: string;
     tenant?: string;
-}): [ICredbull.FixedYieldVaultParamsStruct, CreateVaultParams] {
+}): [ICredbull.FixedYieldVaultParamsStruct, CreateVaultParams, any] {
     const treasury = process.env.ADDRESSES_TREASURY;
     const activityReward = process.env.ADDRESSES_ACTIVITY_REWARD;
 
@@ -119,7 +119,7 @@ function createParams(params: {
     console.log('Vault Params:', fixedYieldVaultParams);
     console.log('Vault Extra Params:', vaultExtraParams);
 
-    return [fixedYieldVaultParams, vaultExtraParams];
+    return [fixedYieldVaultParams, vaultExtraParams, tempParams];
 }
 
 export const main = (
@@ -168,7 +168,9 @@ export const main = (
         // TODO: this is the problem - the vaultFactory Admin (owner) is needed here
         // but later we call to createVault we should be using the operator
         const vaultFactoryAsAdmin = CredbullVaultFactory__factory.connect(factoryAddress!, adminSigner);
+        console.log('error before this.....')
         const allowTx = await vaultFactoryAsAdmin.allowCustodian(custodian);
+        console.log('error here...')
         await allowTx.wait();
 
         console.log(`!! CredbullVaultFactory ${factoryAddress} allowCustodian: ${custodian}`);
@@ -178,12 +180,12 @@ export const main = (
         const asset = addresses.data.find((i) => i.contract_name === 'MockStablecoin')?.address;
         const token = addresses.data.find((i) => i.contract_name === 'MockToken')?.address;
 
-        const [vaultParams, createVaultParams] = createParams({
+        const [vaultParams, createVaultParams, tempParams] = createParams({
             custodian, kycProvider, asset, token, matured: scenarios.matured, upside: params?.upsideVault,
             tenant: scenarios.tenant && params?.tenantEmail ? (await userByEmail(params?.tenantEmail)).id : undefined,
         });
 
-        let body = JSON.stringify({...vaultParams, ...createVaultParams}, null, 2);
+        let body = JSON.stringify({...tempParams, ...createVaultParams}, null, 2);
 
 
         console.log('\n%%%%%%%%%%%%%%%%%%%%% start vaults/create-vault %%%%%%%%%%%%%%%%%%%%%');

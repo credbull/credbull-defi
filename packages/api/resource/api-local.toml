@@ -13,7 +13,7 @@ url = "http://127.0.0.1:54321"
 
 [services.ethers]
 url="http://127.0.0.1:8545"
-wss="wss://127.0.0.1:8545"
+wss="ws://127.0.0.1:8545"
 
 # Dev/Anvil Wallet, Account[1]
 operator.public_address = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
