@@ -34,14 +34,12 @@ contract UpsideVault is FixedYieldVault {
     /// @notice Additional precision required for math
     uint256 private additionalPrecision;
 
-    constructor(FixedYieldVaultParams memory params, IERC20 _token, uint256 _collateralPercentage)
-        FixedYieldVault(params)
-    {
-        collateralPercentage = _collateralPercentage;
-        token = _token;
+    constructor(UpsideVaultParams memory params) FixedYieldVault(params.fixedYieldVaultParams) {
+        collateralPercentage = params.collateralPercentage;
+        token = params.cblToken;
 
-        uint8 assetDecimal = _checkValidDecimalValue(address(params.baseVaultParams.asset));
-        uint8 tokenDecimal = _checkValidDecimalValue(address(_token));
+        uint8 assetDecimal = _checkValidDecimalValue(address(params.fixedYieldVaultParams.baseVaultParams.asset));
+        uint8 tokenDecimal = _checkValidDecimalValue(address(params.cblToken));
 
         if (tokenDecimal >= assetDecimal) {
             additionalPrecision = 10 ** (tokenDecimal - assetDecimal);

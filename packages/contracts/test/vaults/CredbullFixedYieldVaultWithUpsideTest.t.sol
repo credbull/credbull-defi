@@ -24,6 +24,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     CredbullKYCProvider private kycProvider;
 
     ICredbull.FixedYieldVaultParams private vaultParams;
+    ICredbull.UpsideVaultParams private upsideVaultParams;
 
     address private alice = makeAddr("alice");
 
@@ -38,11 +39,13 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     function setUp() public {
         deployer = new DeployVaultFactory();
         (,, kycProvider, helperConfig) = deployer.runTest();
-        (vaultParams, cblToken) =
+        (upsideVaultParams) =
             new HelperVaultTest(helperConfig.getNetworkConfig()).createFixedYieldWithUpsideVaultParams();
-        vaultParams.kycParams.kycProvider = address(kycProvider);
+        vaultParams = upsideVaultParams.fixedYieldVaultParams;
+        upsideVaultParams.fixedYieldVaultParams.kycParams.kycProvider = address(kycProvider);
+        cblToken = upsideVaultParams.cblToken;
 
-        vault = new CredbullFixedYieldVaultWithUpside(vaultParams, cblToken, REQUIRED_COLLATERAL_PERCENTAGE);
+        vault = new CredbullFixedYieldVaultWithUpside(upsideVaultParams);
         precision = 10 ** MockStablecoin(address(vaultParams.baseVaultParams.asset)).decimals();
 
         address[] memory whitelistAddresses = new address[](1);

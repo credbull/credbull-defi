@@ -34,12 +34,12 @@ contract HelperVaultTest is Test {
         });
     }
 
-    function createFixedYieldWithUpsideVaultParams()
-        public
-        returns (ICredbull.FixedYieldVaultParams memory params, IERC20 token)
-    {
-        params = createFixedYieldVaultParams();
-        token = networkConfig.cblToken;
+    function createFixedYieldWithUpsideVaultParams() public returns (ICredbull.UpsideVaultParams memory params) {
+        params = ICredbull.UpsideVaultParams({
+            fixedYieldVaultParams: createFixedYieldVaultParams(),
+            cblToken: networkConfig.cblToken,
+            collateralPercentage: 20_00
+        });
     }
 
     function createFixedYieldVaultParams() public returns (ICredbull.FixedYieldVaultParams memory params) {

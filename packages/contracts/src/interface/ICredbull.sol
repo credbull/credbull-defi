@@ -68,13 +68,10 @@ interface ICredbull {
         uint256 promisedYield;
     }
 
-    struct MaturityVaultParams {
-        BaseVaultParams baseVaultParams;
-        ContractRoles contractRoles;
-        WindowVaultParams windowVaultParams;
-        KycParams kycParams;
-        MaxCapParams maxCapParams;
-        uint256 promisedYield;
+    struct UpsideVaultParams {
+        FixedYieldVaultParams fixedYieldVaultParams;
+        IERC20 cblToken;
+        uint256 collateralPercentage;
     }
 
     /// @notice - Zero address error
