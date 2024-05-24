@@ -5,7 +5,6 @@ pragma solidity ^0.8.19;
 import { ICredbull } from "../interface/ICredbull.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../CredbullFixedYieldVaultWithUpside.sol";
 import { CredbullVaultFactory } from "./CredbullVaultFactory.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract CredbullUpsideVaultFactory is CredbullVaultFactory {
     /// @notice Event to emit when a new vault is created

@@ -11,7 +11,6 @@ import { HelperConfig, NetworkConfig } from "../../script/HelperConfig.s.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract CredbullVaultWithUpsideFactoryTest is Test {
     CredbullUpsideVaultFactory private factory;

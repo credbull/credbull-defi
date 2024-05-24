@@ -5,7 +5,6 @@ pragma solidity ^0.8.19;
 import { Test } from "forge-std/Test.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, FactoryParams } from "../../script/HelperConfig.s.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// Utility to help with testing vaults
 contract HelperVaultTest is Test {
