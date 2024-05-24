@@ -5,6 +5,7 @@ defaults:
     working-directory: .
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "*" ]
     paths:
@@ -16,7 +17,7 @@ jobs:
     environment: dev
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:

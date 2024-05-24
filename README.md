@@ -21,40 +21,50 @@
 - If you only want to work on the contracts, you don't need to setup the whole project. 
 Please go directly to [`contracts/`](./packages/contracts/README.md) and follow the instructions there.
 
-- Ensure that you have installed:
-    - NodeJS v21+ ([install node.js](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs))
-    - Yarn ([install yarn](https://v3.yarnpkg.com/getting-started/install))
-    - Foundry ([install forge](https://book.getfoundry.sh/getting-started/installation))
-    - Docker ([install docker](https://docs.docker.com/get-docker/))
-    - Supabase CLI ([install the cli](https://github.com/supabase/cli#install-the-cli))
-      - Hint: choose a native client for your platform instead of the npm package
+## Install Pre-requisite Tools
+- NodeJS v21+ ([install node.js](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs))
+- Yarn ([install yarn](https://v3.yarnpkg.com/getting-started/install))
+- Foundry ([install forge](https://book.getfoundry.sh/getting-started/installation))
+- Docker ([install docker](https://docs.docker.com/get-docker/))
+- Supabase CLI ([install the cli](https://github.com/supabase/cli#install-the-cli))
+  - Hint: choose a native client for your platform instead of the npm package
 
-- Install the project dependencies with ```yarn install```
 
-- Ensure you have the environment variables for local development:
-  - In `package/api`, run `cp -v .env.local.sample .env.local`
-  - In `package/app`, run `cp -v .env.local.sample .env.local`
-  - In `package/contracts`, run `cp -v .env.sample .env`
-  - In `package/sdk`, run `cp -v .env.sample .env`
-    - NOTE: Further setup required. See SDK [README.md](packages/sdk/README.md).
-  - In `scripts/operation`, run `cp -v .env.sample .env`
-    - NOTE: Further setup required. See Operations [README.md](scripts/operation/README.md). 
+## Install dependencies
+```bash
+yarn install
+```
+## Onetime Setup
+1. Setup environment variables in each package
+    ```bash
+    cp -v .env.sample .env
+    cd package/api && cp -v .env.local.sample .env.local && cd -
+    cd package/app && cp -v .env.local.sample .env.local && cd -
+    cd package/contracts && cp -v .env.sample .env && cd - 
+    cd package/sdk && cp -v .env.sample .env && cd - 
+    ```
+1. Start the database (Supabase)
+    ```bash
+    cd packages/api && supabase start && cd -
+    ```
+1. Setup sdk, see [sdk/README.md](packages/sdk/README.md)
+1. Setup op scripts, see [operations/README.md](scripts/operation/README.md). 
 
-- Start the database (Supabase)
-  - In `packages/api`, run `supabase start` 
-  - Follow the instructions from the CLI.
 
----
-## Test Locally
+## Rum and Test Locally
+After completing the above setup, simply run:
+```bash
+# test all packages
+yarn test
+```
 
-- After the project has been setup locally you can just ```yarn test```
-- NOTE: JL 2024-05-08, `test` for the `sdk` package has been re-named to `int-test` as it was interfering with developer workflow. The Notion [issue](https://www.notion.so/Task-Ensure-sdk-test-does-not-impact-developer-workflow-on-push-etc-b51ce2df722a4b70a74fcaab6134ad66?pvs=4).
+```bash
+# run all pakcages
+yarn dev
+```
 
----
-## Run and Deploy Locally
-
-- Run `yarn dev`
-- Run `open http://localhost:3000`
+### Open the Application
+open http://localhost:3000
 
 ---
 ## Slack Integration

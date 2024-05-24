@@ -7,14 +7,16 @@ app = 'credbull-defi-api'
 primary_region = 'fra'
 
 [build]
-  dockerfile = "./packages/api/Dockerfile"
-  ignorefile = "./packages/api/.dockerignore"
+  image = "credbull-defi-api:latest"
 
 [deploy]
   strategy = "bluegreen"
 
+[env]
+  ENVIRONMENT = "testnet"
+
 [http_service]
-  internal_port = 3000
+  internal_port = 3001
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true

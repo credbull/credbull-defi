@@ -10,11 +10,11 @@ import { AuthenticationModule } from './modules/authentication/authentication.mo
 import { NotificationsModule } from './modules/notification/notifications.module';
 import { VaultsModule } from './modules/vaults/vaults.module';
 import * as logger from './utils/logger';
-import { Config } from './utils/module';
+import { ConfigurationModule } from './utils/module';
 
 @Module({
   imports: [
-    Config.module(),
+    ConfigurationModule,
     AccountsModule,
     SupabaseModule,
     AuthenticationModule,

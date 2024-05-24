@@ -1,4 +1,4 @@
-## Contracts
+## Credbull Smart Contracts
 
 All our smart contract reside in this project. 
 

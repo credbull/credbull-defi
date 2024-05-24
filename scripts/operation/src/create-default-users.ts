@@ -8,14 +8,14 @@ export const main = () => {
     console.log('=====================================');
     console.log('\n');
 
-    const adminEmail = 'admin-user@credbull.io';
-    const adminPassword = 'admin123';
+    const adminEmail = process.env.ADMIN_EMAIL!;
+    const adminPassword = process.env.ADMIN_PASSWORD!;
 
-    const userA = 'usera@cbl.com';
+    const userA = 'usera@credbull.io';
     const userAPassword = 'usera123';
 
-    const userB = 'oper-user@credbull.io';
-    const userBPassword = 'oper123';
+    const userB = process.env.BOB_EMAIL!;
+    const userBPassword = process.env.BOB_PASSWORD!;
 
     const client = supabase({ admin: true });
 

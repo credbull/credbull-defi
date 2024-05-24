@@ -1,22 +1,23 @@
 import { Signer } from '@ethersproject/abstract-signer';
 import { ConsoleLogger, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Overrides, Wallet, providers } from 'ethers';
+
+import { TomlConfigService } from '../../utils/tomlConfig';
 
 @Injectable()
 export class EthersService {
-  private readonly deployerKey: string;
+  private readonly operatorPrivateKey: string;
 
   constructor(
-    private readonly config: ConfigService,
+    private readonly tomlConfigService: TomlConfigService,
     private readonly logger: ConsoleLogger,
   ) {
     this.logger.setContext(this.constructor.name);
-    this.deployerKey = config.getOrThrow('ETHERS_DEPLOYER_PRIVATE_KEY'); // woohoo - this is where the private key is coming from
+    this.operatorPrivateKey = this.tomlConfigService.config.secret.OPERATOR_PRIVATE_KEY.value;
   }
 
   async operator(): Promise<Signer> {
-    return new Wallet(this.deployerKey, await this.provider());
+    return new Wallet(this.operatorPrivateKey, await this.provider());
   }
 
   async networkId(): Promise<number> {
@@ -27,18 +28,19 @@ export class EthersService {
 
   // TODO: this is only needed while we dont have a real custodian
   async custodian(): Promise<Signer> {
-    const custodianKey = this.config.getOrThrow('ETHERS_CUSTODIAN_PRIVATE_KEY');
+    const custodianKey = this.tomlConfigService.config.secret.CUSTODIAN_PRIVATE_KEY.value;
     return new Wallet(custodianKey, await this.provider());
   }
 
   overrides(): Overrides {
-    const env = this.config.getOrThrow('NODE_ENV');
-    return env === 'development' ? { gasLimit: 1000000 } : {};
+    const nodeEnv = this.tomlConfigService.config.node_env;
+    return nodeEnv === 'development' ? { gasLimit: 1000000 } : {};
   }
 
   public async wssProvider(): Promise<providers.WebSocketProvider> {
-    console.log(this.config.getOrThrow('WSS_PROVIDER_URLS'));
-    const provider = new providers.WebSocketProvider(this.config.getOrThrow('WSS_PROVIDER_URLS'));
+    const wssUrl = this.tomlConfigService.config.services.ethers.wss;
+    console.log(wssUrl);
+    const provider = new providers.WebSocketProvider(wssUrl);
     provider._websocket.on('open', () => {
       console.log('WebSocketProvider open');
     });
@@ -55,7 +57,9 @@ export class EthersService {
   }
 
   private async provider(): Promise<providers.Provider> {
-    const networkProviders = String(this.config.getOrThrow('ETHERS_PROVIDER_URLS')).split(',');
+    const ethersUrl = this.tomlConfigService.config.services.ethers.url;
+
+    const networkProviders = String(ethersUrl).split(',');
 
     let provider;
     let connectionStatus: boolean = false;
@@ -75,6 +79,11 @@ export class EthersService {
     }
 
     return provider as providers.Provider;
+  }
+
+  public async getBlockNumber(): Promise<number> {
+    const provider = await this.provider();
+    return await provider.getBlockNumber();
   }
 
   private async retryConnection(

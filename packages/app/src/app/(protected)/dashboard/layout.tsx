@@ -13,7 +13,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { User } from '@supabase/gotrue-js/dist/module/lib/types';
+import { User } from '@supabase/auth-js';
 import { IconBug, IconBusinessplan, IconChevronRight, IconLogout } from '@tabler/icons';
 import Link from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
