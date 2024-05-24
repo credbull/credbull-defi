@@ -38,10 +38,10 @@ yarn install
 1. Setup environment variables in each package
     ```bash
     cp -v .env.sample .env
-    cd package/api && cp -v .env.local.sample .env.local && cd -
-    cd package/app && cp -v .env.local.sample .env.local && cd -
-    cd package/contracts && cp -v .env.sample .env && cd - 
-    cd package/sdk && cp -v .env.sample .env && cd - 
+    cd packages/api && cp -v .env.sample .env && cd -
+    cd packages/app && cp -v .env.local.sample .env.local && cd -
+    cd packages/contracts && cp -v .env.sample .env && cd - 
+    cd packages/sdk && cp -v .env.sample .env && cd - 
     ```
 1. Start the database (Supabase)
     ```bash
