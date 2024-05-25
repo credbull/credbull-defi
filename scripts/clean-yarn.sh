@@ -1,15 +1,24 @@
 cd ..
 
-cd ~/proj/credbull/credbull-defi
+# Capture the current directory
+current_dir=$(pwd)
 
-# Remove all node_modules directories
-find . -name "node_modules" -type d -prune -exec rm -rf '{}' +
+echo "Cleaning yarn caches from root directory ($current_dir)"
 
-# Remove all yarn.lock files
-find . -name "yarn.lock" -type f -delete
+# Enable command echoing
+set -x
 
-# Remove all .pnp.js files (if not using PnP)
-find . -name ".pnp.js" -type f -delete
+# Ensure command echoing is disabled upon script exit
+trap 'set +x' EXIT
 
-# Run a clean yarn install
-yarn install
+pwd
+
+# Remove all node_modules directories, excluding those under any 'lib' directory
+find . -name "lib" -prune -o -name "node_modules" -type d -exec rm -rf '{}' +
+
+# Remove all node_modules directories, excluding those under any 'lib' directory
+find . -name "lib" -prune -o -name ".yarn/cache" -type d -exec rm -rf '{}' +
+
+
+# Remove all .pnp.js files (if not using PnP), excluding those under any 'lib' directory
+find . -name "lib" -prune -o -name ".pnp.js" -type f -exec rm -f '{}' +w
