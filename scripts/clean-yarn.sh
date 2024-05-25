@@ -17,7 +17,7 @@ pwd
 find . -name "lib" -prune -o -name "node_modules" -type d -exec rm -rf '{}' +
 
 # Remove all node_modules directories, excluding those under any 'lib' directory
-find . -name "lib" -prune -o -name ".yarn/cache" -type d -exec rm -rf '{}' +
+find . -name "lib" -prune -o -name "cache" -type d -exec rm -rf '{}' +
 
 
 # Remove all .pnp.js files (if not using PnP), excluding those under any 'lib' directory
