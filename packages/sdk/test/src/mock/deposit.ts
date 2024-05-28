@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 import { BigNumber, utils } from 'ethers';
 
-import { CredbullSDK } from '..';
+import { CredbullSDK } from '../../../src/index';
 import { __mockMint, generateSigner, login, signer } from './utils/helpers';
 
 config();
@@ -29,8 +29,8 @@ config();
   await admin.sendTransaction(tx2);
 
   // Initialize the SDK
-  const sdkUser1 = new CredbullSDK(res.access_token, user1Signer);
-  const sdkUser2 = new CredbullSDK(res.access_token, user2Signer);
+  const sdkUser1 = new CredbullSDK(process.env.BASE_URL || '', res.access_token, user1Signer);
+  const sdkUser2 = new CredbullSDK(process.env.BASE_URL || '', res.access_token, user2Signer);
 
   //Get all vaults through SDK
   const vaults = await sdkUser1.getAllVaults();

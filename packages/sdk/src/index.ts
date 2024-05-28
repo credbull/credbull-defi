@@ -1,37 +1,47 @@
+import { BigNumber, Signer } from 'ethers';
+import { ethers } from 'ethers';
+import { SiweMessage, generateNonce } from 'siwe';
+
 import {
   CredbullFixedYieldVaultWithUpside__factory,
   CredbullFixedYieldVault__factory,
   ERC20__factory,
 } from '@credbull/contracts';
-import { BigNumber, Signer } from 'ethers';
-import { ethers } from 'ethers';
-import { SiweMessage, generateNonce } from 'siwe';
 
-import { decodeContractError } from './src/utils/utils';
+import { decodeContractError } from './utils';
 
 export class CredbullSDK {
-  private SERVICE_URL = process.env.API_BASE_URL || '';
+
+  private serviceUrl: URL;
+
   constructor(
-    private access_token: string,
+    serviceUrl: string,
+    private accessToken: string,
     private signer: Signer,
-  ) {}
+  ) {
+      this.serviceUrl = new URL(serviceUrl);
+  }
 
   private headers() {
     return {
       headers: {
         'Content-Type': 'application/json',
-        ...(this.access_token ? { Authorization: `Bearer ${this.access_token}` } : {}),
+        ...({ Authorization: `Bearer ${this.accessToken}` }),
       },
     };
   }
 
-  private async linkWalletMessage(signer: Signer) {
+  private toServiceUrl(path: string): URL {
+    return new URL(path, this.serviceUrl)
+  }
+
+  private async linkWalletMessage(signer: Signer): Promise<string> {
     const chainId = await signer.getChainId();
     const preMessage = new SiweMessage({
-      domain: this.SERVICE_URL.split('//')[1],
+      domain: this.serviceUrl.host,
       address: await signer.getAddress(),
       statement: 'By connecting your wallet, you agree to the Terms of Service and Privacy Policy.',
-      uri: this.SERVICE_URL,
+      uri: this.serviceUrl.toString(),
       version: '1',
       chainId,
       nonce: generateNonce(),
@@ -52,17 +62,17 @@ export class CredbullSDK {
   }
 
   /// Return all active vaults
-  async getAllVaults() {
-    const vaultsData = await fetch(`${this.SERVICE_URL}/vaults/current`, { method: 'GET', ...this.headers() });
+  async getAllVaults(): Promise<any> {
+    const vaultsData = await fetch(this.toServiceUrl('/vaults/current'), { method: 'GET', ...this.headers() });
     return await vaultsData.json();
   }
 
   /// Link user wallet
-  async linkWallet(discriminator?: string) {
+  async linkWallet(discriminator?: string): Promise<any> {
     const message = await this.linkWalletMessage(this.signer);
     const signature = await this.signer.signMessage(message);
 
-    const linkWallet = await fetch(`${this.SERVICE_URL}/accounts/link-wallet`, {
+    const linkWallet = await fetch(this.toServiceUrl('/accounts/link-wallet'), {
       method: 'POST',
       body: JSON.stringify({ message, signature, discriminator }),
       ...this.headers(),
@@ -72,35 +82,35 @@ export class CredbullSDK {
   }
 
   /// Deposit token to the given vault address
-  async deposit(vaultAddress: string, amount: BigNumber, receiver: string) {
+  async deposit(vaultAddress: string, amount: BigNumber, receiver: string): Promise<void> {
     const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
     await vault.deposit(amount, receiver).catch((err) => this.handleError(vault, err));
   }
 
   /// Redeem the share tokens
-  async redeem(vaultAddress: string, shares: BigNumber, receiver: string) {
+  async redeem(vaultAddress: string, shares: BigNumber, receiver: string): Promise<void> {
     const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
     await vault.redeem(shares, receiver, receiver).catch((err) => this.handleError(vault, err));
   }
 
   /// Get the instance of an asset associated with the vault
-  async getAssetInstance(vaultAddress: string) {
+  async getAssetInstance(vaultAddress: string): Promise<any> {
     const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
     const assetAddress = await vault.asset().catch((err) => this.handleError(vault, err));
     return ERC20__factory.connect(assetAddress as string, this.signer);
   }
 
   /// Get the instance of the vault
-  async getVaultInstance(vaultAddress: string) {
+  async getVaultInstance(vaultAddress: string): Promise<any> {
     return CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
   }
 
   /// Get upside vault instance
-  async getUpsideVaultInstance(vaultAddress: string) {
+  async getUpsideVaultInstance(vaultAddress: string): Promise<any> {
     return CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, this.signer);
   }
 
-  async getTokenInstance(vaultAddress: string) {
+  async getTokenInstance(vaultAddress: string): Promise<any> {
     const vault = CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, this.signer);
     const tokenAddress = await vault.token().catch((err) => this.handleError(vault, err));
     return ERC20__factory.connect(tokenAddress as string, this.signer);

@@ -1,6 +1,7 @@
-import { CredbullFixedYieldVault, MockStablecoin__factory } from '@credbull/contracts';
 import crypto from 'crypto';
 import { BigNumber, Signer, Wallet, providers } from 'ethers';
+
+import { CredbullFixedYieldVault, MockStablecoin__factory } from '@credbull/contracts';
 
 export const headers = (session?: Awaited<ReturnType<typeof login>>) => {
   return {
