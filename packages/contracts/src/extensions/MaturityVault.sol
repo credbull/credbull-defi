@@ -5,6 +5,7 @@ pragma solidity ^0.8.19;
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { CredbullBaseVault } from "../base/CredbullBaseVault.sol";
+import { ICredbull } from "../interface/ICredbull.sol";
 
 abstract contract MaturityVault is CredbullBaseVault {
     using Math for uint256;
@@ -26,7 +27,7 @@ abstract contract MaturityVault is CredbullBaseVault {
     /**
      * @param params - Vault parameters
      */
-    constructor(FixedYieldVaultParams memory params) CredbullBaseVault(params.baseVaultParams) {
+    constructor(ICredbull.FixedYieldVaultParams memory params) CredbullBaseVault(params.baseVaultParams) {
         checkMaturity = true;
         _fixedYield = params.promisedYield;
     }

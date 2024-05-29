@@ -10,7 +10,7 @@ import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { ICredbull } from "../interface/ICredbull.sol";
 
-abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
+abstract contract CredbullBaseVault is ERC4626, Pausable {
     using Math for uint256;
 
     error CredbullVault__TransferOutsideEcosystem(address);
@@ -53,12 +53,12 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
      *
      * @param baseVaultParams - Base vault parameters
      */
-    constructor(BaseVaultParams memory baseVaultParams)
+    constructor(ICredbull.BaseVaultParams memory baseVaultParams)
         ERC4626(baseVaultParams.asset)
         ERC20(baseVaultParams.shareName, baseVaultParams.shareSymbol)
     {
         if (baseVaultParams.custodian == address(0) || address(baseVaultParams.asset) == address(0)) {
-            revert ZeroAddress();
+            revert ICredbull.ZeroAddress();
         }
 
         CUSTODIAN = baseVaultParams.custodian;

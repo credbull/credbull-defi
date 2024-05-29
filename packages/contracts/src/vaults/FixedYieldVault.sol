@@ -7,13 +7,14 @@ import { MaturityVault } from "../extensions/MaturityVault.sol";
 import { WhitelistPlugIn } from "../plugins/WhitelistPlugIn.sol";
 import { WindowPlugIn } from "../plugins/WindowPlugIn.sol";
 import { MaxCapPlugIn } from "../plugins/MaxCapPlug.sol";
+import { ICredbull } from "../interface/ICredbull.sol";
 
 /// @notice - A Fixed yield vault
 contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCapPlugIn, AccessControl {
     /// @notice - Hash of operator role
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-    constructor(FixedYieldVaultParams memory params)
+    constructor(ICredbull.FixedYieldVaultParams memory params)
         MaturityVault(params)
         WhitelistPlugIn(params.kycParams.kycProvider, params.kycParams.depositThresholdForWhitelisting)
         MaxCapPlugIn(params.maxCapParams.maxCap)

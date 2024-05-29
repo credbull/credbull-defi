@@ -5,6 +5,7 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { FixedYieldVault } from "./FixedYieldVault.sol";
+import { ICredbull } from "../interface/ICredbull.sol";
 
 /// @notice - Upside vault
 contract UpsideVault is FixedYieldVault {
@@ -34,7 +35,7 @@ contract UpsideVault is FixedYieldVault {
     /// @notice Additional precision required for math
     uint256 private additionalPrecision;
 
-    constructor(UpsideVaultParams memory params) FixedYieldVault(params.fixedYieldVaultParams) {
+    constructor(ICredbull.UpsideVaultParams memory params) FixedYieldVault(params.fixedYieldVaultParams) {
         collateralPercentage = params.collateralPercentage;
         token = params.cblToken;
 
