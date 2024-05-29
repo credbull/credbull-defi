@@ -7,12 +7,14 @@
   "dependencies": {
     "@credbull/api": "workspace:^",
     "@credbull/contracts": "workspace:^",
+    "@credbull/sdk": "workspace:^",
     "@supabase/supabase-js": "^2.39.1",
     "compression": "^1.7.4",
     "crypto": "^1.0.1",
     "date-fns": "^3.3.1",
     "dotenv": "^16.3.1",
     "ethers": "^5.7.2",
+    "js-toml": "^1.0.0",
     "siwe": "^2.1.4",
     "zod": "^3.22.4"
   },
