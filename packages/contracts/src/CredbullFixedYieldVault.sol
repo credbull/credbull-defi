@@ -6,5 +6,5 @@ import { FixedYieldVault } from "./vaults/FixedYieldVault.sol";
 import { ICredbull } from "./interface/ICredbull.sol";
 
 contract CredbullFixedYieldVault is FixedYieldVault {
-    constructor(ICredbull.FixedYieldVaultParams memory params) FixedYieldVault(params) { }
+    constructor(FixedYieldVaultParams memory params) FixedYieldVault(params) { }
 }

@@ -5,6 +5,10 @@ pragma solidity ^0.8.19;
 import { Test } from "forge-std/Test.sol";
 import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { NetworkConfig, FactoryParams } from "../../script/HelperConfig.s.sol";
+import { CredbullBaseVault } from "../mocks/vaults/CredbullBaseVaultMock.m.sol";
+import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
+import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
+import { MaxCapVaultMock } from "../mocks/vaults/MaxCapVaultMock.m.sol";
 
 /// Utility to help with testing vaults
 contract HelperVaultTest is Test {
@@ -22,7 +26,7 @@ contract HelperVaultTest is Test {
         return createTestVaultParams(custodian, address(0));
     }
 
-    function createBaseVaultTestParams() public returns (ICredbull.BaseVaultParams memory params) {
+    function createBaseVaultTestParams() public returns (CredbullBaseVault.BaseVaultParams memory params) {
         address custodian = makeAddr("custodianAddress");
 
         params = ICredbull.BaseVaultParams({
@@ -33,7 +37,10 @@ contract HelperVaultTest is Test {
         });
     }
 
-    function createFixedYieldWithUpsideVaultParams() public returns (ICredbull.UpsideVaultParams memory params) {
+    function createFixedYieldWithUpsideVaultParams()
+        public
+        returns (CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params)
+    {
         params = ICredbull.UpsideVaultParams({
             fixedYieldVaultParams: createFixedYieldVaultParams(),
             cblToken: networkConfig.cblToken,
@@ -41,7 +48,10 @@ contract HelperVaultTest is Test {
         });
     }
 
-    function createFixedYieldVaultParams() public returns (ICredbull.FixedYieldVaultParams memory params) {
+    function createFixedYieldVaultParams()
+        public
+        returns (CredbullFixedYieldVault.FixedYieldVaultParams memory params)
+    {
         params = ICredbull.FixedYieldVaultParams({
             baseVaultParams: createBaseVaultTestParams(),
             contractRoles: createContractRoles(),
@@ -52,7 +62,10 @@ contract HelperVaultTest is Test {
         });
     }
 
-    function createMaturityVaultTestParams() public returns (ICredbull.FixedYieldVaultParams memory params) {
+    function createMaturityVaultTestParams()
+        public
+        returns (CredbullFixedYieldVault.FixedYieldVaultParams memory params)
+    {
         return createFixedYieldVaultParams();
     }
 
@@ -67,7 +80,7 @@ contract HelperVaultTest is Test {
         });
     }
 
-    function createWindowVaultParams() public view returns (ICredbull.WindowVaultParams memory params) {
+    function createWindowVaultParams() public view returns (MaxCapVaultMock.WindowVaultParams memory params) {
         uint256 opensAt = block.timestamp;
         uint256 closesAt = opensAt + 7 days;
         uint256 year = 365 days;

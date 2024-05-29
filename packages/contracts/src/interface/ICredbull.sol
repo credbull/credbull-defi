@@ -27,52 +27,29 @@ interface ICredbull {
         uint256 depositThresholdForWhitelisting;
     }
 
-    struct BaseVaultParams {
-        IERC20 asset;
-        string shareName;
-        string shareSymbol;
-        address custodian;
-    }
+    // struct KycParams {
+    //     address kycProvider;
+    //     uint256 depositThresholdForWhitelisting;
+    // }
 
-    struct ContractRoles {
-        address owner;
-        address operator;
-        address custodian;
-    }
+    // struct MaxCapParams {
+    //     uint256 maxCap;
+    // }
 
-    struct WindowParams {
-        uint256 opensAt;
-        uint256 closesAt;
-    }
+    // struct FixedYieldVaultParams {
+    //     BaseVaultParams baseVaultParams;
+    //     ContractRoles contractRoles;
+    //     WindowVaultParams windowVaultParams;
+    //     KycParams kycParams;
+    //     MaxCapParams maxCapParams;
+    //     uint256 promisedYield;
+    // }
 
-    struct WindowVaultParams {
-        WindowParams depositWindow;
-        WindowParams matureWindow;
-    }
-
-    struct KycParams {
-        address kycProvider;
-        uint256 depositThresholdForWhitelisting;
-    }
-
-    struct MaxCapParams {
-        uint256 maxCap;
-    }
-
-    struct FixedYieldVaultParams {
-        BaseVaultParams baseVaultParams;
-        ContractRoles contractRoles;
-        WindowVaultParams windowVaultParams;
-        KycParams kycParams;
-        MaxCapParams maxCapParams;
-        uint256 promisedYield;
-    }
-
-    struct UpsideVaultParams {
-        FixedYieldVaultParams fixedYieldVaultParams;
-        IERC20 cblToken;
-        uint256 collateralPercentage;
-    }
+    // struct UpsideVaultParams {
+    //     FixedYieldVaultParams fixedYieldVaultParams;
+    //     IERC20 cblToken;
+    //     uint256 collateralPercentage;
+    // }
 
     /// @notice - Zero address error
     error ZeroAddress();

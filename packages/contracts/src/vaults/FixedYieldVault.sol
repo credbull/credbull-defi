@@ -13,8 +13,17 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCap
     /// @notice - Hash of operator role
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
+    /// @notice - Struct to hold the parameters for FixedYieldVault
+    struct FixedYieldVaultParams {
+        MaturityVaultParams maturityVaultParams;
+        ContractRoles contractRoles;
+        WindowVaultParams windowVaultParams;
+        KycParams kycParams;
+        MaxCapParams maxCapParams;
+    }
+
     constructor(FixedYieldVaultParams memory params)
-        MaturityVault(params)
+        MaturityVault(params.maturityVaultParams)
         WhitelistPlugIn(params.kycParams.kycProvider, params.kycParams.depositThresholdForWhitelisting)
         MaxCapPlugIn(params.maxCapParams.maxCap)
         WindowPlugIn(

@@ -15,13 +15,9 @@ contract CredbullBaseVaultMock is CredbullBaseVault {
     function createBaseVaultParams(IERC20 asset, string memory shareName, string memory shareSymbol, address custodian)
         internal
         pure
-        returns (ICredbull.BaseVaultParams memory vaultParams)
+        returns (BaseVaultParams memory vaultParams)
     {
-        vaultParams = ICredbull.BaseVaultParams({
-            asset: asset,
-            shareName: shareName,
-            shareSymbol: shareSymbol,
-            custodian: custodian
-        });
+        vaultParams =
+            BaseVaultParams({ asset: asset, shareName: shareName, shareSymbol: shareSymbol, custodian: custodian });
     }
 }

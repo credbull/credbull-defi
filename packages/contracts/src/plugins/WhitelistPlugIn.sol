@@ -10,6 +10,12 @@ abstract contract WhitelistPlugIn {
     /// @notice Error to revert if the address is not whitelisted
     error CredbullVault__NotAWhitelistedAddress(address, uint256);
 
+    /// @notice - Parameters for the Whitelist PlugIn
+    struct KycParams {
+        address kycProvider;
+        uint256 depositThresholdForWhitelisting;
+    }
+
     /// @notice - Address of the Kyc provider
     IKYCProvider public kycProvider;
 

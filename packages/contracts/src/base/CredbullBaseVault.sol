@@ -18,6 +18,21 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
     error CredbullVault__UnsupportedDecimalValue(uint8);
     error CredbullVault__NativeTransferNotAllowed();
 
+    /// @notice Struct for Parameters required to create a base vault
+    struct BaseVaultParams {
+        IERC20 asset;
+        string shareName;
+        string shareSymbol;
+        address custodian;
+    }
+
+    /// @notice Struct for Contract Roles
+    struct ContractRoles {
+        address owner;
+        address operator;
+        address custodian;
+    }
+
     /// @notice Address of the CUSTODIAN to receive the assets on deposit and mint
     address public immutable CUSTODIAN;
 
