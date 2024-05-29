@@ -1,56 +1,63 @@
-import { supabase } from './utils/helpers';
+import { z } from 'zod';
+
+import { createUser } from './create-user';
+import { makeAdmin } from './make-admin';
+import { loadConfiguration } from './utils/config';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const main = () => {
-  setTimeout(async () => {
-    console.log('\n');
-    console.log('=====================================');
-    console.log('\n');
+// NOTE (JL,2024-05-29): This Zod Schema validates the configuration for the 'Create Default Users' operation only.
+//  Meaning the config references in this module. Helper function configuration requirements are validated
+//  in situ.
+const configParser = z.object({
+  operation: z.object({
+    users: z.object({
+      admin: z.object({
+        email_address: z.string().email()
+      }),
+      bob: z.object({
+        email_address: z.string().email()
+      }),
+    })
+  }),
+  secret: z.object({
+    ADMIN_PASSWORD: z.string(),
+    BOB_PASSWORD: z.string(),
+  })
+});
 
-    const adminEmail = process.env.ADMIN_EMAIL!;
-    const adminPassword = process.env.ADMIN_PASSWORD!;
+/**
+ * Creates the 'default' Corporate Accounts. 
+ * 
+ * @param config The applicable configuration object. 
+ * @throws ZodError if the `config` object does not satisfy all configuration needs.
+ */
+export const createDefaultUsers = async (config: any) => {
+  configParser.parse(config)
 
-    const userA = 'usera@credbull.io';
-    const userAPassword = 'usera123';
+  console.log('='.repeat(100));
+  console.log('  Creating default Users.')
 
-    const userB = process.env.BOB_EMAIL!;
-    const userBPassword = process.env.BOB_PASSWORD!;
+  createUser(config.operation.users.admin.email_address, config.secret.ADMIN_PASSWORD!);
+  await wait(1000);
+  makeAdmin(config, config.operation.users.admin.email_address);
+  await wait(1000);
+  createUser(config.operation.users.bob.email_address, config.secret.BOB_PASSWORD!);
+  await wait(1000);
+  createUser('usera@credbull.io', 'usera123');
 
-    const client = supabase({ admin: true });
-
-    const adminAuth = await client.auth.signUp({
-      email: adminEmail,
-      password: adminPassword,
-      options: {  },
-    });
-    if (adminAuth.error) throw adminAuth.error;
-
-    await wait(1000);
-
-    const userAAuth = await client.auth.signUp({
-      email: userA,
-      password: userAPassword,
-      options: { },
-    });
-
-    if (userAAuth.error) throw userAAuth.error;
-
-    await wait(1000);
-
-    const userBAuth = await client.auth.signUp({
-      email: userB,
-      password: userBPassword,
-      options: { },
-    });
-
-    if (userBAuth.error) throw userBAuth.error;
-
-    console.log('Admin and user accounts created!');
-
-    console.log('\n');
-    console.log('=====================================');
-    console.log('\n');
-
-  }, 1000);
+  console.log('  Done.')
+  console.log('='.repeat(100));
 };
+
+/**
+ * Invoked by the command line processor, creates the default User Accounts.
+ * 
+ * @throws AuthError if any account creation fails.
+ * @throws ZodError if the loaded configuration does not satisfy all configuration needs.
+ */
+export const main = () => {
+  setTimeout(async () => { createDefaultUsers(loadConfiguration()); }, 1000);
+};
+
+export default { main };
