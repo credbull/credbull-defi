@@ -1,22 +1,35 @@
-import { Database } from '@credbull/api';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { Wallet, providers } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
+import { z } from 'zod';
 
-export const supabase = (opts?: { admin: boolean }) =>
-  createClient<Database, 'public'>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    opts?.admin ? process.env.SUPABASE_SERVICE_ROLE_KEY : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+import { Database } from '@credbull/api';
+
+const supabaseConfigParser = z.object({
+  services: z.object({ supabase: z.object({ url: z.string().url() }) }),
+  secret: z.object({
+    SUPABASE_SERVICE_ROLE_KEY: z.string(),
+    SUPABASE_ANONYMOUS_KEY: z.string(),
+  })
+});
+
+export const supabase = (config: any, opts?: { admin: boolean }) => {
+  supabaseConfigParser.parse(config)
+
+  return createClient<Database, 'public'>(
+    config.services.supabase.url,
+    opts?.admin ? config.secret!.SUPABASE_SERVICE_ROLE_KEY! : config.secret!.SUPABASE_ANONYMOUS_KEY!,
   );
+}
 
-export const userByEmail = async (email: string) => {
-  const client = supabase({ admin: true });
+export const userByEmail = async (config: any, email: string) => {
+  const client = supabase(config, { admin: true });
   const listUsers = await client.auth.admin.listUsers({ perPage: 10000 });
   if (listUsers.error) throw listUsers.error;
 
   const user = listUsers.data.users.find((u) => u.email === email);
-  if (!user) throw new Error('No User');
+  if (!user) throw new Error('No User for ' + email);
 
   return user;
 };
@@ -30,23 +43,47 @@ export const headers = (session?: Awaited<ReturnType<typeof login>>) => {
   };
 };
 
-export const login = async (opts?: { admin: boolean }): Promise<{ access_token: string; user_id: string }> => {
-  const body = JSON.stringify({
-    email: opts?.admin ? process.env.ADMIN_EMAIL : process.env.BOB_EMAIL,
-    password: opts?.admin ? process.env.ADMIN_PASSWORD : process.env.BOB_PASSWORD,
-  });
+const adminLoginConfigParser = z.object({
+  api: z.object({ url: z.string().url() }),
+  operation: z.object({ users: z.object({ admin: z.object({ email_address: z.string().email() }) }) }),
+  secret: z.object({ ADMIN_PASSWORD: z.string() })
+});
 
-  const signIn = await fetch(`${process.env.API_BASE_URL}/auth/api/sign-in`, { method: 'POST', body, ...headers() });
+const bobLoginConfigParser = z.object({
+  api: z.object({ url: z.string().url() }),
+  operation: z.object({ users: z.object({ bob: z.object({ email_address: z.string().email() }) }) }),
+  secret: z.object({ BOB_PASSWORD: z.string() })
+});
+
+export const login = async (config: any, opts?: { admin: boolean }): Promise<{ access_token: string; user_id: string }> => {
+  let _email: string, _password: string;
+  if (opts?.admin) {
+    adminLoginConfigParser.parse(config);
+    _email = config.operation.users.admin.email_address;
+    _password = config.secret!.ADMIN_PASSWORD!;
+  } else {
+    bobLoginConfigParser.parse(config);
+    _email = config.operation.users.bob.email_address;
+    _password = config.secret!.BOB_PASSWORD!;
+  }
+
+  const body = JSON.stringify({ email: _email, password: _password });
+  const signIn = await fetch(`${config.api.url}/auth/api/sign-in`, { method: 'POST', body, ...headers() });
   return signIn.json();
 };
 
-export const linkWalletMessage = async (signer: Wallet) => {
+const linkWalletConfigParser = z.object({ app: z.object({ url: z.string().url() }) });
+
+export const linkWalletMessage = async (config: any, signer: Wallet) => {
+  linkWalletConfigParser.parse(config);
+
+  let appUrl = new URL(config.app.url)
   const chainId = await signer.getChainId();
   const preMessage = new SiweMessage({
-    domain: 'localhost:3000',
+    domain: appUrl.host,
     address: signer.address,
     statement: 'By connecting your wallet, you agree to the Terms of Service and Privacy Policy.',
-    uri: 'http://localhost:3000',
+    uri: appUrl.href,
     version: '1',
     chainId,
     nonce: generateNonce(),
@@ -55,8 +92,11 @@ export const linkWalletMessage = async (signer: Wallet) => {
   return preMessage.prepareMessage();
 };
 
-export const signer = (privateKey: string) => {
-  return new Wallet(privateKey, new providers.JsonRpcProvider(process.env.NEXT_PUBLIC_TARGET_NETWORK));
+const signerConfigParser = z.object({ services: z.object({ ethers: z.object({ url: z.string().url() }) }) });
+
+export const signer = (config: any, privateKey: string) => {
+  signerConfigParser.parse(config);
+  return new Wallet(privateKey, new providers.JsonRpcProvider(config.services.ethers.url));
 };
 
 export const generateAddress = () => {
