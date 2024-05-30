@@ -1,40 +1,59 @@
+import { z } from 'zod';
+
 import { CredbullFixedYieldVault__factory } from '@credbull/contracts';
 
+import { loadConfiguration } from './utils/config';
 import { signer, supabase } from './utils/helpers';
 
-export const main = () => {
-  setTimeout(async () => {
-    console.log('\n');
-    console.log('=====================================');
-    console.log('\n');
+const configParser = z.object({ secret: z.object({ ADMIN_PRIVATE_KEY: z.string() }) });
 
-    const client = supabase({ admin: true });
-    const { data, error } = await client.from('vaults').select();
+/**
+ * Pauses all Vault contracts and truncates the Vault database table.
+ * 
+ * @param config The applicable configuration object. 
+ * @throws PostgrestError if any database operation fails.
+ * @throws ZodError if the `config` object does not satisfy all configuration needs.
+ */
+export const cleanVaultTable = async (config: any) => {
+  configParser.parse(config);
 
-    if (error) throw error;
+  const client = supabase(config, { admin: true });
+  const { data, error } = await client.from('vaults').select();
 
-    if (data.length === 0) {
-      console.log('No vault data to clean');
-      return;
-    }
+  if (error) throw error;
 
-    const adminSigner = signer(process.env.ADMIN_PRIVATE_KEY);
+  if (data.length === 0) {
+    console.log('No vault data to clean');
+    return;
+  }
 
-    for (const vault of data) {
-      const contract = CredbullFixedYieldVault__factory.connect(vault.address, adminSigner);
-      const tx = await contract.pauseVault();
-      await tx.wait();
-      console.log(`Vault ${vault.address} paused`);
-    }
+  const adminSigner = signer(config, config.secret.ADMIN_PRIVATE_KEY);
 
-    const { error: deleteError } = await client.from('vaults').delete().neq('id', 0);
+  console.log('='.repeat(80));
+  console.log(` Pausing ${data.length} Vaults.`)
+  for (const vault of data) {
+    const contract = CredbullFixedYieldVault__factory.connect(vault.address, adminSigner);
+    const tx = await contract.pauseVault();
+    await tx.wait();
+    console.log(`  Vault ${vault.address} paused.`);
+  }
+  console.log('-'.repeat(80));
 
-    if (deleteError) throw deleteError;
+  const { error: deleteError } = await client.from('vaults').delete().neq('id', 0);
+  if (deleteError) throw deleteError;
 
-    console.log('Vault data cleaned');
-
-    console.log('\n');
-    console.log('=====================================');
-    console.log('\n');
-  }, 1000);
+  console.log(' Vault Table truncated.');
+  console.log('='.repeat(80));
 };
+
+/**
+ * Invoked by the command line processor, pauses all Vault contracts and truncates the Vault database table. 
+ * 
+ * @throws AuthError if the account does not exist or the update fails.
+ * @throws ZodError if the loaded configuration does not satisfy all configuration needs.
+ */
+export const main = () => {
+  setTimeout(async () => { cleanVaultTable(loadConfiguration()); }, 1000);
+};
+
+export default main;
