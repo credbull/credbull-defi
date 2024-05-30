@@ -5,7 +5,6 @@ pragma solidity ^0.8.19;
 import { CredbullBaseVault } from "../../../src/base/CredbullBaseVault.sol";
 
 import { MaxCapPlugIn } from "../../../src/plugins/MaxCapPlug.sol";
-import { ICredbull } from "../../../src/interface/ICredbull.sol";
 import { CredbullBaseVault } from "../../../src/base/CredbullBaseVault.sol";
 import { MaxCapPlugIn } from "../../../src/plugins/MaxCapPlug.sol";
 

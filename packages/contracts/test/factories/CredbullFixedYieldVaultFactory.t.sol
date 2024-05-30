@@ -7,7 +7,6 @@ import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { CredbullFixedYieldVaultFactory } from "../../src/factories/CredbullFixedYieldVaultFactory.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { HelperConfig, NetworkConfig } from "../../script/HelperConfig.s.sol";
-import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { CredbullVaultFactory } from "../../src/factories/CredbullVaultFactory.sol";

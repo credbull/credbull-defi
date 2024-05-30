@@ -15,8 +15,6 @@ import { CredbullFixedYieldVaultFactory } from "../../src/factories/CredbullFixe
 import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
 import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 
-import { ICredbull } from "../../src/interface/ICredbull.sol";
-
 import { console2 } from "forge-std/console2.sol";
 
 // TODO: Script was breaking build - moved to test package to see if it fixes it

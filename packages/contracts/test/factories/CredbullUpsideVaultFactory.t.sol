@@ -8,7 +8,6 @@ import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { CredbullUpsideVaultFactory } from "../../src/factories/CredbullUpsideVaultFactory.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { HelperConfig, NetworkConfig } from "../../script/HelperConfig.s.sol";
-import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
 

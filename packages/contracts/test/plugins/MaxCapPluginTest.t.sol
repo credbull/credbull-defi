@@ -5,7 +5,6 @@ pragma solidity ^0.8.19;
 import { Test } from "forge-std/Test.sol";
 import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { MaxCapVaultMock } from "../mocks/vaults/MaxCapVaultMock.m.sol";
-import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlug.sol";
