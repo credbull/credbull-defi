@@ -10,19 +10,39 @@ import {
 
 import { decodeContractError } from './utils';
 
+/**
+ * The Credbull SDK for creating and managing Credbull Vaults, via the Credbull API.
+ */
 export class CredbullSDK {
 
+  // The `URL` for the Credbull API.
   private serviceUrl: URL;
 
+  // The logged in User's Access Token. Only populated on login.
+  private accessToken: string | undefined = undefined;
+
+  /**
+   * Creates a `CredbullSDK` instance pointed at the `serviceUrl` API backend.
+   * 
+   * @param serviceUrl The `string` API URL. Must be a valid URL.
+   * @param email The User's Email Address.
+   * @param password The User's Password.
+   * @param signer The `Signer`.
+   * @throws TypeError if `serviceUrl` is not a valid URL.
+   */
   constructor(
     serviceUrl: string,
-    private accessToken: string,
+    private email: string, 
+    private password: string, 
     private signer: Signer,
   ) {
-      this.serviceUrl = new URL(serviceUrl);
+    this.serviceUrl = new URL(serviceUrl);
   }
 
-  private headers() {
+  private async headers() {
+    if (!this.accessToken) {
+      await this.connect();
+    }
     return {
       headers: {
         'Content-Type': 'application/json',
@@ -61,21 +81,37 @@ export class CredbullSDK {
     }
   }
 
+  /// Connects to the API by logging the configured User in, caching their Access Token for future operations.
+  async connect(): Promise<void> {
+    return await fetch(this.toServiceUrl('/auth/api/sign-in'), {
+      method: 'POST',
+      body: JSON.stringify({ email: this.email, password: this.password }),
+      headers: { 'Content-Type': 'application/json' },
+    }).then((response) => {
+      if (!response.ok) throw new Error(response.statusText);
+      return response.json() as Promise<{ access_token: string }>;
+    }).then((data) => {
+      this.accessToken = data.access_token;
+    });
+  }
+
   /// Return all active vaults
   async getAllVaults(): Promise<any> {
-    const vaultsData = await fetch(this.toServiceUrl('/vaults/current'), { method: 'GET', ...this.headers() });
+    const headers = await this.headers();
+    const vaultsData = await fetch(this.toServiceUrl('/vaults/current'), { method: 'GET', ...headers });
     return await vaultsData.json();
   }
 
   /// Link user wallet
   async linkWallet(discriminator?: string): Promise<any> {
+    // NOTE (JL,2024-05-30): Would these Promises be better chained?
     const message = await this.linkWalletMessage(this.signer);
     const signature = await this.signer.signMessage(message);
-
+    const headers = await this.headers();
     const linkWallet = await fetch(this.toServiceUrl('/accounts/link-wallet'), {
       method: 'POST',
       body: JSON.stringify({ message, signature, discriminator }),
-      ...this.headers(),
+      ...headers,
     });
 
     return await linkWallet.json();
