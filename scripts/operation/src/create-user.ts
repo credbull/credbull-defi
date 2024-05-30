@@ -17,13 +17,14 @@ const configParser = z.object({ app: z.object({ url: z.string().url() }) });
  * 
  * @param config The applicable configuration. 
  * @param email The `string` email address of the Corporate Account.
+ * @param isChannel The Corporate Account is also a Channel.
  * @param _password The optional password to use for the Corporate Account.
  * @throws AuthError if the account creation fails.
  * @throws ZodError if the `config` object does not satisfy all configuration needs.
  */
-export const createUser = async (config: any, email: string, _password?: string) => {
+export const createUser = async (config: any, email: string, isChannel: boolean, _password?: string) => {
   configParser.parse(config)
-  
+
   const client = supabase(config, { admin: true });
   const password = _password || (Math.random() + 1).toString(36);
   const auth = await client.auth.signUp({
@@ -38,6 +39,10 @@ export const createUser = async (config: any, email: string, _password?: string)
   console.log('   Email Address: ' + email);
   console.log('   Password: ' + (_password ? '******' : password));
   console.log('='.repeat(80));
+
+  if (isChannel) {
+    makeChannel(config, email);
+  }
 };
 
 /**
@@ -52,13 +57,7 @@ export const createUser = async (config: any, email: string, _password?: string)
 export const main = (scenarios: { channel: boolean }, params?: { email: string }) => {
   setTimeout(async () => {
     if (!params?.email) throw new Error('Email is required');
-
-    const config = loadConfiguration();
-    createUser(config, params!.email)
-
-    if (scenarios.channel) {
-      makeChannel(config, params!.email);
-    }
+    createUser(loadConfiguration(), params!.email, scenarios.channel);
   }, 1000);
 };
 
