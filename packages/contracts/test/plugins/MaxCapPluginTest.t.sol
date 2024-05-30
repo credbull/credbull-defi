@@ -9,13 +9,13 @@ import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlug.sol";
-import { console2 } from "forge-std/console2.sol";
+import { CredbullBaseVault } from "./../../src/base/CredbullBaseVault.sol";
 
 contract MaxCapPluginTest is Test {
     MaxCapVaultMock private vault;
 
-    ICredbull.BaseVaultParams private vaultParams;
-    ICredbull.MaxCapParams private maxCapParams;
+    CredbullBaseVault.BaseVaultParams private vaultParams;
+    MaxCapPlugIn.MaxCapParams private maxCapParams;
     HelperConfig private helperConfig;
 
     address private alice = makeAddr("alice");
@@ -38,13 +38,10 @@ contract MaxCapPluginTest is Test {
 
     function test__MaxCapVault__ShouldRevertDepositIfReachedMaxCap() public {
         uint256 aliceDepositAmount = 100 * precision;
-        console2.log(aliceDepositAmount);
         //Call internal deposit function
         deposit(alice, aliceDepositAmount, true);
 
         uint256 maxCap = vault.maxCap();
-
-        console2.log(maxCap);
 
         // Edge case - when total deposited asset is exactly 1 million
         uint256 bobDepositAmount = maxCap - aliceDepositAmount;

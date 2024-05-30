@@ -45,7 +45,8 @@ contract UpsideVault is FixedYieldVault {
         collateralPercentage = params.collateralPercentage;
         token = params.cblToken;
 
-        uint8 assetDecimal = _checkValidDecimalValue(address(params.fixedYieldVaultParams.baseVaultParams.asset));
+        uint8 assetDecimal =
+            _checkValidDecimalValue(address(params.fixedYieldVaultParams.maturityVaultParams.baseVaultParams.asset));
         uint8 tokenDecimal = _checkValidDecimalValue(address(params.cblToken));
 
         if (tokenDecimal >= assetDecimal) {

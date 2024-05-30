@@ -18,7 +18,7 @@ contract CredbullBaseVaultTest is Test {
     CredbullBaseVaultMock private vault;
     HelperConfig private helperConfig;
 
-    ICredbull.BaseVaultParams private vaultParams;
+    CredbullBaseVault.BaseVaultParams private vaultParams;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
@@ -293,7 +293,7 @@ contract CredbullBaseVaultTest is Test {
         vm.stopPrank();
     }
 
-    function createBaseVaultMock(ICredbull.BaseVaultParams memory _vaultParams)
+    function createBaseVaultMock(CredbullBaseVault.BaseVaultParams memory _vaultParams)
         internal
         returns (CredbullBaseVaultMock)
     {

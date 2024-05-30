@@ -27,22 +27,22 @@ contract CredbullVaultWithUpsideFactoryTest is Test {
 
     function test__CreateUpsideVaultFromFactory() public {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
-        (ICredbull.UpsideVaultParams memory params) =
+        (CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params) =
             new HelperVaultTest(config).createFixedYieldWithUpsideVaultParams();
 
         params.fixedYieldVaultParams.kycParams.kycProvider = address(kycProvider);
 
         vm.prank(config.factoryParams.owner);
-        factory.allowCustodian(params.fixedYieldVaultParams.baseVaultParams.custodian);
+        factory.allowCustodian(params.fixedYieldVaultParams.maturityVaultParams.baseVaultParams.custodian);
 
         vm.prank(config.factoryParams.operator);
         CredbullFixedYieldVaultWithUpside vault =
             CredbullFixedYieldVaultWithUpside(payable(factory.createVault(params, OPTIONS)));
 
-        assertEq(vault.asset(), address(params.fixedYieldVaultParams.baseVaultParams.asset));
-        assertEq(vault.name(), params.fixedYieldVaultParams.baseVaultParams.shareName);
-        assertEq(vault.symbol(), params.fixedYieldVaultParams.baseVaultParams.shareSymbol);
+        assertEq(vault.asset(), address(params.fixedYieldVaultParams.maturityVaultParams.baseVaultParams.asset));
+        assertEq(vault.name(), params.fixedYieldVaultParams.maturityVaultParams.baseVaultParams.shareName);
+        assertEq(vault.symbol(), params.fixedYieldVaultParams.maturityVaultParams.baseVaultParams.shareSymbol);
         assertEq(address(vault.kycProvider()), params.fixedYieldVaultParams.kycParams.kycProvider);
-        assertEq(vault.CUSTODIAN(), params.fixedYieldVaultParams.baseVaultParams.custodian);
+        assertEq(vault.CUSTODIAN(), params.fixedYieldVaultParams.maturityVaultParams.baseVaultParams.custodian);
     }
 }

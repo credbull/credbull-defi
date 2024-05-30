@@ -11,14 +11,15 @@ import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
+import { CredbullBaseVault } from "../../src/base/CredbullBaseVault.sol";
 
 contract WhitelistPlugInTest is Test {
     WhitelistVaultMock private vault;
     DeployVaultFactory private deployer;
     CredbullKYCProvider private kycProvider;
 
-    ICredbull.BaseVaultParams private vaultParams;
-    ICredbull.KycParams private kycParams;
+    CredbullBaseVault.BaseVaultParams private vaultParams;
+    WhitelistPlugIn.KycParams private kycParams;
     HelperConfig private helperConfig;
 
     address private alice = makeAddr("alice");

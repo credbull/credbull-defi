@@ -21,7 +21,7 @@ contract CredbullFixedYieldVaultTest is Test {
     DeployVaultFactory private deployer;
     CredbullKYCProvider private kycProvider;
 
-    ICredbull.FixedYieldVaultParams private vaultParams;
+    CredbullFixedYieldVault.FixedYieldVaultParams private vaultParams;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
@@ -38,7 +38,7 @@ contract CredbullFixedYieldVaultTest is Test {
 
         vault = new CredbullFixedYieldVault(vaultParams);
 
-        precision = 10 ** MockStablecoin(address(vaultParams.baseVaultParams.asset)).decimals();
+        precision = 10 ** MockStablecoin(address(vaultParams.maturityVaultParams.baseVaultParams.asset)).decimals();
 
         address[] memory whitelistAddresses = new address[](2);
         whitelistAddresses[0] = alice;
@@ -52,8 +52,12 @@ contract CredbullFixedYieldVaultTest is Test {
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
-        MockStablecoin(address(vaultParams.baseVaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
-        MockStablecoin(address(vaultParams.baseVaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
+        MockStablecoin(address(vaultParams.maturityVaultParams.baseVaultParams.asset)).mint(
+            alice, INITIAL_BALANCE * precision
+        );
+        MockStablecoin(address(vaultParams.maturityVaultParams.baseVaultParams.asset)).mint(
+            bob, INITIAL_BALANCE * precision
+        );
     }
 
     function test__FixedYieldVault__ShouldAllowOwnerToChangeOperator() public {
@@ -271,7 +275,7 @@ contract CredbullFixedYieldVaultTest is Test {
     }
 
     function test__FixedYieldVault__ShouldAllowAdminToWithdrawERC20Tokens() public {
-        MockStablecoin token = MockStablecoin(address(vaultParams.baseVaultParams.asset));
+        MockStablecoin token = MockStablecoin(address(vaultParams.maturityVaultParams.baseVaultParams.asset));
         vm.prank(alice);
         token.transfer(address(vault), 100 * precision);
 
@@ -279,7 +283,7 @@ contract CredbullFixedYieldVaultTest is Test {
 
         vm.prank(vaultParams.contractRoles.owner);
         address[] memory addresses = new address[](1);
-        addresses[0] = address(vaultParams.baseVaultParams.asset);
+        addresses[0] = address(vaultParams.maturityVaultParams.baseVaultParams.asset);
         vault.withdrawERC20(addresses);
 
         assertEq(token.balanceOf(address(vault)), 0);
@@ -288,7 +292,7 @@ contract CredbullFixedYieldVaultTest is Test {
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
-        vaultParams.baseVaultParams.asset.approve(address(vault), assets);
+        vaultParams.maturityVaultParams.baseVaultParams.asset.approve(address(vault), assets);
         // vaultParams.token.approve(address(vault), assets * ADDITIONAL_PRECISION);
 
         // wrap if set to true

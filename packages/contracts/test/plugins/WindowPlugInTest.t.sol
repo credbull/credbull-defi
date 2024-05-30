@@ -9,12 +9,13 @@ import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { WindowPlugIn } from "../../src/plugins/WindowPlugIn.sol";
+import { CredbullBaseVault } from "../../src/base/CredbullBaseVault.sol";
 
 contract WindowPlugInTest is Test {
     WindowVaultMock private vault;
 
-    ICredbull.BaseVaultParams private vaultParams;
-    ICredbull.WindowVaultParams private windowParams;
+    CredbullBaseVault.BaseVaultParams private vaultParams;
+    WindowPlugIn.WindowVaultParams private windowParams;
     HelperConfig private helperConfig;
 
     address private alice = makeAddr("alice");

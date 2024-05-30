@@ -4,9 +4,11 @@ pragma solidity ^0.8.19;
 
 import { MaturityVault } from "../../../src/extensions/MaturityVault.sol";
 import { ICredbull } from "../../../src/interface/ICredbull.sol";
+import { FixedYieldVault } from "../../../src/vaults/FixedYieldVault.sol";
+import { MaturityVault } from "../../../src/extensions/MaturityVault.sol";
 
 contract MaturityVaultMock is MaturityVault {
-    constructor(ICredbull.FixedYieldVaultParams memory params) MaturityVault(params) { }
+    constructor(MaturityVault.MaturityVaultParams memory params) MaturityVault(params) { }
 
     modifier withdrawModifier(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         override

@@ -9,6 +9,12 @@ import { CredbullBaseVault } from "../mocks/vaults/CredbullBaseVaultMock.m.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
 import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
 import { MaxCapVaultMock } from "../mocks/vaults/MaxCapVaultMock.m.sol";
+import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlug.sol";
+import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
+import { WindowPlugIn } from "../../src/plugins/WindowPlugIn.sol";
+import { UpsideVault } from "../../src/vaults/UpsideVault.sol";
+import { FixedYieldVault } from "../../src/vaults/FixedYieldVault.sol";
+import { MaturityVault } from "../../src/extensions/MaturityVault.sol";
 
 /// Utility to help with testing vaults
 contract HelperVaultTest is Test {
@@ -29,7 +35,7 @@ contract HelperVaultTest is Test {
     function createBaseVaultTestParams() public returns (CredbullBaseVault.BaseVaultParams memory params) {
         address custodian = makeAddr("custodianAddress");
 
-        params = ICredbull.BaseVaultParams({
+        params = CredbullBaseVault.BaseVaultParams({
             asset: networkConfig.usdcToken,
             shareName: "Share_sep",
             shareSymbol: "SYM_sep",
@@ -41,7 +47,7 @@ contract HelperVaultTest is Test {
         public
         returns (CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params)
     {
-        params = ICredbull.UpsideVaultParams({
+        params = UpsideVault.UpsideVaultParams({
             fixedYieldVaultParams: createFixedYieldVaultParams(),
             cblToken: networkConfig.cblToken,
             collateralPercentage: 20_00
@@ -52,49 +58,49 @@ contract HelperVaultTest is Test {
         public
         returns (CredbullFixedYieldVault.FixedYieldVaultParams memory params)
     {
-        params = ICredbull.FixedYieldVaultParams({
-            baseVaultParams: createBaseVaultTestParams(),
+        params = FixedYieldVault.FixedYieldVaultParams({
+            maturityVaultParams: createMaturityVaultTestParams(),
             contractRoles: createContractRoles(),
             windowVaultParams: createWindowVaultParams(),
             kycParams: createKycParams(),
-            maxCapParams: createMaxCapParams(),
+            maxCapParams: createMaxCapParams()
+        });
+    }
+
+    function createMaturityVaultTestParams() public returns (MaturityVault.MaturityVaultParams memory params) {
+        params = MaturityVault.MaturityVaultParams({
+            baseVaultParams: createBaseVaultTestParams(),
             promisedYield: PROMISED_FIXED_YIELD
         });
     }
 
-    function createMaturityVaultTestParams()
-        public
-        returns (CredbullFixedYieldVault.FixedYieldVaultParams memory params)
-    {
-        return createFixedYieldVaultParams();
+    function createMaxCapParams() public pure returns (MaxCapPlugIn.MaxCapParams memory params) {
+        params = MaxCapPlugIn.MaxCapParams({ maxCap: 1e6 * 1e6 });
     }
 
-    function createMaxCapParams() public pure returns (ICredbull.MaxCapParams memory params) {
-        params = ICredbull.MaxCapParams({ maxCap: 1e6 * 1e6 });
-    }
-
-    function createKycParams() public returns (ICredbull.KycParams memory params) {
-        params = ICredbull.KycParams({
+    function createKycParams() public returns (WhitelistPlugIn.KycParams memory params) {
+        params = WhitelistPlugIn.KycParams({
             kycProvider: makeAddr("kycProviderAddress"),
             depositThresholdForWhitelisting: 1000e6
         });
     }
 
-    function createWindowVaultParams() public view returns (MaxCapVaultMock.WindowVaultParams memory params) {
+    function createWindowVaultParams() public view returns (WindowPlugIn.WindowVaultParams memory params) {
         uint256 opensAt = block.timestamp;
         uint256 closesAt = opensAt + 7 days;
         uint256 year = 365 days;
 
-        ICredbull.WindowParams memory depositWindow = ICredbull.WindowParams({ opensAt: opensAt, closesAt: closesAt });
+        WindowPlugIn.WindowParams memory depositWindow =
+            WindowPlugIn.WindowParams({ opensAt: opensAt, closesAt: closesAt });
 
-        ICredbull.WindowParams memory matureWindow =
-            ICredbull.WindowParams({ opensAt: opensAt + year, closesAt: closesAt + year });
+        WindowPlugIn.WindowParams memory matureWindow =
+            WindowPlugIn.WindowParams({ opensAt: opensAt + year, closesAt: closesAt + year });
 
-        params = ICredbull.WindowVaultParams({ depositWindow: depositWindow, matureWindow: matureWindow });
+        params = WindowPlugIn.WindowVaultParams({ depositWindow: depositWindow, matureWindow: matureWindow });
     }
 
-    function createContractRoles() public returns (ICredbull.ContractRoles memory roles) {
-        roles = ICredbull.ContractRoles({
+    function createContractRoles() public returns (CredbullBaseVault.ContractRoles memory roles) {
+        roles = CredbullBaseVault.ContractRoles({
             owner: networkConfig.factoryParams.owner,
             operator: networkConfig.factoryParams.operator,
             custodian: makeAddr("custodianAddress")
