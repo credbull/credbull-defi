@@ -3,8 +3,8 @@ import { expect, test } from '@playwright/test';
 import { config } from 'dotenv';
 import { BigNumber, Signer } from 'ethers';
 
-import { CredbullSDK } from '../index';
-import { signer } from '../mock/utils/helpers';
+import { CredbullSDK } from '../../src/index';
+import { signer } from './mock/utils/helpers';
 
 import {
   TRASH_ADDRESS,
@@ -50,8 +50,8 @@ test.beforeAll(async () => {
   operatorSigner = signer(process.env.OPERATOR_PRIVATE_KEY || '0x');
   custodianSigner = signer(process.env.CUSTODIAN_PRIVATE_KEY || '0x');
 
-  sdkA = new CredbullSDK(userAToken, walletSignerA as Signer);
-  sdkB = new CredbullSDK(userBToken, walletSignerB as Signer);
+  sdkA = new CredbullSDK(process.env.BASE_URL || '', userAToken, walletSignerA as Signer);
+  sdkB = new CredbullSDK(process.env.BASE_URL || '', userBToken, walletSignerB as Signer);
 
   userAddressA = await (walletSignerA as Signer).getAddress();
   userAddressB = await (walletSignerB as Signer).getAddress();

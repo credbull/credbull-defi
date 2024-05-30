@@ -1,13 +1,14 @@
 {
   "name": "@credbull/sdk",
   "packageManager": "yarn@3.2.3",
-  "main": "index.ts",
-  "types": "index.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "scripts": {
+    "clean": "tsc --build --clean tsconfig && rm -rf build dist",
+    "build": "tsc --build tsconfig",
     "mock": "ts-node mock/mock.ts",
     "deposit": "ts-node mock/deposit.ts",
     "format": "prettier . --write",
-    "build": "tsc",
     "int-test": "playwright test",
     "report": "playwright show-report"
   },
