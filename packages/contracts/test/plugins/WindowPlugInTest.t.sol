@@ -78,12 +78,12 @@ contract WindowPlugInTest is Test {
         // given that we are in the vault's deposit window
         // when Alice try to deposit 10 * precision
         // then the deposit should be reverted
-        deposit(alice, 10 * precision, true);
+        deposit(alice, 10 * precision);
         assertEq(vault.balanceOf(alice), 10 * precision);
     }
 
     function test__WindowVault__RevertWithdrawIfAheadOfWindow() public {
-        uint256 shares = deposit(alice, 10 * precision, true);
+        uint256 shares = deposit(alice, 10 * precision);
         vm.startPrank(alice);
 
         // given that the vault's redemption window is in the past
@@ -104,7 +104,7 @@ contract WindowPlugInTest is Test {
     }
 
     function test__WindowVault__WithdrawSuccessOnWindowOpen() public {
-        uint256 shares = deposit(alice, 10 * precision, true);
+        uint256 shares = deposit(alice, 10 * precision);
         assertEq(vault.balanceOf(alice), 10 * precision);
 
         MockStablecoin token = MockStablecoin(address(vaultParams.asset));
@@ -121,7 +121,7 @@ contract WindowPlugInTest is Test {
     }
 
     function test__WindowVault__RevertWithdrawIfBehindWindow() public {
-        uint256 shares = deposit(alice, 10 * precision, true);
+        uint256 shares = deposit(alice, 10 * precision);
         vm.startPrank(alice);
         // given that the vault's redemption window is in the future
         // when Alice try to redeem 10 * precision
@@ -141,7 +141,7 @@ contract WindowPlugInTest is Test {
     function test__WindowVault__ShouldNotRevertOnWindowModifier() public {
         vault.toggleWindowCheck(false);
 
-        deposit(alice, 10 * precision, false);
+        deposit(alice, 10 * precision);
         assertEq(vault.balanceOf(alice), 10 * precision);
     }
 
@@ -176,16 +176,10 @@ contract WindowPlugInTest is Test {
         assertTrue(vault.redemptionClosesAtTimestamp() == newWithdrawClose);
     }
 
-    function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
+    function deposit(address user, uint256 assets) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
         vaultParams.asset.approve(address(vault), assets);
-
-        // now we can deposit, alice is the caller and receiver
-        //TODO: Clean up this code
-        if (warp) {
-            // vm.warp(vaultParams.depositOpensAt);
-        }
 
         shares = vault.deposit(assets, user);
         vm.stopPrank();

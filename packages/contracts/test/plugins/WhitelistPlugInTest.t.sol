@@ -117,7 +117,7 @@ contract WhitelistPlugInTest is Test {
 
         vault.toggleWhitelistCheck(false);
 
-        deposit(alice, 10 * precision, true);
+        deposit(alice, 10 * precision);
         assertEq(vault.balanceOf(alice), 10 * precision);
     }
 
@@ -128,15 +128,10 @@ contract WhitelistPlugInTest is Test {
         assertEq(afterToggle, !beforeToggle);
     }
 
-    function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
+    function deposit(address user, uint256 assets) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
         vaultParams.asset.approve(address(vault), assets);
-
-        // wrap if set to true
-        if (warp) {
-            //vm.warp(vaultParams.depositOpensAt);
-        }
 
         shares = vault.deposit(assets, user);
         vm.stopPrank();

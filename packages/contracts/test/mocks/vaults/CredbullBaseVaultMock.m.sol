@@ -3,8 +3,6 @@
 pragma solidity ^0.8.19;
 
 import { CredbullBaseVault } from "../../../src/base/CredbullBaseVault.sol";
-import { ICredbull } from "../../../src/interface/ICredbull.sol";
-
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract CredbullBaseVaultMock is CredbullBaseVault {

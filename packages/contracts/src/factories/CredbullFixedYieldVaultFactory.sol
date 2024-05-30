@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.19;
 
-import { ICredbull } from "../interface/ICredbull.sol";
 import { CredbullFixedYieldVault } from "../CredbullFixedYieldVault.sol";
 import { CredbullVaultFactory } from "./CredbullVaultFactory.sol";
 

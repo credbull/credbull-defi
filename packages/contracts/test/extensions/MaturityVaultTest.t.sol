@@ -9,7 +9,6 @@ import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { MaturityVault } from "../../src/extensions/MaturityVault.sol";
 import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
-import { FixedYieldVault } from "../../src/vaults/FixedYieldVault.sol";
 
 contract MaturityVaultTest is Test {
     MaturityVaultMock private vault;

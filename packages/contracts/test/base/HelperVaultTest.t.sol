@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
-import { NetworkConfig, FactoryParams } from "../../script/HelperConfig.s.sol";
+import { NetworkConfig } from "../../script/HelperConfig.s.sol";
 import { CredbullBaseVault } from "../mocks/vaults/CredbullBaseVaultMock.m.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
 import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";

@@ -58,7 +58,7 @@ contract CredbullBaseVaultTest is Test {
         // ---- Setup Part 2 - Alice Deposit and Receives shares ----
         uint256 depositAmount = 10 * precision;
         //Call internal deposit function
-        uint256 shares = deposit(alice, depositAmount, true);
+        uint256 shares = deposit(alice, depositAmount);
 
         // ---- Assert - Vault gets the Assets, Alice gets Shares ----
 
@@ -79,7 +79,7 @@ contract CredbullBaseVaultTest is Test {
         // ---- Setup Part 1 - Deposit Assets to the vault ---- //
         uint256 depositAmount = 10 * precision;
         //Call internal deposit function
-        uint256 shares = deposit(alice, depositAmount, true);
+        uint256 shares = deposit(alice, depositAmount);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
         MockStablecoin(address(vaultParams.asset)).mint(vaultParams.custodian, 1 * precision);
@@ -102,7 +102,7 @@ contract CredbullBaseVaultTest is Test {
     function test__BaseVault__totalAssetShouldReturnTotalDeposited() public {
         uint256 depositAmount = 10 * precision;
         //Call internal deposit function
-        deposit(alice, depositAmount, true);
+        deposit(alice, depositAmount);
 
         assertEq(vault.totalAssets(), vault.totalAssetDeposited());
         assertEq(vault.totalAssetDeposited(), depositAmount);
@@ -110,7 +110,7 @@ contract CredbullBaseVaultTest is Test {
 
     function test__BaseVault__ShouldRevertOnTransferOutsideEcosystem() public {
         uint256 depositAmount = 100 * precision;
-        deposit(alice, depositAmount, true);
+        deposit(alice, depositAmount);
 
         vm.prank(alice);
         vm.expectRevert(
@@ -136,7 +136,7 @@ contract CredbullBaseVaultTest is Test {
         if ((depositAmount % precision) > 0) {
             depositWithRevert(alice, depositAmount);
         } else {
-            deposit(alice, depositAmount, true);
+            deposit(alice, depositAmount);
         }
     }
 
@@ -161,7 +161,7 @@ contract CredbullBaseVaultTest is Test {
         } else {
             // ---- Setup Part 2 - Alice Deposit and Receives shares ----
             //Call internal deposit function
-            shares = deposit(alice, depositAmount, true);
+            shares = deposit(alice, depositAmount);
 
             // ---- Assert - Vault gets the Assets, Alice gets Shares ----
 
@@ -199,13 +199,13 @@ contract CredbullBaseVaultTest is Test {
         if (aliceRemainder > 0) {
             aliceShares = depositWithRevert(alice, aliceDepositAmount);
         } else {
-            aliceShares = deposit(alice, aliceDepositAmount, true);
+            aliceShares = deposit(alice, aliceDepositAmount);
         }
 
         if (bobRemainder > 0) {
             bobShares = depositWithRevert(bob, bobDepositAmount);
         } else {
-            bobShares = deposit(bob, bobDepositAmount, true);
+            bobShares = deposit(bob, bobDepositAmount);
         }
 
         uint256 totalDepositAmount;
@@ -268,16 +268,10 @@ contract CredbullBaseVaultTest is Test {
         }
     }
 
-    function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
+    function deposit(address user, uint256 assets) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
         vaultParams.asset.approve(address(vault), assets);
-
-        // wrap if set to true
-        // TODO: clean up this code
-        if (warp) {
-            // vm.warp(vaultParams.depositOpensAt);
-        }
 
         shares = vault.deposit(assets, user);
         vm.stopPrank();
