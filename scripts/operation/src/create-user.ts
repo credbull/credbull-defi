@@ -4,10 +4,12 @@ import { makeChannel } from './make-channel';
 import { supabase } from './utils/helpers';
 import { loadConfiguration } from './utils/config';
 
-// NOTE (JL,2024-05-29): This Zod Schema validates the configuration for the 'Create User' operation only.
-//  Meaning the config references in this module. Helper function configuration requirements are validated
-//  in situ.
-const configParser = z.object({ app: z.object({ url: z.string().url() }) });
+import assert = require('node:assert');
+
+// NOTE (JL,2024-05-29): Zod Schemas to validate the configuration for the 'Create User' operation only.
+const configSchema = z.object({ app: z.object({ url: z.string().url() }) });
+const emailSchema = z.string().email();
+const nonEmptyStringSchema = z.string().trim().min(1);
 
 /**
  * Creates a Corporate Account User with `email` Email Address and `_password` Password, if provided. If
@@ -20,10 +22,12 @@ const configParser = z.object({ app: z.object({ url: z.string().url() }) });
  * @param isChannel The Corporate Account is also a Channel.
  * @param _password The optional password to use for the Corporate Account.
  * @throws AuthError if the account creation fails.
- * @throws ZodError if the `config` object does not satisfy all configuration needs.
+ * @throws ZodError if the parameters or config are invalid.
  */
 export const createUser = async (config: any, email: string, isChannel: boolean, _password?: string) => {
-  configParser.parse(config)
+  emailSchema.parse(email);
+  nonEmptyStringSchema.optional().parse(_password);
+  configSchema.parse(config);
 
   const client = supabase(config, { admin: true });
   const password = _password || (Math.random() + 1).toString(36);
