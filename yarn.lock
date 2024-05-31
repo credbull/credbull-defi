@@ -653,6 +653,7 @@ __metadata:
   dependencies:
     "@credbull/api": "workspace:^"
     "@credbull/contracts": "workspace:^"
+    "@playwright/test": ^1.44.1
     "@supabase/supabase-js": ^2.39.1
     "@trivago/prettier-plugin-sort-imports": ^4.3.0
     "@types/node": ^20.10.5
@@ -3041,7 +3042,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/test@npm:^1.42.1":
+"@playwright/test@npm:^1.42.1, @playwright/test@npm:^1.44.1":
   version: 1.44.1
   resolution: "@playwright/test@npm:1.44.1"
   dependencies:
