@@ -556,7 +556,7 @@ __metadata:
     supertest: ^6.3.3
     ts-loader: ^9.5.1
     ts-node: ^10.9.2
-    typescript: 5.3.3
+    typescript: ^5.4.5
     unplugin-swc: ^1.4.4
     vitest: ^1.1.0
     vitest-mock-extended: ^1.3.1
@@ -613,7 +613,7 @@ __metadata:
     react-dom: ^18.2.0
     siwe: ^2.1.4
     start-server-and-test: ^2.0.3
-    typescript: 5.1.3
+    typescript: ^5.4.5
     vercel: ^34.2.2
     viem: ^1.21.0
     vite-tsconfig-paths: ^4.2.2
@@ -643,7 +643,7 @@ __metadata:
     prettier: ^3.2.2
     solhint: ^4.1.1
     typechain: ^8.3.2
-    typescript: ^5.3.3
+    typescript: ^5.4.5
   languageName: unknown
   linkType: soft
 
@@ -670,7 +670,7 @@ __metadata:
     prettier: ^3.1.1
     siwe: ^2.1.4
     ts-node: ^10.9.2
-    typescript: ^5.3.3
+    typescript: ^5.4.5
     zod: ^3.22.4
   languageName: unknown
   linkType: soft
@@ -705,7 +705,7 @@ __metadata:
     prettier: ^3.1.1
     siwe: ^2.1.4
     ts-node: ^10.9.2
-    typescript: ^5.3.3
+    typescript: ^5.4.5
     zod: ^3.22.4
   languageName: unknown
   linkType: soft
@@ -732,9 +732,9 @@ __metadata:
     lodash: ^4.17.21
     prettier: ^3.0.3
     solidity-coverage: ^0.8.5
-    ts-node: ^10.9.1
+    ts-node: ^10.9.2
     typechain: ^8.3.2
-    typescript: ^5.2.2
+    typescript: ^5.4.5
   languageName: unknown
   linkType: soft
 
@@ -18841,7 +18841,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-node@npm:^10.9.1, ts-node@npm:^10.9.2":
+"ts-node@npm:^10.9.2":
   version: 10.9.2
   resolution: "ts-node@npm:10.9.2"
   dependencies:
@@ -19219,16 +19219,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.1.3":
-  version: 5.1.3
-  resolution: "typescript@npm:5.1.3"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: d9d51862d98efa46534f2800a1071a613751b1585dc78884807d0c179bcd93d6e9d4012a508e276742f5f33c480adefc52ffcafaf9e0e00ab641a14cde9a31c7
-  languageName: node
-  linkType: hard
-
 "typescript@npm:5.3.3":
   version: 5.3.3
   resolution: "typescript@npm:5.3.3"
@@ -19239,7 +19229,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.2.2, typescript@npm:^5.3.3, typescript@npm:^5.4.5":
+"typescript@npm:^5.4.5":
   version: 5.4.5
   resolution: "typescript@npm:5.4.5"
   bin:
@@ -19259,16 +19249,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@5.1.3#~builtin<compat/typescript>":
-  version: 5.1.3
-  resolution: "typescript@patch:typescript@npm%3A5.1.3#~builtin<compat/typescript>::version=5.1.3&hash=a1c5e5"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 32a25b2e128a4616f999d4ee502aabb1525d5647bc8955e6edf05d7fbc53af8aa98252e2f6ba80bcedfc0260c982b885f3c09cfac8bb65d2924f3133ad1e1e62
-  languageName: node
-  linkType: hard
-
 "typescript@patch:typescript@5.3.3#~builtin<compat/typescript>":
   version: 5.3.3
   resolution: "typescript@patch:typescript@npm%3A5.3.3#~builtin<compat/typescript>::version=5.3.3&hash=a1c5e5"
@@ -19279,7 +19259,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^5.2.2#~builtin<compat/typescript>, typescript@patch:typescript@^5.3.3#~builtin<compat/typescript>, typescript@patch:typescript@^5.4.5#~builtin<compat/typescript>":
+"typescript@patch:typescript@^5.4.5#~builtin<compat/typescript>":
   version: 5.4.5
   resolution: "typescript@patch:typescript@npm%3A5.4.5#~builtin<compat/typescript>::version=5.4.5&hash=a1c5e5"
   bin:
