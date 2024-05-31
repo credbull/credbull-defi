@@ -7,7 +7,6 @@
   "dependencies": {
     "@credbull/api": "workspace:^",
     "@credbull/contracts": "workspace:^",
-    "@credbull/sdk": "workspace:^",
     "@supabase/supabase-js": "^2.39.1",
     "compression": "^1.7.4",
     "crypto": "^1.0.1",
