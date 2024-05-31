@@ -60,7 +60,7 @@ export class CredbullSDK {
       domain: this.serviceUrl.host,
       address: await signer.getAddress(),
       statement: 'By connecting your wallet, you agree to the Terms of Service and Privacy Policy.',
-      uri: this.serviceUrl.toString(),
+      uri: this.serviceUrl.href,
       version: '1',
       chainId,
       nonce: generateNonce(),
