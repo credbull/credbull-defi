@@ -45,25 +45,28 @@ export const headers = (session?: Awaited<ReturnType<typeof login>>) => {
 
 const adminLoginConfigParser = z.object({
   api: z.object({ url: z.string().url() }),
-  operation: z.object({ users: z.object({ admin: z.object({ email_address: z.string().email() }) }) }),
+  users: z.object({ admin: z.object({ email_address: z.string().email() }) }),
   secret: z.object({ ADMIN_PASSWORD: z.string() })
 });
 
 const bobLoginConfigParser = z.object({
   api: z.object({ url: z.string().url() }),
-  operation: z.object({ users: z.object({ bob: z.object({ email_address: z.string().email() }) }) }),
+  users: z.object({ bob: z.object({ email_address: z.string().email() }) }),
   secret: z.object({ BOB_PASSWORD: z.string() })
 });
 
-export const login = async (config: any, opts?: { admin: boolean }): Promise<{ access_token: string; user_id: string }> => {
+export const login = async (
+  config: any,
+  opts?: { admin: boolean }
+): Promise<{ access_token: string; user_id: string }> => {
   let _email: string, _password: string;
   if (opts?.admin) {
     adminLoginConfigParser.parse(config);
-    _email = config.operation.users.admin.email_address;
+    _email = config.users.admin.email_address;
     _password = config.secret!.ADMIN_PASSWORD!;
   } else {
     bobLoginConfigParser.parse(config);
-    _email = config.operation.users.bob.email_address;
+    _email = config.users.bob.email_address;
     _password = config.secret!.BOB_PASSWORD!;
   }
 

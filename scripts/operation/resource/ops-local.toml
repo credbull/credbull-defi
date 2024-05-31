@@ -28,6 +28,5 @@ activity_reward = "0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556"
 admin.email_address = "admin@credbull.io"
 bob.email_address = "bob@credbull.io"
 
-[operation]
-[createVault]
+[operation.createVault]
 collateral_percentage = 20
