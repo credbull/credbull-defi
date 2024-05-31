@@ -8,6 +8,12 @@ import {
   ERC20__factory,
 } from '@credbull/contracts';
 
+import type {
+  CredbullFixedYieldVault,
+  CredbullFixedYieldVaultWithUpside,
+  ERC20
+} from '@credbull/contracts';
+
 import { decodeContractError } from './utils';
 
 /**
@@ -32,8 +38,8 @@ export class CredbullSDK {
    */
   constructor(
     serviceUrl: string,
-    private email: string, 
-    private password: string, 
+    private email: string,
+    private password: string,
     private signer: Signer,
   ) {
     this.serviceUrl = new URL(serviceUrl);
@@ -130,25 +136,26 @@ export class CredbullSDK {
   }
 
   /// Get the instance of an asset associated with the vault
-  async getAssetInstance(vaultAddress: string): Promise<any> {
+  async getAssetInstance(vaultAddress: string): Promise<ERC20> {
     const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
     const assetAddress = await vault.asset().catch((err) => this.handleError(vault, err));
     return ERC20__factory.connect(assetAddress as string, this.signer);
   }
 
   /// Get the instance of the vault
-  async getVaultInstance(vaultAddress: string): Promise<any> {
+  async getVaultInstance(vaultAddress: string): Promise<CredbullFixedYieldVault> {
     return CredbullFixedYieldVault__factory.connect(vaultAddress, this.signer);
   }
 
   /// Get upside vault instance
-  async getUpsideVaultInstance(vaultAddress: string): Promise<any> {
+  async getUpsideVaultInstance(vaultAddress: string): Promise<CredbullFixedYieldVaultWithUpside> {
     return CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, this.signer);
   }
 
-  async getTokenInstance(vaultAddress: string): Promise<any> {
+  async getTokenInstance(vaultAddress: string): Promise<ERC20> {
     const vault = CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, this.signer);
     const tokenAddress = await vault.token().catch((err) => this.handleError(vault, err));
     return ERC20__factory.connect(tokenAddress as string, this.signer);
   }
+
 }
