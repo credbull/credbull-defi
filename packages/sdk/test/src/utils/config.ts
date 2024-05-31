@@ -1,14 +1,14 @@
 import * as dotenv from 'dotenv';
-import * as path from 'path';
 import * as fs from 'fs';
 import { load } from 'js-toml';
+import * as path from 'path';
 
-// NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the grandparent directory (../..), 
-//  then the parent (..) and finally the current directory (.). Override is enabled so that the most 
+// NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the grandparent directory (../..),
+//  then the parent (..) and finally the current directory (.). Override is enabled so that the most
 //  specific configuration wins.
 dotenv.config({
-  path: ['../../.env', '../.env', '.env' ],
-  override: true
+  path: ['../../.env', '../.env', '.env'],
+  override: true,
 });
 
 interface Config {
@@ -26,8 +26,8 @@ interface Config {
 /**
  * Loads the Operations Local Configuration TOML file. Post-processing it to add supported Environment
  * Variables as a 'Secrets' mechanism.
- * 
- * @returns A `Config` instance. 
+ *
+ * @returns A `Config` instance.
  */
 export const loadConfiguration = (): Config => {
   const configFile = path.resolve(__dirname, `../../resource/ops-local.toml`);

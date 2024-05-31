@@ -1,18 +1,12 @@
-import { BigNumber, Signer } from 'ethers';
-import { ethers } from 'ethers';
-import { SiweMessage, generateNonce } from 'siwe';
-
 import {
   CredbullFixedYieldVaultWithUpside__factory,
   CredbullFixedYieldVault__factory,
   ERC20__factory,
 } from '@credbull/contracts';
-
-import type {
-  CredbullFixedYieldVault,
-  CredbullFixedYieldVaultWithUpside,
-  ERC20
-} from '@credbull/contracts';
+import type { CredbullFixedYieldVault, CredbullFixedYieldVaultWithUpside, ERC20 } from '@credbull/contracts';
+import { BigNumber, Signer } from 'ethers';
+import { ethers } from 'ethers';
+import { SiweMessage, generateNonce } from 'siwe';
 
 import { decodeContractError } from './utils';
 
@@ -20,7 +14,6 @@ import { decodeContractError } from './utils';
  * The Credbull SDK for creating and managing Credbull Vaults, via the Credbull API.
  */
 export class CredbullSDK {
-
   // The `URL` for the Credbull API.
   private serviceUrl: URL;
 
@@ -29,7 +22,7 @@ export class CredbullSDK {
 
   /**
    * Creates a `CredbullSDK` instance pointed at the `serviceUrl` API backend.
-   * 
+   *
    * @param serviceUrl The `string` API URL. Must be a valid URL.
    * @param email The User's Email Address.
    * @param password The User's Password.
@@ -52,13 +45,13 @@ export class CredbullSDK {
     return {
       headers: {
         'Content-Type': 'application/json',
-        ...({ Authorization: `Bearer ${this.accessToken}` }),
+        ...{ Authorization: `Bearer ${this.accessToken}` },
       },
     };
   }
 
   private toServiceUrl(path: string): URL {
-    return new URL(path, this.serviceUrl)
+    return new URL(path, this.serviceUrl);
   }
 
   private async linkWalletMessage(signer: Signer): Promise<string> {
@@ -93,12 +86,14 @@ export class CredbullSDK {
       method: 'POST',
       body: JSON.stringify({ email: this.email, password: this.password }),
       headers: { 'Content-Type': 'application/json' },
-    }).then((response) => {
-      if (!response.ok) throw new Error(response.statusText);
-      return response.json() as Promise<{ access_token: string }>;
-    }).then((data) => {
-      this.accessToken = data.access_token;
-    });
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error(response.statusText);
+        return response.json() as Promise<{ access_token: string }>;
+      })
+      .then((data) => {
+        this.accessToken = data.access_token;
+      });
   }
 
   /// Return all active vaults
@@ -157,5 +152,4 @@ export class CredbullSDK {
     const tokenAddress = await vault.token().catch((err) => this.handleError(vault, err));
     return ERC20__factory.connect(tokenAddress as string, this.signer);
   }
-
 }

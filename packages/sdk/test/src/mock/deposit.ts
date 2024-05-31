@@ -2,6 +2,7 @@ import { config } from 'dotenv';
 import { BigNumber, utils } from 'ethers';
 
 import { CredbullSDK } from '../../../src/index';
+
 import { __mockMint, generateSigner, login, signer } from './utils/helpers';
 
 config();

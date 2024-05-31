@@ -4,8 +4,8 @@ import { config } from 'dotenv';
 import { BigNumber, Signer } from 'ethers';
 
 import { CredbullSDK } from '../../src/index';
-import { signer } from './mock/utils/helpers';
 
+import { signer } from './mock/utils/helpers';
 import {
   TRASH_ADDRESS,
   __mockMint,

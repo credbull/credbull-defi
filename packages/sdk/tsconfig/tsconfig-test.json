@@ -4,12 +4,10 @@
     "outDir": "../build",
     "rootDir": "../test/src"
   },
-  "include": [
-    "../test/src"
-  ],
+  "include": ["../test/src"],
   "references": [
     {
       "path": "./tsconfig-main.json"
     }
-  ],
+  ]
 }

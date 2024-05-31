@@ -1,13 +1,12 @@
-import * as ChildProcess from 'child_process';
-import { config } from 'dotenv';
-import { BigNumber, Signer, Wallet, providers, utils } from 'ethers';
-import path from 'path';
-
 import {
   CredbullFixedYieldVault,
   CredbullFixedYieldVaultWithUpside,
   MockStablecoin__factory,
 } from '@credbull/contracts';
+import * as ChildProcess from 'child_process';
+import { config } from 'dotenv';
+import { BigNumber, Signer, Wallet, providers, utils } from 'ethers';
+import path from 'path';
 
 config();
 
