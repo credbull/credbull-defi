@@ -3,12 +3,16 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { load } from 'js-toml';
 
-// NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the grandparent directory (../..), 
-//  then the parent (..) and finally the current directory (.). Override is enabled so that the most 
-//  specific configuration wins.
+// NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the package's grandparent directory (../..), 
+//  then the parent (..) and finally the package directory (.) (adjusted for module location).
 dotenv.config({
-  path: ['../../.env', '../.env', '.env' ],
-  override: true
+  encoding: 'utf-8',
+  path: [
+    path.resolve(__dirname, '../../../../.env'), // credbull-defi (root)
+    path.resolve(__dirname, '../../../.env'), // script
+    path.resolve(__dirname, '../../.env') // operation
+  ],
+  override: true,
 });
 
 interface Config {
