@@ -1,10 +1,8 @@
 import { z } from 'zod';
 
-import { makeChannel } from './make-channel';
-import { supabase } from './utils/helpers';
-import { loadConfiguration } from './utils/config';
-
-import assert = require('node:assert');
+import { makeChannel } from '@/make-channel';
+import { supabase } from '@/utils/helpers';
+import { loadConfiguration } from '@/utils/config';
 
 // NOTE (JL,2024-05-29): Zod Schemas to validate the configuration for the 'Create User' operation only.
 const configSchema = z.object({ app: z.object({ url: z.string().url() }) });
@@ -20,33 +18,43 @@ const nonEmptyStringSchema = z.string().trim().min(1);
  * @param config The applicable configuration. 
  * @param email The `string` email address of the Corporate Account.
  * @param isChannel The Corporate Account is also a Channel.
- * @param _password The optional password to use for the Corporate Account.
+ * @param _password The optional password to use for the Corporate Account. If not specified, a password is generated. 
+ *  This value is injected in the returned object with the `generated_password` property name.
+ * @returns A `Promise` for the Supabase User object.
  * @throws AuthError if the account creation fails.
  * @throws ZodError if the parameters or config are invalid.
  */
-export const createUser = async (config: any, email: string, isChannel: boolean, _password?: string) => {
+export const createUser = async (config: any, email: string, isChannel: boolean, _password?: string): Promise<any> => {
   emailSchema.parse(email);
   nonEmptyStringSchema.optional().parse(_password);
   configSchema.parse(config);
 
-  const client = supabase(config, { admin: true });
+  const supabaseClient = supabase(config, { admin: true });
   const password = _password || (Math.random() + 1).toString(36);
-  const auth = await client.auth.signUp({
+  const { data: { user }, error } = await supabaseClient.auth.signUp({
     email: email,
     password: password,
     options: { emailRedirectTo: `${config.app.url}/forgot-password` },
   });
-  if (auth.error) throw auth.error;
+  if (error) throw error;
 
   console.log('='.repeat(80));
   console.log(' Corporate Account created: ');
-  console.log('   Email Address: ' + email);
-  console.log('   Password: ' + (_password ? '******' : password));
+  console.log('   Email Address: %s', email);
+  console.log('   Password: %s', (_password ? '******' : password));
   console.log('='.repeat(80));
 
+  let toReturn = user;
   if (isChannel) {
-    makeChannel(config, email);
+    toReturn = await makeChannel(config, email);
   }
+
+  // NOTE (JL,2024-06-04): If we generated the password, include it in the inital user. Ugly.
+  if (!_password && password) {
+    toReturn = Object.assign(toReturn as object, { 'generated_password': password }) as any;
+  }
+
+  return toReturn;
 };
 
 /**
@@ -59,8 +67,8 @@ export const createUser = async (config: any, email: string, isChannel: boolean,
  * @throws ZodError if the loaded configuration does not satisfy all configuration needs.
  */
 export const main = (scenarios: { channel: boolean }, params?: { email: string }) => {
+  if (!params?.email) throw new Error('Email is required');
   setTimeout(async () => {
-    if (!params?.email) throw new Error('Email is required');
     createUser(loadConfiguration(), params!.email, scenarios.channel);
   }, 1000);
 };
