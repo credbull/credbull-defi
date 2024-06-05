@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-import { makeChannel } from '@/make-channel';
-import { supabase } from '@/utils/helpers';
-import { loadConfiguration } from '@/utils/config';
+import { makeChannel } from './make-channel';
+import { supabase } from './utils/helpers';
+import { loadConfiguration } from './utils/config';
 
 // Zod Schemas to validate the parameters and configuration.
 const configSchema = z.object({ app: z.object({ url: z.string().url() }) });
