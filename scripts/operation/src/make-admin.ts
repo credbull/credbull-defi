@@ -1,25 +1,36 @@
+import { z } from 'zod';
+
 import { loadConfiguration } from './utils/config';
-import { supabase, userByEmail } from './utils/helpers';
+import { supabase, userByOrThrow } from './utils/helpers';
+
+// TODO (JL,2024-06-05): Add `update-metadata` script.
+const emailSchema = z.string().email();
 
 /**
  * Updates the `email` Corporate User Account to add the Administrator Role.
  * 
  * @param config The applicable configuration object. 
  * @param email The `string` email address of the Corporate Account.
- * @throws AuthError if the account does not exist or the update fails.
- * @throws ZodError if the `config` object does not satisfy all configuration needs.
+ * @returns The updated User object.
+ * @throws Error if the User was not found.
+ * @throws AuthError if the update fails.
+ * @throws ZodError if the parameters or configuration are invalid.
  */
-export const makeAdmin = async (config: any, email: string) => {
-  const user = await userByEmail(config, email);
-  const client = supabase(config, { admin: true });
-  const updateUserById = await client.auth.admin.updateUserById(user.id, {
-    app_metadata: { ...user.app_metadata, roles: ['admin'] },
+export const makeAdmin = async (config: any, email: string): Promise<any> => {
+  emailSchema.parse(email);
+
+  const supabaseAdmin = supabase(config, { admin: true });
+  const toUpdate = await userByOrThrow(supabaseAdmin, email);
+  const { data: { user }, error } = await supabaseAdmin.auth.admin.updateUserById(toUpdate.id, {
+    app_metadata: { ...toUpdate.app_metadata, roles: ['admin'] },
   });
-  if (updateUserById.error) throw updateUserById.error;
+  if (error) throw error;
 
   console.log('='.repeat(80));
   console.log('  Corporate Account ' + email + ' is now an Administrator.');
   console.log('='.repeat(80));
+
+  return user;
 }
 
 /**
@@ -33,8 +44,8 @@ export const makeAdmin = async (config: any, email: string) => {
  * @throws ZodError if the loaded configuration does not satisfy all configuration needs.
  */
 export const main = (scenarios: object, params?: { email: string }) => {
+  if (!params?.email) throw new Error('Email is required');
   setTimeout(async () => {
-    if (!params?.email) throw new Error('Email is required');
     makeAdmin(loadConfiguration(), params!.email);
   }, 1000);
 };
