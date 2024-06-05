@@ -4,7 +4,7 @@ import { makeChannel } from '@/make-channel';
 import { supabase } from '@/utils/helpers';
 import { loadConfiguration } from '@/utils/config';
 
-// NOTE (JL,2024-05-29): Zod Schemas to validate the configuration for the 'Create User' operation only.
+// Zod Schemas to validate the parameters and configuration.
 const configSchema = z.object({ app: z.object({ url: z.string().url() }) });
 const emailSchema = z.string().email();
 const nonEmptyStringSchema = z.string().trim().min(1);
@@ -18,20 +18,20 @@ const nonEmptyStringSchema = z.string().trim().min(1);
  * @param config The applicable configuration. 
  * @param email The `string` email address of the Corporate Account.
  * @param isChannel The Corporate Account is also a Channel.
- * @param _password The optional password to use for the Corporate Account. If not specified, a password is generated. 
+ * @param passwordMaybe The optional password to use for the Corporate Account. If not specified, a password is generated. 
  *  This value is injected in the returned object with the `generated_password` property name.
  * @returns A `Promise` for the Supabase User object.
  * @throws AuthError if the account creation fails.
  * @throws ZodError if the parameters or config are invalid.
  */
-export const createUser = async (config: any, email: string, isChannel: boolean, _password?: string): Promise<any> => {
+export const createUser = async (config: any, email: string, isChannel: boolean, passwordMaybe?: string): Promise<any> => {
   emailSchema.parse(email);
-  nonEmptyStringSchema.optional().parse(_password);
+  nonEmptyStringSchema.optional().parse(passwordMaybe);
   configSchema.parse(config);
 
-  const supabaseClient = supabase(config, { admin: true });
-  const password = _password || (Math.random() + 1).toString(36);
-  const { data: { user }, error } = await supabaseClient.auth.signUp({
+  const supabaseAdmin = supabase(config, { admin: true });
+  const password = passwordMaybe || (Math.random() + 1).toString(36);
+  const { data: { user }, error } = await supabaseAdmin.auth.signUp({
     email: email,
     password: password,
     options: { emailRedirectTo: `${config.app.url}/forgot-password` },
@@ -41,7 +41,7 @@ export const createUser = async (config: any, email: string, isChannel: boolean,
   console.log('='.repeat(80));
   console.log(' Corporate Account created: ');
   console.log('   Email Address: %s', email);
-  console.log('   Password: %s', (_password ? '******' : password));
+  console.log('   Password: %s', (passwordMaybe ? '******' : password));
   console.log('='.repeat(80));
 
   let toReturn = user;
@@ -50,7 +50,7 @@ export const createUser = async (config: any, email: string, isChannel: boolean,
   }
 
   // NOTE (JL,2024-06-04): If we generated the password, include it in the inital user. Ugly.
-  if (!_password && password) {
+  if (!passwordMaybe && password) {
     toReturn = Object.assign(toReturn as object, { 'generated_password': password }) as any;
   }
 

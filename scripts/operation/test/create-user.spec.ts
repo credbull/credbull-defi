@@ -3,31 +3,22 @@ import { test, expect, type Page } from '@playwright/test';
 
 import { createUser, main } from '@/create-user';
 import { loadConfiguration } from '@/utils/config';
-import { supabase } from '@/utils/helpers';
+import { deleteUserIfPresent, supabase, userByOrUndefined } from '@/utils/helpers';
 
-const EMAIL_ADDRESS = 'minion@under.test';
+const EMAIL_ADDRESS = 'minion@create.user.test';
 const PASSWORD = 'DoNotForget';
 const EMPTY_CONFIG = {};
 
 let config: any | undefined = undefined;
-let supabaseClient: any | undefined = undefined;
+let supabaseAdmin: any | undefined = undefined;
 let subscription: any | undefined = undefined;
-
-// Helper similar to that in `helpers.ts`, but uses existing Supabase Admin Client and does not throw when unfound.
-async function userByOrUndefined(email: string): Promise<any> {
-  const pageSize = 1_000;
-  const { data: { users }, error } = await supabaseClient.auth.admin.listUsers({ perPage: pageSize });
-  if (error) throw error;
-  if (users.length === pageSize) throw Error('Implement pagination');
-  return users.find((u: { email: string }) => u.email === email);
-}
 
 test.beforeAll(() => {
   // NOTE (JL,2024-05-31): This loads the same configuration as the operations themselves.
   config = loadConfiguration();
 
-  supabaseClient = supabase(config, { admin: true });
-  ({ data: { subscription } } = supabaseClient.auth.onAuthStateChange((event: any, session: any) => {
+  supabaseAdmin = supabase(config, { admin: true });
+  ({ data: { subscription } } = supabaseAdmin.auth.onAuthStateChange((event: any, session: any) => {
     console.log(' => Supabase Auth Event: %s, Session: %s', event, session);
   }));
 });
@@ -71,29 +62,20 @@ test.describe('Create User Main should fail with', async () => {
   });
 });
 
-async function deleteTestUserIfPresent(emailAddress: string) {
-  await userByOrUndefined(emailAddress)
-    .then((user) => {
-      supabaseClient.auth.admin.deleteUser(user.id, false);
-    }).catch((error) => {
-      // Ignore.
-    });
-}
-
 // NOTE (JL,2024-06-04): These tests failed non-deterministically, with database errors, when using the same 
 //  Email Address. Waiting did not work. Removing parallelism did not work. 
 //  The workaround solution is to use 1 Email Per Test.
 test.describe('Create User should create', async () => {
 
   async function assertUserCreatedWith(email: string, isChannel: boolean, passwordMaybe?: string) {
-    await expect(userByOrUndefined(email)).resolves.toBeUndefined();
+    await expect(userByOrUndefined(supabaseAdmin, email)).resolves.toBeUndefined();
 
     const actualUser = await createUser(config, email, isChannel, passwordMaybe);
     const expectedUser = passwordMaybe ? { email: email }
       : { email: email, generated_password: actualUser.generated_password };
     expect(actualUser).toMatchObject(expectedUser);
 
-    const { data: { user }, error } = await supabaseClient.auth.signInWithPassword({
+    const { data: { user }, error } = await supabaseAdmin.auth.signInWithPassword({
       email: email,
       password: passwordMaybe || actualUser.generated_password
     });
@@ -107,24 +89,24 @@ test.describe('Create User should create', async () => {
       expect(user.app_metadata, 'Partner Type is not set.').toMatchObject(expectedPartnerType);
     }
 
-    await supabaseClient.auth.signOut('local');
-    await deleteTestUserIfPresent(email);
+    await supabaseAdmin.auth.signOut('local');
+    await deleteUserIfPresent(supabaseAdmin, email);
   };
 
   test('a non-channel user with specified email address and password', async () => {
-    await assertUserCreatedWith('minion1@under.test.com', false, PASSWORD);
+    await assertUserCreatedWith('minion1@create.user.test', false, PASSWORD);
   });
 
   test('a channel user with specified email address and password', async () => {
-    await assertUserCreatedWith('minion2@under.test.com', true, PASSWORD);
+    await assertUserCreatedWith('minion2@create.user.test', true, PASSWORD);
   });
 
   test('a non-channel user with specified email address and a generated password', async () => {
-    await assertUserCreatedWith('minion3@under.test.com', false);
+    await assertUserCreatedWith('minion3@create.user.test', false);
   });
 
   test('a channel user with specified email address and a generated password', async () => {
-    await assertUserCreatedWith('minion4@under.test.com', true);
+    await assertUserCreatedWith('minion4@create.user.test', true);
   });
 });
 
@@ -134,11 +116,11 @@ test.describe('Create User Main should create', async () => {
     expect(() => main({ channel: isChannel }, { email: email })).toPass();
 
     // Poll the database until the User is found to exist, or test is timed out after 1 minute.
-    await expect.poll(async () => { return await userByOrUndefined(email); }, { timeout: 30_000 })
+    await expect.poll(async () => { return await userByOrUndefined(supabaseAdmin, email); }, { timeout: 30_000 })
       .toMatchObject({ email: email });
 
     // NOTE (JL,2024-06-05): I can't get the value from the `poll`, so re-query.
-    const user = await userByOrUndefined(email);
+    const user = await userByOrUndefined(supabaseAdmin, email);
     if (!isChannel) {
       expect(user.app_metadata.partner_type, 'Partner Type is set.').toBeUndefined();
     } else {
@@ -146,14 +128,14 @@ test.describe('Create User Main should create', async () => {
       expect(user.app_metadata, 'Partner Type is not set.').toMatchObject(expectedPartnerType);
     }
 
-    await deleteTestUserIfPresent(email);
+    await deleteUserIfPresent(supabaseAdmin, email);
   };
 
   test('an non-channel user with specified email address', async () => {
-    await assertUserCreatedWith('minion5@under.test.com', false);
+    await assertUserCreatedWith('minion5@create.user.test', false);
   });
 
   test('a channel user with specified email address', async () => {
-    await assertUserCreatedWith('minion6@under.test.com', true);
+    await assertUserCreatedWith('minion6@create.user.test', true);
   });
 });

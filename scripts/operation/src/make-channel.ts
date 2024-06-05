@@ -1,20 +1,27 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import { z } from 'zod';
+
 import { loadConfiguration } from './utils/config';
-import { supabase, userByEmail } from './utils/helpers';
+import { supabase, userByOrThrow } from './utils/helpers';
+
+// Zod Schemas for parameter and configuration validation.
+const emailSchema = z.string().email();
 
 /**
- * Updates the `email` Corporate User Account to be a Channel.
+ * Updates the `email` Corporate User Account to have a Partner Type of Channel.
  * 
  * @param config The applicable configuration object. 
  * @param email The `string` email address of the Corporate Account.
  * @returns The updated User object.
- * @throws AuthError if the account does not exist or the update fails.
- * @throws ZodError if the `config` object does not satisfy all configuration needs.
+ * @throws Error if the User was not found.
+ * @throws AuthError if the update fails.
+ * @throws ZodError if the parameters or configuration are invalid.
  */
 export const makeChannel = async (config: any, email: string): Promise<any> => {
-  const toUpdate = await userByEmail(config, email);
-  const supabaseClient = supabase(config, { admin: true });
-  const { data: { user }, error } = await supabaseClient.auth.admin.updateUserById(toUpdate.id, {
+  emailSchema.parse(email);
+
+  const supabaseAdmin = supabase(config, { admin: true });
+  const toUpdate = await userByOrThrow(supabaseAdmin, email);
+  const { data: { user }, error } = await supabaseAdmin.auth.admin.updateUserById(toUpdate.id, {
     app_metadata: { ...toUpdate.app_metadata, partner_type: 'channel' },
   });
   if (error) throw error;
@@ -37,8 +44,8 @@ export const makeChannel = async (config: any, email: string): Promise<any> => {
  * @throws ZodError if the loaded configuration does not satisfy all configuration needs.
  */
 export const main = (scenarios: object, params?: { email: string }) => {
+  if (!params?.email) throw new Error('Email is required');
   setTimeout(async () => {
-    if (!params?.email) throw new Error('Email is required');
     makeChannel(loadConfiguration(), params!.email);
   }, 1000);
 };

@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { Wallet, providers } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
@@ -23,16 +23,28 @@ export const supabase = (config: any, opts?: { admin: boolean }) => {
   );
 }
 
-export const userByEmail = async (config: any, email: string) => {
-  const client = supabase(config, { admin: true });
-  const listUsers = await client.auth.admin.listUsers({ perPage: 10000 });
-  if (listUsers.error) throw listUsers.error;
-
-  const user = listUsers.data.users.find((u) => u.email === email);
+export const userByOrThrow = async (supabaseAdmin: SupabaseClient, email: string) => {
+  const user = await userByOrUndefined(supabaseAdmin, email);
   if (!user) throw new Error('No User for ' + email);
-
   return user;
 };
+
+export const userByOrUndefined = async (supabaseAdmin: SupabaseClient, email: string): Promise<any> => {
+  const pageSize = 1_000;
+  const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: pageSize });
+  if (error) throw error;
+  if (users.length === pageSize) throw Error('Implement pagination');
+  return users.find((u) => u.email === email);
+};
+
+export const deleteUserIfPresent = async (supabaseAdmin: SupabaseClient, email: string) => {
+  await userByOrUndefined(supabaseAdmin, email)
+    .then((user) => {
+      supabaseAdmin.auth.admin.deleteUser(user.id, false);
+    }).catch((error) => {
+      // Ignore.
+    });
+}
 
 export const headers = (session?: Awaited<ReturnType<typeof login>>) => {
   return {
