@@ -37,7 +37,7 @@ const configSchema = z.object({
   })
 });
 const emailSchema = z.string().email();
-const upsideVaultSchema =   z.intersection(addressSchema, z.string().regex(/self/));
+const upsideVaultSchema = z.intersection(addressSchema, z.string().regex(/self/));
 
 type CreateVaultParams = {
   treasury: string | undefined;
@@ -135,11 +135,11 @@ export const createVault = async (
   isTenant: boolean,
   upsideVault?: string,
   tenantEmail?: string
-) => {
+): Promise<any> => {
   configSchema.parse(config);
   upsideVaultSchema.optional().parse(upsideVault);
   emailSchema.optional().parse(tenantEmail);
-  
+
   const supabaseAdmin = supabase(config, { admin: true });
   const addresses = await supabaseAdmin.from('contracts_addresses').select();
   if (addresses.error) throw addresses.error;
@@ -206,11 +206,11 @@ export const createVault = async (
   console.log('  Request Headers: ', { ...adminHeaders });
   console.log('  Request Body: ', body);
 
-  const createVault = await fetch(serviceUrl, { method: 'POST', body: body, ...adminHeaders });
-  const vaults = await createVault.json();
+  const response = await fetch(serviceUrl, { method: 'POST', body: body, ...adminHeaders });
+  const { data: [created] } = await response.json();
 
   console.log('-'.repeat(80));
-  console.log('  Response: ', vaults);
+  console.log('  Response: ', created);
   console.log('-'.repeat(80));
 
   // alternative - use a direct call instead of posting to the API
@@ -218,13 +218,14 @@ export const createVault = async (
   // await createVaultUsingEthers(config, factoryAddress, operatorKey, vaultParams);
 
   if (isMatured) {
-    const vault = CredbullFixedYieldVault__factory.connect(vaults.data[0].address, adminSigner);
+    const vault = CredbullFixedYieldVault__factory.connect(created.address, adminSigner);
     const toggleTx = await vault.toggleWindowCheck(false);
     await toggleTx.wait();
-    console.log('  Toggled Window Check OFF for Vault: ', vaults.data[0].address);
+    console.log('  Toggled Window Check OFF for Vault: ', created.address);
   }
 
   console.log('='.repeat(80));
+  return created;
 };
 
 /**
