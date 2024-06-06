@@ -1,5 +1,5 @@
-import { z, ZodError } from 'zod';
-import { test, expect, type Page } from '@playwright/test';
+import { ZodError } from 'zod';
+import { test, expect } from '@playwright/test';
 
 import { createUser, main } from '@/create-user';
 import { loadConfiguration } from '@/utils/config';
