@@ -22,7 +22,7 @@
 Please go directly to [`contracts/`](./packages/contracts/README.md) and follow the instructions there.
 
 ## Install Pre-requisite Tools
-- NodeJS v21+ ([install node.js](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs))
+- NodeJS LTS (v20) ([install node.js](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs))
 - Yarn ([install yarn](https://v3.yarnpkg.com/getting-started/install))
 - Foundry ([install forge](https://book.getfoundry.sh/getting-started/installation))
 - Docker ([install docker](https://docs.docker.com/get-docker/))
