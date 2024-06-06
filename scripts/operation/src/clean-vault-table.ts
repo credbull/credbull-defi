@@ -5,6 +5,7 @@ import { CredbullFixedYieldVault__factory } from '@credbull/contracts';
 import { loadConfiguration } from './utils/config';
 import { signer, supabase } from './utils/helpers';
 
+// Zod Schema for validating parameters and configuration.
 const configParser = z.object({ secret: z.object({ ADMIN_PRIVATE_KEY: z.string() }) });
 
 /**
@@ -17,8 +18,8 @@ const configParser = z.object({ secret: z.object({ ADMIN_PRIVATE_KEY: z.string()
 export const cleanVaultTable = async (config: any) => {
   configParser.parse(config);
 
-  const client = supabase(config, { admin: true });
-  const { data, error } = await client.from('vaults').select();
+  const supabaseAdmin = supabase(config, { admin: true });
+  const { data, error } = await supabaseAdmin.from('vaults').select();
 
   if (error) throw error;
 
@@ -39,7 +40,7 @@ export const cleanVaultTable = async (config: any) => {
   }
   console.log('-'.repeat(80));
 
-  const { error: deleteError } = await client.from('vaults').delete().neq('id', 0);
+  const { error: deleteError } = await supabaseAdmin.from('vaults').delete().neq('id', 0);
   if (deleteError) throw deleteError;
 
   console.log(' Vault Table truncated.');
@@ -53,7 +54,7 @@ export const cleanVaultTable = async (config: any) => {
  * @throws ZodError if the loaded configuration does not satisfy all configuration needs.
  */
 export const main = () => {
-  setTimeout(async () => { cleanVaultTable(loadConfiguration()); }, 1000);
+  setTimeout(async () => { cleanVaultTable(loadConfiguration()) }, 1000);
 };
 
 export default main;

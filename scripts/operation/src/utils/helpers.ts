@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import { Database } from '@credbull/api';
 
-const supabaseConfigParser = z.object({
+const supabaseConfigSchema = z.object({
   services: z.object({ supabase: z.object({ url: z.string().url() }) }),
   secret: z.object({
     SUPABASE_SERVICE_ROLE_KEY: z.string(),
@@ -15,7 +15,7 @@ const supabaseConfigParser = z.object({
 });
 
 export const supabase = (config: any, opts?: { admin: boolean }) => {
-  supabaseConfigParser.parse(config)
+  supabaseConfigSchema.parse(config)
 
   return createClient<Database, 'public'>(
     config.services.supabase.url,
@@ -55,13 +55,13 @@ export const headers = (session?: Awaited<ReturnType<typeof login>>) => {
   };
 };
 
-const adminLoginConfigParser = z.object({
+const adminLoginConfigSchema = z.object({
   api: z.object({ url: z.string().url() }),
   users: z.object({ admin: z.object({ email_address: z.string().email() }) }),
   secret: z.object({ ADMIN_PASSWORD: z.string() })
 });
 
-const bobLoginConfigParser = z.object({
+const bobLoginConfigSchema = z.object({
   api: z.object({ url: z.string().url() }),
   users: z.object({ bob: z.object({ email_address: z.string().email() }) }),
   secret: z.object({ BOB_PASSWORD: z.string() })
@@ -73,11 +73,11 @@ export const login = async (
 ): Promise<{ access_token: string; user_id: string }> => {
   let _email: string, _password: string;
   if (opts?.admin) {
-    adminLoginConfigParser.parse(config);
+    adminLoginConfigSchema.parse(config);
     _email = config.users.admin.email_address;
     _password = config.secret!.ADMIN_PASSWORD!;
   } else {
-    bobLoginConfigParser.parse(config);
+    bobLoginConfigSchema.parse(config);
     _email = config.users.bob.email_address;
     _password = config.secret!.BOB_PASSWORD!;
   }
@@ -87,10 +87,10 @@ export const login = async (
   return signIn.json();
 };
 
-const linkWalletConfigParser = z.object({ app: z.object({ url: z.string().url() }) });
+const linkWalletConfigSchema = z.object({ app: z.object({ url: z.string().url() }) });
 
 export const linkWalletMessage = async (config: any, signer: Wallet) => {
-  linkWalletConfigParser.parse(config);
+  linkWalletConfigSchema.parse(config);
 
   let appUrl = new URL(config.app.url)
   const chainId = await signer.getChainId();
@@ -107,10 +107,10 @@ export const linkWalletMessage = async (config: any, signer: Wallet) => {
   return preMessage.prepareMessage();
 };
 
-const signerConfigParser = z.object({ services: z.object({ ethers: z.object({ url: z.string().url() }) }) });
+const signerConfigSchema = z.object({ services: z.object({ ethers: z.object({ url: z.string().url() }) }) });
 
 export const signer = (config: any, privateKey: string) => {
-  signerConfigParser.parse(config);
+  signerConfigSchema.parse(config);
   return new Wallet(privateKey, new providers.JsonRpcProvider(config.services.ethers.url));
 };
 

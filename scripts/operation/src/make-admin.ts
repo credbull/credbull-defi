@@ -3,7 +3,9 @@ import { z } from 'zod';
 import { loadConfiguration } from './utils/config';
 import { supabase, userByOrThrow } from './utils/helpers';
 
-// TODO (JL,2024-06-05): Add `update-metadata` script.
+// TODO (JL,2024-06-05): Add `update-metadata` script and use for Make Admin/Channel.
+
+// Zod Schemas for parameter and configuration validation.
 const emailSchema = z.string().email();
 
 /**

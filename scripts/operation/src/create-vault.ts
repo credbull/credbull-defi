@@ -10,10 +10,10 @@ import {
 import type { ICredbull } from '@credbull/contracts/types/CredbullFixedYieldVaultFactory';
 
 import { loadConfiguration } from './utils/config';
-import { headers, login, signer, supabase, userByEmail } from './utils/helpers';
+import { headers, login, signer, supabase, userByOrThrow } from './utils/helpers';
 
 // Zod Schema to validate all config points in this module.
-const configParser = z.object({
+const configSchema = z.object({
   secret: z.object({
     ADMIN_PRIVATE_KEY: z.string()
   }),
@@ -32,6 +32,7 @@ const configParser = z.object({
     })
   })
 });
+const emailSchema = z.string().email();
 
 type CreateVaultParams = {
   treasury: string | undefined;
@@ -130,10 +131,11 @@ export const createVault = async (
   upsideVault?: string,
   tenantEmail?: string
 ) => {
-  configParser.parse(config);
+  configSchema.parse(config);
+  emailSchema.optional().parse(tenantEmail);
   
-  const adminClient = supabase(config, { admin: true });
-  const addresses = await adminClient.from('contracts_addresses').select();
+  const supabaseAdmin = supabase(config, { admin: true });
+  const addresses = await supabaseAdmin.from('contracts_addresses').select();
   if (addresses.error) throw addresses.error;
 
   console.log('='.repeat(80));
@@ -151,8 +153,8 @@ export const createVault = async (
   let custodian = isMatured ? config.evm.address.custodian : config.evm.address.custodian || '';
 
   if (upsideVault && !isUpside) {
-    const vault = await adminClient.from('vaults').select().eq('address', upsideVault).single();
-    const upsideCustodian = await adminClient
+    const vault = await supabaseAdmin.from('vaults').select().eq('address', upsideVault).single();
+    const upsideCustodian = await supabaseAdmin
       .from('vault_entities')
       .select()
       .eq('vault_id', vault.data!.id)
@@ -186,7 +188,7 @@ export const createVault = async (
     token,
     matured: isMatured,
     upside: upsideVault,
-    tenant: isTenant && tenantEmail ? (await userByEmail(config, tenantEmail)).id : undefined,
+    tenant: isTenant && tenantEmail ? (await userByOrThrow(supabaseAdmin, tenantEmail)).id : undefined,
   });
 
   const serviceUrl = new URL(`/vaults/create-vault${isUpside ? '-upside' : ''}`, config.api.url);

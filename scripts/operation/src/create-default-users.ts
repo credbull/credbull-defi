@@ -5,7 +5,7 @@ import { makeAdmin } from './make-admin';
 import { loadConfiguration } from './utils/config';
 
 // Zod Schema for validating parameters and configuration.
-const configParser = z.object({
+const configSchema = z.object({
   users: z.object({
     admin: z.object({
       email_address: z.string().email()
@@ -27,7 +27,7 @@ const configParser = z.object({
  * @throws ZodError if the `config` object does not satisfy all configuration needs.
  */
 export const createDefaultUsers = async (config: any) => {
-  configParser.parse(config)
+  configSchema.parse(config)
 
   console.log('='.repeat(90));
   console.log('  Creating default Users.')
