@@ -13,17 +13,21 @@ import { loadConfiguration } from './utils/config';
 import { headers, login, signer, supabase, userByOrThrow } from './utils/helpers';
 
 // Zod Schema to validate all config points in this module.
+const addressSchema = z.string().regex(/^(0x)?[0-9a-fA-F]{40,40}$/);
 const configSchema = z.object({
   secret: z.object({
     ADMIN_PRIVATE_KEY: z.string()
   }),
+  api: z.object({
+    url: z.string().url()
+  }),
   evm: z.object({
     address: z.object({
-      owner: z.string(),
-      operator: z.string(),
-      custodian: z.string().optional(),
-      treasury: z.string(),
-      activity_reward: z.string(),
+      owner: addressSchema,
+      operator: addressSchema,
+      custodian: addressSchema,
+      treasury: addressSchema,
+      activity_reward: addressSchema,
     })
   }),
   operation: z.object({
@@ -33,6 +37,7 @@ const configSchema = z.object({
   })
 });
 const emailSchema = z.string().email();
+const upsideVaultSchema =   z.intersection(addressSchema, z.string().regex(/self/));
 
 type CreateVaultParams = {
   treasury: string | undefined;
@@ -114,12 +119,12 @@ function createParams(
  * Creates a Vault according to the parameters.
  * 
  * @param config The applicable configuration. Must be valid against a schema.
- * @param isMatured Determines if a Maturity Vault 
- * @param isUpside 
+ * @param isMatured `true` if the Vault is to be created matured, or not.
+ * @param isUpside `true` is an Fixed Yield With Upside Vault is to be created. 
  * @param isTenant 
- * @param upsideVault 
+ * @param upsideVault The `string` Address of the Fixed Yield With Upside Vault.
  * @param tenantEmail 
- * @throws ZodError if `coonfig` fails validation.
+ * @throws ZodError if any parameter or config item fails validation.
  * @throws PostgrestError if authentication or any database interaction fails.
  * @throws Error if there are no contracts to operate upon.
  */
@@ -132,6 +137,7 @@ export const createVault = async (
   tenantEmail?: string
 ) => {
   configSchema.parse(config);
+  upsideVaultSchema.optional().parse(upsideVault);
   emailSchema.optional().parse(tenantEmail);
   
   const supabaseAdmin = supabase(config, { admin: true });
