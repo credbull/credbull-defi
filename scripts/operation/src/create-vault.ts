@@ -213,7 +213,7 @@ export const createVault = async (
   console.log('  Response Body:', responseBody);
   console.log('-'.repeat(80));
 
-  if (!response.ok) throw Error(responseBody.message);
+  if (!response.ok) throw new Error(responseBody.message);
   const { data: [created, ...rest] } = responseBody;
   if (rest && rest.length > 0) {
     console.log('WARNING: Response contained unexpected:', rest);
