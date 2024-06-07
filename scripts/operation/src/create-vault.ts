@@ -37,7 +37,7 @@ const configSchema = z.object({
   })
 });
 const emailSchema = z.string().email();
-const upsideVaultSchema = z.intersection(addressSchema, z.string().regex(/self/));
+const upsideVaultSchema = z.union([addressSchema, z.string().regex(/self/)]);
 
 type CreateVaultParams = {
   treasury: string | undefined;
@@ -168,9 +168,9 @@ export const createVault = async (
       .single();
 
     custodian = upsideCustodian.data!.address;
-    console.log(' Queried Custodian Address for Vault: ' + upsideVault);
+    console.log(' Queried Custodian Address for Vault:', upsideVault);
   }
-  console.log(' Custodian Address: ' + custodian);
+  console.log(' Custodian Address:', custodian);
 
   const expectedFactoryName = (isUpside ? 'CredbullUpsideVaultFactory' : 'CredbullFixedYieldVaultFactory');
   const factoryAddress = addresses.data.find((i) => i.contract_name === expectedFactoryName)?.address;
@@ -198,20 +198,26 @@ export const createVault = async (
   });
 
   const serviceUrl = new URL(`/vaults/create-vault${isUpside ? '-upside' : ''}`, config.api.url);
-  let body = JSON.stringify({ ...vaultParams, ...createVaultParams }, null, 2);
+  let requestBody = JSON.stringify({ ...vaultParams, ...createVaultParams }, null, 2);
 
   console.log('-'.repeat(80));
   console.log(' Creating Vault with:');
-  console.log('  URL: ', serviceUrl.href);
-  console.log('  Request Headers: ', { ...adminHeaders });
-  console.log('  Request Body: ', body);
+  console.log('  URL:', serviceUrl.href);
+  console.log('  Request Headers:', { ...adminHeaders });
+  console.log('  Request Body:', requestBody);
 
-  const response = await fetch(serviceUrl, { method: 'POST', body: body, ...adminHeaders });
-  const { data: [created] } = await response.json();
+  const response = await fetch(serviceUrl, { method: 'POST', body: requestBody, ...adminHeaders });
+  const responseBody = await response.json();
 
   console.log('-'.repeat(80));
-  console.log('  Response: ', created);
+  console.log('  Response Body:', responseBody);
   console.log('-'.repeat(80));
+
+  if (!response.ok) throw Error(responseBody.message);
+  const { data: [created, ...rest] } = responseBody;
+  if (rest && rest.length > 0) {
+    console.log('WARNING: Response contained unexpected:', rest);
+  }
 
   // alternative - use a direct call instead of posting to the API
   // const operatorKey = process.env.OPERATOR_PRIVATE_KEY; // this should be the Vault Operator
