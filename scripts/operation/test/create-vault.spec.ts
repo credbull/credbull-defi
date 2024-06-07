@@ -1,5 +1,6 @@
 import { ZodError } from 'zod';
 import { test, expect } from '@playwright/test';
+import { isAfter, isFuture, isPast } from 'date-fns';
 
 import { CredbullFixedYieldVault__factory } from '@credbull/contracts';
 
@@ -68,6 +69,8 @@ test.describe('Create Vault Main should fail when invoked with', async () => {
 });
 
 test.describe('Create Vault', async () => {
+  test.describe.configure({ mode: 'serial' });
+
   let supabaseAdmin: any | undefined = undefined;
   let createdAdminUser: boolean = false;
   let adminSigner: any | undefined = undefined;
@@ -88,39 +91,110 @@ test.describe('Create Vault', async () => {
     if (createdAdminUser) await deleteUserIfPresent(supabaseAdmin, config.users.admin.email_address);
   });
 
-  async function countVaults(): Promise<number> {
+  async function numberOfVaults(): Promise<number> {
     return supabaseAdmin.from('vaults').select('*', { count: 'exact', head: true })
       .then((data: any) => { return data.count; });
   }
 
+  async function wait(ms: number) {
+    new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async function verifyVaultContract(address: string, isMatured = false): Promise<void> {
+    const vaultContract = CredbullFixedYieldVault__factory.connect(address, adminSigner);
+    expect(vaultContract.name()).resolves.toBe('Credbull Liquidity');
+    expect(vaultContract.symbol()).resolves.toBe('CLTP');
+    expect(vaultContract.isMatured()).resolves.toBe(isMatured);
+  }
+
   test.describe('should create', async () => {
 
-    test('a Fixed Yield vault that is ready', async () => {
-      const countBefore = await countVaults();
+    test('a non-matured, ready, Fixed Yield vault, open for deposits, not-yet open for redemption', async () => {
       const created = await createVault(config, false, false, false);
       expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
-
-      const countAfter = await countVaults();
-      expect(countAfter === countBefore + 1, 'No Vault was created').toBe(true);
+      expect(isPast(created.deposits_opened_at)).toBe(true);
+      expect(isFuture(created.deposits_closed_at)).toBe(true);
+      expect(isAfter(created.deposits_closed_at, created.deposits_opened_at)).toBe(true);
+      expect(isFuture(created.redemptions_opened_at)).toBe(true);
+      expect(isAfter(created.redemptions_opened_at, created.deposits_closed_at)).toBe(true);
+      expect(isAfter(created.redemptions_closed_at, created.redemptions_opened_at)).toBe(true);
 
       const { data: [loaded, ...rest] } = await supabaseAdmin
         .from('vaults')
-        .select('id, type, status')
+        .select('id, type, status, address')
         .eq('id', created.id);
-      expect(loaded).toMatchObject({ id: created.id, type: 'fixed_yield', status: 'ready' });
+      expect(loaded).toMatchObject({ id: created.id, type: 'fixed_yield', status: 'ready', address: created.address });
       expect(rest).toEqual([]);
 
-      const vaultContract = CredbullFixedYieldVault__factory.connect(created.address, adminSigner);
-      const name = await vaultContract.name();
-      const symbol = await vaultContract.symbol();
-      expect(name).toBe('Credbull Liquidity');
-      expect(symbol).toBe('CLTP');
+      await verifyVaultContract(created.address);
+    });
+
+    test('a non-matured, ready, Fixed Yield vault, closed for deposits/redemption, Maturity Check OFF', async () => {
+      const created = await createVault(config, true, false, false);
+      expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
+      expect(isPast(created.deposits_opened_at)).toBe(true);
+      expect(isPast(created.deposits_closed_at)).toBe(true);
+      expect(isAfter(created.deposits_closed_at, created.deposits_opened_at)).toBe(true);
+      expect(isPast(created.redemptions_opened_at)).toBe(true);
+      expect(isPast(created.redemptions_closed_at)).toBe(true);
+      expect(isAfter(created.redemptions_opened_at, created.deposits_closed_at)).toBe(true);
+      expect(isAfter(created.redemptions_closed_at, created.redemptions_opened_at)).toBe(true);
+
+      const { data: [loaded, ...rest] } = await supabaseAdmin
+        .from('vaults')
+        .select('id, type, status, address')
+        .eq('id', created.id);
+      expect(loaded).toMatchObject({ id: created.id, type: 'fixed_yield', status: 'ready', address: created.address });
+      expect(rest).toEqual([]);
+
+      await verifyVaultContract(created.address);
+    });
+
+    test.skip('a non-matured, ready, Upside Fixed Yield vault, open for deposits, redemption, Maturity Check OFF', async () => {
+      const created = await createVault(config, false, true, false, 'self');
+      expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
+      expect(isPast(created.deposits_opened_at)).toBe(true);
+      expect(isFuture(created.deposits_closed_at)).toBe(true);
+      expect(isAfter(created.deposits_closed_at, created.deposits_opened_at)).toBe(true);
+      expect(isFuture(created.redemptions_opened_at)).toBe(true);
+      expect(isAfter(created.redemptions_opened_at, created.deposits_closed_at)).toBe(true);
+      expect(isAfter(created.redemptions_closed_at, created.redemptions_opened_at)).toBe(true);
+
+      const { data: [loaded, ...rest] } = await supabaseAdmin
+        .from('vaults')
+        .select('id, type, status, address')
+        .eq('id', created.id);
+      expect(loaded).toMatchObject({ id: created.id, type: 'fixed_yield', status: 'ready', address: created.address });
+      expect(rest).toEqual([]);
+
+      await verifyVaultContract(created.address);
     });
   });
 
-  test.skip('Main should create', async () => {
+  test.describe('Main should create', async () => {
 
-    test('a specific vault', async () => {
+    test('a non-matured, ready, Fixed Yield vault, open for deposits, not-yet open for redemption', async () => {
+      const countBefore = await numberOfVaults();
+      expect(() => main({ matured: false, upside: false, tenant: false })).toPass();
+
+      await expect.poll(async () => { return numberOfVaults() }, { timeout: 30_000 }).toBe(countBefore + 1);
+      // NOTE (JL,2024-06-07): Assume that the latest created vault pertains to this test and has the highest ID.
+      const { data: loaded } = await supabaseAdmin
+        .from('vaults')
+        .select('id, type, status, address, deposits_opened_at, deposits_closed_at, redemptions_opened_at, redemptions_closed_at')
+        .order('id', { ascending: false })
+        .limit(1)
+        .single();
+      expect(loaded).toMatchObject({ type: 'fixed_yield', status: 'ready' });
+
+      expect(isPast(loaded.deposits_opened_at)).toBe(true);
+      expect(isFuture(loaded.deposits_closed_at)).toBe(true);
+      expect(isAfter(loaded.deposits_closed_at, loaded.deposits_opened_at)).toBe(true);
+      expect(isFuture(loaded.redemptions_opened_at)).toBe(true);
+      expect(isAfter(loaded.redemptions_opened_at, loaded.deposits_closed_at)).toBe(true);
+      expect(isAfter(loaded.redemptions_closed_at, loaded.redemptions_opened_at)).toBe(true);
+
+      await verifyVaultContract(loaded.address);
     });
   });
 
