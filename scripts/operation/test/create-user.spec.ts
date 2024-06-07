@@ -53,7 +53,7 @@ test.describe('Create User Main should fail with', async () => {
     expect(() => main({ channel: false })).toThrow(Error);
   });
 
-  // NOTE (JL,2024-06-04): Internal async invocation means no other impact possible. 
+  // NOTE (JL,2024-06-04): Internal async invocation means no other impact possible.
   test('an invalid parameter, but does not due to asynchronous invocation', async () => {
     expect(() => main({ channel: false }, { email: '' })).toPass();
     expect(() => main({ channel: false }, { email: ' \t \n ' })).toPass();
@@ -62,8 +62,8 @@ test.describe('Create User Main should fail with', async () => {
   });
 });
 
-// NOTE (JL,2024-06-04): These tests failed non-deterministically, with database errors, when using the same 
-//  Email Address. Waiting did not work. Removing parallelism did not work. 
+// NOTE (JL,2024-06-04): These tests failed non-deterministically, with database errors, when using the same
+//  Email Address. Waiting did not work. Removing parallelism did not work.
 //  The workaround solution is to use 1 Email Per Test.
 test.describe('Create User should create', async () => {
 

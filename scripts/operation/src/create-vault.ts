@@ -117,13 +117,13 @@ function createParams(
 
 /**
  * Creates a Vault according to the parameters.
- * 
+ *
  * @param config The applicable configuration. Must be valid against a schema.
  * @param isMatured `true` if the Vault is to be created matured, or not.
- * @param isUpside `true` is an Fixed Yield With Upside Vault is to be created. 
- * @param isTenant 
+ * @param isUpside `true` is an Fixed Yield With Upside Vault is to be created.
+ * @param isTenant
  * @param upsideVault The `string` Address of the Fixed Yield With Upside Vault.
- * @param tenantEmail 
+ * @param tenantEmail
  * @throws ZodError if any parameter or config item fails validation.
  * @throws PostgrestError if authentication or any database interaction fails.
  * @throws Error if there are no contracts to operate upon.
@@ -229,8 +229,8 @@ export const createVault = async (
 };
 
 /**
- * Invoked by the command line processor, creates a Vault according to the  `scenarios` and `params`. 
- * 
+ * Invoked by the command line processor, creates a Vault according to the  `scenarios` and `params`.
+ *
  * @param scenarios Provides flags to govern the Vault Creation process.
  * @param params Optional parameters object.
  * @throws ZodError if the configuration fails to load or satisfy any configuration requirement.
@@ -251,7 +251,7 @@ export const main = (
   }, 1000);
 };
 
-// alternative option to calling the create-vault API.  not fully compatible with our arch (missing tenant 
+// alternative option to calling the create-vault API.  not fully compatible with our arch (missing tenant
 // information, maybe others)
 async function createVaultUsingEthers(
   config: any,
