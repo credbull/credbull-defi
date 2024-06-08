@@ -8,16 +8,20 @@ import { loadConfiguration } from './utils/config';
 const configSchema = z.object({
   users: z.object({
     admin: z.object({
-      email_address: z.string().email()
+      email_address: z.string().email(),
+    }),
+    alice: z.object({
+      email_address: z.string().email(),
     }),
     bob: z.object({
-      email_address: z.string().email()
+      email_address: z.string().email(),
     }),
   }),
   secret: z.object({
     ADMIN_PASSWORD: z.string(),
+    ALICE_PASSWORD: z.string(),
     BOB_PASSWORD: z.string(),
-  })
+  }),
 });
 
 /**
@@ -30,14 +34,14 @@ export const createDefaultUsers = async (config: any) => {
   configSchema.parse(config)
 
   console.log('='.repeat(90));
-  console.log('  Creating default Users.')
+  console.log('  Creating default Users.');
 
   await createUser(config, config.users.admin.email_address, false, config.secret.ADMIN_PASSWORD!);
   await makeAdmin(config, config.users.admin.email_address);
+  await createUser(config, config.users.alice.email_address, false, config.secret.ALICE_PASSWORD!);
   await createUser(config, config.users.bob.email_address, false, config.secret.BOB_PASSWORD!);
-  await createUser(config, 'usera@credbull.io', false, 'usera123');
 
-  console.log('  Done.')
+  console.log('  Done.');
   console.log('='.repeat(90));
 };
 

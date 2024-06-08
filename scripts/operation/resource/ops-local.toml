@@ -25,8 +25,9 @@ treasury = "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
 activity_reward = "0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556"
 
 [users]
-admin.email_address = "admin@credbull.io"
-bob.email_address = "bob@credbull.io"
+admin.email_address = "test+admin@credbull.io"
+alice.email_address = "test+alice@credbull.io"
+bob.email_address = "test+bob@credbull.io"
 
 [operation.createVault]
 collateral_percentage = 20
