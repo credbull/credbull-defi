@@ -28,4 +28,13 @@ jobs:
           # locally, load using ```act --var-file my.variables``` (see https://nektosact.com/usage/index.html)
           ENVIRONMENT: ${{ vars.ENVIRONMENT }}
           SOME_SECRET: ${{ secrets.SOME_SECRET }}
-          
+
+      - name: Load .env.sample as Environment
+        run: |
+          echo "<< before loading .env"
+          echo "Environment: $ENVIRONMENT"
+          echo "Deployer key: DEPLOYER_PRIVATE_KEY"       
+          source .env.sample
+          echo ">> after loading .env"
+          echo "Environment: $ENVIRONMENT"                    
+          echo "Deployer key: DEPLOYER_PRIVATE_KEY"          
