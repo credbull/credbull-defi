@@ -71,17 +71,16 @@ jobs:
         run: docker logs api --tail all
 
       - name: Run SDK tests
-        run: cp -n .env.sample .env && yarn int-test
+        run: |
+          cp -n packages/api/.env.sample packages/api/.env
+          cp -n .env.sample .env
+          set -a
+          source packages/api/.env
+          source .env
+          set +a
+          yarn int-test
         env:
           SOME_ENV: "some_env"
-#          CRON_SECRET: ""
-#          OPERATOR_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
-#          CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_CUSTODIAN_PRIVATE_KEY }}
-#
-#          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
-#          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-#          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
-#          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
         working-directory: packages/sdk
 
 
