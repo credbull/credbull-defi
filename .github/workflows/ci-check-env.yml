@@ -30,10 +30,15 @@ jobs:
           SOME_SECRET: ${{ secrets.SOME_SECRET }}
 
 
-      - name: Load .env.sample as Environment
+      - name: Export .env.sample as Environment
         run: |
+          echo "Before Environment: $ENVIRONMENT"                    
+          echo "Before Deployer key: $DEPLOYER_PRIVATE_KEY"
           set -a
           source .env.sample
+          echo "After Environment: $ENVIRONMENT"                    
+          echo "After Deployer key: $DEPLOYER_PRIVATE_KEY"
+
 
       - name: Echo environment
         run: |
