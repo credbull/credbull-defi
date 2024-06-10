@@ -32,5 +32,8 @@ jobs:
 
       - name: Export .env.sample as Environment
         run: |
+          echo "Environment: $ENVIRONMENT"
           source .env.sample
           echo "Environment: $ENVIRONMENT"
+        env:
+          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
