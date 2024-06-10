@@ -1,12 +1,12 @@
 ##
-# The Application Configuration for the TestNet Environment. 
+# The Application Configuration for the TestNet Environment.
 ##
 
 [evm]
 # blockchain id, e.g. baseSepolia=84532, arbSepolia=421614
 chain_id = 84532
 
-[evm.contracts]
+[evm.address]
 # credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)
 # devops admin/owner (wallet 1) - public address, okay to share
 owner.public_address = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"

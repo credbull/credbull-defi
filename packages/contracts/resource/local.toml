@@ -1,12 +1,12 @@
 ##
-# The Application Configuration for the Local Environment (local development). 
+# The Application Configuration for the Local Environment (local development).
 ##
 
 [evm]
 # blockchain id
 chain_id = 31337
 
-[evm.contracts]
+[evm.address]
 # Dev/Anvil Wallet, Account[0]
 owner.public_address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 # Dev/Anvil Wallet, Account[1]

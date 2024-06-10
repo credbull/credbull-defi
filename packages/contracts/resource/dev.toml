@@ -7,7 +7,7 @@
 # blockchain id, e.g. baseSepolia=84532, arbSepolia=421614
 chain_id = 84532
 
-[evm.contracts]
+[evm.address]
 # credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)
 # devops deployer (wallet 5)
 deployer.private_key = ""
@@ -21,7 +21,6 @@ operator.public_address = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 collateral_percentage = 200
 
 [services.supabase]
-
 url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
 
 # Export contract details to supabase.
