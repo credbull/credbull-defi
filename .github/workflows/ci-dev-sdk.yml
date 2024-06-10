@@ -39,20 +39,14 @@ jobs:
           compose-command: up
           compose-options: --build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
+          ETHERS_DEPLOYER_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
+          ETHERS_CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_CUSTODIAN_PRIVATE_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_JWT_SECRET: ${{ secrets.SDK_SUPABASE_JWT_SECRET }}
-          ETHERS_CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_CUSTODIAN_PRIVATE_KEY }}
-          ETHERS_DEPLOYER_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
           CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
-          NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
-          ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
           SLACK_TOKEN: ${{ secrets.SDK_SLACK_TOKEN }}
-          WSS_PROVIDER_URLS: ${{ secrets.SDK_WSS_PROVIDER_URLS }}
-          OPERATOR_ADDRESS: ${{ secrets.SDK_OPERATOR_ADDRESS }}
-          APP_PORT: 3001
-          APP_VERSION: 0.0.1000
 
 
       # TODO: confirm if we can use the local supabase for SDK.
