@@ -54,36 +54,25 @@ jobs:
           APP_PORT: 3001
           APP_VERSION: 0.0.1000
 
+
+      # TODO: confirm if we can use the local supabase for SDK.
+      # TODO: this should not be our credbull-test supabase instance.  later in the build we clear down all vaults!
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: cd packages/api/supabase && supabase link --project-ref ${{ vars.CREDBULL_TESTNET_SUPABASE_PROJECT_ID }} && supabase db push
+      - run: supabase link --project-ref ${{ vars.CREDBULL_TESTNET_SUPABASE_PROJECT_ID }} && supabase db push
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.CREDBULL_DEVOPS_TEST_SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
-
-      - name: Load .env.sample as Environment
-        run: |
-          echo "<< before loading .env"
-          echo "Environment: $ENVIRONMENT"
-          echo "Deployer key: $DEPLOYER_PRIVATE_KEY"       
-          cp .env.sample .env
-          source .env
-          echo ">> after loading .env"
-          echo "Environment: $ENVIRONMENT"                    
-          echo "Deployer key: $DEPLOYER_PRIVATE_KEY"
-        working-directory: packages/contracts
+        working-directory: packages/api/supabase
 
       - name: Deploy contracts
         run: cp .env.sample .env && yarn deploy
-        env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
         working-directory: packages/contracts
 
       - name: Make Admin
-        run: cd scripts/operation/ && source .env.sample && yarn op --make-admin null email:admin@cbl.com
-        env:
-          ENVIRONMENT: "local"
+        run: cp .env.sample .env && yarn op --make-admin null email:admin@cbl.com
+        working-directory: scripts/operation/
 
       - name: Logs
         run: docker logs api --tail all
