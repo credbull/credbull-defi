@@ -64,9 +64,9 @@ jobs:
         working-directory: packages/contracts
 
       # TODO: this keeps failing - move this step out?
-#      - name: Create Default Users
-#        run:  cp -n ../../.env.sample ../../.env && cp -n .env.sample .env && yarn op --create-default-users
-#        working-directory: scripts/operation
+      - name: Create Default Users
+        run:  cp -n ../../.env.sample ../../.env && cp -n .env.sample .env && yarn op --create-default-users
+        working-directory: scripts/operation
 
       - name: Logs
         run: docker logs api --tail all
