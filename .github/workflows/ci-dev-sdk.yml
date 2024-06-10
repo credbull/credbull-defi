@@ -68,10 +68,14 @@ jobs:
 
       - name: Deploy contracts
         run: cp .env.sample .env && yarn deploy
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
         working-directory: packages/contracts
 
       - name: Make Admin
         run: cp .env.sample .env && yarn op --make-admin null email:admin@cbl.com
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
         working-directory: scripts/operation/
 
       - name: Logs
