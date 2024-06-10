@@ -43,7 +43,7 @@ jobs:
 
       # Docker compose detached (-d) so other jobs can continue
       # Env variables are sourced and then exported (set -a)
-      - name: Docker compose detached
+      - name: Run Docker compose detached
         run: |
           cp -n packages/api/.env.sample packages/api/.env
           set -a

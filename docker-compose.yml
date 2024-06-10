@@ -4,6 +4,7 @@ services:
   anvil:
     container_name: anvil
     image: anvil
+    network_mode: "host"
     platform: linux/amd64
     build: 
       context: .
@@ -15,6 +16,7 @@ services:
   api:
     container_name: api
     image: api
+    network_mode: "host"
     platform: linux/amd64
     build:
       context: .
