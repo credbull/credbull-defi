@@ -9,9 +9,6 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile-anvil
-    ports:
-      - 8545:8545
-    
 
   api:
     container_name: api
@@ -21,8 +18,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-api
-    ports:
-      - 3001:3001
     environment:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       NEXT_PUBLIC_TARGET_NETWORK_WSS: ${NEXT_PUBLIC_TARGET_NETWORK_WSS}
