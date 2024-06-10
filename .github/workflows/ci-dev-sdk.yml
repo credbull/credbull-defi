@@ -62,6 +62,17 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.CREDBULL_DEVOPS_TEST_SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
 
+      - name: Credbull environment
+        run: |
+          echo "Environment is: $ENVIRONMENT"
+          echo "Deployer is: $DEPLOYER_PRIVATE_KEY"
+          echo "Anvil Local Deployer is: ${{ vars.ANVIL_LOCAL_DEPLOYER_PRIVATE_KEY }}"
+        env:
+          # in github, these will come from the environment
+          # locally, load using ```act --var-file my.variables``` (see https://nektosact.com/usage/index.html)
+          ENVIRONMENT: "local"
+          DEPLOYER_PRIVATE_KEY: ${{ vars.ANVIL_LOCAL_DEPLOYER_PRIVATE_KEY }}
+
       - name: Deploy contracts
         run: cd packages/contracts/ && yarn deploy
         env:
