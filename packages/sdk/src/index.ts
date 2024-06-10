@@ -10,6 +10,8 @@ import { SiweMessage, generateNonce } from 'siwe';
 
 import { decodeContractError } from './utils';
 
+// TODO (JL,2024-06-10): The use of the generated Ethers API bypasses the Credbull API.
+
 /**
  * The Credbull SDK for creating and managing Credbull Vaults, via the Credbull API.
  */
@@ -17,25 +19,29 @@ export class CredbullSDK {
   // The `URL` for the Credbull API.
   private serviceUrl: URL;
 
-  // The logged in User's Access Token. Only populated on login.
-  private accessToken: string | undefined = undefined;
+  // Client credentials. Either a Email/Password to login with, or a valid Access Token.
+  private login: { email: string, password: String } | null = null;
+  private accessToken: string | null = null;
 
   /**
    * Creates a `CredbullSDK` instance pointed at the `serviceUrl` API backend.
    *
    * @param serviceUrl The `string` API URL. Must be a valid URL.
-   * @param email The User's Email Address.
-   * @param password The User's Password.
+   * @param credentials The client's credentials. Either an email/password pair or an Access Token.
    * @param signer The `Signer`.
    * @throws TypeError if `serviceUrl` is not a valid URL.
    */
   constructor(
     serviceUrl: string,
-    private email: string,
-    private password: string,
+    credentials: { email: string, password: string } | { accessToken: string },
     private signer: Signer,
   ) {
     this.serviceUrl = new URL(serviceUrl);
+    if ('email' in credentials) {
+      this.login = credentials;
+    } else {
+      this.accessToken = credentials.accessToken;
+    }
   }
 
   private async headers() {
@@ -84,7 +90,7 @@ export class CredbullSDK {
   async connect(): Promise<void> {
     return await fetch(this.toServiceUrl('/auth/api/sign-in'), {
       method: 'POST',
-      body: JSON.stringify({ email: this.email, password: this.password }),
+      body: JSON.stringify(this.login),
       headers: { 'Content-Type': 'application/json' },
     })
       .then((response) => {
@@ -105,7 +111,6 @@ export class CredbullSDK {
 
   /// Link user wallet
   async linkWallet(discriminator?: string): Promise<any> {
-    // NOTE (JL,2024-05-30): Would these Promises be better chained?
     const message = await this.linkWalletMessage(this.signer);
     const signature = await this.signer.signMessage(message);
     const headers = await this.headers();
