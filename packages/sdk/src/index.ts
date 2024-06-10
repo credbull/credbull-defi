@@ -1,12 +1,13 @@
+import { BigNumber, Signer } from 'ethers';
+import { ethers } from 'ethers';
+import { SiweMessage, generateNonce } from 'siwe';
+
 import {
   CredbullFixedYieldVaultWithUpside__factory,
   CredbullFixedYieldVault__factory,
   ERC20__factory,
 } from '@credbull/contracts';
 import type { CredbullFixedYieldVault, CredbullFixedYieldVaultWithUpside, ERC20 } from '@credbull/contracts';
-import { BigNumber, Signer } from 'ethers';
-import { ethers } from 'ethers';
-import { SiweMessage, generateNonce } from 'siwe';
 
 import { decodeContractError } from './utils';
 

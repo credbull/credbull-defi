@@ -50,8 +50,8 @@ test.beforeAll(async () => {
   operatorSigner = signer(process.env.OPERATOR_PRIVATE_KEY || '0x');
   custodianSigner = signer(process.env.CUSTODIAN_PRIVATE_KEY || '0x');
 
-  sdkA = new CredbullSDK(process.env.BASE_URL || '', userAToken, walletSignerA as Signer);
-  sdkB = new CredbullSDK(process.env.BASE_URL || '', userBToken, walletSignerB as Signer);
+  sdkA = new CredbullSDK(process.env.BASE_URL || '', { accessToken: userAToken }, walletSignerA as Signer);
+  sdkB = new CredbullSDK(process.env.BASE_URL || '', { accessToken: userBToken }, walletSignerB as Signer);
 
   userAddressA = await (walletSignerA as Signer).getAddress();
   userAddressB = await (walletSignerB as Signer).getAddress();
@@ -104,7 +104,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
     vaultAddress = await test.step('Get vault and filter', async () => {
       try {
         await sdkA.getAllVaults();
-      } catch (e) {}
+      } catch (e) { }
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 
@@ -230,7 +230,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
     vaultAddress = await test.step('Get vault and filter', async () => {
       try {
         await sdkA.getAllVaults();
-      } catch (e) {}
+      } catch (e) { }
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 

@@ -30,8 +30,8 @@ config();
   await admin.sendTransaction(tx2);
 
   // Initialize the SDK
-  const sdkUser1 = new CredbullSDK(process.env.BASE_URL || '', res.access_token, user1Signer);
-  const sdkUser2 = new CredbullSDK(process.env.BASE_URL || '', res.access_token, user2Signer);
+  const sdkUser1 = new CredbullSDK(process.env.BASE_URL || '', { accessToken: res.access_token }, user1Signer);
+  const sdkUser2 = new CredbullSDK(process.env.BASE_URL || '', { accessToken: res.access_token }, user2Signer);
 
   //Get all vaults through SDK
   const vaults = await sdkUser1.getAllVaults();
