@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { load } from 'js-toml';
 
-// NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the package's grandparent directory (../..), 
+// NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the package's grandparent directory (../..),
 //  then the parent (..) and finally the package directory (.) (adjusted for module location).
 dotenv.config({
   encoding: 'utf-8',
@@ -31,11 +31,12 @@ interface Config {
 /**
  * Loads the Operations Local Configuration TOML file. Post-processing it to add supported Environment
  * Variables as a 'Secrets' mechanism.
- * 
- * @returns A `Config` instance. 
+ *
+ * @returns A `Config` instance.
  */
 export const loadConfiguration = (): Config => {
-  const configFile = path.resolve(__dirname, `../../resource/ops-local.toml`);
+  const env = process.env.ENVIRONMENT || 'local';
+  const configFile = path.resolve(__dirname, `../../resource/ops-${env}.toml`);
   console.log(`Loading configuration from: '${configFile}'`);
 
   const toml = fs.readFileSync(configFile, 'utf8');
