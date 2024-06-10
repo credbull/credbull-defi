@@ -30,8 +30,16 @@ jobs:
           SOME_SECRET: ${{ secrets.SOME_SECRET }}
 
 
-      - name: Load .env.sample as Environment
-        run: source .env.sample
+# doesn't seem to work
+#      - name: Load .env.sample as Environment
+#        run: source .env.sample
+
+      - name: Add Environment variables to github
+        shell: bash
+        run: |
+          while read line; do
+            echo "$line" >> $GITHUB_ENV
+          done < .env.sample
 
       - name: Echo environment
         run: |
