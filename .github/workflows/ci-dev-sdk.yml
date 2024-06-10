@@ -20,6 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install yarn
+        run: npm install -g yarn
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -33,21 +36,23 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-      - uses: isbang/compose-action@v1.5.1
-        with:
-          compose-file: docker-compose.yml
-          compose-command: up
-          compose-options: --build
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      # Docker compose detached (-d) so other jobs can continue
+      # Env variables are sourced and then exported (set -a)
+      - name: Docker compose detached
+        run: |
+          cp -n packages/api/.env.sample packages/api/.env
+          set -a
+          source packages/api/.env
+          set +a
+          docker-compose up -d --build
         env:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
-          ETHERS_DEPLOYER_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
-          ETHERS_CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_CUSTODIAN_PRIVATE_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_JWT_SECRET: ${{ secrets.SDK_SUPABASE_JWT_SECRET }}
-          CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
-          SLACK_TOKEN: ${{ secrets.SDK_SLACK_TOKEN }}
-
 
       # TODO: confirm if we can use the local supabase for SDK.
       # TODO: this should not be our credbull-test supabase instance.  later in the build we clear down all vaults!
@@ -61,13 +66,13 @@ jobs:
         working-directory: packages/api/supabase
 
       - name: Deploy contracts
-        run: cp .env.sample .env && yarn deploy
+        run: cp -n .env.sample .env && yarn deploy
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
         working-directory: packages/contracts
 
       - name: Make Admin
-        run: cp .env.sample .env && yarn op --make-admin null email:admin@cbl.com
+        run: cp -n .env.sample .env && yarn op --make-admin null email:admin@cbl.com
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
         working-directory: scripts/operation/
@@ -126,3 +131,7 @@ jobs:
           PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
           ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
           ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+
+      - name: Cleanup
+        if: always()
+        run: npm uninstall -g yarn

@@ -4,7 +4,7 @@ services:
   anvil:
     container_name: anvil
     image: anvil
-    network_mode: "host"
+    platform: linux/amd64
     build: 
       context: .
       dockerfile: Dockerfile-anvil
@@ -15,20 +15,17 @@ services:
   api:
     container_name: api
     image: api
-    network_mode: "host"
-    build: 
+    platform: linux/amd64
+    build:
       context: .
       dockerfile: Dockerfile-api
     ports:
       - 3001:3001
     environment:
-      # missing ??
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       NEXT_PUBLIC_TARGET_NETWORK_WSS: ${NEXT_PUBLIC_TARGET_NETWORK_WSS}
-      # confirm if operator or deployer
-      ETHERS_DEPLOYER_PRIVATE_KEY: ${OPERATOR_PRIVATE_KEY}
-      # ok
-      ETHERS_CUSTODIAN_PRIVATE_KEY: ${CUSTODIAN_PRIVATE_KEY}
+      OPERATOR_PRIVATE_KEY: ${OPERATOR_PRIVATE_KEY}
+      CUSTODIAN_PRIVATE_KEY: ${CUSTODIAN_PRIVATE_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
       CRON_SECRET: ${CRON_SECRET}
@@ -40,7 +37,6 @@ services:
   # supabase:
   #   container_name: supabase
   #   image: public.ecr.aws/supabase/postgres:15.1.1.9
-  #   network_mode: "host"
   #   ports:
   #     - 5432:5432
   #   environment:
