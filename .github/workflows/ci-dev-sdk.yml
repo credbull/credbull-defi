@@ -79,7 +79,7 @@ jobs:
           echo ">> after loading .env"
           echo "Environment: $ENVIRONMENT"                    
           echo "Deployer key: $DEPLOYER_PRIVATE_KEY"          
-          yarn deploy
+          make deploy-local
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
         working-directory: packages/contracts
