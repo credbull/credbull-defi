@@ -115,15 +115,17 @@ function createParams(
   return [vaultParams, vaultExtraParams];
 }
 
+// TODO (JL,2024-06-10): Understand Tenancy & Tenant Email.
+
 /**
  * Creates a Vault according to the parameters.
  *
  * @param config The applicable configuration. Must be valid against a schema.
  * @param isMatured `true` if the Vault is to be created matured, or not.
  * @param isUpside `true` is an Fixed Yield With Upside Vault is to be created.
- * @param isTenant
+ * @param isTenant Don't Know.
  * @param upsideVault The `string` Address of the Fixed Yield With Upside Vault.
- * @param tenantEmail
+ * @param tenantEmail Don't Know.
  * @throws ZodError if any parameter or config item fails validation.
  * @throws PostgrestError if authentication or any database interaction fails.
  * @throws Error if there are no contracts to operate upon.

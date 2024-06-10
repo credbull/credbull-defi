@@ -150,7 +150,7 @@ test.describe('Create Vault', async () => {
       await verifyVaultContract(created.address);
     });
 
-    test.skip('a non-matured, ready, Upside Fixed Yield vault, open for deposits, redemption, Maturity Check OFF', async () => {
+    test.fixme('a non-matured, ready, Upside Fixed Yield vault, open for deposits, pending for redemption', async () => {
       const created = await createVault(config, false, true, false, 'self');
       expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
       expect(isPast(created.deposits_opened_at)).toBe(true);
@@ -164,7 +164,8 @@ test.describe('Create Vault', async () => {
         .from('vaults')
         .select('id, type, status, address')
         .eq('id', created.id);
-      expect(loaded).toMatchObject({ id: created.id, type: 'fixed_yield', status: 'ready', address: created.address });
+      const expected = { id: created.id, type: 'fixed_yield', status: 'ready', address: created.address };
+      expect(loaded).toMatchObject(expected);
       expect(rest).toEqual([]);
 
       await verifyVaultContract(created.address);
