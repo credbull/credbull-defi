@@ -67,19 +67,15 @@ jobs:
           echo "<< before loading .env"
           echo "Environment: $ENVIRONMENT"
           echo "Deployer key: $DEPLOYER_PRIVATE_KEY"       
-          source .env.sample
+          cp .env.sample .env
+          source .env
           echo ">> after loading .env"
           echo "Environment: $ENVIRONMENT"                    
           echo "Deployer key: $DEPLOYER_PRIVATE_KEY"
         working-directory: packages/contracts
 
       - name: Deploy contracts
-        run: |
-          source .env.sample
-          echo ">> after loading .env"
-          echo "Environment: $ENVIRONMENT"                    
-          echo "Deployer key: $DEPLOYER_PRIVATE_KEY"          
-          make deploy-local
+        run: cp .env.sample .env && yarn deploy
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
         working-directory: packages/contracts
