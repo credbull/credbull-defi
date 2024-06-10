@@ -76,7 +76,7 @@ test.describe('Multi user Interaction - Upside', async () => {
     await test.step('Get all vaults and filter upside', async () => {
       try {
         await sdkA.getAllVaults();
-      } catch (e) { }
+      } catch (e) {}
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 

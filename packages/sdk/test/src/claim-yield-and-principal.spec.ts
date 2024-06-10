@@ -104,7 +104,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
     vaultAddress = await test.step('Get vault and filter', async () => {
       try {
         await sdkA.getAllVaults();
-      } catch (e) { }
+      } catch (e) {}
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 
@@ -230,7 +230,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
     vaultAddress = await test.step('Get vault and filter', async () => {
       try {
         await sdkA.getAllVaults();
-      } catch (e) { }
+      } catch (e) {}
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 

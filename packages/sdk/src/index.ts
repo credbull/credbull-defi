@@ -1,13 +1,12 @@
-import { BigNumber, Signer } from 'ethers';
-import { ethers } from 'ethers';
-import { SiweMessage, generateNonce } from 'siwe';
-
 import {
   CredbullFixedYieldVaultWithUpside__factory,
   CredbullFixedYieldVault__factory,
   ERC20__factory,
 } from '@credbull/contracts';
 import type { CredbullFixedYieldVault, CredbullFixedYieldVaultWithUpside, ERC20 } from '@credbull/contracts';
+import { BigNumber, Signer } from 'ethers';
+import { ethers } from 'ethers';
+import { SiweMessage, generateNonce } from 'siwe';
 
 import { decodeContractError } from './utils';
 
@@ -21,7 +20,7 @@ export class CredbullSDK {
   private serviceUrl: URL;
 
   // Client credentials. Either a Email/Password to login with, or a valid Access Token.
-  private login: { email: string, password: String } | null = null;
+  private login: { email: string; password: String } | null = null;
   private accessToken: string | null = null;
 
   /**
@@ -34,7 +33,7 @@ export class CredbullSDK {
    */
   constructor(
     serviceUrl: string,
-    credentials: { email: string, password: string } | { accessToken: string },
+    credentials: { email: string; password: string } | { accessToken: string },
     private signer: Signer,
   ) {
     this.serviceUrl = new URL(serviceUrl);

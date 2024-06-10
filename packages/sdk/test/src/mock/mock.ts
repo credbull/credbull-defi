@@ -16,7 +16,7 @@ config();
 
   const userAddress = await userSigner.getAddress();
   // Initialize the SDK
-  const sdk = new CredbullSDK(process.env.BASE_URL || '', { accessToken :res.access_token }, userSigner);
+  const sdk = new CredbullSDK(process.env.BASE_URL || '', { accessToken: res.access_token }, userSigner);
 
   //Get all vaults through SDK
   const vaults = await sdk.getAllVaults();

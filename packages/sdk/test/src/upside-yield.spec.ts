@@ -81,7 +81,7 @@ test.describe('Upside Yield', async () => {
     await test.step('Get all vaults and filter upside', async () => {
       try {
         await sdkA.getAllVaults();
-      } catch (e) { }
+      } catch (e) {}
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 
@@ -261,7 +261,7 @@ test.describe('Upside Yield', async () => {
     await test.step('Get all vaults and filter upside', async () => {
       try {
         await sdkA.getAllVaults();
-      } catch (e) { }
+      } catch (e) {}
       const vaults = await sdkA.getAllVaults();
       const totalVaults = vaults.data.length;
 
