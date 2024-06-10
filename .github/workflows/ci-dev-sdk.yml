@@ -14,7 +14,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: dev
+    environment: testnet
 
     steps:
       - uses: actions/checkout@v4
@@ -36,8 +36,8 @@ jobs:
         with:
           compose-file: docker-compose.yml
           compose-command: up
-          compose-options: --build 
-        env: 
+          compose-options: --build
+        env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
@@ -57,11 +57,11 @@ jobs:
         with:
           version: latest
       - run: cd packages/api/supabase && supabase link --project-ref ${{ secrets.SDK_SUPABASE_PROJECT_ID }} && supabase db push
-        env: 
+        env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SDK_SUPABASE_ACCESS_TOKEN }}
           PROJECT_ID: ${{ secrets.SDK_SUPABASE_PROJECT_ID }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SDK_SUPABASE_DB_PASSWORD }}
-      
+
       - name: Deploy contracts
         run: cd packages/contracts/ && yarn deploy
         env:
@@ -75,7 +75,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
           PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
           PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}      
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Make Admin
         run: cd scripts/operation/ && yarn op --make-admin null email:admin@cbl.com
@@ -116,7 +116,7 @@ jobs:
           CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
           OPERATOR_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
           CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_CUSTODIAN_PRIVATE_KEY }}
-    
+
           API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -130,7 +130,7 @@ jobs:
           ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
           ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
           ADDRESSES_CUSTODIAN: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
-          
+
 
       - name: Clean vault data
         run: cd scripts/operation/ && yarn op --clean-vault-table
