@@ -107,7 +107,7 @@ function createParams(
   const vaultExtraParams: CreateVaultParams = {
     treasury: treasury,
     activityReward: activityReward,
-    collateralPercentage: config.operation.collateral_percentage,
+    collateralPercentage: config.operation.createVault.collateral_percentage,
     entities,
     tenant: params.tenant,
   };
