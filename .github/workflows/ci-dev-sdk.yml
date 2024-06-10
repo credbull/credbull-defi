@@ -71,37 +71,17 @@ jobs:
         run: docker logs api --tail all
 
       - name: Run SDK tests
-        run: yarn int-test
+        run: cp -n .env.sample .env && yarn int-test
         env:
-          BASE_URL: http://localhost:3001
-          API_BASE_URL: http://localhost:3001
-
-          ADMIN_PRIVATE_KEY_SDK: ${{ secrets.SDK_DEFAULT_ANVIL_KEY }}
-          ADMIN_EMAIL_SDK: admin@cbl.com
-          ADMIN_PASSWORD_SDK: admin123
-
-          USER_A_PRIVATE_KEY: ${{ secrets.SDK_USER_A_PRIVATE_KEY }}
-          USER_A_EMAIL: usera@cbl.com
-          USER_A_PASSWORD: usera123
-
-          USER_B_PRIVATE_KEY: ${{ secrets.SDK_USER_B_PRIVATE_KEY }}
-          USER_B_EMAIL: userb@cbl.com
-          USER_B_PASSWORD: userb123
-
-          NODE_ENV: development
-          RPC_PROVIDER: http://localhost:8545
-          CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
-          OPERATOR_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
-          CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_CUSTODIAN_PRIVATE_KEY }}
-
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-
-          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
-          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
+          SOME_ENV: "some_env"
+#          CRON_SECRET: ""
+#          OPERATOR_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
+#          CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_CUSTODIAN_PRIVATE_KEY }}
+#
+#          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
+#          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+#          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
+#          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
         working-directory: packages/sdk
 
 
