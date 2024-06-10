@@ -29,14 +29,12 @@ jobs:
           ENVIRONMENT: ${{ vars.ENVIRONMENT }}
           SOME_SECRET: ${{ secrets.SOME_SECRET }}
 
+
       - name: Load .env.sample as Environment
+        run: source .env.sample
+
+      - name: Echo environment
         run: |
-          echo "<< before loading .env"
-          echo "Environment: $ENVIRONMENT"
-          echo "Deployer key: $DEPLOYER_PRIVATE_KEY"
-          echo "Another key: $ANOTHER_KEY"                 
-          source .env.sample
-          echo ">> after loading .env"
           echo "Environment: $ENVIRONMENT"                    
           echo "Deployer key: $DEPLOYER_PRIVATE_KEY"
           echo "Another key: $ANOTHER_KEY"
