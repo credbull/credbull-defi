@@ -33,8 +33,15 @@ jobs:
         run: |
           echo "<< before loading .env"
           echo "Environment: $ENVIRONMENT"
-          echo "Deployer key: $DEPLOYER_PRIVATE_KEY"       
+          echo "Deployer key: $DEPLOYER_PRIVATE_KEY"
+          echo "Another key: $ANOTHER_KEY"                 
           source .env.sample
           echo ">> after loading .env"
           echo "Environment: $ENVIRONMENT"                    
-          echo "Deployer key: $DEPLOYER_PRIVATE_KEY"          
+          echo "Deployer key: $DEPLOYER_PRIVATE_KEY"
+          echo "Another key: $ANOTHER_KEY"
+        env:
+          # in github, these will come from the environment
+          # locally, load using ```act --var-file my.variables``` (see https://nektosact.com/usage/index.html)
+          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+          ANOTHER_KEY: "AnotherKey"
