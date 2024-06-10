@@ -74,6 +74,7 @@ jobs:
         run: yarn int-test
         env:
           BASE_URL: http://localhost:3001
+          API_BASE_URL: http://localhost:3001
 
           ADMIN_PRIVATE_KEY_SDK: ${{ secrets.SDK_DEFAULT_ANVIL_KEY }}
           ADMIN_EMAIL_SDK: admin@cbl.com
@@ -97,6 +98,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
+
           ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
           ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
