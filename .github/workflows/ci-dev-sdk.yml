@@ -62,11 +62,27 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.CREDBULL_DEVOPS_TEST_SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
 
+      - name: Load .env.sample as Environment
+        run: |
+          echo "<< before loading .env"
+          echo "Environment: $ENVIRONMENT"
+          echo "Deployer key: $DEPLOYER_PRIVATE_KEY"       
+          source .env.sample
+          echo ">> after loading .env"
+          echo "Environment: $ENVIRONMENT"                    
+          echo "Deployer key: $DEPLOYER_PRIVATE_KEY"
+        working-directory: packages/contracts
+
       - name: Deploy contracts
-        run: cd packages/contracts/ && source .env.sample && yarn deploy
+        run: |
+          source .env.sample
+          echo ">> after loading .env"
+          echo "Environment: $ENVIRONMENT"                    
+          echo "Deployer key: $DEPLOYER_PRIVATE_KEY"          
+          yarn deploy
         env:
-          ENVIRONMENT: "local"
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+        working-directory: packages/contracts
 
       - name: Make Admin
         run: cd scripts/operation/ && source .env.sample && yarn op --make-admin null email:admin@cbl.com
