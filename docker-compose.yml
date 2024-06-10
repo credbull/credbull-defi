@@ -21,8 +21,6 @@ services:
       dockerfile: Dockerfile-api
     ports:
       - 3001:3001
-    env_file:
-      - packages/api/.env
     environment:
       # missing ??
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
