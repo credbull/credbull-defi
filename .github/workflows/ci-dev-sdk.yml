@@ -50,31 +50,21 @@ jobs:
           source packages/api/.env
           set +a
           docker-compose up -d --build
-        env:
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
 
-      # TODO: confirm if we can use the local supabase for SDK.
-      # TODO: this should not be our credbull-test supabase instance.  later in the build we clear down all vaults!
+      # TODO: using local supabase for SDK.
+      # if we want a deployed instance, we need to set up a new one for the SDK.
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: supabase link --project-ref ${{ vars.CREDBULL_TESTNET_SUPABASE_PROJECT_ID }} && supabase db push
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.CREDBULL_DEVOPS_TEST_SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
+      - run: supabase start
         working-directory: packages/api/supabase
 
       - name: Deploy contracts
         run: cp -n .env.sample .env && yarn deploy
-        env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
         working-directory: packages/contracts
 
-      - name: Make Admin
-        run: cp -n .env.sample .env && yarn op --make-admin null email:admin@cbl.com
-        env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+      - name: Create Default Users
+        run: cp -n .env.sample .env && yarn op --create-default-users
         working-directory: scripts/operation/
 
       - name: Logs
@@ -117,20 +107,8 @@ jobs:
 
 
       - name: Clean vault data
-        run: cd scripts/operation/ && yarn op --clean-vault-table
-        env:
-          API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
-          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
-          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-          ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
-          ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+        run: cp -n .env.sample .env && yarn op --clean-vault-table
+        working-directory: scripts/operation/
 
       - name: Cleanup
         if: always()
