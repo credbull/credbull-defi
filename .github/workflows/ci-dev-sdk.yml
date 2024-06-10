@@ -64,7 +64,7 @@ jobs:
         working-directory: packages/contracts
 
       - name: Create Default Users
-        run: cp -n .env.sample .env && yarn op --create-default-users
+        run:  cp -n ../../.env.sample ../../.env && cp -n .env.sample .env && yarn op --create-default-users
         working-directory: scripts/operation/
 
       - name: Logs
