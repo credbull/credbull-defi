@@ -1,7 +1,7 @@
 // Multi user deposit test similar to deposit.spec.ts
 import { expect, test } from '@playwright/test';
 import { config } from 'dotenv';
-import { BigNumber, Signer } from 'ethers';
+import { BigNumber, Signer, ethers } from 'ethers';
 
 import { CredbullSDK } from '../../src/index';
 
@@ -16,19 +16,14 @@ import {
   sleep,
   whitelist,
 } from './utils/admin-ops';
+import { TestSigners } from './utils/test-signer';
 
 config();
 
-let walletSignerA: Signer | undefined = undefined;
-let walletSignerB: Signer | undefined = undefined;
-let operatorSigner: Signer | undefined = undefined;
-let custodianSigner: Signer | undefined = undefined;
+let testSigners: TestSigners;
 
 let sdkA: CredbullSDK;
 let sdkB: CredbullSDK;
-
-let userAddressA: string;
-let userAddressB: string;
 
 let userAId: string;
 let userBId: string;
@@ -45,16 +40,19 @@ test.beforeAll(async () => {
     process.env.USER_B_PASSWORD || '',
   );
 
-  walletSignerA = signer(process.env.USER_A_PRIVATE_KEY || '0x');
-  walletSignerB = signer(process.env.USER_B_PRIVATE_KEY || '0x');
-  operatorSigner = signer(process.env.OPERATOR_PRIVATE_KEY || '0x');
-  custodianSigner = signer(process.env.CUSTODIAN_PRIVATE_KEY || '0x');
+  const provider = new ethers.providers.JsonRpcProvider(); // no url, defaults to ``http:/\/localhost:8545`
+  testSigners = new TestSigners(provider);
 
-  sdkA = new CredbullSDK(process.env.BASE_URL || '', { accessToken: userAToken }, walletSignerA as Signer);
-  sdkB = new CredbullSDK(process.env.BASE_URL || '', { accessToken: userBToken }, walletSignerB as Signer);
-
-  userAddressA = await (walletSignerA as Signer).getAddress();
-  userAddressB = await (walletSignerB as Signer).getAddress();
+  sdkA = new CredbullSDK(
+    process.env.BASE_URL || '',
+    { accessToken: userAToken },
+    testSigners.alice.getDelegate() as Signer,
+  );
+  sdkB = new CredbullSDK(
+    process.env.BASE_URL || '',
+    { accessToken: userBToken },
+    testSigners.bob.getDelegate() as Signer,
+  );
 
   userAId = _userAId;
   userBId = _userBId;
@@ -97,8 +95,8 @@ test.describe('Claim yield and principal - Fixed', async () => {
     });
 
     await test.step('Whitelist users', async () => {
-      await whitelist(userAddressA, userAId);
-      await whitelist(userAddressB, userBId);
+      await whitelist(await testSigners.alice.getAddress(), userAId);
+      await whitelist(await testSigners.bob.getAddress(), userBId);
     });
 
     vaultAddress = await test.step('Get vault and filter', async () => {
@@ -130,7 +128,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
         const custodian = await vault.CUSTODIAN();
         const custodianBalance = await usdc.balanceOf(custodian);
         if (custodianBalance.gt(0)) {
-          await usdc.connect(custodianSigner as Signer).transfer(TRASH_ADDRESS, custodianBalance);
+          await usdc.connect(testSigners.custodian.getDelegate() as Signer).transfer(TRASH_ADDRESS, custodianBalance);
         }
       }
     });
@@ -139,23 +137,33 @@ test.describe('Claim yield and principal - Fixed', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
         const vault = await sdkA.getVaultInstance(vaultAddress[i]);
 
-        await __mockMint(userAddressA, depositAmount, vault, walletSignerA as Signer);
-        await __mockMint(userAddressB, depositAmount, vault, walletSignerB as Signer);
+        await __mockMint(
+          await testSigners.alice.getAddress(),
+          depositAmount,
+          vault,
+          testSigners.alice.getDelegate() as Signer,
+        );
+        await __mockMint(
+          await testSigners.bob.getAddress(),
+          depositAmount,
+          vault,
+          testSigners.bob.getDelegate() as Signer,
+        );
       }
     });
 
     await test.step('Approve USDC', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
         const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
-        await usdc.connect(walletSignerA as Signer).approve(vaultAddress[i], depositAmount);
-        await usdc.connect(walletSignerB as Signer).approve(vaultAddress[i], depositAmount);
+        await usdc.connect(testSigners.alice.getDelegate() as Signer).approve(vaultAddress[i], depositAmount);
+        await usdc.connect(testSigners.bob.getDelegate() as Signer).approve(vaultAddress[i], depositAmount);
       }
     });
 
     await test.step('Deposit to the vault', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
-        await sdkA.deposit(vaultAddress[i], depositAmount, userAddressA);
-        await sdkB.deposit(vaultAddress[i], depositAmount, userAddressB);
+        await sdkA.deposit(vaultAddress[i], depositAmount, await testSigners.alice.getAddress());
+        await sdkB.deposit(vaultAddress[i], depositAmount, await testSigners.bob.getAddress());
       }
     });
 
@@ -163,7 +171,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
         const vault = await sdkA.getVaultInstance(vaultAddress[i]);
         const custodian = await vault.CUSTODIAN();
-        await __mockMint(custodian, BigNumber.from('1000000000'), vault, walletSignerA as Signer);
+        await __mockMint(custodian, BigNumber.from('1000000000'), vault, testSigners.alice.getDelegate() as Signer);
 
         const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
 
@@ -256,7 +264,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
         const custodian = await vault.CUSTODIAN();
         const custodianBalance = await usdc.balanceOf(custodian);
         if (custodianBalance.gt(0)) {
-          await usdc.connect(custodianSigner as Signer).transfer(TRASH_ADDRESS, custodianBalance);
+          await usdc.connect(testSigners.custodian.getDelegate() as Signer).transfer(TRASH_ADDRESS, custodianBalance);
         }
       }
     });
@@ -265,23 +273,33 @@ test.describe('Claim yield and principal - Fixed', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
         const vault = await sdkA.getVaultInstance(vaultAddress[i]);
 
-        await __mockMint(userAddressA, depositAmount, vault, walletSignerA as Signer);
-        await __mockMint(userAddressB, depositAmount, vault, walletSignerB as Signer);
+        await __mockMint(
+          await testSigners.alice.getAddress(),
+          depositAmount,
+          vault,
+          testSigners.alice.getDelegate() as Signer,
+        );
+        await __mockMint(
+          await testSigners.bob.getAddress(),
+          depositAmount,
+          vault,
+          testSigners.bob.getDelegate() as Signer,
+        );
       }
     });
 
     await test.step('Approve USDC', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
         const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
-        await usdc.connect(walletSignerA as Signer).approve(vaultAddress[i], depositAmount);
-        await usdc.connect(walletSignerB as Signer).approve(vaultAddress[i], depositAmount);
+        await usdc.connect(testSigners.alice.getDelegate() as Signer).approve(vaultAddress[i], depositAmount);
+        await usdc.connect(testSigners.bob.getDelegate() as Signer).approve(vaultAddress[i], depositAmount);
       }
     });
 
     await test.step('Deposit to the vault', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
-        await sdkA.deposit(vaultAddress[i], depositAmount, userAddressA);
-        await sdkB.deposit(vaultAddress[i], depositAmount, userAddressB);
+        await sdkA.deposit(vaultAddress[i], depositAmount, await testSigners.alice.getAddress());
+        await sdkB.deposit(vaultAddress[i], depositAmount, await testSigners.bob.getAddress());
       }
     });
 
@@ -289,7 +307,7 @@ test.describe('Claim yield and principal - Fixed', async () => {
       for (let i = 0; i < vaultAddress.length; i++) {
         const vault = await sdkA.getVaultInstance(vaultAddress[i]);
         const custodian = await vault.CUSTODIAN();
-        await __mockMint(custodian, BigNumber.from('1000000000'), vault, walletSignerA as Signer);
+        await __mockMint(custodian, BigNumber.from('1000000000'), vault, testSigners.alice.getDelegate() as Signer);
 
         const usdc = await sdkA.getAssetInstance(vaultAddress[i]);
 
