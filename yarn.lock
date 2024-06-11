@@ -647,9 +647,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@credbull/operation@workspace:scripts/operation":
+"@credbull/ops@workspace:packages/ops":
   version: 0.0.0-use.local
-  resolution: "@credbull/operation@workspace:scripts/operation"
+  resolution: "@credbull/ops@workspace:packages/ops"
   dependencies:
     "@credbull/api": "workspace:^"
     "@credbull/contracts": "workspace:^"

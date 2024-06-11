@@ -3,11 +3,15 @@ import * as fs from 'fs';
 import { load } from 'js-toml';
 import * as path from 'path';
 
-// NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the grandparent directory (../..),
-//  then the parent (..) and finally the current directory (.). Override is enabled so that the most
-//  specific configuration wins.
+// NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the package's grandparent directory (../..),
+//  then the parent (..) and finally the package directory (.) (adjusted for module location).
 dotenv.config({
-  path: ['../../.env', '../.env', '.env'],
+  encoding: 'utf-8',
+  path: [
+    path.resolve(__dirname, '../../../../../.env'), // credbull-defi (root)
+    path.resolve(__dirname, '../../../../.env'), // packages
+    path.resolve(__dirname, '../../../.env'), // sdk
+  ],
   override: true,
 });
 
@@ -30,7 +34,7 @@ interface Config {
  * @returns A `Config` instance.
  */
 export const loadConfiguration = (): Config => {
-  const configFile = path.resolve(__dirname, `../../resource/ops-local.toml`);
+  const configFile = path.resolve(__dirname, `../../resource/test.toml`);
   console.log(`Loading configuration from: '${configFile}'`);
 
   const toml = fs.readFileSync(configFile, 'utf8');

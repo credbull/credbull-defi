@@ -2,7 +2,7 @@
   "name": "@credbull/sdk",
   "packageManager": "yarn@3.2.3",
   "main": "src/index.ts",
-  "types": "src/index.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "clean": "tsc --build --clean tsconfig && rm -rf build dist",
     "build": "tsc --build tsconfig",

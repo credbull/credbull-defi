@@ -9,16 +9,14 @@
     * [`api/`](./packages/api) Our backend API Server (NestJS)
     * [`app/`](./packages/app) Our frontend app (NextJS)
     * [`contracts/`](./packages/contracts) Smart Contracts and Tests
-
-* [`scripts/`](./scripts) Scripts to automate any manual task we need
-    * [`operation/`](./scripts/operation) Scripts for operational tasks
+    * [`ops/`](./packages/ops) Scripts for operational tasks
 
 * [`spikes/`](./spikes) Any POC or research we do
 
 ---
 ## Setup project locally
 
-- If you only want to work on the contracts, you don't need to setup the whole project. 
+- If you only want to work on the contracts, you don't need to setup the whole project.
 Please go directly to [`contracts/`](./packages/contracts/README.md) and follow the instructions there.
 
 ## Install Pre-requisite Tools
@@ -40,15 +38,16 @@ yarn install
     cp -n .env.sample .env
     cd packages/api && cp -n .env.sample .env && cd -
     cd packages/app && cp -n .env.local.sample .env.local && cd -
-    cd packages/contracts && cp -n .env.sample .env && cd - 
-    cd packages/sdk && cp -n .env.sample .env && cd - 
+    cd packages/contracts && cp -n .env.sample .env && cd -
+    cd packages/ops && cp -n .env.sample .env && cd -
+    cd packages/sdk && cp -n .env.sample .env && cd -
     ```
 1. Start the database (Supabase)
     ```bash
     cd packages/api && supabase start && cd -
     ```
 1. Setup sdk, see [sdk/README.md](packages/sdk/README.md)
-1. Setup op scripts, see [operations/README.md](scripts/operation/README.md). 
+1. Setup op scripts, see [operations/README.md](packages/ops/README.md).
 
 
 ## Rum and Test Locally
@@ -77,5 +76,5 @@ This is covered in detail [here](https://github.com/integrations/slack).
 * Setup your GitHub subscriptions as desired. For example, to receive notifications for Issue and Pull Request changes, for `credbull-defi`, enter the following in the GitHub app:
 
   ```/github credbull/credbull-defi unsubscribe commits releases deployments```
-* Tune your notifications to taste and enjoy the plethora of information at your fingertips! 
+* Tune your notifications to taste and enjoy the plethora of information at your fingertips!
 ---

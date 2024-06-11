@@ -1,5 +1,5 @@
 {
-  "name": "@credbull/operation",
+  "name": "@credbull/ops",
   "packageManager": "yarn@3.2.3",
   "scripts": {
     "op": "ts-node index.ts",

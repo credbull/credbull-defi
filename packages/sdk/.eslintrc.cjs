@@ -3,7 +3,7 @@ const prettierConfig = require('./.prettierrc.cjs');
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: 'tsconfig.json',
+    project: './tsconfig/tsconfig*.json',
     tsconfigRootDir: __dirname,
     sourceType: 'module',
   },
@@ -13,7 +13,7 @@ module.exports = {
   env: {
     node: true,
   },
-  ignorePatterns: ['.eslintrc.js'],
+  ignorePatterns: ['.eslintrc.*js'],
   rules: {
     'prettier/prettier': ['error', prettierConfig],
     '@typescript-eslint/interface-name-prefix': 'off',

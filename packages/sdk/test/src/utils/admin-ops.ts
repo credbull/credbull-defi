@@ -8,7 +8,13 @@ import { config } from 'dotenv';
 import { BigNumber, Signer, Wallet, providers, utils } from 'ethers';
 import path from 'path';
 
+import { createVault } from '../../../../scripts/operation/src/create-vault';
+
+import { loadConfiguration } from './config';
+
 config();
+
+loadConfiguration();
 
 export const TRASH_ADDRESS = '0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556';
 
@@ -22,7 +28,7 @@ export const generateAddress = (name: string) => {
 };
 
 function envCleanup(existing: any, newEnv: any) {
-  //Find keys of newEnv that are in existing and replace it with the new value
+  // Find keys of newEnv that are in existing and replace it with the new value
   for (const key in newEnv) {
     if (Object.prototype.hasOwnProperty.call(existing, key)) {
       if (existing.hasOwnProperty(key)) {
