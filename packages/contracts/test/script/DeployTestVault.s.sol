@@ -15,8 +15,6 @@ import { CredbullFixedYieldVaultFactory } from "../../src/factories/CredbullFixe
 import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
 import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 
-import { ICredbull } from "../../src/interface/ICredbull.sol";
-
 import { console2 } from "forge-std/console2.sol";
 
 // TODO: Script was breaking build - moved to test package to see if it fixes it
@@ -52,7 +50,7 @@ contract DeployTestVault is Script {
         address custodianAddr = vm.envAddress("ADDRESSES_CUSTODIAN");
         allowCustodian(custodianAddr, fixedYieldVaultFactory);
 
-        ICredbull.FixedYieldVaultParams memory vaultParams = helperVaultTest.createFixedYieldVaultParams();
+        CredbullFixedYieldVault.FixedYieldVaultParams memory vaultParams = helperVaultTest.createFixedYieldVaultParams();
 
         CredbullFixedYieldVault credbullFixedYieldVault = addVault(fixedYieldVaultFactory, vaultParams);
 
@@ -80,7 +78,7 @@ contract DeployTestVault is Script {
 
     function addVault(
         CredbullFixedYieldVaultFactory fixedYieldVaultFactory,
-        ICredbull.FixedYieldVaultParams memory vaultParams
+        CredbullFixedYieldVault.FixedYieldVaultParams memory vaultParams
     ) internal returns (CredbullFixedYieldVault) {
         vm.startBroadcast(vaultDeployerKey); // vaults are actually deployed by VaultFactoryOperators
 

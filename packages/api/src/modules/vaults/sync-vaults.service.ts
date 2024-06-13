@@ -7,6 +7,7 @@ import {
   FixedYieldVault__factory,
 } from '@credbull/contracts';
 import { VaultDeployedEvent } from '@credbull/contracts/types/CredbullFixedYieldVaultFactory';
+import { VaultDeployedEvent as UpsideVaultDeployedEvent } from '@credbull/contracts/types/CredbullUpsideVaultFactory';
 import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -106,7 +107,10 @@ export class SyncVaultsService {
     }
   }
 
-  private async processEventData(events: VaultDeployedEvent[], upside: boolean): Promise<ServiceResponse<any>> {
+  private async processEventData(
+    events: VaultDeployedEvent[] | UpsideVaultDeployedEvent[],
+    upside: boolean,
+  ): Promise<ServiceResponse<any>> {
     //Push vault
     const newVaults = await this.supabaseAdmin
       .from('vaults')
@@ -123,31 +127,52 @@ export class SyncVaultsService {
     return this.supabaseAdmin.from('vaults').update({ status: 'ready' }).in('id', ids).select();
   }
 
-  private prepareVaultDataFromEvent(event: VaultDeployedEvent, upside: boolean) {
+  private prepareVaultDataFromEvent(event: VaultDeployedEvent | UpsideVaultDeployedEvent, upside: boolean) {
     const { tenant } = JSON.parse(event.args.options) as Pick<VaultParamsDto, 'entities' | 'tenant'>;
+
+    if (upside) {
+      const params = event.args.params as UpsideVaultDeployedEvent['args']['params'];
+      return {
+        type: 'fixed_yield_upside',
+        status: 'created' as const,
+        deposits_opened_at: new Date(
+          Number(params.fixedYieldVaultParams.windowVaultParams.depositWindow.opensAt) * 1000,
+        ).toISOString(),
+        deposits_closed_at: new Date(
+          Number(params.fixedYieldVaultParams.windowVaultParams.depositWindow.closesAt) * 1000,
+        ).toISOString(),
+        redemptions_opened_at: new Date(
+          Number(params.fixedYieldVaultParams.windowVaultParams.matureWindow.opensAt) * 1000,
+        ).toISOString(),
+        redemptions_closed_at: new Date(
+          Number(params.fixedYieldVaultParams.windowVaultParams.matureWindow.opensAt) * 1000,
+        ).toISOString(),
+        address: event.args.vault,
+        strategy_address: event.args.vault,
+        asset_address: params.fixedYieldVaultParams.maturityVaultParams.baseVaultParams.asset,
+        tenant,
+      } as Tables<'vaults'>;
+    }
+
+    const params = event.args.params as VaultDeployedEvent['args']['params'];
     return {
-      type: upside ? 'fixed_yield_upside' : 'fixed_yield',
+      type: 'fixed_yield',
       status: 'created' as const,
-      deposits_opened_at: new Date(
-        Number(event.args.params.windowVaultParams.depositWindow.opensAt) * 1000,
-      ).toISOString(),
-      deposits_closed_at: new Date(
-        Number(event.args.params.windowVaultParams.depositWindow.closesAt) * 1000,
-      ).toISOString(),
-      redemptions_opened_at: new Date(
-        Number(event.args.params.windowVaultParams.matureWindow.opensAt) * 1000,
-      ).toISOString(),
-      redemptions_closed_at: new Date(
-        Number(event.args.params.windowVaultParams.matureWindow.opensAt) * 1000,
-      ).toISOString(),
+      deposits_opened_at: new Date(Number(params.windowVaultParams.depositWindow.opensAt) * 1000).toISOString(),
+      deposits_closed_at: new Date(Number(params.windowVaultParams.depositWindow.closesAt) * 1000).toISOString(),
+      redemptions_opened_at: new Date(Number(params.windowVaultParams.matureWindow.opensAt) * 1000).toISOString(),
+      redemptions_closed_at: new Date(Number(params.windowVaultParams.matureWindow.opensAt) * 1000).toISOString(),
       address: event.args.vault,
       strategy_address: event.args.vault,
-      asset_address: event.args.params.baseVaultParams.asset,
+      asset_address: params.maturityVaultParams.baseVaultParams.asset,
       tenant,
     } as Tables<'vaults'>;
   }
 
-  private addEntitiesAndDistributionFromEvents(events: VaultDeployedEvent[], vaults: Tables<'vaults'>[]) {
+  private addEntitiesAndDistributionFromEvents(
+    events: VaultDeployedEvent[] | UpsideVaultDeployedEvent[],
+    vaults: Tables<'vaults'>[],
+  ) {
     return events.flatMap((event, index) => {
       const { entities } = JSON.parse(event.args.options) as Pick<VaultParamsDto, 'entities' | 'tenant'>;
       return addEntitiesAndDistribution(entities, vaults[index], this.supabaseAdmin);

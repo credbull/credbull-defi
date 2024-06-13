@@ -5,17 +5,16 @@ pragma solidity ^0.8.19;
 import { Test } from "forge-std/Test.sol";
 import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { MaxCapVaultMock } from "../mocks/vaults/MaxCapVaultMock.m.sol";
-import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlug.sol";
-import { console2 } from "forge-std/console2.sol";
+import { CredbullBaseVault } from "./../../src/base/CredbullBaseVault.sol";
 
 contract MaxCapPluginTest is Test {
     MaxCapVaultMock private vault;
 
-    ICredbull.BaseVaultParams private vaultParams;
-    ICredbull.MaxCapParams private maxCapParams;
+    CredbullBaseVault.BaseVaultParams private vaultParams;
+    MaxCapPlugIn.MaxCapParams private maxCapParams;
     HelperConfig private helperConfig;
 
     address private alice = makeAddr("alice");
@@ -38,25 +37,21 @@ contract MaxCapPluginTest is Test {
 
     function test__MaxCapVault__ShouldRevertDepositIfReachedMaxCap() public {
         uint256 aliceDepositAmount = 100 * precision;
-        console2.log(aliceDepositAmount);
         //Call internal deposit function
-        deposit(alice, aliceDepositAmount, true);
+        deposit(alice, aliceDepositAmount);
 
         uint256 maxCap = vault.maxCap();
-
-        console2.log(maxCap);
 
         // Edge case - when total deposited asset is exactly 1 million
         uint256 bobDepositAmount = maxCap - aliceDepositAmount;
         MockStablecoin(address(vaultParams.asset)).mint(bob, bobDepositAmount);
-        deposit(bob, bobDepositAmount, true);
+        deposit(bob, bobDepositAmount);
 
         uint256 additionalDepositAmount = 1 * precision;
         vm.startPrank(alice);
         vaultParams.asset.approve(address(vault), additionalDepositAmount);
 
         vm.expectRevert(MaxCapPlugIn.CredbullVault__MaxCapReached.selector);
-        //vm.warp(vaultParams.windowVaultParams.depositWindow.opensAt);
         vault.deposit(additionalDepositAmount, alice);
         vm.stopPrank();
     }
@@ -72,16 +67,10 @@ contract MaxCapPluginTest is Test {
         assertTrue(vault.maxCap() == newValue);
     }
 
-    function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
+    function deposit(address user, uint256 assets) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
         vaultParams.asset.approve(address(vault), assets);
-
-        // wrap if set to true
-        //TODO: Clean up this code
-        if (warp) {
-            // vm.warp(vaultParams.depositOpensAt);
-        }
 
         shares = vault.deposit(assets, user);
         vm.stopPrank();

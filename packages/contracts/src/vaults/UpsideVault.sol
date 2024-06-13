@@ -12,6 +12,13 @@ contract UpsideVault is FixedYieldVault {
 
     error CredbullVault__InsufficientShareBalance();
 
+    /// @notice - Struct defining parameters for upside vault
+    struct UpsideVaultParams {
+        FixedYieldVaultParams fixedYieldVaultParams;
+        IERC20 cblToken;
+        uint256 collateralPercentage;
+    }
+
     /// @notice address of the Credbull token CBL
     IERC20 public token;
 
@@ -38,7 +45,8 @@ contract UpsideVault is FixedYieldVault {
         collateralPercentage = params.collateralPercentage;
         token = params.cblToken;
 
-        uint8 assetDecimal = _checkValidDecimalValue(address(params.fixedYieldVaultParams.baseVaultParams.asset));
+        uint8 assetDecimal =
+            _checkValidDecimalValue(address(params.fixedYieldVaultParams.maturityVaultParams.baseVaultParams.asset));
         uint8 tokenDecimal = _checkValidDecimalValue(address(params.cblToken));
 
         if (tokenDecimal >= assetDecimal) {

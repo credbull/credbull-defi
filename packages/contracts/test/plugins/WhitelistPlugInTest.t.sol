@@ -5,20 +5,20 @@ pragma solidity ^0.8.19;
 import { Test } from "forge-std/Test.sol";
 import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { WhitelistVaultMock } from "../mocks/vaults/WhitelistVaultMock.m.sol";
-import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
+import { CredbullBaseVault } from "../../src/base/CredbullBaseVault.sol";
 
 contract WhitelistPlugInTest is Test {
     WhitelistVaultMock private vault;
     DeployVaultFactory private deployer;
     CredbullKYCProvider private kycProvider;
 
-    ICredbull.BaseVaultParams private vaultParams;
-    ICredbull.KycParams private kycParams;
+    CredbullBaseVault.BaseVaultParams private vaultParams;
+    WhitelistPlugIn.KycParams private kycParams;
     HelperConfig private helperConfig;
 
     address private alice = makeAddr("alice");
@@ -117,7 +117,7 @@ contract WhitelistPlugInTest is Test {
 
         vault.toggleWhitelistCheck(false);
 
-        deposit(alice, 10 * precision, true);
+        deposit(alice, 10 * precision);
         assertEq(vault.balanceOf(alice), 10 * precision);
     }
 
@@ -128,15 +128,10 @@ contract WhitelistPlugInTest is Test {
         assertEq(afterToggle, !beforeToggle);
     }
 
-    function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
+    function deposit(address user, uint256 assets) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
         vaultParams.asset.approve(address(vault), assets);
-
-        // wrap if set to true
-        if (warp) {
-            //vm.warp(vaultParams.depositOpensAt);
-        }
 
         shares = vault.deposit(assets, user);
         vm.stopPrank();

@@ -8,15 +8,30 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
-import { ICredbull } from "../interface/ICredbull.sol";
+import { IErrors } from "../interface/IErrors.sol";
 
-abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
+abstract contract CredbullBaseVault is ERC4626, Pausable {
     using Math for uint256;
 
     error CredbullVault__TransferOutsideEcosystem(address);
     error CredbullVault__InvalidAssetAmount(uint256);
     error CredbullVault__UnsupportedDecimalValue(uint8);
     error CredbullVault__NativeTransferNotAllowed();
+
+    /// @notice Struct for Parameters required to create a base vault
+    struct BaseVaultParams {
+        IERC20 asset;
+        string shareName;
+        string shareSymbol;
+        address custodian;
+    }
+
+    /// @notice Struct for Contract Roles
+    struct ContractRoles {
+        address owner;
+        address operator;
+        address custodian;
+    }
 
     /// @notice Address of the CUSTODIAN to receive the assets on deposit and mint
     address public immutable CUSTODIAN;
@@ -58,7 +73,7 @@ abstract contract CredbullBaseVault is ICredbull, ERC4626, Pausable {
         ERC20(baseVaultParams.shareName, baseVaultParams.shareSymbol)
     {
         if (baseVaultParams.custodian == address(0) || address(baseVaultParams.asset) == address(0)) {
-            revert ZeroAddress();
+            revert IErrors.ZeroAddress();
         }
 
         CUSTODIAN = baseVaultParams.custodian;

@@ -4,10 +4,9 @@ pragma solidity ^0.8.19;
 
 import { CredbullBaseVault } from "../../../src/base/CredbullBaseVault.sol";
 import { WhitelistPlugIn } from "../../../src/plugins/WhitelistPlugIn.sol";
-import { ICredbull } from "../../../src/interface/ICredbull.sol";
 
 contract WhitelistVaultMock is CredbullBaseVault, WhitelistPlugIn {
-    constructor(ICredbull.BaseVaultParams memory params, ICredbull.KycParams memory kycParams)
+    constructor(CredbullBaseVault.BaseVaultParams memory params, WhitelistPlugIn.KycParams memory kycParams)
         CredbullBaseVault(params)
         WhitelistPlugIn(kycParams.kycProvider, kycParams.depositThresholdForWhitelisting)
     { }

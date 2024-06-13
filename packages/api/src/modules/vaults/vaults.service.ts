@@ -6,7 +6,9 @@ import {
   CredbullUpsideVaultFactory,
   CredbullUpsideVaultFactory__factory,
 } from '@credbull/contracts';
-import { ICredbull } from '@credbull/contracts/types/CredbullFixedYieldVault';
+import { FixedYieldVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
+import { MaturityVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
+import { UpsideVault } from '@credbull/contracts/types/CredbullFixedYieldVaultWithUpside';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BigNumber, type ContractTransaction } from 'ethers';
 
@@ -73,11 +75,11 @@ export class VaultsService {
 
     if (!collateralPercentage) collateralPercentage = 0;
 
-    const fixedYieldVaultParams = this.createVaultParams(params);
+    const vaultParams = this.createVaultParams(params, upside, collateralPercentage);
 
     const readMethod: Promise<BigNumber> = upside
-      ? upsideFactory.estimateGas.createVault(fixedYieldVaultParams, params.token, collateralPercentage, options)
-      : factory.estimateGas.createVault(fixedYieldVaultParams, options);
+      ? upsideFactory.estimateGas.createVault(vaultParams as UpsideVault.UpsideVaultParamsStruct, options)
+      : factory.estimateGas.createVault(vaultParams as FixedYieldVault.FixedYieldVaultParamsStruct, options);
 
     const estimation = await responseFromRead(upside ? upsideFactory : factory, readMethod);
     if (estimation.error) {
@@ -85,10 +87,12 @@ export class VaultsService {
     }
 
     const writeMethod: Promise<ContractTransaction> = upside
-      ? upsideFactory.createVault(fixedYieldVaultParams, params.token, collateralPercentage, options, {
+      ? upsideFactory.createVault(vaultParams as UpsideVault.UpsideVaultParamsStruct, options, {
           gasLimit: estimation.data,
         })
-      : factory.createVault(fixedYieldVaultParams, options, { gasLimit: estimation.data });
+      : factory.createVault(vaultParams as FixedYieldVault.FixedYieldVaultParamsStruct, options, {
+          gasLimit: estimation.data,
+        });
 
     const response = await responseFromWrite(upside ? upsideFactory : factory, writeMethod);
     if (response.error) return response;
@@ -105,7 +109,11 @@ export class VaultsService {
     return await this.readyVaultInDB(createdVault.data);
   }
 
-  private createVaultParams(params: VaultParamsDto): ICredbull.FixedYieldVaultParamsStruct {
+  private createVaultParams(
+    params: VaultParamsDto,
+    upside: boolean = false,
+    collateralPercentage?: number,
+  ): FixedYieldVault.FixedYieldVaultParamsStruct | UpsideVault.UpsideVaultParamsStruct {
     const baseVaultParams = {
       asset: params.asset,
       shareName: params.shareName,
@@ -143,14 +151,30 @@ export class VaultsService {
       maxCap: params.maxCap,
     };
 
-    return {
+    const maturityVaultParams: MaturityVault.MaturityVaultParamsStruct = {
       baseVaultParams,
+      promisedYield: params.promisedYield,
+    };
+
+    const fixedYieldVaultParams: FixedYieldVault.FixedYieldVaultParamsStruct = {
+      maturityVaultParams,
       contractRoles,
       windowVaultParams,
       kycParams,
       maxCapParams,
-      promisedYield: params.promisedYield,
     };
+
+    if (!upside) {
+      return fixedYieldVaultParams;
+    }
+
+    const upsideVaultParams: UpsideVault.UpsideVaultParamsStruct = {
+      fixedYieldVaultParams,
+      cblToken: params.token,
+      collateralPercentage: collateralPercentage as unknown as BigNumber,
+    };
+
+    return upsideVaultParams;
   }
 
   private async createVaultInDB(params: VaultParamsDto, vaultAddress: string, upside: boolean) {

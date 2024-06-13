@@ -4,10 +4,9 @@ pragma solidity ^0.8.19;
 
 import { CredbullBaseVault } from "../../../src/base/CredbullBaseVault.sol";
 import { WindowPlugIn } from "../../../src/plugins/WindowPlugIn.sol";
-import { ICredbull } from "../../../src/interface/ICredbull.sol";
 
 contract WindowVaultMock is CredbullBaseVault, WindowPlugIn {
-    constructor(ICredbull.BaseVaultParams memory params, ICredbull.WindowVaultParams memory windowParams)
+    constructor(CredbullBaseVault.BaseVaultParams memory params, WindowPlugIn.WindowVaultParams memory windowParams)
         CredbullBaseVault(params)
         WindowPlugIn(
             windowParams.depositWindow.opensAt,

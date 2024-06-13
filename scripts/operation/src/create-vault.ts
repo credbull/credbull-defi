@@ -2,13 +2,16 @@ import {
     CredbullFixedYieldVault__factory,
     CredbullFixedYieldVaultFactory__factory,
     CredbullVaultFactory__factory,
+    CredbullUpsideVaultFactory__factory,
 } from '@credbull/contracts';
 import {addYears, startOfWeek, startOfYear, subDays} from 'date-fns';
 
 import {headers, login, signer, supabase, userByEmail} from './utils/helpers';
 
 // import this as a type as needed at compile type
-import type {ICredbull} from '@credbull/contracts/types/CredbullFixedYieldVaultFactory';
+import { FixedYieldVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
+import { MaturityVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
+import { UpsideVault } from '@credbull/contracts/types/CredbullFixedYieldVaultWithUpside';
 
 type CreateVaultParams = {
     // separate struct
@@ -29,7 +32,7 @@ function createParams(params: {
     matured?: boolean;
     upside?: string;
     tenant?: string;
-}): [ICredbull.FixedYieldVaultParamsStruct, CreateVaultParams, any] {
+}): [FixedYieldVault.FixedYieldVaultParamsStruct | UpsideVault.UpsideVaultParamsStruct, CreateVaultParams, any] {
     const treasury = process.env.ADDRESSES_TREASURY;
     const activityReward = process.env.ADDRESSES_ACTIVITY_REWARD;
 
@@ -75,13 +78,18 @@ function createParams(params: {
         depositThresholdForWhitelisting: (1000e6).toString(),
     };
 
-    const fixedYieldVaultParams: ICredbull.FixedYieldVaultParamsStruct = {
+    const maturityVaultParams: MaturityVault.MaturityVaultParamsStruct = {
         baseVaultParams: {
             asset: tempParams.asset,
             shareName: tempParams.shareName,
             shareSymbol: tempParams.shareSymbol,
             custodian: tempParams.custodian,
         },
+        promisedYield: tempParams.promisedYield,
+    }
+
+    const fixedYieldVaultParams: FixedYieldVault.FixedYieldVaultParamsStruct = {
+        maturityVaultParams,
         contractRoles: {
             owner: tempParams.owner,
             operator: tempParams.operator,
@@ -103,8 +111,13 @@ function createParams(params: {
         },
         maxCapParams: {
             maxCap: tempParams.maxCap,
-        },
-        promisedYield: tempParams.promisedYield,
+        }
+    }
+
+    const upsideVaultParams: UpsideVault.UpsideVaultParamsStruct = {
+        fixedYieldVaultParams,
+        cblToken: tempParams.token,
+        collateralPercentage: process.env.COLLATERAL_PERCENTAGE || 20_00
     }
 
 
@@ -116,10 +129,12 @@ function createParams(params: {
         tenant: params.tenant,
     };
 
+    const vaultParams = params.upside ? upsideVaultParams : fixedYieldVaultParams;
+
     console.log('Vault Params:', fixedYieldVaultParams);
     console.log('Vault Extra Params:', vaultExtraParams);
 
-    return [fixedYieldVaultParams, vaultExtraParams, tempParams];
+    return [vaultParams, vaultExtraParams, tempParams];
 }
 
 export const main = (
@@ -168,9 +183,7 @@ export const main = (
         // TODO: this is the problem - the vaultFactory Admin (owner) is needed here
         // but later we call to createVault we should be using the operator
         const vaultFactoryAsAdmin = CredbullVaultFactory__factory.connect(factoryAddress!, adminSigner);
-        console.log('error before this.....')
         const allowTx = await vaultFactoryAsAdmin.allowCustodian(custodian);
-        console.log('error here...')
         await allowTx.wait();
 
         console.log(`!! CredbullVaultFactory ${factoryAddress} allowCustodian: ${custodian}`);
@@ -206,8 +219,8 @@ export const main = (
         console.log('\n%%%%%%%%%%%%%%%%%%%%% end vaults/create-vault %%%%%%%%%%%%%%%%%%%%%');
 
         // alternative - use a direct call instead of posting to the API
-        // const operatorKey = process.env.OPERATOR_PRIVATE_KEY; // this should be the Vault Operator
-        // await createVaultUsingEthers(factoryAddress, operatorKey, vaultParams);
+        // const operatorKey = process.env.OPERATOR_PRIVATE_KEY || "0x"; // this should be the Vault Operator
+        // await createVaultUsingEthers(factoryAddress, operatorKey, vaultParams, scenarios.upside);
 
 
         if (scenarios.matured) {
@@ -225,8 +238,14 @@ export const main = (
 };
 
 // alternative option to calling the create-vault API.  not fully compatible with our arch (missing tenant information, maybe others)
-async function createVaultUsingEthers(factoryAddress: string, operatorSignerKey: string, vaultParams: ICredbull.FixedYieldVaultParamsStruct) {
+async function createVaultUsingEthers(factoryAddress: string | undefined, operatorSignerKey: string, vaultParams: FixedYieldVault.FixedYieldVaultParamsStruct | UpsideVault.UpsideVaultParamsStruct, upside: boolean = false) {
+    if(upside) {
+        const factoryAsVaultOper = CredbullUpsideVaultFactory__factory.connect(factoryAddress!, signer(operatorSignerKey));
+        const createVaultTx = await factoryAsVaultOper.createVault(vaultParams as UpsideVault.UpsideVaultParamsStruct, "{}");
+        await createVaultTx.wait();
+    }
+
     const factoryAsVaultOper = CredbullFixedYieldVaultFactory__factory.connect(factoryAddress!, signer(operatorSignerKey));
-    const createVaultTx = await factoryAsVaultOper.createVault(vaultParams, "{}");
+    const createVaultTx = await factoryAsVaultOper.createVault(vaultParams as FixedYieldVault.FixedYieldVaultParamsStruct, "{}");
     await createVaultTx.wait();
 }
