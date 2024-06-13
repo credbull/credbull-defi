@@ -1,4 +1,4 @@
-node_env="development"
+node_env = "development"
 
 [api]
 url = "http://127.0.0.1:3001"
@@ -10,7 +10,7 @@ url = "http://127.0.0.1:3000"
 url = "http://127.0.0.1:54321"
 
 [services.ethers]
-url="http://127.0.0.1:8545"
+url = "http://127.0.0.1:8545"
 
 [evm.address]
 # Dev/Anvil Wallet, Account[0]
@@ -33,4 +33,4 @@ alice.email_address = "test+alice@credbull.io"
 bob.email_address = "test+bob@credbull.io"
 
 [operation.createVault]
-collateral_percentage = 20
+collateral_percentage = 300
