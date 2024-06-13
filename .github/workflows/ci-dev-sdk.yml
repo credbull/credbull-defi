@@ -65,7 +65,7 @@ jobs:
 
       - name: Create Default Users
         run:  cp -n ../../.env.sample ../../.env && cp -n .env.sample .env && yarn op --create-default-users
-        working-directory: scripts/operation
+        working-directory: packages/ops
 
       - name: Logs
         run: docker logs api --tail all
@@ -84,7 +84,7 @@ jobs:
 
       - name: Clean vault data
         run: cp -n .env.sample .env && yarn op --clean-vault-table
-        working-directory: scripts/operation
+        working-directory: packages/ops
 
       - name: Cleanup
         if: always()
