@@ -14,7 +14,7 @@
     "db-export": "tsc && node ./script/utils/exporter.js",
     "deploy": "make deploy-local",
     "deploy:ci": "yarn db-export && make deploy-baseSepolia",
-    "gen-types": "rm -rf ./out/IERC20.sol && yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
+    "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
     "postinstall": "yarn build && yarn gen-types"
   },
   "packageManager": "yarn@3.2.3",
