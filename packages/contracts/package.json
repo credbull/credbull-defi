@@ -14,7 +14,7 @@
     "db-export": "tsc && node ./script/utils/exporter.js",
     "deploy": "make deploy-local",
     "deploy:ci": "yarn db-export && make deploy-baseSepolia",
-    "gen-types": "echo 'TODO: Exclude forge-std/src/interfaces/IERC20.sol from gen-type (deleting to work-around)' && rm -rf ./out/IERC20.sol && yarn typechain --target ethers-v5 --out-dir ./types ./out/**/*.json && tsc",
+    "gen-types": "rm -rf ./out/IERC20.sol && yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
     "postinstall": "yarn build && yarn gen-types"
   },
   "packageManager": "yarn@3.2.3",
