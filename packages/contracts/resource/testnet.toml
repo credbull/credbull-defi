@@ -9,16 +9,15 @@ chain_id = 84532
 [evm.address]
 # credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)
 # devops admin/owner (wallet 1) - public address, okay to share
-owner.public_address = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
+owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 # devops operator (wallet 2) - public address, okay to share
-operator.public_address = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
+operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 
 [evm.contracts.upside_vault]
 # 2 decimal place percentage (meaining value divided by 100) as integer.
 collateral_percentage = 200
 
 [services.supabase]
-
 url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
 
 # Export contract details to supabase.

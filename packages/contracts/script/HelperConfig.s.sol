@@ -85,8 +85,8 @@ contract HelperConfig is Script {
     /// @return The active Factory Parameters
     function createFactoryParamsFromConfig() internal view returns (FactoryParams memory) {
         FactoryParams memory factoryParams = FactoryParams({
-            owner: tomlConfig.readAddress(".evm.address.owner.public_address"),
-            operator: tomlConfig.readAddress(".evm.address.operator.public_address"),
+            owner: tomlConfig.readAddress(".evm.address.owner"),
+            operator: tomlConfig.readAddress(".evm.address.operator"),
             collateralPercentage: tomlConfig.readUint(".evm.contracts.upside_vault.collateral_percentage")
         });
 
