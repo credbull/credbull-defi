@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { BigNumber, Wallet, ethers } from 'ethers';
+import { Wallet, ethers } from 'ethers';
 
 import { CredbullSDK } from '../../../src';
 
@@ -10,11 +10,11 @@ let provider: ethers.providers.JsonRpcProvider;
 
 let config: any = {
   api: {
-    url: 'http://127.0.0.1/api',
+    url: 'http://127.0.0.1:3001',
   },
   services: {
     ethers: {
-      url: 'http://127.0.0.1/8545',
+      url: 'http://127.0.0.1:8545',
     },
   },
 };
@@ -22,7 +22,7 @@ let config: any = {
 let testSigners: TestSigners;
 
 async function userFor(name: string, email: string, password: string, privateKey: string, testSigner: TestSigner) {
-  const { access_token: accessToken, user_id } = await login(config, email, password);
+  const { access_token: accessToken, user_id } = await login(email, password);
 
   const wallet = new Wallet(privateKey, new ethers.providers.JsonRpcProvider(config.services.ethers.url));
   const address = await wallet.getAddress();
@@ -36,7 +36,7 @@ async function userFor(name: string, email: string, password: string, privateKey
  we don't need to pass in the private key and a TestSigner.  the TestSigner is a wallet.
  */
 async function userForNew(name: string, email: string, password: string, testSigner: TestSigner) {
-  const { access_token: accessToken, user_id } = await login(config, email, password);
+  const { access_token: accessToken, user_id } = await login(email, password);
 
   const sdk = new CredbullSDK(config.api.url, { accessToken }, testSigner.getDelegate());
 
@@ -63,11 +63,13 @@ test.describe('Test Create SDK', () => {
 
     const privateKeyArg = '0x4bbbf85ce3377467afe5d46f804f221813b2bb87f24d81f60f1fcdbf7cbf4356';
 
-    const { sdk: sdkUserFor } = await userFor(nameArg, emailArg, passwordArg, privateKeyArg, testSigners.alice);
-    console.log(sdkUserFor);
+    const { sdk: sdk } = await userFor(nameArg, emailArg, passwordArg, privateKeyArg, testSigners.alice);
+    const sdkLinkResult = await sdk.linkWallet();
+    expect(sdkLinkResult.address).toEqual(await testSigners.alice.getAddress());
 
     // called without the private key - we already have alice as a signer
-    const { sdk: sdkUserForNew } = await userForNew(nameArg, emailArg, passwordArg, testSigners.alice);
-    console.log(sdkUserForNew);
+    const { sdk: sdkNew } = await userForNew(nameArg, emailArg, passwordArg, testSigners.alice);
+    const sdkNewLinkResult = await sdkNew.linkWallet();
+    expect(sdkNewLinkResult.address).toEqual(await testSigners.alice.getAddress());
   });
 });

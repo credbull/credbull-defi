@@ -1,12 +1,17 @@
-import { Signer, providers } from 'ethers';
+import { Signer, Wallet, ethers, providers } from 'ethers';
 
 export const OWNER_PUBLIC_KEY_LOCAL: string = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 
 export class TestSigner {
-  private _delegate: providers.JsonRpcSigner;
+  private _delegate: Wallet;
 
   constructor(index: number, provider: providers.JsonRpcProvider) {
-    this._delegate = provider.getSigner(index);
+    // TODO: the SDK is expecting a Wallet (that extends Signer).  using mnemonic to set this for now.
+
+    const anvilMnemonic = 'test test test test test test test test test test test junk';
+    const path = `m/44'/60'/0'/0/${index}`;
+    const hdNode = ethers.utils.HDNode.fromMnemonic(anvilMnemonic);
+    this._delegate = new ethers.Wallet(hdNode.derivePath(path), provider);
   }
 
   getAddress(): Promise<string> {
