@@ -3,7 +3,7 @@ import { Wallet, ethers } from 'ethers';
 
 import { CredbullSDK } from '../../../src';
 
-import { login } from './admin-ops';
+import { login } from './admin';
 import { OWNER_PUBLIC_KEY_LOCAL, TestSigner, TestSigners } from './test-signer';
 
 let provider: ethers.providers.JsonRpcProvider;

@@ -1,4 +1,4 @@
-node_env="development"
+node_env = "development"
 
 [api]
 url = "http://127.0.0.1:3001"
@@ -10,7 +10,7 @@ url = "http://127.0.0.1:3000"
 url = "http://127.0.0.1:54321"
 
 [services.ethers]
-url="http://127.0.0.1:8545"
+url = "http://127.0.0.1:8545"
 
 [evm.address]
 # Dev/Anvil Wallet, Account[0]
@@ -24,3 +24,13 @@ treasury = "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
 # Dev/Anvil Wallet, Account[4]
 activity_reward = "0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556"
 
+[users]
+# Associated with Dev/Anvil Wallet, Account[0]
+admin.email_address = "test+admin@credbull.io"
+# Associated with Dev/Anvil Wallet, Account[7]
+alice.email_address = "test+alice@credbull.io"
+# Associated with Dev/Anvil Wallet, Account[8]
+bob.email_address = "test+bob@credbull.io"
+
+[operation.createVault]
+collateral_percentage = 20

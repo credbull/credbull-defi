@@ -4,8 +4,8 @@
     "outDir": "../build",
     "rootDir": "../test/src",
     "paths": {
-      "@sdk/*": ["../src/*"],
-      "@operation/*": ["../../*"]
+      "@sdk/*": ["../../src/*"],
+      "@ops/*": ["../../ops/src/*"]
     }
   },
   "include": ["../test/src"],

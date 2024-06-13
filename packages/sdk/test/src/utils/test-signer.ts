@@ -48,8 +48,9 @@ export class TestSigners {
     this._treasury = new TestSigner(3, provider);
     this._deployer = new TestSigner(4, provider);
     this._rewardVault = new TestSigner(5, provider);
-    this._alice = new TestSigner(6, provider);
-    this._bob = new TestSigner(7, provider);
+
+    this._alice = new TestSigner(7, provider);
+    this._bob = new TestSigner(8, provider);
   }
 
   get admin(): TestSigner {

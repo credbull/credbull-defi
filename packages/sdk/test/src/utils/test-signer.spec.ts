@@ -7,7 +7,7 @@ let provider: ethers.providers.JsonRpcProvider;
 let testSigners: TestSigners;
 
 test.beforeAll(async () => {
-  provider = new ethers.providers.JsonRpcProvider(); // no url, defaults to ``http:/\/localhost:8545`
+  provider = new ethers.providers.JsonRpcProvider(); // no url, defaults to 'http://localhost:8545'
   testSigners = new TestSigners(provider);
 });
 
