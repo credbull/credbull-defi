@@ -25,8 +25,11 @@ treasury = "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
 activity_reward = "0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556"
 
 [users]
+# Associated with Dev/Anvil Wallet, Account[0]
 admin.email_address = "test+admin@credbull.io"
+# Associated with Dev/Anvil Wallet, Account[7]
 alice.email_address = "test+alice@credbull.io"
+# Associated with Dev/Anvil Wallet, Account[8]
 bob.email_address = "test+bob@credbull.io"
 
 [operation.createVault]

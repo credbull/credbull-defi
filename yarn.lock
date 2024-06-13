@@ -692,7 +692,7 @@ __metadata:
   dependencies:
     "@credbull/api": "workspace:^"
     "@credbull/contracts": "workspace:^"
-    "@playwright/test": ^1.42.1
+    "@playwright/test": ^1.44.1
     "@trivago/prettier-plugin-sort-imports": ^4.3.0
     "@types/node": ^20.11.20
     "@typescript-eslint/eslint-plugin": ^7.1.0
@@ -3042,7 +3042,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/test@npm:^1.42.1, @playwright/test@npm:^1.44.1":
+"@playwright/test@npm:^1.44.1":
   version: 1.44.1
   resolution: "@playwright/test@npm:1.44.1"
   dependencies:

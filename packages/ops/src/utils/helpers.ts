@@ -1,27 +1,26 @@
+import { Database } from '@credbull/api';
 import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { Wallet, providers } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
 import { z } from 'zod';
 
-import { Database } from '@credbull/api';
-
 const supabaseConfigSchema = z.object({
   services: z.object({ supabase: z.object({ url: z.string().url() }) }),
   secret: z.object({
     SUPABASE_SERVICE_ROLE_KEY: z.string(),
     SUPABASE_ANONYMOUS_KEY: z.string(),
-  })
+  }),
 });
 
 export const supabase = (config: any, opts?: { admin: boolean }) => {
-  supabaseConfigSchema.parse(config)
+  supabaseConfigSchema.parse(config);
 
   return createClient<Database, 'public'>(
     config.services.supabase.url,
     opts?.admin ? config.secret!.SUPABASE_SERVICE_ROLE_KEY! : config.secret!.SUPABASE_ANONYMOUS_KEY!,
   );
-}
+};
 
 export const userByOrThrow = async (supabaseAdmin: SupabaseClient, email: string) => {
   const user = await userByOrUndefined(supabaseAdmin, email);
@@ -31,7 +30,10 @@ export const userByOrThrow = async (supabaseAdmin: SupabaseClient, email: string
 
 export const userByOrUndefined = async (supabaseAdmin: SupabaseClient, email: string): Promise<any> => {
   const pageSize = 1_000;
-  const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: pageSize });
+  const {
+    data: { users },
+    error,
+  } = await supabaseAdmin.auth.admin.listUsers({ perPage: pageSize });
   if (error) throw error;
   if (users.length === pageSize) throw Error('Implement pagination');
   return users.find((u) => u.email === email);
@@ -41,10 +43,11 @@ export const deleteUserIfPresent = async (supabaseAdmin: SupabaseClient, email: 
   await userByOrUndefined(supabaseAdmin, email)
     .then((user) => {
       supabaseAdmin.auth.admin.deleteUser(user.id, false);
-    }).catch((error) => {
+    })
+    .catch((error) => {
       // Ignore.
     });
-}
+};
 
 export const headers = (session?: Awaited<ReturnType<typeof login>>) => {
   return {
@@ -58,18 +61,18 @@ export const headers = (session?: Awaited<ReturnType<typeof login>>) => {
 const adminLoginConfigSchema = z.object({
   api: z.object({ url: z.string().url() }),
   users: z.object({ admin: z.object({ email_address: z.string().email() }) }),
-  secret: z.object({ ADMIN_PASSWORD: z.string() })
+  secret: z.object({ ADMIN_PASSWORD: z.string() }),
 });
 
 const bobLoginConfigSchema = z.object({
   api: z.object({ url: z.string().url() }),
   users: z.object({ bob: z.object({ email_address: z.string().email() }) }),
-  secret: z.object({ BOB_PASSWORD: z.string() })
+  secret: z.object({ BOB_PASSWORD: z.string() }),
 });
 
 export const login = async (
   config: any,
-  opts?: { admin: boolean }
+  opts?: { admin: boolean },
 ): Promise<{ access_token: string; user_id: string }> => {
   let _email: string, _password: string;
   if (opts?.admin) {
@@ -92,7 +95,7 @@ const linkWalletConfigSchema = z.object({ app: z.object({ url: z.string().url() 
 export const linkWalletMessage = async (config: any, signer: Wallet) => {
   linkWalletConfigSchema.parse(config);
 
-  let appUrl = new URL(config.app.url)
+  let appUrl = new URL(config.app.url);
   const chainId = await signer.getChainId();
   const preMessage = new SiweMessage({
     domain: appUrl.host,
@@ -120,4 +123,13 @@ export const generateAddress = () => {
 
   const wallet = new Wallet(privateKey);
   return wallet.address;
+};
+
+export const generatePassword = (
+  length = 15,
+  characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~!@-#$',
+) => {
+  return Array.from(crypto.getRandomValues(new Uint32Array(length)))
+    .map((x) => characters[x % characters.length])
+    .join('');
 };

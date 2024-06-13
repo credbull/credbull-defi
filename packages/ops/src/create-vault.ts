@@ -1,13 +1,11 @@
-import { z } from 'zod';
-import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
-
 import {
-  CredbullFixedYieldVault__factory,
   CredbullFixedYieldVaultFactory__factory,
+  CredbullFixedYieldVault__factory,
   CredbullVaultFactory__factory,
 } from '@credbull/contracts';
-
 import type { ICredbull } from '@credbull/contracts/types/CredbullFixedYieldVaultFactory';
+import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
+import { z } from 'zod';
 
 import { loadConfiguration } from './utils/config';
 import { headers, login, signer, supabase, userByOrThrow } from './utils/helpers';
@@ -16,10 +14,10 @@ import { headers, login, signer, supabase, userByOrThrow } from './utils/helpers
 const addressSchema = z.string().regex(/^(0x)?[0-9a-fA-F]{40,40}$/);
 const configSchema = z.object({
   secret: z.object({
-    ADMIN_PRIVATE_KEY: z.string()
+    ADMIN_PRIVATE_KEY: z.string(),
   }),
   api: z.object({
-    url: z.string().url()
+    url: z.string().url(),
   }),
   evm: z.object({
     address: z.object({
@@ -28,13 +26,13 @@ const configSchema = z.object({
       custodian: addressSchema,
       treasury: addressSchema,
       activity_reward: addressSchema,
-    })
+    }),
   }),
   operation: z.object({
     createVault: z.object({
-      collateral_percentage: z.number()
-    })
-  })
+      collateral_percentage: z.number(),
+    }),
+  }),
 });
 const emailSchema = z.string().email();
 const upsideVaultSchema = z.union([addressSchema, z.string().regex(/self/)]);
@@ -57,10 +55,15 @@ function createParams(
     matured?: boolean;
     upside?: string;
     tenant?: string;
-  }
+    treasuryAddress?: string;
+    activityRewardAddress?: string;
+    collateralPercentage?: number;
+  },
 ): [ICredbull.VaultParamsStruct, CreateVaultParams] {
-  const treasury = config.evm.address.treasury;
-  const activityReward = config.evm.address.activity_reward;
+  // NOTE (JL,2024-06-12): These configuration overrides are needed when invoked from SDK Tests.
+  const treasury = params.treasuryAddress || config.evm.address.treasury;
+  const activityReward = params.activityRewardAddress || config.evm.address.activity_reward;
+  const collateralPercentage = params.collateralPercentage || config.operation.createVault.collateral_percentage;
 
   const kycProvider = params.kycProvider;
   const custodian = params.custodian;
@@ -69,7 +72,6 @@ function createParams(
   const currentYearStart = startOfYear(new Date());
   let depositOpensAt = startOfWeek(new Date());
   if (params.matured) depositOpensAt = startOfYear(subDays(currentYearStart, 1));
-
   const depositDateAsTimestamp = depositOpensAt.getTime() / 1000;
 
   const redemptionOpensAt = addYears(depositOpensAt, 1);
@@ -107,7 +109,7 @@ function createParams(
   const vaultExtraParams: CreateVaultParams = {
     treasury: treasury,
     activityReward: activityReward,
-    collateralPercentage: config.operation.createVault.collateral_percentage,
+    collateralPercentage: collateralPercentage,
     entities,
     tenant: params.tenant,
   };
@@ -116,6 +118,7 @@ function createParams(
 }
 
 // TODO (JL,2024-06-10): Understand Tenancy & Tenant Email.
+// FIXME (JL,2024-06-12): The 'override' hack is because sdk tests hack the environment before calling the script.
 
 /**
  * Creates a Vault according to the parameters.
@@ -126,6 +129,7 @@ function createParams(
  * @param isTenant Don't Know.
  * @param upsideVault The `string` Address of the Fixed Yield With Upside Vault.
  * @param tenantEmail Don't Know.
+ * @param override Values that, if present, override the same configuration values.
  * @throws ZodError if any parameter or config item fails validation.
  * @throws PostgrestError if authentication or any database interaction fails.
  * @throws Error if there are no contracts to operate upon.
@@ -136,7 +140,8 @@ export const createVault = async (
   isUpside: boolean,
   isTenant: boolean,
   upsideVault?: string,
-  tenantEmail?: string
+  tenantEmail?: string,
+  override?: { treasuryAddress: string; activityRewardAddress: string; collateralPercentage: number },
 ): Promise<any> => {
   configSchema.parse(config);
   upsideVaultSchema.optional().parse(upsideVault);
@@ -174,7 +179,7 @@ export const createVault = async (
   }
   console.log(' Custodian Address:', custodian);
 
-  const expectedFactoryName = (isUpside ? 'CredbullUpsideVaultFactory' : 'CredbullFixedYieldVaultFactory');
+  const expectedFactoryName = isUpside ? 'CredbullUpsideVaultFactory' : 'CredbullFixedYieldVaultFactory';
   const factoryAddress = addresses.data.find((i) => i.contract_name === expectedFactoryName)?.address;
   console.log(` ${expectedFactoryName} Address: ${factoryAddress}`);
 
@@ -197,6 +202,9 @@ export const createVault = async (
     matured: isMatured,
     upside: upsideVault,
     tenant: isTenant && tenantEmail ? (await userByOrThrow(supabaseAdmin, tenantEmail)).id : undefined,
+    treasuryAddress: override?.treasuryAddress,
+    activityRewardAddress: override?.activityRewardAddress,
+    collateralPercentage: override?.collateralPercentage,
   });
 
   const serviceUrl = new URL(`/vaults/create-vault${isUpside ? '-upside' : ''}`, config.api.url);
@@ -216,7 +224,9 @@ export const createVault = async (
   console.log('-'.repeat(80));
 
   if (!response.ok) throw new Error(responseBody.message);
-  const { data: [created, ...rest] } = responseBody;
+  const {
+    data: [created, ...rest],
+  } = responseBody;
   if (rest && rest.length > 0) {
     console.log('WARNING: Response contained unexpected:', rest);
   }
@@ -254,8 +264,8 @@ export const main = (
       scenarios.upside,
       scenarios.tenant,
       params?.upsideVault,
-      params?.tenantEmail
-    )
+      params?.tenantEmail,
+    );
   }, 1000);
 };
 
@@ -265,10 +275,10 @@ async function createVaultUsingEthers(
   config: any,
   factoryAddress: string,
   operatorSignerKey: string,
-  vaultParams: ICredbull.VaultParamsStruct
+  vaultParams: ICredbull.VaultParamsStruct,
 ) {
   const alternateSigner = signer(config, operatorSignerKey);
   const factoryAsVaultOper = CredbullFixedYieldVaultFactory__factory.connect(factoryAddress!, alternateSigner);
-  const createVaultTx = await factoryAsVaultOper.createVault(vaultParams, "{}");
+  const createVaultTx = await factoryAsVaultOper.createVault(vaultParams, '{}');
   await createVaultTx.wait();
 }
