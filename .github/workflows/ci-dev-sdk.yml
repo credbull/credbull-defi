@@ -7,7 +7,10 @@ defaults:
 on:
   workflow_dispatch:
   push:
-    branches: [ "*" ]
+    branches:
+      - "main*"
+      - "development*"
+      - "ops*"
     paths:
       - "packages/sdk/**"
       - ".github/workflows/ci-dev-sdk.yml"
@@ -18,22 +21,24 @@ jobs:
     environment: testnet
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Install yarn
-        run: npm install -g yarn
-
-      - uses: actions/setup-node@v4
+      - name: Install Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "yarn"
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+      - name: Install yarn
+        run: corepack prepare yarn@stable --activate
+
+      - name: Install foundry-toolchain
+        uses: foundry-rs/foundry-toolchain@v1.2.0
         with:
           version: nightly
 
-      - name: Install dependencies
+      - name: Install Project Dependencies
         run: yarn install
 
       - name: Install Docker Compose
@@ -41,11 +46,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
+      - name: Setup Local Environment
+        run: find . -type f -name ".env*.sample" -exec sh -c 'F={}; cp -nv $F $(dirname $F)/$(basename $F .sample)' \;
+        working-directory: .
+
       # Docker compose detached (-d) so other jobs can continue
       # Env variables are sourced and then exported (set -a)
       - name: Run Docker compose detached
         run: |
-          cp -n packages/api/.env.sample packages/api/.env
           set -a
           source packages/api/.env
           set +a
@@ -53,18 +61,25 @@ jobs:
 
       # TODO: using local supabase for SDK.
       # if we want a deployed instance, we need to set up a new one for the SDK.
-      - uses: supabase/setup-cli@v1
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1.3.0
         with:
           version: latest
-      - run: supabase start
+
+      - name: Initialise Supabase
+        run: supabase init
         working-directory: packages/api/supabase
 
-      - name: Deploy contracts
-        run: cp -n .env.sample .env && yarn deploy
+      - name: Start Supabase
+        run: supabase start
+        working-directory: packages/api/supabase
+
+      - name: Deploy Credbull Contracts
+        run: yarn deploy
         working-directory: packages/contracts
 
       - name: Create Default Users
-        run:  cp -n ../../.env.sample ../../.env && cp -n .env.sample .env && yarn op --create-default-users
+        run: yarn op --create-default-users
         working-directory: packages/ops
 
       - name: Logs
@@ -72,8 +87,6 @@ jobs:
 
       - name: Run SDK tests
         run: |
-          cp -n ../api/.env.sample ../api/.env
-          cp -n .env.sample .env
           set -a
           source ../api/.env
           source .env
@@ -81,11 +94,10 @@ jobs:
           yarn int-test
         working-directory: packages/sdk
 
-
       - name: Clean vault data
-        run: cp -n .env.sample .env && yarn op --clean-vault-table
+        run: yarn op --clean-vault-table
         working-directory: packages/ops
 
-      - name: Cleanup
+      - name: Cleanup Yarn Cache
         if: always()
-        run: npm uninstall -g yarn
+        run: yarn cache clean
