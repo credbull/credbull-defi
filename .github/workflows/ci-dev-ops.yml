@@ -12,8 +12,8 @@ on:
       - "development*"
       - "ops*"
     paths:
-      - "packages/sdk/**"
-      - ".github/workflows/ci-dev-sdk.yml"
+      - "packages/ops/**"
+      - ".github/workflows/ci-dev-ops.yml"
 
 jobs:
   deploy:
