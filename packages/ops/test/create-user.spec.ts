@@ -1,5 +1,5 @@
+import { expect, test } from '@playwright/test';
 import { ZodError } from 'zod';
-import { test, expect } from '@playwright/test';
 
 import { createUser, main } from '@/create-user';
 import { loadConfiguration } from '@/utils/config';
@@ -18,7 +18,9 @@ test.beforeAll(() => {
   config = loadConfiguration();
 
   supabaseAdmin = supabase(config, { admin: true });
-  ({ data: { subscription } } = supabaseAdmin.auth.onAuthStateChange((event: any, session: any) => {
+  ({
+    data: { subscription },
+  } = supabaseAdmin.auth.onAuthStateChange((event: any, session: any) => {
     console.log(' => Supabase Auth Event: %s, Session: %s', event, session);
   }));
 });
@@ -52,32 +54,27 @@ test.describe('Create User Main should fail with', async () => {
   test('an absent parameters configuration', async () => {
     expect(() => main({ channel: false })).toThrow(Error);
   });
-
-  // NOTE (JL,2024-06-04): Internal async invocation means no other impact possible.
-  test('an invalid parameter, but does not due to asynchronous invocation', async () => {
-    expect(() => main({ channel: false }, { email: '' })).toPass();
-    expect(() => main({ channel: false }, { email: ' \t \n ' })).toPass();
-    expect(() => main({ channel: false }, { email: 'someone@here' })).toPass();
-    expect(() => main({ channel: false }, { email: 'no one@here.com' })).toPass();
-  });
 });
 
 // NOTE (JL,2024-06-04): These tests failed non-deterministically, with database errors, when using the same
 //  Email Address. Waiting did not work. Removing parallelism did not work.
 //  The workaround solution is to use 1 Email Per Test.
 test.describe('Create User should create', async () => {
-
   async function assertUserCreatedWith(email: string, isChannel: boolean, passwordMaybe?: string) {
     await expect(userByOrUndefined(supabaseAdmin, email)).resolves.toBeUndefined();
 
     const actualUser = await createUser(config, email, isChannel, passwordMaybe);
-    const expectedUser = passwordMaybe ? { email: email }
+    const expectedUser = passwordMaybe
+      ? { email: email }
       : { email: email, generated_password: actualUser.generated_password };
     expect(actualUser).toMatchObject(expectedUser);
 
-    const { data: { user }, error } = await supabaseAdmin.auth.signInWithPassword({
+    const {
+      data: { user },
+      error,
+    } = await supabaseAdmin.auth.signInWithPassword({
       email: email,
-      password: passwordMaybe || actualUser.generated_password
+      password: passwordMaybe || actualUser.generated_password,
     });
     expect(error, 'Error logging in created User').toBeNull();
     expect(user, 'Logged in user does not match created.').toMatchObject({ email: email });
@@ -91,7 +88,7 @@ test.describe('Create User should create', async () => {
 
     await supabaseAdmin.auth.signOut('local');
     await deleteUserIfPresent(supabaseAdmin, email);
-  };
+  }
 
   test('a non-channel user with specified email address and password', async () => {
     await assertUserCreatedWith('minion1@create.user.test', false, PASSWORD);
@@ -111,12 +108,17 @@ test.describe('Create User should create', async () => {
 });
 
 test.describe('Create User Main should create', async () => {
-
   async function assertUserCreatedWith(email: string, isChannel: boolean) {
     expect(() => main({ channel: isChannel }, { email: email })).toPass();
 
     // Poll the database until the User is found to exist, or test is timed out after 1 minute.
-    await expect.poll(async () => { return await userByOrUndefined(supabaseAdmin, email); }, { timeout: 30_000 })
+    await expect
+      .poll(
+        async () => {
+          return await userByOrUndefined(supabaseAdmin, email);
+        },
+        { timeout: 30_000 },
+      )
       .toMatchObject({ email: email });
 
     // NOTE (JL,2024-06-05): I can't get the value from the `poll`, so re-query.
@@ -129,7 +131,7 @@ test.describe('Create User Main should create', async () => {
     }
 
     await deleteUserIfPresent(supabaseAdmin, email);
-  };
+  }
 
   test('an non-channel user with specified email address', async () => {
     await assertUserCreatedWith('minion5@create.user.test', false);

@@ -5,6 +5,9 @@ import { Wallet, providers } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
 import { z } from 'zod';
 
+const emailSchema = z.string().email();
+const emailSchemaOptional = z.string().email().optional();
+
 const supabaseConfigSchema = z.object({
   services: z.object({ supabase: z.object({ url: z.string().url() }) }),
   secret: z.object({
@@ -133,3 +136,19 @@ export const generatePassword = (
     .map((x) => characters[x % characters.length])
     .join('');
 };
+
+export function parseEmail(email: string) {
+  emailSchema.parse(email);
+}
+
+export function parseEmailOptional(email: string | undefined) {
+  if (email == undefined || email == '') return;
+
+  emailSchemaOptional.parse(email);
+}
+
+export function generateRandomEmail(prefix: string): string {
+  const randomString = Math.random().toString(36).substring(2, 10); // Generates a random string
+  const domain = '@credbull.io';
+  return `${prefix}+${randomString}${domain}`;
+}

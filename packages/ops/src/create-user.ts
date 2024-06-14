@@ -1,12 +1,11 @@
-import { z } from 'zod';
+import { ZodError, z } from 'zod';
 
 import { makeChannel } from './make-channel';
 import { loadConfiguration } from './utils/config';
-import { generatePassword, supabase } from './utils/helpers';
+import { generatePassword, parseEmail, supabase } from './utils/helpers';
 
 // Zod Schemas to validate the parameters and configuration.
 const configSchema = z.object({ app: z.object({ url: z.string().url() }) });
-const emailSchema = z.string().email();
 const nonEmptyStringSchema = z.string().trim().min(1);
 
 /**
@@ -30,7 +29,8 @@ export const createUser = async (
   isChannel: boolean,
   passwordMaybe?: string,
 ): Promise<any> => {
-  emailSchema.parse(email);
+  parseEmail(email);
+
   nonEmptyStringSchema.optional().parse(passwordMaybe);
   configSchema.parse(config);
 
@@ -76,9 +76,8 @@ export const createUser = async (
  */
 export const main = (scenarios: { channel: boolean }, params?: { email: string }) => {
   if (!params?.email) throw new Error('Email is required');
-  setTimeout(async () => {
-    createUser(loadConfiguration(), params!.email, scenarios.channel);
-  }, 1000);
+
+  createUser(loadConfiguration(), params!.email, scenarios.channel);
 };
 
 export default { main };

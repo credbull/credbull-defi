@@ -8,7 +8,7 @@ import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 import { z } from 'zod';
 
 import { loadConfiguration } from './utils/config';
-import { headers, login, signer, supabase, userByOrThrow } from './utils/helpers';
+import { headers, login, parseEmailOptional, signer, supabase, userByOrThrow } from './utils/helpers';
 
 // Zod Schema to validate all config points in this module.
 const addressSchema = z.string().regex(/^(0x)?[0-9a-fA-F]{40,40}$/);
@@ -34,8 +34,8 @@ const configSchema = z.object({
     }),
   }),
 });
-const emailSchema = z.string().email();
-const upsideVaultSchema = z.union([addressSchema, z.string().regex(/self/)]);
+
+const upsideVaultSchema = z.union([addressSchema, z.string().regex(/self/)]).optional();
 
 type CreateVaultParams = {
   treasury: string | undefined;
@@ -145,7 +145,7 @@ export const createVault = async (
 ): Promise<any> => {
   configSchema.parse(config);
   upsideVaultSchema.optional().parse(upsideVault);
-  emailSchema.optional().parse(tenantEmail);
+  parseEmailOptional(tenantEmail);
 
   const supabaseAdmin = supabase(config, { admin: true });
   const addresses = await supabaseAdmin.from('contracts_addresses').select();
@@ -257,28 +257,12 @@ export const main = (
   scenarios: { matured: boolean; upside: boolean; tenant: boolean },
   params?: { upsideVault: string; tenantEmail: string },
 ) => {
-  setTimeout(async () => {
-    createVault(
-      loadConfiguration(),
-      scenarios.matured,
-      scenarios.upside,
-      scenarios.tenant,
-      params?.upsideVault,
-      params?.tenantEmail,
-    );
-  }, 1000);
+  createVault(
+    loadConfiguration(),
+    scenarios.matured,
+    scenarios.upside,
+    scenarios.tenant,
+    params?.upsideVault,
+    params?.tenantEmail,
+  );
 };
-
-// alternative option to calling the create-vault API.  not fully compatible with our arch (missing tenant
-// information, maybe others)
-async function createVaultUsingEthers(
-  config: any,
-  factoryAddress: string,
-  operatorSignerKey: string,
-  vaultParams: ICredbull.VaultParamsStruct,
-) {
-  const alternateSigner = signer(config, operatorSignerKey);
-  const factoryAsVaultOper = CredbullFixedYieldVaultFactory__factory.connect(factoryAddress!, alternateSigner);
-  const createVaultTx = await factoryAsVaultOper.createVault(vaultParams, '{}');
-  await createVaultTx.wait();
-}
