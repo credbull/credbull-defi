@@ -27,9 +27,11 @@ test('Test parse email', async () => {
 });
 
 test('Test parse optional email', async () => {
+  expect(() => parseEmail('someone@here')).toThrow(ZodError);
+
   // Test invalid email
   expect(() => parseEmailOptional(undefined)).not.toThrow(ZodError);
 
-  // NB - empty string will not parse
+  expect(() => parseEmailOptional(null)).not.toThrow(ZodError);
   expect(() => parseEmailOptional('')).not.toThrow(ZodError);
 });

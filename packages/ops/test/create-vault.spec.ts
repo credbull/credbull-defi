@@ -50,10 +50,15 @@ test.describe('Create Vault should fail when invoked with', async () => {
 
 test.describe('Create Vault Main should fail when invoked with', async () => {
   // NOTE (JL,2024-06-04): Internal async invocation means no other impact possible.
-  test('any invalid parameter, does not due to asynchronous invocation', async () => {
+  test('Throws error if invalid parameters', async () => {
     const scenarios = { matured: false, upside: true, tenant: false };
-    expect(() => main(scenarios, { upsideVault: VALID_ADDRESS, tenantEmail: 'someone@here' })).toPass();
-    expect(() => main(scenarios, { upsideVault: '0x123456789abcdef', tenantEmail: 'someone@here.com' })).toPass();
+
+    await expect(main(scenarios, { upsideVault: VALID_ADDRESS, tenantEmail: 'someone@here' })).rejects.toThrow(
+      ZodError,
+    );
+    await expect(
+      main(scenarios, { upsideVault: '0x123456789abcdef', tenantEmail: 'someone@here.com' }),
+    ).rejects.toThrow(ZodError);
   });
 });
 

@@ -253,11 +253,11 @@ export const createVault = async (
  * @param params Optional parameters object.
  * @throws ZodError if the configuration fails to load or satisfy any configuration requirement.
  */
-export const main = (
+export const main = async (
   scenarios: { matured: boolean; upside: boolean; tenant: boolean },
   params?: { upsideVault: string; tenantEmail: string },
 ) => {
-  createVault(
+  await createVault(
     loadConfiguration(),
     scenarios.matured,
     scenarios.upside,

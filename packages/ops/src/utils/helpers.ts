@@ -3,10 +3,10 @@ import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { Wallet, providers } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
-import { z } from 'zod';
+import { ZodError, z } from 'zod';
 
 const emailSchema = z.string().email();
-const emailSchemaOptional = z.string().email().optional();
+const emailSchemaOptional = z.string().email().nullish().or(z.literal(''));
 
 const supabaseConfigSchema = z.object({
   services: z.object({ supabase: z.object({ url: z.string().url() }) }),
@@ -141,10 +141,8 @@ export function parseEmail(email: string) {
   emailSchema.parse(email);
 }
 
-export function parseEmailOptional(email: string | undefined) {
-  if (email == undefined || email == '') return;
-
-  emailSchemaOptional.parse(email);
+export function parseEmailOptional(email?: string | undefined) {
+  emailSchemaOptional.nullish().optional().or(z.literal('')).parse(email);
 }
 
 export function generateRandomEmail(prefix: string): string {
