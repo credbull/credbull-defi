@@ -1,4 +1,4 @@
-name: ci-dev-sdk
+name: ci-dev-ops
 
 defaults:
   run:
@@ -61,8 +61,6 @@ jobs:
           set +a
           docker-compose up -d --build
 
-      # TODO: using local supabase for SDK.
-      # if we want a deployed instance, we need to set up a new one for the SDK.
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1.3.0
         with:
@@ -76,21 +74,17 @@ jobs:
         run: yarn deploy
         working-directory: packages/contracts
 
-      - name: Create Default Users
-        run: yarn op --create-default-users
-        working-directory: packages/ops
-
       - name: Logs
         run: docker logs api --tail all
 
-      - name: Run SDK tests
+      - name: Run Ops tests
         run: |
           set -a
           source ../api/.env
           source .env
           set +a
           yarn int-test
-        working-directory: packages/sdk
+        working-directory: packages/ops
 
       - name: Clean vault data
         run: yarn op --clean-vault-table
