@@ -1,6 +1,6 @@
 // Multi user deposit test similar to deposit.spec.ts
 import { expect, test } from '@playwright/test';
-import { BigNumber, Signer, ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 
 import { whitelist } from './utils/admin';
 import { signerFor } from './utils/api';
@@ -14,14 +14,17 @@ import { generateAddress, wait } from './utils/utils';
 
 let config: any;
 let testSigners: TestSigners;
+let admin: User;
 let alice: User;
 let bob: User;
 
 // NOTE (JL,2024-06-13): By experimentation, this is invoked before EVERY top-level `test`.
 test.beforeAll('Setup', async () => {
   config = loadConfiguration();
+
   testSigners = new TestSigners(new ethers.providers.JsonRpcProvider(config.services.ethers.url));
 
+  admin = await userFor(config, config.users.admin.email_address, config.secret.ADMIN_PASSWORD, testSigners.admin);
   alice = await userFor(config, config.users.alice.email_address, config.secret.ALICE_PASSWORD, testSigners.alice);
   bob = await userFor(config, config.users.bob.email_address, config.secret.BOB_PASSWORD, testSigners.bob);
 
@@ -60,8 +63,8 @@ test.describe('Claim yield and principal - Fixed', async () => {
     });
 
     await test.step('Whitelist users', async () => {
-      await whitelist(config, alice.address, alice.id);
-      await whitelist(config, bob.address, bob.id);
+      await whitelist(config, admin, alice.address, alice.id);
+      await whitelist(config, admin, bob.address, bob.id);
     });
 
     vaultAddress = await test.step('Get vault and filter', async () => {
