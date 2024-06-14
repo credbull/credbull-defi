@@ -88,7 +88,7 @@ export class CredbullSDK {
 
   /// Connects to the API by logging the configured User in, caching their Access Token for future operations.
   async connect(): Promise<void> {
-    return await fetch(this.toServiceUrl('/auth/api/sign-in'), {
+    return fetch(this.toServiceUrl('/auth/api/sign-in'), {
       method: 'POST',
       body: JSON.stringify(this.login),
       headers: { 'Content-Type': 'application/json' },
@@ -104,23 +104,27 @@ export class CredbullSDK {
 
   /// Return all active vaults
   async getAllVaults(): Promise<any> {
-    const headers = await this.headers();
-    const vaultsData = await fetch(this.toServiceUrl('/vaults/current'), { method: 'GET', ...headers });
-    return await vaultsData.json();
+    return this.headers().then((headers) =>
+      fetch(this.toServiceUrl('/vaults/current'), { method: 'GET', ...headers }).then(async (response) =>
+        response.json(),
+      ),
+    );
   }
 
   /// Link user wallet
   async linkWallet(discriminator?: string): Promise<any> {
-    const message = await this.linkWalletMessage(this.signer);
-    const signature = await this.signer.signMessage(message);
-    const headers = await this.headers();
-    const linkWallet = await fetch(this.toServiceUrl('/accounts/link-wallet'), {
-      method: 'POST',
-      body: JSON.stringify({ message, signature, discriminator }),
-      ...headers,
-    });
-
-    return await linkWallet.json();
+    // NOTE (JL,2024-06-14): We use this style of chaining as we require access to the value from all the promises.
+    return this.linkWalletMessage(this.signer).then((message) =>
+      this.signer.signMessage(message).then((signature) =>
+        this.headers().then((headers) =>
+          fetch(this.toServiceUrl('/accounts/link-wallet'), {
+            method: 'POST',
+            body: JSON.stringify({ message, signature, discriminator }),
+            ...headers,
+          }).then((response) => response.json()),
+        ),
+      ),
+    );
   }
 
   /// Deposit token to the given vault address
