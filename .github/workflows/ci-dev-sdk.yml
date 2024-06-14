@@ -66,13 +66,9 @@ jobs:
         with:
           version: latest
 
-      - name: Initialise Supabase
-        run: supabase init
-        working-directory: packages/api/supabase
-
       - name: Start Supabase
         run: supabase start
-        working-directory: packages/api/supabase
+        working-directory: packages/api
 
       - name: Deploy Credbull Contracts
         run: yarn deploy
