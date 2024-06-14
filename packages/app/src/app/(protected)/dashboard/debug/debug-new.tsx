@@ -364,7 +364,11 @@ const LinkWallet = () => {
 
   const link = async () => {
     const signer = await getEthersSigner({ chainId: await connector?.getChainId() });
-    const sdk = new CredbullSDK(process.env.NEXT_PUBLIC_ACCESS_TOKEN as string, signer as Signer);
+    const sdk = new CredbullSDK(
+      process.env.API_BASE_URL || '',
+      { accessToken: process.env.NEXT_PUBLIC_ACCESS_TOKEN as string },
+      signer as Signer,
+    );
     await sdk.linkWallet();
   };
 

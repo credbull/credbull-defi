@@ -14,7 +14,7 @@
     "db-export": "tsc && node ./script/utils/exporter.js",
     "deploy": "make deploy-local",
     "deploy:ci": "yarn db-export && make deploy-baseSepolia",
-    "gen-types": "echo 'TODO: Exclude forge-std/src/interfaces/IERC20.sol from gen-type (deleting to work-around)' && rm -rf ./out/IERC20.sol && yarn typechain --target ethers-v5 --out-dir ./types ./out/**/*.json && tsc",
+    "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
     "postinstall": "yarn build && yarn gen-types"
   },
   "packageManager": "yarn@3.2.3",
@@ -27,7 +27,7 @@
     "eslint-plugin-prettier": "^5.1.3",
     "prettier": "^3.2.2",
     "typechain": "^8.3.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.7.0",

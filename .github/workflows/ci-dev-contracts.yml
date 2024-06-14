@@ -10,8 +10,10 @@ on:
     branches:
       - "main*"
       - "development*"
+      - "ops*"
     paths:
       - "packages/contracts/**"
+      - ".github/workflows/ci-dev-contracts.yml"
 
 jobs:
   contracts-test:

@@ -12,9 +12,11 @@ on:
     branches:
       - "main*"
       - "development*"
+      - "ops*"
     paths:
       - "packages/app/**"
       - "packages/contracts/**"
+      - ".github/workflows/ci-dev-app.yml"
 
 jobs:
   deploy:

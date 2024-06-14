@@ -10,9 +10,11 @@ on:
     branches:
       - "main*"
       - "development*"
+      - "ops*"
     paths:
       - "packages/api/**"
       - "packages/contracts/**"
+      - ".github/workflows/ci-dev-api.yml"
 
 jobs:
   # TODO - separate out build and deploy steps.  see https://github.com/actions/upload-artifact

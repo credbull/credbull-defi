@@ -7,143 +7,93 @@ defaults:
 on:
   workflow_dispatch:
   push:
-    branches: [ "*" ]
+    branches:
+      - "main*"
+      - "development*"
+      - "ops*"
     paths:
       - "packages/sdk/**"
+      - ".github/workflows/ci-dev-sdk.yml"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: dev
+    environment: testnet
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Install Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "yarn"
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+      - name: Install yarn
+        run: corepack prepare yarn@stable --activate
+
+      - name: Install foundry-toolchain
+        uses: foundry-rs/foundry-toolchain@v1.2.0
         with:
           version: nightly
 
-      - name: Install dependencies
+      - name: Install Project Dependencies
         run: yarn install
 
-      - uses: isbang/compose-action@v1.5.1
-        with:
-          compose-file: docker-compose.yml
-          compose-command: up
-          compose-options: --build 
-        env: 
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_JWT_SECRET: ${{ secrets.SDK_SUPABASE_JWT_SECRET }}
-          ETHERS_CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_CUSTODIAN_PRIVATE_KEY }}
-          ETHERS_DEPLOYER_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
-          CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
-          NEXT_PUBLIC_TARGET_NETWORK_WSS: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK_WSS }}
-          ETHERS_PROVIDER_URLS: ${{ secrets.SDK_ETHERS_PROVIDER_URLS }}
-          SLACK_TOKEN: ${{ secrets.SDK_SLACK_TOKEN }}
-          WSS_PROVIDER_URLS: ${{ secrets.SDK_WSS_PROVIDER_URLS }}
-          OPERATOR_ADDRESS: ${{ secrets.SDK_OPERATOR_ADDRESS }}
-          APP_PORT: 3001
-          APP_VERSION: 0.0.1000
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
 
-      - uses: supabase/setup-cli@v1
+      - name: Setup Local Environment
+        run: find . -type f -name ".env*.sample" -exec sh -c 'F={}; cp -nv $F $(dirname $F)/$(basename $F .sample)' \;
+        working-directory: .
+
+      # Docker compose detached (-d) so other jobs can continue
+      # Env variables are sourced and then exported (set -a)
+      - name: Run Docker compose detached
+        run: |
+          set -a
+          source packages/api/.env
+          set +a
+          docker-compose up -d --build
+
+      # TODO: using local supabase for SDK.
+      # if we want a deployed instance, we need to set up a new one for the SDK.
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1.3.0
         with:
           version: latest
-      - run: cd packages/api/supabase && supabase link --project-ref ${{ secrets.SDK_SUPABASE_PROJECT_ID }} && supabase db push
-        env: 
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SDK_SUPABASE_ACCESS_TOKEN }}
-          PROJECT_ID: ${{ secrets.SDK_SUPABASE_PROJECT_ID }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SDK_SUPABASE_DB_PASSWORD }}
-      
-      - name: Deploy contracts
-        run: cd packages/contracts/ && yarn deploy
-        env:
-          EXPORT_TO_SUPABASE: true
-          NEXT_PUBLIC_TARGET_NETWORK_ID: 31337
-          COLLATERAL_PERCENTAGE: 200
-          DEFAULT_ANVIL_KEY: ${{ secrets.SDK_DEFAULT_ANVIL_KEY }}
-          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
-          VAULT_OPENS_AT_TIMESTAMP: ${{ secrets.SDK_VAULT_OPENS_AT_TIMESTAMP }}
-          VAULT_CLOSES_DURATION_TIMESTAMP: ${{ secrets.SDK_VAULT_CLOSES_DURATION_TIMESTAMP }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
-          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}      
 
-      - name: Make Admin
-        run: cd scripts/operation/ && yarn op --make-admin null email:admin@cbl.com
-        env:
-          API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
-          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
-          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-          ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
-          ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+      - name: Start Supabase
+        run: supabase start
+        working-directory: packages/api
+
+      - name: Deploy Credbull Contracts
+        run: yarn deploy
+        working-directory: packages/contracts
+
+      - name: Create Default Users
+        run: yarn op --create-default-users
+        working-directory: packages/ops
 
       - name: Logs
         run: docker logs api --tail all
 
       - name: Run SDK tests
-        run: cd packages/sdk/ && yarn int-test
-        env:
-          ADMIN_PRIVATE_KEY_SDK: ${{ secrets.SDK_DEFAULT_ANVIL_KEY }}
-          ADMIN_EMAIL_SDK: admin@cbl.com
-          ADMIN_PASSWORD_SDK: admin123
-
-          USER_A_PRIVATE_KEY: ${{ secrets.SDK_USER_A_PRIVATE_KEY }}
-          USER_A_EMAIL: usera@cbl.com
-          USER_A_PASSWORD: usera123
-
-          USER_B_PRIVATE_KEY: ${{ secrets.SDK_USER_B_PRIVATE_KEY }}
-          USER_B_EMAIL: userb@cbl.com
-          USER_B_PASSWORD: userb123
-
-          NODE_ENV: development
-          RPC_PROVIDER: http://localhost:8545
-          CRON_SECRET: ${{ secrets.SDK_CRON_SECRET }}
-          OPERATOR_PRIVATE_KEY: ${{ secrets.SDK_ETHERS_DEPLOYER_PRIVATE_KEY }}
-          CUSTODIAN_PRIVATE_KEY: ${{ secrets.SDK_CUSTODIAN_PRIVATE_KEY }}
-    
-          API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
-          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
-          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-          ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
-          ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
-          ADDRESSES_CUSTODIAN: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
-          
+        run: |
+          set -a
+          source ../api/.env
+          source .env
+          set +a
+          yarn int-test
+        working-directory: packages/sdk
 
       - name: Clean vault data
-        run: cd scripts/operation/ && yarn op --clean-vault-table
-        env:
-          API_BASE_URL: ${{ secrets.SDK_API_BASE_URL }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SDK_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_TARGET_NETWORK: ${{ secrets.SDK_NEXT_PUBLIC_TARGET_NETWORK }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SDK_SUPABASE_SERVICE_ROLE_KEY }}
-          ADMIN_PRIVATE_KEY: ${{ secrets.SDK_ADMIN_PRIVATE_KEY }}
-          ADMIN_EMAIL: ${{ secrets.SDK_ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.SDK_ADMIN_PASSWORD }}
-          PUBLIC_OWNER_ADDRESS: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-          PUBLIC_OPERATOR_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-          ADDRESSES_TREASURY: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
-          ADDRESSES_ACTIVITY_REWARD: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+        run: yarn op --clean-vault-table
+        working-directory: packages/ops
+
+      - name: Cleanup Yarn Cache
+        if: always()
+        run: yarn cache clean
