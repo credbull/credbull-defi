@@ -67,7 +67,7 @@ export class TomlConfigService {
       throw Error(error);
     }
 
-    console.log('Successfully loaded configuration:', JSON.stringify(this.tomlConfig, null, 2));
+    console.log(`Successfully loaded configuration from: '${configFile}'`);
   }
 
   get config(): TomlConfig {

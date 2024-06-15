@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
-import * as path from 'path';
 import * as fs from 'fs';
 import { load } from 'js-toml';
+import * as path from 'path';
 
 // NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the package's grandparent directory (../..),
 //  then the parent (..) and finally the package directory (.) (adjusted for module location).
@@ -10,7 +10,7 @@ dotenv.config({
   path: [
     path.resolve(__dirname, '../../../../.env'), // credbull-defi (root)
     path.resolve(__dirname, '../../../.env'), // script
-    path.resolve(__dirname, '../../.env') // operation
+    path.resolve(__dirname, '../../.env'), // operation
   ],
   override: true,
 });
@@ -42,7 +42,7 @@ export const loadConfiguration = (): Config => {
   const toml = fs.readFileSync(configFile, 'utf8');
   const config: Config = load(toml);
 
-  console.log('Successfully loaded configuration:', JSON.stringify(config, null, 2));
+  console.log(`Successfully loaded configuration from: '${configFile}'`);
 
   // include Environment into config
   // NB - call this after the log statement to avoid logging keys!

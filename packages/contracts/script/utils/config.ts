@@ -3,12 +3,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { load } from 'js-toml';
 
-// NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the grandparent directory (../..), 
-//  then the parent (..) and finally the current directory (.). Override is enabled so that the most 
+// NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the grandparent directory (../..),
+//  then the parent (..) and finally the current directory (.). Override is enabled so that the most
 //  specific configuration wins.
 dotenv.config({
-  path: ['../../.env', '../.env', '.env' ],
-  override: true
+  path: ['../../.env', '../.env', '.env'],
+  override: true,
 });
 
 interface Config {
@@ -27,7 +27,7 @@ export const loadConfiguration = (): Config => {
   const toml = fs.readFileSync(configFile, 'utf8');
   const config: Config = load(toml);
 
-  console.log('Successfully loaded configuration:', JSON.stringify(config, null, 2));
+  console.log(`Successfully loaded configuration from: '${configFile}'`);
 
   // include Environment into config
   // NB - call this after the log statement to avoid logging keys!
