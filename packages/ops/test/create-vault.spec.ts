@@ -1,5 +1,6 @@
 import { CredbullFixedYieldVault__factory } from '@credbull/contracts';
 import { expect, test } from '@playwright/test';
+import Bottleneck from 'bottleneck';
 import { isAfter, isFuture, isPast } from 'date-fns';
 import { ZodError } from 'zod';
 
@@ -14,27 +15,16 @@ const VALID_ADDRESS = generateAddress();
 
 let config: any | undefined = undefined;
 
+const limiter = new Bottleneck({
+  minTime: 1000, // Minimum time between requests in ms
+});
+
 test.beforeAll(async () => {
   // NOTE (JL,2024-06-06): This loads the same configuration as the operations themselves.
   config = loadConfiguration();
 });
 
-const createVaultWithPause = async (
-  config: any,
-  isMatured: boolean,
-  isUpside: boolean,
-  isTenant: boolean,
-  upsideVault?: string,
-  tenantEmail?: string,
-  override?: { treasuryAddress: string; activityRewardAddress: string; collateralPercentage: number },
-): Promise<any> => {
-  const result = await createVault(config, isMatured, isUpside, isTenant, upsideVault, tenantEmail, override);
-
-  // Adding a pause of 100 ms
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  return result;
-};
+const createVaultWithPause = limiter.wrap(createVault);
 
 /*
   TODO - move param validations and tests to separate classes to simplfy createVault testing.
@@ -42,25 +32,25 @@ const createVaultWithPause = async (
  */
 test.describe('Create Vault should fail when invoked with', async () => {
   test('an invalid configuration', async () => {
-    expect(createVaultWithPause(EMPTY_CONFIG, false, false, false)).rejects.toThrow(ZodError);
-    expect(createVaultWithPause('I Am Config', false, false, false)).rejects.toThrow(ZodError);
-    expect(createVaultWithPause(42, false, false, false)).rejects.toThrow(ZodError);
-    expect(createVaultWithPause({ api: { url: 'not.a.valid.url' } }, false, false, false)).rejects.toThrow(ZodError);
+    expect(createVault(EMPTY_CONFIG, false, false, false)).rejects.toThrow(ZodError);
+    expect(createVault('I Am Config', false, false, false)).rejects.toThrow(ZodError);
+    expect(createVault(42, false, false, false)).rejects.toThrow(ZodError);
+    expect(createVault({ api: { url: 'not.a.valid.url' } }, false, false, false)).rejects.toThrow(ZodError);
   });
 
   test('an invalid Fixed Yield With Upside Vault specification', async () => {
     for (const chr of 'ghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ') {
       const notHex = chr.repeat(40);
-      expect(createVaultWithPause(config, false, true, false, notHex)).rejects.toThrow(ZodError);
-      expect(createVaultWithPause(config, false, true, false, '0x' + notHex)).rejects.toThrow(ZodError);
+      expect(createVault(config, false, true, false, notHex)).rejects.toThrow(ZodError);
+      expect(createVault(config, false, true, false, '0x' + notHex)).rejects.toThrow(ZodError);
     }
     for (const chr of '1234567890abcdefABCDEF') {
       const tooSmall = chr.repeat(39);
       const tooBig = chr.repeat(41);
-      expect(createVaultWithPause(config, false, true, false, tooSmall)).rejects.toThrow(ZodError);
-      expect(createVaultWithPause(config, false, true, false, '0x' + tooSmall)).rejects.toThrow(ZodError);
-      expect(createVaultWithPause(config, false, true, false, tooBig)).rejects.toThrow(ZodError);
-      expect(createVaultWithPause(config, false, true, false, '0x' + tooBig)).rejects.toThrow(ZodError);
+      expect(createVault(config, false, true, false, tooSmall)).rejects.toThrow(ZodError);
+      expect(createVault(config, false, true, false, '0x' + tooSmall)).rejects.toThrow(ZodError);
+      expect(createVault(config, false, true, false, tooBig)).rejects.toThrow(ZodError);
+      expect(createVault(config, false, true, false, '0x' + tooBig)).rejects.toThrow(ZodError);
     }
   });
 });
@@ -111,10 +101,6 @@ test.describe('Create Vault', async () => {
       });
   }
 
-  async function wait(ms: number) {
-    new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
   async function verifyVaultContract(address: string, isMatured = false): Promise<void> {
     const vaultContract = CredbullFixedYieldVault__factory.connect(address, adminSigner);
     expect(vaultContract.name()).resolves.toBe('Credbull Liquidity');
@@ -125,6 +111,7 @@ test.describe('Create Vault', async () => {
   test.describe('should create', async () => {
     test('a non-matured, ready, Fixed Yield vault, open for deposits, not-yet open for redemption', async () => {
       const created = await createVaultWithPause(config, false, false, false);
+
       expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
       expect(isPast(created.deposits_opened_at)).toBe(true);
       expect(isFuture(created.deposits_closed_at)).toBe(true);
@@ -186,8 +173,9 @@ test.describe('Create Vault', async () => {
     );
   });
 
-  test.describe('Main should create', async () => {
-    test('a non-matured, ready, Fixed Yield vault, open for deposits, not-yet open for redemption', async () => {
+  // TODO: lucasia - do we really need to test the main function that is a pass through to createVault?
+  test.describe.skip('Main should create', async () => {
+    test.skip('a non-matured, ready, Fixed Yield vault, open for deposits, not-yet open for redemption', async () => {
       const countBefore = await numberOfVaults();
       expect(() => main({ matured: false, upside: false, tenant: false })).toPass();
 

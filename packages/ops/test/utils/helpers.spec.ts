@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ZodError, z } from 'zod';
+import { ZodError } from 'zod';
 
 import { generateRandomEmail, parseEmail, parseEmailOptional, parseUsideVault } from '../../src/utils/helpers';
 

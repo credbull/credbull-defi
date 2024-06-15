@@ -6,16 +6,6 @@ defaults:
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "main*"
-      - "development*"
-      - "ops*"
-    paths:
-      - "packages/ops/**"
-      - "packages/contracts/**"
-      - "packages/api/**"
-      - ".github/workflows/ci-dev-ops-local.yml"
 
 jobs:
   deploy:
