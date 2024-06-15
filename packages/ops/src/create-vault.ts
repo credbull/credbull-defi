@@ -8,10 +8,19 @@ import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 import { z } from 'zod';
 
 import { loadConfiguration } from './utils/config';
-import { headers, login, parseEmailOptional, signer, supabase, userByOrThrow } from './utils/helpers';
+import {
+  addressSchema,
+  headers,
+  login,
+  parseEmailOptional,
+  parseUsideVault,
+  signer,
+  supabase,
+  userByOrThrow,
+} from './utils/helpers';
 
 // Zod Schema to validate all config points in this module.
-const addressSchema = z.string().regex(/^(0x)?[0-9a-fA-F]{40,40}$/);
+
 const configSchema = z.object({
   secret: z.object({
     ADMIN_PRIVATE_KEY: z.string(),
@@ -34,8 +43,6 @@ const configSchema = z.object({
     }),
   }),
 });
-
-const upsideVaultSchema = z.union([addressSchema, z.string().regex(/self/)]).optional();
 
 type CreateVaultParams = {
   treasury: string | undefined;
@@ -144,11 +151,11 @@ export const createVault = async (
   override?: { treasuryAddress: string; activityRewardAddress: string; collateralPercentage: number },
 ): Promise<any> => {
   configSchema.parse(config);
-  upsideVaultSchema.optional().parse(upsideVault);
+  parseUsideVault(upsideVault);
   parseEmailOptional(tenantEmail);
-
   const supabaseAdmin = supabase(config, { admin: true });
   const addresses = await supabaseAdmin.from('contracts_addresses').select();
+  console.log(`addresses ${addresses}`);
   if (addresses.error) throw addresses.error;
 
   console.log('='.repeat(80));
@@ -230,10 +237,6 @@ export const createVault = async (
   if (rest && rest.length > 0) {
     console.log('WARNING: Response contained unexpected:', rest);
   }
-
-  // alternative - use a direct call instead of posting to the API
-  // const operatorKey = process.env.OPERATOR_PRIVATE_KEY; // this should be the Vault Operator
-  // await createVaultUsingEthers(config, factoryAddress, operatorKey, vaultParams);
 
   if (isMatured) {
     const vault = CredbullFixedYieldVault__factory.connect(created.address, adminSigner);

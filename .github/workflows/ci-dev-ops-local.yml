@@ -15,7 +15,7 @@ on:
       - "packages/ops/**"
       - "packages/contracts/**"
       - "packages/api/**"
-      - ".github/workflows/ci-dev-ops.yml"
+      - ".github/workflows/ci-dev-ops-local.yml"
 
 jobs:
   deploy:
@@ -44,25 +44,11 @@ jobs:
 
       - name: Install Project Dependencies
         run: yarn install
-
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
+#
       - name: Setup Local Environment
         run: find . -type f -name ".env*.sample" -exec sh -c 'F={}; cp -nv $F $(dirname $F)/$(basename $F .sample)' \;
         working-directory: .
-
-      # Docker compose detached (-d) so other jobs can continue
-      # Env variables are sourced and then exported (set -a)
-      - name: Run Docker compose detached
-        run: |
-          set -a
-          source packages/api/.env
-          set +a
-          docker-compose up -d --build
-
+#
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1.3.0
         with:
@@ -72,12 +58,20 @@ jobs:
         run: supabase start
         working-directory: packages/api
 
-      - name: Deploy Credbull Contracts
-        run: yarn deploy
+      - name: Run anvil and deploy contracts
+        run: |
+          rm ./script/output/dbdata.json || true
+          nohup anvil --config-out localhost.json > anvil.log 2>&1 &
+          disown
+          sleep 10 # wait to ensure anvil is started
+          make deploy-local
         working-directory: packages/contracts
 
-      - name: Logs
-        run: docker logs api --tail all
+      - name: Run API
+        run: |
+          nohup yarn dev > api.log 2>&1 &
+          disown
+        working-directory: packages/api
 
       - name: Run Ops tests
         run: |

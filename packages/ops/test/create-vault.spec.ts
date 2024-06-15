@@ -36,6 +36,10 @@ const createVaultWithPause = async (
   return result;
 };
 
+/*
+  TODO - move param validations and tests to separate classes to simplfy createVault testing.
+  // e.g. helpers.parseUsideVault() (and associated tests)
+ */
 test.describe('Create Vault should fail when invoked with', async () => {
   test('an invalid configuration', async () => {
     expect(createVaultWithPause(EMPTY_CONFIG, false, false, false)).rejects.toThrow(ZodError);
@@ -45,10 +49,6 @@ test.describe('Create Vault should fail when invoked with', async () => {
   });
 
   test('an invalid Fixed Yield With Upside Vault specification', async () => {
-    expect(createVaultWithPause(config, false, true, false, '')).rejects.toThrow(ZodError);
-    expect(createVaultWithPause(config, false, true, false, ' \t \n ')).rejects.toThrow(ZodError);
-    expect(createVaultWithPause(config, false, true, false, 'self ')).rejects.toThrow(ZodError);
-    expect(createVaultWithPause(config, false, true, false, 'SELF')).rejects.toThrow(ZodError);
     for (const chr of 'ghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ') {
       const notHex = chr.repeat(40);
       expect(createVaultWithPause(config, false, true, false, notHex)).rejects.toThrow(ZodError);

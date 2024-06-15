@@ -3,10 +3,12 @@ import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { Wallet, providers } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
-import { ZodError, z } from 'zod';
+import { z } from 'zod';
 
-const emailSchema = z.string().email();
-const emailSchemaOptional = z.string().email().nullish().or(z.literal(''));
+export const emailSchema = z.string().email();
+export const emailSchemaOptional = z.string().email().nullish().or(z.literal(''));
+export const addressSchema = z.string().regex(/^(0x)?[0-9a-fA-F]{40,40}$/);
+export const upsideVaultSchema = z.union([addressSchema, z.string().regex(/^self$/)]).optional();
 
 const supabaseConfigSchema = z.object({
   services: z.object({ supabase: z.object({ url: z.string().url() }) }),
@@ -78,6 +80,7 @@ export const login = async (
   opts?: { admin: boolean },
 ): Promise<{ access_token: string; user_id: string }> => {
   let _email: string, _password: string;
+
   if (opts?.admin) {
     adminLoginConfigSchema.parse(config);
     _email = config.users.admin.email_address;
@@ -89,8 +92,24 @@ export const login = async (
   }
 
   const body = JSON.stringify({ email: _email, password: _password });
-  const signIn = await fetch(`${config.api.url}/auth/api/sign-in`, { method: 'POST', body, ...headers() });
-  return signIn.json();
+  console.log(`sign in body ${body}`);
+
+  try {
+    const signIn = await fetch(`${config.api.url}/auth/api/sign-in`, { method: 'POST', body, ...headers() });
+
+    if (!signIn.ok) {
+      console.error(`HTTP error! status: ${signIn.status}`);
+      throw new Error(`Failed to login: ${signIn.statusText}`);
+    }
+
+    const data = await signIn.json();
+    console.log(`sign in response: ${JSON.stringify(data)}`);
+
+    return data;
+  } catch (error) {
+    console.error('Network error or server is down:', error);
+    throw new Error('Failed to login: Network error or server is down');
+  }
 };
 
 const linkWalletConfigSchema = z.object({ app: z.object({ url: z.string().url() }) });
@@ -143,6 +162,14 @@ export function parseEmail(email: string) {
 
 export function parseEmailOptional(email?: string | undefined) {
   emailSchemaOptional.nullish().optional().or(z.literal('')).parse(email);
+}
+
+export function parseAddress(address: string) {
+  emailSchema.parse(address);
+}
+
+export function parseUsideVault(upsideVaultStr: string | undefined) {
+  upsideVaultSchema.optional().parse(upsideVaultStr);
 }
 
 export function generateRandomEmail(prefix: string): string {

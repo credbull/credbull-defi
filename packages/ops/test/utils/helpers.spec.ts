@@ -1,9 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { ZodError, z } from 'zod';
 
-import { main } from '@/make-admin';
-
-import { generateRandomEmail, parseEmail, parseEmailOptional } from '../../src/utils/helpers';
+import { generateRandomEmail, parseEmail, parseEmailOptional, parseUsideVault } from '../../src/utils/helpers';
 
 // Adjust the path as necessary
 
@@ -34,4 +32,13 @@ test('Test parse optional email', async () => {
 
   expect(() => parseEmailOptional(null)).not.toThrow(ZodError);
   expect(() => parseEmailOptional('')).not.toThrow(ZodError);
+});
+
+test('Test parse vault upsideVault params', async () => {
+  expect(() => parseUsideVault('self')).not.toThrow(ZodError);
+
+  expect(() => parseUsideVault('')).toThrow(ZodError);
+  expect(() => parseUsideVault(' \t \n ')).toThrow(ZodError);
+  expect(() => parseUsideVault('self ')).toThrow(ZodError);
+  expect(() => parseUsideVault('SELF')).toThrow(ZodError);
 });
