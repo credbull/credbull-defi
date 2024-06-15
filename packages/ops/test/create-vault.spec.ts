@@ -20,14 +20,14 @@ test.beforeAll(async () => {
 });
 
 test.describe('Create Vault should fail when invoked with', async () => {
-  test.skip('an invalid configuration', async () => {
+  test('an invalid configuration', async () => {
     expect(createVault(EMPTY_CONFIG, false, false, false)).rejects.toThrow(ZodError);
     expect(createVault('I Am Config', false, false, false)).rejects.toThrow(ZodError);
     expect(createVault(42, false, false, false)).rejects.toThrow(ZodError);
     expect(createVault({ api: { url: 'not.a.valid.url' } }, false, false, false)).rejects.toThrow(ZodError);
   });
 
-  test.skip('an invalid Fixed Yield With Upside Vault specification', async () => {
+  test('an invalid Fixed Yield With Upside Vault specification', async () => {
     expect(createVault(config, false, true, false, '')).rejects.toThrow(ZodError);
     expect(createVault(config, false, true, false, ' \t \n ')).rejects.toThrow(ZodError);
     expect(createVault(config, false, true, false, 'self ')).rejects.toThrow(ZodError);
