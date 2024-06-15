@@ -19,31 +19,48 @@ test.beforeAll(async () => {
   config = loadConfiguration();
 });
 
+const createVaultWithPause = async (
+  config: any,
+  isMatured: boolean,
+  isUpside: boolean,
+  isTenant: boolean,
+  upsideVault?: string,
+  tenantEmail?: string,
+  override?: { treasuryAddress: string; activityRewardAddress: string; collateralPercentage: number },
+): Promise<any> => {
+  const result = await createVault(config, isMatured, isUpside, isTenant, upsideVault, tenantEmail, override);
+
+  // Adding a pause of 100 ms
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  return result;
+};
+
 test.describe('Create Vault should fail when invoked with', async () => {
   test('an invalid configuration', async () => {
-    expect(createVault(EMPTY_CONFIG, false, false, false)).rejects.toThrow(ZodError);
-    expect(createVault('I Am Config', false, false, false)).rejects.toThrow(ZodError);
-    expect(createVault(42, false, false, false)).rejects.toThrow(ZodError);
-    expect(createVault({ api: { url: 'not.a.valid.url' } }, false, false, false)).rejects.toThrow(ZodError);
+    expect(createVaultWithPause(EMPTY_CONFIG, false, false, false)).rejects.toThrow(ZodError);
+    expect(createVaultWithPause('I Am Config', false, false, false)).rejects.toThrow(ZodError);
+    expect(createVaultWithPause(42, false, false, false)).rejects.toThrow(ZodError);
+    expect(createVaultWithPause({ api: { url: 'not.a.valid.url' } }, false, false, false)).rejects.toThrow(ZodError);
   });
 
   test('an invalid Fixed Yield With Upside Vault specification', async () => {
-    expect(createVault(config, false, true, false, '')).rejects.toThrow(ZodError);
-    expect(createVault(config, false, true, false, ' \t \n ')).rejects.toThrow(ZodError);
-    expect(createVault(config, false, true, false, 'self ')).rejects.toThrow(ZodError);
-    expect(createVault(config, false, true, false, 'SELF')).rejects.toThrow(ZodError);
+    expect(createVaultWithPause(config, false, true, false, '')).rejects.toThrow(ZodError);
+    expect(createVaultWithPause(config, false, true, false, ' \t \n ')).rejects.toThrow(ZodError);
+    expect(createVaultWithPause(config, false, true, false, 'self ')).rejects.toThrow(ZodError);
+    expect(createVaultWithPause(config, false, true, false, 'SELF')).rejects.toThrow(ZodError);
     for (const chr of 'ghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ') {
       const notHex = chr.repeat(40);
-      expect(createVault(config, false, true, false, notHex)).rejects.toThrow(ZodError);
-      expect(createVault(config, false, true, false, '0x' + notHex)).rejects.toThrow(ZodError);
+      expect(createVaultWithPause(config, false, true, false, notHex)).rejects.toThrow(ZodError);
+      expect(createVaultWithPause(config, false, true, false, '0x' + notHex)).rejects.toThrow(ZodError);
     }
     for (const chr of '1234567890abcdefABCDEF') {
       const tooSmall = chr.repeat(39);
       const tooBig = chr.repeat(41);
-      expect(createVault(config, false, true, false, tooSmall)).rejects.toThrow(ZodError);
-      expect(createVault(config, false, true, false, '0x' + tooSmall)).rejects.toThrow(ZodError);
-      expect(createVault(config, false, true, false, tooBig)).rejects.toThrow(ZodError);
-      expect(createVault(config, false, true, false, '0x' + tooBig)).rejects.toThrow(ZodError);
+      expect(createVaultWithPause(config, false, true, false, tooSmall)).rejects.toThrow(ZodError);
+      expect(createVaultWithPause(config, false, true, false, '0x' + tooSmall)).rejects.toThrow(ZodError);
+      expect(createVaultWithPause(config, false, true, false, tooBig)).rejects.toThrow(ZodError);
+      expect(createVaultWithPause(config, false, true, false, '0x' + tooBig)).rejects.toThrow(ZodError);
     }
   });
 });
@@ -107,7 +124,7 @@ test.describe('Create Vault', async () => {
 
   test.describe('should create', async () => {
     test('a non-matured, ready, Fixed Yield vault, open for deposits, not-yet open for redemption', async () => {
-      const created = await createVault(config, false, false, false);
+      const created = await createVaultWithPause(config, false, false, false);
       expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
       expect(isPast(created.deposits_opened_at)).toBe(true);
       expect(isFuture(created.deposits_closed_at)).toBe(true);
@@ -126,7 +143,7 @@ test.describe('Create Vault', async () => {
     });
 
     test('a non-matured, ready, Fixed Yield vault, closed for deposits/redemption, Maturity Check OFF', async () => {
-      const created = await createVault(config, true, false, false);
+      const created = await createVaultWithPause(config, true, false, false);
       expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
       expect(isPast(created.deposits_opened_at)).toBe(true);
       expect(isPast(created.deposits_closed_at)).toBe(true);
@@ -148,7 +165,7 @@ test.describe('Create Vault', async () => {
     test.fixme(
       'a non-matured, ready, Upside Fixed Yield vault, open for deposits, pending for redemption',
       async () => {
-        const created = await createVault(config, false, true, false, 'self');
+        const created = await createVaultWithPause(config, false, true, false, 'self');
         expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
         expect(isPast(created.deposits_opened_at)).toBe(true);
         expect(isFuture(created.deposits_closed_at)).toBe(true);
