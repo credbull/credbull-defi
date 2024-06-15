@@ -1,4 +1,4 @@
-name: ci-dev-ops
+name: ci-dev-ops-local
 
 defaults:
   run:

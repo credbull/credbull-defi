@@ -24,7 +24,19 @@ test.beforeAll(async () => {
   config = loadConfiguration();
 });
 
-const createVaultWithPause = limiter.wrap(createVault);
+const createVaultWithPause = limiter.wrap(
+  async (
+    config: any,
+    isMatured: boolean,
+    isUpside: boolean,
+    isTenant: boolean,
+    upsideVault?: string,
+    tenantEmail?: string,
+    override?: { treasuryAddress: string; activityRewardAddress: string; collateralPercentage: number },
+  ): Promise<any> => {
+    return createVault(config, isMatured, isUpside, isTenant, upsideVault, tenantEmail, override);
+  },
+);
 
 /*
   TODO - move param validations and tests to separate classes to simplfy createVault testing.
@@ -131,6 +143,7 @@ test.describe('Create Vault', async () => {
 
     test('a non-matured, ready, Fixed Yield vault, closed for deposits/redemption, Maturity Check OFF', async () => {
       const created = await createVaultWithPause(config, true, false, false);
+
       expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
       expect(isPast(created.deposits_opened_at)).toBe(true);
       expect(isPast(created.deposits_closed_at)).toBe(true);
