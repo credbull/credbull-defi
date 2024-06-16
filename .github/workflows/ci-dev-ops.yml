@@ -37,6 +37,11 @@ jobs:
           node-version: 20
           cache: "yarn"
 
+      - name: Install foundry-toolchain
+        uses: foundry-rs/foundry-toolchain@v1.2.0
+        with:
+          version: nightly
+
       - name: Install Project Dependencies
         run: yarn install
 
