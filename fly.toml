@@ -3,7 +3,6 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'credbull-defi-api'
 primary_region = 'fra'
 
 [build]
@@ -11,9 +10,6 @@ primary_region = 'fra'
 
 [deploy]
   strategy = "bluegreen"
-
-[env]
-  ENVIRONMENT = "testnet"
 
 [http_service]
   internal_port = 3001

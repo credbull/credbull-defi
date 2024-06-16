@@ -1,0 +1,24 @@
+##
+# The Application Configuration for the TestNet Environment.
+##
+
+node_env = "development"
+
+[api]
+#TODO - confirm port
+port = 3001
+version = "0.0.1"
+
+[services.sync_vaults]
+block_history = 1000
+
+[services.supabase]
+url = "https://iucsqvvjujqcncowypnr.supabase.co"
+
+[services.ethers]
+url = "http://127.0.0.1:8545"
+wss = "ws://127.0.0.1:8545"
+
+[evm.address]
+# Dev/Anvil Wallet, Account[1]
+operator = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
