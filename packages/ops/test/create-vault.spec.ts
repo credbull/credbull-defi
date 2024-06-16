@@ -121,7 +121,6 @@ test.describe('Create Vault', async () => {
   }
 
   test.describe('should create', async () => {
-    test.describe.configure({ mode: 'serial', timeout: 20000 }); // 20 seconds timeout for this suite
     test('a non-matured, ready, Fixed Yield vault, open for deposits, not-yet open for redemption', async () => {
       const created = await createVaultWithPause(config, false, false, false);
 
@@ -140,7 +139,7 @@ test.describe('Create Vault', async () => {
       expect(rest).toEqual([]);
 
       await verifyVaultContract(created.address);
-    });
+    }, 20000); // Increase the timeout to 20000ms (20 seconds)
 
     test('a non-matured, ready, Fixed Yield vault, closed for deposits/redemption, Maturity Check OFF', async () => {
       const created = await createVaultWithPause(config, true, false, false);
@@ -161,7 +160,7 @@ test.describe('Create Vault', async () => {
       expect(rest).toEqual([]);
 
       await verifyVaultContract(created.address);
-    });
+    }, 20000); // Increase the timeout to 20000ms (20 seconds)
 
     test.fixme(
       'a non-matured, ready, Upside Fixed Yield vault, open for deposits, pending for redemption',
