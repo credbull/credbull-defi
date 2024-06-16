@@ -14,10 +14,10 @@ export const upsideVaultSchema = z.union([addressSchema, z.string().regex(/^self
 
 // Configure axios to use axios-retry
 axiosRetry(axios, {
-  retries: 5, // Number of retries
+  retries: 3, // Number of retries
   retryDelay: (retryCount) => {
     console.log(`Retry attempt: ${retryCount}`);
-    return retryCount * 10000; // Time in ms between retries
+    return retryCount * 300; // Time in ms between retries
   },
   retryCondition: (error) => {
     // Retry on network errors or 5xx status codes
