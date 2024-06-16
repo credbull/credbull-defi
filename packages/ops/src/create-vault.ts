@@ -155,7 +155,6 @@ export const createVault = async (
   parseEmailOptional(tenantEmail);
   const supabaseAdmin = supabase(config, { admin: true });
   const addresses = await supabaseAdmin.from('contracts_addresses').select();
-  console.log(`addresses ${addresses}`);
   if (addresses.error) throw addresses.error;
 
   console.log('='.repeat(80));

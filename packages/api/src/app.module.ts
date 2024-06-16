@@ -22,12 +22,14 @@ import { ConfigurationModule } from './utils/module';
     VaultsModule,
     NotificationsModule,
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 10,
-      },
-    ]),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 30, // the number of seconds that each request will last in storage
+          limit: 10, //max requests within the TTL limit
+        },
+      ],
+    }),
   ],
   controllers: [AppController],
   providers: [
