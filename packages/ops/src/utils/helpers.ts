@@ -92,24 +92,24 @@ export const login = async (
   }
 
   const body = JSON.stringify({ email: _email, password: _password });
-  console.log(`sign in body ${body}`);
+
+  let signIn;
 
   try {
-    const signIn = await fetch(`${config.api.url}/auth/api/sign-in`, { method: 'POST', body, ...headers() });
-
-    if (!signIn.ok) {
-      console.error(`HTTP error! status: ${signIn.status}`);
-      throw new Error(`Failed to login: ${signIn.statusText}`);
-    }
-
-    const data = await signIn.json();
-    console.log(`sign in response: ${JSON.stringify(data)}`);
-
-    return data;
+    signIn = await fetch(`${config.api.url}/auth/api/sign-in`, { method: 'POST', body, ...headers() });
   } catch (error) {
     console.error('Network error or server is down:', error);
-    throw new Error('Failed to login: Network error or server is down');
+    throw error;
   }
+
+  if (!signIn.ok) {
+    console.error(`HTTP error! status: ${signIn.status}`);
+    throw new Error(`Failed to login: ${signIn.statusText}`);
+  }
+
+  const data = await signIn.json();
+  console.log(`sign in response: ${JSON.stringify(data)}`);
+  return data;
 };
 
 const linkWalletConfigSchema = z.object({ app: z.object({ url: z.string().url() }) });
