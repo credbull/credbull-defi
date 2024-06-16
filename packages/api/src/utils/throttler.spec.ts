@@ -39,7 +39,6 @@ describe('Throttling', () => {
       // 429 is too many requests
       if (response.status == 429) {
         foundone = true;
-        console.log(response.status);
       }
     }
 
