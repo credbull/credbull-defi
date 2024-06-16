@@ -21,19 +21,19 @@ owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 # devops operator (wallet 2) - public address, okay to share
 operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 
-# Dev/Anvil Wallet, Account[2]
-custodian = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
-# Dev/Anvil Wallet, Account[3]
-treasury = "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
-# Dev/Anvil Wallet, Account[4]
-activity_reward = "0xcabE80b332Aa9d900f5e32DF51cb0Bc5b276c556"
+# devops custodian (wallet 3) - public address, okay to share
+custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
+# devops operator (wallet 4) - public address, okay to share
+treasury = "0x77f07B5d5E03e39Dc42FBCa53F122D4c1851B939"
+# devops operator (wallet 5) - public address, okay to share
+activity_reward = "0x0822a51f5f8DB0480A0eA294099D56EA1aCcdC5c"
 
 [users]
-# Associated with Dev/Anvil Wallet, Account[0]
+# Associated with devops admin/owner (wallet 1)
 admin.email_address = "test+admin@credbull.io"
-# Associated with Dev/Anvil Wallet, Account[7]
+# Associated with devops alice (wallet 6)
 alice.email_address = "test+alice@credbull.io"
-# Associated with Dev/Anvil Wallet, Account[8]
+# Associated with devops bob (wallet 7)
 bob.email_address = "test+bob@credbull.io"
 
 [operation.createVault]
