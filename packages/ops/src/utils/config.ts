@@ -42,7 +42,7 @@ export const loadConfiguration = (): Config => {
   const toml = fs.readFileSync(configFile, 'utf8');
   const config: Config = load(toml);
 
-  console.log(`Successfully loaded configuration from: '${configFile}'`);
+  console.log('Successfully loaded configuration:', JSON.stringify(config, null, 2));
 
   // include Environment into config
   // NB - call this after the log statement to avoid logging keys!

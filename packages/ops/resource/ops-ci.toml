@@ -1,7 +1,7 @@
 node_env = "development"
 
 [api]
-url = "https://credbull-defi-api.fly.dev/"
+url = "https://credbull-defi-api-ci.fly.dev"
 
 [app]
 url = "http://127.0.0.1:3000"
@@ -10,13 +10,17 @@ url = "http://127.0.0.1:3000"
 url = "https://iucsqvvjujqcncowypnr.supabase.co"
 
 [services.ethers]
-url = "http://127.0.0.1:8545"
+# settings for baseSepolia, see others: https://chainlist.org/
+url = "https://sepolia.base.org"
+wss = "https://sepolia.base.org"
 
 [evm.address]
-# Dev/Anvil Wallet, Account[0]
-owner = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-# Dev/Anvil Wallet, Account[1]
-operator = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+# credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)
+# devops admin/owner (wallet 1) - public address, okay to share
+owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
+# devops operator (wallet 2) - public address, okay to share
+operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
+
 # Dev/Anvil Wallet, Account[2]
 custodian = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
 # Dev/Anvil Wallet, Account[3]

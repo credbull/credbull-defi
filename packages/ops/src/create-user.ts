@@ -44,7 +44,15 @@ export const createUser = async (
     password: password,
     options: { emailRedirectTo: `${config.app.url}/forgot-password` },
   });
-  if (error) throw error;
+
+  if (error) {
+    if (error.message === 'User already registered') {
+      console.log('User already registered. Proceeding without error.');
+    } else {
+      // Throw other errors
+      throw error;
+    }
+  }
 
   console.log('='.repeat(80));
   console.log(' Corporate Account created: ');

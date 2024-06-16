@@ -76,7 +76,7 @@ jobs:
         run: flyctl deploy ../.. --app credbull-defi-api --env ENVIRONMENT=testnet --local-only -t ${{ secrets.FLY_DEPLOY_TOKEN }}
 
       - name: Deploy fly.io credbull-defi-ci app
-        run: flyctl deploy ../.. --app credbull-defi-api-ci --env ENVIRONMENT=local --local-only -t ${{ secrets.CI_FLY_DEPLOY_TOKEN }}
+        run: flyctl deploy ../.. --app credbull-defi-api-ci --env ENVIRONMENT=ci --local-only -t ${{ secrets.CI_FLY_DEPLOY_TOKEN }}
 
       - name: Create Sentry release
         uses: getsentry/action-release@v1
