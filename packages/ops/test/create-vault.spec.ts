@@ -121,7 +121,7 @@ test.describe('Create Vault', async () => {
   }
 
   test.describe('should create', async () => {
-    test.describe.configure({ mode: 'serial', timeout: 120000 }); // 120 seconds timeout for this suite
+    test.describe.configure({ mode: 'serial', timeout: 20000 }); // 20 seconds timeout for this suite
     test('a non-matured, ready, Fixed Yield vault, open for deposits, not-yet open for redemption', async () => {
       const created = await createVaultWithPause(config, false, false, false);
 
