@@ -1,7 +1,5 @@
 import { Database } from '@credbull/api';
 import { SupabaseClient, createClient } from '@supabase/supabase-js';
-import axios from 'axios';
-import axiosRetry from 'axios-retry';
 import crypto from 'crypto';
 import { Wallet, providers } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
@@ -11,19 +9,6 @@ export const emailSchema = z.string().email();
 export const emailSchemaOptional = z.string().email().nullish().or(z.literal(''));
 export const addressSchema = z.string().regex(/^(0x)?[0-9a-fA-F]{40,40}$/);
 export const upsideVaultSchema = z.union([addressSchema, z.string().regex(/^self$/)]).optional();
-
-// Configure axios to use axios-retry
-axiosRetry(axios, {
-  retries: 3, // Number of retries
-  retryDelay: (retryCount) => {
-    console.log(`Retry attempt: ${retryCount}`);
-    return retryCount * 300; // Time in ms between retries
-  },
-  retryCondition: (error) => {
-    // Retry on network errors or 5xx status codes
-    return axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response.status >= 500;
-  },
-});
 
 const supabaseConfigSchema = z.object({
   services: z.object({ supabase: z.object({ url: z.string().url() }) }),
@@ -106,26 +91,24 @@ export const login = async (
     _password = config.secret!.BOB_PASSWORD!;
   }
 
-  const body = { email: _email, password: _password };
-  console.log(JSON.stringify(body));
+  const body = JSON.stringify({ email: _email, password: _password });
 
   let signIn;
 
   try {
-    signIn = await axios.post(`${config.api.url}/auth/api/sign-in`, body, headers());
+    signIn = await fetch(`${config.api.url}/auth/api/sign-in`, { method: 'POST', body, ...headers() });
   } catch (error) {
     console.error('Network error or server is down:', error);
     throw error;
   }
 
-  if (signIn.status < 200 || signIn.status >= 300) {
+  if (!signIn.ok) {
     console.error(`HTTP error! status: ${signIn.status}`);
     throw new Error(`Failed to login: ${signIn.statusText}`);
   }
 
-  const data = await signIn.data;
+  const data = await signIn.json();
   console.log(`sign in response: ${JSON.stringify(data)}`);
-
   return data;
 };
 
@@ -134,7 +117,7 @@ const linkWalletConfigSchema = z.object({ app: z.object({ url: z.string().url() 
 export const linkWalletMessage = async (config: any, signer: Wallet) => {
   linkWalletConfigSchema.parse(config);
 
-  const appUrl = new URL(config.app.url);
+  let appUrl = new URL(config.app.url);
   const chainId = await signer.getChainId();
   const preMessage = new SiweMessage({
     domain: appUrl.host,
