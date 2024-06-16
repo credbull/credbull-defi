@@ -106,18 +106,19 @@ export const login = async (
     _password = config.secret!.BOB_PASSWORD!;
   }
 
-  const body = JSON.stringify({ email: _email, password: _password });
+  const body = { email: _email, password: _password };
+  console.log(JSON.stringify(body));
 
   let signIn;
 
   try {
-    signIn = await axios.post(`${config.api.url}/auth/api/sign-in`, { body, ...headers() });
+    signIn = await axios.post(`${config.api.url}/auth/api/sign-in`, body, headers());
   } catch (error) {
     console.error('Network error or server is down:', error);
     throw error;
   }
 
-  if (signIn.status != 200) {
+  if (signIn.status < 200 || signIn.status >= 300) {
     console.error(`HTTP error! status: ${signIn.status}`);
     throw new Error(`Failed to login: ${signIn.statusText}`);
   }
