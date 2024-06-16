@@ -5,7 +5,6 @@
 node_env = "testnet"
 
 [api]
-#TODO - confirm port
 port = 3001
 version = "0.0.1"
 

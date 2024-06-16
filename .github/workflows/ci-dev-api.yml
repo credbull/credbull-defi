@@ -26,9 +26,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install yarn
-        run: npm install -g yarn
+        run: |
+          corepack prepare yarn@stable --activate
+          npm install -g yarn
 
-      - uses: actions/setup-node@v4
+      - name: Install Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "yarn"

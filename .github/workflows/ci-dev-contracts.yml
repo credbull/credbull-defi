@@ -61,7 +61,13 @@ jobs:
         env:
           ENVIRONMENT: local
 
-      - uses: actions/setup-node@v4
+      - name: Install yarn
+        run: |
+          corepack prepare yarn@stable --activate
+          npm install -g yarn
+
+      - name: Install Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "yarn"
@@ -69,10 +75,18 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-      - name: Deploy contracts
+      - name: Deploy contracts and export to Test supabase
         run: yarn deploy:ci
         env:
-          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+          ENVIRONMENT: "testnet"
           DEPLOYER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
           BASE_SEPOLIA_ETHERSCAN_API_KEY: ${{ secrets.BASE_SEPOLIA_ETHERSCAN_API_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Deploy contracts and export to CI supabase
+        run: yarn deploy:ci
+        env:
+          ENVIRONMENT: "ci"
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
+          BASE_SEPOLIA_ETHERSCAN_API_KEY: ${{ secrets.BASE_SEPOLIA_ETHERSCAN_API_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.CI_SUPABASE_SERVICE_ROLE_KEY }}

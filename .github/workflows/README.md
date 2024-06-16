@@ -18,6 +18,12 @@ Run all jobs in ci-check-env.yml.  Pass in an .env file as Environment variables
 act -W .github/workflows/ci-check-env.yml --var-file packages/contracts/.env --secret-file packages/contracts/.secret --container-architecture linux/amd64
 ```
 
+### Run Contracts jobs
+Runs the api job - only the Env should be an .env (configs are in .toml) - local secrets are in .env
+```bash
+act -W .github/workflows/ci-dev-contracts.yml --var ENVIRONMENT=local --secret-file packages/contracts/.env --container-architecture linux/amd64
+```
+
 ### Run API jobs
 Runs the api job - only the Env should be an .env (configs are in .toml) - local secrets are in .env
 ```bash

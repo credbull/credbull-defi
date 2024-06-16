@@ -1,11 +1,10 @@
 ##
-# The Application Configuration for the TestNet Environment.
+# The Application Configuration for the CI Environment.
 ##
 
-node_env = "development"
+node_env = "ci"
 
 [api]
-#TODO - confirm port
 port = 3001
 version = "0.0.1"
 
@@ -16,9 +15,10 @@ block_history = 1000
 url = "https://iucsqvvjujqcncowypnr.supabase.co"
 
 [services.ethers]
-url = "http://127.0.0.1:8545"
-wss = "ws://127.0.0.1:8545"
+# settings for baseSepolia, see others: https://chainlist.org/
+url = "https://sepolia.base.org"
+wss = "https://sepolia.base.org"
 
 [evm.address]
-# Dev/Anvil Wallet, Account[1]
-operator = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+# devops operator (wallet 2) - public address, okay to share
+operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
