@@ -5,7 +5,7 @@ pragma solidity ^0.8.19;
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import { Script } from "forge-std/Script.sol";
-import "../src/interface/ICredbull.sol";
+import { ICredbull } from "../src/interface/ICredbull.sol";
 
 contract InCredbullVaultParams is Script {
     uint256 public constant ONE_YEAR = 365 days;

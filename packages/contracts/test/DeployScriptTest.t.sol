@@ -10,8 +10,6 @@ import { CredbullFixedYieldVault } from "../src/CredbullFixedYieldVault.sol";
 
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
-import { console2 } from "forge-std/console2.sol";
-
 contract DeployScriptTest is Test {
     DeployVaultFactory private deployScript;
     CredbullFixedYieldVault private usdc10APYVault;
