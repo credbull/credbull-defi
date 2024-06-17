@@ -3,6 +3,11 @@
 # Credbull DeFI (credbull-defi)
 
 ---
+![contracts](https://github.com/credbull/credbull-defi/actions/workflows/ci-dev-contracts.yml/badge.svg)
+![api](https://github.com/credbull/credbull-defi/actions/workflows/ci-dev-api.yml/badge.svg)
+![app](https://github.com/credbull/credbull-defi/actions/workflows/ci-dev-app.yml/badge.svg)
+![ops](https://github.com/credbull/credbull-defi/actions/workflows/ci-dev-ops.yml/badge.svg)
+---
 ## Project Structure
 
 * [`packages/`](./packages) Individual sub-projects
