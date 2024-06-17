@@ -4,12 +4,13 @@ import { Schema } from './schema';
 
 export async function createFixedYieldVault(
   config: any,
-  treasuryAddress: string,
-  activityRewardAddress: string,
-  collateralPercentage: number,
+  treasuryAddress?: string,
+  activityRewardAddress?: string,
+  collateralPercentage?: number,
 ): Promise<any> {
-  Schema.ADDRESS.parse(treasuryAddress);
-  Schema.ADDRESS.parse(activityRewardAddress);
+  Schema.ADDRESS.optional().parse(treasuryAddress);
+  Schema.ADDRESS.optional().parse(activityRewardAddress);
+  Schema.PERCENTAGE.optional().parse(collateralPercentage);
 
   return createVault(config, true, false, false, undefined, undefined, {
     treasuryAddress,

@@ -148,7 +148,7 @@ export const createVault = async (
   isTenant: boolean,
   upsideVault?: string,
   tenantEmail?: string,
-  override?: { treasuryAddress: string; activityRewardAddress: string; collateralPercentage: number },
+  override?: { treasuryAddress?: string; activityRewardAddress?: string; collateralPercentage?: number },
 ): Promise<any> => {
   configSchema.parse(config);
   parseUsideVault(upsideVault);
