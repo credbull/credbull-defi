@@ -56,6 +56,10 @@ jobs:
           BOB_PRIVATE_KEY: ${{ secrets.DEVOPS_SEPOLIA_BOB_PRIVATE_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_ANONYMOUS_KEY: ${{ vars.SUPABASE_ANONYMOUS_KEY }}
+          ADMIN_PASSWORD: NeverGuessThis
+          ALICE_PASSWORD: alice-1234
+          BOB_PASSWORD: bobword
+
 
       - name: Clean vault data
         run: yarn op --clean-vault-table
