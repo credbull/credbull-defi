@@ -15,28 +15,10 @@ const VALID_ADDRESS = generateAddress();
 
 let config: any | undefined = undefined;
 
-const limiter = new Bottleneck({
-  minTime: 1000, // Minimum time between requests in ms
-});
-
 test.beforeAll(async () => {
   // NOTE (JL,2024-06-06): This loads the same configuration as the operations themselves.
   config = loadConfiguration();
 });
-
-const createVaultWithPause = limiter.wrap(
-  async (
-    config: any,
-    isMatured: boolean,
-    isUpside: boolean,
-    isTenant: boolean,
-    upsideVault?: string,
-    tenantEmail?: string,
-    override?: { treasuryAddress: string; activityRewardAddress: string; collateralPercentage: number },
-  ): Promise<any> => {
-    return createVault(config, isMatured, isUpside, isTenant, upsideVault, tenantEmail, override);
-  },
-);
 
 /*
   TODO - move param validations and tests to separate classes to simplfy createVault testing.
@@ -122,7 +104,7 @@ test.describe('Create Vault', async () => {
 
   test.describe('should create', async () => {
     test('a non-matured, ready, Fixed Yield vault, open for deposits, not-yet open for redemption', async () => {
-      const created = await createVaultWithPause(config, false, false, false);
+      const created = await createVault(config, false, false, false);
 
       expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
       expect(isPast(created.deposits_opened_at)).toBe(true);
@@ -142,7 +124,7 @@ test.describe('Create Vault', async () => {
     });
 
     test('a non-matured, ready, Fixed Yield vault, closed for deposits/redemption, Maturity Check OFF', async () => {
-      const created = await createVaultWithPause(config, true, false, false);
+      const created = await createVault(config, true, false, false);
 
       expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
       expect(isPast(created.deposits_opened_at)).toBe(true);
@@ -165,7 +147,7 @@ test.describe('Create Vault', async () => {
     test.fixme(
       'a non-matured, ready, Upside Fixed Yield vault, open for deposits, pending for redemption',
       async () => {
-        const created = await createVaultWithPause(config, false, true, false, 'self');
+        const created = await createVault(config, false, true, false, 'self');
         expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
         expect(isPast(created.deposits_opened_at)).toBe(true);
         expect(isFuture(created.deposits_closed_at)).toBe(true);
@@ -184,41 +166,5 @@ test.describe('Create Vault', async () => {
         await verifyVaultContract(created.address);
       },
     );
-  });
-
-  // TODO: lucasia - do we really need to test the main function that is a pass through to createVault?
-  test.describe.skip('Main should create', async () => {
-    test.skip('a non-matured, ready, Fixed Yield vault, open for deposits, not-yet open for redemption', async () => {
-      const countBefore = await numberOfVaults();
-      expect(() => main({ matured: false, upside: false, tenant: false })).toPass();
-
-      await expect
-        .poll(
-          async () => {
-            return numberOfVaults();
-          },
-          { timeout: 30_000 },
-        )
-        .toBe(countBefore + 1);
-      // NOTE (JL,2024-06-07): Assume that the latest created vault pertains to this test and has the highest ID.
-      const { data: loaded } = await supabaseAdmin
-        .from('vaults')
-        .select(
-          'id, type, status, address, deposits_opened_at, deposits_closed_at, redemptions_opened_at, redemptions_closed_at',
-        )
-        .order('id', { ascending: false })
-        .limit(1)
-        .single();
-      expect(loaded).toMatchObject({ type: 'fixed_yield', status: 'ready' });
-
-      expect(isPast(loaded.deposits_opened_at)).toBe(true);
-      expect(isFuture(loaded.deposits_closed_at)).toBe(true);
-      expect(isAfter(loaded.deposits_closed_at, loaded.deposits_opened_at)).toBe(true);
-      expect(isFuture(loaded.redemptions_opened_at)).toBe(true);
-      expect(isAfter(loaded.redemptions_opened_at, loaded.deposits_closed_at)).toBe(true);
-      expect(isAfter(loaded.redemptions_closed_at, loaded.redemptions_opened_at)).toBe(true);
-
-      await verifyVaultContract(loaded.address);
-    });
   });
 });
