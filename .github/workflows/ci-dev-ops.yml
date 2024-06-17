@@ -45,7 +45,7 @@ jobs:
       - name: Install Project Dependencies
         run: yarn install
 
-      - name: Run Ops tests and clear vault data
+      - name: Run Ops tests
         run: yarn int-test
         working-directory: packages/ops
         env:
