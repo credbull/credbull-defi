@@ -20,7 +20,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: testnet
+    environment: ci
 
     steps:
       - name: Checkout
@@ -45,44 +45,17 @@ jobs:
       - name: Install Project Dependencies
         run: yarn install
 
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
-      - name: Setup Local Environment
-        run: find . -type f -name ".env*.sample" -exec sh -c 'F={}; cp -nv $F $(dirname $F)/$(basename $F .sample)' \;
-        working-directory: .
-
-      # Docker compose detached (-d) so other jobs can continue
-      # Env variables are sourced and then exported (set -a)
-      - name: Run Docker compose detached
-        run: |
-          set -a
-          source packages/api/.env
-          set +a
-          docker-compose up -d --build
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1.3.0
-        with:
-          version: latest
-
-      - name: Start Supabase
-        run: supabase start
-        working-directory: packages/api
-
-      - name: Logs
-        run: docker logs api --tail all
-
       - name: Run Ops tests
-        run: |
-          set -a
-          source ../api/.env
-          source .env
-          set +a
-          yarn int-test
+        run: yarn int-test
         working-directory: packages/ops
+        env:
+          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEVOPS_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
+          ADMIN_PRIVATE_KEY: ${{ secrets.DEVOPS_SEPOLIA_ADMIN_PRIVATE_KEY }}
+          ALICE_PRIVATE_KEY: ${{ secrets.DEVOPS_SEPOLIA_ALICE_PRIVATE_KEY }}
+          BOB_PRIVATE_KEY: ${{ secrets.DEVOPS_SEPOLIA_BOB_PRIVATE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANONYMOUS_KEY: ${{ vars.SUPABASE_ANONYMOUS_KEY }}
 
       - name: Clean vault data
         run: yarn op --clean-vault-table
