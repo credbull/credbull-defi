@@ -14,12 +14,11 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
 contract DeployScriptTest is Test {
     DeployVaultFactory private deployScript;
 
-    CredbullVaultFactory factory;
-    CredbullVaultFactory upsideFactory;
+    CredbullVaultFactory private factory;
+    CredbullVaultFactory private upsideFactory;
 
     CredbullFixedYieldVault private usdc10APYVault;
 
-    HelperConfig private helperConfig;
     NetworkConfig private networkConfig;
 
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
@@ -27,10 +26,8 @@ contract DeployScriptTest is Test {
 
     function setUp() public {
         deployScript = new DeployVaultFactory();
-
+        HelperConfig helperConfig;
         (factory, upsideFactory,, helperConfig) = deployScript.runTest();
-        (helperConfig, usdc10APYVault) = deployScript.deployVault();
-
         networkConfig = helperConfig.getNetworkConfig();
     }
 
@@ -42,7 +39,9 @@ contract DeployScriptTest is Test {
         assertVaultFactoryRoles(upsideFactory);
     }
 
-    function test__DeployScriptTest_DeployVault() public view {
+    function test__DeployScriptTest_DeployVault() public {
+        (, usdc10APYVault) = deployScript.deployVault();
+
         assertNotEq(address(0), address(usdc10APYVault), "zeroAddress - check CredbullVault deploy");
 
         assertVaultRoles(usdc10APYVault);
