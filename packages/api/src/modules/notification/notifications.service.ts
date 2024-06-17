@@ -1,5 +1,5 @@
 import { CredbullVaultFactory__factory } from '@credbull/contracts';
-import { Injectable, OnModuleInit, Scope } from '@nestjs/common';
+import { ConsoleLogger, Injectable, OnModuleInit, Scope } from '@nestjs/common';
 import { WebClient } from '@slack/web-api';
 import { ethers } from 'ethers';
 
@@ -10,14 +10,22 @@ import { TomlConfigService } from '../../utils/tomlConfig';
 export class NotificationsService implements OnModuleInit {
   private operator: string;
 
-  private slack: WebClient;
+  private slack: WebClient | undefined = undefined;
 
   constructor(
     private readonly ethers: EthersService,
     private readonly tomlConfigService: TomlConfigService,
+    private readonly logger: ConsoleLogger,
   ) {
+    this.logger.setContext(this.constructor.name);
     this.operator = tomlConfigService.config.evm.address.operator;
-    this.slack = new WebClient(tomlConfigService.config.secret.SLACK_TOKEN?.value);
+    const token = tomlConfigService.config.secret.SLACK_TOKEN?.value;
+    if (token) {
+      this.slack = new WebClient(token);
+      this.logger.log('Slack Client created.');
+    } else {
+      this.logger.log('Console Logging Client created.');
+    }
   }
 
   onModuleInit() {
@@ -25,7 +33,7 @@ export class NotificationsService implements OnModuleInit {
   }
 
   async startListeningForBlockEvents() {
-    console.log('Listening for block events....');
+    this.logger.log('Listening for block events....');
     const provider = await this.ethers.wssProvider();
 
     const vaultInterface = new ethers.utils.Interface(CredbullVaultFactory__factory.abi);
@@ -56,10 +64,14 @@ export class NotificationsService implements OnModuleInit {
 
           msg += `<https://polygonscan.com/tx/${tx.transactionHash}|View transaction on explorer> \n\n`;
 
-          await this.slack.chat.postMessage({
-            channel: 'C06QJ4G7WPP',
-            text: msg,
-          });
+          if (this.slack) {
+            await this.slack.chat.postMessage({
+              channel: 'C06QJ4G7WPP',
+              text: msg,
+            });
+          } else {
+            this.logger.log(msg);
+          }
         }
       }
     });
