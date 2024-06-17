@@ -39,18 +39,18 @@ export class EthersService {
 
   public async wssProvider(): Promise<providers.WebSocketProvider> {
     const wssUrl = this.tomlConfigService.config.services.ethers.wss;
-    console.log(wssUrl);
+    this.logger.log('Configured WebSocket URL: ' + wssUrl);
     const provider = new providers.WebSocketProvider(wssUrl);
     provider._websocket.on('open', () => {
-      console.log('WebSocketProvider open');
+      this.logger.log('WebSocketProvider OPEN, on: ' + wssUrl);
     });
 
     provider._websocket.on('close', () => {
-      console.log('WebSocketProvider close');
+      this.logger.log('WebSocketProvider CLOSE, on: ' + wssUrl);
     });
 
     provider._websocket.on('error', () => {
-      console.log('WebSocketProvider error');
+      this.logger.log('WebSocketProvider ERROR, on: ' + wssUrl);
     });
 
     return provider;
