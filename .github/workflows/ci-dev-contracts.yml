@@ -32,13 +32,9 @@ jobs:
 
       - name: Run tests
         run: forge test -vvv
-        env:
-          ENVIRONMENT: local
 
       - name: Run coverage report
         run: forge coverage
-        env:
-          ENVIRONMENT: local
 
   contracts-deploy-testnet:
     runs-on: ubuntu-latest
@@ -57,7 +53,7 @@ jobs:
 
       # re-run the tests here on purpose to ensure quality.
       - name: Run tests
-        run: forge test -vv
+        run: forge test -vvv
         env:
           ENVIRONMENT: local
 
