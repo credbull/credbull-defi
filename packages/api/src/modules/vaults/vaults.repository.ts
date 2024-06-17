@@ -74,7 +74,7 @@ export async function getUnpausedVaults(vaults: ServiceResponse<Tables<'vaults'>
         const vaultContract = CredbullFixedYieldVault__factory.connect(vault.address, operator);
         const paused = await responseFromRead(vaultContract, vaultContract.paused());
         if (paused.error) throw paused.error;
-        return paused.data ? vault : null;
+        return paused.data === false ? vault : null;
       }),
     ),
   );
