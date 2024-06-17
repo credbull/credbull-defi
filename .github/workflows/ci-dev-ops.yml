@@ -46,9 +46,7 @@ jobs:
         run: yarn install
 
       - name: Run Ops tests and clear vault data
-        run: | 
-          yarn int-test
-          yarn op --clean-vault-table
+        run: yarn int-test
         working-directory: packages/ops
         env:
           ENVIRONMENT: ${{ vars.ENVIRONMENT }}
