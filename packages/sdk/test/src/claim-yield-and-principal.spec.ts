@@ -48,18 +48,18 @@ test.describe('Claim yield and principal - Fixed', async () => {
     let activityRewardPrivateKey: string[];
 
     await test.step('Create fixed yield vault', async () => {
-      const { privateKey: treasuryPkey, address: treasury } = generateAddress('treasury');
-      const { privateKey: activityRewardPkey, address: activityReward } = generateAddress('activity_reward');
+      const { privateKey: treasuryPk, address: treasury } = generateAddress('treasury');
+      const { privateKey: activityRewardPk, address: activityReward } = generateAddress('activity_reward');
       await createFixedYieldVault(config, treasury, activityReward, 200);
 
-      const { privateKey: treasuryPkey2, address: treasury2 } = generateAddress('treasury2');
-      const { privateKey: activityRewardPkey2, address: activityReward2 } = generateAddress('activity_reward2');
+      const { privateKey: treasuryPk2, address: treasury2 } = generateAddress('treasury');
+      const { privateKey: activityRewardPk2, address: activityReward2 } = generateAddress('activity_reward2');
       await createFixedYieldVault(config, treasury2, activityReward2, 200);
 
       treasuryAddresses = [treasury, treasury2];
       activityRewardAddresses = [activityReward, activityReward2];
-      treasuryPrivateKey = [treasuryPkey, treasuryPkey2];
-      activityRewardPrivateKey = [activityRewardPkey, activityRewardPkey2];
+      treasuryPrivateKey = [treasuryPk, treasuryPk2];
+      activityRewardPrivateKey = [activityRewardPk, activityRewardPk2];
     });
 
     await test.step('Whitelist users', async () => {
