@@ -6,8 +6,6 @@
   "scripts": {
     "clean": "tsc --build --clean tsconfig && rm -rf build dist",
     "build": "tsc --build tsconfig",
-    "mock": "ts-node mock/mock.ts",
-    "deposit": "ts-node mock/deposit.ts",
     "format": "prettier . --write",
     "int-test": "playwright test",
     "report": "playwright show-report"

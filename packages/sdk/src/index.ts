@@ -105,9 +105,7 @@ export class CredbullSDK {
   /// Return all active vaults
   async getAllVaults(): Promise<any> {
     return this.headers().then((headers) =>
-      fetch(this.toServiceUrl('/vaults/current'), { method: 'GET', ...headers }).then(async (response) =>
-        response.json(),
-      ),
+      fetch(this.toServiceUrl('/vaults/current'), { method: 'GET', ...headers }).then((response) => response.json()),
     );
   }
 

@@ -4,6 +4,7 @@ import { z } from 'zod';
 export abstract class Schema {
   static EMAIL = z.string().email();
   static NON_EMPTY_STRING = z.string().trim().min(1);
+  static PERCENTAGE = z.number().int().positive().gt(0);
   static ADDRESS = z.string().regex(/^(0x)?[0-9a-fA-F]{40,40}$/);
 
   static CONFIG_API_URL = z.object({
