@@ -21,9 +21,14 @@ test.beforeAll(async () => {
 });
 
 /*
-  TODO - move param validations and tests to separate classes to simplfy createVault testing.
-  // e.g. helpers.parseUsideVault() (and associated tests)
+  TODO - move param validations and tests to separate classes to simplify createVault testing.
+  // e.g. helpers.parseUpsideVault() (and associated tests)
  */
+// NOTE (JL,2024-06-18): Given that this test suite is Black Box testing, it is proving the API Contract (no pun) of the
+//  function. Thus having tests for the validation helper functions (we have some) does not actually test the API
+//  Contract of the function under test (just a correlation of it!). So, I don't actually agree with the TODO above!
+//  Will discuss with Ian.
+
 test.describe('Create Vault should fail when invoked with', async () => {
   test('an invalid configuration', async () => {
     expect(createVault(EMPTY_CONFIG, false, false, false)).rejects.toThrow(ZodError);
@@ -86,15 +91,6 @@ test.describe('Create Vault', async () => {
     if (createdAdminUser) await deleteUserIfPresent(supabaseAdmin, config.users.admin.email_address);
   });
 
-  async function numberOfVaults(): Promise<number> {
-    return supabaseAdmin
-      .from('vaults')
-      .select('*', { count: 'exact', head: true })
-      .then((data: any) => {
-        return data.count;
-      });
-  }
-
   async function verifyVaultContract(address: string, isMatured = false): Promise<void> {
     const vaultContract = CredbullFixedYieldVault__factory.connect(address, adminSigner);
     expect(vaultContract.name()).resolves.toBe('Credbull Liquidity');
@@ -144,27 +140,62 @@ test.describe('Create Vault', async () => {
       await verifyVaultContract(created.address);
     });
 
-    test.fixme(
-      'a non-matured, ready, Upside Fixed Yield vault, open for deposits, pending for redemption',
-      async () => {
-        const created = await createVault(config, false, true, false, 'self');
-        expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
-        expect(isPast(created.deposits_opened_at)).toBe(true);
-        expect(isFuture(created.deposits_closed_at)).toBe(true);
-        expect(isAfter(created.deposits_closed_at, created.deposits_opened_at)).toBe(true);
-        expect(isFuture(created.redemptions_opened_at)).toBe(true);
-        expect(isAfter(created.redemptions_opened_at, created.deposits_closed_at)).toBe(true);
-        expect(isAfter(created.redemptions_closed_at, created.redemptions_opened_at)).toBe(true);
+    test('a non-matured, ready, Upside Fixed Yield vault, linked to itself, open for deposits, pending for redemption', async () => {
+      const created = await createVault(config, false, true, false, 'self');
+      expect(created).toMatchObject({ type: 'fixed_yield_upside', status: 'ready' });
+      expect(isPast(created.deposits_opened_at)).toBe(true);
+      expect(isFuture(created.deposits_closed_at)).toBe(true);
+      expect(isAfter(created.deposits_closed_at, created.deposits_opened_at)).toBe(true);
+      expect(isFuture(created.redemptions_opened_at)).toBe(true);
+      expect(isAfter(created.redemptions_opened_at, created.deposits_closed_at)).toBe(true);
+      expect(isAfter(created.redemptions_closed_at, created.redemptions_opened_at)).toBe(true);
 
-        const {
-          data: [loaded, ...rest],
-        } = await supabaseAdmin.from('vaults').select('id, type, status, address').eq('id', created.id);
-        const expected = { id: created.id, type: 'fixed_yield', status: 'ready', address: created.address };
-        expect(loaded).toMatchObject(expected);
-        expect(rest).toEqual([]);
+      // Vault
+      const {
+        data: [vaults, ...restVaults],
+      } = await supabaseAdmin.from('vaults').select('id, type, status, address').eq('id', created.id);
+      let expected = { id: created.id, type: 'fixed_yield_upside', status: 'ready', address: created.address };
+      expect(vaults).toMatchObject(expected);
+      expect(restVaults).toEqual([]);
 
-        await verifyVaultContract(created.address);
-      },
-    );
+      // Vault Entity
+      const {
+        data: [vaultEntity, ...restVaultEntity],
+      } = await supabaseAdmin.from('vault_entities').select('address').eq('vault_id', created.id).eq('type', 'vault');
+      expect(vaultEntity).toMatchObject({ address: created.address });
+      expect(restVaultEntity).toEqual([]);
+
+      await verifyVaultContract(created.address);
+    });
+
+    test('a non-matured, ready, Upside Fixed Yield vault, linked to another, open for deposits, pending for redemption', async () => {
+      const linkTo = await createVault(config, false, false, false);
+
+      const created = await createVault(config, false, true, false, linkTo.address);
+      expect(created).toMatchObject({ type: 'fixed_yield_upside', status: 'ready' });
+      expect(isPast(created.deposits_opened_at)).toBe(true);
+      expect(isFuture(created.deposits_closed_at)).toBe(true);
+      expect(isAfter(created.deposits_closed_at, created.deposits_opened_at)).toBe(true);
+      expect(isFuture(created.redemptions_opened_at)).toBe(true);
+      expect(isAfter(created.redemptions_opened_at, created.deposits_closed_at)).toBe(true);
+      expect(isAfter(created.redemptions_closed_at, created.redemptions_opened_at)).toBe(true);
+
+      // Vault
+      const {
+        data: [vaults, ...restVaults],
+      } = await supabaseAdmin.from('vaults').select('id, type, status, address').eq('id', created.id);
+      let expected = { id: created.id, type: 'fixed_yield_upside', status: 'ready', address: created.address };
+      expect(vaults).toMatchObject(expected);
+      expect(restVaults).toEqual([]);
+
+      // Vault Entity
+      const {
+        data: [vaultEntity, ...restVaultEntity],
+      } = await supabaseAdmin.from('vault_entities').select('address').eq('vault_id', created.id).eq('type', 'vault');
+      expect(vaultEntity).toMatchObject({ address: linkTo.address });
+      expect(restVaultEntity).toEqual([]);
+
+      await verifyVaultContract(created.address);
+    });
   });
 });
