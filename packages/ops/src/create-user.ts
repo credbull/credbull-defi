@@ -1,24 +1,19 @@
-import { ZodError, z } from 'zod';
-
 import { makeChannel } from './make-channel';
 import { loadConfiguration } from './utils/config';
 import { assertEmail, generatePassword, supabase } from './utils/helpers';
-
-// Zod Schemas to validate the parameters and configuration.
-const configSchema = z.object({ app: z.object({ url: z.string().url() }) });
-const nonEmptyStringSchema = z.string().trim().min(1);
+import { Schema } from './utils/schema';
 
 /**
- * Creates a Corporate Account User with `email` Email Address and `_password` Password, if provided. If
- * `_password` is not provided, generate a password.
+ * Creates a Corporate Account User with `email` Email Address and `passwordMaybe` Password, if provided. If
+ * `passwordMaybe` is not provided, generate a password.
  *
  * The `config` object is validated to provide all configuration items required.
  *
  * @param config The applicable configuration.
  * @param email The `string` email address of the Corporate Account.
  * @param isChannel The Corporate Account is also a Channel.
- * @param passwordMaybe The optional password to use for the Corporate Account. If not specified, a password is generated.
- *  This value is injected in the returned object with the `generated_password` property name.
+ * @param passwordMaybe The optional password to use for the Corporate Account. If not specified, a password is
+ *  generated. This value is injected in the returned object with the `generated_password` property name.
  * @returns A `Promise` for the Supabase User object.
  * @throws AuthError if the account creation fails.
  * @throws ZodError if the parameters or config are invalid.
@@ -29,10 +24,9 @@ export const createUser = async (
   isChannel: boolean,
   passwordMaybe?: string,
 ): Promise<any> => {
+  Schema.CONFIG_APP_URL.parse(config);
+  Schema.NON_EMPTY_STRING.optional().parse(passwordMaybe);
   assertEmail(email);
-
-  nonEmptyStringSchema.optional().parse(passwordMaybe);
-  configSchema.parse(config);
 
   const supabaseAdmin = supabase(config, { admin: true });
   const password = passwordMaybe || generatePassword();

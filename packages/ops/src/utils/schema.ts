@@ -60,6 +60,17 @@ export abstract class Schema {
     }),
   });
 
+  static readonly CONFIG_USER_ALICE = z.object({
+    users: z.object({
+      alice: z.object({
+        email_address: this.EMAIL,
+      }),
+    }),
+    secret: z.object({
+      ALICE_PASSWORD: this.NON_EMPTY_STRING,
+    }),
+  });
+
   static readonly CONFIG_USER_BOB = z.object({
     users: z.object({
       bob: z.object({
@@ -70,6 +81,8 @@ export abstract class Schema {
       BOB_PASSWORD: this.NON_EMPTY_STRING,
     }),
   });
+
+  static readonly CONFIG_USERS = this.CONFIG_USER_ADMIN.merge(this.CONFIG_USER_ALICE).merge(this.CONFIG_USER_BOB);
 
   static readonly CONFIG_ADMIN_PRIVATE_KEY = z.object({
     secret: z.object({

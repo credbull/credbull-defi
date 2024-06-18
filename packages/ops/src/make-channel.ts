@@ -1,8 +1,6 @@
 import { loadConfiguration } from './utils/config';
 import { assertEmail, supabase, userByOrThrow } from './utils/helpers';
 
-// Zod Schemas for parameter and configuration validation.
-
 /**
  * Updates the `email` Corporate User Account to have a Partner Type of Channel.
  *

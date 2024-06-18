@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 import { loadConfiguration } from './utils/config';
 import { assertEmail, supabase, userByOrThrow } from './utils/helpers';
 

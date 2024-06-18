@@ -103,9 +103,9 @@ function createParams(
  * @param config The applicable configuration. Must be valid against a schema.
  * @param isMatured `true` if the Vault is to be created matured, or not.
  * @param isUpside `true` is an Fixed Yield With Upside Vault is to be created.
- * @param isTenant Don't Know.
+ * @param isTenant (JL,2024-06-18): Don't Know.
  * @param upsideVault The `string` Address of the Fixed Yield With Upside Vault.
- * @param tenantEmail Don't Know.
+ * @param tenantEmail (JL,2024-06-18): Don't Know.
  * @param override Values that, if present, override the same configuration values.
  * @throws ZodError if any parameter or config item fails validation.
  * @throws PostgrestError if authentication or any database interaction fails.
