@@ -1,75 +1,116 @@
 import { expect, test } from '@playwright/test';
 import { ZodError } from 'zod';
 
-import { generateRandomEmail, parseEmail, parseEmailOptional, parseUpsideVault } from '../../src/utils/helpers';
+import {
+  assertAddress,
+  assertEmail,
+  assertEmailOptional,
+  assertUpsideVault,
+  generateAddress,
+  generateRandomEmail,
+} from '../../src/utils/helpers';
 
-test.describe('Parsing an email parameter with', async () => {
+test.describe('Asserting an email parameter with', async () => {
   test('a valid email should pass', async () => {
-    expect(() => parseEmail('test@credbull.io')).toPass();
-    expect(() => parseEmail('test+admin@credbull.io')).toPass();
-    expect(() => parseEmail(generateRandomEmail('test'))).toPass();
+    expect(() => assertEmail('test@credbull.io')).toPass();
+    expect(() => assertEmail('test+admin@credbull.io')).toPass();
+    expect(() => assertEmail(generateRandomEmail('test'))).toPass();
   });
 
   test('an invalid email should fail', async () => {
-    expect(() => parseEmail('prefix')).toThrow(ZodError);
-    expect(() => parseEmail('domain.com')).toThrow(ZodError);
-    expect(() => parseEmail('')).toThrow(ZodError);
-    expect(() => parseEmail(' \t \n ')).toThrow(ZodError);
-    expect(() => parseEmail('someone@here')).toThrow(ZodError);
-    expect(() => parseEmail('no one@here.com')).toThrow(ZodError);
+    expect(() => assertEmail('prefix')).toThrow(ZodError);
+    expect(() => assertEmail('domain.com')).toThrow(ZodError);
+    expect(() => assertEmail('')).toThrow(ZodError);
+    expect(() => assertEmail(' \t \n ')).toThrow(ZodError);
+    expect(() => assertEmail('someone@here')).toThrow(ZodError);
+    expect(() => assertEmail('no one@here.com')).toThrow(ZodError);
   });
 });
 
-test.describe('Parsing an optional email parameter with', async () => {
+test.describe('Asserting an optional email parameter with', async () => {
   test('a valid email should pass', async () => {
-    expect(() => parseEmailOptional('test@credbull.io')).toPass();
-    expect(() => parseEmailOptional('test+admin@credbull.io')).toPass();
-    expect(() => parseEmailOptional(generateRandomEmail('test'))).toPass();
+    expect(() => assertEmailOptional('test@credbull.io')).toPass();
+    expect(() => assertEmailOptional('test+admin@credbull.io')).toPass();
+    expect(() => assertEmailOptional(generateRandomEmail('test'))).toPass();
   });
 
   test('an invalid email should fail', async () => {
-    expect(() => parseEmailOptional('prefix')).toThrow(ZodError);
-    expect(() => parseEmailOptional('domain.com')).toThrow(ZodError);
-    expect(() => parseEmailOptional(' \t \n ')).toThrow(ZodError);
-    expect(() => parseEmailOptional('someone@here')).toThrow(ZodError);
-    expect(() => parseEmailOptional('no one@here.com')).toThrow(ZodError);
+    expect(() => assertEmailOptional('prefix')).toThrow(ZodError);
+    expect(() => assertEmailOptional('domain.com')).toThrow(ZodError);
+    expect(() => assertEmailOptional(' \t \n ')).toThrow(ZodError);
+    expect(() => assertEmailOptional('someone@here')).toThrow(ZodError);
+    expect(() => assertEmailOptional('no one@here.com')).toThrow(ZodError);
   });
 
   test('a null, undefined or empty string should pass', async () => {
-    expect(() => parseEmailOptional(undefined)).toPass();
-    expect(() => parseEmailOptional(null)).toPass();
-    expect(() => parseEmailOptional('')).toPass();
+    expect(() => assertEmailOptional(undefined)).toPass();
+    expect(() => assertEmailOptional(null)).toPass();
+    expect(() => assertEmailOptional('')).toPass();
   });
 });
 
-test.describe('Parsing an Upside Vault Specifier with', async () => {
+function correctlyAcceptsAddress(subject: (address: string) => void) {
+  for (const chr of '1234567890abcdefABCDEF') {
+    const hex = chr.repeat(40);
+    expect(() => subject(hex)).toPass();
+    expect(() => subject('0x' + hex)).toPass();
+  }
+}
+
+function correctlyRejectsAddress(subject: (address: string) => void) {
+  expect(() => subject('')).toThrow(ZodError);
+  expect(() => subject(' \t \n ')).toThrow(ZodError);
+
+  for (const chr of 'ghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ') {
+    const notHex = chr.repeat(40);
+    expect(() => subject(notHex)).toThrow(ZodError);
+    expect(() => subject('0x' + notHex)).toThrow(ZodError);
+  }
+  for (const chr of '1234567890abcdefABCDEF') {
+    const tooSmall = chr.repeat(39);
+    const tooBig = chr.repeat(41);
+    expect(() => subject(tooSmall)).toThrow(ZodError);
+    expect(() => subject('0x' + tooSmall)).toThrow(ZodError);
+    expect(() => subject(tooBig)).toThrow(ZodError);
+    expect(() => subject('0x' + tooBig)).toThrow(ZodError);
+  }
+}
+
+test.describe('Asserting an address parameter with', async () => {
+  test('a valid address should pass', async () => {
+    correctlyAcceptsAddress(assertAddress);
+  });
+
+  test('an invalid address should fail', async () => {
+    correctlyRejectsAddress(assertAddress);
+  });
+});
+
+test.describe('Asserting an Upside Vault Specifier with', async () => {
   test('a valid value should pass', async () => {
-    expect(() => parseUpsideVault('self')).toPass();
-    for (const chr of '1234567890abcdefABCDEF') {
-      const hex = chr.repeat(40);
-      expect(() => parseUpsideVault(hex)).toPass();
-      expect(() => parseUpsideVault('0x' + hex)).toPass();
-    }
+    expect(() => assertUpsideVault('self')).toPass();
+    correctlyAcceptsAddress(assertUpsideVault);
   });
 
   test('an invalid value should fail', async () => {
-    expect(() => parseUpsideVault('')).toThrow(ZodError);
-    expect(() => parseUpsideVault(' \t \n ')).toThrow(ZodError);
-    expect(() => parseUpsideVault('self ')).toThrow(ZodError);
-    expect(() => parseUpsideVault('SELF')).toThrow(ZodError);
+    expect(() => assertUpsideVault('self ')).toThrow(ZodError);
+    expect(() => assertUpsideVault('SELF')).toThrow(ZodError);
+    correctlyRejectsAddress(assertUpsideVault);
+  });
+});
 
-    for (const chr of 'ghijklmnopqrstuvwxyzGHIJKLMNOPQRSTUVWXYZ') {
-      const notHex = chr.repeat(40);
-      expect(() => parseUpsideVault(notHex)).toThrow(ZodError);
-      expect(() => parseUpsideVault('0x' + notHex)).toThrow(ZodError);
+test.describe('Generating an address should', async () => {
+  test('produce a valid address every iteration', async () => {
+    for (let i = 0; i < 20; i++) {
+      expect(() => assertAddress(generateAddress())).toPass();
     }
-    for (const chr of '1234567890abcdefABCDEF') {
-      const tooSmall = chr.repeat(39);
-      const tooBig = chr.repeat(41);
-      expect(() => parseUpsideVault(tooSmall)).toThrow(ZodError);
-      expect(() => parseUpsideVault('0x' + tooSmall)).toThrow(ZodError);
-      expect(() => parseUpsideVault(tooBig)).toThrow(ZodError);
-      expect(() => parseUpsideVault('0x' + tooBig)).toThrow(ZodError);
+  });
+});
+
+test.describe('Generating an email should', async () => {
+  test('produce a valid email every iteration', async () => {
+    for (let i = 0; i < 20; i++) {
+      expect(() => assertEmail(generateRandomEmail('test-' + i))).toPass();
     }
   });
 });

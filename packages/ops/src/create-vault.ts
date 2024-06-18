@@ -3,7 +3,15 @@ import type { ICredbull } from '@credbull/contracts/types/CredbullFixedYieldVaul
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 
 import { loadConfiguration } from './utils/config';
-import { headers, login, parseEmailOptional, parseUpsideVault, signer, supabase, userByOrThrow } from './utils/helpers';
+import {
+  assertEmailOptional,
+  assertUpsideVault,
+  headers,
+  login,
+  signer,
+  supabase,
+  userByOrThrow,
+} from './utils/helpers';
 import { Schema } from './utils/schema';
 
 type CreateVaultParams = {
@@ -116,8 +124,8 @@ export const createVault = async (
   Schema.CONFIG_ADMIN_PRIVATE_KEY.parse(config);
   Schema.CONFIG_EVM_ADDRESS.parse(config);
   Schema.CONFIG_OPERATION_CREATE_VAULT.parse(config);
-  parseUpsideVault(upsideVault);
-  parseEmailOptional(tenantEmail);
+  assertUpsideVault(upsideVault);
+  assertEmailOptional(tenantEmail);
 
   const supabaseAdmin = supabase(config, { admin: true });
   const addresses = await supabaseAdmin.from('contracts_addresses').select();

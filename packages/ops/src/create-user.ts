@@ -2,7 +2,7 @@ import { ZodError, z } from 'zod';
 
 import { makeChannel } from './make-channel';
 import { loadConfiguration } from './utils/config';
-import { generatePassword, parseEmail, supabase } from './utils/helpers';
+import { assertEmail, generatePassword, supabase } from './utils/helpers';
 
 // Zod Schemas to validate the parameters and configuration.
 const configSchema = z.object({ app: z.object({ url: z.string().url() }) });
@@ -29,7 +29,7 @@ export const createUser = async (
   isChannel: boolean,
   passwordMaybe?: string,
 ): Promise<any> => {
-  parseEmail(email);
+  assertEmail(email);
 
   nonEmptyStringSchema.optional().parse(passwordMaybe);
   configSchema.parse(config);

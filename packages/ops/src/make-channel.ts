@@ -1,5 +1,5 @@
 import { loadConfiguration } from './utils/config';
-import { parseEmail, supabase, userByOrThrow } from './utils/helpers';
+import { assertEmail, supabase, userByOrThrow } from './utils/helpers';
 
 // Zod Schemas for parameter and configuration validation.
 
@@ -14,7 +14,7 @@ import { parseEmail, supabase, userByOrThrow } from './utils/helpers';
  * @throws ZodError if the parameters or configuration are invalid.
  */
 export const makeChannel = async (config: any, email: string): Promise<any> => {
-  parseEmail(email);
+  assertEmail(email);
 
   const supabaseAdmin = supabase(config, { admin: true });
   const toUpdate = await userByOrThrow(supabaseAdmin, email);

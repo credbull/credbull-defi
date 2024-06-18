@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { loadConfiguration } from './utils/config';
-import { parseEmail, supabase, userByOrThrow } from './utils/helpers';
+import { assertEmail, supabase, userByOrThrow } from './utils/helpers';
 
 // TODO (JL,2024-06-05): Add `update-metadata` script and use for Make Admin/Channel.
 
@@ -16,7 +16,7 @@ import { parseEmail, supabase, userByOrThrow } from './utils/helpers';
  * @throws ZodError if the parameters or configuration are invalid.
  */
 export const makeAdmin = async (config: any, email: string): Promise<any> => {
-  parseEmail(email);
+  assertEmail(email);
 
   const supabaseAdmin = supabase(config, { admin: true });
   const toUpdate = await userByOrThrow(supabaseAdmin, email);

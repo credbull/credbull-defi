@@ -145,24 +145,24 @@ export const generatePassword = (
     .join('');
 };
 
-export function parseEmail(email: string) {
-  Schema.EMAIL.parse(email);
-}
-
-export function parseEmailOptional(email?: string | null) {
-  Schema.EMAIL_OPTIONAL.parse(email);
-}
-
-export function parseAddress(address: string) {
+export function assertAddress(address: string) {
   Schema.ADDRESS.parse(address);
 }
 
-export function parseUpsideVault(upsideVaultSpec?: string) {
+export function assertEmail(email: string) {
+  Schema.EMAIL.parse(email);
+}
+
+export function assertEmailOptional(email?: string | null) {
+  Schema.EMAIL_OPTIONAL.parse(email);
+}
+
+export function assertUpsideVault(upsideVaultSpec?: string) {
   Schema.UPSIDE_VAULT_SPEC.optional().parse(upsideVaultSpec);
 }
 
 export function generateRandomEmail(prefix: string): string {
-  const randomString = Math.random().toString(36).substring(2, 10); // Generates a random string
+  const randomString = Math.random().toString(36).substring(2, 10); // Generates a weak, pseudorandom string
   const domain = '@credbull.io';
   return `${prefix}+${randomString}${domain}`;
 }
