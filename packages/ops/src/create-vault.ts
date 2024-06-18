@@ -1,48 +1,10 @@
-import {
-  CredbullFixedYieldVaultFactory__factory,
-  CredbullFixedYieldVault__factory,
-  CredbullVaultFactory__factory,
-} from '@credbull/contracts';
+import { CredbullFixedYieldVault__factory, CredbullVaultFactory__factory } from '@credbull/contracts';
 import type { ICredbull } from '@credbull/contracts/types/CredbullFixedYieldVaultFactory';
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
-import { z } from 'zod';
 
 import { loadConfiguration } from './utils/config';
-import {
-  addressSchema,
-  headers,
-  login,
-  parseEmailOptional,
-  parseUsideVault,
-  signer,
-  supabase,
-  userByOrThrow,
-} from './utils/helpers';
-
-// Zod Schema to validate all config points in this module.
-
-const configSchema = z.object({
-  secret: z.object({
-    ADMIN_PRIVATE_KEY: z.string(),
-  }),
-  api: z.object({
-    url: z.string().url(),
-  }),
-  evm: z.object({
-    address: z.object({
-      owner: addressSchema,
-      operator: addressSchema,
-      custodian: addressSchema,
-      treasury: addressSchema,
-      activity_reward: addressSchema,
-    }),
-  }),
-  operation: z.object({
-    createVault: z.object({
-      collateral_percentage: z.number(),
-    }),
-  }),
-});
+import { headers, login, parseEmailOptional, parseUpsideVault, signer, supabase, userByOrThrow } from './utils/helpers';
+import { Schema } from './utils/schema';
 
 type CreateVaultParams = {
   treasury: string | undefined;
@@ -150,9 +112,13 @@ export const createVault = async (
   tenantEmail?: string,
   override?: { treasuryAddress?: string; activityRewardAddress?: string; collateralPercentage?: number },
 ): Promise<any> => {
-  configSchema.parse(config);
-  parseUsideVault(upsideVault);
+  Schema.CONFIG_API_URL.parse(config);
+  Schema.CONFIG_ADMIN_PRIVATE_KEY.parse(config);
+  Schema.CONFIG_EVM_ADDRESS.parse(config);
+  Schema.CONFIG_OPERATION_CREATE_VAULT.parse(config);
+  parseUpsideVault(upsideVault);
   parseEmailOptional(tenantEmail);
+
   const supabaseAdmin = supabase(config, { admin: true });
   const addresses = await supabaseAdmin.from('contracts_addresses').select();
   if (addresses.error) throw addresses.error;
