@@ -1,25 +1,15 @@
 import { Database } from '@credbull/api';
 import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
-import { Wallet, providers } from 'ethers';
+import { Wallet, ethers } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
-import { z } from 'zod';
 
-export const emailSchema = z.string().email();
-export const emailSchemaOptional = z.string().email().nullish().or(z.literal(''));
-export const addressSchema = z.string().regex(/^(0x)?[0-9a-fA-F]{40,40}$/);
-export const upsideVaultSchema = z.union([addressSchema, z.string().regex(/^self$/)]).optional();
-
-const supabaseConfigSchema = z.object({
-  services: z.object({ supabase: z.object({ url: z.string().url() }) }),
-  secret: z.object({
-    SUPABASE_SERVICE_ROLE_KEY: z.string(),
-    SUPABASE_ANONYMOUS_KEY: z.string(),
-  }),
-});
+import { Schema } from './schema';
 
 export const supabase = (config: any, opts?: { admin: boolean }) => {
-  supabaseConfigSchema.parse(config);
+  Schema.CONFIG_SUPABASE_URL.merge(opts?.admin ? Schema.CONFIG_SUPABASE_ADMIN : Schema.CONFIG_SUPABASE_ANONYMOUS).parse(
+    config,
+  );
 
   return createClient<Database, 'public'>(
     config.services.supabase.url,
@@ -33,7 +23,21 @@ export const userByOrThrow = async (supabaseAdmin: SupabaseClient, email: string
   return user;
 };
 
-export const userByOrUndefined = async (supabaseAdmin: SupabaseClient, email: string): Promise<any> => {
+/**
+ * Searches for the `email` User, returning `undefined` if not found.
+ * Only throws an error in a unrecoverable scenario.
+ *
+ * @param supabaseAdmin A `SupabaseClient` with administrative access.
+ * @param email The `string` email address. Must be valid.
+ * @returns A `Promise` of a User `any` or `undefined` if not found.
+ * @throws ZodError if `email` is not an email address.
+ * @throws PostgrestError if there is an error searching for the User.
+ * @throws AuthError if there is an error accessing the database.
+ * @throws Error if there is a system error or if the result pagination mechanism is broken.
+ */
+export const userByOrUndefined = async (supabaseAdmin: SupabaseClient, email: string): Promise<any | undefined> => {
+  Schema.EMAIL.parse(email);
+
   const pageSize = 1_000;
   const {
     data: { users },
@@ -45,7 +49,7 @@ export const userByOrUndefined = async (supabaseAdmin: SupabaseClient, email: st
 };
 
 export const deleteUserIfPresent = async (supabaseAdmin: SupabaseClient, email: string) => {
-  await userByOrUndefined(supabaseAdmin, email)
+  await userByOrThrow(supabaseAdmin, email)
     .then((user) => {
       supabaseAdmin.auth.admin.deleteUser(user.id, false);
     })
@@ -63,30 +67,19 @@ export const headers = (session?: Awaited<ReturnType<typeof login>>) => {
   };
 };
 
-const adminLoginConfigSchema = z.object({
-  api: z.object({ url: z.string().url() }),
-  users: z.object({ admin: z.object({ email_address: z.string().email() }) }),
-  secret: z.object({ ADMIN_PASSWORD: z.string() }),
-});
-
-const bobLoginConfigSchema = z.object({
-  api: z.object({ url: z.string().url() }),
-  users: z.object({ bob: z.object({ email_address: z.string().email() }) }),
-  secret: z.object({ BOB_PASSWORD: z.string() }),
-});
-
 export const login = async (
   config: any,
   opts?: { admin: boolean },
 ): Promise<{ access_token: string; user_id: string }> => {
-  let _email: string, _password: string;
+  Schema.CONFIG_API_URL.parse(config);
 
+  let _email: string, _password: string;
   if (opts?.admin) {
-    adminLoginConfigSchema.parse(config);
+    Schema.CONFIG_USER_ADMIN.parse(config);
     _email = config.users.admin.email_address;
     _password = config.secret!.ADMIN_PASSWORD!;
   } else {
-    bobLoginConfigSchema.parse(config);
+    Schema.CONFIG_USER_BOB.parse(config);
     _email = config.users.bob.email_address;
     _password = config.secret!.BOB_PASSWORD!;
   }
@@ -112,10 +105,8 @@ export const login = async (
   return data;
 };
 
-const linkWalletConfigSchema = z.object({ app: z.object({ url: z.string().url() }) });
-
 export const linkWalletMessage = async (config: any, signer: Wallet) => {
-  linkWalletConfigSchema.parse(config);
+  Schema.CONFIG_APP_URL.parse(config);
 
   let appUrl = new URL(config.app.url);
   const chainId = await signer.getChainId();
@@ -132,11 +123,9 @@ export const linkWalletMessage = async (config: any, signer: Wallet) => {
   return preMessage.prepareMessage();
 };
 
-const signerConfigSchema = z.object({ services: z.object({ ethers: z.object({ url: z.string().url() }) }) });
-
 export const signer = (config: any, privateKey: string) => {
-  signerConfigSchema.parse(config);
-  return new Wallet(privateKey, new providers.JsonRpcProvider(config.services.ethers.url));
+  Schema.CONFIG_ETHERS_URL.parse(config);
+  return new Wallet(privateKey, new ethers.providers.JsonRpcProvider(config.services.ethers.url));
 };
 
 export const generateAddress = () => {
@@ -157,19 +146,19 @@ export const generatePassword = (
 };
 
 export function parseEmail(email: string) {
-  emailSchema.parse(email);
+  Schema.EMAIL.parse(email);
 }
 
-export function parseEmailOptional(email?: string | undefined) {
-  emailSchemaOptional.nullish().optional().or(z.literal('')).parse(email);
+export function parseEmailOptional(email?: string | null) {
+  Schema.EMAIL_OPTIONAL.parse(email);
 }
 
 export function parseAddress(address: string) {
-  emailSchema.parse(address);
+  Schema.ADDRESS.parse(address);
 }
 
-export function parseUsideVault(upsideVaultStr: string | undefined) {
-  upsideVaultSchema.optional().parse(upsideVaultStr);
+export function parseUpsideVault(upsideVaultSpec?: string) {
+  Schema.UPSIDE_VAULT_SPEC.optional().parse(upsideVaultSpec);
 }
 
 export function generateRandomEmail(prefix: string): string {
