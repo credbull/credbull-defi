@@ -1,5 +1,7 @@
+import { assertEmail } from './utils/assert';
 import { loadConfiguration } from './utils/config';
-import { assertEmail, supabase, userByOrThrow } from './utils/helpers';
+import { supabaseAdminClient } from './utils/database';
+import { userByOrThrow } from './utils/user';
 
 // TODO (JL,2024-06-05): Add `update-metadata` script and use for Make Admin/Channel.
 
@@ -16,7 +18,7 @@ import { assertEmail, supabase, userByOrThrow } from './utils/helpers';
 export const makeAdmin = async (config: any, email: string): Promise<any> => {
   assertEmail(email);
 
-  const supabaseAdmin = supabase(config, { admin: true });
+  const supabaseAdmin = supabaseAdminClient(config);
   const toUpdate = await userByOrThrow(supabaseAdmin, email);
   const {
     data: { user },

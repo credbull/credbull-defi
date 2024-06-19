@@ -2,17 +2,13 @@ import { CredbullFixedYieldVault__factory, CredbullVaultFactory__factory } from 
 import type { ICredbull } from '@credbull/contracts/types/CredbullFixedYieldVaultFactory';
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 
+import { headers, login } from './utils/api';
+import { assertEmailOptional, assertUpsideVault } from './utils/assert';
 import { loadConfiguration } from './utils/config';
-import {
-  assertEmailOptional,
-  assertUpsideVault,
-  headers,
-  login,
-  signer,
-  supabase,
-  userByOrThrow,
-} from './utils/helpers';
+import { supabaseAdminClient } from './utils/database';
+import { signerFor } from './utils/ethers';
 import { Schema } from './utils/schema';
+import { userByOrThrow } from './utils/user';
 
 type CreateVaultParams = {
   treasury: string | undefined;
@@ -127,7 +123,7 @@ export const createVault = async (
   assertUpsideVault(upsideVault);
   assertEmailOptional(tenantEmail);
 
-  const supabaseAdmin = supabase(config, { admin: true });
+  const supabaseAdmin = supabaseAdminClient(config);
   const addresses = await supabaseAdmin.from('contracts_addresses').select();
   if (addresses.error) throw addresses.error;
 
@@ -135,7 +131,7 @@ export const createVault = async (
 
   // for allowCustodian we need the Admin user.  for createVault we need the Operator Key.
   // the only way this works is if you go into supabase and associate the admin user with the Operator wallet
-  const adminSigner = signer(config, config.secret.ADMIN_PRIVATE_KEY);
+  const adminSigner = signerFor(config, config.secret.ADMIN_PRIVATE_KEY);
 
   // TODO: ISSUE we are logging in here as the Admin User - but later we POST to the createVault owned by the OPERATOR
   const admin = await login(config, { admin: true });

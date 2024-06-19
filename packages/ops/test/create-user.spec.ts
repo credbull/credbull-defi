@@ -3,7 +3,8 @@ import { ZodError } from 'zod';
 
 import { createUser, main } from '@/create-user';
 import { loadConfiguration } from '@/utils/config';
-import { deleteUserIfPresent, supabase, userByOrUndefined } from '@/utils/helpers';
+import { supabaseAdminClient } from '@/utils/database';
+import { deleteUserIfPresent, userByOrUndefined } from '@/utils/user';
 
 const EMAIL_ADDRESS = 'minion@create.user.test';
 const PASSWORD = 'DoNotForget';
@@ -17,7 +18,7 @@ test.beforeAll(() => {
   // NOTE (JL,2024-05-31): This loads the same configuration as the operations themselves.
   config = loadConfiguration();
 
-  supabaseAdmin = supabase(config, { admin: true });
+  supabaseAdmin = supabaseAdminClient(config);
   ({
     data: { subscription },
   } = supabaseAdmin.auth.onAuthStateChange((event: any, session: any) => {

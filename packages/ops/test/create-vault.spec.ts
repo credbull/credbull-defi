@@ -7,15 +7,10 @@ import { createUser } from '@/create-user';
 import { createVault, main } from '@/create-vault';
 import { makeAdmin } from '@/make-admin';
 import { loadConfiguration } from '@/utils/config';
-import {
-  deleteUserIfPresent,
-  generateAddress,
-  generatePassword,
-  generateRandomEmail,
-  signer,
-  supabase,
-  userByOrUndefined,
-} from '@/utils/helpers';
+import { supabaseAdminClient } from '@/utils/database';
+import { signerFor } from '@/utils/ethers';
+import { generateAddress, generatePassword, generateRandomEmail } from '@/utils/generate';
+import { deleteUserIfPresent, userByOrUndefined } from '@/utils/user';
 
 const EMPTY_CONFIG = {};
 const VALID_ADDRESS = generateAddress();
@@ -83,8 +78,8 @@ test.describe('Create Vault', async () => {
   let adminSigner: any | undefined = undefined;
 
   test.beforeAll(async () => {
-    supabaseAdmin = supabase(config, { admin: true });
-    adminSigner = signer(config, config.secret.ADMIN_PRIVATE_KEY);
+    supabaseAdmin = supabaseAdminClient(config);
+    adminSigner = signerFor(config, config.secret.ADMIN_PRIVATE_KEY);
 
     // Ensure the admin user exists.
     if (!(await userByOrUndefined(supabaseAdmin, config.users.admin.email_address))) {

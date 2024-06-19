@@ -1,6 +1,8 @@
 import { makeChannel } from './make-channel';
+import { assertEmail } from './utils/assert';
 import { loadConfiguration } from './utils/config';
-import { assertEmail, generatePassword, supabase } from './utils/helpers';
+import { supabaseAdminClient } from './utils/database';
+import { generatePassword } from './utils/generate';
 import { Schema } from './utils/schema';
 
 /**
@@ -28,7 +30,7 @@ export const createUser = async (
   Schema.NON_EMPTY_STRING.optional().parse(passwordMaybe);
   assertEmail(email);
 
-  const supabaseAdmin = supabase(config, { admin: true });
+  const supabaseAdmin = supabaseAdminClient(config);
   const password = passwordMaybe || generatePassword();
   const {
     data: { user },

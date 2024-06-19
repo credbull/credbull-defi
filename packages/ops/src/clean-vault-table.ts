@@ -1,7 +1,8 @@
 import { CredbullFixedYieldVault__factory } from '@credbull/contracts';
 
 import { loadConfiguration } from './utils/config';
-import { signer, supabase } from './utils/helpers';
+import { supabaseAdminClient } from './utils/database';
+import { signerFor } from './utils/ethers';
 import { Schema } from './utils/schema';
 
 /**
@@ -14,7 +15,7 @@ import { Schema } from './utils/schema';
 export const cleanVaultTable = async (config: any) => {
   Schema.CONFIG_ADMIN_PRIVATE_KEY.parse(config);
 
-  const supabaseAdmin = supabase(config, { admin: true });
+  const supabaseAdmin = supabaseAdminClient(config);
   const { data, error } = await supabaseAdmin.from('vaults').select();
   if (error) throw error;
   if (data.length === 0) {
@@ -22,7 +23,7 @@ export const cleanVaultTable = async (config: any) => {
     return;
   }
 
-  const adminSigner = signer(config, config.secret.ADMIN_PRIVATE_KEY);
+  const adminSigner = signerFor(config, config.secret.ADMIN_PRIVATE_KEY);
 
   console.log('='.repeat(80));
   console.log(` Pausing ${data.length} Vaults.`);

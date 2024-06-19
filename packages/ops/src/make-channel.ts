@@ -1,5 +1,7 @@
+import { assertEmail } from './utils/assert';
 import { loadConfiguration } from './utils/config';
-import { assertEmail, supabase, userByOrThrow } from './utils/helpers';
+import { supabaseAdminClient } from './utils/database';
+import { userByOrThrow } from './utils/user';
 
 /**
  * Updates the `email` Corporate User Account to have a Partner Type of Channel.
@@ -14,7 +16,7 @@ import { assertEmail, supabase, userByOrThrow } from './utils/helpers';
 export const makeChannel = async (config: any, email: string): Promise<any> => {
   assertEmail(email);
 
-  const supabaseAdmin = supabase(config, { admin: true });
+  const supabaseAdmin = supabaseAdminClient(config);
   const toUpdate = await userByOrThrow(supabaseAdmin, email);
   const {
     data: { user },

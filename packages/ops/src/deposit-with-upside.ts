@@ -3,32 +3,36 @@ import {
   MockStablecoin__factory,
   MockToken__factory,
 } from '@credbull/contracts';
-import { formatEther, parseEther, parseUnits } from 'ethers/lib/utils';
+import { formatEther, parseUnits } from 'ethers/lib/utils';
 
-import { headers, linkWalletMessage, login, signer, supabase } from './utils/helpers';
+import { headers, login } from './utils/api';
+import { loadConfiguration } from './utils/config';
+import { supabaseAdminClient } from './utils/database';
+import { linkWalletMessage, signerFor } from './utils/ethers';
 
 export const main = () => {
   setTimeout(async () => {
     console.log('\n');
     console.log('=====================================');
     console.log('\n');
+    const config = loadConfiguration();
 
     // console.log('Bob: retrieves a session through api.');
-    const bob = await login();
+    const bob = await login(config);
 
     const bobHeaders = headers(bob);
     console.log('Bob: retrieves a session through api. - OK');
 
     // console.log('Bob: signs a message with his wallet.');
-    const bobSigner = signer(process.env.BOB_PRIVATE_KEY || "");
-    const message = await linkWalletMessage(bobSigner);
+    const bobSigner = signerFor(config, config.secret!.BOB_PRIVATE_KEY!);
+    const message = await linkWalletMessage(config, bobSigner);
     const signature = await bobSigner.signMessage(message);
     console.log('Bob: signs a message with his wallet. - OK');
 
     // console.log('Bob: sends the signed message to Credbull so that he can be KYC`ed.');
-    await fetch(`${process.env.API_BASE_URL}/accounts/link-wallet`, {
+    await fetch(`${config.api.url}/accounts/link-wallet`, {
       method: 'POST',
-      body: JSON.stringify({ message, signature, discriminator: 'bob@partner.com' }),
+      body: JSON.stringify({ message, signature, discriminator: config.users.bob.email_address }),
       ...bobHeaders,
     });
     console.log('Bob: sends the signed message to Credbull so that he can be KYC`ed. - OK');
@@ -37,7 +41,7 @@ export const main = () => {
     const admin = await login({ admin: true });
     const adminHeaders = headers(admin);
 
-    await fetch(`${process.env.API_BASE_URL}/accounts/whitelist`, {
+    await fetch(`${config.api.url}/accounts/whitelist`, {
       method: 'POST',
       body: JSON.stringify({ user_id: bob.user_id, address: bobSigner.address }),
       ...adminHeaders,
@@ -45,7 +49,7 @@ export const main = () => {
     console.log('Admin: receives the approval and KYCs Bob. - OK');
 
     // console.log('Bob: queries for existing vaults.');
-    const vaultsResponse = await fetch(`${process.env.API_BASE_URL}/vaults/current`, {
+    const vaultsResponse = await fetch(`${config.api.url}/vaults/current`, {
       method: 'GET',
       ...bobHeaders,
     });
@@ -66,7 +70,7 @@ export const main = () => {
     await approveTx.wait();
     console.log('Bob: gives the approval to the vault to swap it`s USDC. - OK');
 
-    const client = supabase({ admin: true });
+    const client = supabaseAdminClient(config);
     const addresses = await client.from('contracts_addresses').select();
     if (addresses.error) return addresses;
 
