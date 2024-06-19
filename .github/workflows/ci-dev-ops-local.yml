@@ -1,0 +1,81 @@
+name: ci-dev-ops-local
+
+defaults:
+  run:
+    working-directory: .
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: testnet
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yarn
+        run: |
+          corepack prepare yarn@stable --activate
+          npm install -g yarn
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "yarn"
+
+      - name: Install foundry-toolchain
+        uses: foundry-rs/foundry-toolchain@v1.2.0
+        with:
+          version: nightly
+
+      - name: Install Project Dependencies
+        run: yarn install
+#
+      - name: Setup Local Environment
+        run: find . -type f -name ".env*.sample" -exec sh -c 'F={}; cp -nv $F $(dirname $F)/$(basename $F .sample)' \;
+        working-directory: .
+#
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1.3.0
+        with:
+          version: latest
+
+      - name: Start Supabase
+        run: supabase start
+        working-directory: packages/api
+
+      - name: Run anvil and deploy contracts
+        run: |
+          rm ./script/output/dbdata.json || true
+          nohup anvil --config-out localhost.json > anvil.log 2>&1 &
+          disown
+          sleep 10 # wait to ensure anvil is started
+          make deploy-local
+        working-directory: packages/contracts
+
+      - name: Run API
+        run: |
+          nohup yarn dev > api.log 2>&1 &
+          disown
+        working-directory: packages/api
+
+      - name: Run Ops tests
+        run: |
+          set -a
+          source ../api/.env
+          source .env
+          set +a
+          yarn int-test
+        working-directory: packages/ops
+
+      - name: Clean vault data
+        run: yarn op --clean-vault-table
+        working-directory: packages/ops
+
+      - name: Cleanup Yarn Cache
+        if: always()
+        run: yarn cache clean

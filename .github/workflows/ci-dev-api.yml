@@ -10,12 +10,15 @@ on:
     branches:
       - "main*"
       - "development*"
+      - "ops*"
     paths:
       - "packages/api/**"
       - "packages/contracts/**"
+      - ".github/workflows/ci-dev-api.yml"
 
 jobs:
-  deploy:
+  # TODO - separate out build and deploy steps.  see https://github.com/actions/upload-artifact
+  api-build-deploy:
     runs-on: ubuntu-latest
     environment: testnet
 
@@ -23,9 +26,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install yarn
-        run: npm install -g yarn
+        run: |
+          corepack prepare yarn@stable --activate
+          npm install -g yarn
 
-      - uses: actions/setup-node@v4
+      - name: Install Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "yarn"
@@ -41,8 +47,9 @@ jobs:
       - name: Run Tests
         run: yarn run test
         env:
+          ENVIRONMENT: "local"
           # Dev/Anvil Wallet, PrivateKey[1] - okay to share
-          OPERATOR_PRIVATE_KEY: "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+          OPERATOR_PRIVATE_KEY: anything-testing-only
           SUPABASE_SERVICE_ROLE_KEY: anything-testing-only
           SUPABASE_JWT_SECRET: anything-testing-only
           CRON_SECRET : anything-testing-only
@@ -53,9 +60,23 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
-      - name: Deploying to fly.io
+       # docker build --platform needs to match the fly.io instances.  currently linux/amd64.
+      - name: Build Docker image
+        run: docker build --platform linux/amd64 -f Dockerfile -t credbull-defi-api ../..
+
+      - name: List docker images
+        run: docker images
+
+      - name: Set up Fly.io
         uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy ../.. --remote-only -t ${{ secrets.FLY_DEPLOY_TOKEN }}
+        with:
+          version: v0.2.69
+
+      - name: Deploy fly.io credbull-defi app
+        run: flyctl deploy ../.. --app credbull-defi-api --env ENVIRONMENT=testnet --local-only -t ${{ secrets.FLY_DEPLOY_TOKEN }}
+
+      - name: Deploy fly.io credbull-defi-ci app
+        run: flyctl deploy ../.. --app credbull-defi-api-ci --env ENVIRONMENT=ci --local-only -t ${{ secrets.CI_FLY_DEPLOY_TOKEN }}
 
       - name: Create Sentry release
         uses: getsentry/action-release@v1
@@ -64,5 +85,6 @@ jobs:
           SENTRY_PROJECT: credbull-defi-api
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
-      - name: Install yarn
-        run: npm install -g yarn
+      - name: Cleanup
+        if: always()
+        run: npm uninstall -g yarn

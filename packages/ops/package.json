@@ -1,0 +1,35 @@
+{
+  "name": "@credbull/ops",
+  "packageManager": "yarn@3.2.3",
+  "scripts": {
+    "op": "ts-node index.ts",
+    "int-test": "playwright test"
+  },
+  "dependencies": {
+    "@credbull/api": "workspace:^",
+    "@credbull/contracts": "workspace:^",
+    "@supabase/supabase-js": "^2.39.1",
+    "bottleneck": "^2.19.5",
+    "compression": "^1.7.4",
+    "crypto": "^1.0.1",
+    "date-fns": "^3.3.1",
+    "dotenv": "^16.3.1",
+    "ethers": "^5.7.2",
+    "js-toml": "^1.0.0",
+    "siwe": "^2.1.4",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.1",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@types/node": "^20.10.5",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.2",
+    "prettier": "^3.1.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

@@ -12,8 +12,7 @@ import { CredbullSDK } from '@credbull/sdk';
 import { Button, Card, Flex, Group, NumberInput, SimpleGrid, Text, TextInput } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useClipboard } from '@mantine/hooks';
-import { useList, useNotification, useOne } from '@refinedev/core';
-import { OpenNotificationParams } from '@refinedev/core/dist/contexts/notification/INotificationContext';
+import { OpenNotificationParams, useList, useNotification, useOne } from '@refinedev/core';
 import { useForm } from '@refinedev/mantine';
 import { IconCopy } from '@tabler/icons';
 import { getPublicClient } from '@wagmi/core';
@@ -365,7 +364,11 @@ const LinkWallet = () => {
 
   const link = async () => {
     const signer = await getEthersSigner({ chainId: await connector?.getChainId() });
-    const sdk = new CredbullSDK(process.env.NEXT_PUBLIC_ACCESS_TOKEN as string, signer as Signer);
+    const sdk = new CredbullSDK(
+      process.env.API_BASE_URL || '',
+      { accessToken: process.env.NEXT_PUBLIC_ACCESS_TOKEN as string },
+      signer as Signer,
+    );
     await sdk.linkWallet();
   };
 

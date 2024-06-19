@@ -4,3 +4,7 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 dist/
+build/
+
+# NOTE (JL,2024-05-28): TSC Project Reference artifact.
+**/*.tsbuildinfo
