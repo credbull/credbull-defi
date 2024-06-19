@@ -122,7 +122,6 @@ function createParams(
       collateralPercentage: params.collateralPercentage || 20_00
   }
 
-
   const vaultExtraParams: CreateVaultParams = {
       treasury: treasury,
       activityReward: activityReward,
@@ -135,7 +134,6 @@ function createParams(
 
   console.log('Vault Params:', fixedYieldVaultParams);
   console.log('Vault Extra Params:', vaultExtraParams);
-
 
   return [vaultParams, vaultExtraParams, tempParams];
 }
