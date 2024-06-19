@@ -28,15 +28,11 @@ function createParams(
     matured?: boolean;
     upside?: string;
     tenant?: string;
-    treasuryAddress?: string;
-    activityRewardAddress?: string;
-    collateralPercentage?: number;
   },
 ): [ICredbull.VaultParamsStruct, CreateVaultParams] {
-  // NOTE (JL,2024-06-12): These configuration overrides are needed when invoked from SDK Tests.
-  const treasury = params.treasuryAddress || config.evm.address.treasury;
-  const activityReward = params.activityRewardAddress || config.evm.address.activity_reward;
-  const collateralPercentage = params.collateralPercentage || config.operation.createVault.collateral_percentage;
+  const treasury = config.evm.address.treasury;
+  const activityReward = config.evm.address.activity_reward;
+  const collateralPercentage = config.operation.createVault.collateral_percentage;
 
   const kycProvider = params.kycProvider;
   const custodian = params.custodian;
@@ -90,9 +86,6 @@ function createParams(
   return [vaultParams, vaultExtraParams];
 }
 
-// TODO (JL,2024-06-10): Understand Tenancy & Tenant Email.
-// FIXME (JL,2024-06-12): The 'override' hack is because sdk tests hack the environment before calling the script.
-
 /**
  * Creates a Vault according to the parameters.
  *
@@ -102,7 +95,6 @@ function createParams(
  * @param isTenant (JL,2024-06-18): Don't Know.
  * @param upsideVault The `string` Address of the Fixed Yield With Upside Vault.
  * @param tenantEmail (JL,2024-06-18): Don't Know.
- * @param override Values that, if present, override the same configuration values.
  * @throws ZodError if any parameter or config item fails validation.
  * @throws PostgrestError if authentication or any database interaction fails.
  * @throws Error if there are no contracts to operate upon.
@@ -114,7 +106,6 @@ export const createVault = async (
   isTenant: boolean,
   upsideVault?: string,
   tenantEmail?: string,
-  override?: { treasuryAddress?: string; activityRewardAddress?: string; collateralPercentage?: number },
 ): Promise<any> => {
   Schema.CONFIG_API_URL.parse(config);
   Schema.CONFIG_ADMIN_PRIVATE_KEY.parse(config);
@@ -178,9 +169,6 @@ export const createVault = async (
     matured: isMatured,
     upside: upsideVault,
     tenant: isTenant && tenantEmail ? (await userByOrThrow(supabaseAdmin, tenantEmail)).id : undefined,
-    treasuryAddress: override?.treasuryAddress,
-    activityRewardAddress: override?.activityRewardAddress,
-    collateralPercentage: override?.collateralPercentage,
   });
 
   const serviceUrl = new URL(`/vaults/create-vault${isUpside ? '-upside' : ''}`, config.api.url);
