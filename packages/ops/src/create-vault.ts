@@ -1,48 +1,14 @@
-import {
-  CredbullFixedYieldVaultFactory__factory,
-  CredbullFixedYieldVault__factory,
-  CredbullVaultFactory__factory,
-} from '@credbull/contracts';
+import { CredbullFixedYieldVault__factory, CredbullVaultFactory__factory } from '@credbull/contracts';
 import type { ICredbull } from '@credbull/contracts/types/CredbullFixedYieldVaultFactory';
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
-import { z } from 'zod';
 
+import { headers, login } from './utils/api';
+import { assertEmailOptional, assertUpsideVault } from './utils/assert';
 import { loadConfiguration } from './utils/config';
-import {
-  addressSchema,
-  headers,
-  login,
-  parseEmailOptional,
-  parseUsideVault,
-  signer,
-  supabase,
-  userByOrThrow,
-} from './utils/helpers';
-
-// Zod Schema to validate all config points in this module.
-
-const configSchema = z.object({
-  secret: z.object({
-    ADMIN_PRIVATE_KEY: z.string(),
-  }),
-  api: z.object({
-    url: z.string().url(),
-  }),
-  evm: z.object({
-    address: z.object({
-      owner: addressSchema,
-      operator: addressSchema,
-      custodian: addressSchema,
-      treasury: addressSchema,
-      activity_reward: addressSchema,
-    }),
-  }),
-  operation: z.object({
-    createVault: z.object({
-      collateral_percentage: z.number(),
-    }),
-  }),
-});
+import { supabaseAdminClient } from './utils/database';
+import { signerFor } from './utils/ethers';
+import { Schema } from './utils/schema';
+import { userByOrThrow } from './utils/user';
 
 type CreateVaultParams = {
   treasury: string | undefined;
@@ -133,9 +99,9 @@ function createParams(
  * @param config The applicable configuration. Must be valid against a schema.
  * @param isMatured `true` if the Vault is to be created matured, or not.
  * @param isUpside `true` is an Fixed Yield With Upside Vault is to be created.
- * @param isTenant Don't Know.
+ * @param isTenant (JL,2024-06-18): Don't Know.
  * @param upsideVault The `string` Address of the Fixed Yield With Upside Vault.
- * @param tenantEmail Don't Know.
+ * @param tenantEmail (JL,2024-06-18): Don't Know.
  * @param override Values that, if present, override the same configuration values.
  * @throws ZodError if any parameter or config item fails validation.
  * @throws PostgrestError if authentication or any database interaction fails.
@@ -150,10 +116,14 @@ export const createVault = async (
   tenantEmail?: string,
   override?: { treasuryAddress?: string; activityRewardAddress?: string; collateralPercentage?: number },
 ): Promise<any> => {
-  configSchema.parse(config);
-  parseUsideVault(upsideVault);
-  parseEmailOptional(tenantEmail);
-  const supabaseAdmin = supabase(config, { admin: true });
+  Schema.CONFIG_API_URL.parse(config);
+  Schema.CONFIG_ADMIN_PRIVATE_KEY.parse(config);
+  Schema.CONFIG_EVM_ADDRESS.parse(config);
+  Schema.CONFIG_OPERATION_CREATE_VAULT.parse(config);
+  assertUpsideVault(upsideVault);
+  assertEmailOptional(tenantEmail);
+
+  const supabaseAdmin = supabaseAdminClient(config);
   const addresses = await supabaseAdmin.from('contracts_addresses').select();
   if (addresses.error) throw addresses.error;
 
@@ -161,7 +131,7 @@ export const createVault = async (
 
   // for allowCustodian we need the Admin user.  for createVault we need the Operator Key.
   // the only way this works is if you go into supabase and associate the admin user with the Operator wallet
-  const adminSigner = signer(config, config.secret.ADMIN_PRIVATE_KEY);
+  const adminSigner = signerFor(config, config.secret.ADMIN_PRIVATE_KEY);
 
   // TODO: ISSUE we are logging in here as the Admin User - but later we POST to the createVault owned by the OPERATOR
   const admin = await login(config, { admin: true });

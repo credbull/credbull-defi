@@ -1,25 +1,28 @@
 import { CredbullFixedYieldVault__factory, MockStablecoin__factory } from '@credbull/contracts';
-import { formatEther, parseEther, parseUnits } from 'ethers/lib/utils';
+import { formatEther, parseUnits } from 'ethers/lib/utils';
 
-import { headers, login, signer } from './utils/helpers';
+import { headers, login } from './utils/api';
+import { loadConfiguration } from './utils/config';
+import { signerFor } from './utils/ethers';
 
 export const main = () => {
   setTimeout(async () => {
     console.log('\n');
     console.log('=====================================');
     console.log('\n');
+    const config = loadConfiguration();
 
     // console.log('Bob: retrieves a session through api.');
-    const bob = await login();
+    const bob = await login(config);
 
     const bobHeaders = headers(bob);
     console.log('Bob: retrieves a session through api. - OK');
 
     // console.log('Bob: signs a message with his wallet.');
-    const bobSigner = signer(process.env.BOB_PRIVATE_KEY);
+    const bobSigner = signerFor(config, config.secret!.BOB_PRIVATE_KEY!);
 
     // console.log('Bob: queries for existing vaults.');
-    const vaultsResponse = await fetch(`${process.env.API_BASE_URL}/vaults/current`, {
+    const vaultsResponse = await fetch(`${config.api.url}/vaults/current`, {
       method: 'GET',
       ...bobHeaders,
     });
@@ -33,7 +36,7 @@ export const main = () => {
 
     const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
     const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, bobSigner);
-    const mintTx = await usdc.mint(vaultAddress,  parseUnits('1000', 'mwei'));
+    const mintTx = await usdc.mint(vaultAddress, parseUnits('1000', 'mwei'));
     await mintTx.wait();
 
     const shares = await vault.balanceOf(bobSigner.address);

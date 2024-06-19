@@ -1,28 +1,31 @@
 import { CredbullFixedYieldVault__factory, MockStablecoin__factory } from '@credbull/contracts';
 import { parseUnits } from 'ethers/lib/utils';
 
-import { headers, linkWalletMessage, login, signer } from './utils/helpers';
+import { headers, login } from './utils/api';
+import { loadConfiguration } from './utils/config';
+import { linkWalletMessage, signerFor } from './utils/ethers';
 
 export const main = () => {
   setTimeout(async () => {
     console.log('\n');
     console.log('=====================================');
     console.log('\n');
+    const config = loadConfiguration();
 
     // console.log('Bob: retrieves a session through api.');
-    const bob = await login();
+    const bob = await login(config);
 
     const bobHeaders = headers(bob);
     console.log('Bob: retrieves a session through api. - OK');
 
     // console.log('Bob: signs a message with his wallet.');
-    const bobSigner = signer(process.env.BOB_PRIVATE_KEY);
-    const message = await linkWalletMessage(bobSigner);
+    const bobSigner = signerFor(config, config.secret!.BOB_PRIVATE_KEY!);
+    const message = await linkWalletMessage(config, bobSigner);
     const signature = await bobSigner.signMessage(message);
     console.log('Bob: signs a message with his wallet. - OK');
 
     // console.log('Bob: sends the signed message to Credbull so that he can be KYC`ed.');
-    await fetch(`${process.env.API_BASE_URL}/accounts/link-wallet`, {
+    await fetch(`${config.api.url}/accounts/link-wallet`, {
       method: 'POST',
       body: JSON.stringify({ message, signature, discriminator: 'bob@partner.com' }),
       ...bobHeaders,
@@ -32,9 +35,9 @@ export const main = () => {
     // console.log('Admin: receives the approval and KYCs Bob.');
     const admin = await login({ admin: true });
     const adminHeaders = headers(admin);
-    const adminSigner = signer(process.env.ADMIN_PRIVATE_KEY);
+    const adminSigner = signerFor(config, config.secret!.ADMIN_PRIVATE_KEY!);
 
-    await fetch(`${process.env.API_BASE_URL}/accounts/whitelist`, {
+    await fetch(`${config.api.url}/accounts/whitelist`, {
       method: 'POST',
       body: JSON.stringify({ user_id: bob.user_id, address: bobSigner.address }),
       ...adminHeaders,
@@ -42,7 +45,7 @@ export const main = () => {
     console.log('Admin: receives the approval and KYCs Bob. - OK');
 
     // console.log('Bob: queries for existing vaults.');
-    const vaultsResponse = await fetch(`${process.env.API_BASE_URL}/vaults/current`, {
+    const vaultsResponse = await fetch(`${config.api.url}/vaults/current`, {
       method: 'GET',
       ...bobHeaders,
     });
@@ -67,7 +70,7 @@ export const main = () => {
     const toggleTx = await vault.connect(adminSigner).toggleWindowCheck(false);
     await toggleTx.wait();
 
-    const depositTx = await vault.deposit(parseUnits("1000", "mwei"), bobSigner.address, { gasLimit: 10000000 });
+    const depositTx = await vault.deposit(parseUnits('1000', 'mwei'), bobSigner.address, { gasLimit: 10000000 });
     await depositTx.wait();
     console.log('Bob: deposits his USDC in the vault. - OK');
 

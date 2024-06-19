@@ -1,7 +1,7 @@
+import { assertEmail } from './utils/assert';
 import { loadConfiguration } from './utils/config';
-import { parseEmail, supabase, userByOrThrow } from './utils/helpers';
-
-// Zod Schemas for parameter and configuration validation.
+import { supabaseAdminClient } from './utils/database';
+import { userByOrThrow } from './utils/user';
 
 /**
  * Updates the `email` Corporate User Account to have a Partner Type of Channel.
@@ -14,9 +14,9 @@ import { parseEmail, supabase, userByOrThrow } from './utils/helpers';
  * @throws ZodError if the parameters or configuration are invalid.
  */
 export const makeChannel = async (config: any, email: string): Promise<any> => {
-  parseEmail(email);
+  assertEmail(email);
 
-  const supabaseAdmin = supabase(config, { admin: true });
+  const supabaseAdmin = supabaseAdminClient(config);
   const toUpdate = await userByOrThrow(supabaseAdmin, email);
   const {
     data: { user },
