@@ -1,14 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { ZodError } from 'zod';
 
-import {
-  assertAddress,
-  assertEmail,
-  assertEmailOptional,
-  assertUpsideVault,
-  generateAddress,
-  generateRandomEmail,
-} from '../../src/utils/helpers';
+import { assertAddress, assertEmail, assertEmailOptional, assertUpsideVault } from '@/utils/assert';
+import { generateRandomEmail } from '@/utils/generate';
 
 test.describe('Asserting an email parameter with', async () => {
   test('a valid email should pass', async () => {
@@ -96,21 +90,5 @@ test.describe('Asserting an Upside Vault Specifier with', async () => {
     expect(() => assertUpsideVault('self ')).toThrow(ZodError);
     expect(() => assertUpsideVault('SELF')).toThrow(ZodError);
     correctlyRejectsAddress(assertUpsideVault);
-  });
-});
-
-test.describe('Generating an address should', async () => {
-  test('produce a valid address every iteration', async () => {
-    for (let i = 0; i < 20; i++) {
-      expect(() => assertAddress(generateAddress())).toPass();
-    }
-  });
-});
-
-test.describe('Generating an email should', async () => {
-  test('produce a valid email every iteration', async () => {
-    for (let i = 0; i < 20; i++) {
-      expect(() => assertEmail(generateRandomEmail('test-' + i))).toPass();
-    }
   });
 });
