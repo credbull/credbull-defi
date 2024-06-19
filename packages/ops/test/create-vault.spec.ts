@@ -1,6 +1,5 @@
 import { CredbullFixedYieldVault__factory } from '@credbull/contracts';
 import { expect, test } from '@playwright/test';
-import Bottleneck from 'bottleneck';
 import { isAfter, isFuture, isPast } from 'date-fns';
 import { ZodError } from 'zod';
 
@@ -8,7 +7,15 @@ import { createUser } from '@/create-user';
 import { createVault, main } from '@/create-vault';
 import { makeAdmin } from '@/make-admin';
 import { loadConfiguration } from '@/utils/config';
-import { deleteUserIfPresent, generateAddress, signer, supabase, userByOrUndefined } from '@/utils/helpers';
+import {
+  deleteUserIfPresent,
+  generateAddress,
+  generatePassword,
+  generateRandomEmail,
+  signer,
+  supabase,
+  userByOrUndefined,
+} from '@/utils/helpers';
 
 const EMPTY_CONFIG = {};
 const VALID_ADDRESS = generateAddress();
@@ -56,7 +63,7 @@ test.describe('Create Vault should fail when invoked with', async () => {
 
 test.describe('Create Vault Main should fail when invoked with', async () => {
   // NOTE (JL,2024-06-04): Internal async invocation means no other impact possible.
-  test('Throws error if invalid parameters', async () => {
+  test('an invalid Tenant Email parameter', async () => {
     const scenarios = { matured: false, upside: true, tenant: false };
 
     await expect(main(scenarios, { upsideVault: VALID_ADDRESS, tenantEmail: 'someone@here' })).rejects.toThrow(
@@ -154,7 +161,7 @@ test.describe('Create Vault', async () => {
       const {
         data: [vaults, ...restVaults],
       } = await supabaseAdmin.from('vaults').select('id, type, status, address').eq('id', created.id);
-      let expected = { id: created.id, type: 'fixed_yield_upside', status: 'ready', address: created.address };
+      const expected = { id: created.id, type: 'fixed_yield_upside', status: 'ready', address: created.address };
       expect(vaults).toMatchObject(expected);
       expect(restVaults).toEqual([]);
 
@@ -169,9 +176,9 @@ test.describe('Create Vault', async () => {
     });
 
     test('a non-matured, ready, Upside Fixed Yield vault, linked to another, open for deposits, pending for redemption', async () => {
-      const linkTo = await createVault(config, false, false, false);
+      const linkToVault = await createVault(config, false, false, false);
 
-      const created = await createVault(config, false, true, false, linkTo.address);
+      const created = await createVault(config, false, true, false, linkToVault.address);
       expect(created).toMatchObject({ type: 'fixed_yield_upside', status: 'ready' });
       expect(isPast(created.deposits_opened_at)).toBe(true);
       expect(isFuture(created.deposits_closed_at)).toBe(true);
@@ -184,7 +191,7 @@ test.describe('Create Vault', async () => {
       const {
         data: [vaults, ...restVaults],
       } = await supabaseAdmin.from('vaults').select('id, type, status, address').eq('id', created.id);
-      let expected = { id: created.id, type: 'fixed_yield_upside', status: 'ready', address: created.address };
+      const expected = { id: created.id, type: 'fixed_yield_upside', status: 'ready', address: created.address };
       expect(vaults).toMatchObject(expected);
       expect(restVaults).toEqual([]);
 
@@ -192,10 +199,40 @@ test.describe('Create Vault', async () => {
       const {
         data: [vaultEntity, ...restVaultEntity],
       } = await supabaseAdmin.from('vault_entities').select('address').eq('vault_id', created.id).eq('type', 'vault');
-      expect(vaultEntity).toMatchObject({ address: linkTo.address });
+      expect(vaultEntity).toMatchObject({ address: linkToVault.address });
       expect(restVaultEntity).toEqual([]);
 
       await verifyVaultContract(created.address);
+    });
+
+    test('a non-matured, ready, Fixed Yield vault, open for deposits, pending for redemption, with tenant', async () => {
+      const tenantUser = await createUser(config, generateRandomEmail('tenant'), false, generatePassword());
+
+      const created = await createVault(config, false, false, true, undefined, tenantUser.email);
+      expect(created).toMatchObject({ type: 'fixed_yield', status: 'ready' });
+      expect(isPast(created.deposits_opened_at)).toBe(true);
+      expect(isFuture(created.deposits_closed_at)).toBe(true);
+      expect(isAfter(created.deposits_closed_at, created.deposits_opened_at)).toBe(true);
+      expect(isFuture(created.redemptions_opened_at)).toBe(true);
+      expect(isAfter(created.redemptions_opened_at, created.deposits_closed_at)).toBe(true);
+      expect(isAfter(created.redemptions_closed_at, created.redemptions_opened_at)).toBe(true);
+
+      // Vault
+      const {
+        data: [vaults, ...restVaults],
+      } = await supabaseAdmin.from('vaults').select('id, type, status, address, tenant').eq('id', created.id);
+      const expected = {
+        id: created.id,
+        type: 'fixed_yield',
+        status: 'ready',
+        address: created.address,
+        tenant: tenantUser.id,
+      };
+      expect(vaults).toMatchObject(expected);
+      expect(restVaults).toEqual([]);
+
+      await verifyVaultContract(created.address);
+      await deleteUserIfPresent(config, tenantUser.email);
     });
   });
 });
