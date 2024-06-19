@@ -227,6 +227,7 @@ test.describe('Create Vault', async () => {
       expect(restVaults).toEqual([]);
 
       await verifyVaultContract(created.address);
+      // NOTE (JL,2024-06-19): Deletion fails, due to Referential Integrity checks (Vault row refers to User).
       await deleteUserIfPresent(config, tenantUser.email);
     });
   });
