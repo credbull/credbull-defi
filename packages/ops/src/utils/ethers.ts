@@ -1,9 +1,9 @@
-import { Wallet, ethers } from 'ethers';
+import { Signer, Wallet, ethers } from 'ethers';
 import { SiweMessage, generateNonce } from 'siwe';
 
 import { Schema } from './schema';
 
-export const linkWalletMessage = async (config: any, signer: Wallet) => {
+export async function linkWalletMessage(config: any, signer: Wallet): Promise<string> {
   Schema.CONFIG_APP_URL.parse(config);
 
   let appUrl = new URL(config.app.url);
@@ -19,9 +19,9 @@ export const linkWalletMessage = async (config: any, signer: Wallet) => {
   });
 
   return preMessage.prepareMessage();
-};
+}
 
-export const signerFor = (config: any, privateKey: string) => {
+export function signerFor(config: any, privateKey: string): Signer {
   Schema.CONFIG_ETHERS_URL.parse(config);
   return new Wallet(privateKey, new ethers.providers.JsonRpcProvider(config.services.ethers.url));
-};
+}
