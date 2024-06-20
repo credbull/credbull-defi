@@ -654,6 +654,7 @@ __metadata:
   dependencies:
     "@credbull/api": "workspace:^"
     "@credbull/contracts": "workspace:^"
+    "@credbull/sdk": "workspace:^"
     "@playwright/test": ^1.44.1
     "@supabase/supabase-js": ^2.39.1
     "@trivago/prettier-plugin-sort-imports": ^4.3.0
