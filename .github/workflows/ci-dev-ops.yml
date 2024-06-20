@@ -8,9 +8,8 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - "main*"
-      - "development*"
-      - "ops*"
+      - "main"
+      - "development"
     paths:
       - "packages/ops/**"
       - "packages/contracts/**"
@@ -26,16 +25,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install yarn
-        run: |
-          corepack prepare yarn@stable --activate
-          npm install -g yarn
-
       - name: Install Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "yarn"
+
+      - name: Install yarn
+        run: corepack prepare yarn@stable --activate
 
       - name: Install foundry-toolchain
         uses: foundry-rs/foundry-toolchain@v1.2.0
