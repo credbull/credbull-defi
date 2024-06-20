@@ -9,7 +9,7 @@ import { Schema } from './utils/schema';
  * @param config The applicable configuration object.
  * @throws ZodError if the `config` object does not satisfy all configuration needs.
  */
-export const createDefaultUsers = async (config: any) => {
+export async function createDefaultUsers(config: any) {
   Schema.CONFIG_USERS.parse(config);
 
   console.log('='.repeat(90));
@@ -22,7 +22,7 @@ export const createDefaultUsers = async (config: any) => {
 
   console.log('  Done.');
   console.log('='.repeat(90));
-};
+}
 
 /**
  * Invoked by the command line processor, creates the default User Accounts.
@@ -30,10 +30,8 @@ export const createDefaultUsers = async (config: any) => {
  * @throws AuthError if any account creation fails.
  * @throws ZodError if the loaded configuration does not satisfy all configuration needs.
  */
-export const main = () => {
-  setTimeout(async () => {
-    createDefaultUsers(loadConfiguration());
-  }, 1000);
-};
+export async function main() {
+  await createDefaultUsers(loadConfiguration());
+}
 
 export default { main };

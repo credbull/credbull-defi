@@ -12,7 +12,7 @@ import { Schema } from './utils/schema';
  * @throws PostgrestError if any database operation fails.
  * @throws ZodError if the `config` object does not satisfy all configuration needs.
  */
-export const cleanVaultTable = async (config: any) => {
+export async function cleanVaultTable(config: any) {
   Schema.CONFIG_ADMIN_PRIVATE_KEY.parse(config);
 
   const supabaseAdmin = supabaseAdminClient(config);
@@ -40,18 +40,15 @@ export const cleanVaultTable = async (config: any) => {
 
   console.log(' Vault Table truncated.');
   console.log('='.repeat(80));
-};
+}
 
 /**
  * Invoked by the command line processor, pauses all Vault contracts and truncates the Vault database table.
  *
- * @throws AuthError if the account does not exist or the update fails.
  * @throws ZodError if the loaded configuration does not satisfy all configuration needs.
  */
-export const main = () => {
-  setTimeout(async () => {
-    cleanVaultTable(loadConfiguration());
-  }, 1000);
-};
+export async function main() {
+  await cleanVaultTable(loadConfiguration());
+}
 
 export default main;
