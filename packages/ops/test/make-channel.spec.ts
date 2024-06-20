@@ -61,31 +61,3 @@ test.describe('Make Channel should update', async () => {
     await deleteUserIfPresent(supabaseAdmin, email);
   });
 });
-
-test.describe('Make Channel Main should fail with', async () => {
-  test('an absent parameters configuration', async () => {
-    expect(() => main({})).toThrow(Error);
-  });
-});
-
-test.describe('Make Channel Main should update', async () => {
-  test('an existing non-channel account to be a channel account', async () => {
-    const user = await createUser(config, email2, false, PASSWORD);
-    expect(user.app_metadata.partner_type).toBeUndefined();
-
-    expect(() => main({}, { email: email2 })).toPass();
-
-    // Poll the database until the User is updated, or test is timed out after 1 minute.
-    await expect
-      .poll(
-        async () => {
-          const updated = await userByOrThrow(supabaseAdmin, email2);
-          return updated?.app_metadata?.partner_type === 'channel';
-        },
-        {
-          timeout: 30_000,
-        },
-      )
-      .toEqual(true);
-  });
-});

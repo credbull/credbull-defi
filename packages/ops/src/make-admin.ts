@@ -45,10 +45,10 @@ export async function makeAdmin(config: any, email: string): Promise<any> {
  * @throws AuthError if the account does not exist or the update fails.
  * @throws ZodError if the loaded configuration does not satisfy all configuration needs.
  */
-export function main(scenarios: object, params?: { email: string }) {
+export async function main(scenarios: object, params?: { email: string }) {
   if (!params?.email) throw new Error('Email is required');
 
-  makeAdmin(loadConfiguration(), params!.email);
+  await makeAdmin(loadConfiguration(), params!.email);
 }
 
 export default { main };
