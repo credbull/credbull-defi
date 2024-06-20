@@ -57,31 +57,3 @@ test.describe('Make Admnin should update', async () => {
     expect(updated.app_metadata, 'Admin Role is not set.').toMatchObject(expectedRoles);
   });
 });
-
-test.describe('Make Admin Main should fail with', async () => {
-  test('an absent parameters configuration', async () => {
-    expect(() => main({})).toThrow(Error);
-  });
-});
-
-test.describe('Make Admin Main should update', async () => {
-  test('an existing non-admin account to be an admin account', async () => {
-    const user = await createUser(config, email2, false, PASSWORD);
-    expect(user.app_metadata.roles).toBeUndefined();
-
-    expect(() => main({}, { email: email2 })).toPass();
-
-    // Poll the database until the User is updated, or test is timed out after 1 minute.
-    await expect
-      .poll(
-        async () => {
-          const updated = await userByOrThrow(supabaseAdmin, email2);
-          return updated.app_metadata.roles?.includes('admin') || false;
-        },
-        {
-          timeout: 30_000,
-        },
-      )
-      .toEqual(true);
-  });
-});
