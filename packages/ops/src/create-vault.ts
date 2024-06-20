@@ -151,7 +151,7 @@ function createParams(
  * @throws PostgrestError if authentication or any database interaction fails.
  * @throws Error if there are no contracts to operate upon.
  */
-export const createVault = async (
+export async function createVault(
   config: any,
   isMatured: boolean,
   isUpside: boolean,
@@ -177,7 +177,7 @@ export const createVault = async (
   const adminSigner = signerFor(config, config.secret.ADMIN_PRIVATE_KEY);
 
   // TODO: ISSUE we are logging in here as the Admin User - but later we POST to the createVault owned by the OPERATOR
-  const admin = await login(config, { admin: true });
+  const admin = await login(config, config.users.admin.email_address, config.secret.ADMIN_PASSWORD);
   const adminHeaders = headers(admin);
 
   // Require Custodian address for a Matured Vault. Allow it otherwise.
@@ -256,7 +256,7 @@ export const createVault = async (
 
   console.log('='.repeat(80));
   return created;
-};
+}
 
 /**
  * Invoked by the command line processor, creates a Vault according to the  `scenarios` and `params`.
@@ -265,10 +265,10 @@ export const createVault = async (
  * @param params Optional parameters object.
  * @throws ZodError if the configuration fails to load or satisfy any configuration requirement.
  */
-export const main = async (
+export async function main(
   scenarios: { matured: boolean; upside: boolean; tenant: boolean },
   params?: { upsideVault: string; tenantEmail: string },
-) => {
+) {
   await createVault(
     loadConfiguration(),
     scenarios.matured,
@@ -277,4 +277,4 @@ export const main = async (
     params?.upsideVault,
     params?.tenantEmail,
   );
-};
+}
