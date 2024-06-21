@@ -16,7 +16,7 @@ on:
       - ".github/workflows/ci-dev-sdk.yml"
 
 jobs:
-  deploy:
+  sdk-int-test:
     runs-on: ubuntu-latest
     environment: testnet
 
@@ -96,6 +96,3 @@ jobs:
         run: yarn op --clean-vault-table
         working-directory: packages/ops
 
-      - name: Cleanup Yarn Cache
-        if: always()
-        run: yarn cache clean

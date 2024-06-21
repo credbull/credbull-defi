@@ -17,7 +17,7 @@ on:
       - ".github/workflows/ci-dev-ops.yml"
 
 jobs:
-  deploy:
+  ops-int-test:
     runs-on: ubuntu-latest
     environment: ci
 
@@ -58,6 +58,3 @@ jobs:
           ALICE_PASSWORD: alice-1234
           BOB_PASSWORD: bobword
 
-      - name: Cleanup Yarn Cache
-        if: always()
-        run: yarn cache clean
