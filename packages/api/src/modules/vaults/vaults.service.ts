@@ -6,6 +6,9 @@ import {
   CredbullUpsideVaultFactory,
   CredbullUpsideVaultFactory__factory,
 } from '@credbull/contracts';
+import { FixedYieldVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
+import { MaturityVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
+import { UpsideVault } from '@credbull/contracts/types/CredbullFixedYieldVaultWithUpside';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BigNumber, type ContractTransaction } from 'ethers';
 
@@ -15,6 +18,7 @@ import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
 import { responseFromRead, responseFromWrite } from '../../utils/contracts';
+import { toISOString } from '../../utils/time';
 
 import { VaultParamsDto } from './vaults.dto';
 import {
@@ -72,9 +76,11 @@ export class VaultsService {
 
     if (!collateralPercentage) collateralPercentage = 0;
 
+    const vaultParams = this.createVaultParams(params, upside, collateralPercentage);
+
     const readMethod: Promise<BigNumber> = upside
-      ? upsideFactory.estimateGas.createVault(params, collateralPercentage, options)
-      : factory.estimateGas.createVault(params, options);
+      ? upsideFactory.estimateGas.createVault(vaultParams as UpsideVault.UpsideVaultParamsStruct, options)
+      : factory.estimateGas.createVault(vaultParams as FixedYieldVault.FixedYieldVaultParamsStruct, options);
 
     const estimation = await responseFromRead(upside ? upsideFactory : factory, readMethod);
     if (estimation.error) {
@@ -82,8 +88,12 @@ export class VaultsService {
     }
 
     const writeMethod: Promise<ContractTransaction> = upside
-      ? upsideFactory.createVault(params, collateralPercentage, options, { gasLimit: estimation.data })
-      : factory.createVault(params, options, { gasLimit: estimation.data });
+      ? upsideFactory.createVault(vaultParams as UpsideVault.UpsideVaultParamsStruct, options, {
+          gasLimit: estimation.data,
+        })
+      : factory.createVault(vaultParams as FixedYieldVault.FixedYieldVaultParamsStruct, options, {
+          gasLimit: estimation.data,
+        });
 
     const response = await responseFromWrite(upside ? upsideFactory : factory, writeMethod);
     if (response.error) return response;
@@ -100,14 +110,82 @@ export class VaultsService {
     return await this.readyVaultInDB(createdVault.data);
   }
 
+  private createVaultParams(
+    params: VaultParamsDto,
+    upside: boolean = false,
+    collateralPercentage?: number,
+  ): FixedYieldVault.FixedYieldVaultParamsStruct | UpsideVault.UpsideVaultParamsStruct {
+    const baseVaultParams = {
+      asset: params.asset,
+      shareName: params.shareName,
+      shareSymbol: params.shareSymbol,
+      custodian: params.custodian,
+    };
+
+    const contractRoles = {
+      owner: params.owner,
+      operator: params.operator,
+      custodian: params.custodian,
+    };
+
+    const depositWindowParam = {
+      opensAt: params.depositOpensAt,
+      closesAt: params.depositClosesAt,
+    };
+
+    const matureWindowParam = {
+      opensAt: params.redemptionOpensAt,
+      closesAt: params.redemptionClosesAt,
+    };
+
+    const windowVaultParams = {
+      depositWindow: depositWindowParam,
+      matureWindow: matureWindowParam,
+    };
+
+    const kycParams = {
+      kycProvider: params.kycProvider,
+      depositThresholdForWhitelisting: params.depositThresholdForWhitelisting,
+    };
+
+    const maxCapParams = {
+      maxCap: params.maxCap,
+    };
+
+    const maturityVaultParams: MaturityVault.MaturityVaultParamsStruct = {
+      baseVaultParams,
+      promisedYield: params.promisedYield,
+    };
+
+    const fixedYieldVaultParams: FixedYieldVault.FixedYieldVaultParamsStruct = {
+      maturityVaultParams,
+      contractRoles,
+      windowVaultParams,
+      kycParams,
+      maxCapParams,
+    };
+
+    if (!upside) {
+      return fixedYieldVaultParams;
+    }
+
+    const upsideVaultParams: UpsideVault.UpsideVaultParamsStruct = {
+      fixedYieldVaultParams,
+      cblToken: params.token,
+      collateralPercentage: collateralPercentage as unknown as BigNumber,
+    };
+
+    return upsideVaultParams;
+  }
+
   private async createVaultInDB(params: VaultParamsDto, vaultAddress: string, upside: boolean) {
     const vaultData = {
       type: upside ? 'fixed_yield_upside' : 'fixed_yield',
       status: 'created' as const,
-      deposits_opened_at: new Date(Number(params.depositOpensAt) * 1000).toISOString(),
-      deposits_closed_at: new Date(Number(params.depositClosesAt) * 1000).toISOString(),
-      redemptions_opened_at: new Date(Number(params.redemptionOpensAt) * 1000).toISOString(),
-      redemptions_closed_at: new Date(Number(params.redemptionClosesAt) * 1000).toISOString(),
+      deposits_opened_at: toISOString(Number(params.depositOpensAt)),
+      deposits_closed_at: toISOString(Number(params.depositClosesAt)),
+      redemptions_opened_at: toISOString(Number(params.redemptionOpensAt)),
+      redemptions_closed_at: toISOString(Number(params.redemptionClosesAt)),
       address: vaultAddress,
       strategy_address: vaultAddress,
       asset_address: params.asset,

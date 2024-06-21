@@ -9,6 +9,18 @@ abstract contract WindowPlugIn {
         uint256 windowOpensAt, uint256 windowClosesAt, uint256 timestamp
     );
 
+    /// @notice - Struct for window parameters
+    struct WindowParams {
+        uint256 opensAt;
+        uint256 closesAt;
+    }
+
+    /// @notice - Struct to hold window parameters
+    struct WindowVaultParams {
+        WindowParams depositWindow;
+        WindowParams matureWindow;
+    }
+
     /**
      * @dev
      * The timestamp when the vault opens for deposit.

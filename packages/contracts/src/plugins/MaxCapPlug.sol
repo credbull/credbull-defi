@@ -6,6 +6,11 @@ pragma solidity ^0.8.19;
 abstract contract MaxCapPlugIn {
     error CredbullVault__MaxCapReached();
 
+    /// @notice - Parameters for the MaxCap PlugIn
+    struct MaxCapParams {
+        uint256 maxCap;
+    }
+
     /// @notice Max no.of assets that can be deposited to the vault;
     uint256 public maxCap;
 

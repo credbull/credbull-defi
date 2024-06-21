@@ -9,14 +9,15 @@ defaults:
 
 on:
   workflow_dispatch:
-    branches:
-      - "main*"
-      - "development*"
-      - "ops*"
-    paths:
-      - "packages/app/**"
-      - "packages/contracts/**"
-      - ".github/workflows/ci-dev-app.yml"
+  push:
+      branches:
+        - "main*"
+        - "development*"
+        - "ops*"
+      paths:
+        - "packages/app/**"
+        - "packages/contracts/**"
+        - ".github/workflows/ci-dev-app.yml"
 
 jobs:
   deploy:

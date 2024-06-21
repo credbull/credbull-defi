@@ -5,19 +5,20 @@ pragma solidity ^0.8.19;
 import { Test } from "forge-std/Test.sol";
 import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { WhitelistVaultMock } from "../mocks/vaults/WhitelistVaultMock.m.sol";
-import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
+import { CredbullBaseVault } from "../../src/base/CredbullBaseVault.sol";
 
 contract WhitelistPlugInTest is Test {
     WhitelistVaultMock private vault;
     DeployVaultFactory private deployer;
     CredbullKYCProvider private kycProvider;
 
-    ICredbull.VaultParams private vaultParams;
+    CredbullBaseVault.BaseVaultParams private vaultParams;
+    WhitelistPlugIn.KycParams private kycParams;
     HelperConfig private helperConfig;
 
     address private alice = makeAddr("alice");
@@ -29,13 +30,11 @@ contract WhitelistPlugInTest is Test {
     function setUp() public {
         deployer = new DeployVaultFactory();
         (,, kycProvider, helperConfig) = deployer.runTest();
-        vaultParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createTestVaultParams();
+        vaultParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createBaseVaultTestParams();
+        kycParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createKycParams();
+        kycParams.kycProvider = address(kycProvider);
 
-        if (vaultParams.kycProvider == address(0)) {
-            vaultParams.kycProvider = address(kycProvider);
-        }
-
-        vault = new WhitelistVaultMock(vaultParams);
+        vault = new WhitelistVaultMock(vaultParams, kycParams);
         precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
 
         address[] memory whitelistAddresses = new address[](2);
@@ -46,7 +45,7 @@ contract WhitelistPlugInTest is Test {
         statuses[0] = true;
         statuses[1] = true;
 
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(kycProvider.owner());
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
@@ -61,7 +60,7 @@ contract WhitelistPlugInTest is Test {
         bool[] memory statuses = new bool[](1);
         statuses[0] = false;
 
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(kycProvider.owner());
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
@@ -112,13 +111,13 @@ contract WhitelistPlugInTest is Test {
         bool[] memory statuses = new bool[](1);
         statuses[0] = false;
 
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(kycProvider.owner());
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
         vault.toggleWhitelistCheck(false);
 
-        deposit(alice, 10 * precision, true);
+        deposit(alice, 10 * precision);
         assertEq(vault.balanceOf(alice), 10 * precision);
     }
 
@@ -129,15 +128,10 @@ contract WhitelistPlugInTest is Test {
         assertEq(afterToggle, !beforeToggle);
     }
 
-    function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
+    function deposit(address user, uint256 assets) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
         vaultParams.asset.approve(address(vault), assets);
-
-        // wrap if set to true
-        if (warp) {
-            vm.warp(vaultParams.depositOpensAt);
-        }
 
         shares = vault.deposit(assets, user);
         vm.stopPrank();
