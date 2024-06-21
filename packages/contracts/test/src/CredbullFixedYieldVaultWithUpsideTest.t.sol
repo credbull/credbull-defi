@@ -7,6 +7,8 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { FixedYieldVault } from "../../src/vaults/FixedYieldVault.sol";
 
 import { DeployVaultFactory } from "@script/DeployVaultFactory.s.sol";
 import { HelperConfig } from "@script/HelperConfig.s.sol";

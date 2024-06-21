@@ -73,9 +73,9 @@ abstract contract Vault is ERC4626, Pausable {
             revert CredbullVault__InvalidAsset(params.asset);
         }
 
-        CUSTODIAN = params.custodian;
+        CUSTODIAN = baseVaultParams.custodian;
 
-        VAULT_DECIMALS = _checkValidDecimalValue(address(params.asset));
+        VAULT_DECIMALS = _checkValidDecimalValue(address(baseVaultParams.asset));
     }
 
     /**
