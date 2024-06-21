@@ -2,11 +2,15 @@
 
 pragma solidity ^0.8.19;
 
-import { ICredbull } from "../interface/ICredbull.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../CredbullFixedYieldVaultWithUpside.sol";
 import { CredbullVaultFactory } from "./CredbullVaultFactory.sol";
 
 contract CredbullUpsideVaultFactory is CredbullVaultFactory {
+    /// @notice Event to emit when a new vault is created
+    event VaultDeployed(
+        address indexed vault, CredbullFixedYieldVaultWithUpside.UpsideVaultParams params, string options
+    );
+
     /**
      * @param owner - The owner of the factory contract
      * @param operator - The operator of the factory contract
@@ -19,17 +23,15 @@ contract CredbullUpsideVaultFactory is CredbullVaultFactory {
     /**
      * @notice - Function to create a new upside vault. Should be called only by the owner
      * @param _params - The VaultParams
-     * @param _collateralPercentage - The percentage of collateral to be deposited in Credbull Token
      * @param options - A JSON string that contains additional info about vault (Off-chain use case)
      */
-    function createVault(ICredbull.VaultParams memory _params, uint256 _collateralPercentage, string memory options)
+    function createVault(CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory _params, string memory options)
         public
         onlyRole(OPERATOR_ROLE)
-        onlyAllowedCustodians(_params.custodian)
+        onlyAllowedCustodians(_params.fixedYieldVaultParams.maturityVaultParams.baseVaultParams.custodian)
         returns (address)
     {
-        CredbullFixedYieldVaultWithUpside newVault =
-            new CredbullFixedYieldVaultWithUpside(_params, _params.token, _collateralPercentage);
+        CredbullFixedYieldVaultWithUpside newVault = new CredbullFixedYieldVaultWithUpside(_params);
 
         emit VaultDeployed(address(newVault), _params, options);
 

@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { ICredbull } from "../interface/ICredbull.sol";
 
 /**
  * @notice - A factory contract to create vault contract
@@ -14,9 +13,6 @@ abstract contract CredbullVaultFactory is AccessControl {
 
     /// @notice Error to revert if custodian is not allowed
     error CredbullVaultFactory__CustodianNotAllowed();
-
-    /// @notice Event to emit when a new vault is created
-    event VaultDeployed(address indexed vault, ICredbull.VaultParams params, string options);
 
     /// @notice Address set that contains list of all vault address
     EnumerableSet.AddressSet internal allVaults;

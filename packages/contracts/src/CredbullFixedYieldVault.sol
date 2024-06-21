@@ -5,5 +5,5 @@ pragma solidity ^0.8.19;
 import { FixedYieldVault } from "./vaults/FixedYieldVault.sol";
 
 contract CredbullFixedYieldVault is FixedYieldVault {
-    constructor(VaultParams memory params) FixedYieldVault(params) { }
+    constructor(FixedYieldVaultParams memory params) FixedYieldVault(params) { }
 }
