@@ -11,9 +11,6 @@ import { supabaseAdminClient } from './utils/database';
 import { signerFor } from './utils/ethers';
 import { Schema } from './utils/schema';
 import { userByOrThrow } from './utils/user';
-import { FixedYieldVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
-import { MaturityVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
-import { UpsideVault } from '@credbull/contracts/types/CredbullFixedYieldVaultWithUpside';
 
 type CreateVaultParams = {
   treasury: string | undefined;
@@ -53,10 +50,10 @@ function createParams(
   const redemptionDateAsTimestamp = redemptionOpensAt.getTime() / 1000;
 
   const baseEntities = [
-      {type: 'treasury', address: treasury, percentage: 0.8},
-      {type: 'activity_reward', address: activityReward, percentage: 1},
-      {type: 'custodian', address: custodian},
-      {type: 'kyc_provider', address: kycProvider},
+    { type: 'treasury', address: treasury, percentage: 0.8 },
+    { type: 'activity_reward', address: activityReward, percentage: 1 },
+    { type: 'custodian', address: custodian },
+    { type: 'kyc_provider', address: kycProvider },
   ];
 
   const entities = params.upside
@@ -124,11 +121,11 @@ function createParams(
   };
 
   const vaultExtraParams: CreateVaultParams = {
-      treasury: treasury,
-      activityReward: activityReward,
-      collateralPercentage: collateralPercentage,
-      entities,
-      tenant: params.tenant,
+    treasury: treasury,
+    activityReward: activityReward,
+    collateralPercentage: collateralPercentage,
+    entities,
+    tenant: params.tenant,
   };
 
   const vaultParams = params.upside ? upsideVaultParams : fixedYieldVaultParams;
@@ -150,7 +147,6 @@ function createParams(
  * @param isTenant (JL,2024-06-18): Don't Know.
  * @param upsideVault The `string` Address of the Fixed Yield With Upside Vault.
  * @param tenantEmail (JL,2024-06-18): Don't Know.
- * @param override Values that, if present, override the same configuration values.
  * @throws ZodError if any parameter or config item fails validation.
  * @throws PostgrestError if authentication or any database interaction fails.
  * @throws Error if there are no contracts to operate upon.
@@ -225,9 +221,6 @@ export async function createVault(
     matured: isMatured,
     upside: upsideVault,
     tenant: isTenant && tenantEmail ? (await userByOrThrow(supabaseAdmin, tenantEmail)).id : undefined,
-    treasuryAddress: override?.treasuryAddress,
-    activityRewardAddress: override?.activityRewardAddress,
-    collateralPercentage: override?.collateralPercentage,
   });
 
   const serviceUrl = new URL(`/vaults/create-vault${isUpside ? '-upside' : ''}`, config.api.url);
