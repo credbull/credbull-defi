@@ -13,7 +13,7 @@
     "db-check": "tsc && node ./script/utils/checkDb.js",
     "db-export": "tsc && node ./script/utils/exporter.js",
     "deploy": "make deploy-local",
-    "deploy:ci": "yarn db-export && make deploy-baseSepolia",
+    "deploy:ci": "yarn db-export && make deploy-arbSepolia",
     "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
     "postinstall": "yarn build && yarn gen-types"
   },
