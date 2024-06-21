@@ -158,7 +158,7 @@ export async function createVault(
   isTenant: boolean,
   upsideVault?: string,
   tenantEmail?: string,
-): Promise<any> => {
+): Promise<any> {
   Schema.CONFIG_API_URL.parse(config);
   Schema.CONFIG_ADMIN_PRIVATE_KEY.parse(config);
   Schema.CONFIG_EVM_ADDRESS.parse(config);
