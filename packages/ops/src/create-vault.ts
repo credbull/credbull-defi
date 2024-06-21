@@ -1,4 +1,7 @@
 import { CredbullFixedYieldVault__factory, CredbullVaultFactory__factory } from '@credbull/contracts';
+import { FixedYieldVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
+import { MaturityVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
+import { UpsideVault } from '@credbull/contracts/types/CredbullFixedYieldVaultWithUpside';
 import { addYears, startOfWeek, startOfYear, subDays } from 'date-fns';
 
 import { headers, login } from './utils/api';
@@ -8,9 +11,6 @@ import { supabaseAdminClient } from './utils/database';
 import { signerFor } from './utils/ethers';
 import { Schema } from './utils/schema';
 import { userByOrThrow } from './utils/user';
-import { FixedYieldVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
-import { MaturityVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
-import { UpsideVault } from '@credbull/contracts/types/CredbullFixedYieldVaultWithUpside';
 
 type CreateVaultParams = {
   treasury: string | undefined;
@@ -23,20 +23,18 @@ type CreateVaultParams = {
 function createParams(
   config: any,
   params: {
-  custodian: string;
-  kycProvider?: string;
-  asset?: string;
-  token?: string;
-  matured?: boolean;
-  upside?: string;
-  tenant?: string;
-  treasuryAddress?: string;
-  activityRewardAddress?: string;
-  collateralPercentage?: number;
-}): [FixedYieldVault.FixedYieldVaultParamsStruct | UpsideVault.UpsideVaultParamsStruct, CreateVaultParams, any] {
-  const treasury = params.treasuryAddress || config.evm.address.treasury;
-  const activityReward = params.activityRewardAddress || config.evm.address.activity_reward;
-  const collateralPercentage = params.collateralPercentage || config.operation.createVault.collateral_percentage;
+    custodian: string;
+    kycProvider?: string;
+    asset?: string;
+    token?: string;
+    matured?: boolean;
+    upside?: string;
+    tenant?: string;
+  },
+): [FixedYieldVault.FixedYieldVaultParamsStruct | UpsideVault.UpsideVaultParamsStruct, CreateVaultParams, any] {
+  const treasury = config.evm.address.treasury;
+  const activityReward = config.evm.address.activity_reward;
+  const collateralPercentage = config.operation.createVault.collateral_percentage;
 
   const kycProvider = params.kycProvider;
   const custodian = params.custodian;
@@ -52,82 +50,82 @@ function createParams(
   const redemptionDateAsTimestamp = redemptionOpensAt.getTime() / 1000;
 
   const baseEntities = [
-      {type: 'treasury', address: treasury, percentage: 0.8},
-      {type: 'activity_reward', address: activityReward, percentage: 1},
-      {type: 'custodian', address: custodian},
-      {type: 'kyc_provider', address: kycProvider},
+    { type: 'treasury', address: treasury, percentage: 0.8 },
+    { type: 'activity_reward', address: activityReward, percentage: 1 },
+    { type: 'custodian', address: custodian },
+    { type: 'kyc_provider', address: kycProvider },
   ];
 
   const entities = params.upside
-      ? [{type: 'vault', address: params.upside, percentage: 0.2}, ...baseEntities]
-      : baseEntities;
+    ? [{ type: 'vault', address: params.upside, percentage: 0.2 }, ...baseEntities]
+    : baseEntities;
 
   const tempParams = {
-      owner: config.evm.address.owner,
-      operator: config.evm.address.operator,
-      asset: params.asset || '',
-      token: params.token || '',
-      shareName: 'Credbull Liquidity',
-      shareSymbol: 'CLTP',
-      promisedYield: 10,
-      depositOpensAt: depositDateAsTimestamp,
-      depositClosesAt: depositDateAsTimestamp + week,
-      redemptionOpensAt: redemptionDateAsTimestamp,
-      redemptionClosesAt: redemptionDateAsTimestamp + week,
-      custodian: params.custodian,
-      kycProvider: params.kycProvider || '',
-      maxCap: (1e6 * 1e6).toString(),
-      depositThresholdForWhitelisting: (1000e6).toString(),
+    owner: config.evm.address.owner,
+    operator: config.evm.address.operator,
+    asset: params.asset || '',
+    token: params.token || '',
+    shareName: 'Credbull Liquidity',
+    shareSymbol: 'CLTP',
+    promisedYield: 10,
+    depositOpensAt: depositDateAsTimestamp,
+    depositClosesAt: depositDateAsTimestamp + week,
+    redemptionOpensAt: redemptionDateAsTimestamp,
+    redemptionClosesAt: redemptionDateAsTimestamp + week,
+    custodian: params.custodian,
+    kycProvider: params.kycProvider || '',
+    maxCap: (1e6 * 1e6).toString(),
+    depositThresholdForWhitelisting: (1000e6).toString(),
   };
 
   const maturityVaultParams: MaturityVault.MaturityVaultParamsStruct = {
-      baseVaultParams: {
-          asset: tempParams.asset,
-          shareName: tempParams.shareName,
-          shareSymbol: tempParams.shareSymbol,
-          custodian: tempParams.custodian,
-      },
-      promisedYield: tempParams.promisedYield,
-  }
+    baseVaultParams: {
+      asset: tempParams.asset,
+      shareName: tempParams.shareName,
+      shareSymbol: tempParams.shareSymbol,
+      custodian: tempParams.custodian,
+    },
+    promisedYield: tempParams.promisedYield,
+  };
 
   const fixedYieldVaultParams: FixedYieldVault.FixedYieldVaultParamsStruct = {
-      maturityVaultParams,
-      contractRoles: {
-          owner: tempParams.owner,
-          operator: tempParams.operator,
-          custodian: tempParams.custodian,
+    maturityVaultParams,
+    contractRoles: {
+      owner: tempParams.owner,
+      operator: tempParams.operator,
+      custodian: tempParams.custodian,
+    },
+    windowVaultParams: {
+      depositWindow: {
+        opensAt: tempParams.depositOpensAt,
+        closesAt: tempParams.depositClosesAt,
       },
-      windowVaultParams: {
-          depositWindow: {
-              opensAt: tempParams.depositOpensAt,
-              closesAt: tempParams.depositClosesAt,
-          },
-          matureWindow: {
-              opensAt: tempParams.redemptionOpensAt,
-              closesAt: tempParams.redemptionClosesAt,
-          },
+      matureWindow: {
+        opensAt: tempParams.redemptionOpensAt,
+        closesAt: tempParams.redemptionClosesAt,
       },
-      kycParams: {
-          kycProvider: tempParams.kycProvider,
-          depositThresholdForWhitelisting: tempParams.depositThresholdForWhitelisting,
-      },
-      maxCapParams: {
-          maxCap: tempParams.maxCap,
-      }
-  }
+    },
+    kycParams: {
+      kycProvider: tempParams.kycProvider,
+      depositThresholdForWhitelisting: tempParams.depositThresholdForWhitelisting,
+    },
+    maxCapParams: {
+      maxCap: tempParams.maxCap,
+    },
+  };
 
   const upsideVaultParams: UpsideVault.UpsideVaultParamsStruct = {
-      fixedYieldVaultParams,
-      cblToken: tempParams.token,
-      collateralPercentage: params.collateralPercentage || 20_00
-  }
+    fixedYieldVaultParams,
+    cblToken: tempParams.token,
+    collateralPercentage: collateralPercentage,
+  };
 
   const vaultExtraParams: CreateVaultParams = {
-      treasury: treasury,
-      activityReward: activityReward,
-      collateralPercentage: collateralPercentage,
-      entities,
-      tenant: params.tenant,
+    treasury: treasury,
+    activityReward: activityReward,
+    collateralPercentage: collateralPercentage,
+    entities,
+    tenant: params.tenant,
   };
 
   const vaultParams = params.upside ? upsideVaultParams : fixedYieldVaultParams;
@@ -139,7 +137,6 @@ function createParams(
 }
 
 // TODO (JL,2024-06-10): Understand Tenancy & Tenant Email.
-// FIXME (JL,2024-06-12): The 'override' hack is because sdk tests hack the environment before calling the script.
 
 /**
  * Creates a Vault according to the parameters.
@@ -150,7 +147,6 @@ function createParams(
  * @param isTenant (JL,2024-06-18): Don't Know.
  * @param upsideVault The `string` Address of the Fixed Yield With Upside Vault.
  * @param tenantEmail (JL,2024-06-18): Don't Know.
- * @param override Values that, if present, override the same configuration values.
  * @throws ZodError if any parameter or config item fails validation.
  * @throws PostgrestError if authentication or any database interaction fails.
  * @throws Error if there are no contracts to operate upon.
@@ -162,7 +158,6 @@ export const createVault = async (
   isTenant: boolean,
   upsideVault?: string,
   tenantEmail?: string,
-  override?: { treasuryAddress?: string; activityRewardAddress?: string; collateralPercentage?: number },
 ): Promise<any> => {
   Schema.CONFIG_API_URL.parse(config);
   Schema.CONFIG_ADMIN_PRIVATE_KEY.parse(config);
@@ -226,9 +221,6 @@ export const createVault = async (
     matured: isMatured,
     upside: upsideVault,
     tenant: isTenant && tenantEmail ? (await userByOrThrow(supabaseAdmin, tenantEmail)).id : undefined,
-    treasuryAddress: override?.treasuryAddress,
-    activityRewardAddress: override?.activityRewardAddress,
-    collateralPercentage: override?.collateralPercentage,
   });
 
   const serviceUrl = new URL(`/vaults/create-vault${isUpside ? '-upside' : ''}`, config.api.url);
