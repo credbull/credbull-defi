@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { ConsoleLogger, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { EthersModule } from '../../clients/ethers/ethers.module';
@@ -8,7 +8,7 @@ import { NotificationsService } from './notifications.service';
 
 @Module({
   imports: [SupabaseModule, EthersModule, ConfigModule],
-  providers: [NotificationsService],
+  providers: [NotificationsService, ConsoleLogger],
   exports: [NotificationsService],
 })
 export class NotificationsModule {}
