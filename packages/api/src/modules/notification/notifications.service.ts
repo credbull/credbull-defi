@@ -21,7 +21,6 @@ export class NotificationsService implements OnModuleInit {
   ) {
     this.logger.setContext(this.constructor.name);
     this.operator = tomlConfigService.config.evm.address.operator;
-
     const token = tomlConfigService.config.secret.SLACK_TOKEN?.value;
     if (token) {
       this.slack = new WebClient(token);

@@ -4,7 +4,9 @@ import { ZodError } from 'zod';
 import { createUser } from '@/create-user';
 import { main, makeChannel } from '@/make-channel';
 import { loadConfiguration } from '@/utils/config';
-import { deleteUserIfPresent, generateRandomEmail, supabase, userByOrThrow } from '@/utils/helpers';
+import { supabaseAdminClient } from '@/utils/database';
+import { generateRandomEmail } from '@/utils/generate';
+import { deleteUserIfPresent, userByOrThrow } from '@/utils/user';
 
 const PASSWORD = 'DoNotForget';
 
@@ -21,7 +23,7 @@ test.beforeAll(() => {
   email1 = generateRandomEmail('test.channel');
   email2 = generateRandomEmail('test.channel');
 
-  supabaseAdmin = supabase(config, { admin: true });
+  supabaseAdmin = supabaseAdminClient(config);
   ({
     data: { subscription },
   } = supabaseAdmin.auth.onAuthStateChange((event: any, session: any) => {

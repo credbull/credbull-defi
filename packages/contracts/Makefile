@@ -12,7 +12,10 @@ deploy-local:
 
 # TODO: change this to use the network config from foundry.toml
 deploy-arbSepolia:
-	$(MAKE) deploy RPC_URL=$(SEPOLIA_RPC_URL) EXTRA_FLAGS="--verify --slow"
+	$(MAKE) deploy RPC_URL=arbitrumSepolia EXTRA_FLAGS="--verify --slow"
+
+resume-arbSepolia:
+	$(MAKE) deploy RPC_URL=arbitrumSepolia EXTRA_FLAGS="--verify --slow --resume"
 
 deploy-baseSepolia:
 	$(MAKE) deploy RPC_URL=baseSepolia EXTRA_FLAGS="--verify --slow"

@@ -13,6 +13,7 @@ import { DeployMocks } from "./DeployMocks.s.sol";
 struct FactoryParams {
     address owner;
     address operator;
+    address custodian;
     uint256 collateralPercentage; // TODO - is this required or can we remove it?
 }
 
@@ -87,6 +88,7 @@ contract HelperConfig is Script {
         FactoryParams memory factoryParams = FactoryParams({
             owner: tomlConfig.readAddress(".evm.address.owner"),
             operator: tomlConfig.readAddress(".evm.address.operator"),
+            custodian: tomlConfig.readAddress(".evm.address.custodian"),
             collateralPercentage: tomlConfig.readUint(".evm.contracts.upside_vault.collateral_percentage")
         });
 

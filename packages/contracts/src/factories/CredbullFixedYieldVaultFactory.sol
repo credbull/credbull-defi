@@ -11,9 +11,12 @@ contract CredbullFixedYieldVaultFactory is CredbullVaultFactory {
     /**
      * @param owner - The owner of the factory contract
      * @param operator - The operator of the factory contract
+     * @param custodians - The custodians allowable for the vaults
      */
 
-    constructor(address owner, address operator) CredbullVaultFactory(owner, operator) { }
+    constructor(address owner, address operator, address[] memory custodians)
+        CredbullVaultFactory(owner, operator, custodians)
+    { }
 
     /**
      * @notice - Function to create a new vault. Should be called only by the owner

@@ -1,37 +1,32 @@
-import { z } from 'zod';
-
 import { CredbullFixedYieldVault__factory } from '@credbull/contracts';
 
 import { loadConfiguration } from './utils/config';
-import { signer, supabase } from './utils/helpers';
-
-// Zod Schema for validating parameters and configuration.
-const configParser = z.object({ secret: z.object({ ADMIN_PRIVATE_KEY: z.string() }) });
+import { supabaseAdminClient } from './utils/database';
+import { signerFor } from './utils/ethers';
+import { Schema } from './utils/schema';
 
 /**
  * Pauses all Vault contracts and truncates the Vault database table.
- * 
- * @param config The applicable configuration object. 
+ *
+ * @param config The applicable configuration object.
  * @throws PostgrestError if any database operation fails.
  * @throws ZodError if the `config` object does not satisfy all configuration needs.
  */
 export const cleanVaultTable = async (config: any) => {
-  configParser.parse(config);
+  Schema.CONFIG_ADMIN_PRIVATE_KEY.parse(config);
 
-  const supabaseAdmin = supabase(config, { admin: true });
+  const supabaseAdmin = supabaseAdminClient(config);
   const { data, error } = await supabaseAdmin.from('vaults').select();
-
   if (error) throw error;
-
   if (data.length === 0) {
     console.log('No vault data to clean');
     return;
   }
 
-  const adminSigner = signer(config, config.secret.ADMIN_PRIVATE_KEY);
+  const adminSigner = signerFor(config, config.secret.ADMIN_PRIVATE_KEY);
 
   console.log('='.repeat(80));
-  console.log(` Pausing ${data.length} Vaults.`)
+  console.log(` Pausing ${data.length} Vaults.`);
   for (const vault of data) {
     const contract = CredbullFixedYieldVault__factory.connect(vault.address, adminSigner);
     const tx = await contract.pauseVault();
@@ -48,13 +43,15 @@ export const cleanVaultTable = async (config: any) => {
 };
 
 /**
- * Invoked by the command line processor, pauses all Vault contracts and truncates the Vault database table. 
- * 
+ * Invoked by the command line processor, pauses all Vault contracts and truncates the Vault database table.
+ *
  * @throws AuthError if the account does not exist or the update fails.
  * @throws ZodError if the loaded configuration does not satisfy all configuration needs.
  */
 export const main = () => {
-  setTimeout(async () => { cleanVaultTable(loadConfiguration()) }, 1000);
+  setTimeout(async () => {
+    cleanVaultTable(loadConfiguration());
+  }, 1000);
 };
 
 export default main;

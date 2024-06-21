@@ -57,7 +57,7 @@ jobs:
 
       # re-run the tests here on purpose to ensure quality.
       - name: Run tests
-        run: forge test -vv
+        run: forge test -vvv
         env:
           ENVIRONMENT: local
 

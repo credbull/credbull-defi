@@ -10,11 +10,14 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 2,
+  retries: 0,
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : 1,
+  workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
+  reporter: [
+    ['list', { printSteps: true }],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
@@ -22,8 +25,9 @@ export default defineConfig({
   },
   projects: [
     {
+      // NOTE (JL,2024-06-18): This 'project' useful when using the Playwright Extension in vscode.
       name: 'ops',
-      testMatch: '**/*.spec.ts', // testMatch: '**/create-vault.spec.ts',
+      testMatch: '**/*.spec.ts',
     },
   ],
 });

@@ -24,13 +24,19 @@ abstract contract CredbullVaultFactory is AccessControl {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /**
-     *
      * @param owner - Owner of the factory contract
      * @param operator - Operator of the factory contract
+     * @param custodians - Initial set of custodians allowable for the vaults
      */
-    constructor(address owner, address operator) {
+    constructor(address owner, address operator, address[] memory custodians) {
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
         _grantRole(OPERATOR_ROLE, operator);
+
+        // set the allowed custodians directly in the constructor, without access restriction
+        bool[] memory result = new bool[](custodians.length);
+        for (uint256 i = 0; i < custodians.length; i++) {
+            result[i] = allowedCustodians.add(custodians[i]);
+        }
     }
 
     /**

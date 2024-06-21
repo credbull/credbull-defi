@@ -3,7 +3,8 @@ import { ZodError } from 'zod';
 
 import { createUser, main } from '@/create-user';
 import { loadConfiguration } from '@/utils/config';
-import { deleteUserIfPresent, supabase, userByOrUndefined } from '@/utils/helpers';
+import { supabaseAdminClient } from '@/utils/database';
+import { deleteUserIfPresent, userByOrUndefined } from '@/utils/user';
 
 const EMAIL_ADDRESS = 'minion@create.user.test';
 const PASSWORD = 'DoNotForget';
@@ -17,7 +18,7 @@ test.beforeAll(() => {
   // NOTE (JL,2024-05-31): This loads the same configuration as the operations themselves.
   config = loadConfiguration();
 
-  supabaseAdmin = supabase(config, { admin: true });
+  supabaseAdmin = supabaseAdminClient(config);
   ({
     data: { subscription },
   } = supabaseAdmin.auth.onAuthStateChange((event: any, session: any) => {
@@ -60,6 +61,8 @@ test.describe('Create User Main should fail with', async () => {
 //  Email Address. Waiting did not work. Removing parallelism did not work.
 //  The workaround solution is to use 1 Email Per Test.
 test.describe('Create User should create', async () => {
+  test.describe.configure({ mode: 'serial' });
+
   async function assertUserCreatedWith(email: string, isChannel: boolean, passwordMaybe?: string) {
     await expect(userByOrUndefined(supabaseAdmin, email)).resolves.toBeUndefined();
 
@@ -108,17 +111,14 @@ test.describe('Create User should create', async () => {
 });
 
 test.describe('Create User Main should create', async () => {
+  test.describe.configure({ mode: 'serial' });
+
   async function assertUserCreatedWith(email: string, isChannel: boolean) {
     expect(() => main({ channel: isChannel }, { email: email })).toPass();
 
     // Poll the database until the User is found to exist, or test is timed out after 1 minute.
     await expect
-      .poll(
-        async () => {
-          return await userByOrUndefined(supabaseAdmin, email);
-        },
-        { timeout: 30_000 },
-      )
+      .poll(async () => await userByOrUndefined(supabaseAdmin, email), { timeout: 30_000 })
       .toMatchObject({ email: email });
 
     // NOTE (JL,2024-06-05): I can't get the value from the `poll`, so re-query.
@@ -127,7 +127,7 @@ test.describe('Create User Main should create', async () => {
       expect(user.app_metadata.partner_type, 'Partner Type is set.').toBeUndefined();
     } else {
       const expectedPartnerType = { partner_type: 'channel' };
-      expect(user.app_metadata, 'Partner Type is not set.').toMatchObject(expectedPartnerType);
+      expect(user.app_metadata, 'Partner Type is not set for= ' + email).toMatchObject(expectedPartnerType);
     }
 
     await deleteUserIfPresent(supabaseAdmin, email);

@@ -8,7 +8,7 @@ import { CredbullFixedYieldVaultFactory } from "../src/factories/CredbullFixedYi
 import { CredbullUpsideVaultFactory } from "../src/factories/CredbullUpsideVaultFactory.sol";
 import { CredbullKYCProvider } from "../src/CredbullKYCProvider.sol";
 import { DeployedContracts } from "./DeployedContracts.s.sol";
-
+import { CredbullFixedYieldVault } from "../src/CredbullFixedYieldVault.sol";
 import { console2 } from "forge-std/console2.sol";
 
 contract DeployVaultFactory is Script {
@@ -41,18 +41,20 @@ contract DeployVaultFactory is Script {
 
         address owner = config.factoryParams.owner;
         address operator = config.factoryParams.operator;
+        address[] memory custodians = new address[](1);
+        custodians[0] = config.factoryParams.custodian;
 
         DeployedContracts deployChecker = new DeployedContracts();
 
         vm.startBroadcast();
 
         if (isTestMode || deployChecker.isDeployRequired("CredbullFixedYieldVaultFactory")) {
-            factory = new CredbullFixedYieldVaultFactory(owner, operator);
+            factory = new CredbullFixedYieldVaultFactory(owner, operator, custodians);
             console2.log("!!!!! Deploying CredbullFixedYieldVaultFactory !!!!!");
         }
 
         if (isTestMode || deployChecker.isDeployRequired("CredbullUpsideVaultFactory")) {
-            upsideFactory = new CredbullUpsideVaultFactory(owner, operator);
+            upsideFactory = new CredbullUpsideVaultFactory(owner, operator, custodians);
             console2.log("!!!!! Deploying CredbullVaultWithUpsideFactory !!!!!");
         }
 
