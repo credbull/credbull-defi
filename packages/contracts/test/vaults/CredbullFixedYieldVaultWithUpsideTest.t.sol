@@ -5,7 +5,6 @@ pragma solidity ^0.8.19;
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Test } from "forge-std/Test.sol";
 import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
-import { ICredbull } from "../../src/interface/ICredbull.sol";
 import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
@@ -13,6 +12,8 @@ import { MockToken } from "../mocks/MockToken.sol";
 import { DeployVaultFactory } from "../../script/DeployVaultFactory.s.sol";
 import { CredbullKYCProvider } from "../../src/CredbullKYCProvider.sol";
 import { console2 } from "forge-std/console2.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { FixedYieldVault } from "../../src/vaults/FixedYieldVault.sol";
 
 contract CredbullFixedYieldVaultWithUpsideTest is Test {
     using Math for uint256;
@@ -22,7 +23,8 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     DeployVaultFactory private deployer;
     CredbullKYCProvider private kycProvider;
 
-    ICredbull.VaultParams private vaultParams;
+    FixedYieldVault.FixedYieldVaultParams private vaultParams;
+    CredbullFixedYieldVaultWithUpside.UpsideVaultParams private upsideVaultParams;
 
     address private alice = makeAddr("alice");
 
@@ -30,20 +32,21 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     uint256 private constant REQUIRED_COLLATERAL_PERCENTAGE = 20_00;
     uint256 private constant ADDITIONAL_PRECISION = 1e12;
     uint16 private constant MAX_PERCENTAGE = 100_00;
+    IERC20 private cblToken;
 
     uint256 private precision;
 
     function setUp() public {
         deployer = new DeployVaultFactory();
         (,, kycProvider, helperConfig) = deployer.runTest();
-        vaultParams = new HelperVaultTest(helperConfig.getNetworkConfig()).createTestVaultParams();
+        (upsideVaultParams) =
+            new HelperVaultTest(helperConfig.getNetworkConfig()).createFixedYieldWithUpsideVaultParams();
+        vaultParams = upsideVaultParams.fixedYieldVaultParams;
+        upsideVaultParams.fixedYieldVaultParams.kycParams.kycProvider = address(kycProvider);
+        cblToken = upsideVaultParams.cblToken;
 
-        if (vaultParams.kycProvider == address(0)) {
-            vaultParams.kycProvider = address(kycProvider);
-        }
-
-        vault = new CredbullFixedYieldVaultWithUpside(vaultParams, vaultParams.token, REQUIRED_COLLATERAL_PERCENTAGE);
-        precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
+        vault = new CredbullFixedYieldVaultWithUpside(upsideVaultParams);
+        precision = 10 ** MockStablecoin(address(vaultParams.maturityVaultParams.baseVaultParams.asset)).decimals();
 
         address[] memory whitelistAddresses = new address[](1);
         whitelistAddresses[0] = alice;
@@ -51,19 +54,27 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         bool[] memory statuses = new bool[](1);
         statuses[0] = true;
 
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vault.kycProvider().updateStatus(whitelistAddresses, statuses);
         vm.stopPrank();
 
-        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
-        MockToken(address(vaultParams.token)).mint(alice, 200 ether);
+        MockStablecoin(address(vaultParams.maturityVaultParams.baseVaultParams.asset)).mint(
+            alice, INITIAL_BALANCE * precision
+        );
+        MockToken(address(cblToken)).mint(alice, 200 ether);
     }
 
     function test__UpsideVault__DepositAssetsAndGetShares() public {
-        uint256 custodiansBalance = vaultParams.asset.balanceOf(vaultParams.custodian);
+        uint256 custodiansBalance = vaultParams.maturityVaultParams.baseVaultParams.asset.balanceOf(
+            vaultParams.maturityVaultParams.baseVaultParams.custodian
+        );
 
         // ---- Setup Part 1, Check balance before deposit ----
-        assertEq(vaultParams.asset.balanceOf(address(vault)), 0, "Vault should start with no assets");
+        assertEq(
+            vaultParams.maturityVaultParams.baseVaultParams.asset.balanceOf(address(vault)),
+            0,
+            "Vault should start with no assets"
+        );
         assertEq(vault.totalAssets(), 0, "Vault should start with no assets");
         assertEq(vault.balanceOf(alice), 0, "User should start with no Shares");
 
@@ -77,7 +88,9 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         // Vault should have the assets
         assertEq(vault.totalAssets(), depositAmount, "Vault should now have the assets");
         assertEq(
-            vaultParams.asset.balanceOf(vaultParams.custodian),
+            vaultParams.maturityVaultParams.baseVaultParams.asset.balanceOf(
+                vaultParams.maturityVaultParams.baseVaultParams.custodian
+            ),
             depositAmount + custodiansBalance,
             "Custodian should have received the assets"
         );
@@ -85,7 +98,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         // Alice should have the shares
         assertEq(shares, depositAmount, "User should now have the Shares");
         assertEq(
-            vaultParams.token.balanceOf(address(vault)),
+            cblToken.balanceOf(address(vault)),
             (depositAmount * ADDITIONAL_PRECISION).mulDiv(REQUIRED_COLLATERAL_PERCENTAGE, MAX_PERCENTAGE),
             "Vault should now have the Tokens"
         );
@@ -93,10 +106,16 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     }
 
     function test__UpsideVault__MintAssetsAndGetShares() public {
-        uint256 custodiansBalance = vaultParams.asset.balanceOf(vaultParams.custodian);
+        uint256 custodiansBalance = vaultParams.maturityVaultParams.baseVaultParams.asset.balanceOf(
+            vaultParams.maturityVaultParams.baseVaultParams.custodian
+        );
 
         // ---- Setup Part 1, Check balance before deposit ----
-        assertEq(vaultParams.asset.balanceOf(address(vault)), 0, "Vault should start with no assets");
+        assertEq(
+            vaultParams.maturityVaultParams.baseVaultParams.asset.balanceOf(address(vault)),
+            0,
+            "Vault should start with no assets"
+        );
         assertEq(vault.totalAssets(), 0, "Vault should start with no assets");
         assertEq(vault.balanceOf(alice), 0, "User should start with no Shares");
 
@@ -110,7 +129,9 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         // Vault should have the assets
         assertEq(vault.totalAssets(), sharesAmount, "Vault should now have the assets");
         assertEq(
-            vaultParams.asset.balanceOf(vaultParams.custodian),
+            vaultParams.maturityVaultParams.baseVaultParams.asset.balanceOf(
+                vaultParams.maturityVaultParams.baseVaultParams.custodian
+            ),
             sharesAmount + custodiansBalance,
             "Custodian should have received the assets"
         );
@@ -118,7 +139,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         // Alice should have the shares
         assertEq(assets, sharesAmount, "User should now have the Shares");
         assertEq(
-            vaultParams.token.balanceOf(address(vault)),
+            cblToken.balanceOf(address(vault)),
             (sharesAmount * ADDITIONAL_PRECISION).mulDiv(REQUIRED_COLLATERAL_PERCENTAGE, MAX_PERCENTAGE),
             "Vault should now have the Tokens"
         );
@@ -132,20 +153,24 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         uint256 shares = deposit(alice, depositAmount, true);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(address(vaultParams.asset)).mint(vaultParams.custodian, (100 * precision) + 1);
-        uint256 finalBalance = MockStablecoin(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
+        MockStablecoin(address(vaultParams.maturityVaultParams.baseVaultParams.asset)).mint(
+            vaultParams.maturityVaultParams.baseVaultParams.custodian, (100 * precision) + 1
+        );
+        uint256 finalBalance = MockStablecoin(address(vaultParams.maturityVaultParams.baseVaultParams.asset)).balanceOf(
+            vaultParams.maturityVaultParams.baseVaultParams.custodian
+        );
 
-        vm.prank(vaultParams.custodian);
-        vaultParams.asset.transfer(address(vault), finalBalance);
+        vm.prank(vaultParams.maturityVaultParams.baseVaultParams.custodian);
+        vaultParams.maturityVaultParams.baseVaultParams.asset.transfer(address(vault), finalBalance);
 
         // ---- Assert Vault burns shares and Alice receive asset with additional 10% ---
-        uint256 balanceBeforeRedeem = vaultParams.asset.balanceOf(alice);
+        uint256 balanceBeforeRedeem = vaultParams.maturityVaultParams.baseVaultParams.asset.balanceOf(alice);
         vm.prank(alice);
         vault.approve(address(vault), shares);
 
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vault.mature();
-        vm.warp(vaultParams.redemptionOpensAt + 1);
+        vm.warp(vaultParams.windowVaultParams.matureWindow.opensAt + 1);
         vm.stopPrank();
 
         uint256 collateralToRedeem = vault.calculateTokenRedemption(shares, alice);
@@ -157,9 +182,9 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
         console2.log("assets", assets);
 
-        assertEq(vaultParams.token.balanceOf(alice), collateralToRedeem, "Alice should now have the Tokens");
+        assertEq(cblToken.balanceOf(alice), collateralToRedeem, "Alice should now have the Tokens");
         assertEq(
-            vaultParams.asset.balanceOf(alice),
+            vaultParams.maturityVaultParams.baseVaultParams.asset.balanceOf(alice),
             balanceBeforeRedeem + assets,
             "Alice should receive finalBalance with 10% yeild"
         );
@@ -172,32 +197,36 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         uint256 shares = deposit(alice, depositAmount, true);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(address(vaultParams.asset)).mint(vaultParams.custodian, 100 * precision);
-        uint256 finalBalance = MockStablecoin(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
+        MockStablecoin(address(vaultParams.maturityVaultParams.baseVaultParams.asset)).mint(
+            vaultParams.maturityVaultParams.baseVaultParams.custodian, 100 * precision
+        );
+        uint256 finalBalance = MockStablecoin(address(vaultParams.maturityVaultParams.baseVaultParams.asset)).balanceOf(
+            vaultParams.maturityVaultParams.baseVaultParams.custodian
+        );
 
-        vm.prank(vaultParams.custodian);
-        vaultParams.asset.transfer(address(vault), finalBalance);
+        vm.prank(vaultParams.maturityVaultParams.baseVaultParams.custodian);
+        vaultParams.maturityVaultParams.baseVaultParams.asset.transfer(address(vault), finalBalance);
         vm.stopPrank();
 
         // ---- Assert Vault burns shares and Alice receive asset with additional 10% ---
         vm.prank(alice);
         vault.approve(address(vault), shares);
 
-        vm.startPrank(vaultParams.operator);
+        vm.startPrank(vaultParams.contractRoles.operator);
         vault.mature();
-        vm.warp(vaultParams.redemptionOpensAt + 1);
+        vm.warp(vaultParams.windowVaultParams.matureWindow.opensAt + 1);
         vm.stopPrank();
 
-        uint256 assetBalanceBeforeWithdraw = vaultParams.asset.balanceOf(alice);
+        uint256 assetBalanceBeforeWithdraw = vaultParams.maturityVaultParams.baseVaultParams.asset.balanceOf(alice);
 
         uint256 assetToReceive = vault.convertToAssets(shares);
 
         vm.prank(alice);
         vault.withdraw(assetToReceive, alice, alice);
 
-        assertEq(vaultParams.token.balanceOf(alice), 200 ether, "Alice should now have the Tokens");
+        assertEq(cblToken.balanceOf(alice), 200 ether, "Alice should now have the Tokens");
         assertEq(
-            vaultParams.asset.balanceOf(alice),
+            vaultParams.maturityVaultParams.baseVaultParams.asset.balanceOf(alice),
             assetBalanceBeforeWithdraw + assetToReceive,
             "Alice should receive finalBalance with 10% yeild"
         );
@@ -206,12 +235,12 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
-        vaultParams.asset.approve(address(vault), assets);
-        vaultParams.token.approve(address(vault), assets * ADDITIONAL_PRECISION);
+        vaultParams.maturityVaultParams.baseVaultParams.asset.approve(address(vault), assets);
+        cblToken.approve(address(vault), assets * ADDITIONAL_PRECISION);
 
         // wrap if set to true
         if (warp) {
-            vm.warp(vaultParams.depositOpensAt);
+            vm.warp(vaultParams.windowVaultParams.depositWindow.opensAt);
         }
 
         shares = vault.deposit(assets, user);
@@ -221,12 +250,12 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     function mint(address user, uint256 shares, bool warp) internal returns (uint256 assets) {
         // first, approve the deposit
         vm.startPrank(user);
-        vaultParams.asset.approve(address(vault), shares);
-        vaultParams.token.approve(address(vault), shares * ADDITIONAL_PRECISION);
+        vaultParams.maturityVaultParams.baseVaultParams.asset.approve(address(vault), shares);
+        cblToken.approve(address(vault), shares * ADDITIONAL_PRECISION);
 
         // wrap if set to true
         if (warp) {
-            vm.warp(vaultParams.depositOpensAt);
+            vm.warp(vaultParams.windowVaultParams.depositWindow.opensAt);
         }
 
         assets = vault.mint(shares, user);

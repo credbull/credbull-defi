@@ -9,6 +9,11 @@ import { CredbullBaseVault } from "../base/CredbullBaseVault.sol";
 abstract contract MaturityVault is CredbullBaseVault {
     using Math for uint256;
 
+    struct MaturityVaultParams {
+        BaseVaultParams baseVaultParams;
+        uint256 promisedYield;
+    }
+
     //Error to revert on withdraw if vault is not matured
     error CredbullVault__NotMatured();
     //Error to revert mature if there is not enough balance to mature
@@ -26,7 +31,7 @@ abstract contract MaturityVault is CredbullBaseVault {
     /**
      * @param params - Vault parameters
      */
-    constructor(VaultParams memory params) CredbullBaseVault(params) {
+    constructor(MaturityVaultParams memory params) CredbullBaseVault(params.baseVaultParams) {
         checkMaturity = true;
         _fixedYield = params.promisedYield;
     }

@@ -6,9 +6,14 @@ import { CredbullBaseVault } from "../../../src/base/CredbullBaseVault.sol";
 import { WindowPlugIn } from "../../../src/plugins/WindowPlugIn.sol";
 
 contract WindowVaultMock is CredbullBaseVault, WindowPlugIn {
-    constructor(VaultParams memory params)
+    constructor(CredbullBaseVault.BaseVaultParams memory params, WindowPlugIn.WindowVaultParams memory windowParams)
         CredbullBaseVault(params)
-        WindowPlugIn(params.depositOpensAt, params.depositClosesAt, params.redemptionOpensAt, params.redemptionClosesAt)
+        WindowPlugIn(
+            windowParams.depositWindow.opensAt,
+            windowParams.depositWindow.closesAt,
+            windowParams.matureWindow.opensAt,
+            windowParams.matureWindow.closesAt
+        )
     { }
 
     modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {

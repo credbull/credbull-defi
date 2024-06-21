@@ -12,6 +12,13 @@ contract UpsideVault is FixedYieldVault {
 
     error CredbullVault__InsufficientShareBalance();
 
+    /// @notice - Struct defining parameters for upside vault
+    struct UpsideVaultParams {
+        FixedYieldVaultParams fixedYieldVaultParams;
+        IERC20 cblToken;
+        uint256 collateralPercentage;
+    }
+
     /// @notice address of the Credbull token CBL
     IERC20 public token;
 
@@ -34,12 +41,13 @@ contract UpsideVault is FixedYieldVault {
     /// @notice Additional precision required for math
     uint256 private additionalPrecision;
 
-    constructor(VaultParams memory params, IERC20 _token, uint256 _collateralPercentage) FixedYieldVault(params) {
-        collateralPercentage = _collateralPercentage;
-        token = _token;
+    constructor(UpsideVaultParams memory params) FixedYieldVault(params.fixedYieldVaultParams) {
+        collateralPercentage = params.collateralPercentage;
+        token = params.cblToken;
 
-        uint8 assetDecimal = _checkValidDecimalValue(address(params.asset));
-        uint8 tokenDecimal = _checkValidDecimalValue(address(_token));
+        uint8 assetDecimal =
+            _checkValidDecimalValue(address(params.fixedYieldVaultParams.maturityVaultParams.baseVaultParams.asset));
+        uint8 tokenDecimal = _checkValidDecimalValue(address(params.cblToken));
 
         if (tokenDecimal >= assetDecimal) {
             additionalPrecision = 10 ** (tokenDecimal - assetDecimal);

@@ -11,6 +11,9 @@ primary_region = 'fra'
 [deploy]
   strategy = "bluegreen"
 
+[env]
+  ENVIRONMENT = "testnet"
+
 [http_service]
   internal_port = 3001
   force_https = true
