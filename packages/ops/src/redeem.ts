@@ -1,63 +1,60 @@
-import { CredbullFixedYieldVault__factory, MockStablecoin__factory } from '@credbull/contracts';
+import { MockStablecoin__factory } from '@credbull/contracts';
 import { formatEther, parseUnits } from 'ethers/lib/utils';
 
-import { headers, login } from './utils/api';
 import { loadConfiguration } from './utils/config';
-import { signerFor } from './utils/ethers';
+import { Schema } from './utils/schema';
+import { userFor } from './utils/user';
 
-export const main = () => {
-  setTimeout(async () => {
-    console.log('\n');
-    console.log('=====================================');
-    console.log('\n');
-    const config = loadConfiguration();
+export async function redeem(config: any): Promise<void> {
+  Schema.CONFIG_API_URL.parse(config);
+  Schema.CONFIG_USER_BOB.parse(config);
 
-    // console.log('Bob: retrieves a session through api.');
-    const bob = await login(config);
+  console.log('='.repeat(80));
+  const userBob = await userFor(
+    config,
+    config.users.bob.email_address,
+    config.secret.BOB_PASSWORD,
+    config.secret.BOB_PRIVATE_KEY,
+  );
+  await userBob.sdk.linkWallet();
+  console.log(' Bob signs a message and links his wallet.');
 
-    const bobHeaders = headers(bob);
-    console.log('Bob: retrieves a session through api. - OK');
+  const amount = parseUnits('1000', 'mwei');
+  console.log(' Bob determines a value to play with=', amount);
 
-    // console.log('Bob: signs a message with his wallet.');
-    const bobSigner = signerFor(config, config.secret!.BOB_PRIVATE_KEY!);
+  const { data: vaults } = await userBob.sdk.getAllVaults();
+  console.log(' Bob queries for all available vaults=', vaults);
 
-    // console.log('Bob: queries for existing vaults.');
-    const vaultsResponse = await fetch(`${config.api.url}/vaults/current`, {
-      method: 'GET',
-      ...bobHeaders,
-    });
+  const vaultData = vaults[0];
+  const vault = await userBob.sdk.getVaultInstance(vaultData.address);
+  console.log(' Bob selects the first vault.');
 
-    const vaults = await vaultsResponse.json();
+  const usdc = await userBob.sdk.getAssetInstance(vaultData.address);
+  console.log(' Bob gets the Asset of the chosen Vault, USDC!');
 
-    console.log('Bob: queries for existing vaults. - OK');
+  const mockUsdc = MockStablecoin__factory.connect(usdc.address, userBob.signer);
+  const mintTx = await mockUsdc.mint(vault.address, amount);
+  await mintTx.wait();
+  console.log(' The Vault mints some USDC, using `MockStableCoin`.');
 
-    const vaultAddress = vaults['data'][0].address;
-    const usdcAddress = vaults['data'][0].asset_address;
+  const shares = await vault.balanceOf(userBob.address);
+  console.log(" Bob's gets his balance of Shares in the Vault= ", shares);
 
-    const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
-    const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, bobSigner);
-    const mintTx = await usdc.mint(vaultAddress, parseUnits('1000', 'mwei'));
-    await mintTx.wait();
+  const approveTx = await vault.approve(vault.address, shares);
+  await approveTx.wait();
+  console.log(" The Vault approves the spending of Bob's amount of shares.");
 
-    const shares = await vault.balanceOf(bobSigner.address);
-    const approveTTx = await vault.approve(vaultAddress, shares);
-    await approveTTx.wait();
+  await userBob.sdk.redeem(vault.address, shares, userBob.address);
+  console.log(' Bob redeems his shares from the vault.');
 
-    const redeemTx = await vault.redeem(shares, bobSigner.address, bobSigner.address, {
-      gasLimit: 10000000,
-    });
+  const balanceOfInner = await vault.balanceOf(userBob.address);
+  const balanceOfUSDC = await usdc.balanceOf(userBob.address);
 
-    await redeemTx.wait();
-    console.log('Bob: redeems. - OK');
+  console.log(` Bob has ${formatEther(balanceOfInner)} sToken. - OK`);
+  console.log(` Bob has ${formatEther(balanceOfUSDC)} USDC. - OK`);
+  console.log('='.repeat(80));
+}
 
-    const balanceOfInner = await vault.balanceOf(bobSigner.address);
-    const balanceOfUSDC = await usdc.balanceOf(bobSigner.address);
-
-    console.log(`Bob: has ${formatEther(balanceOfInner)} sToken. - OK`);
-    console.log(`Bob: has ${formatEther(balanceOfUSDC)} USDC. - OK`);
-
-    console.log('\n');
-    console.log('=====================================');
-    console.log('\n');
-  }, 1000);
-};
+export async function main() {
+  await redeem(loadConfiguration());
+}
