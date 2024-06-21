@@ -25,11 +25,7 @@
 Please go directly to [`contracts/`](./packages/contracts/README.md) and follow the instructions there.
 
 ## Install Pre-requisite Tools
-<<<<<<< HEAD
-- NodeJS v21+ ([install node.js](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs))
-=======
 - NodeJS LTS (v20) ([install node.js](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs))
->>>>>>> 4c8ceee7c87082b354260a8e51d03ed6212c3b40
 - Yarn ([install yarn](https://v3.yarnpkg.com/getting-started/install))
 - Foundry ([install forge](https://book.getfoundry.sh/getting-started/installation))
 - Docker ([install docker](https://docs.docker.com/get-docker/))
@@ -44,31 +40,19 @@ yarn install
 ## Onetime Setup
 1. Setup environment variables in each package
     ```bash
-<<<<<<< HEAD
-    cp -v .env.sample .env
-    cd package/api && cp -v .env.local.sample .env.local && cd -
-    cd package/app && cp -v .env.local.sample .env.local && cd -
-    cd package/contracts && cp -v .env.sample .env && cd - 
-    cd package/sdk && cp -v .env.sample .env && cd - 
-=======
     cp -n .env.sample .env
     cd packages/api && cp -n .env.sample .env && cd -
     cd packages/app && cp -n .env.local.sample .env.local && cd -
     cd packages/contracts && cp -n .env.sample .env && cd -
     cd packages/ops && cp -n .env.sample .env && cd -
     cd packages/sdk && cp -n .env.sample .env && cd -
->>>>>>> 4c8ceee7c87082b354260a8e51d03ed6212c3b40
     ```
 1. Start the database (Supabase)
     ```bash
     cd packages/api && supabase start && cd -
     ```
 1. Setup sdk, see [sdk/README.md](packages/sdk/README.md)
-<<<<<<< HEAD
-1. Setup op scripts, see [operations/README.md](scripts/operation/README.md). 
-=======
 1. Setup op scripts, see [operations/README.md](packages/ops/README.md).
->>>>>>> 4c8ceee7c87082b354260a8e51d03ed6212c3b40
 
 
 ## Rum and Test Locally
@@ -79,11 +63,7 @@ yarn test
 ```
 
 ```bash
-<<<<<<< HEAD
-# run all pakcages
-=======
 # run all packages
->>>>>>> 4c8ceee7c87082b354260a8e51d03ed6212c3b40
 yarn dev
 ```
 
