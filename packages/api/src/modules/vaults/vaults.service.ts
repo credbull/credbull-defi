@@ -18,6 +18,7 @@ import { SupabaseService } from '../../clients/supabase/supabase.service';
 import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
 import { responseFromRead, responseFromWrite } from '../../utils/contracts';
+import { toISOString } from '../../utils/time';
 
 import { VaultParamsDto } from './vaults.dto';
 import {
@@ -181,10 +182,10 @@ export class VaultsService {
     const vaultData = {
       type: upside ? 'fixed_yield_upside' : 'fixed_yield',
       status: 'created' as const,
-      deposits_opened_at: new Date(Number(params.depositOpensAt) * 1000).toISOString(),
-      deposits_closed_at: new Date(Number(params.depositClosesAt) * 1000).toISOString(),
-      redemptions_opened_at: new Date(Number(params.redemptionOpensAt) * 1000).toISOString(),
-      redemptions_closed_at: new Date(Number(params.redemptionClosesAt) * 1000).toISOString(),
+      deposits_opened_at: toISOString(Number(params.depositOpensAt)),
+      deposits_closed_at: toISOString(Number(params.depositClosesAt)),
+      redemptions_opened_at: toISOString(Number(params.redemptionOpensAt)),
+      redemptions_closed_at: toISOString(Number(params.redemptionClosesAt)),
       address: vaultAddress,
       strategy_address: vaultAddress,
       asset_address: params.asset,

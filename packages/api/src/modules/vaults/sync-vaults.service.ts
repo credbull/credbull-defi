@@ -17,6 +17,7 @@ import { SupabaseAdminService } from '../../clients/supabase/supabase-admin.serv
 import { ServiceResponse } from '../../types/responses';
 import { Database, Tables } from '../../types/supabase';
 import { NoDataFound } from '../../utils/errors';
+import { toISOString } from '../../utils/time';
 import { TomlConfigService } from '../../utils/tomlConfig';
 
 import { VaultParamsDto } from './vaults.dto';
@@ -145,18 +146,12 @@ export class SyncVaultsService {
       return {
         type: 'fixed_yield_upside',
         status: 'created' as const,
-        deposits_opened_at: new Date(
-          Number(params.fixedYieldVaultParams.windowVaultParams.depositWindow.opensAt) * 1000,
-        ).toISOString(),
-        deposits_closed_at: new Date(
-          Number(params.fixedYieldVaultParams.windowVaultParams.depositWindow.closesAt) * 1000,
-        ).toISOString(),
-        redemptions_opened_at: new Date(
-          Number(params.fixedYieldVaultParams.windowVaultParams.matureWindow.opensAt) * 1000,
-        ).toISOString(),
-        redemptions_closed_at: new Date(
-          Number(params.fixedYieldVaultParams.windowVaultParams.matureWindow.opensAt) * 1000,
-        ).toISOString(),
+        deposits_opened_at: toISOString(Number(params.fixedYieldVaultParams.windowVaultParams.depositWindow.opensAt)),
+        deposits_closed_at: toISOString(Number(params.fixedYieldVaultParams.windowVaultParams.depositWindow.closesAt)),
+        redemptions_opened_at: toISOString(Number(params.fixedYieldVaultParams.windowVaultParams.matureWindow.opensAt)),
+        redemptions_closed_at: toISOString(
+          Number(params.fixedYieldVaultParams.windowVaultParams.matureWindow.closesAt),
+        ),
         address: event.args.vault,
         strategy_address: event.args.vault,
         asset_address: params.fixedYieldVaultParams.maturityVaultParams.baseVaultParams.asset,
@@ -168,10 +163,10 @@ export class SyncVaultsService {
     return {
       type: 'fixed_yield',
       status: 'created' as const,
-      deposits_opened_at: new Date(Number(params.windowVaultParams.depositWindow.opensAt) * 1000).toISOString(),
-      deposits_closed_at: new Date(Number(params.windowVaultParams.depositWindow.closesAt) * 1000).toISOString(),
-      redemptions_opened_at: new Date(Number(params.windowVaultParams.matureWindow.opensAt) * 1000).toISOString(),
-      redemptions_closed_at: new Date(Number(params.windowVaultParams.matureWindow.opensAt) * 1000).toISOString(),
+      deposits_opened_at: toISOString(Number(params.windowVaultParams.depositWindow.opensAt)),
+      deposits_closed_at: toISOString(Number(params.windowVaultParams.depositWindow.opensAt)),
+      redemptions_opened_at: toISOString(Number(params.windowVaultParams.matureWindow.opensAt)),
+      redemptions_closed_at: toISOString(Number(params.windowVaultParams.matureWindow.closesAt)),
       address: event.args.vault,
       strategy_address: event.args.vault,
       asset_address: params.maturityVaultParams.baseVaultParams.asset,
