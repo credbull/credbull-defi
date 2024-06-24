@@ -92,8 +92,7 @@ function createParams(
     maturityVaultParams,
     contractRoles: {
       owner: tempParams.owner,
-      operator: tempParams.operator,
-      custodian: tempParams.custodian,
+      operator: tempParams.operator
     },
     windowVaultParams: {
       depositWindow: {

@@ -125,7 +125,6 @@ export class VaultsService {
     const contractRoles = {
       owner: params.owner,
       operator: params.operator,
-      custodian: params.custodian,
     };
 
     const depositWindowParam = {
