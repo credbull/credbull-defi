@@ -90,11 +90,10 @@ contract HelperVaultTest is Test {
         params = WindowPlugIn.WindowVaultParams({ depositWindow: depositWindow, matureWindow: matureWindow });
     }
 
-    function createContractRoles() public returns (CredbullBaseVault.ContractRoles memory roles) {
-        roles = CredbullBaseVault.ContractRoles({
+    function createContractRoles() public view returns (FixedYieldVault.ContractRoles memory roles) {
+        roles = FixedYieldVault.ContractRoles({
             owner: networkConfig.factoryParams.owner,
-            operator: networkConfig.factoryParams.operator,
-            custodian: makeAddr("custodianAddress")
+            operator: networkConfig.factoryParams.operator
         });
     }
 }

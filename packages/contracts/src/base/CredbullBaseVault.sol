@@ -26,13 +26,6 @@ abstract contract CredbullBaseVault is ERC4626, Pausable {
         address custodian;
     }
 
-    /// @notice Struct for Contract Roles
-    struct ContractRoles {
-        address owner;
-        address operator;
-        address custodian;
-    }
-
     /// @notice Address of the CUSTODIAN to receive the assets on deposit and mint
     address public immutable CUSTODIAN;
 
