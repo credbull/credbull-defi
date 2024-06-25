@@ -1,13 +1,14 @@
 import { MockStablecoin__factory } from '@credbull/contracts';
-import { formatEther, parseUnits } from 'ethers/lib/utils';
+import { formatUnits, parseUnits } from 'ethers/lib/utils';
 
 import { loadConfiguration } from './utils/config';
-import { describeToken, describeVault, displayValueFor } from './utils/display';
+import { balanceLoggerFactory, describeFYVault, describeToken, displayValueFor } from './utils/display';
 import { Schema } from './utils/schema';
 import { userFor } from './utils/user';
 
 export async function redeem(config: any): Promise<void> {
   Schema.CONFIG_API_URL.parse(config);
+  Schema.CONFIG_USER_ADMIN.parse(config);
   Schema.CONFIG_USER_BOB.parse(config);
 
   console.log('='.repeat(80));
@@ -20,35 +21,44 @@ export async function redeem(config: any): Promise<void> {
   await userBob.sdk.linkWallet();
   console.log(' Bob signs a message and links his wallet.');
 
-  const toRedeem = parseUnits('1000', 'mwei');
-  console.log(' Bob determines an amount of Shares to redeem=', formatEther(toRedeem));
-
   const { data: vaults } = await userBob.sdk.getAllVaults();
   console.log(' Bob queries for all available vaults=', vaults);
 
-  const vaultData = vaults[0];
+  const vaultData = vaults.find((v: any) => v.type === 'fixed_yield');
+  if (vaultData === undefined) throw new Error('No Fixed Yield Vault found.');
   const vault = await userBob.sdk.getVaultInstance(vaultData.address);
-  const displayShares = displayValueFor(await vault.decimals());
-  console.log(' Bob selects the first vault=', await describeVault(vault));
+  const displayShare = displayValueFor(await vault.decimals());
+  console.log(' Bob selects the first vault=', await describeFYVault(vault));
 
-  const usdc = await userBob.sdk.getAssetInstance(vaultData.address);
-  const displayUsdc = displayValueFor(await usdc.decimals());
-  console.log(' Bob gets the Asset of the chosen Vault, USDC=', await describeToken(usdc));
+  const redeemAmount = await vault.balanceOf(userBob.address);
+  console.log(' Bob decides to redeem all his Shares=', formatUnits(redeemAmount, await vault.decimals()));
+  if (redeemAmount.lte(0)) throw new Error('No Shares to redeem.');
 
-  console.log(` The Custodian's USDC balance is=`, displayUsdc(await usdc.balanceOf(await vault.CUSTODIAN())));
+  const asset = await userBob.sdk.getAssetInstance(vaultData.address);
+  const displayAsset = displayValueFor(await asset.decimals());
+  console.log(' Bob gets the Asset of the chosen Vault, USDC=', await describeToken(asset));
 
-  const mockUsdc = MockStablecoin__factory.connect(usdc.address, userBob.signer);
-  const mintTx = await mockUsdc.mint(vault.address, toRedeem);
+  // A complicated utility logging function for outputting balances for all actors to see state changes.
+  const logBalances = balanceLoggerFactory(
+    async (address) => await vault.balanceOf(address),
+    displayShare,
+    async (address) => await asset.balanceOf(address),
+    displayAsset,
+    [
+      ['The Vault', vaultData.address],
+      ['Bob', userBob.address],
+      ['The Custodian', await vault.CUSTODIAN()],
+    ],
+  );
+  await logBalances();
+
+  const mockUsdc = MockStablecoin__factory.connect(asset.address, userBob.signer);
+  const mintTx = await mockUsdc.mint(vault.address, redeemAmount);
   await mintTx.wait();
-  console.log(' Bob mints some USDC, using `MockStableCoin`, to the Vault. Minted=', displayUsdc(toRedeem));
+  console.log(' Bob mints some USDC, using `MockStableCoin`, to the Vault. Minted=', displayAsset(redeemAmount));
+  await logBalances();
 
-  console.log(" Bob's USDC balance is=", displayUsdc(await usdc.balanceOf(userBob.address)));
-  console.log(` The Custodian's USDC balance is=`, displayUsdc(await usdc.balanceOf(await vault.CUSTODIAN())));
-
-  const shares = await vault.balanceOf(userBob.address);
-  console.log(" Bob's gets his balance of Shares in the Vault= ", displayShares(shares));
-
-  const approveTx = await vault.approve(vault.address, shares);
+  const approveTx = await vault.approve(vault.address, redeemAmount);
   await approveTx.wait();
   console.log(" The Vault approves the spending of Bob's amount of shares.");
 
@@ -65,14 +75,9 @@ export async function redeem(config: any): Promise<void> {
   await maturityCheckTx.wait();
   console.log(' Admin disables the Vault Maturity and Window Checks');
 
-  await userBob.sdk.redeem(vault.address, toRedeem, userBob.address);
+  await userBob.sdk.redeem(vault.address, redeemAmount, userBob.address);
   console.log(' Bob redeems his shares from the vault.');
-
-  const balanceOfShares = await vault.balanceOf(userBob.address);
-  const balanceOfUsdc = await usdc.balanceOf(userBob.address);
-
-  console.log(` Bob has ${displayShares(balanceOfShares)} ${await vault.symbol()}.`);
-  console.log(` Bob has ${displayUsdc(balanceOfUsdc)} USDC.`);
+  await logBalances();
   console.log('='.repeat(80));
 }
 
