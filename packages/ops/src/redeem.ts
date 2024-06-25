@@ -1,5 +1,5 @@
 import { MockStablecoin__factory } from '@credbull/contracts';
-import { formatUnits, parseUnits } from 'ethers/lib/utils';
+import { formatUnits } from 'ethers/lib/utils';
 
 import { loadConfiguration } from './utils/config';
 import { balanceLoggerFactory, describeFYVault, describeToken, displayValueFor } from './utils/display';
@@ -40,10 +40,8 @@ export async function redeem(config: any): Promise<void> {
 
   // A complicated utility logging function for outputting balances for all actors to see state changes.
   const logBalances = balanceLoggerFactory(
-    async (address) => await vault.balanceOf(address),
-    displayShare,
-    async (address) => await asset.balanceOf(address),
-    displayAsset,
+    async (address) => displayShare(await vault.balanceOf(address)),
+    async (address) => displayAsset(await asset.balanceOf(address)),
     [
       ['The Vault', vaultData.address],
       ['Bob', userBob.address],
