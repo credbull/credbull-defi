@@ -10,7 +10,7 @@ import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { IErrors } from "../interface/IErrors.sol";
 
-abstract contract CredbullBaseVault is ERC4626, Pausable {
+abstract contract CredbullBaseVault is IErrors, ERC4626, Pausable {
     using Math for uint256;
 
     error CredbullVault__TransferOutsideEcosystem(address);
@@ -26,7 +26,6 @@ abstract contract CredbullBaseVault is ERC4626, Pausable {
         address custodian;
     }
 
-    /// @notice Struct for Contract Roles
     struct ContractRoles {
         address owner;
         address operator;
@@ -37,8 +36,7 @@ abstract contract CredbullBaseVault is ERC4626, Pausable {
     address public immutable CUSTODIAN;
 
     /**
-     * @dev
-     * The assets deposited to the vault will be sent to CUSTODIAN address so this is
+     * @dev The assets deposited to the vault will be sent to CUSTODIAN address so this is
      * separate variable to track the total assets that's been deposited to this vault.
      */
     uint256 public totalAssetDeposited;
@@ -65,15 +63,17 @@ abstract contract CredbullBaseVault is ERC4626, Pausable {
     }
 
     /**
-     *
      * @param baseVaultParams - Base vault parameters
      */
     constructor(BaseVaultParams memory baseVaultParams)
         ERC4626(baseVaultParams.asset)
         ERC20(baseVaultParams.shareName, baseVaultParams.shareSymbol)
     {
-        if (baseVaultParams.custodian == address(0) || address(baseVaultParams.asset) == address(0)) {
-            revert IErrors.ZeroAddress();
+        if (baseVaultParams.custodian == address(0)) {
+            revert CredbullVault__InvalidCustodianAddress(baseVaultParams.custodian);
+        }
+        if (address(baseVaultParams.asset) == address(0)) {
+            revert CredbullVault__InvalidAsset(baseVaultParams.asset);
         }
 
         CUSTODIAN = baseVaultParams.custodian;
