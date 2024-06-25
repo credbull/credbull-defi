@@ -3,7 +3,7 @@ import { BigNumber } from 'ethers';
 
 import { whitelist } from './utils/admin';
 import { loadConfiguration } from './utils/config';
-import { describeToken, describeVault, displayValueFor } from './utils/display';
+import { balanceLoggerFactory, describeFYVault, describeToken, displayValueFor } from './utils/display';
 import { Schema } from './utils/schema';
 import { userFor } from './utils/user';
 
@@ -13,6 +13,9 @@ export async function deposit(config: any) {
   Schema.CONFIG_USER_BOB.parse(config);
 
   console.log('='.repeat(80));
+  const toDeposit = 1_000;
+  console.log(' Bob plans to deposit USD', toDeposit);
+
   const userBob = await userFor(
     config,
     config.users.bob.email_address,
@@ -31,29 +34,41 @@ export async function deposit(config: any) {
   await whitelist(config, userAdmin, userBob.address, userBob.id);
   console.log(' Admin whitelists Bob.');
 
-  const toDeposit = 1_000;
-  console.log(' Bob plans to deposit USD', toDeposit);
-
   const { data: vaults } = await userBob.sdk.getAllVaults();
   console.log(' Bob queries for all available vaults.');
 
-  const vaultData = vaults[0];
+  const vaultData = vaults.find((v: any) => v.type === 'fixed_yield');
+  if (vaultData === undefined) throw new Error('No Fixed Yield Vault found.');
   const vault = await userBob.sdk.getVaultInstance(vaultData.address);
-  console.log(' Bob selects the first vault=', await describeVault(vault));
+  const displayShare = displayValueFor(await vault.decimals());
+  console.log(' Bob selects the first vault=', await describeFYVault(vault));
 
-  const usdc = await userBob.sdk.getAssetInstance(vaultData.address);
-  const displayUsdc = displayValueFor(await usdc.decimals());
-  console.log(' Bob gets the Asset of the chosen Vault, USDC=', await describeToken(usdc));
+  const asset = await userBob.sdk.getAssetInstance(vaultData.address);
+  const displayAsset = displayValueFor(await asset.decimals());
+  console.log(' Bob gets the Asset (USDC) of the chosen Vault=', await describeToken(asset));
 
-  const depositAmount = BigNumber.from(toDeposit).mul(10 ** (await usdc.decimals()));
-  const mockUsdc = MockStablecoin__factory.connect(usdc.address, userBob.signer);
+  // A complicated utility logging function for outputting balances for all actors to see state changes.
+  const logBalances = balanceLoggerFactory(
+    async (address) => await vault.balanceOf(address),
+    displayShare,
+    async (address) => await asset.balanceOf(address),
+    displayAsset,
+    [
+      ['The Vault', vaultData.address],
+      ['Bob', userBob.address],
+      ['The Custodian', await vault.CUSTODIAN()],
+    ],
+  );
+  await logBalances();
+
+  const depositAmount = BigNumber.from(toDeposit).mul(10 ** (await asset.decimals()));
+  const mockUsdc = MockStablecoin__factory.connect(asset.address, userBob.signer);
   const mintTx = await mockUsdc.mint(userBob.address, depositAmount);
   await mintTx.wait();
-  console.log(' Bob buys (mints) his deposit amount of USDC=', displayUsdc(depositAmount));
-  console.log(" Bob's USDC balance is=", displayUsdc(await usdc.balanceOf(userBob.address)));
-  console.log(` The Custodian's USDC balance is=`, displayUsdc(await usdc.balanceOf(await vault.CUSTODIAN())));
+  console.log(' Bob buys (mints) his deposit amount of USDC=', displayAsset(depositAmount));
+  await logBalances();
 
-  const approveTx = await usdc.approve(vaultData.address, depositAmount);
+  const approveTx = await asset.approve(vaultData.address, depositAmount);
   await approveTx.wait();
   console.log(" Bob approves transfers of the Vault's USDC.");
 
@@ -64,12 +79,7 @@ export async function deposit(config: any) {
   await userBob.sdk.deposit(vaultData.address, depositAmount, userBob.address);
   console.log(' Bob deposits his USDC to the Vault.');
 
-  const shareBalance = await vault.balanceOf(userBob.address);
-  const displayShares = displayValueFor(await vault.decimals());
-
-  console.log(" Bob's Share balance is=", displayShares(shareBalance));
-  console.log(" Bob's USDC balance is=", displayUsdc(await usdc.balanceOf(userBob.address)));
-  console.log(` The Custodian's USDC balance is=`, displayUsdc(await usdc.balanceOf(await vault.CUSTODIAN())));
+  await logBalances();
   console.log('='.repeat(80));
 }
 
