@@ -1,101 +1,103 @@
-import {
-  CredbullFixedYieldVaultWithUpside__factory,
-  MockStablecoin__factory,
-  MockToken__factory,
-} from '@credbull/contracts';
-import { formatEther, parseUnits } from 'ethers/lib/utils';
+import { MockStablecoin__factory, MockToken__factory } from '@credbull/contracts';
+import { parseUnits } from 'ethers/lib/utils';
 
-import { headers, login } from './utils/api';
+import { whitelist } from './utils/admin';
 import { loadConfiguration } from './utils/config';
-import { supabaseAdminClient } from './utils/database';
-import { linkWalletMessage, signerFor } from './utils/ethers';
+import { balanceLoggerFactory, describeFYWUVault, describeToken, displayValueFor } from './utils/display';
+import { Schema } from './utils/schema';
+import { userFor } from './utils/user';
 
-export const main = () => {
-  setTimeout(async () => {
-    console.log('\n');
-    console.log('=====================================');
-    console.log('\n');
-    const config = loadConfiguration();
+export async function depositWithUpside(config: any): Promise<void> {
+  Schema.CONFIG_API_URL.parse(config);
+  Schema.CONFIG_USER_ADMIN.parse(config);
+  Schema.CONFIG_USER_BOB.parse(config);
 
-    // console.log('Bob: retrieves a session through api.');
-    const bob = await login(config);
+  console.log('='.repeat(80));
+  const toDeposit = 1_000;
+  console.log(' Bob plans to deposit USD', toDeposit);
 
-    const bobHeaders = headers(bob);
-    console.log('Bob: retrieves a session through api. - OK');
+  const userBob = await userFor(
+    config,
+    config.users.bob.email_address,
+    config.secret.BOB_PASSWORD,
+    config.secret.BOB_PRIVATE_KEY,
+  );
+  await userBob.sdk.linkWallet();
+  console.log(' Bob signs a message and links his wallet.');
 
-    // console.log('Bob: signs a message with his wallet.');
-    const bobSigner = signerFor(config, config.secret!.BOB_PRIVATE_KEY!);
-    const message = await linkWalletMessage(config, bobSigner);
-    const signature = await bobSigner.signMessage(message);
-    console.log('Bob: signs a message with his wallet. - OK');
+  const userAdmin = await userFor(
+    config,
+    config.users.admin.email_address,
+    config.secret.ADMIN_PASSWORD,
+    config.secret.ADMIN_PRIVATE_KEY,
+  );
+  await whitelist(config, userAdmin, userBob.address, userBob.id);
+  console.log(' Admin whitelists Bob.');
 
-    // console.log('Bob: sends the signed message to Credbull so that he can be KYC`ed.');
-    await fetch(`${config.api.url}/accounts/link-wallet`, {
-      method: 'POST',
-      body: JSON.stringify({ message, signature, discriminator: config.users.bob.email_address }),
-      ...bobHeaders,
-    });
-    console.log('Bob: sends the signed message to Credbull so that he can be KYC`ed. - OK');
+  const { data: vaults } = await userBob.sdk.getAllVaults();
+  console.log(' Bob queries for all available vaults.');
 
-    // console.log('Admin: receives the approval and KYCs Bob.');
-    const admin = await login({ admin: true });
-    const adminHeaders = headers(admin);
+  const vaultData = vaults.find((v: any) => v.type === 'fixed_yield_upside');
+  if (vaultData === undefined) throw new Error('No Fixed Yield Vault With Upside found.');
+  const vault = await userBob.sdk.getUpsideVaultInstance(vaultData.address);
+  const displayShare = displayValueFor(await vault.decimals());
+  console.log(' Bob selects the first Fixed Yield Vault With Upside=', await describeFYWUVault(vault));
 
-    await fetch(`${config.api.url}/accounts/whitelist`, {
-      method: 'POST',
-      body: JSON.stringify({ user_id: bob.user_id, address: bobSigner.address }),
-      ...adminHeaders,
-    });
-    console.log('Admin: receives the approval and KYCs Bob. - OK');
+  const asset = await userBob.sdk.getAssetInstance(vaultData.address);
+  const displayAsset = displayValueFor(await asset.decimals());
+  console.log(' Bob gets the Asset of the Vault=', await describeToken(asset));
 
-    // console.log('Bob: queries for existing vaults.');
-    const vaultsResponse = await fetch(`${config.api.url}/vaults/current`, {
-      method: 'GET',
-      ...bobHeaders,
-    });
+  const token = await userBob.sdk.getTokenInstance(vaultData.address);
+  const displayToken = displayValueFor(await token.decimals());
+  console.log(' Bob gets the Token of the Vault=', await describeToken(token));
 
-    const vaults = await vaultsResponse.json();
+  // A complicated utility logging function for outputting balances for all actors to see state changes.
+  const logBalances = balanceLoggerFactory(
+    async (address) => await vault.balanceOf(address),
+    displayShare,
+    async (address) => await asset.balanceOf(address),
+    displayAsset,
+    [
+      ['The Vault', vaultData.address],
+      ['Bob', userBob.address],
+      ['The Custodian', await vault.CUSTODIAN()],
+    ],
+    async (address) => await token.balanceOf(address),
+    displayToken,
+  );
+  await logBalances();
 
-    console.log('Bob: queries for existing vaults. - OK');
+  const depositAmount = parseUnits(toDeposit.toString(), await asset.decimals());
+  console.log(' Bob decides to mint his deposit amount of the Asset=', displayAsset(depositAmount));
 
-    const vaultAddress = vaults['data'][0].address;
-    const usdcAddress = vaults['data'][0].asset_address;
+  const mockUsdc = MockStablecoin__factory.connect(asset.address, userBob.signer);
+  const mintAssetTx = await mockUsdc.mint(userBob.address, depositAmount);
+  await mintAssetTx.wait();
+  await logBalances();
 
-    const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
-    const mintTx = await usdc.mint(bobSigner.address, parseUnits('1000', 'mwei'));
-    await mintTx.wait();
-    console.log('mint usdc - OK');
+  const assetSwapApproveTx = await asset.approve(vaultData.address, depositAmount);
+  await assetSwapApproveTx.wait();
+  console.log(" Bob gives the approval to the vault to swap it's Asset.");
 
-    const approveTx = await usdc.approve(vaultAddress, parseUnits('1000', 'mwei'));
-    await approveTx.wait();
-    console.log('Bob: gives the approval to the vault to swap it`s USDC. - OK');
+  const tokenAmount = parseUnits(toDeposit.toString(), await token.decimals());
+  console.log(' Bob decides to mint his deposit amount of Token=', displayToken(tokenAmount));
 
-    const client = supabaseAdminClient(config);
-    const addresses = await client.from('contracts_addresses').select();
-    if (addresses.error) return addresses;
+  const mockToken = MockToken__factory.connect(token.address, userBob.signer);
+  const mintTokenTx = await mockToken.mint(userBob.address, tokenAmount);
+  await mintTokenTx.wait();
+  await logBalances();
 
-    const tokenAddress = addresses.data.find((a) => a.contract_name === 'MockToken');
-    if (!tokenAddress) throw new Error('Token address not found');
+  const tokenSwapApproveTx = await token.approve(vaultData.address, tokenAmount);
+  await tokenSwapApproveTx.wait();
+  console.log(' Bob gives the approval to the vault to swap it`s Token.');
 
-    const token = MockToken__factory.connect(tokenAddress.address, bobSigner);
-    const tokenTx = await token.mint(bobSigner.address, parseUnits('1000', 'mwei'));
-    await tokenTx.wait();
-    console.log('token usdc - OK');
+  await userBob.sdk.deposit(vaultData.address, depositAmount, userBob.address);
+  console.log(' Bob deposits his Assets to the Vault.');
 
-    const approveTTx = await token.approve(vaultAddress, parseUnits('1000', 'mwei'));
-    await approveTTx.wait();
-    console.log('Bob: gives the approval to the vault to swap it`s cToken. - OK');
+  await logBalances();
+  console.log('='.repeat(80));
+}
 
-    const vault = CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, bobSigner);
-    const depositTx = await vault.deposit(parseUnits('1000', 'mwei'), bobSigner.address, { gasLimit: 10000000 });
-    await depositTx.wait();
-    console.log('Bob: deposits his USDC in the vault. - OK');
-
-    console.log(`Vault: has ${formatEther(await token.balanceOf(vaultAddress))} cToken. - OK`);
-    console.log(`Bob: has ${(await vault.balanceOf(bobSigner.address)).div(10 ** 6)} SHARES. - OK`);
-
-    console.log('\n');
-    console.log('=====================================');
-    console.log('\n');
-  }, 1000);
-};
+export async function main() {
+  await depositWithUpside(loadConfiguration());
+}
