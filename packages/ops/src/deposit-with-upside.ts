@@ -53,17 +53,14 @@ export async function depositWithUpside(config: any): Promise<void> {
 
   // A complicated utility logging function for outputting balances for all actors to see state changes.
   const logBalances = balanceLoggerFactory(
-    async (address) => await vault.balanceOf(address),
-    displayShare,
-    async (address) => await asset.balanceOf(address),
-    displayAsset,
+    async (address) => displayShare(await vault.balanceOf(address)),
+    async (address) => displayAsset(await asset.balanceOf(address)),
     [
       ['The Vault', vaultData.address],
       ['Bob', userBob.address],
       ['The Custodian', await vault.CUSTODIAN()],
     ],
-    async (address) => await token.balanceOf(address),
-    displayToken,
+    async (address) => displayToken(await token.balanceOf(address)),
   );
   await logBalances();
 

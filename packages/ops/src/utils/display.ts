@@ -43,20 +43,17 @@ export async function describeToken(token: ERC20): Promise<string> {
 }
 
 export function balanceLoggerFactory(
-  shareBalance: (address: string) => Promise<BigNumber>,
-  shareFormatter: (balance: BigNumber) => string,
-  assetBalance: (address: string) => Promise<BigNumber>,
-  assetFormatter: (balance: BigNumber) => string,
+  shareBalance: (address: string) => Promise<string>,
+  assetBalance: (address: string) => Promise<string>,
   actors: string[][],
-  tokenBalance?: (address: string) => Promise<BigNumber>,
-  tokenFormatter?: (balance: BigNumber) => string,
+  tokenBalance?: (address: string) => Promise<string>,
 ): () => Promise<void> {
   return async function balanceLogger(): Promise<void> {
     const balancesFor = async (whom: string, address: string) => {
-      const sb = shareFormatter(await shareBalance(address));
-      const ab = assetFormatter(await assetBalance(address));
-      const tb = tokenFormatter ? tokenFormatter(await tokenBalance!(address)) : undefined;
-      console.log(` ${whom}'s Share/Asset${tb ? '/Token' : ''} balance= ${sb} / ${ab}${tb ? ' / ' + tb : ''}`);
+      const sb = await shareBalance(address);
+      const ab = await assetBalance(address);
+      const tb = tokenBalance ? await tokenBalance!(address) : undefined;
+      console.log(`  ${whom}'s Share/Asset${tb ? '/Token' : ''} balance= ${sb} / ${ab}${tb ? ' / ' + tb : ''}`);
     };
 
     console.log('-'.repeat(80));

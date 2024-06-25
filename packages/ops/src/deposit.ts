@@ -49,10 +49,8 @@ export async function deposit(config: any) {
 
   // A complicated utility logging function for outputting balances for all actors to see state changes.
   const logBalances = balanceLoggerFactory(
-    async (address) => await vault.balanceOf(address),
-    displayShare,
-    async (address) => await asset.balanceOf(address),
-    displayAsset,
+    async (address) => displayShare(await vault.balanceOf(address)),
+    async (address) => displayAsset(await asset.balanceOf(address)),
     [
       ['The Vault', vaultData.address],
       ['Bob', userBob.address],
