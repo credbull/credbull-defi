@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { ZodError } from 'zod';
 
 import { createUser } from '@/create-user';
-import { main, makeChannel } from '@/make-channel';
+import { makeChannel } from '@/make-channel';
 import { loadConfiguration } from '@/utils/config';
 import { supabaseAdminClient } from '@/utils/database';
 import { generateRandomEmail } from '@/utils/generate';

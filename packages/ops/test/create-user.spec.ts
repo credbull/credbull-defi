@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { ZodError } from 'zod';
 
-import { createUser, main } from '@/create-user';
+import { createUser } from '@/create-user';
 import { loadConfiguration } from '@/utils/config';
 import { supabaseAdminClient } from '@/utils/database';
 import { deleteUserIfPresent, userByOrUndefined } from '@/utils/user';
