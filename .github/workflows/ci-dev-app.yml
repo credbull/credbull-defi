@@ -22,7 +22,7 @@ on:
 jobs:
   app-build-deploy:
     runs-on: ubuntu-latest
-    environment: testnet
+    environment: Preview
 
     steps:
       - uses: actions/checkout@v4
