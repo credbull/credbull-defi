@@ -1,84 +1,86 @@
-import { CredbullFixedYieldVault__factory, MockStablecoin__factory } from '@credbull/contracts';
-import { parseUnits } from 'ethers/lib/utils';
+import { MockStablecoin__factory } from '@credbull/contracts';
+import { BigNumber } from 'ethers';
 
-import { headers, login } from './utils/api';
+import { whitelist } from './utils/admin';
 import { loadConfiguration } from './utils/config';
-import { linkWalletMessage, signerFor } from './utils/ethers';
+import { balanceLoggerFactory, describeFYVault, describeToken, displayValueFor } from './utils/display';
+import { Schema } from './utils/schema';
+import { userFor } from './utils/user';
 
-export const main = () => {
-  setTimeout(async () => {
-    console.log('\n');
-    console.log('=====================================');
-    console.log('\n');
-    const config = loadConfiguration();
+export async function deposit(config: any) {
+  Schema.CONFIG_API_URL.parse(config);
+  Schema.CONFIG_USER_ADMIN.parse(config);
+  Schema.CONFIG_USER_BOB.parse(config);
 
-    // console.log('Bob: retrieves a session through api.');
-    const bob = await login(config);
+  console.log('='.repeat(80));
+  const toDeposit = 1_000;
+  console.log(' Bob plans to deposit USD', toDeposit);
 
-    const bobHeaders = headers(bob);
-    console.log('Bob: retrieves a session through api. - OK');
+  const userBob = await userFor(
+    config,
+    config.users.bob.email_address,
+    config.secret.BOB_PASSWORD,
+    config.secret.BOB_PRIVATE_KEY,
+  );
+  await userBob.sdk.linkWallet();
+  console.log(' Bob signs a message and links his wallet.');
 
-    // console.log('Bob: signs a message with his wallet.');
-    const bobSigner = signerFor(config, config.secret!.BOB_PRIVATE_KEY!);
-    const message = await linkWalletMessage(config, bobSigner);
-    const signature = await bobSigner.signMessage(message);
-    console.log('Bob: signs a message with his wallet. - OK');
+  const userAdmin = await userFor(
+    config,
+    config.users.admin.email_address,
+    config.secret.ADMIN_PASSWORD,
+    config.secret.ADMIN_PRIVATE_KEY,
+  );
+  await whitelist(config, userAdmin, userBob.address, userBob.id);
+  console.log(' Admin whitelists Bob.');
 
-    // console.log('Bob: sends the signed message to Credbull so that he can be KYC`ed.');
-    await fetch(`${config.api.url}/accounts/link-wallet`, {
-      method: 'POST',
-      body: JSON.stringify({ message, signature, discriminator: 'bob@partner.com' }),
-      ...bobHeaders,
-    });
-    console.log('Bob: sends the signed message to Credbull so that he can be KYC`ed. - OK');
+  const { data: vaults } = await userBob.sdk.getAllVaults();
+  console.log(' Bob queries for all available vaults.');
 
-    // console.log('Admin: receives the approval and KYCs Bob.');
-    const admin = await login({ admin: true });
-    const adminHeaders = headers(admin);
-    const adminSigner = signerFor(config, config.secret!.ADMIN_PRIVATE_KEY!);
+  const vaultData = vaults.find((v: any) => v.type === 'fixed_yield');
+  if (vaultData === undefined) throw new Error('No Fixed Yield Vault found.');
+  const vault = await userBob.sdk.getVaultInstance(vaultData.address);
+  const displayShare = displayValueFor(await vault.decimals());
+  console.log(' Bob selects the first vault=', await describeFYVault(vault));
 
-    await fetch(`${config.api.url}/accounts/whitelist`, {
-      method: 'POST',
-      body: JSON.stringify({ user_id: bob.user_id, address: bobSigner.address }),
-      ...adminHeaders,
-    });
-    console.log('Admin: receives the approval and KYCs Bob. - OK');
+  const asset = await userBob.sdk.getAssetInstance(vaultData.address);
+  const displayAsset = displayValueFor(await asset.decimals());
+  console.log(' Bob gets the Asset (USDC) of the chosen Vault=', await describeToken(asset));
 
-    // console.log('Bob: queries for existing vaults.');
-    const vaultsResponse = await fetch(`${config.api.url}/vaults/current`, {
-      method: 'GET',
-      ...bobHeaders,
-    });
+  // A complicated utility logging function for outputting balances for all actors to see state changes.
+  const logBalances = balanceLoggerFactory(
+    async (address) => displayShare(await vault.balanceOf(address)),
+    async (address) => displayAsset(await asset.balanceOf(address)),
+    [
+      ['The Vault', vaultData.address],
+      ['Bob', userBob.address],
+      ['The Custodian', await vault.CUSTODIAN()],
+    ],
+  );
+  await logBalances();
 
-    const vaults = await vaultsResponse.json();
+  const depositAmount = BigNumber.from(toDeposit).mul(10 ** (await asset.decimals()));
+  const mockUsdc = MockStablecoin__factory.connect(asset.address, userBob.signer);
+  const mintTx = await mockUsdc.mint(userBob.address, depositAmount);
+  await mintTx.wait();
+  console.log(' Bob buys (mints) his deposit amount of USDC=', displayAsset(depositAmount));
+  await logBalances();
 
-    console.log('Bob: queries for existing vaults. - OK');
-    const vaultAddress = vaults['data'][0].address;
-    const usdcAddress = vaults['data'][0].asset_address;
+  const approveTx = await asset.approve(vaultData.address, depositAmount);
+  await approveTx.wait();
+  console.log(" Bob approves transfers of the Vault's USDC.");
 
-    const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
-    const mintTx = await usdc.mint(bobSigner.address, parseUnits('1000', 'mwei'));
-    await mintTx.wait();
+  const toggleTx = await vault.connect(userAdmin.signer).toggleWindowCheck(false);
+  await toggleTx.wait();
+  console.log(' Admin disables the Vault Window Check');
 
-    const approveTx = await usdc.approve(vaultAddress, parseUnits('1000', 'mwei'));
-    await approveTx.wait();
-    console.log('Bob: gives the approval to the vault to swap it`s USDC. - OK');
+  await userBob.sdk.deposit(vaultData.address, depositAmount, userBob.address);
+  console.log(' Bob deposits his USDC to the Vault.');
 
-    // console.log('Bob: deposits his USDC in the vault.');
-    const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, bobSigner);
+  await logBalances();
+  console.log('='.repeat(80));
+}
 
-    const toggleTx = await vault.connect(adminSigner).toggleWindowCheck(false);
-    await toggleTx.wait();
-
-    const depositTx = await vault.deposit(parseUnits('1000', 'mwei'), bobSigner.address, { gasLimit: 10000000 });
-    await depositTx.wait();
-    console.log('Bob: deposits his USDC in the vault. - OK');
-
-    const balanceOf = await vault.balanceOf(bobSigner.address);
-    console.log(`Bob: has ${balanceOf.div(10 ** 6)} USDC deposited in the vault. - OK`);
-
-    console.log('\n');
-    console.log('=====================================');
-    console.log('\n');
-  }, 1000);
-};
+export async function main() {
+  await deposit(loadConfiguration());
+}

@@ -1,82 +1,85 @@
-import {
-  CredbullFixedYieldVaultWithUpside__factory,
-  MockStablecoin__factory,
-  MockToken__factory,
-} from '@credbull/contracts';
-import { formatEther, parseUnits } from 'ethers/lib/utils';
+import { MockStablecoin__factory } from '@credbull/contracts';
+import { formatUnits } from 'ethers/lib/utils';
 
-import { headers, login } from './utils/api';
 import { loadConfiguration } from './utils/config';
-import { supabaseAdminClient } from './utils/database';
-import { signerFor } from './utils/ethers';
+import { balanceLoggerFactory, describeFYWUVault, describeToken, displayValueFor } from './utils/display';
+import { Schema } from './utils/schema';
+import { userFor } from './utils/user';
 
-export const main = () => {
-  setTimeout(async () => {
-    console.log('\n');
-    console.log('=====================================');
-    console.log('\n');
-    const config = loadConfiguration();
+export async function redeemWithUpside(config: any): Promise<void> {
+  Schema.CONFIG_API_URL.parse(config);
+  Schema.CONFIG_USER_ADMIN.parse(config);
+  Schema.CONFIG_USER_BOB.parse(config);
 
-    // console.log('Bob: retrieves a session through api.');
-    const bob = await login(config);
+  console.log('='.repeat(80));
+  const userBob = await userFor(
+    config,
+    config.users.bob.email_address,
+    config.secret.BOB_PASSWORD,
+    config.secret.BOB_PRIVATE_KEY,
+  );
+  await userBob.sdk.linkWallet();
+  console.log(' Bob signs a message and links his wallet.');
 
-    const bobHeaders = headers(bob);
-    console.log('Bob: retrieves a session through api. - OK');
+  const { data: vaults } = await userBob.sdk.getAllVaults();
+  console.log(' Bob queries for all available vaults=', vaults);
 
-    // console.log('Bob: signs a message with his wallet.');
-    const bobSigner = signerFor(config, config.secret!.BOB_PRIVATE_KEY!);
+  const vaultData = vaults.find((v: any) => v.type === 'fixed_yield_upside');
+  if (vaultData === undefined) throw new Error('No Fixed Yield Vault With Upside found.');
+  const vault = await userBob.sdk.getUpsideVaultInstance(vaultData.address);
+  const displayShare = displayValueFor(await vault.decimals());
+  console.log(' Bob selects the first Fixed Yield Vault With Upside=', await describeFYWUVault(vault));
 
-    // console.log('Bob: queries for existing vaults.');
-    const vaultsResponse = await fetch(`${config.api.url}/vaults/current`, {
-      method: 'GET',
-      ...bobHeaders,
-    });
+  const asset = await userBob.sdk.getAssetInstance(vaultData.address);
+  const displayAsset = displayValueFor(await asset.decimals());
+  console.log(' Bob gets the Asset of the Vault=', await describeToken(asset));
 
-    const vaults = await vaultsResponse.json();
+  const token = await userBob.sdk.getTokenInstance(vaultData.address);
+  const displayToken = displayValueFor(await token.decimals());
+  console.log(' Bob gets the Token of the Vault=', await describeToken(token));
 
-    console.log('Bob: queries for existing vaults. - OK');
+  // A complicated utility logging function for outputting balances for all actors to see state changes.
+  const logBalances = balanceLoggerFactory(
+    async (address) => displayShare(await vault.balanceOf(address)),
+    async (address) => displayAsset(await asset.balanceOf(address)),
+    [
+      ['The Vault', vaultData.address],
+      ['Bob', userBob.address],
+      ['The Custodian', await vault.CUSTODIAN()],
+    ],
+    async (address) => displayToken(await token.balanceOf(address)),
+  );
+  await logBalances();
 
-    const vaultAddress = vaults['data'][0].address;
-    const usdcAddress = vaults['data'][0].asset_address;
+  const redeemAmount = await vault.balanceOf(userBob.address);
+  console.log(' Bob decides to redeem all his Shares=', formatUnits(redeemAmount, await vault.decimals()));
+  if (redeemAmount.lte(0)) throw new Error('No Shares to redeem.');
 
-    const client = supabaseAdminClient(config);
-    const addresses = await client.from('contracts_addresses').select();
-    if (addresses.error) return addresses;
+  const mockUsdc = MockStablecoin__factory.connect(asset.address, userBob.signer);
+  const mintAssetTx = await mockUsdc.mint(vaultData.address, redeemAmount);
+  await mintAssetTx.wait();
+  console.log(' Bob mints the redeem amount of Asset to the Vault=', displayAsset(redeemAmount));
+  await logBalances();
 
-    const tokenAddress = addresses.data.find((a) => a.contract_name === 'MockToken');
-    if (!tokenAddress) throw new Error('Token address not found');
+  const userAdmin = await userFor(
+    config,
+    config.users.admin.email_address,
+    config.secret.ADMIN_PASSWORD,
+    config.secret.ADMIN_PRIVATE_KEY,
+  );
+  const adminVault = vault.connect(userAdmin.signer);
+  const windowCheckTx = await adminVault.toggleWindowCheck(false);
+  await windowCheckTx.wait();
+  const maturityCheckTx = await adminVault.toggleMaturityCheck(false);
+  await maturityCheckTx.wait();
+  console.log(' Admin disables the Vault Maturity and Window Checks');
 
-    const usdc = MockStablecoin__factory.connect(usdcAddress, bobSigner);
-    const token = MockToken__factory.connect(tokenAddress.address, bobSigner);
-    const vault = CredbullFixedYieldVaultWithUpside__factory.connect(vaultAddress, bobSigner);
-    const mintTx = await usdc.mint(vaultAddress, parseUnits('1000', 'mwei'));
-    await mintTx.wait();
+  await userBob.sdk.redeem(vaultData.address, redeemAmount, userBob.address);
+  console.log(' Bob redeems his Shares from the Vault.');
+  await logBalances();
+  console.log('='.repeat(80));
+}
 
-    const shares = await vault.balanceOf(bobSigner.address);
-
-    let balanceOfToken = await token.balanceOf(vaultAddress);
-    let balanceOfUSDC = await usdc.balanceOf(vaultAddress);
-    console.log(`Bob: balance before redeem ${formatEther(shares)} sToken - OK`);
-    console.log(`Vault: balance before redeem ${formatEther(balanceOfToken)} cToken - OK`);
-    console.log(`Vault: balance before redeem ${formatEther(balanceOfUSDC)} USDC - OK`);
-
-    const redeemTx = await vault.redeem(shares, bobSigner.address, bobSigner.address, {
-      gasLimit: 10000000,
-    });
-
-    await redeemTx.wait();
-    console.log('Bob: redeems. - OK');
-
-    const balanceOf = await vault.balanceOf(bobSigner.address);
-    balanceOfToken = await token.balanceOf(vaultAddress);
-    balanceOfUSDC = await usdc.balanceOf(vaultAddress);
-
-    console.log(`Bob: has ${formatEther(balanceOf)} sToken. - OK`);
-    console.log(`Vault: has ${formatEther(balanceOfUSDC)} USDC. - OK`);
-    console.log(`Vault: has ${formatEther(balanceOfToken)} cToken. - OK`);
-
-    console.log('\n');
-    console.log('=====================================');
-    console.log('\n');
-  }, 1000);
-};
+export async function main(): Promise<void> {
+  await redeemWithUpside(loadConfiguration());
+}

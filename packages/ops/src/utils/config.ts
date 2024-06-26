@@ -34,7 +34,7 @@ interface Config {
  *
  * @returns A `Config` instance.
  */
-export const loadConfiguration = (): Config => {
+export function loadConfiguration(): Config {
   const env = process.env.ENVIRONMENT || 'local';
   const configFile = path.resolve(__dirname, `../../resource/ops-${env}.toml`);
   console.log(`Loading configuration from: '${configFile}'`);
@@ -56,6 +56,6 @@ export const loadConfiguration = (): Config => {
   config.secret.BOB_PRIVATE_KEY = process.env.BOB_PRIVATE_KEY;
 
   return config;
-};
+}
 
 export default { loadConfiguration };

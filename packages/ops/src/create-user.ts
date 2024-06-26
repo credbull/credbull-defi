@@ -20,12 +20,7 @@ import { Schema } from './utils/schema';
  * @throws AuthError if the account creation fails.
  * @throws ZodError if the parameters or config are invalid.
  */
-export const createUser = async (
-  config: any,
-  email: string,
-  isChannel: boolean,
-  passwordMaybe?: string,
-): Promise<any> => {
+export async function createUser(config: any, email: string, isChannel: boolean, passwordMaybe?: string): Promise<any> {
   Schema.CONFIG_APP_URL.parse(config);
   Schema.NON_EMPTY_STRING.optional().parse(passwordMaybe);
   assertEmail(email);
@@ -67,7 +62,7 @@ export const createUser = async (
   }
 
   return toReturn;
-};
+}
 
 /**
  * Invoked by the command line processor, creates a Corporate Account User according to the
@@ -78,10 +73,10 @@ export const createUser = async (
  * @throws Error if `params.email` is not provided.
  * @throws ZodError if the loaded configuration does not satisfy all configuration needs.
  */
-export const main = (scenarios: { channel: boolean }, params?: { email: string }) => {
+export async function main(scenarios: { channel: boolean }, params?: { email: string }) {
   if (!params?.email) throw new Error('Email is required');
 
-  createUser(loadConfiguration(), params!.email, scenarios.channel);
-};
+  await createUser(loadConfiguration(), params!.email, scenarios.channel);
+}
 
 export default { main };

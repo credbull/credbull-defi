@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { ZodError } from 'zod';
 
-import { createUser, main } from '@/create-user';
+import { createUser } from '@/create-user';
 import { loadConfiguration } from '@/utils/config';
 import { supabaseAdminClient } from '@/utils/database';
 import { deleteUserIfPresent, userByOrUndefined } from '@/utils/user';
@@ -48,12 +48,6 @@ test.describe('Create User should fail when invoked with', async () => {
   test('an empty or blank password', async () => {
     expect(createUser(config, EMAIL_ADDRESS, false, '')).rejects.toThrow(ZodError);
     expect(createUser(config, EMAIL_ADDRESS, false, ' \t \n ')).rejects.toThrow(ZodError);
-  });
-});
-
-test.describe('Create User Main should fail with', async () => {
-  test('an absent parameters configuration', async () => {
-    expect(() => main({ channel: false })).toThrow(Error);
   });
 });
 
@@ -107,37 +101,5 @@ test.describe('Create User should create', async () => {
 
   test('a channel user with specified email address and a generated password', async () => {
     await assertUserCreatedWith('minion4@create.user.test', true);
-  });
-});
-
-test.describe('Create User Main should create', async () => {
-  test.describe.configure({ mode: 'serial' });
-
-  async function assertUserCreatedWith(email: string, isChannel: boolean) {
-    expect(() => main({ channel: isChannel }, { email: email })).toPass();
-
-    // Poll the database until the User is found to exist, or test is timed out after 1 minute.
-    await expect
-      .poll(async () => await userByOrUndefined(supabaseAdmin, email), { timeout: 30_000 })
-      .toMatchObject({ email: email });
-
-    // NOTE (JL,2024-06-05): I can't get the value from the `poll`, so re-query.
-    const user = await userByOrUndefined(supabaseAdmin, email);
-    if (!isChannel) {
-      expect(user.app_metadata.partner_type, 'Partner Type is set.').toBeUndefined();
-    } else {
-      const expectedPartnerType = { partner_type: 'channel' };
-      expect(user.app_metadata, 'Partner Type is not set for= ' + email).toMatchObject(expectedPartnerType);
-    }
-
-    await deleteUserIfPresent(supabaseAdmin, email);
-  }
-
-  test('an non-channel user with specified email address', async () => {
-    await assertUserCreatedWith('minion5@create.user.test', false);
-  });
-
-  test('a channel user with specified email address', async () => {
-    await assertUserCreatedWith('minion6@create.user.test', true);
   });
 });

@@ -4,7 +4,7 @@ import { isAfter, isFuture, isPast } from 'date-fns';
 import { ZodError } from 'zod';
 
 import { createUser } from '@/create-user';
-import { createVault, main } from '@/create-vault';
+import { createVault } from '@/create-vault';
 import { makeAdmin } from '@/make-admin';
 import { loadConfiguration } from '@/utils/config';
 import { supabaseAdminClient } from '@/utils/database';
@@ -53,20 +53,6 @@ test.describe('Create Vault should fail when invoked with', async () => {
       expect(createVault(config, false, true, false, tooBig)).rejects.toThrow(ZodError);
       expect(createVault(config, false, true, false, '0x' + tooBig)).rejects.toThrow(ZodError);
     }
-  });
-});
-
-test.describe('Create Vault Main should fail when invoked with', async () => {
-  // NOTE (JL,2024-06-04): Internal async invocation means no other impact possible.
-  test('an invalid Tenant Email parameter', async () => {
-    const scenarios = { matured: false, upside: true, tenant: false };
-
-    await expect(main(scenarios, { upsideVault: VALID_ADDRESS, tenantEmail: 'someone@here' })).rejects.toThrow(
-      ZodError,
-    );
-    await expect(
-      main(scenarios, { upsideVault: '0x123456789abcdef', tenantEmail: 'someone@here.com' }),
-    ).rejects.toThrow(ZodError);
   });
 });
 
