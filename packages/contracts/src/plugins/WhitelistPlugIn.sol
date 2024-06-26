@@ -3,10 +3,11 @@
 pragma solidity ^0.8.19;
 
 import { IKYCProvider } from "../interface/IKYCProvider.sol";
-import { IErrors } from "../interface/IErrors.sol";
 
 /// @notice - A PlugIn to handle whitelisting
-abstract contract WhitelistPlugIn is IErrors {
+abstract contract WhitelistPlugIn {
+    /// @notice If an invalid `IKYCProvider` Address is provided.
+    error CredbullVault__InvalidKYCProviderAddress(address);
     /// @notice Error to revert if the address is not whitelisted
     error CredbullVault__NotAWhitelistedAddress(address, uint256);
 

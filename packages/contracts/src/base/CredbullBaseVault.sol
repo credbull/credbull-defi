@@ -8,11 +8,12 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
-import { IErrors } from "../interface/IErrors.sol";
 
-abstract contract CredbullBaseVault is IErrors, ERC4626, Pausable {
+abstract contract CredbullBaseVault is ERC4626, Pausable {
     using Math for uint256;
 
+    error CredbullVault__InvalidCustodianAddress(address);
+    error CredbullVault__InvalidAsset(IERC20);
     error CredbullVault__TransferOutsideEcosystem(address);
     error CredbullVault__InvalidAssetAmount(uint256);
     error CredbullVault__UnsupportedDecimalValue(uint8);
