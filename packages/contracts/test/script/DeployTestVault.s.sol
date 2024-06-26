@@ -38,7 +38,6 @@ contract DeployTestVault is Script {
 
         CredbullFixedYieldVaultFactory fixedYieldVaultFactory =
             CredbullFixedYieldVaultFactory(deployChecker.getContractAddress("CredbullFixedYieldVaultFactory"));
-        address kycProviderAddr = deployChecker.getContractAddress("CredbullKYCProvider");
 
         NetworkConfig memory configFromDatabase = NetworkConfig({
             factoryParams: networkConfig.factoryParams,
