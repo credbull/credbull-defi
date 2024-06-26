@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { ZodError } from 'zod';
 
 import { createUser } from '@/create-user';
-import { main, makeAdmin } from '@/make-admin';
+import { makeAdmin } from '@/make-admin';
 import { loadConfiguration } from '@/utils/config';
 import { supabaseAdminClient } from '@/utils/database';
 import { generateRandomEmail } from '@/utils/generate';
@@ -46,7 +46,7 @@ test.describe('Make Admin should fail with', async () => {
   });
 });
 
-test.describe('Make Admnin should update', async () => {
+test.describe('Make Admin should update', async () => {
   test('an existing non-admin account to be an admin account', async () => {
     const user = await createUser(config, email1, false, PASSWORD);
     expect(user.app_metadata.roles).toBeUndefined();

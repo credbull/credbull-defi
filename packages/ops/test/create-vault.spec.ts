@@ -4,7 +4,7 @@ import { isAfter, isFuture, isPast } from 'date-fns';
 import { ZodError } from 'zod';
 
 import { createUser } from '@/create-user';
-import { createVault, main } from '@/create-vault';
+import { createVault } from '@/create-vault';
 import { makeAdmin } from '@/make-admin';
 import { loadConfiguration } from '@/utils/config';
 import { supabaseAdminClient } from '@/utils/database';
