@@ -22,7 +22,7 @@ on:
 jobs:
   app-build-deploy:
     runs-on: ubuntu-latest
-    environment: Preview
+    environment: testnet
 
     steps:
       - uses: actions/checkout@v4
@@ -49,13 +49,12 @@ jobs:
       - name: Run Tests
         run: yarn run test
         env:
-          # the environment variables below should be removed when we configure the secrets in github
-          NEXT_PUBLIC_SUPABASE_URL: your_supabase_project_url
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: your_supabase_anon_key
-          NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: your_wallet_connect_project_id
-          SUPABASE_SERVICE_ROLE_KEY: your_supabase_service_role_key
           API_BASE_URL: http://localhost:3001
           APP_BASE_URL: http://localhost:3000
+          NEXT_PUBLIC_SUPABASE_URL: testing_anything_will_do
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: testing_anything_will_do
+          NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: testing_anything_will_do
+          SUPABASE_SERVICE_ROLE_KEY: testing_anything_will_do
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
@@ -65,6 +64,12 @@ jobs:
 #
       - name: Build Project Artifacts
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          API_BASE_URL: http://localhost:3001
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.TEST_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.TEST_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: ${{ vars.XXX }}
 
       - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
