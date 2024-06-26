@@ -6,7 +6,7 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
 import { MaturityVault } from "../extensions/MaturityVault.sol";
 import { WhitelistPlugIn } from "../plugins/WhitelistPlugIn.sol";
 import { WindowPlugIn } from "../plugins/WindowPlugIn.sol";
-import { MaxCapPlugIn } from "../plugins/MaxCapPlug.sol";
+import { MaxCapPlugIn } from "../plugins/MaxCapPlugIn.sol";
 
 contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCapPlugIn, AccessControl {
     /// @notice - Hash of operator role
