@@ -1,7 +1,5 @@
-import { assertEmail } from './utils/assert';
+import { updateMetadata } from './update-metadata';
 import { loadConfiguration } from './utils/config';
-import { supabaseAdminClient } from './utils/database';
-import { userByOrThrow } from './utils/user';
 
 /**
  * Updates the `email` Corporate User Account to have a Partner Type of Channel.
@@ -14,23 +12,7 @@ import { userByOrThrow } from './utils/user';
  * @throws ZodError if the parameters or configuration are invalid.
  */
 export async function makeChannel(config: any, email: string): Promise<any> {
-  assertEmail(email);
-
-  const supabaseAdmin = supabaseAdminClient(config);
-  const toUpdate = await userByOrThrow(supabaseAdmin, email);
-  const {
-    data: { user },
-    error,
-  } = await supabaseAdmin.auth.admin.updateUserById(toUpdate.id, {
-    app_metadata: { ...toUpdate.app_metadata, partner_type: 'channel' },
-  });
-  if (error) throw error;
-
-  console.log('='.repeat(80));
-  console.log('  Corporate Account ' + email + ' is now a Channel.');
-  console.log('='.repeat(80));
-
-  return user;
+  return updateMetadata(config, email, { partner_type: 'channel' });
 }
 
 /**
