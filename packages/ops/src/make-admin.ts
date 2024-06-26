@@ -1,9 +1,5 @@
-import { assertEmail } from './utils/assert';
+import { updateMetadata } from './update-metadata';
 import { loadConfiguration } from './utils/config';
-import { supabaseAdminClient } from './utils/database';
-import { userByOrThrow } from './utils/user';
-
-// TODO (JL,2024-06-05): Add `update-metadata` script and use for Make Admin/Channel.
 
 /**
  * Updates the `email` Corporate User Account to add the Administrator Role.
@@ -16,23 +12,7 @@ import { userByOrThrow } from './utils/user';
  * @throws ZodError if the parameters or configuration are invalid.
  */
 export async function makeAdmin(config: any, email: string): Promise<any> {
-  assertEmail(email);
-
-  const supabaseAdmin = supabaseAdminClient(config);
-  const toUpdate = await userByOrThrow(supabaseAdmin, email);
-  const {
-    data: { user },
-    error,
-  } = await supabaseAdmin.auth.admin.updateUserById(toUpdate.id, {
-    app_metadata: { ...toUpdate.app_metadata, roles: ['admin'] },
-  });
-  if (error) throw error;
-
-  console.log('='.repeat(80));
-  console.log('  Corporate Account ' + email + ' is now an Administrator.');
-  console.log('='.repeat(80));
-
-  return user;
+  return updateMetadata(config, email, { roles: ['admin'] });
 }
 
 /**
