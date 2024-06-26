@@ -1,6 +1,6 @@
 name: ci-dev-app
 env:
-  VERCEL_ORG_ID: ${{ vars.VERCEL_CREDBULL_DEFI_PROJECT_ID }}
+  VERCEL_ORG_ID: ${{ vars.VERCEL_CREDBULL_TEAM_ID }}
   VERCEL_PROJECT_ID: ${{ vars.VERCEL_CREDBULL_DEFI_PROJECT_ID }}
 
 defaults:
