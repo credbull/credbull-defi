@@ -22,7 +22,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     HelperConfig private helperConfig;
     CredbullWhiteListProvider private whiteListProvider;
     NetworkConfig private config;
-    CredbullFixedYieldVault.FixedYieldVaultParams private params;
+    CredbullFixedYieldVault.FixedYieldVaultParameters private params;
 
     string private OPTIONS = "{}";
 

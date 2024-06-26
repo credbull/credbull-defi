@@ -24,7 +24,7 @@ contract CredbullFixedYieldVaultTest is Test {
     DeployVaultFactory private deployer;
     CredbullWhiteListProvider private whiteListProvider;
 
-    CredbullFixedYieldVault.FixedYieldVaultParams private vaultParams;
+    CredbullFixedYieldVault.FixedYieldVaultParameters private vaultParams;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");

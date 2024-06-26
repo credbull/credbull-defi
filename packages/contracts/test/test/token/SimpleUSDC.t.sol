@@ -4,12 +4,17 @@ pragma solidity ^0.8.19;
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
+<<<<<<<< HEAD:packages/contracts/test/test/token/SimpleUSDC.t.sol
 /**
  * @notice A simple [ERC20] Token, used to mimic USDC in tests.
  * @dev The Symbol, Name and decimals are hard-coded, so an instance cannot represent anything other than 'sUSDC'.
  */
 contract SimpleUSDC is ERC20, Ownable {
     constructor(uint256 initialSupply) ERC20("Simple USDC", "sUSDC") Ownable(msg.sender) {
+========
+contract MockStablecoin is ERC20, Ownable {
+    constructor(uint256 initialSupply) ERC20("Mock USDC", "mUSDC") Ownable(msg.sender) {
+>>>>>>>> 00739ff (LOADS of re-structuring and renaming into a better structure (for me). This is for review.):packages/contracts/test/test/mock/MockStablecoin.t.sol
         _mint(msg.sender, initialSupply);
     }
 
