@@ -3,19 +3,17 @@
 pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
-
-import { HelperConfig, NetworkConfig } from "../../script/HelperConfig.s.sol";
-import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
-
-import { MockStablecoin } from "../mocks/MockStablecoin.sol";
-import { MockToken } from "../mocks/MockToken.sol";
-import { DeployedContracts } from "../../script/DeployedContracts.s.sol";
-
-import { CredbullFixedYieldVaultFactory } from "../../src/factories/CredbullFixedYieldVaultFactory.sol";
-import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
-import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
-
 import { console2 } from "forge-std/console2.sol";
+
+import { HelperConfig, NetworkConfig } from "@script/HelperConfig.s.sol";
+import { DeployedContracts } from "@script/DeployedContracts.s.sol";
+
+import { CredbullFixedYieldVaultFactory } from "@src/CredbullFixedYieldVaultFactory.sol";
+import { CredbullFixedYieldVault } from "@src/CredbullFixedYieldVault.sol";
+
+import { MockStablecoin } from "@test/test/mock/MockStablecoin.t.sol";
+import { MockToken } from "@test/test/mock/MockToken.t.sol";
+import { ParametersFactory } from "@test/test/vault/ParametersFactory.t.sol";
 
 // TODO: Script was breaking build - moved to test package to see if it fixes it
 contract DeployTestVault is Script {
@@ -45,11 +43,11 @@ contract DeployTestVault is Script {
             cblToken: mockToken
         });
 
-        HelperVaultTest helperVaultTest = new HelperVaultTest(configFromDatabase);
+        ParametersFactory pf = new ParametersFactory(configFromDatabase);
         address custodianAddr = vm.envAddress("ADDRESSES_CUSTODIAN");
         allowCustodian(custodianAddr, fixedYieldVaultFactory);
 
-        CredbullFixedYieldVault.FixedYieldVaultParams memory vaultParams = helperVaultTest.createFixedYieldVaultParams();
+        CredbullFixedYieldVault.FixedYieldVaultParameters memory vaultParams = pf.createFixedYieldVaultParameters();
 
         CredbullFixedYieldVault credbullFixedYieldVault = addVault(fixedYieldVaultFactory, vaultParams);
 
@@ -77,7 +75,7 @@ contract DeployTestVault is Script {
 
     function addVault(
         CredbullFixedYieldVaultFactory fixedYieldVaultFactory,
-        CredbullFixedYieldVault.FixedYieldVaultParams memory vaultParams
+        CredbullFixedYieldVault.FixedYieldVaultParameters memory vaultParams
     ) internal returns (CredbullFixedYieldVault) {
         vm.startBroadcast(vaultDeployerKey); // vaults are actually deployed by VaultFactoryOperators
 

@@ -3,13 +3,16 @@
 pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
-import { HelperConfig, NetworkConfig } from "../script/HelperConfig.s.sol";
-import { CredbullFixedYieldVaultFactory } from "../src/factories/CredbullFixedYieldVaultFactory.sol";
-import { CredbullUpsideVaultFactory } from "../src/factories/CredbullUpsideVaultFactory.sol";
-import { CredbullKYCProvider } from "../src/CredbullKYCProvider.sol";
-import { DeployedContracts } from "./DeployedContracts.s.sol";
-import { CredbullFixedYieldVault } from "../src/CredbullFixedYieldVault.sol";
 import { console2 } from "forge-std/console2.sol";
+
+import { HelperConfig, NetworkConfig } from "@script/HelperConfig.s.sol";
+
+import { CredbullFixedYieldVaultFactory } from "@src/CredbullFixedYieldVaultFactory.sol";
+import { CredbullUpsideVaultFactory } from "@src/CredbullUpsideVaultFactory.sol";
+import { CredbullKYCProvider } from "@src/CredbullKYCProvider.sol";
+import { CredbullFixedYieldVault } from "@src/CredbullFixedYieldVault.sol";
+
+import { DeployedContracts } from "./DeployedContracts.s.sol";
 
 contract DeployVaultFactory is Script {
     bool private isTestMode;

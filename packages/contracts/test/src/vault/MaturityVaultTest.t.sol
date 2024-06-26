@@ -1,0 +1,139 @@
+//SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.19;
+
+import { Test } from "forge-std/Test.sol";
+
+import { HelperConfig } from "@script/HelperConfig.s.sol";
+
+import { MaturityVault } from "@src/vault/MaturityVault.sol";
+
+import { MockMaturityVault } from "@test/test/mock/vault/MockMaturityVault.t.sol";
+import { MockStablecoin } from "@test/test/mock/MockStablecoin.t.sol";
+import { ParametersFactory } from "@test/test/vault/ParametersFactory.t.sol";
+
+contract MaturityVaultTest is Test {
+    MockMaturityVault private vault;
+
+    MaturityVault.MaturityVaultParameters private params;
+    HelperConfig private helperConfig;
+    uint256 private precision;
+
+    address private alice = makeAddr("alice");
+    address private bob = makeAddr("bob");
+
+    uint256 private constant INITIAL_BALANCE = 1e6;
+
+    function setUp() public {
+        helperConfig = new HelperConfig(true);
+        params = new ParametersFactory(helperConfig.getNetworkConfig()).createMaturityVaultParameters();
+
+        vault = new MockMaturityVault(params);
+        precision = 10 ** MockStablecoin(address(params.vault.asset)).decimals();
+
+        MockStablecoin(address(params.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
+        MockStablecoin(address(params.vault.asset)).mint(bob, INITIAL_BALANCE * precision);
+    }
+
+    function test__MaturityVault__WithdrawAssetAndBurnShares() public {
+        // ---- Setup Part 1 - Deposit Assets to the vault ---- //
+        uint256 depositAmount = 10 * precision;
+        //Call internal deposit function
+        uint256 shares = deposit(alice, depositAmount);
+
+        // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
+        MockStablecoin(address(params.vault.asset)).mint(params.vault.custodian, 1 * precision);
+        uint256 finalBalance = MockStablecoin(address(params.vault.asset)).balanceOf(params.vault.custodian);
+
+        vm.startPrank(params.vault.custodian);
+        params.vault.asset.approve(params.vault.custodian, finalBalance);
+        params.vault.asset.transferFrom(params.vault.custodian, address(vault), finalBalance);
+        vm.stopPrank();
+
+        vault.mature();
+
+        // ---- Assert Vault burns shares and Alice receive asset with additional 10% ---
+        uint256 balanceBeforeRedeem = params.vault.asset.balanceOf(alice);
+        vm.startPrank(alice);
+        vault.approve(address(vault), shares);
+        uint256 assets = vault.redeem(shares, alice, alice);
+        uint256 balanceAfterRedeem = params.vault.asset.balanceOf(alice);
+        vm.stopPrank();
+
+        assertEq(balanceAfterRedeem, balanceBeforeRedeem + assets, "Alice should recieve finalBalance with 10% yeild");
+    }
+
+    function test__MaturityVault__RevertOnWithdrawIfVaultNotMatured() public {
+        // ---- Setup Part 1 - Deposit Assets to the vault ---- //
+        uint256 depositAmount = 10 * precision;
+        //Call internal deposit function
+        uint256 shares = deposit(alice, depositAmount);
+
+        vm.startPrank(alice);
+        vault.approve(address(vault), shares);
+
+        vm.expectRevert(MaturityVault.CredbullVault__NotMatured.selector);
+        vault.redeem(shares, alice, alice);
+        vm.stopPrank();
+    }
+
+    function test__MaturityVault__NotEnoughBalanceToMatureVault() public {
+        // ---- Setup Part 1 - Deposit Assets to the vault ---- //
+        uint256 depositAmount = 10 * precision;
+        deposit(alice, depositAmount);
+        uint256 finalBalance = depositAmount;
+
+        // ---- Transfer assets to vault ---
+        vm.startPrank(params.vault.custodian);
+        params.vault.asset.approve(params.vault.custodian, finalBalance);
+        params.vault.asset.transferFrom(params.vault.custodian, address(vault), finalBalance);
+        vm.stopPrank();
+
+        // ---- Assert it can't be matured yet ---
+        // vm.prank(params.contractRoles.operator);
+        vm.expectRevert(MaturityVault.CredbullVault__NotEnoughBalanceToMature.selector);
+        vault.mature();
+    }
+
+    function test__MaturityVault__ExpectedAssetOnMaturity() public {
+        uint256 depositAmount = 10 * precision;
+        deposit(alice, depositAmount);
+
+        uint256 expectedAssetVaulue = ((depositAmount * (100 + params.promisedYield)) / 100);
+
+        assertEq(vault.expectedAssetsOnMaturity(), expectedAssetVaulue);
+    }
+
+    function test__MaturityVault__ShouldNotRevertOnMaturityModifier() public {
+        uint256 depositAmount = 10 * precision;
+        uint256 shares = deposit(alice, depositAmount);
+
+        vm.prank(params.vault.custodian);
+        params.vault.asset.transfer(address(vault), depositAmount);
+
+        vm.startPrank(alice);
+        vault.approve(address(vault), shares);
+
+        vault.toogleMaturityCheck(false);
+
+        vault.redeem(shares, alice, alice);
+        assertEq(params.vault.asset.balanceOf(alice), INITIAL_BALANCE * precision);
+        vm.stopPrank();
+    }
+
+    function test__MaturityVault__ShouldToggleMaturityCheck() public {
+        bool beforeToggle = vault.checkMaturity();
+        vault.toogleMaturityCheck(!beforeToggle);
+        bool afterToggle = vault.checkMaturity();
+        assertEq(afterToggle, !beforeToggle);
+    }
+
+    function deposit(address user, uint256 assets) internal returns (uint256 shares) {
+        // first, approve the deposit
+        vm.startPrank(user);
+        params.vault.asset.approve(address(vault), assets);
+
+        shares = vault.deposit(assets, user);
+        vm.stopPrank();
+    }
+}

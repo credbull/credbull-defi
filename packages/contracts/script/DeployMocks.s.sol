@@ -3,13 +3,15 @@
 pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
-
-import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
-import { MockToken } from "../test/mocks/MockToken.sol";
-
 import { console2 } from "forge-std/console2.sol";
+
+import { Vault } from "@src/vault/Vault.sol";
+
+import { MockStablecoin } from "@test/test/mock/MockStablecoin.t.sol";
+import { MockToken } from "@test/test/mock/MockToken.t.sol";
+import { MockVault } from "@test/test/mock/vault/MockVault.t.sol";
+
 import { DeployedContracts } from "./DeployedContracts.s.sol";
-import { CredbullBaseVaultMock } from "../test/mocks/vaults/CredbullBaseVaultMock.m.sol";
 
 contract DeployMocks is Script {
     bool public isTestMode;
@@ -18,7 +20,7 @@ contract DeployMocks is Script {
 
     uint128 public totalSupply = MAX_UINT128_SIZE;
 
-    CredbullBaseVaultMock internal credbullBaseVaultMock;
+    MockVault internal mockVault;
 
     constructor(bool _isTestMode, address _custodian) {
         isTestMode = _isTestMode;
@@ -47,8 +49,14 @@ contract DeployMocks is Script {
             mockToken = MockToken(deployChecker.getContractAddress("MockStablecoin"));
         }
 
-        if (isTestMode || deployChecker.isDeployRequired("CredbullBaseVaultMock")) {
-            credbullBaseVaultMock = new CredbullBaseVaultMock(mockStablecoin, "Mock Vault", "mVault", custodian);
+        if (isTestMode || deployChecker.isDeployRequired("MockVault")) {
+            Vault.VaultParameters memory params = Vault.VaultParameters({
+                asset: mockStablecoin,
+                shareName: "Mock Vault",
+                shareSymbol: "mVault",
+                custodian: custodian
+            });
+            mockVault = new MockVault(params);
             console2.log("!!!!! Deploying CredbullBaseVaultMock !!!!!");
         }
 
