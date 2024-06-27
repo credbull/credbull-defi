@@ -8,11 +8,12 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
-import { IErrors } from "../interface/IErrors.sol";
 
 abstract contract CredbullBaseVault is ERC4626, Pausable {
     using Math for uint256;
 
+    error CredbullVault__InvalidCustodianAddress(address);
+    error CredbullVault__InvalidAsset(IERC20);
     error CredbullVault__TransferOutsideEcosystem(address);
     error CredbullVault__InvalidAssetAmount(uint256);
     error CredbullVault__UnsupportedDecimalValue(uint8);
@@ -26,7 +27,6 @@ abstract contract CredbullBaseVault is ERC4626, Pausable {
         address custodian;
     }
 
-    /// @notice Struct for Contract Roles
     struct ContractRoles {
         address owner;
         address operator;
@@ -37,8 +37,7 @@ abstract contract CredbullBaseVault is ERC4626, Pausable {
     address public immutable CUSTODIAN;
 
     /**
-     * @dev
-     * The assets deposited to the vault will be sent to CUSTODIAN address so this is
+     * @dev The assets deposited to the vault will be sent to CUSTODIAN address so this is
      * separate variable to track the total assets that's been deposited to this vault.
      */
     uint256 public totalAssetDeposited;
@@ -65,15 +64,17 @@ abstract contract CredbullBaseVault is ERC4626, Pausable {
     }
 
     /**
-     *
      * @param baseVaultParams - Base vault parameters
      */
     constructor(BaseVaultParams memory baseVaultParams)
         ERC4626(baseVaultParams.asset)
         ERC20(baseVaultParams.shareName, baseVaultParams.shareSymbol)
     {
-        if (baseVaultParams.custodian == address(0) || address(baseVaultParams.asset) == address(0)) {
-            revert IErrors.ZeroAddress();
+        if (baseVaultParams.custodian == address(0)) {
+            revert CredbullVault__InvalidCustodianAddress(baseVaultParams.custodian);
+        }
+        if (address(baseVaultParams.asset) == address(0)) {
+            revert CredbullVault__InvalidAsset(baseVaultParams.asset);
         }
 
         CUSTODIAN = baseVaultParams.custodian;

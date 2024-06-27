@@ -6,14 +6,12 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
 import { MaturityVault } from "../extensions/MaturityVault.sol";
 import { WhitelistPlugIn } from "../plugins/WhitelistPlugIn.sol";
 import { WindowPlugIn } from "../plugins/WindowPlugIn.sol";
-import { MaxCapPlugIn } from "../plugins/MaxCapPlug.sol";
+import { MaxCapPlugIn } from "../plugins/MaxCapPlugIn.sol";
 
-/// @notice - A Fixed yield vault
 contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCapPlugIn, AccessControl {
     /// @notice - Hash of operator role
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-    /// @notice - Struct to hold the parameters for FixedYieldVault
     struct FixedYieldVaultParams {
         MaturityVaultParams maturityVaultParams;
         ContractRoles contractRoles;

@@ -4,9 +4,8 @@ pragma solidity ^0.8.19;
 
 import { CredbullBaseVault } from "../../../src/base/CredbullBaseVault.sol";
 
-import { MaxCapPlugIn } from "../../../src/plugins/MaxCapPlug.sol";
+import { MaxCapPlugIn } from "../../../src/plugins/MaxCapPlugIn.sol";
 import { CredbullBaseVault } from "../../../src/base/CredbullBaseVault.sol";
-import { MaxCapPlugIn } from "../../../src/plugins/MaxCapPlug.sol";
 
 contract MaxCapVaultMock is CredbullBaseVault, MaxCapPlugIn {
     constructor(CredbullBaseVault.BaseVaultParams memory params, MaxCapPlugIn.MaxCapParams memory maxCapParams)
