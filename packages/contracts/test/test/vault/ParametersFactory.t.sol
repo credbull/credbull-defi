@@ -37,10 +37,7 @@ contract ParametersFactory is Test {
         });
     }
 
-    function createUpsideVaultParameters()
-        public
-        returns (CredbullFixedYieldVaultWithUpside.UpsideVaultParameters memory params)
-    {
+    function createUpsideVaultParameters() public returns (UpsideVault.UpsideVaultParameters memory params) {
         params = UpsideVault.UpsideVaultParameters({
             fixedYieldVault: createFixedYieldVaultParameters(),
             cblToken: networkConfig.cblToken,
