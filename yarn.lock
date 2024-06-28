@@ -729,6 +729,7 @@ __metadata:
     "@types/chai": ^4.3.10
     "@types/lodash": ^4
     "@types/mocha": ^10.0.4
+    "@types/node": ^20.14.9
     chai: ^4.3.10
     ethers: 6.8.1
     hardhat: ^2.19.0
