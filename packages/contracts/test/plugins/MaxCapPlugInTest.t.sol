@@ -7,7 +7,7 @@ import { HelperVaultTest } from "../base/HelperVaultTest.t.sol";
 import { MaxCapVaultMock } from "../mocks/vaults/MaxCapVaultMock.m.sol";
 import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { MockStablecoin } from "../mocks/MockStablecoin.sol";
-import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlug.sol";
+import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlugIn.sol";
 import { CredbullBaseVault } from "./../../src/base/CredbullBaseVault.sol";
 
 contract MaxCapPluginTest is Test {

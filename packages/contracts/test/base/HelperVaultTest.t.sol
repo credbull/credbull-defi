@@ -7,7 +7,7 @@ import { NetworkConfig } from "../../script/HelperConfig.s.sol";
 import { CredbullBaseVault } from "../mocks/vaults/CredbullBaseVaultMock.m.sol";
 import { CredbullFixedYieldVaultWithUpside } from "../../src/CredbullFixedYieldVaultWithUpside.sol";
 import { CredbullFixedYieldVault } from "../../src/CredbullFixedYieldVault.sol";
-import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlug.sol";
+import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlugIn.sol";
 import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
 import { WindowPlugIn } from "../../src/plugins/WindowPlugIn.sol";
 import { UpsideVault } from "../../src/vaults/UpsideVault.sol";

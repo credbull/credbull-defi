@@ -14,38 +14,36 @@ abstract contract MaturityVault is CredbullBaseVault {
         uint256 promisedYield;
     }
 
-    //Error to revert on withdraw if vault is not matured
+    /// @notice Reverts on withdraw if vault is not matured.
     error CredbullVault__NotMatured();
-    //Error to revert mature if there is not enough balance to mature
+
+    /// @notice Reverts on mature if there is not enough balance.
     error CredbullVault__NotEnoughBalanceToMature();
 
-    /// @notice - Track if vault is matured
+    /// @notice Determine if the vault is matured or not.
     bool public isMatured;
 
-    /// @notice - Toggle to check for maturity
+    /// @notice Determine if Maturity Checking is enabled or disabled.
     bool public checkMaturity;
 
     /// @dev The fixed yield value in percentage(100) that's promised to the users on deposit.
     uint256 private _fixedYield;
 
-    /**
-     * @param params - Vault parameters
-     */
     constructor(MaturityVaultParams memory params) CredbullBaseVault(params.baseVaultParams) {
         checkMaturity = true;
         _fixedYield = params.promisedYield;
     }
 
-    /**
-     * @notice - Returns expected assets on maturity
-     */
+    /// @notice - Returns expected assets on maturity
     function expectedAssetsOnMaturity() public view returns (uint256) {
         return totalAssetDeposited.mulDiv(100 + _fixedYield, 100);
     }
 
     /**
-     * @notice - Method to mature the vault by by depositing back the asset from the custodian wallet with addition yield earned.
-     * @dev - _totalAssetDeposited to be updated to calculate the right amount of asset with yield in proportion to the shares.
+     * @notice - Method to mature the vault by by depositing back the asset from the custodian wallet with addition
+     *  yield earned.
+     * @dev - _totalAssetDeposited to be updated to calculate the right amount of asset with yield in proportion to
+     *  the shares.
      */
     function _mature() internal {
         uint256 currentBalance = IERC20(asset()).balanceOf(address(this));
@@ -74,8 +72,9 @@ abstract contract MaturityVault is CredbullBaseVault {
     }
 
     /**
-     * @notice - Function to toggle the check for maturity
-     * @param status - Boolean value to toggle
+     * @notice Enables/disables the Maturity Check according to the [status] value.
+     * @dev 'Toggling' means flipping the existing state. This is simply a mutator.
+     * @param status Boolean value to toggle
      */
     function _toggleMaturityCheck(bool status) internal {
         checkMaturity = status;
