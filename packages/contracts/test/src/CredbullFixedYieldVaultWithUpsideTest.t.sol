@@ -10,7 +10,7 @@ import { console2 } from "forge-std/console2.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { FixedYieldVault } from "../../src/vaults/FixedYieldVault.sol";
 import { CredbullBaseVault } from "../mocks/vaults/CredbullBaseVaultMock.m.sol";
-import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlug.sol";
+import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlugIn.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { UpsideVault } from "../../src/vaults/UpsideVault.sol";
 import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
