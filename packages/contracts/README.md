@@ -49,6 +49,6 @@ forge test
 1. Code Coverage Report
    1. Install [genhtml](https://manpages.ubuntu.com/manpages/focal/man1/genhtml.1.html)
    2. ```bash
-       forge coverage report -lcov
+       forge coverage --report lcov
        genhtml lcov.info -o out/coverage
       ```
