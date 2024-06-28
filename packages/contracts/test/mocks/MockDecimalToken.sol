@@ -5,7 +5,7 @@ pragma solidity ^0.8.19;
 import { MockToken } from "./MockToken.sol";
 
 contract MockDecimalToken is MockToken {
-    uint8 tokenDecimals;
+    uint8 private tokenDecimals;
 
     constructor(uint256 initialSupply, uint8 _decimals) MockToken(initialSupply) {
         tokenDecimals = _decimals;
