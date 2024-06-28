@@ -39,3 +39,15 @@ $ forge build
 ```shell
 $ forge test
 ```
+
+### Advanced Testing
+
+1. Code Coverage Summary
+  ```shell
+  forge coverage
+  ```
+1. Code Coverage Report (depends on [genhtml](https://manpages.ubuntu.com/manpages/focal/man1/genhtml.1.html)
+  ```shell
+  forge coverage report -lcov
+  genhtml lcov.info -o out/coverage
+  ```
