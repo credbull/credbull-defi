@@ -642,7 +642,7 @@ __metadata:
     ethers: ^5.7.2
     js-toml: ^1.0.0
     prettier: ^3.2.2
-    solhint: ^4.1.1
+    solhint: ^5.0.1
     typechain: ^8.3.2
     typescript: ^5.4.5
   languageName: unknown
@@ -17727,9 +17727,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"solhint@npm:^4.1.1":
-  version: 4.5.4
-  resolution: "solhint@npm:4.5.4"
+"solhint@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "solhint@npm:5.0.1"
   dependencies:
     "@solidity-parser/parser": ^0.18.0
     ajv: ^6.12.6
@@ -17755,7 +17755,7 @@ __metadata:
       optional: true
   bin:
     solhint: solhint.js
-  checksum: 1c869d85048bbef988bf6ac855d53fc8faf07d88cf90f4da9619ec53ee617bc910fe8d9bf06251de22f1c3292b800754e77e4b060e7b8536f8076e4733a1162c
+  checksum: ff961f5e3e62172b6e26cda758b4b2e266cd07fdc32f280bfbafeb9eda99177326515aaeb5dfff531eeb03c01e432488783f4406439e7524c8da1afa0235a44e
   languageName: node
   linkType: hard
 
