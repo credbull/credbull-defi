@@ -7,9 +7,7 @@ import { VaultFactory } from "./factory/VaultFactory.sol";
 
 contract CredbullFixedYieldVaultFactory is VaultFactory {
     /// @notice Event to emit when a new vault is created
-    event VaultDeployed(
-        address indexed vault, CredbullFixedYieldVault.FixedYieldVaultParameters params, string options
-    );
+    event VaultDeployed(address indexed vault, CredbullFixedYieldVault.FixedYieldVaultParams params, string options);
 
     /**
      * @param owner - The owner of the factory contract
@@ -24,7 +22,7 @@ contract CredbullFixedYieldVaultFactory is VaultFactory {
      * @notice - Function to create a new vault. Should be called only by the owner
      * @param params - The VaultParams
      */
-    function createVault(CredbullFixedYieldVault.FixedYieldVaultParameters memory params, string memory options)
+    function createVault(CredbullFixedYieldVault.FixedYieldVaultParams memory params, string memory options)
         public
         virtual
         onlyRole(OPERATOR_ROLE)

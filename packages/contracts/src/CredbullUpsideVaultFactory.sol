@@ -8,7 +8,7 @@ import { VaultFactory } from "./factory/VaultFactory.sol";
 contract CredbullUpsideVaultFactory is VaultFactory {
     /// @notice Event to emit when a new vault is created
     event VaultDeployed(
-        address indexed vault, CredbullFixedYieldVaultWithUpside.UpsideVaultParameters params, string options
+        address indexed vault, CredbullFixedYieldVaultWithUpside.UpsideVaultParams params, string options
     );
 
     /**
@@ -25,7 +25,7 @@ contract CredbullUpsideVaultFactory is VaultFactory {
      * @param params - The VaultParams
      * @param options - A JSON string that contains additional info about vault (Off-chain use case)
      */
-    function createVault(CredbullFixedYieldVaultWithUpside.UpsideVaultParameters memory params, string memory options)
+    function createVault(CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params, string memory options)
         public
         onlyRole(OPERATOR_ROLE)
         onlyAllowedCustodians(params.fixedYieldVault.maturityVault.vault.custodian)

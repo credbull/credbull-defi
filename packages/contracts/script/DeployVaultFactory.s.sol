@@ -7,10 +7,10 @@ import { console2 } from "forge-std/console2.sol";
 
 import { HelperConfig, NetworkConfig } from "@script/HelperConfig.s.sol";
 
-import { CredbullFixedYieldVaultFactory } from "@src/CredbullFixedYieldVaultFactory.sol";
-import { CredbullUpsideVaultFactory } from "@src/CredbullUpsideVaultFactory.sol";
-import { CredbullKYCProvider } from "@src/CredbullKYCProvider.sol";
-import { CredbullFixedYieldVault } from "@src/CredbullFixedYieldVault.sol";
+import { CredbullFixedYieldVaultFactory } from "@credbull/CredbullFixedYieldVaultFactory.sol";
+import { CredbullUpsideVaultFactory } from "@credbull/CredbullUpsideVaultFactory.sol";
+import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
+import { CredbullFixedYieldVault } from "@credbull/CredbullFixedYieldVault.sol";
 
 import { DeployedContracts } from "./DeployedContracts.s.sol";
 
@@ -22,7 +22,7 @@ contract DeployVaultFactory is Script {
         returns (
             CredbullFixedYieldVaultFactory factory,
             CredbullUpsideVaultFactory upsideFactory,
-            CredbullKYCProvider kycProvider,
+            CredbullWhiteListProvider whiteListProvider,
             HelperConfig helperConfig
         )
     {
@@ -35,7 +35,7 @@ contract DeployVaultFactory is Script {
         returns (
             CredbullFixedYieldVaultFactory factory,
             CredbullUpsideVaultFactory upsideFactory,
-            CredbullKYCProvider kycProvider,
+            CredbullWhiteListProvider whiteListProvider,
             HelperConfig helperConfig
         )
     {
@@ -61,13 +61,13 @@ contract DeployVaultFactory is Script {
             console2.log("!!!!! Deploying CredbullVaultWithUpsideFactory !!!!!");
         }
 
-        if (isTestMode || deployChecker.isDeployRequired("CredbullKYCProvider")) {
-            kycProvider = new CredbullKYCProvider(operator);
-            console2.log("!!!!! Deploying CredbullKYCProvider !!!!!");
+        if (isTestMode || deployChecker.isDeployRequired("CredbullWhiteListProvider")) {
+            whiteListProvider = new CredbullWhiteListProvider(operator);
+            console2.log("!!!!! Deploying CredbullWhiteListProvider !!!!!");
         }
 
         vm.stopBroadcast();
 
-        return (factory, upsideFactory, kycProvider, helperConfig);
+        return (factory, upsideFactory, whiteListProvider, helperConfig);
     }
 }

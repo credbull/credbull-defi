@@ -6,20 +6,20 @@ import { Test } from "forge-std/Test.sol";
 
 import { DeployMocks } from "@script/DeployMocks.s.sol";
 
-import { MockStablecoin } from "@test/test/mock/MockStablecoin.t.sol";
-import { MockToken } from "@test/test/mock/MockToken.t.sol";
+import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
+import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 
 contract DeployMocksTest is Test, DeployMocks {
     constructor() DeployMocks(true, makeAddr("custodian")) { }
 
     function test__DeployMocksTest__DeployMocks() public {
-        (MockToken mockToken, MockStablecoin mockStablecoin) = run();
+        (SimpleToken testToken, SimpleUSDC testStablecoin) = run();
 
-        assertNotEq(address(0), address(mockToken));
-        assertNotEq(address(0), address(mockStablecoin));
-        assertNotEq(address(0), address(mockVault));
+        assertNotEq(address(0), address(testToken));
+        assertNotEq(address(0), address(testStablecoin));
+        assertNotEq(address(0), address(testVault));
 
-        assertEq(totalSupply, mockToken.totalSupply());
-        assertEq(totalSupply, mockStablecoin.totalSupply());
+        assertEq(totalSupply, testToken.totalSupply());
+        assertEq(totalSupply, testStablecoin.totalSupply());
     }
 }

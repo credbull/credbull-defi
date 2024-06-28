@@ -6,11 +6,16 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Vault } from "./Vault.sol";
 
+/**
+ * @title A Credbull Vault with Maturity properties.
+ * @author @pasviegas
+ * @notice Once matured, such a vault will not accept further deposits.
+ */
 abstract contract MaturityVault is Vault {
     using Math for uint256;
 
-    struct MaturityVaultParameters {
-        VaultParameters vault;
+    struct MaturityVaultParams {
+        VaultParams vault;
         uint256 promisedYield;
     }
 
@@ -26,10 +31,11 @@ abstract contract MaturityVault is Vault {
     /// @notice Determine if Maturity Checking is enabled or disabled.
     bool public checkMaturity;
 
+    // NOTE (JL,2024-06-28): Why is a Fixed Yield here and not in the `FixedYieldVault`?
     /// @dev The fixed yield value in percentage(100) that's promised to the users on deposit.
     uint256 private _fixedYield;
 
-    constructor(MaturityVaultParameters memory params) Vault(params.vault) {
+    constructor(MaturityVaultParams memory params) Vault(params.vault) {
         checkMaturity = true;
         _fixedYield = params.promisedYield;
     }

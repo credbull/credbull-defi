@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.19;
 
-/// @notice - A plugIn to handle deposit and withdraw window
-abstract contract WindowPlugIn {
+/// @notice - A plugin to handle deposit and withdraw window
+abstract contract WindowPlugin {
     /// @notice Error to revert when operation is outside required window
     error CredbullVault__OperationOutsideRequiredWindow(
         uint256 windowOpensAt, uint256 windowClosesAt, uint256 timestamp
@@ -16,7 +16,7 @@ abstract contract WindowPlugIn {
     }
 
     /// @notice - Struct to hold window parameters
-    struct WindowPlugInParameters {
+    struct WindowPluginParams {
         Window depositWindow;
         Window redemptionWindow;
     }
@@ -48,7 +48,7 @@ abstract contract WindowPlugIn {
     /// @notice - Flag to check for window
     bool public checkWindow;
 
-    constructor(WindowPlugInParameters memory params) {
+    constructor(WindowPluginParams memory params) {
         depositOpensAtTimestamp = params.depositWindow.opensAt;
         depositClosesAtTimestamp = params.depositWindow.closesAt;
         redemptionOpensAtTimestamp = params.redemptionWindow.opensAt;

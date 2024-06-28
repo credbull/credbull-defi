@@ -11,12 +11,13 @@ import { console2 } from "forge-std/console2.sol";
 import { DeployVaultFactory } from "@script/DeployVaultFactory.s.sol";
 import { HelperConfig } from "@script/HelperConfig.s.sol";
 
-import { CredbullFixedYieldVaultWithUpside } from "@src/CredbullFixedYieldVaultWithUpside.sol";
-import { CredbullKYCProvider } from "@src/CredbullKYCProvider.sol";
-import { FixedYieldVault } from "@src/vault/FixedYieldVault.sol";
-import { MockStablecoin } from "@test/test/mock/MockStablecoin.t.sol";
-import { MockToken } from "@test/test/mock/MockToken.t.sol";
-import { ParametersFactory } from "@test/test/vault/ParametersFactory.t.sol";
+import { CredbullFixedYieldVaultWithUpside } from "@credbull/CredbullFixedYieldVaultWithUpside.sol";
+import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
+import { FixedYieldVault } from "@credbull/vault/FixedYieldVault.sol";
+
+import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
+import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
+import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
 contract CredbullFixedYieldVaultWithUpsideTest is Test {
     using Math for uint256;
@@ -24,10 +25,10 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     CredbullFixedYieldVaultWithUpside private vault;
     HelperConfig private helperConfig;
     DeployVaultFactory private deployer;
-    CredbullKYCProvider private kycProvider;
+    CredbullWhiteListProvider private whiteListProvider;
 
-    FixedYieldVault.FixedYieldVaultParameters private vaultParams;
-    CredbullFixedYieldVaultWithUpside.UpsideVaultParameters private upsideVaultParams;
+    FixedYieldVault.FixedYieldVaultParams private vaultParams;
+    CredbullFixedYieldVaultWithUpside.UpsideVaultParams private upsideVaultParams;
 
     address private alice = makeAddr("alice");
 
@@ -41,27 +42,27 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (,, kycProvider, helperConfig) = deployer.runTest();
-        (upsideVaultParams) = new ParametersFactory(helperConfig.getNetworkConfig()).createUpsideVaultParameters();
+        (,, whiteListProvider, helperConfig) = deployer.runTest();
+        (upsideVaultParams) = new ParamsFactory(helperConfig.getNetworkConfig()).createUpsideVaultParams();
         vaultParams = upsideVaultParams.fixedYieldVault;
-        upsideVaultParams.fixedYieldVault.whitelistPlugIn.kycProvider = address(kycProvider);
+        upsideVaultParams.fixedYieldVault.whiteListPlugin.whiteListProvider = address(whiteListProvider);
         cblToken = upsideVaultParams.cblToken;
 
         vault = new CredbullFixedYieldVaultWithUpside(upsideVaultParams);
-        precision = 10 ** MockStablecoin(address(vaultParams.maturityVault.vault.asset)).decimals();
+        precision = 10 ** SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).decimals();
 
-        address[] memory whitelistAddresses = new address[](1);
-        whitelistAddresses[0] = alice;
+        address[] memory whiteListAddresses = new address[](1);
+        whiteListAddresses[0] = alice;
 
         bool[] memory statuses = new bool[](1);
         statuses[0] = true;
 
         vm.startPrank(vaultParams.roles.operator);
-        vault.kycProvider().updateStatus(whitelistAddresses, statuses);
+        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
-        MockStablecoin(address(vaultParams.maturityVault.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
-        MockToken(address(cblToken)).mint(alice, 200 ether);
+        SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
+        SimpleToken(address(cblToken)).mint(alice, 200 ether);
     }
 
     function test__UpsideVault__DepositAssetsAndGetShares() public {
@@ -143,10 +144,10 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         uint256 shares = deposit(alice, depositAmount, true);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(address(vaultParams.maturityVault.vault.asset)).mint(
+        SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).mint(
             vaultParams.maturityVault.vault.custodian, (100 * precision) + 1
         );
-        uint256 finalBalance = MockStablecoin(address(vaultParams.maturityVault.vault.asset)).balanceOf(
+        uint256 finalBalance = SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).balanceOf(
             vaultParams.maturityVault.vault.custodian
         );
 
@@ -160,7 +161,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
         vm.startPrank(vaultParams.roles.operator);
         vault.mature();
-        vm.warp(vaultParams.windowPlugIn.redemptionWindow.opensAt + 1);
+        vm.warp(vaultParams.windowPlugin.redemptionWindow.opensAt + 1);
         vm.stopPrank();
 
         uint256 collateralToRedeem = vault.calculateTokenRedemption(shares, alice);
@@ -187,10 +188,10 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         uint256 shares = deposit(alice, depositAmount, true);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(address(vaultParams.maturityVault.vault.asset)).mint(
+        SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).mint(
             vaultParams.maturityVault.vault.custodian, 100 * precision
         );
-        uint256 finalBalance = MockStablecoin(address(vaultParams.maturityVault.vault.asset)).balanceOf(
+        uint256 finalBalance = SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).balanceOf(
             vaultParams.maturityVault.vault.custodian
         );
 
@@ -204,7 +205,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
         vm.startPrank(vaultParams.roles.operator);
         vault.mature();
-        vm.warp(vaultParams.windowPlugIn.redemptionWindow.opensAt + 1);
+        vm.warp(vaultParams.windowPlugin.redemptionWindow.opensAt + 1);
         vm.stopPrank();
 
         uint256 assetBalanceBeforeWithdraw = vaultParams.maturityVault.vault.asset.balanceOf(alice);
@@ -230,7 +231,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
         // wrap if set to true
         if (warp) {
-            vm.warp(vaultParams.windowPlugIn.depositWindow.opensAt);
+            vm.warp(vaultParams.windowPlugin.depositWindow.opensAt);
         }
 
         shares = vault.deposit(assets, user);
@@ -245,7 +246,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
         // wrap if set to true
         if (warp) {
-            vm.warp(vaultParams.windowPlugIn.depositWindow.opensAt);
+            vm.warp(vaultParams.windowPlugin.depositWindow.opensAt);
         }
 
         assets = vault.mint(shares, user);

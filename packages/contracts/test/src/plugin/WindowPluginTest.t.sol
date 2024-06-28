@@ -6,18 +6,18 @@ import { Test } from "forge-std/Test.sol";
 
 import { HelperConfig } from "@script/HelperConfig.s.sol";
 
-import { Vault } from "@src/vault/Vault.sol";
-import { WindowPlugIn } from "@src/plugin/WindowPlugIn.sol";
+import { Vault } from "@credbull/vault/Vault.sol";
+import { WindowPlugin } from "@credbull/plugin/WindowPlugin.sol";
 
-import { MockStablecoin } from "@test/test/mock/MockStablecoin.t.sol";
-import { MockWindowVault } from "@test/test/mock/vault/MockWindowVault.t.sol";
-import { ParametersFactory } from "@test/test/vault/ParametersFactory.t.sol";
+import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
+import { SimpleWindowVault } from "@test/test/vault/SimpleWindowVault.t.sol";
+import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract WindowPlugInTest is Test {
-    MockWindowVault private vault;
+contract WindowPluginTest is Test {
+    SimpleWindowVault private vault;
 
-    Vault.VaultParameters private vaultParams;
-    WindowPlugIn.WindowPlugInParameters private windowParams;
+    Vault.VaultParams private vaultParams;
+    WindowPlugin.WindowPluginParams private windowParams;
     HelperConfig private helperConfig;
 
     address private alice = makeAddr("alice");
@@ -28,15 +28,15 @@ contract WindowPlugInTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        ParametersFactory pf = new ParametersFactory(helperConfig.getNetworkConfig());
-        vaultParams = pf.createVaultParameters();
-        windowParams = pf.createWindowPlugInParameters();
+        ParamsFactory pf = new ParamsFactory(helperConfig.getNetworkConfig());
+        vaultParams = pf.createVaultParams();
+        windowParams = pf.createWindowPluginParams();
 
-        vault = new MockWindowVault(vaultParams, windowParams);
-        precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
+        vault = new SimpleWindowVault(vaultParams, windowParams);
+        precision = 10 ** SimpleUSDC(address(vaultParams.asset)).decimals();
 
-        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
-        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
+        SimpleUSDC(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
+        SimpleUSDC(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__WindowVault__RevertDepositIfBehindWindow() public {
@@ -49,7 +49,7 @@ contract WindowPlugInTest is Test {
         vaultParams.asset.approve(address(vault), 10 * precision);
         vm.expectRevert(
             abi.encodeWithSelector(
-                WindowPlugIn.CredbullVault__OperationOutsideRequiredWindow.selector,
+                WindowPlugin.CredbullVault__OperationOutsideRequiredWindow.selector,
                 windowParams.depositWindow.opensAt,
                 windowParams.depositWindow.closesAt,
                 block.timestamp
@@ -68,7 +68,7 @@ contract WindowPlugInTest is Test {
         vaultParams.asset.approve(address(vault), 10 * precision);
         vm.expectRevert(
             abi.encodeWithSelector(
-                WindowPlugIn.CredbullVault__OperationOutsideRequiredWindow.selector,
+                WindowPlugin.CredbullVault__OperationOutsideRequiredWindow.selector,
                 windowParams.depositWindow.opensAt,
                 windowParams.depositWindow.closesAt,
                 block.timestamp
@@ -97,7 +97,7 @@ contract WindowPlugInTest is Test {
         // then the redemption should be reverted
         vm.expectRevert(
             abi.encodeWithSelector(
-                WindowPlugIn.CredbullVault__OperationOutsideRequiredWindow.selector,
+                WindowPlugin.CredbullVault__OperationOutsideRequiredWindow.selector,
                 windowParams.redemptionWindow.opensAt,
                 windowParams.redemptionWindow.closesAt,
                 block.timestamp
@@ -111,7 +111,7 @@ contract WindowPlugInTest is Test {
         uint256 shares = deposit(alice, 10 * precision);
         assertEq(vault.balanceOf(alice), 10 * precision);
 
-        MockStablecoin token = MockStablecoin(address(vaultParams.asset));
+        SimpleUSDC token = SimpleUSDC(address(vaultParams.asset));
         token.mint(address(vault), 10 * precision);
 
         vm.startPrank(alice);
@@ -132,7 +132,7 @@ contract WindowPlugInTest is Test {
         // then the redemption should be reverted
         vm.expectRevert(
             abi.encodeWithSelector(
-                WindowPlugIn.CredbullVault__OperationOutsideRequiredWindow.selector,
+                WindowPlugin.CredbullVault__OperationOutsideRequiredWindow.selector,
                 windowParams.redemptionWindow.opensAt,
                 windowParams.redemptionWindow.closesAt,
                 block.timestamp
@@ -149,7 +149,7 @@ contract WindowPlugInTest is Test {
         assertEq(vault.balanceOf(alice), 10 * precision);
     }
 
-    function test__WindowVault__ShouldToggleWhitelist() public {
+    function test__WindowVault__ShouldToggleWhiteList() public {
         bool beforeToggle = vault.checkWindow();
         vault.toggleWindowCheck(!beforeToggle);
         bool afterToggle = vault.checkWindow();

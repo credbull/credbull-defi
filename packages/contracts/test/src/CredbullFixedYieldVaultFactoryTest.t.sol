@@ -9,30 +9,30 @@ import { Test } from "forge-std/Test.sol";
 import { HelperConfig, NetworkConfig } from "@script/HelperConfig.s.sol";
 import { DeployVaultFactory } from "@script/DeployVaultFactory.s.sol";
 
-import { CredbullFixedYieldVaultFactory } from "@src/CredbullFixedYieldVaultFactory.sol";
-import { CredbullFixedYieldVault } from "@src/CredbullFixedYieldVault.sol";
-import { CredbullKYCProvider } from "@src/CredbullKYCProvider.sol";
-import { VaultFactory } from "@src/factory/VaultFactory.sol";
+import { CredbullFixedYieldVaultFactory } from "@credbull/CredbullFixedYieldVaultFactory.sol";
+import { CredbullFixedYieldVault } from "@credbull/CredbullFixedYieldVault.sol";
+import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
+import { VaultFactory } from "@credbull/factory/VaultFactory.sol";
 
-import { ParametersFactory } from "@test/test/vault/ParametersFactory.t.sol";
+import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
 contract CredbullFixedYieldVaultFactoryTest is Test {
     CredbullFixedYieldVaultFactory private factory;
     DeployVaultFactory private deployer;
     HelperConfig private helperConfig;
-    CredbullKYCProvider private kycProvider;
+    CredbullWhiteListProvider private whiteListProvider;
     NetworkConfig private config;
-    CredbullFixedYieldVault.FixedYieldVaultParameters private params;
+    CredbullFixedYieldVault.FixedYieldVaultParams private params;
 
     string private OPTIONS = "{}";
 
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (factory,, kycProvider, helperConfig) = deployer.runTest();
+        (factory,, whiteListProvider, helperConfig) = deployer.runTest();
         config = helperConfig.getNetworkConfig();
-        params = new ParametersFactory(config).createFixedYieldVaultParameters();
+        params = new ParamsFactory(config).createFixedYieldVaultParams();
 
-        params.whitelistPlugIn.kycProvider = address(kycProvider);
+        params.whiteListPlugin.whiteListProvider = address(whiteListProvider);
     }
 
     function test__CreateVaultFromFactory() public {
@@ -45,7 +45,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         assertEq(vault.asset(), address(params.maturityVault.vault.asset));
         assertEq(vault.name(), params.maturityVault.vault.shareName);
         assertEq(vault.symbol(), params.maturityVault.vault.shareSymbol);
-        assertEq(address(vault.kycProvider()), params.whitelistPlugIn.kycProvider);
+        assertEq(address(vault.whiteListProvider()), params.whiteListPlugin.whiteListProvider);
         assertEq(vault.CUSTODIAN(), params.maturityVault.vault.custodian);
     }
 

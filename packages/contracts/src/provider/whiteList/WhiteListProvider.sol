@@ -2,24 +2,24 @@
 pragma solidity ^0.8.19;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IKYCProvider } from "./IKYCProvider.sol";
+import { IWhiteListProvider } from "./IWhiteListProvider.sol";
 
-contract KYCProvider is IKYCProvider, Ownable {
+contract WhiteListProvider is IWhiteListProvider, Ownable {
     error LengthMismatch();
 
     /**
-     * @notice - Track whitelisted addresses
+     * @notice - Track whiteListed addresses
      */
-    mapping(address => bool) public isWhitelisted;
+    mapping(address => bool) public isWhiteListed;
 
     constructor(address _owner) Ownable(_owner) { }
 
     function status(address receiver) public view override returns (bool) {
-        return isWhitelisted[receiver];
+        return isWhiteListed[receiver];
     }
 
     /**
-     * @notice - Method to update the whitelist status of an address called only by the owner.
+     * @notice - Method to update the whiteList status of an address called only by the owner.
      *
      * @param _addresses - List of addresses value
      * @param _statuses - List of statuses to update
@@ -30,7 +30,7 @@ contract KYCProvider is IKYCProvider, Ownable {
         uint256 length = _addresses.length;
 
         for (uint256 i; i < length;) {
-            isWhitelisted[_addresses[i]] = _statuses[i];
+            isWhiteListed[_addresses[i]] = _statuses[i];
 
             unchecked {
                 ++i;

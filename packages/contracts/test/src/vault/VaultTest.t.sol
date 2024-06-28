@@ -9,19 +9,19 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { HelperConfig } from "@script/HelperConfig.s.sol";
 
-import { Vault } from "@src/vault/Vault.sol";
+import { Vault } from "@credbull/vault/Vault.sol";
 
-import { MockStablecoin } from "@test/test/mock/MockStablecoin.t.sol";
-import { MockVault } from "@test/test/mock/vault/MockVault.t.sol";
-import { ParametersFactory } from "@test/test/vault/ParametersFactory.t.sol";
+import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
+import { SimpleVault } from "@test/test/vault/SimpleVault.t.sol";
+import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
 contract VaultTest is Test {
     using Math for uint256;
 
-    MockVault private vault;
+    SimpleVault private vault;
     HelperConfig private helperConfig;
 
-    Vault.VaultParameters private vaultParams;
+    Vault.VaultParams private vaultParams;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
@@ -33,13 +33,13 @@ contract VaultTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        vaultParams = new ParametersFactory(helperConfig.getNetworkConfig()).createVaultParameters();
+        vaultParams = new ParamsFactory(helperConfig.getNetworkConfig()).createVaultParams();
 
         vault = createMockVault(vaultParams);
-        precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
+        precision = 10 ** SimpleUSDC(address(vaultParams.asset)).decimals();
 
-        MockStablecoin(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
-        MockStablecoin(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
+        SimpleUSDC(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
+        SimpleUSDC(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__Vault__ShareNameAndSymbol() public view {
@@ -86,8 +86,8 @@ contract VaultTest is Test {
         uint256 shares = deposit(alice, depositAmount);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(address(vaultParams.asset)).mint(vaultParams.custodian, 1 * precision);
-        uint256 finalBalance = MockStablecoin(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
+        SimpleUSDC(address(vaultParams.asset)).mint(vaultParams.custodian, 1 * precision);
+        uint256 finalBalance = SimpleUSDC(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
 
         vm.prank(vaultParams.custodian);
         vaultParams.asset.transfer(address(vault), finalBalance);
@@ -229,10 +229,10 @@ contract VaultTest is Test {
         assertEq(vault.balanceOf(bob), bobShares, "Bob should now have the Shares");
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(address(vaultParams.asset)).mint(
+        SimpleUSDC(address(vaultParams.asset)).mint(
             vaultParams.custodian, totalDepositAmount.mulDiv(10_00, MAX_PERCENTAGE)
         );
-        uint256 finalBalance = MockStablecoin(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
+        uint256 finalBalance = SimpleUSDC(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
 
         vm.prank(vaultParams.custodian);
         vaultParams.asset.transfer(address(vault), finalBalance);
@@ -285,7 +285,7 @@ contract VaultTest is Test {
         vm.stopPrank();
     }
 
-    function createMockVault(Vault.VaultParameters memory _vaultParams) internal returns (MockVault) {
-        return new MockVault(_vaultParams);
+    function createMockVault(Vault.VaultParams memory _vaultParams) internal returns (SimpleVault) {
+        return new SimpleVault(_vaultParams);
     }
 }

@@ -10,21 +10,21 @@ import { Test } from "forge-std/Test.sol";
 import { HelperConfig } from "@script/HelperConfig.s.sol";
 import { DeployVaultFactory } from "@script/DeployVaultFactory.s.sol";
 
-import { CredbullFixedYieldVault } from "@src/CredbullFixedYieldVault.sol";
-import { CredbullKYCProvider } from "@src/CredbullKYCProvider.sol";
-import { WhitelistPlugIn } from "@src/plugin/WhitelistPlugIn.sol";
-import { KYCProvider } from "@src/provider/kyc/KYCProvider.sol";
+import { CredbullFixedYieldVault } from "@credbull/CredbullFixedYieldVault.sol";
+import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
+import { WhiteListProvider } from "@credbull/provider/whiteList/WhiteListProvider.sol";
+import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
 
-import { ParametersFactory } from "@test/test/vault/ParametersFactory.t.sol";
-import { MockStablecoin } from "@test/test/mock/MockStablecoin.t.sol";
+import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
+import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
 contract CredbullFixedYieldVaultTest is Test {
     CredbullFixedYieldVault private vault;
     HelperConfig private helperConfig;
     DeployVaultFactory private deployer;
-    CredbullKYCProvider private kycProvider;
+    CredbullWhiteListProvider private whiteListProvider;
 
-    CredbullFixedYieldVault.FixedYieldVaultParameters private vaultParams;
+    CredbullFixedYieldVault.FixedYieldVaultParams private vaultParams;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
@@ -35,28 +35,28 @@ contract CredbullFixedYieldVaultTest is Test {
 
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (,, kycProvider, helperConfig) = deployer.runTest();
-        vaultParams = new ParametersFactory(helperConfig.getNetworkConfig()).createFixedYieldVaultParameters();
-        vaultParams.whitelistPlugIn.kycProvider = address(kycProvider);
+        (,, whiteListProvider, helperConfig) = deployer.runTest();
+        vaultParams = new ParamsFactory(helperConfig.getNetworkConfig()).createFixedYieldVaultParams();
+        vaultParams.whiteListPlugin.whiteListProvider = address(whiteListProvider);
 
         vault = new CredbullFixedYieldVault(vaultParams);
 
-        precision = 10 ** MockStablecoin(address(vaultParams.maturityVault.vault.asset)).decimals();
+        precision = 10 ** SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).decimals();
 
-        address[] memory whitelistAddresses = new address[](2);
-        whitelistAddresses[0] = alice;
-        whitelistAddresses[1] = bob;
+        address[] memory whiteListAddresses = new address[](2);
+        whiteListAddresses[0] = alice;
+        whiteListAddresses[1] = bob;
 
         bool[] memory statuses = new bool[](2);
         statuses[0] = true;
         statuses[1] = true;
 
         vm.startPrank(vaultParams.roles.operator);
-        vault.kycProvider().updateStatus(whitelistAddresses, statuses);
+        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
-        MockStablecoin(address(vaultParams.maturityVault.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
-        MockStablecoin(address(vaultParams.maturityVault.vault.asset)).mint(bob, INITIAL_BALANCE * precision);
+        SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
+        SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__FixedYieldVault__ShouldAllowOwnerToChangeOperator() public {
@@ -110,7 +110,7 @@ contract CredbullFixedYieldVaultTest is Test {
         vault.toggleMaturityCheck(false);
     }
 
-    function test__FixedYieldVault__RevertWhitelistToggleIfNotAdmin() public {
+    function test__FixedYieldVault__RevertWhiteListToggleIfNotAdmin() public {
         vm.startPrank(vaultParams.roles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -119,11 +119,11 @@ contract CredbullFixedYieldVaultTest is Test {
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
-        vault.toggleWhitelistCheck(false);
+        vault.toggleWhiteListCheck(false);
         vm.stopPrank();
 
         vm.prank(vaultParams.roles.owner);
-        vault.toggleWhitelistCheck(false);
+        vault.toggleWhiteListCheck(false);
     }
 
     function test__FixedYieldVault__RevertWindowToggleIfNotAdmin() public {
@@ -143,39 +143,41 @@ contract CredbullFixedYieldVaultTest is Test {
     }
 
     function test__FixedYieldVault__ShouldCheckForWhitelsitedAddresses() public {
-        address[] memory whitelistAddresses = new address[](1);
-        whitelistAddresses[0] = alice;
+        address[] memory whiteListAddresses = new address[](1);
+        whiteListAddresses[0] = alice;
 
         bool[] memory statuses = new bool[](1);
         statuses[0] = false;
 
         vm.startPrank(vaultParams.roles.operator);
-        vault.kycProvider().updateStatus(whitelistAddresses, statuses);
+        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
         uint256 depositAmount = 1000 * precision;
 
         vm.expectRevert(
-            abi.encodeWithSelector(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector, alice, depositAmount)
+            abi.encodeWithSelector(WhiteListPlugin.CredbullVault__NotWhiteListed.selector, alice, depositAmount)
         );
         vault.deposit(depositAmount, alice);
     }
 
-    function test__FixedYieldVault__ExpectACallToWhitelistPlugin() public {
-        address[] memory whitelistAddresses = new address[](1);
-        whitelistAddresses[0] = alice;
+    function test__FixedYieldVault__ExpectACallToWhiteListPlugin() public {
+        address[] memory whiteListAddresses = new address[](1);
+        whiteListAddresses[0] = alice;
 
         bool[] memory statuses = new bool[](1);
         statuses[0] = false;
 
         vm.startPrank(vaultParams.roles.operator);
-        vault.kycProvider().updateStatus(whitelistAddresses, statuses);
+        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
         uint256 depositAmount = 1000 * precision;
         vm.expectRevert(
-            abi.encodeWithSelector(WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector, alice, depositAmount)
+            abi.encodeWithSelector(WhiteListPlugin.CredbullVault__NotWhiteListed.selector, alice, depositAmount)
         );
-        vm.expectCall(address(vaultParams.whitelistPlugIn.kycProvider), abi.encodeCall(KYCProvider.status, alice));
+        vm.expectCall(
+            address(vaultParams.whiteListPlugin.whiteListProvider), abi.encodeCall(WhiteListProvider.status, alice)
+        );
         vault.deposit(depositAmount, alice);
     }
 
@@ -272,7 +274,7 @@ contract CredbullFixedYieldVaultTest is Test {
     }
 
     function test__FixedYieldVault__ShouldAllowAdminToWithdrawERC20Tokens() public {
-        MockStablecoin token = MockStablecoin(address(vaultParams.maturityVault.vault.asset));
+        SimpleUSDC token = SimpleUSDC(address(vaultParams.maturityVault.vault.asset));
         vm.prank(alice);
         token.transfer(address(vault), 100 * precision);
 
@@ -294,7 +296,7 @@ contract CredbullFixedYieldVaultTest is Test {
 
         // wrap if set to true
         if (warp) {
-            vm.warp(vaultParams.windowPlugIn.depositWindow.opensAt);
+            vm.warp(vaultParams.windowPlugin.depositWindow.opensAt);
         }
 
         shares = vault.deposit(assets, user);

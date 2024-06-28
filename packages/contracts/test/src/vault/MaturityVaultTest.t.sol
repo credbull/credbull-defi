@@ -6,16 +6,16 @@ import { Test } from "forge-std/Test.sol";
 
 import { HelperConfig } from "@script/HelperConfig.s.sol";
 
-import { MaturityVault } from "@src/vault/MaturityVault.sol";
+import { MaturityVault } from "@credbull/vault/MaturityVault.sol";
 
-import { MockMaturityVault } from "@test/test/mock/vault/MockMaturityVault.t.sol";
-import { MockStablecoin } from "@test/test/mock/MockStablecoin.t.sol";
-import { ParametersFactory } from "@test/test/vault/ParametersFactory.t.sol";
+import { SimpleMaturityVault } from "@test/test/vault/SimpleMaturityVault.t.sol";
+import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
+import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
 contract MaturityVaultTest is Test {
-    MockMaturityVault private vault;
+    SimpleMaturityVault private vault;
 
-    MaturityVault.MaturityVaultParameters private params;
+    MaturityVault.MaturityVaultParams private params;
     HelperConfig private helperConfig;
     uint256 private precision;
 
@@ -26,13 +26,13 @@ contract MaturityVaultTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-        params = new ParametersFactory(helperConfig.getNetworkConfig()).createMaturityVaultParameters();
+        params = new ParamsFactory(helperConfig.getNetworkConfig()).createMaturityVaultParams();
 
-        vault = new MockMaturityVault(params);
-        precision = 10 ** MockStablecoin(address(params.vault.asset)).decimals();
+        vault = new SimpleMaturityVault(params);
+        precision = 10 ** SimpleUSDC(address(params.vault.asset)).decimals();
 
-        MockStablecoin(address(params.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
-        MockStablecoin(address(params.vault.asset)).mint(bob, INITIAL_BALANCE * precision);
+        SimpleUSDC(address(params.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
+        SimpleUSDC(address(params.vault.asset)).mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__MaturityVault__WithdrawAssetAndBurnShares() public {
@@ -42,8 +42,8 @@ contract MaturityVaultTest is Test {
         uint256 shares = deposit(alice, depositAmount);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(address(params.vault.asset)).mint(params.vault.custodian, 1 * precision);
-        uint256 finalBalance = MockStablecoin(address(params.vault.asset)).balanceOf(params.vault.custodian);
+        SimpleUSDC(address(params.vault.asset)).mint(params.vault.custodian, 1 * precision);
+        uint256 finalBalance = SimpleUSDC(address(params.vault.asset)).balanceOf(params.vault.custodian);
 
         vm.startPrank(params.vault.custodian);
         params.vault.asset.approve(params.vault.custodian, finalBalance);

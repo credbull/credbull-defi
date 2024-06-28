@@ -4,11 +4,11 @@ pragma solidity ^0.8.19;
 
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { MaturityVault } from "./MaturityVault.sol";
-import { WhitelistPlugIn } from "../plugin/WhitelistPlugIn.sol";
-import { WindowPlugIn } from "../plugin/WindowPlugIn.sol";
-import { MaxCapPlugIn } from "../plugin/MaxCapPlugIn.sol";
+import { WhiteListPlugin } from "../plugin/WhiteListPlugin.sol";
+import { WindowPlugin } from "../plugin/WindowPlugin.sol";
+import { MaxCapPlugin } from "../plugin/MaxCapPlugin.sol";
 
-contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCapPlugIn, AccessControl {
+contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCapPlugin, AccessControl {
     /// @notice - Hash of operator role
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
@@ -18,30 +18,30 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCap
         address custodian;
     }
 
-    struct FixedYieldVaultParameters {
-        MaturityVaultParameters maturityVault;
+    struct FixedYieldVaultParams {
+        MaturityVaultParams maturityVault;
         ContractRoles roles;
-        WindowPlugInParameters windowPlugIn;
-        WhitelistPlugInParameters whitelistPlugIn;
-        MaxCapPlugInParameters maxCapPlugIn;
+        WindowPluginParams windowPlugin;
+        WhiteListPluginParams whiteListPlugin;
+        MaxCapPluginParams maxCapPlugin;
     }
 
-    constructor(FixedYieldVaultParameters memory params)
+    constructor(FixedYieldVaultParams memory params)
         MaturityVault(params.maturityVault)
-        WhitelistPlugIn(params.whitelistPlugIn)
-        WindowPlugIn(params.windowPlugIn)
-        MaxCapPlugIn(params.maxCapPlugIn)
+        WhiteListPlugin(params.whiteListPlugin)
+        WindowPlugin(params.windowPlugin)
+        MaxCapPlugin(params.maxCapPlugin)
     {
         _grantRole(DEFAULT_ADMIN_ROLE, params.roles.owner);
         _grantRole(OPERATOR_ROLE, params.roles.operator);
     }
 
     /// @dev - Overridden deposit modifer
-    /// Should check for whitelisted address
+    /// Should check for whiteListed address
     /// Should check for deposit window
     /// Should check for max cap
     modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {
-        _checkIsWhitelisted(receiver, assets + convertToAssets(balanceOf(receiver)));
+        _checkIsWhiteListed(receiver, assets + convertToAssets(balanceOf(receiver)));
         _checkIsDepositWithinWindow();
         _checkMaxCap(totalAssetDeposited + assets);
         _;
@@ -68,9 +68,9 @@ contract FixedYieldVault is MaturityVault, WhitelistPlugIn, WindowPlugIn, MaxCap
         _toggleMaturityCheck(status);
     }
 
-    /// @notice Toggle check for whitelist
-    function toggleWhitelistCheck(bool status) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _toggleWhitelistCheck(status);
+    /// @notice Toggle check for whiteList
+    function toggleWhiteListCheck(bool status) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _toggleWhiteListCheck(status);
     }
 
     /// @notice Toggle check for window

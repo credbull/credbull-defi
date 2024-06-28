@@ -2,11 +2,13 @@
 
 pragma solidity ^0.8.19;
 
-import { MaturityVault } from "@src/vault/MaturityVault.sol";
-import { FixedYieldVault } from "@src/vault/FixedYieldVault.sol";
+import { MaturityVault } from "@credbull/vault/MaturityVault.sol";
 
-contract MockMaturityVault is MaturityVault {
-    constructor(MaturityVaultParameters memory params) MaturityVault(params) { }
+/**
+ * @notice A simple [MaturityVault] realisation for testing purposes.
+ */
+contract SimpleMaturityVault is MaturityVault {
+    constructor(MaturityVaultParams memory params) MaturityVault(params) { }
 
     modifier withdrawModifier(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         override

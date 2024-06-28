@@ -2,13 +2,17 @@
 
 pragma solidity ^0.8.19;
 
-import { Vault } from "@src/vault/Vault.sol";
-import { WindowPlugIn } from "@src/plugin/WindowPlugIn.sol";
+import { Vault } from "@credbull/vault/Vault.sol";
+import { WindowPlugin } from "@credbull/plugin/WindowPlugin.sol";
 
-contract MockWindowVault is Vault, WindowPlugIn {
-    constructor(VaultParameters memory params, WindowPlugInParameters memory windowPlugInParams)
+/**
+ * @notice A simple [Vault] with [WindowPlugin] realisation, for testing purposes.
+ * @dev It could be called `WindowVault` as there is no name clash, but stuck with the naming convention.
+ */
+contract SimpleWindowVault is Vault, WindowPlugin {
+    constructor(VaultParams memory params, WindowPluginParams memory windowPluginParams)
         Vault(params)
-        WindowPlugIn(windowPlugInParams)
+        WindowPlugin(windowPluginParams)
     { }
 
     modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {

@@ -13,7 +13,7 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
  * @title Credbull Vault
  * @author @pasviegas
  * @notice The family defining contract, based upon Open Zeppelin's ERC4626 implementation.
- * @dev Yay, dudes, it's awesome with overrides to
+ * @dev Uses a Custodian Account to accummulate the deposited Asset.
  */
 abstract contract Vault is ERC4626, Pausable {
     using Math for uint256;
@@ -28,7 +28,7 @@ abstract contract Vault is ERC4626, Pausable {
     error CredbullVault__NativeTransferNotAllowed();
 
     /// @notice The set of parameters required to create a Credbull Vault instance.
-    struct VaultParameters {
+    struct VaultParams {
         IERC20 asset;
         string shareName;
         string shareSymbol;
@@ -65,10 +65,7 @@ abstract contract Vault is ERC4626, Pausable {
         _;
     }
 
-    /**
-     * @param params - Base vault parameters
-     */
-    constructor(VaultParameters memory params) ERC4626(params.asset) ERC20(params.shareName, params.shareSymbol) {
+    constructor(VaultParams memory params) ERC4626(params.asset) ERC20(params.shareName, params.shareSymbol) {
         if (params.custodian == address(0)) {
             revert CredbullVault__InvalidCustodianAddress(params.custodian);
         }
