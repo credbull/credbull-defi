@@ -4,12 +4,11 @@ pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
 import { CredbullKYCProvider } from "../src/CredbullKYCProvider.sol";
-import { IKYCProvider } from "../src/interface/IKYCProvider.sol";
 
 contract CredbullKYCProviderTest is Test {
     CredbullKYCProvider private kycProvider;
-    address owner = makeAddr("owner");
-    address alice = makeAddr("alice");
+    address private owner = makeAddr("owner");
+    address private alice = makeAddr("alice");
 
     function setUp() public {
         kycProvider = new CredbullKYCProvider(owner);

@@ -14,7 +14,6 @@ import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlug.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { UpsideVault } from "../../src/vaults/UpsideVault.sol";
 import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
-import { IKYCProvider } from "../../src/interface/IKYCProvider.sol";
 import { MockDecimalToken } from "../mocks/MockDecimalToken.sol";
 
 import { DeployVaultFactory } from "@script/DeployVaultFactory.s.sol";
