@@ -10,7 +10,6 @@ import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { CredbullBaseVault } from "../../src/base/CredbullBaseVault.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { console2 } from "forge-std/Console2.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract CredbullBaseVaultTest is Test {
@@ -362,7 +361,6 @@ contract CredbullBaseVaultTest is Test {
     }
 
     function depositWithRevert(address user, uint256 assets) internal returns (uint256 shares) {
-        console2.log("Deposit with Revert: ", assets);
         vm.startPrank(user);
         vaultParams.asset.approve(address(vault), assets);
         vm.expectRevert(abi.encodeWithSelector(CredbullBaseVault.CredbullVault__InvalidAssetAmount.selector, assets));
