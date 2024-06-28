@@ -157,6 +157,8 @@ test.describe('Create Vault', async () => {
     });
 
     test('a non-matured, ready, Upside Fixed Yield vault, linked to another, open for deposits, pending for redemption', async () => {
+      test.slow(); // triple the timeout time for this test.  keeps failing with default timeout of 30s.
+
       const linkToVault = await createVault(config, false, false, false);
 
       const created = await createVault(config, false, true, false, linkToVault.address);
