@@ -50,9 +50,19 @@ contract CredbullBaseVaultTest is Test {
         assertEq(vault.CUSTODIAN(), vaultParams.custodian);
     }
 
-    function test__BaseVault__ShouldRevertOnZeroAddress() public {
-        vm.expectRevert(abi.encodeWithSelector(IErrors.ZeroAddress.selector));
-        new CredbullBaseVaultMock(IERC20(address(0)), "Test", "test", address(0));
+    function test__BaseVault__ShouldRevertOnInvalidAsset() public {
+        address zeroAddress = address(0);
+        vm.expectRevert(abi.encodeWithSelector(CredbullBaseVault.CredbullVault__InvalidAsset.selector, zeroAddress));
+        new CredbullBaseVaultMock(IERC20(zeroAddress), "Test", "test", vaultParams.custodian);
+    }
+
+    function test__BaseVault__ShouldRevertOnInvalidCustodianAddress() public {
+        address zeroAddress = address(0);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(CredbullBaseVault.CredbullVault__InvalidCustodianAddress.selector, zeroAddress)
+        );
+        new CredbullBaseVaultMock(vaultParams.asset, "Test", "test", zeroAddress);
     }
 
     function test__BaseVault__ShouldReturnCorrectDecimalValue() public view {
