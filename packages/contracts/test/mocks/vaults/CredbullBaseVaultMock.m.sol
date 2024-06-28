@@ -18,4 +18,8 @@ contract CredbullBaseVaultMock is CredbullBaseVault {
         vaultParams =
             BaseVaultParams({ asset: asset, shareName: shareName, shareSymbol: shareSymbol, custodian: custodian });
     }
+
+    function withdrawERC20(address[] calldata _tokens, address _to) external {
+        _withdrawERC20(_tokens, _to);
+    }
 }

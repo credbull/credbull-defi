@@ -10,6 +10,9 @@ import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { CredbullBaseVault } from "../../src/base/CredbullBaseVault.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { console2 } from "forge-std/Console2.sol";
+import { IErrors } from "../../src/interface/IErrors.sol";
+import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract CredbullBaseVaultTest is Test {
     using Math for uint256;
@@ -45,6 +48,15 @@ contract CredbullBaseVaultTest is Test {
 
     function test__BaseVault__CustodianAddress() public view {
         assertEq(vault.CUSTODIAN(), vaultParams.custodian);
+    }
+
+    function test__BaseVault__ShouldRevertOnZeroAddress() public {
+        vm.expectRevert(abi.encodeWithSelector(IErrors.ZeroAddress.selector));
+        new CredbullBaseVaultMock(IERC20(address(0)), "Test", "test", address(0));
+    }
+
+    function test__BaseVault__ShouldReturnCorrectDecimalValue() public view {
+        assertEq(vault.decimals(), MockStablecoin(address(vaultParams.asset)).decimals());
     }
 
     function test__BaseVault__DepositAssetsAndGetShares() public {
@@ -268,6 +280,69 @@ contract CredbullBaseVaultTest is Test {
         }
     }
 
+    function test__BaseVault__WithdrawOnBehalfOf() public {
+        uint256 depositAmount = 10 * precision;
+        //Call internal deposit function
+        uint256 shares = deposit(alice, depositAmount);
+
+        // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
+        MockStablecoin(address(vaultParams.asset)).mint(
+            vaultParams.custodian, depositAmount.mulDiv(10_00, MAX_PERCENTAGE)
+        );
+        uint256 finalBalance = MockStablecoin(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
+
+        vm.prank(vaultParams.custodian);
+        vaultParams.asset.transfer(address(vault), finalBalance);
+
+        // ---- Assert Vault burns shares
+        vm.startPrank(alice);
+        vault.approve(address(vault), shares);
+        vault.approve(address(this), shares);
+        vm.stopPrank();
+
+        vault.redeem(shares, alice, alice);
+    }
+
+    function test__BaseVault__WithdrawERC20() public {
+        MockStablecoin mock1 = new MockStablecoin(100 * precision);
+        MockStablecoin mock2 = new MockStablecoin(100 * precision);
+
+        mock1.mint(address(vault), 100 * precision);
+        mock2.mint(address(vault), 100 * precision);
+
+        address[] memory tokens = new address[](2);
+        tokens[0] = address(mock1);
+        tokens[1] = address(mock2);
+
+        vault.withdrawERC20(tokens, alice);
+
+        assertEq(mock1.balanceOf(alice), 100 * precision);
+        assertEq(mock2.balanceOf(alice), 100 * precision);
+    }
+
+    function test__BaseVault__ShouldRevertOnSendingETHToVault() public {
+        (bool isReceivedSuccess,) = address(vault).call{ value: 5 wei }("");
+        assertFalse(isReceivedSuccess, "Should fail: receive function is not allowed to accept Native tokens.");
+
+        (bool isFallbackSuccess,) =
+            address(vault).call{ value: 8 wei }(abi.encodeWithSignature("nonExistentFunction()"));
+        assertFalse(isFallbackSuccess, "Should fail: fallback function is not allowed to accept Native tokens.");
+    }
+
+    function test__BaseVault__ShouldRevertAllTransfers() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(CredbullBaseVault.CredbullVault__TransferOutsideEcosystem.selector, address(alice))
+        );
+        vm.prank(alice);
+        vault.transfer(bob, 100 * precision);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(CredbullBaseVault.CredbullVault__TransferOutsideEcosystem.selector, alice)
+        );
+        vm.prank(alice);
+        vault.transferFrom(alice, bob, 100 * precision);
+    }
+
     function deposit(address user, uint256 assets) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
@@ -278,10 +353,10 @@ contract CredbullBaseVaultTest is Test {
     }
 
     function depositWithRevert(address user, uint256 assets) internal returns (uint256 shares) {
+        console2.log("Deposit with Revert: ", assets);
         vm.startPrank(user);
         vaultParams.asset.approve(address(vault), assets);
         vm.expectRevert(abi.encodeWithSelector(CredbullBaseVault.CredbullVault__InvalidAssetAmount.selector, assets));
-        //vm.warp(vaultParams.depositOpensAt);
         shares = vault.deposit(assets, alice);
         vm.stopPrank();
     }

@@ -169,12 +169,12 @@ abstract contract CredbullBaseVault is ERC4626, Pausable {
 
     /// @notice Revert any ETH transfer to contract
     receive() external payable {
-        revert CredbullVault__NativeTransferNotAllowed();
+        revert();
     }
 
     /// @notice Revert any ETH transfer to contract
     fallback() external payable {
-        revert CredbullVault__NativeTransferNotAllowed();
+        revert();
     }
 
     /// @notice Withdraw any ERC20 tokens sent directly to contract.
