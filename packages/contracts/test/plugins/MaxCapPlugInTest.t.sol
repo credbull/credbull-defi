@@ -10,7 +10,7 @@ import { MockStablecoin } from "../mocks/MockStablecoin.sol";
 import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlugIn.sol";
 import { CredbullBaseVault } from "./../../src/base/CredbullBaseVault.sol";
 
-contract MaxCapPluginTest is Test {
+contract MaxCapPlugInTest is Test {
     MaxCapVaultMock private vault;
 
     CredbullBaseVault.BaseVaultParams private vaultParams;
