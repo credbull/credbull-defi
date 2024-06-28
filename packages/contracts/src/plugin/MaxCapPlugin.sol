@@ -6,13 +6,8 @@ pragma solidity ^0.8.19;
 abstract contract MaxCapPlugin {
     error CredbullVault__MaxCapReached();
 
-<<<<<<<< HEAD:packages/contracts/src/plugin/MaxCapPlugin.sol
     /// @notice - Params for the MaxCap Plugin
     struct MaxCapPluginParams {
-========
-    /// @notice - Parameters for the MaxCap PlugIn
-    struct MaxCapPlugInParameters {
->>>>>>>> 00739ff (LOADS of re-structuring and renaming into a better structure (for me). This is for review.):packages/contracts/src/plugin/MaxCapPlugIn.sol
         uint256 maxCap;
     }
 
@@ -22,11 +17,7 @@ abstract contract MaxCapPlugin {
     /// @notice Flag to check for max cap
     bool public checkMaxCap;
 
-<<<<<<<< HEAD:packages/contracts/src/plugin/MaxCapPlugin.sol
     constructor(MaxCapPluginParams memory params) {
-========
-    constructor(MaxCapPlugInParameters memory params) {
->>>>>>>> 00739ff (LOADS of re-structuring and renaming into a better structure (for me). This is for review.):packages/contracts/src/plugin/MaxCapPlugIn.sol
         maxCap = params.maxCap;
         checkMaxCap = true; // Set the check to true by default
     }

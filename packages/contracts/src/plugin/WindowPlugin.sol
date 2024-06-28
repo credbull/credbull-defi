@@ -2,13 +2,8 @@
 
 pragma solidity ^0.8.19;
 
-<<<<<<<< HEAD:packages/contracts/src/plugin/WindowPlugin.sol
-/// @notice - A plugin to handle deposit and withdraw window
-abstract contract WindowPlugin {
-========
 /// @notice - A plugIn to handle deposit and withdraw window
 abstract contract WindowPlugIn {
->>>>>>>> 00739ff (LOADS of re-structuring and renaming into a better structure (for me). This is for review.):packages/contracts/src/plugin/WindowPlugIn.sol
     /// @notice Error to revert when operation is outside required window
     error CredbullVault__OperationOutsideRequiredWindow(
         uint256 windowOpensAt, uint256 windowClosesAt, uint256 timestamp
@@ -21,11 +16,7 @@ abstract contract WindowPlugIn {
     }
 
     /// @notice - Struct to hold window parameters
-<<<<<<<< HEAD:packages/contracts/src/plugin/WindowPlugin.sol
     struct WindowPluginParams {
-========
-    struct WindowPlugInParameters {
->>>>>>>> 00739ff (LOADS of re-structuring and renaming into a better structure (for me). This is for review.):packages/contracts/src/plugin/WindowPlugIn.sol
         Window depositWindow;
         Window redemptionWindow;
     }
@@ -57,11 +48,7 @@ abstract contract WindowPlugIn {
     /// @notice - Flag to check for window
     bool public checkWindow;
 
-<<<<<<<< HEAD:packages/contracts/src/plugin/WindowPlugin.sol
     constructor(WindowPluginParams memory params) {
-========
-    constructor(WindowPlugInParameters memory params) {
->>>>>>>> 00739ff (LOADS of re-structuring and renaming into a better structure (for me). This is for review.):packages/contracts/src/plugin/WindowPlugIn.sol
         depositOpensAtTimestamp = params.depositWindow.opensAt;
         depositClosesAtTimestamp = params.depositWindow.closesAt;
         redemptionOpensAtTimestamp = params.redemptionWindow.opensAt;

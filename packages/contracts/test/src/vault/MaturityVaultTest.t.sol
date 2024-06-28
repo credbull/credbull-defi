@@ -15,7 +15,7 @@ import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 contract MaturityVaultTest is Test {
     SimpleMaturityVault private vault;
 
-    MaturityVault.MaturityVaultParameters private params;
+    MaturityVault.MaturityVaultParams private params;
     HelperConfig private helperConfig;
     uint256 private precision;
 

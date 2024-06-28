@@ -11,10 +11,6 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract SimpleUSDC is ERC20, Ownable {
     constructor(uint256 initialSupply) ERC20("Simple USDC", "sUSDC") Ownable(msg.sender) {
-========
-contract MockStablecoin is ERC20, Ownable {
-    constructor(uint256 initialSupply) ERC20("Mock USDC", "mUSDC") Ownable(msg.sender) {
->>>>>>>> 00739ff (LOADS of re-structuring and renaming into a better structure (for me). This is for review.):packages/contracts/test/test/mock/MockStablecoin.t.sol
         _mint(msg.sender, initialSupply);
     }
 
