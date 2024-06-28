@@ -11,7 +11,6 @@ import { CredbullBaseVault } from "../../src/base/CredbullBaseVault.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { console2 } from "forge-std/Console2.sol";
-import { IErrors } from "../../src/interface/IErrors.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract CredbullBaseVaultTest is Test {
