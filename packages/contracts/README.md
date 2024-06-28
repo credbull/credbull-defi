@@ -30,24 +30,25 @@ https://book.getfoundry.sh/
 
 ### Build
 
-```shell
-$ forge build
+```bash
+forge build
 ```
 
 ### Test
 
-```shell
-$ forge test
+```bash
+forge test
 ```
 
 ### Advanced Testing
 
 1. Code Coverage Summary
-  ```shell
-  forge coverage
-  ```
-1. Code Coverage Report (depends on [genhtml](https://manpages.ubuntu.com/manpages/focal/man1/genhtml.1.html)
-  ```shell
-  forge coverage report -lcov
-  genhtml lcov.info -o out/coverage
-  ```
+   ```bash
+   forge test
+   ```
+1. Code Coverage Report
+   1. Install [genhtml](https://manpages.ubuntu.com/manpages/focal/man1/genhtml.1.html)
+   2. ```bash
+       forge coverage report -lcov
+       genhtml lcov.info -o out/coverage
+      ```
