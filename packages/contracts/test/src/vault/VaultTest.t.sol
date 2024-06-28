@@ -360,7 +360,6 @@ contract VaultTest is Test {
     }
 
     function depositWithRevert(address user, uint256 assets) internal returns (uint256 shares) {
-        console2.log("Deposit with Revert: ", assets);
         vm.startPrank(user);
         vaultParams.asset.approve(address(vault), assets);
         vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__InvalidAssetAmount.selector, assets));
