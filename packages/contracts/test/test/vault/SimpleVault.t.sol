@@ -9,4 +9,8 @@ import { Vault } from "@credbull/vault/Vault.sol";
  */
 contract SimpleVault is Vault {
     constructor(Vault.VaultParams memory params) Vault(params) { }
+
+    function withdrawERC20(address[] calldata _tokens, address _to) external {
+        _withdrawERC20(_tokens, _to);
+    }
 }

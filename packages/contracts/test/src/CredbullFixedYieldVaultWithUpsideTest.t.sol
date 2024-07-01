@@ -3,26 +3,24 @@
 pragma solidity ^0.8.19;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { FixedYieldVault } from "../../src/vaults/FixedYieldVault.sol";
-import { CredbullBaseVault } from "../mocks/vaults/CredbullBaseVaultMock.m.sol";
-import { MaxCapPlugIn } from "../../src/plugins/MaxCapPlugIn.sol";
-import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
-import { UpsideVault } from "../../src/vaults/UpsideVault.sol";
-import { WhitelistPlugIn } from "../../src/plugins/WhitelistPlugIn.sol";
-import { MockDecimalToken } from "../mocks/MockDecimalToken.sol";
 
 import { DeployVaultFactory } from "@script/DeployVaultFactory.s.sol";
 import { HelperConfig } from "@script/HelperConfig.s.sol";
 
 import { CredbullFixedYieldVaultWithUpside } from "@credbull/CredbullFixedYieldVaultWithUpside.sol";
 import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
+import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
+import { MaxCapPlugin } from "@credbull/plugin/MaxCapPlugin.sol";
 import { FixedYieldVault } from "@credbull/vault/FixedYieldVault.sol";
+import { UpsideVault } from "@credbull/vault/UpsideVault.sol";
+import { Vault } from "@credbull/vault/Vault.sol";
 
+import { DecimalToken } from "@test/test/token/DecimalToken.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
@@ -74,22 +72,22 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     }
 
     function test__UpsideVault__VaultCreationShouldRevertOnUnsupportedDecimalValue() public {
-        UpsideVault.UpsideVaultParams memory params = upsideVaultParams;
-        params.cblToken = new MockDecimalToken(1e6, 19);
-        vm.expectRevert(abi.encodeWithSelector(CredbullBaseVault.CredbullVault__UnsupportedDecimalValue.selector, 19));
+        CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params = upsideVaultParams;
+        params.cblToken = new DecimalToken(1e6, 19);
+        vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__UnsupportedDecimalValue.selector, 19));
         new CredbullFixedYieldVaultWithUpside(params);
     }
 
     function test__UpsideVault__ShouldSuccessfullyCreateUpsideVault() public {
         vault = new CredbullFixedYieldVaultWithUpside(upsideVaultParams);
-        assertEq(vault.asset(), address(vaultParams.maturityVaultParams.baseVaultParams.asset));
+        assertEq(vault.asset(), address(vaultParams.maturityVault.vault.asset));
     }
 
     function test__UpsideVault__VaultCreationShouldRevertOnTokenDecimalLessThanAssetDeciaml() public {
-        UpsideVault.UpsideVaultParams memory params = upsideVaultParams;
-        params.cblToken = new MockDecimalToken(1e6, 6);
-        params.fixedYieldVaultParams.maturityVaultParams.baseVaultParams.asset = new MockDecimalToken(1e6, 8);
-        vm.expectRevert(abi.encodeWithSelector(CredbullBaseVault.CredbullVault__UnsupportedDecimalValue.selector, 8));
+        CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params = upsideVaultParams;
+        params.cblToken = new DecimalToken(1e6, 6);
+        params.fixedYieldVault.maturityVault.vault.asset = new DecimalToken(1e6, 8);
+        vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__UnsupportedDecimalValue.selector, 8));
         new CredbullFixedYieldVaultWithUpside(params);
     }
 
@@ -162,7 +160,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
     function test__UpsideVault__SetTWAP() public {
         uint256 twap = 1000;
-        vm.prank(vaultParams.contractRoles.operator);
+        vm.prank(vaultParams.roles.operator);
         vault.setTWAP(twap);
         assertEq(vault.twap(), twap, "TWAP should be set to 1000");
     }
@@ -182,9 +180,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     function test__UpsideVault__RevertDepositIfNotWhitelisted() public {
         uint256 depositAmount = 1000 * precision;
         vm.expectRevert(
-            abi.encodeWithSelector(
-                WhitelistPlugIn.CredbullVault__NotAWhitelistedAddress.selector, address(this), depositAmount
-            )
+            abi.encodeWithSelector(WhiteListPlugin.CredbullVault__NotWhiteListed.selector, address(this), depositAmount)
         );
         vault.deposit(depositAmount, address(this));
     }
@@ -233,15 +229,15 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         uint256 depositAmount = 1e6 * 1e6;
 
         vm.prank(alice);
-        vm.expectRevert(abi.encodeWithSelector(MaxCapPlugIn.CredbullVault__MaxCapReached.selector));
+        vm.expectRevert(abi.encodeWithSelector(MaxCapPlugin.CredbullVault__MaxCapReached.selector));
         vault.deposit(depositAmount + 1, alice);
     }
 
     function depositWithRevert(address user, uint256 assets) internal returns (uint256 shares) {
         vm.startPrank(user);
-        vaultParams.maturityVaultParams.baseVaultParams.asset.approve(address(vault), assets);
+        vaultParams.maturityVault.vault.asset.approve(address(vault), assets);
         cblToken.approve(address(vault), assets * ADDITIONAL_PRECISION);
-        vm.expectRevert(abi.encodeWithSelector(CredbullBaseVault.CredbullVault__InvalidAssetAmount.selector, assets));
+        vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__InvalidAssetAmount.selector, assets));
         shares = vault.deposit(assets, user);
         vm.stopPrank();
     }
@@ -253,15 +249,15 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         uint256 shares = deposit(alice, depositAmount, true);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(address(vaultParams.maturityVaultParams.baseVaultParams.asset)).mint(
-            vaultParams.maturityVaultParams.baseVaultParams.custodian, (100 * precision) + 1
+        SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).mint(
+            vaultParams.maturityVault.vault.custodian, (100 * precision) + 1
         );
-        uint256 finalBalance = MockStablecoin(address(vaultParams.maturityVaultParams.baseVaultParams.asset)).balanceOf(
-            vaultParams.maturityVaultParams.baseVaultParams.custodian
+        uint256 finalBalance = SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).balanceOf(
+            vaultParams.maturityVault.vault.custodian
         );
 
-        vm.prank(vaultParams.maturityVaultParams.baseVaultParams.custodian);
-        vaultParams.maturityVaultParams.baseVaultParams.asset.transfer(address(vault), finalBalance);
+        vm.prank(vaultParams.maturityVault.vault.custodian);
+        vaultParams.maturityVault.vault.asset.transfer(address(vault), finalBalance);
 
         // ---- Assert Vault burns shares
         vm.startPrank(alice);
@@ -269,9 +265,9 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         vault.approve(address(this), shares);
         vm.stopPrank();
 
-        vm.startPrank(vaultParams.contractRoles.operator);
+        vm.startPrank(vaultParams.roles.operator);
         vault.mature();
-        vm.warp(vaultParams.windowVaultParams.matureWindow.opensAt + 1);
+        vm.warp(vaultParams.windowPlugin.redemptionWindow.opensAt + 1);
         vm.stopPrank();
 
         vault.redeem(shares, alice, alice);

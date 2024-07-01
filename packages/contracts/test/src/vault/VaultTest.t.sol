@@ -5,6 +5,7 @@ pragma solidity ^0.8.19;
 import { Test } from "forge-std/Test.sol";
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { HelperConfig } from "@script/HelperConfig.s.sol";
@@ -35,7 +36,7 @@ contract VaultTest is Test {
         helperConfig = new HelperConfig(true);
         vaultParams = new ParamsFactory(helperConfig.getNetworkConfig()).createVaultParams();
 
-        vault = createMockVault(vaultParams);
+        vault = createTestVault(vaultParams);
         precision = 10 ** SimpleUSDC(address(vaultParams.asset)).decimals();
 
         SimpleUSDC(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
@@ -53,21 +54,33 @@ contract VaultTest is Test {
 
     function test__BaseVault__ShouldRevertOnInvalidAsset() public {
         address zeroAddress = address(0);
-        vm.expectRevert(abi.encodeWithSelector(CredbullBaseVault.CredbullVault__InvalidAsset.selector, zeroAddress));
-        new CredbullBaseVaultMock(IERC20(zeroAddress), "Test", "test", vaultParams.custodian);
+        vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__InvalidAsset.selector, zeroAddress));
+        new SimpleVault(
+            Vault.VaultParams({
+                asset: IERC20(zeroAddress),
+                shareName: "Test",
+                shareSymbol: "test",
+                custodian: vaultParams.custodian
+            })
+        );
     }
 
     function test__BaseVault__ShouldRevertOnInvalidCustodianAddress() public {
         address zeroAddress = address(0);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(CredbullBaseVault.CredbullVault__InvalidCustodianAddress.selector, zeroAddress)
+        vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__InvalidCustodianAddress.selector, zeroAddress));
+        new SimpleVault(
+            Vault.VaultParams({
+                asset: vaultParams.asset,
+                shareName: "Test",
+                shareSymbol: "test",
+                custodian: zeroAddress
+            })
         );
-        new CredbullBaseVaultMock(vaultParams.asset, "Test", "test", zeroAddress);
     }
 
     function test__BaseVault__ShouldReturnCorrectDecimalValue() public view {
-        assertEq(vault.decimals(), MockStablecoin(address(vaultParams.asset)).decimals());
+        assertEq(vault.decimals(), SimpleUSDC(address(vaultParams.asset)).decimals());
     }
 
     function test__BaseVault__DepositAssetsAndGetShares() public {
@@ -164,7 +177,7 @@ contract VaultTest is Test {
     function test__ShouldRevertIfDecimalIsNotSupported() public {
         vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__UnsupportedDecimalValue.selector, 24));
         vm.mockCall(address(vaultParams.asset), abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(24));
-        createMockVault(vaultParams);
+        createTestVault(vaultParams);
     }
 
     function test__Vault__Deposit__Fuzz(uint256 depositAmount) public {
@@ -293,10 +306,8 @@ contract VaultTest is Test {
         uint256 shares = deposit(alice, depositAmount);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        MockStablecoin(address(vaultParams.asset)).mint(
-            vaultParams.custodian, depositAmount.mulDiv(10_00, MAX_PERCENTAGE)
-        );
-        uint256 finalBalance = MockStablecoin(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
+        SimpleUSDC(address(vaultParams.asset)).mint(vaultParams.custodian, depositAmount.mulDiv(10_00, MAX_PERCENTAGE));
+        uint256 finalBalance = SimpleUSDC(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
 
         vm.prank(vaultParams.custodian);
         vaultParams.asset.transfer(address(vault), finalBalance);
@@ -311,8 +322,8 @@ contract VaultTest is Test {
     }
 
     function test__BaseVault__WithdrawERC20() public {
-        MockStablecoin mock1 = new MockStablecoin(100 * precision);
-        MockStablecoin mock2 = new MockStablecoin(100 * precision);
+        SimpleUSDC mock1 = new SimpleUSDC(100 * precision);
+        SimpleUSDC mock2 = new SimpleUSDC(100 * precision);
 
         mock1.mint(address(vault), 100 * precision);
         mock2.mint(address(vault), 100 * precision);
@@ -337,15 +348,11 @@ contract VaultTest is Test {
     }
 
     function test__BaseVault__ShouldRevertAllTransfers() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(CredbullBaseVault.CredbullVault__TransferOutsideEcosystem.selector, address(alice))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__TransferOutsideEcosystem.selector, address(alice)));
         vm.prank(alice);
         vault.transfer(bob, 100 * precision);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(CredbullBaseVault.CredbullVault__TransferOutsideEcosystem.selector, alice)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__TransferOutsideEcosystem.selector, alice));
         vm.prank(alice);
         vault.transferFrom(alice, bob, 100 * precision);
     }
@@ -367,7 +374,7 @@ contract VaultTest is Test {
         vm.stopPrank();
     }
 
-    function createMockVault(Vault.VaultParams memory _vaultParams) internal returns (SimpleVault) {
+    function createTestVault(Vault.VaultParams memory _vaultParams) internal returns (SimpleVault) {
         return new SimpleVault(_vaultParams);
     }
 }

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 /// @notice - A plugIn to handle deposit and withdraw window
-abstract contract WindowPlugIn {
+abstract contract WindowPlugin {
     /// @notice Error to revert when operation is outside required window
     error CredbullVault__OperationOutsideRequiredWindow(
         uint256 windowOpensAt, uint256 windowClosesAt, uint256 timestamp

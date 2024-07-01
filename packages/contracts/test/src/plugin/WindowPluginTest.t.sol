@@ -3,7 +3,6 @@
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
-<<<<<<<< HEAD:packages/contracts/test/src/plugin/WindowPluginTest.t.sol
 
 import { HelperConfig } from "@script/HelperConfig.s.sol";
 
@@ -19,23 +18,6 @@ contract WindowPluginTest is Test {
 
     Vault.VaultParams private vaultParams;
     WindowPlugin.WindowPluginParams private windowParams;
-========
-
-import { HelperConfig } from "@script/HelperConfig.s.sol";
-
-import { Vault } from "@src/vault/Vault.sol";
-import { WindowPlugIn } from "@src/plugin/WindowPlugIn.sol";
-
-import { MockStablecoin } from "@test/test/mock/MockStablecoin.t.sol";
-import { MockWindowVault } from "@test/test/mock/vault/MockWindowVault.t.sol";
-import { ParametersFactory } from "@test/test/vault/ParametersFactory.t.sol";
-
-contract WindowPlugInTest is Test {
-    MockWindowVault private vault;
-
-    Vault.VaultParameters private vaultParams;
-    WindowPlugIn.WindowPlugInParameters private windowParams;
->>>>>>>> 00739ff (LOADS of re-structuring and renaming into a better structure (for me). This is for review.):packages/contracts/test/src/plugin/WindowPlugInTest.t.sol
     HelperConfig private helperConfig;
 
     address private alice = makeAddr("alice");
@@ -46,21 +28,12 @@ contract WindowPlugInTest is Test {
 
     function setUp() public {
         helperConfig = new HelperConfig(true);
-<<<<<<<< HEAD:packages/contracts/test/src/plugin/WindowPluginTest.t.sol
         ParamsFactory pf = new ParamsFactory(helperConfig.getNetworkConfig());
         vaultParams = pf.createVaultParams();
         windowParams = pf.createWindowPluginParams();
 
         vault = new SimpleWindowVault(vaultParams, windowParams);
         precision = 10 ** SimpleUSDC(address(vaultParams.asset)).decimals();
-========
-        ParametersFactory pf = new ParametersFactory(helperConfig.getNetworkConfig());
-        vaultParams = pf.createVaultParameters();
-        windowParams = pf.createWindowPlugInParameters();
-
-        vault = new MockWindowVault(vaultParams, windowParams);
-        precision = 10 ** MockStablecoin(address(vaultParams.asset)).decimals();
->>>>>>>> 00739ff (LOADS of re-structuring and renaming into a better structure (for me). This is for review.):packages/contracts/test/src/plugin/WindowPlugInTest.t.sol
 
         SimpleUSDC(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
         SimpleUSDC(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
@@ -124,11 +97,7 @@ contract WindowPlugInTest is Test {
         // then the redemption should be reverted
         vm.expectRevert(
             abi.encodeWithSelector(
-<<<<<<<< HEAD:packages/contracts/test/src/plugin/WindowPluginTest.t.sol
                 WindowPlugin.CredbullVault__OperationOutsideRequiredWindow.selector,
-========
-                WindowPlugIn.CredbullVault__OperationOutsideRequiredWindow.selector,
->>>>>>>> 00739ff (LOADS of re-structuring and renaming into a better structure (for me). This is for review.):packages/contracts/test/src/plugin/WindowPlugInTest.t.sol
                 windowParams.redemptionWindow.opensAt,
                 windowParams.redemptionWindow.closesAt,
                 block.timestamp
@@ -163,11 +132,7 @@ contract WindowPlugInTest is Test {
         // then the redemption should be reverted
         vm.expectRevert(
             abi.encodeWithSelector(
-<<<<<<<< HEAD:packages/contracts/test/src/plugin/WindowPluginTest.t.sol
                 WindowPlugin.CredbullVault__OperationOutsideRequiredWindow.selector,
-========
-                WindowPlugIn.CredbullVault__OperationOutsideRequiredWindow.selector,
->>>>>>>> 00739ff (LOADS of re-structuring and renaming into a better structure (for me). This is for review.):packages/contracts/test/src/plugin/WindowPlugInTest.t.sol
                 windowParams.redemptionWindow.opensAt,
                 windowParams.redemptionWindow.closesAt,
                 block.timestamp
