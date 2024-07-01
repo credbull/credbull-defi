@@ -6,13 +6,11 @@ import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { FixedYieldVault } from "./FixedYieldVault.sol";
 
-/// @notice - Upside vault
 contract UpsideVault is FixedYieldVault {
     using Math for uint256;
 
     error CredbullVault__InsufficientShareBalance();
 
-    /// @notice - Struct defining parameters for upside vault
     struct UpsideVaultParams {
         FixedYieldVaultParams fixedYieldVaultParams;
         IERC20 cblToken;

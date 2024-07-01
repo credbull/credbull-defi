@@ -31,6 +31,14 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         params.kycParams.kycProvider = address(kycProvider);
     }
 
+    function test__ShouldSuccefullyCreateFactoryFixedYield() public {
+        address[] memory custodians = new address[](1);
+        custodians[0] = config.factoryParams.custodian;
+        CredbullFixedYieldVaultFactory vaultFactory =
+            new CredbullFixedYieldVaultFactory(config.factoryParams.owner, config.factoryParams.operator, custodians);
+        vaultFactory.hasRole(vaultFactory.OPERATOR_ROLE(), config.factoryParams.operator);
+    }
+
     function test__CreateVaultFromFactory() public {
         vm.prank(config.factoryParams.owner);
         factory.allowCustodian(params.maturityVaultParams.baseVaultParams.custodian);

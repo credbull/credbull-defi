@@ -24,6 +24,15 @@ contract CredbullVaultWithUpsideFactoryTest is Test {
         (, factory, kycProvider, helperConfig) = deployer.runTest();
     }
 
+    function test__ShouldSuccefullyCreateFactoryUpside() public {
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+        address[] memory custodians = new address[](1);
+        custodians[0] = config.factoryParams.custodian;
+        CredbullUpsideVaultFactory vaultFactory =
+            new CredbullUpsideVaultFactory(config.factoryParams.owner, config.factoryParams.operator, custodians);
+        vaultFactory.hasRole(vaultFactory.OPERATOR_ROLE(), config.factoryParams.operator);
+    }
+
     function test__CreateUpsideVaultFromFactory() public {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         (CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params) =
