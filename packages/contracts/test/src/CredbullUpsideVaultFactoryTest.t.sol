@@ -13,7 +13,7 @@ import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.s
 import { CredbullUpsideVaultFactory } from "@credbull/CredbullUpsideVaultFactory.sol";
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract CredbullVaultWithUpsideFactoryTest is Test {
+contract CredbullUpsideVaultFactoryTest is Test {
     CredbullUpsideVaultFactory private factory;
     DeployVaultFactory private deployer;
     HelperConfig private helperConfig;
@@ -26,7 +26,16 @@ contract CredbullVaultWithUpsideFactoryTest is Test {
         (, factory, whiteListProvider, helperConfig) = deployer.runTest();
     }
 
-    function test__CreateUpsideVaultFromFactory() public {
+    function test__CredbullUpsideVaultFactory__ShouldSuccessfullyCreateFactoryUpside() public {
+        NetworkConfig memory config = helperConfig.getNetworkConfig();
+        address[] memory custodians = new address[](1);
+        custodians[0] = config.factoryParams.custodian;
+        CredbullUpsideVaultFactory vaultFactory =
+            new CredbullUpsideVaultFactory(config.factoryParams.owner, config.factoryParams.operator, custodians);
+        vaultFactory.hasRole(vaultFactory.OPERATOR_ROLE(), config.factoryParams.operator);
+    }
+
+    function test__CredbullUpsideVaultFactory__CreateUpsideVaultFromFactory() public {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         (UpsideVault.UpsideVaultParams memory params) = new ParamsFactory(config).createUpsideVaultParams();
 

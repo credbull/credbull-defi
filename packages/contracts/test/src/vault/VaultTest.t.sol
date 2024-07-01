@@ -52,7 +52,7 @@ contract VaultTest is Test {
         assertEq(vault.CUSTODIAN(), vaultParams.custodian);
     }
 
-    function test__BaseVault__ShouldRevertOnInvalidAsset() public {
+    function test__Vault__ShouldRevertOnInvalidAsset() public {
         address zeroAddress = address(0);
         vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__InvalidAsset.selector, zeroAddress));
         new SimpleVault(
@@ -65,7 +65,7 @@ contract VaultTest is Test {
         );
     }
 
-    function test__BaseVault__ShouldRevertOnInvalidCustodianAddress() public {
+    function test__Vault__ShouldRevertOnInvalidCustodianAddress() public {
         address zeroAddress = address(0);
 
         vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__InvalidCustodianAddress.selector, zeroAddress));
@@ -79,11 +79,11 @@ contract VaultTest is Test {
         );
     }
 
-    function test__BaseVault__ShouldReturnCorrectDecimalValue() public view {
+    function test__Vault__ShouldReturnCorrectDecimalValue() public view {
         assertEq(vault.decimals(), SimpleUSDC(address(vaultParams.asset)).decimals());
     }
 
-    function test__BaseVault__DepositAssetsAndGetShares() public {
+    function test__Vault__DepositAssetsAndGetShares() public {
         uint256 custodiansBalance = vaultParams.asset.balanceOf(vaultParams.custodian);
 
         // ---- Setup Part 1, Check balance before deposit ----
@@ -300,7 +300,7 @@ contract VaultTest is Test {
         }
     }
 
-    function test__BaseVault__WithdrawOnBehalfOf() public {
+    function test__Vault__WithdrawOnBehalfOf() public {
         uint256 depositAmount = 10 * precision;
         //Call internal deposit function
         uint256 shares = deposit(alice, depositAmount);
@@ -321,7 +321,7 @@ contract VaultTest is Test {
         vault.redeem(shares, alice, alice);
     }
 
-    function test__BaseVault__WithdrawERC20() public {
+    function test__Vault__WithdrawERC20() public {
         SimpleUSDC mock1 = new SimpleUSDC(100 * precision);
         SimpleUSDC mock2 = new SimpleUSDC(100 * precision);
 
@@ -338,7 +338,7 @@ contract VaultTest is Test {
         assertEq(mock2.balanceOf(alice), 100 * precision);
     }
 
-    function test__BaseVault__ShouldRevertOnSendingETHToVault() public {
+    function test__Vault__ShouldRevertOnSendingETHToVault() public {
         (bool isReceivedSuccess,) = address(vault).call{ value: 5 wei }("");
         assertFalse(isReceivedSuccess, "Should fail: receive function is not allowed to accept Native tokens.");
 
@@ -347,7 +347,7 @@ contract VaultTest is Test {
         assertFalse(isFallbackSuccess, "Should fail: fallback function is not allowed to accept Native tokens.");
     }
 
-    function test__BaseVault__ShouldRevertAllTransfers() public {
+    function test__Vault__ShouldRevertAllTransfers() public {
         vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__TransferOutsideEcosystem.selector, address(alice)));
         vm.prank(alice);
         vault.transfer(bob, 100 * precision);
