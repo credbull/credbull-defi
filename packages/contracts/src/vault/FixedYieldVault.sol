@@ -3,12 +3,16 @@
 pragma solidity ^0.8.19;
 
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
+
 import { MaturityVault } from "./MaturityVault.sol";
 import { WhiteListPlugin } from "../plugin/WhiteListPlugin.sol";
 import { WindowPlugin } from "../plugin/WindowPlugin.sol";
 import { MaxCapPlugin } from "../plugin/MaxCapPlugin.sol";
 
 contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCapPlugin, AccessControl {
+    using Math for uint256;
+
     /// @notice - Hash of operator role
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
@@ -24,7 +28,11 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
         WindowPluginParams windowPlugin;
         WhiteListPluginParams whiteListPlugin;
         MaxCapPluginParams maxCapPlugin;
+        uint256 promisedYield;
     }
+
+    /// @dev The fixed yield value in percentage(100) that's promised to the users on deposit.
+    uint256 private _fixedYield;
 
     constructor(FixedYieldVaultParams memory params)
         MaturityVault(params.maturityVault)
@@ -34,6 +42,8 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
     {
         _grantRole(DEFAULT_ADMIN_ROLE, params.roles.owner);
         _grantRole(OPERATOR_ROLE, params.roles.operator);
+
+        _fixedYield = params.promisedYield;
     }
 
     /// @dev - Overridden deposit modifer
@@ -53,9 +63,14 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
     modifier withdrawModifier(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         override
     {
-        _checkIsWithdrawWithinWindow();
+        _checkIsRedeemWithinWindow();
         _checkVaultMaturity();
         _;
+    }
+
+    // @notice - Returns expected assets on maturity
+    function expectedAssetsOnMaturity() public view override returns (uint256) {
+        return totalAssetDeposited.mulDiv(100 + _fixedYield, 100);
     }
 
     /// @notice Mature the vault

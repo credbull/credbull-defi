@@ -3,7 +3,6 @@
 pragma solidity ^0.8.19;
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Vault } from "./Vault.sol";
 
 /**
@@ -12,11 +11,10 @@ import { Vault } from "./Vault.sol";
  * @notice Once matured, such a vault will not accept further deposits.
  */
 abstract contract MaturityVault is Vault {
-    using Math for uint256;
-
+    /// @notice The set of parameters for creating a [MaturityVault].abi
+    /// @dev Though unnecessary, we maintain the implementation pattern of a 'Params' per Vault.
     struct MaturityVaultParams {
         VaultParams vault;
-        uint256 promisedYield;
     }
 
     /// @notice Reverts on withdraw if vault is not matured.
@@ -31,18 +29,8 @@ abstract contract MaturityVault is Vault {
     /// @notice Determine if Maturity Checking is enabled or disabled.
     bool public checkMaturity;
 
-    // NOTE (JL,2024-06-28): Why is a Fixed Yield here and not in the `FixedYieldVault`?
-    /// @dev The fixed yield value in percentage(100) that's promised to the users on deposit.
-    uint256 private _fixedYield;
-
     constructor(MaturityVaultParams memory params) Vault(params.vault) {
         checkMaturity = true;
-        _fixedYield = params.promisedYield;
-    }
-
-    /// @notice - Returns expected assets on maturity
-    function expectedAssetsOnMaturity() public view returns (uint256) {
-        return totalAssetDeposited.mulDiv(100 + _fixedYield, 100);
     }
 
     /**
@@ -61,6 +49,9 @@ abstract contract MaturityVault is Vault {
         totalAssetDeposited = currentBalance;
         isMatured = true;
     }
+
+    /// @notice - Returns expected assets on maturity
+    function expectedAssetsOnMaturity() public view virtual returns (uint256);
 
     /// @dev - To be access controlled on inherited contract
     function mature() public virtual {
