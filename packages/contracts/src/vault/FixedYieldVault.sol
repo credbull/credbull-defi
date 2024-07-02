@@ -50,7 +50,7 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
     /// Should check for whiteListed address
     /// Should check for deposit window
     /// Should check for max cap
-    modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {
+    modifier onDepositOrMint(address caller, address receiver, uint256 assets, uint256 shares) override {
         _checkIsWhiteListed(receiver, assets + convertToAssets(balanceOf(receiver)));
         _checkIsDepositWithinWindow();
         _checkMaxCap(totalAssetDeposited + assets);
@@ -60,7 +60,7 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
     /// @dev - Overridden withdraw modifier
     /// Should check for withdraw window
     /// Should check for maturity
-    modifier withdrawModifier(address caller, address receiver, address owner, uint256 assets, uint256 shares)
+    modifier onWithdrawOrRedeem(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         override
     {
         _checkIsRedeemWithinWindow();

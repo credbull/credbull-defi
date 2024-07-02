@@ -57,7 +57,7 @@ contract UpsideVault is FixedYieldVault {
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares)
         internal
         override
-        depositModifier(caller, receiver, assets, shares)
+        onDepositOrMint(caller, receiver, assets, shares)
         whenNotPaused
     {
         (, uint256 reminder) = assets.tryMod(10 ** VAULT_DECIMALS);
@@ -86,7 +86,7 @@ contract UpsideVault is FixedYieldVault {
     function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         internal
         override
-        withdrawModifier(caller, receiver, owner, assets, shares)
+        onWithdrawOrRedeem(caller, receiver, owner, assets, shares)
         whenNotPaused
     {
         if (caller != owner) {

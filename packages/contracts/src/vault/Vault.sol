@@ -11,7 +11,6 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 /**
  * @title Credbull Vault
- * @author @pasviegas
  * @notice The family defining contract, based upon Open Zeppelin's ERC4626 implementation.
  * @dev Uses a Custodian Account to accummulate the deposited Asset.
  */
@@ -53,13 +52,13 @@ abstract contract Vault is ERC4626, Pausable {
     /// @notice Min decimal value supported by vault
     uint8 public constant MIN_DECIMAL = 6;
 
-    /// @notice Modifier to add additional checks on deposit
-    modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) virtual {
+    /// @notice Modifier to add additional checks on _deposit, the deposit/mint common workflow function.
+    modifier onDepositOrMint(address caller, address receiver, uint256 assets, uint256 shares) virtual {
         _;
     }
 
-    /// @notice Modifier to add additional checks on withdraw
-    modifier withdrawModifier(address caller, address receiver, address owner, uint256 assets, uint256 shares)
+    /// @notice Modifier to add additional checks on _withdraw, the withdraw/redeem common workflow function.
+    modifier onWithdrawOrRedeem(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         virtual
     {
         _;
@@ -86,7 +85,7 @@ abstract contract Vault is ERC4626, Pausable {
         internal
         virtual
         override
-        depositModifier(caller, receiver, assets, shares)
+        onDepositOrMint(caller, receiver, assets, shares)
         whenNotPaused
     {
         (, uint256 reminder) = assets.tryMod(10 ** VAULT_DECIMALS);
@@ -109,7 +108,7 @@ abstract contract Vault is ERC4626, Pausable {
         internal
         virtual
         override
-        withdrawModifier(caller, receiver, owner, assets, shares)
+        onWithdrawOrRedeem(caller, receiver, owner, assets, shares)
         whenNotPaused
     {
         if (caller != owner) {
