@@ -51,7 +51,9 @@ abstract contract MaturityVault is Vault {
     }
 
     /// @notice - Returns expected assets on maturity
-    function expectedAssetsOnMaturity() public view virtual returns (uint256);
+    function expectedAssetsOnMaturity() public view virtual returns (uint256) {
+        return totalAssetDeposited;
+    }
 
     /// @dev - To be access controlled on inherited contract
     function mature() public virtual {

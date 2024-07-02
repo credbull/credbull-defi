@@ -81,16 +81,16 @@ contract MaturityVaultTest is Test {
         // ---- Setup Part 1 - Deposit Assets to the vault ---- //
         uint256 depositAmount = 10 * precision;
         deposit(alice, depositAmount);
-        uint256 finalBalance = depositAmount;
 
-        // ---- Transfer assets to vault ---
+        // ---- Transfer fewer assets to vault (arbitrarily use half the assets) ---
+        uint256 finalBalance = depositAmount / 2;
         vm.startPrank(params.vault.custodian);
         params.vault.asset.approve(params.vault.custodian, finalBalance);
         params.vault.asset.transferFrom(params.vault.custodian, address(vault), finalBalance);
         vm.stopPrank();
 
         // ---- Assert it can't be matured yet ---
-        // vm.prank(params.contractRoles.operator);
+        // vm.prank(params.roles.operator);
         vm.expectRevert(MaturityVault.CredbullVault__NotEnoughBalanceToMature.selector);
         vault.mature();
     }
@@ -99,9 +99,8 @@ contract MaturityVaultTest is Test {
         uint256 depositAmount = 10 * precision;
         deposit(alice, depositAmount);
 
-        uint256 expectedAssetVaulue = ((depositAmount * (100 + params.promisedYield)) / 100);
-
-        assertEq(vault.expectedAssetsOnMaturity(), expectedAssetVaulue);
+        uint256 expectedAssetValue = depositAmount;
+        assertEq(vault.expectedAssetsOnMaturity(), expectedAssetValue);
     }
 
     function test__MaturityVault__ShouldNotRevertOnMaturityModifier() public {
