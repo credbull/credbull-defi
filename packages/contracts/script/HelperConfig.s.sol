@@ -24,6 +24,11 @@ struct NetworkConfig {
     IERC20 cblToken;
 }
 
+struct TokenParams {
+    address owner;
+    uint256 maxSupply;
+}
+
 /// @title Helper to centralize any chain-specific config and code into one place
 /// Each chain has different addresses for contracts such as USDC and (Gnosis) Safe
 /// This is the only place in the contract code that knows about different chains and environment settings
@@ -54,6 +59,10 @@ contract HelperConfig is Script {
 
     function getNetworkConfig() public view returns (NetworkConfig memory) {
         return activeNetworkConfig;
+    }
+
+    function getTokenParams() public view returns (TokenParams memory) {
+        return createTokenParamsFromConfig();
     }
 
     function loadTomlConfiguration() internal view returns (string memory) {
@@ -93,5 +102,14 @@ contract HelperConfig is Script {
         });
 
         return factoryParams;
+    }
+
+    function createTokenParamsFromConfig() internal view returns (TokenParams memory) {
+        TokenParams memory tokenParams = TokenParams({
+            owner: tomlConfig.readAddress(".evm.address.owner"),
+            maxSupply: tomlConfig.readUint(".evm.contracts.token.max_supply") * 1e18
+        });
+
+        return tokenParams;
     }
 }

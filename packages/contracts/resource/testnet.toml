@@ -19,6 +19,10 @@ custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
 # 2 decimal place percentage (meaining value divided by 100) as integer.
 collateral_percentage = 200
 
+[evm.contracts.token]
+# CBL token params
+max_supply = 10000000 # 10 million
+
 [services.supabase]
 url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
 
