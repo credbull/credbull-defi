@@ -9,7 +9,7 @@
     "build": "forge clean && forge build",
     "test": "forge test",
     "format": "forge fmt && prettier './script/**/*.js' --write",
-    "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint  './*(test|src)/**/*.sol'",
+    "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint './*(test|src)/**/*.sol'",
     "db-check": "tsc && node ./script/utils/checkDb.js",
     "db-export": "tsc && node ./script/utils/exporter.js",
     "deploy": "make deploy-local",
