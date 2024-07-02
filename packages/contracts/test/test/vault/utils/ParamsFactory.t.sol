@@ -50,12 +50,13 @@ contract ParamsFactory is Test {
             roles: createContractRoles(),
             windowPlugin: createWindowPluginParams(),
             whiteListPlugin: createWhiteListPluginParams(),
-            maxCapPlugin: createMaxCapPluginParams()
+            maxCapPlugin: createMaxCapPluginParams(),
+            promisedYield: PROMISED_FIXED_YIELD
         });
     }
 
     function createMaturityVaultParams() public returns (MaturityVault.MaturityVaultParams memory params) {
-        params = MaturityVault.MaturityVaultParams({ vault: createVaultParams(), promisedYield: PROMISED_FIXED_YIELD });
+        params = MaturityVault.MaturityVaultParams({ vault: createVaultParams() });
     }
 
     function createMaxCapPluginParams() public pure returns (MaxCapPlugin.MaxCapPluginParams memory params) {
