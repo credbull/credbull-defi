@@ -6,7 +6,6 @@ import { Test } from "forge-std/Test.sol";
 import { CBL } from "../../src/token/CBL.sol";
 import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { DeployCBLToken } from "../../script/DeployCBLToken.s.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract CBLTest is Test {
     CBL private cbl;
