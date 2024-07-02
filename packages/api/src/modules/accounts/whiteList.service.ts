@@ -1,4 +1,4 @@
-import { CredbullKYCProvider__factory } from '@credbull/contracts';
+import { CredbullWhiteListProvider__factory } from '@credbull/contracts';
 import { Injectable } from '@nestjs/common';
 import * as _ from 'lodash';
 
@@ -9,36 +9,36 @@ import { ServiceResponse } from '../../types/responses';
 import { Tables } from '../../types/supabase';
 import { responseFromRead, responseFromWrite } from '../../utils/contracts';
 
-import { KYCStatus, WhitelistAccountDto } from './kyc.dto';
+import { WhiteListAccountDto, WhiteListStatus } from './whiteList.dto';
 
 @Injectable()
-export class KycService {
+export class WhiteListService {
   constructor(
     private readonly ethers: EthersService,
     private readonly supabase: SupabaseService,
     private readonly supabaseAdmin: SupabaseAdminService,
   ) {}
 
-  async status(): Promise<ServiceResponse<KYCStatus>> {
+  async status(): Promise<ServiceResponse<WhiteListStatus>> {
     const client = this.supabase.client();
 
-    const events = await client.from('kyc_events').select().eq('event_name', 'accepted').single();
+    const events = await client.from('whitelist_events').select().eq('event_name', 'accepted').single();
     if (events.error) return events;
 
-    if (!events.data?.address) return { data: KYCStatus.PENDING };
+    if (!events.data?.address) return { data: WhiteListStatus.PENDING };
 
-    const kycProvider = await client.from('vault_entities').select('*').eq('type', 'kyc_provider');
-    if (kycProvider.error) return kycProvider;
+    const whiteListProvider = await client.from('vault_entities').select('*').eq('type', 'whitelist_provider');
+    if (whiteListProvider.error) return whiteListProvider;
 
-    const distinctProviders = _.uniqBy(kycProvider.data ?? [], 'address');
+    const distinctProviders = _.uniqBy(whiteListProvider.data ?? [], 'address');
 
     const check = await this.checkOnChain(distinctProviders, events.data?.address);
     if (check.error) return check;
 
-    return check.data ? { data: KYCStatus.ACTIVE } : { data: KYCStatus.REJECTED };
+    return check.data ? { data: WhiteListStatus.ACTIVE } : { data: WhiteListStatus.REJECTED };
   }
 
-  async whitelist(dto: WhitelistAccountDto): Promise<ServiceResponse<Tables<'kyc_events'>[]>> {
+  async whitelist(dto: WhiteListAccountDto): Promise<ServiceResponse<Tables<'whitelist_events'>[]>> {
     const admin = this.supabaseAdmin.admin();
 
     const wallet = await admin
@@ -49,7 +49,7 @@ export class KycService {
       .single();
     if (wallet.error) return wallet;
 
-    const query = admin.from('vault_entities').select('address').eq('type', 'kyc_provider');
+    const query = admin.from('vault_entities').select('address').eq('type', 'whitelist_provider');
     if (wallet.data.discriminator) {
       query.eq('tenant', dto.user_id);
     } else {
@@ -78,7 +78,7 @@ export class KycService {
     if (errors.length) return { error: new AggregateError(errors) };
 
     const existing = await admin
-      .from('kyc_events')
+      .from('whitelist_events')
       .select()
       .eq('address', dto.address)
       .eq('user_id', dto.user_id)
@@ -89,20 +89,20 @@ export class KycService {
     if (existing.data) return { data: [existing.data] };
 
     return admin
-      .from('kyc_events')
+      .from('whitelist_events')
       .insert({ ...dto, event_name: 'accepted' })
       .select();
   }
 
   private async checkOnChain(
-    kycProviders: Tables<'vault_entities'>[],
+    whiteListProviders: Tables<'vault_entities'>[],
     address: string,
   ): Promise<ServiceResponse<boolean>> {
     const errors = [];
     let status = false;
 
-    for (const kyc of kycProviders) {
-      const provider = await this.getOnChainProvider(kyc.address);
+    for (const whiteListProvider of whiteListProviders) {
+      const provider = await this.getOnChainProvider(whiteListProvider.address);
       const { error, data } = await responseFromRead(provider, provider.status(address));
       if (error) {
         errors.push(error);
@@ -116,6 +116,6 @@ export class KycService {
   }
 
   private async getOnChainProvider(address: string) {
-    return CredbullKYCProvider__factory.connect(address, await this.ethers.operator());
+    return CredbullWhiteListProvider__factory.connect(address, await this.ethers.operator());
   }
 }

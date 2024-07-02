@@ -1,4 +1,4 @@
-import { MockStablecoin__factory, MockToken__factory } from '@credbull/contracts';
+import { SimpleToken__factory, SimpleUSDC__factory } from '@credbull/contracts';
 import { parseUnits } from 'ethers/lib/utils';
 
 import { whitelist } from './utils/admin';
@@ -67,7 +67,7 @@ export async function depositWithUpside(config: any): Promise<void> {
   const depositAmount = parseUnits(toDeposit.toString(), await asset.decimals());
   console.log(' Bob decides to mint his deposit amount of the Asset=', displayAsset(depositAmount));
 
-  const mockUsdc = MockStablecoin__factory.connect(asset.address, userBob.signer);
+  const mockUsdc = SimpleUSDC__factory.connect(asset.address, userBob.signer);
   const mintAssetTx = await mockUsdc.mint(userBob.address, depositAmount);
   await mintAssetTx.wait();
   await logBalances();
@@ -79,7 +79,7 @@ export async function depositWithUpside(config: any): Promise<void> {
   const tokenAmount = parseUnits(toDeposit.toString(), await token.decimals());
   console.log(' Bob decides to mint his deposit amount of Token=', displayToken(tokenAmount));
 
-  const mockToken = MockToken__factory.connect(token.address, userBob.signer);
+  const mockToken = SimpleToken__factory.connect(token.address, userBob.signer);
   const mintTokenTx = await mockToken.mint(userBob.address, tokenAmount);
   await mintTokenTx.wait();
   await logBalances();

@@ -115,7 +115,7 @@ export class VaultsService {
     upside: boolean = false,
     collateralPercentage?: number,
   ): FixedYieldVault.FixedYieldVaultParamsStruct | UpsideVault.UpsideVaultParamsStruct {
-    const baseVaultParams = {
+    const vaultParams = {
       asset: params.asset,
       shareName: params.shareName,
       shareSymbol: params.shareSymbol,
@@ -133,36 +133,36 @@ export class VaultsService {
       closesAt: params.depositClosesAt,
     };
 
-    const matureWindowParam = {
+    const redemptionWindowParam = {
       opensAt: params.redemptionOpensAt,
       closesAt: params.redemptionClosesAt,
     };
 
-    const windowVaultParams = {
+    const windowPluginParams = {
       depositWindow: depositWindowParam,
-      matureWindow: matureWindowParam,
+      redemptionWindow: redemptionWindowParam,
     };
 
-    const kycParams = {
-      kycProvider: params.kycProvider,
-      depositThresholdForWhitelisting: params.depositThresholdForWhitelisting,
+    const whiteListPluginParams = {
+      whiteListProvider: params.whiteListProvider,
+      depositThresholdForWhiteListing: params.depositThresholdForWhiteListing,
     };
 
-    const maxCapParams = {
+    const maxCapPluginParams = {
       maxCap: params.maxCap,
     };
 
     const maturityVaultParams: MaturityVault.MaturityVaultParamsStruct = {
-      baseVaultParams,
-      promisedYield: params.promisedYield,
+      vault: vaultParams,
     };
 
     const fixedYieldVaultParams: FixedYieldVault.FixedYieldVaultParamsStruct = {
-      maturityVaultParams,
-      contractRoles,
-      windowVaultParams,
-      kycParams,
-      maxCapParams,
+      maturityVault: maturityVaultParams,
+      roles: contractRoles,
+      windowPlugin: windowPluginParams,
+      whiteListPlugin: whiteListPluginParams,
+      maxCapPlugin: maxCapPluginParams,
+      promisedYield: params.promisedYield,
     };
 
     if (!upside) {
@@ -170,7 +170,7 @@ export class VaultsService {
     }
 
     const upsideVaultParams: UpsideVault.UpsideVaultParamsStruct = {
-      fixedYieldVaultParams,
+      fixedYieldVault: fixedYieldVaultParams,
       cblToken: params.token,
       collateralPercentage: collateralPercentage as unknown as BigNumber,
     };

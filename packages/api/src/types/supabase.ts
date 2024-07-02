@@ -30,31 +30,31 @@ export type Database = {
         };
         Relationships: [];
       };
-      kyc_events: {
+      whitelist_events: {
         Row: {
           address: string;
           created_at: string;
-          event_name: Database['public']['Enums']['kyc_event'];
+          event_name: Database['public']['Enums']['whitelist_event'];
           id: number;
           user_id: string;
         };
         Insert: {
           address: string;
           created_at?: string;
-          event_name: Database['public']['Enums']['kyc_event'];
+          event_name: Database['public']['Enums']['whitelist_event'];
           id?: number;
           user_id: string;
         };
         Update: {
           address?: string;
           created_at?: string;
-          event_name?: Database['public']['Enums']['kyc_event'];
+          event_name?: Database['public']['Enums']['whitelist_event'];
           id?: number;
           user_id?: string;
         };
         Relationships: [
           {
-            foreignKeyName: 'kyc_events_user_id_fkey';
+            foreignKeyName: 'whitelist_events_user_id_fkey';
             columns: ['user_id'];
             isOneToOne: false;
             referencedRelation: 'users';
@@ -239,8 +239,8 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
-      kyc_event: 'processing' | 'accepted' | 'rejected';
-      vault_entity_types: 'activity_reward' | 'treasury' | 'vault' | 'custodian' | 'kyc_provider';
+      whitelist_event: 'processing' | 'accepted' | 'rejected';
+      vault_entity_types: 'activity_reward' | 'treasury' | 'vault' | 'custodian' | 'whitelist_provider';
       vault_status: 'created' | 'ready' | 'matured';
       vault_type: 'fixed_yield' | 'fixed_yield_upside';
     };
