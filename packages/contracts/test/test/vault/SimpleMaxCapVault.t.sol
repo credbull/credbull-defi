@@ -15,7 +15,7 @@ contract SimpleMaxCapVault is Vault, MaxCapPlugin {
         MaxCapPlugin(maxCapPluginParams)
     { }
 
-    modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {
+    modifier onDepositOrMint(address caller, address receiver, uint256 assets, uint256 shares) override {
         _checkMaxCap(totalAssetDeposited + assets);
         _;
     }

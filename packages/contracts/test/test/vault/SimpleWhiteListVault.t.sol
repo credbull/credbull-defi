@@ -15,7 +15,7 @@ contract SimpleWhiteListVault is Vault, WhiteListPlugin {
         WhiteListPlugin(whiteListPluginParams)
     { }
 
-    modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {
+    modifier onDepositOrMint(address caller, address receiver, uint256 assets, uint256 shares) override {
         _checkIsWhiteListed(receiver, assets);
         _;
     }

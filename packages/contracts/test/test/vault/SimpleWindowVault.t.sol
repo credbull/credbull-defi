@@ -15,15 +15,15 @@ contract SimpleWindowVault is Vault, WindowPlugin {
         WindowPlugin(windowPluginParams)
     { }
 
-    modifier depositModifier(address caller, address receiver, uint256 assets, uint256 shares) override {
+    modifier onDepositOrMint(address caller, address receiver, uint256 assets, uint256 shares) override {
         _checkIsDepositWithinWindow();
         _;
     }
 
-    modifier withdrawModifier(address caller, address receiver, address owner, uint256 assets, uint256 shares)
+    modifier onWithdrawOrRedeem(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         override
     {
-        _checkIsWithdrawWithinWindow();
+        _checkIsRedeemWithinWindow();
         _;
     }
 

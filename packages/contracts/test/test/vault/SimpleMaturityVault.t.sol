@@ -10,7 +10,7 @@ import { MaturityVault } from "@credbull/vault/MaturityVault.sol";
 contract SimpleMaturityVault is MaturityVault {
     constructor(MaturityVaultParams memory params) MaturityVault(params) { }
 
-    modifier withdrawModifier(address caller, address receiver, address owner, uint256 assets, uint256 shares)
+    modifier onWithdrawOrRedeem(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         override
     {
         _checkVaultMaturity();
