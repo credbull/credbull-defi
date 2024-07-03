@@ -18,9 +18,9 @@ operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # 2 decimal place percentage (meaining value divided by 100) as integer.
 collateral_percentage = 200
 
-[evm.contracts.token]
+[evm.contracts.token.cbl]
 # CBL token params
-max_supply = 10000000 # 10 million
+max_supply = "10000000000000000000000000" # 10 million in wei
 
 [services.supabase]
 url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
