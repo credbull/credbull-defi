@@ -107,7 +107,7 @@ contract HelperConfig is Script {
     function createTokenParamsFromConfig() internal view returns (TokenParams memory) {
         TokenParams memory tokenParams = TokenParams({
             owner: tomlConfig.readAddress(".evm.address.owner"),
-            maxSupply: tomlConfig.readUint(".evm.contracts.token.max_supply") * 1e18
+            maxSupply: vm.parseUint(tomlConfig.readString(".evm.contracts.token.cbl.max_supply"))
         });
 
         return tokenParams;
