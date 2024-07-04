@@ -20,7 +20,7 @@ collateral_percentage = 200
 
 [evm.contracts.token.cbl]
 # CBL token params
-max_supply = "10000000000000000000000000" # 10 million in wei
+max_supply = 10_000_000 # 10 million in wei
 
 [services.supabase]
 url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
