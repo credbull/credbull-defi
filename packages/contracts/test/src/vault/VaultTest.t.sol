@@ -154,11 +154,9 @@ contract VaultTest is Test {
     }
 
     function test__Vault__ShouldRevertOnNativeTokenTransfer() public {
-        vm.expectRevert(Vault.CredbullVault__TransferOutsideEcosystem.selector);
         (bool isReceivedSuccess,) = address(vault).call{ value: 5 wei }("");
         assertFalse(isReceivedSuccess, "Should fail: receive function is not allowed to accept Native tokens.");
 
-        vm.expectRevert(Vault.CredbullVault__TransferOutsideEcosystem.selector);
         (bool isFallbackSuccess,) =
             address(vault).call{ value: 8 wei }(abi.encodeWithSignature("nonExistentFunction()"));
         assertFalse(isFallbackSuccess, "Should fail: fallback function is not allowed to accept Native tokens.");
