@@ -41,6 +41,8 @@ contract HelperConfig is Script {
 
     bool private testMode = false;
 
+    uint256 private constant PRECISION = 1e18;
+
     constructor(bool _test) {
         testMode = _test;
 
@@ -107,7 +109,7 @@ contract HelperConfig is Script {
     function createTokenParamsFromConfig() internal view returns (TokenParams memory) {
         TokenParams memory tokenParams = TokenParams({
             owner: tomlConfig.readAddress(".evm.address.owner"),
-            maxSupply: vm.parseUint(tomlConfig.readString(".evm.contracts.token.cbl.max_supply"))
+            maxSupply: vm.parseUint(tomlConfig.readString(".evm.contracts.token.cbl.max_supply")) * PRECISION
         });
 
         return tokenParams;
