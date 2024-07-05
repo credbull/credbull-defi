@@ -21,7 +21,7 @@ export class VaultsDto {
 
 export class EntitiesDto {
   @Expose()
-  type: 'treasury' | 'custodian' | 'activity_reward' | 'vault' | 'kyc_provider';
+  type: 'treasury' | 'custodian' | 'activity_reward' | 'vault' | 'whitelist_provider';
 
   @Expose()
   address: string;
@@ -77,7 +77,7 @@ export class VaultParamsDto extends EntitiesDto {
 
   @ApiProperty({ type: String, example: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512' })
   @IsString()
-  kycProvider: string;
+  whiteListProvider: string;
 
   @ApiProperty({ type: String, example: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' })
   @IsString()
@@ -97,7 +97,7 @@ export class VaultParamsDto extends EntitiesDto {
 
   @ApiProperty({ type: String, example: '1000000000', description: 'Should be in wei with 6 decimals' })
   @IsString()
-  depositThresholdForWhitelisting: string;
+  depositThresholdForWhiteListing: string;
 
   @ApiProperty({
     type: EntitiesDto,

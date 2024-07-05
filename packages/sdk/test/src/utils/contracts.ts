@@ -1,8 +1,4 @@
-import {
-  CredbullFixedYieldVault,
-  CredbullFixedYieldVaultWithUpside,
-  MockStablecoin__factory,
-} from '@credbull/contracts';
+import { CredbullFixedYieldVault, CredbullFixedYieldVaultWithUpside, SimpleUSDC__factory } from '@credbull/contracts';
 import { BigNumber, ContractTransaction, Signer, ethers } from 'ethers';
 
 import { User } from './user';
@@ -16,7 +12,7 @@ export async function __mockMint(
   signer: Signer | ethers.providers.Provider,
 ): Promise<ContractTransaction> {
   return vault.asset().then(async (address) => {
-    const asset = MockStablecoin__factory.connect(address, signer);
+    const asset = SimpleUSDC__factory.connect(address, signer);
     return asset.mint(to, amount);
   });
 }
@@ -28,7 +24,7 @@ export async function __mockMintToken(
   signer: Signer | ethers.providers.Provider,
 ): Promise<ContractTransaction> {
   return vault.token().then(async (address) => {
-    const token = MockStablecoin__factory.connect(address, signer);
+    const token = SimpleUSDC__factory.connect(address, signer);
     return token.mint(to, amount);
   });
 }

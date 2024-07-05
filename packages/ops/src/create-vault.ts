@@ -1,4 +1,4 @@
-import { CredbullFixedYieldVault__factory, CredbullVaultFactory__factory } from '@credbull/contracts';
+import { CredbullFixedYieldVault__factory, VaultFactory__factory } from '@credbull/contracts';
 import { FixedYieldVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
 import { MaturityVault } from '@credbull/contracts/types/CredbullFixedYieldVault';
 import { UpsideVault } from '@credbull/contracts/types/CredbullFixedYieldVaultWithUpside';
@@ -24,7 +24,7 @@ function createParams(
   config: any,
   params: {
     custodian: string;
-    kycProvider?: string;
+    whiteListProvider?: string;
     asset?: string;
     token?: string;
     matured?: boolean;
@@ -36,7 +36,7 @@ function createParams(
   const activityReward = config.evm.address.activity_reward;
   const collateralPercentage = config.operation.createVault.collateral_percentage;
 
-  const kycProvider = params.kycProvider;
+  const whiteListProvider = params.whiteListProvider;
   const custodian = params.custodian;
 
   const week = 604800;
@@ -53,7 +53,7 @@ function createParams(
     { type: 'treasury', address: treasury, percentage: 0.8 },
     { type: 'activity_reward', address: activityReward, percentage: 1 },
     { type: 'custodian', address: custodian },
-    { type: 'kyc_provider', address: kycProvider },
+    { type: 'whitelist_provider', address: whiteListProvider },
   ];
 
   const entities = params.upside
@@ -73,49 +73,49 @@ function createParams(
     redemptionOpensAt: redemptionDateAsTimestamp,
     redemptionClosesAt: redemptionDateAsTimestamp + week,
     custodian: params.custodian,
-    kycProvider: params.kycProvider || '',
+    whiteListProvider: params.whiteListProvider || '',
     maxCap: (1e6 * 1e6).toString(),
-    depositThresholdForWhitelisting: (1000e6).toString(),
+    depositThresholdForWhiteListing: (1000e6).toString(),
   };
 
   const maturityVaultParams: MaturityVault.MaturityVaultParamsStruct = {
-    baseVaultParams: {
+    vault: {
       asset: tempParams.asset,
       shareName: tempParams.shareName,
       shareSymbol: tempParams.shareSymbol,
       custodian: tempParams.custodian,
     },
-    promisedYield: tempParams.promisedYield,
   };
 
   const fixedYieldVaultParams: FixedYieldVault.FixedYieldVaultParamsStruct = {
-    maturityVaultParams,
-    contractRoles: {
+    maturityVault: maturityVaultParams,
+    roles: {
       owner: tempParams.owner,
       operator: tempParams.operator,
       custodian: tempParams.custodian,
     },
-    windowVaultParams: {
+    windowPlugin: {
       depositWindow: {
         opensAt: tempParams.depositOpensAt,
         closesAt: tempParams.depositClosesAt,
       },
-      matureWindow: {
+      redemptionWindow: {
         opensAt: tempParams.redemptionOpensAt,
         closesAt: tempParams.redemptionClosesAt,
       },
     },
-    kycParams: {
-      kycProvider: tempParams.kycProvider,
-      depositThresholdForWhitelisting: tempParams.depositThresholdForWhitelisting,
+    whiteListPlugin: {
+      whiteListProvider: tempParams.whiteListProvider,
+      depositThresholdForWhiteListing: tempParams.depositThresholdForWhiteListing,
     },
-    maxCapParams: {
+    maxCapPlugin: {
       maxCap: tempParams.maxCap,
     },
+    promisedYield: tempParams.promisedYield,
   };
 
   const upsideVaultParams: UpsideVault.UpsideVaultParamsStruct = {
-    fixedYieldVaultParams,
+    fixedYieldVault: fixedYieldVaultParams,
     cblToken: tempParams.token,
     collateralPercentage: collateralPercentage,
   };
@@ -204,18 +204,18 @@ export async function createVault(
 
   // TODO: this is the problem - the vaultFactory Admin (owner) is needed here
   // but later we call to createVault we should be using the operator
-  const vaultFactoryAsAdmin = CredbullVaultFactory__factory.connect(factoryAddress!, adminSigner);
+  const vaultFactoryAsAdmin = VaultFactory__factory.connect(factoryAddress!, adminSigner);
   const allowTx = await vaultFactoryAsAdmin.allowCustodian(custodian);
   await allowTx.wait();
   console.log(` Allowed Custodian ${custodian} on ${expectedFactoryName} ${factoryAddress}`);
 
-  const kycProvider = addresses.data.find((i: any) => i.contract_name === 'CredbullKYCProvider')?.address;
-  const asset = addresses.data.find((i: any) => i.contract_name === 'MockStablecoin')?.address;
-  const token = addresses.data.find((i: any) => i.contract_name === 'MockToken')?.address;
+  const whiteListProvider = addresses.data.find((i: any) => i.contract_name === 'CredbullWhiteListProvider')?.address;
+  const asset = addresses.data.find((i: any) => i.contract_name === 'SimpleUSDC')?.address;
+  const token = addresses.data.find((i: any) => i.contract_name === 'SimpleToken')?.address;
 
-  const [vaultParams, createVaultParams, tempParams] = createParams(config, {
+  const [, createVaultParams, tempParams] = createParams(config, {
     custodian,
-    kycProvider,
+    whiteListProvider,
     asset,
     token,
     matured: isMatured,

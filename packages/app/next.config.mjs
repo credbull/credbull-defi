@@ -2,9 +2,6 @@
  * @type {import("next").NextConfig}
  */
 const nextConfig = {
-  experimental: {
-    serverActions: true,
-  },
   transpilePackages: ['@credbull/sdk'],
   webpack: (config) => {
     config.externals.push({

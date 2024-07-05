@@ -1,4 +1,4 @@
-import { MockStablecoin__factory } from '@credbull/contracts';
+import { SimpleUSDC__factory } from '@credbull/contracts';
 import { formatUnits } from 'ethers/lib/utils';
 
 import { loadConfiguration } from './utils/config';
@@ -55,7 +55,7 @@ export async function redeemWithUpside(config: any): Promise<void> {
   console.log(' Bob decides to redeem all his Shares=', formatUnits(redeemAmount, await vault.decimals()));
   if (redeemAmount.lte(0)) throw new Error('No Shares to redeem.');
 
-  const mockUsdc = MockStablecoin__factory.connect(asset.address, userBob.signer);
+  const mockUsdc = SimpleUSDC__factory.connect(asset.address, userBob.signer);
   const mintAssetTx = await mockUsdc.mint(vaultData.address, redeemAmount);
   await mintAssetTx.wait();
   console.log(' Bob mints the redeem amount of Asset to the Vault=', displayAsset(redeemAmount));
