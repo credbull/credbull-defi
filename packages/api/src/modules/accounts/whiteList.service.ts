@@ -99,7 +99,7 @@ export class WhiteListService {
     address: string,
   ): Promise<ServiceResponse<boolean>> {
     const errors = [];
-    let status = true;
+    let status = false;
 
     for (const whiteListProvider of whiteListProviders) {
       const provider = await this.getOnChainProvider(whiteListProvider.address);
@@ -109,8 +109,11 @@ export class WhiteListService {
         continue;
       }
 
-      status = status && data;
-      if (!status) break;
+      // If the address is white listed by ANY active WhiteListProvider, it is deemed white listed.
+      if (data) {
+        status = true;
+        break;
+      }
     }
     return errors.length > 0 ? { error: new AggregateError(errors) } : { data: status };
   }
