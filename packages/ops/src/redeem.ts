@@ -53,7 +53,7 @@ export async function redeem(config: any): Promise<void> {
   const mockUsdc = SimpleUSDC__factory.connect(asset.address, userBob.signer);
   const mintTx = await mockUsdc.mint(vault.address, redeemAmount);
   await mintTx.wait();
-  console.log(' Bob mints some USDC, using `MockStableCoin`, to the Vault. Minted=', displayAsset(redeemAmount));
+  console.log(' Bob mints some USDC to the Vault. Minted=', displayAsset(redeemAmount));
   await logBalances();
 
   const approveTx = await vault.approve(vault.address, redeemAmount);
