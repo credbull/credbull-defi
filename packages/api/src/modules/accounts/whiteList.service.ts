@@ -99,7 +99,7 @@ export class WhiteListService {
     address: string,
   ): Promise<ServiceResponse<boolean>> {
     const errors = [];
-    let status = false;
+    let status = true;
 
     for (const whiteListProvider of whiteListProviders) {
       const provider = await this.getOnChainProvider(whiteListProvider.address);
