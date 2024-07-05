@@ -2,7 +2,7 @@
 
 import { Tables } from '@credbull/api';
 import { ERC4626__factory, SimpleToken__factory, SimpleUSDC__factory } from '@credbull/contracts';
-// import { CredbullSDK } from '@credbull/sdk';
+import { CredbullSDK } from '@credbull/sdk';
 import { Button, Card, Flex, Group, NumberInput, SimpleGrid, Text, TextInput } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useClipboard } from '@mantine/hooks';
@@ -10,7 +10,7 @@ import { OpenNotificationParams, useList, useNotification, useOne } from '@refin
 import { useForm } from '@refinedev/mantine';
 import { IconCopy } from '@tabler/icons';
 import { getPublicClient } from '@wagmi/core';
-import { utils } from 'ethers';
+import { Signer, utils } from 'ethers';
 import { useEffect, useState } from 'react';
 import { createWalletClient, http, parseEther } from 'viem';
 import { waitForTransactionReceipt } from 'viem/actions';
@@ -19,6 +19,8 @@ import { foundry } from 'wagmi/chains';
 import { z } from 'zod';
 
 import { BalanceOf } from '@/components/contracts/balance-of';
+
+import { getEthersSigner } from '@/utils/ether-adapters';
 
 import { whitelistAddress } from '@/app/(protected)/dashboard/debug/actions';
 
@@ -350,25 +352,25 @@ const VaultDeposit = ({ erc20Address, mockTokenAddress }: { erc20Address: string
 };
 
 // TODO: unexpected dependency on SDK here - is this required?
-// const LinkWallet = () => {
-//   const { connector } = useAccount();
-//
-//   const link = async () => {
-//     const signer = await getEthersSigner({ chainId: await connector?.getChainId() });
-//     const sdk = new CredbullSDK(
-//       process.env.API_BASE_URL || '',
-//       { accessToken: process.env.NEXT_PUBLIC_ACCESS_TOKEN as string },
-//       signer as Signer,
-//     );
-//     await sdk.linkWallet();
-//   };
-//
-//   return (
-//     <>
-//       <button onClick={link}>Link Wallet</button>
-//     </>
-//   );
-// };
+const LinkWallet = () => {
+  const { connector } = useAccount();
+
+  const link = async () => {
+    const signer = await getEthersSigner({ chainId: await connector?.getChainId() });
+    const sdk = new CredbullSDK(
+      process.env.API_BASE_URL || '',
+      { accessToken: process.env.NEXT_PUBLIC_ACCESS_TOKEN as string },
+      signer as Signer,
+    );
+    await sdk.linkWallet();
+  };
+
+  return (
+    <>
+      <button onClick={link}>Link Wallet</button>
+    </>
+  );
+};
 
 const WhitelistWalletAddress = () => {
   const { open } = useNotification();
@@ -435,7 +437,7 @@ export function Debug(props: { mockTokenAddress: string | undefined }) {
         <SendEth />
         <VaultDeposit erc20Address={erc20Address ?? ''} mockTokenAddress={props.mockTokenAddress ?? ''} />
         <WhitelistWalletAddress />
-        {/*<LinkWallet />*/}
+        <LinkWallet />
       </SimpleGrid>
     </Flex>
   );
