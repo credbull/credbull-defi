@@ -1,4 +1,4 @@
-import { CredbullKYCProvider } from '@credbull/contracts';
+import { CredbullWhiteListProvider } from '@credbull/contracts';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,22 +11,22 @@ import { ConfigurationModule } from '../../utils/module';
 
 import { AccountsController } from './accounts.controller';
 import { AccountsModule } from './accounts.module';
-import { KYCStatus } from './kyc.dto';
-import { KycService } from './kyc.service';
+import { WhiteListStatus } from './whiteList.dto';
+import { WhiteListService } from './whiteList.service';
 
 describe('AccountsController', () => {
   let controller: AccountsController;
   let client: DeepMockProxy<SupabaseClient>;
   let admin: DeepMockProxy<SupabaseClient>;
-  let kyc: DeepMockProxy<CredbullKYCProvider>;
+  let whiteList: DeepMockProxy<CredbullWhiteListProvider>;
   let ethers: DeepMockProxy<EthersService>;
   beforeEach(async () => {
     client = mockDeep<SupabaseClient>();
     admin = mockDeep<SupabaseClient>();
-    kyc = mockDeep<CredbullKYCProvider>();
+    whiteList = mockDeep<CredbullWhiteListProvider>();
     ethers = mockDeep<EthersService>();
 
-    (KycService.prototype as any).getOnChainProvider = vi.fn().mockReturnValue(kyc);
+    (WhiteListService.prototype as any).getOnChainProvider = vi.fn().mockReturnValue(whiteList);
 
     const service = { client: () => client, admin: () => admin };
 
@@ -44,7 +44,7 @@ describe('AccountsController', () => {
     controller = await module.resolve<AccountsController>(AccountsController);
   });
 
-  it('should return pending status if there is no kyc event', async () => {
+  it('should return pending status if there is no white list event', async () => {
     const select = vi.fn();
     const eq = vi.fn();
     const single = vi.fn();
@@ -57,7 +57,7 @@ describe('AccountsController', () => {
 
     const { status } = await controller.status();
 
-    expect(status).toBe(KYCStatus.PENDING);
+    expect(status).toBe(WhiteListStatus.PENDING);
   });
 
   it('should whitelist an existing account', async () => {
@@ -91,13 +91,13 @@ describe('AccountsController', () => {
     admin.from.mockReturnValue({ select, insert } as any);
     ethers.operator.mockResolvedValue({} as any);
 
-    kyc.status.mockResolvedValueOnce(false);
-    kyc.updateStatus.mockResolvedValueOnce({} as any);
+    whiteList.status.mockResolvedValueOnce(false);
+    whiteList.updateStatus.mockResolvedValueOnce({} as any);
 
     const { status } = await controller.whitelist({ user_id, address });
 
     expect(insert.mock.calls[0][0]).toStrictEqual({ address, user_id, event_name: 'accepted' });
-    expect(status).toBe(KYCStatus.ACTIVE);
+    expect(status).toBe(WhiteListStatus.ACTIVE);
   });
 
   it('should verify the signature and link the wallet', async () => {

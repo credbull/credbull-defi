@@ -7,13 +7,13 @@ import { VaultsModule } from '../vaults/vaults.module';
 import { VaultsService } from '../vaults/vaults.service';
 
 import { AccountsController } from './accounts.controller';
-import { KycService } from './kyc.service';
 import { WalletsService } from './wallets.service';
+import { WhiteListService } from './whiteList.service';
 
 @Module({
   imports: [ConfigurationModule, SupabaseModule, EthersModule, VaultsModule],
-  providers: [KycService, WalletsService, VaultsService],
+  providers: [WhiteListService, WalletsService, VaultsService],
   controllers: [AccountsController],
-  exports: [KycService, WalletsService],
+  exports: [WhiteListService, WalletsService],
 })
 export class AccountsModule {}
