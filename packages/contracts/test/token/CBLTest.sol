@@ -12,16 +12,21 @@ contract CBLTest is Test {
     HelperConfig private helperConfig;
     address private alice = makeAddr("alice");
     address private owner;
+    address private minter;
+
+    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
     function setUp() public {
         (cbl, helperConfig) = new DeployCBLToken().runTest();
         owner = helperConfig.getTokenParams().owner;
+        minter = helperConfig.getTokenParams().minter;
     }
 
     function test__CBL__SuccessfullyDeployCBLToken() public {
         uint256 maxSupply = helperConfig.getTokenParams().maxSupply;
-        cbl = new CBL(owner, maxSupply);
-        assertEq(cbl.owner(), owner);
+        cbl = new CBL(owner, minter, maxSupply);
+        assertTrue(cbl.hasRole(cbl.DEFAULT_ADMIN_ROLE(), owner));
+        assertTrue(cbl.hasRole(cbl.MINTER_ROLE(), minter));
         assertEq(cbl.maxSupply(), maxSupply);
     }
 
@@ -39,17 +44,16 @@ contract CBLTest is Test {
     function test__CBL__ShouldAllowOwnerToBurn() public {
         vm.startPrank(owner);
         cbl.mint(owner, 100);
-        cbl.burn(owner, 100);
+        cbl.burn(100);
         vm.stopPrank();
     }
 
-    function test__CBL__ShouldRevertIfNotOwnerBurn() public {
+    function test__CBL__ShouldAllowNonOwnerToBurn() public {
         vm.prank(owner);
         cbl.mint(alice, 100);
 
         vm.prank(alice);
-        vm.expectRevert();
-        cbl.burn(alice, 100);
+        cbl.burn(100);
     }
 
     function test__CBL__ShouldRevertIfTotalSupplyExceedsMaxSupply() public {
