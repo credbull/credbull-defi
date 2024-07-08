@@ -18,59 +18,14 @@ on:
       - ".github/workflows/ci-dev-ops.yml"
 
 jobs:
+  ops-int-test-setup:
+    uses: ./.github/workflows/ci-local-setup.yml
+
   ops-int-test:
     runs-on: ubuntu-latest
     environment: local
-
+    needs: [ops-int-test-setup]
     steps:
-      - name: Checkout credbull-defi
-        uses: actions/checkout@v4
-
-      - name: Install yarn
-        run: |
-          corepack prepare yarn@stable --activate
-          npm install -g yarn
-
-      - name: Install Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "yarn"
-
-      - name: Install foundry-toolchain
-        uses: foundry-rs/foundry-toolchain@v1.2.0
-        with:
-          version: nightly
-
-      - name: Install Project Dependencies
-        run: yarn install
-
-      - name: Setup Local Environment
-        run: find . -type f -name ".env*.sample" -exec sh -c 'F={}; cp -nv $F $(dirname $F)/$(basename $F .sample)' \;
-
-      - name: Build Project
-        run: yarn build
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1.3.0
-        with:
-          version: latest
-
-      - name: Start Supabase
-        run: supabase start
-        working-directory: packages/api
-
-      - name: Run Docker Compose with Background Services
-        run: docker compose --env-file packages/api/.env up --detach --build --wait
-
-      - name: Deploy Credbull Contracts
-        run: yarn deploy
-        working-directory: packages/contracts
-
-      - name: Create Default Users
-        run: yarn op --create-default-users
-        working-directory: packages/ops
-
       - name: Run Ops Integration Tests
         run: yarn int-test
         working-directory: packages/ops
@@ -79,11 +34,6 @@ jobs:
         run: docker logs api
         if: ${{ failure() }}
 
-      - name: Shutdown Docker Compose detached
-        run: docker compose --env-file packages/api/.env down
-        if: ${{ always() }}
-
-      - name: Stop Supabase
-        run: supabase stop --no-backup
-        working-directory: packages/api
-        if: ${{ always() }}
+  ops-int-test-teardown:
+    uses: ./.github/workflows/ci-local-teardown.yml
+    needs: [ops-int-test]
