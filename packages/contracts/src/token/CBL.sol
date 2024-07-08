@@ -16,7 +16,7 @@ contract CBL is ERC20, ERC20Permit, ERC20Burnable, ERC20Pausable, AccessControl 
     uint256 public immutable MAX_SUPPLY;
 
     constructor(address _owner, address _minter, uint256 _maxSupply) ERC20("Credbull", "CBL") ERC20Permit("Credbull") {
-        maxSupply = _maxSupply;
+        MAX_SUPPLY = _maxSupply;
         _grantRole(DEFAULT_ADMIN_ROLE, _owner);
         _grantRole(MINTER_ROLE, _minter);
     }
