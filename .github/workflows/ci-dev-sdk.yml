@@ -49,11 +49,6 @@ jobs:
       - name: Build Project
         run: yarn build
 
-      # - name: Install Docker Compose
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y docker-compose
-
       # TODO: using local supabase for SDK.
       # if we want a deployed instance, we need to set up a new one for the SDK.
       - name: Setup Supabase CLI
@@ -68,7 +63,9 @@ jobs:
       # Docker compose detached (-d) so other jobs can continue
       # Env variables are sourced and then exported (set -a)
       - name: Run Docker Compose with Background Services
-        run: docker compose up --detach --build --wait
+        run: |
+          source packages/api/.env
+          docker compose up --detach --build --wait
 
       - name: Deploy Credbull Contracts
         run: yarn deploy
@@ -83,7 +80,9 @@ jobs:
         working-directory: packages/sdk
 
       - name: Shutdown Docker Compose detached
-        run: docker compose down
+        run: |
+          source packages/api/.env
+          docker compose down
         if: always()
 
       - name: Stop Supabase
