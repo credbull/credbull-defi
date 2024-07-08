@@ -39,14 +39,14 @@ contract DeployMocks is Script {
             testToken = new SimpleToken(totalSupply);
             console2.log("!!!!! Deploying SimpleToken !!!!!");
         } else {
-            testStablecoin = SimpleUSDC(deployChecker.getContractAddress("SimpleUSDC"));
+            testToken = SimpleToken(deployChecker.getContractAddress("SimpleToken"));
         }
 
         if (isTestMode || deployChecker.isDeployRequired("SimpleUSDC")) {
             testStablecoin = new SimpleUSDC(totalSupply);
-            console2.log("!!!!! Deploying SimpleUSDC !!!!!");
+            console2.log("!!!!! Deploying SimpleToken !!!!!");
         } else {
-            testToken = SimpleToken(deployChecker.getContractAddress("SimpleToken"));
+            testStablecoin = SimpleUSDC(deployChecker.getContractAddress("SimpleUSDC"));
         }
 
         if (isTestMode || deployChecker.isDeployRequired("SimpleVault")) {
