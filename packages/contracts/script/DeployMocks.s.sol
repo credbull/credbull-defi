@@ -3,13 +3,15 @@
 pragma solidity ^0.8.19;
 
 import { Script } from "forge-std/Script.sol";
-
-import { MockStablecoin } from "../test/mocks/MockStablecoin.sol";
-import { MockToken } from "../test/mocks/MockToken.sol";
-
 import { console2 } from "forge-std/console2.sol";
+
+import { Vault } from "@credbull/vault/Vault.sol";
+
+import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
+import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
+import { SimpleVault } from "@test/test/vault/SimpleVault.t.sol";
+
 import { DeployedContracts } from "./DeployedContracts.s.sol";
-import { CredbullBaseVaultMock } from "../test/mocks/vaults/CredbullBaseVaultMock.m.sol";
 
 contract DeployMocks is Script {
     bool public isTestMode;
@@ -18,42 +20,48 @@ contract DeployMocks is Script {
 
     uint128 public totalSupply = MAX_UINT128_SIZE;
 
-    CredbullBaseVaultMock internal credbullBaseVaultMock;
+    SimpleVault internal testVault;
 
     constructor(bool _isTestMode, address _custodian) {
         isTestMode = _isTestMode;
         custodian = _custodian;
     }
 
-    function run() public returns (MockToken, MockStablecoin) {
+    function run() public returns (SimpleToken, SimpleUSDC) {
         DeployedContracts deployChecker = new DeployedContracts();
 
-        MockToken mockToken;
-        MockStablecoin mockStablecoin;
+        SimpleToken testToken;
+        SimpleUSDC testStablecoin;
 
         vm.startBroadcast();
 
-        if (isTestMode || deployChecker.isDeployRequired("MockToken")) {
-            mockToken = new MockToken(totalSupply);
-            console2.log("!!!!! Deploying MockToken !!!!!");
+        if (isTestMode || deployChecker.isDeployRequired("SimpleToken")) {
+            testToken = new SimpleToken(totalSupply);
+            console2.log("!!!!! Deploying SimpleToken !!!!!");
         } else {
-            mockStablecoin = MockStablecoin(deployChecker.getContractAddress("MockStablecoin"));
+            testStablecoin = SimpleUSDC(deployChecker.getContractAddress("SimpleUSDC"));
         }
 
-        if (isTestMode || deployChecker.isDeployRequired("MockStablecoin")) {
-            mockStablecoin = new MockStablecoin(totalSupply);
-            console2.log("!!!!! Deploying MockStablecoin !!!!!");
+        if (isTestMode || deployChecker.isDeployRequired("SimpleUSDC")) {
+            testStablecoin = new SimpleUSDC(totalSupply);
+            console2.log("!!!!! Deploying SimpleUSDC !!!!!");
         } else {
-            mockToken = MockToken(deployChecker.getContractAddress("MockStablecoin"));
+            testToken = SimpleToken(deployChecker.getContractAddress("SimpleToken"));
         }
 
-        if (isTestMode || deployChecker.isDeployRequired("CredbullBaseVaultMock")) {
-            credbullBaseVaultMock = new CredbullBaseVaultMock(mockStablecoin, "Mock Vault", "mVault", custodian);
-            console2.log("!!!!! Deploying CredbullBaseVaultMock !!!!!");
+        if (isTestMode || deployChecker.isDeployRequired("SimpleVault")) {
+            Vault.VaultParams memory params = Vault.VaultParams({
+                asset: testStablecoin,
+                shareName: "Simple Vault",
+                shareSymbol: "smpVLT",
+                custodian: custodian
+            });
+            testVault = new SimpleVault(params);
+            console2.log("!!!!! Deploying Simple Vault !!!!!");
         }
 
         vm.stopBroadcast();
 
-        return (mockToken, mockStablecoin);
+        return (testToken, testStablecoin);
     }
 }

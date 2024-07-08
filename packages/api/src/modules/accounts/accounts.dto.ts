@@ -1,17 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
 
-import { KYCStatus } from './kyc.dto';
+import { WhiteListStatus } from './whiteList.dto';
 
 export class AccountStatusDto {
-  @IsEnum(KYCStatus)
+  @IsEnum(WhiteListStatus)
   @ApiProperty({
     example: 'active',
-    description: 'account kyc status',
-    enum: KYCStatus,
-    enumName: 'KYCStatus',
+    description: 'account white list status',
+    enum: WhiteListStatus,
+    enumName: 'WhiteListStatus',
   })
-  status: KYCStatus;
+  status: WhiteListStatus;
 
   constructor(partial: Partial<AccountStatusDto>) {
     Object.assign(this, partial);

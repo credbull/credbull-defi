@@ -15,10 +15,10 @@ import { UserWalletDto } from '../../types/db.dto';
 import { isKnownError } from '../../utils/errors';
 
 import { AccountStatusDto } from './accounts.dto';
-import { KYCStatus, WhitelistAccountDto } from './kyc.dto';
-import { KycService } from './kyc.service';
 import { WalletDto } from './wallets.dto';
 import { WalletsService } from './wallets.service';
+import { WhiteListAccountDto, WhiteListStatus } from './whiteList.dto';
+import { WhiteListService } from './whiteList.service';
 
 @Controller('accounts')
 @ApiBearerAuth()
@@ -26,7 +26,7 @@ import { WalletsService } from './wallets.service';
 @ApiTags('Accounts')
 export class AccountsController {
   constructor(
-    private readonly kyc: KycService,
+    private readonly whiteList: WhiteListService,
     private readonly wallets: WalletsService,
   ) {}
 
@@ -36,7 +36,7 @@ export class AccountsController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 500, description: 'Internal Error' })
   async status(): Promise<AccountStatusDto> {
-    const { data, error } = await this.kyc.status();
+    const { data, error } = await this.whiteList.status();
 
     if (isKnownError(error)) throw new BadRequestException(error);
     if (error) throw new InternalServerErrorException(error);
@@ -51,14 +51,14 @@ export class AccountsController {
   @ApiResponse({ status: 200, description: 'Success', type: AccountStatusDto })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 500, description: 'Internal Error' })
-  async whitelist(@Body() dto: WhitelistAccountDto): Promise<AccountStatusDto> {
-    const { data, error } = await this.kyc.whitelist(dto);
+  async whitelist(@Body() dto: WhiteListAccountDto): Promise<AccountStatusDto> {
+    const { data, error } = await this.whiteList.whitelist(dto);
 
     if (isKnownError(error)) throw new BadRequestException(error);
     if (error) throw new InternalServerErrorException(error);
     if (!data) throw new NotFoundException();
 
-    return new AccountStatusDto({ status: KYCStatus.ACTIVE });
+    return new AccountStatusDto({ status: WhiteListStatus.ACTIVE });
   }
 
   @Post('link-wallet')

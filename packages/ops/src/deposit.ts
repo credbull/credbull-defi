@@ -1,4 +1,4 @@
-import { MockStablecoin__factory } from '@credbull/contracts';
+import { SimpleUSDC__factory } from '@credbull/contracts';
 import { BigNumber } from 'ethers';
 
 import { whitelist } from './utils/admin';
@@ -60,7 +60,7 @@ export async function deposit(config: any) {
   await logBalances();
 
   const depositAmount = BigNumber.from(toDeposit).mul(10 ** (await asset.decimals()));
-  const mockUsdc = MockStablecoin__factory.connect(asset.address, userBob.signer);
+  const mockUsdc = SimpleUSDC__factory.connect(asset.address, userBob.signer);
   const mintTx = await mockUsdc.mint(userBob.address, depositAmount);
   await mintTx.wait();
   console.log(' Bob buys (mints) his deposit amount of USDC=', displayAsset(depositAmount));

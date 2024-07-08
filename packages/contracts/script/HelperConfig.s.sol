@@ -93,8 +93,8 @@ contract HelperConfig is Script {
         return networkConfig;
     }
 
-    /// Create the Factory Parameters instance from configuration.
-    /// @return The active Factory Parameters
+    /// Create the Factory Params instance from configuration.
+    /// @return The active Factory Params
     function createFactoryParamsFromConfig() internal view returns (FactoryParams memory) {
         FactoryParams memory factoryParams = FactoryParams({
             owner: tomlConfig.readAddress(".evm.address.owner"),

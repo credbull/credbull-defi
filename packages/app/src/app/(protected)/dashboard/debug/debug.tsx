@@ -1,13 +1,7 @@
 'use client';
 
 import { Tables } from '@credbull/api';
-import {
-  CredbullBaseVault__factory,
-  ERC4626__factory,
-  FixedYieldVault__factory,
-  MockStablecoin__factory,
-  MockToken__factory,
-} from '@credbull/contracts';
+import { ERC4626__factory, SimpleToken__factory, SimpleUSDC__factory } from '@credbull/contracts';
 import { Button, Card, Flex, Group, NumberInput, SimpleGrid, Text, TextInput } from '@mantine/core';
 import { zodResolver } from '@mantine/form';
 import { useClipboard } from '@mantine/hooks';
@@ -53,7 +47,7 @@ const MintUSDC = ({ erc20Address }: { erc20Address: string }) => {
 
   const { writeAsync } = useContractWrite({
     address: erc20Address as Address,
-    abi: MockStablecoin__factory.abi,
+    abi: SimpleUSDC__factory.abi,
     functionName: 'mint',
     args: [form.values.address as Address, utils.parseUnits((form.values.amount ?? 0).toString(), 'mwei').toBigInt()],
   });
@@ -131,7 +125,7 @@ const MintCToken = ({ erc20Address }: { erc20Address: string }) => {
 
   const { writeAsync } = useContractWrite({
     address: erc20Address as Address,
-    abi: MockToken__factory.abi,
+    abi: SimpleToken__factory.abi,
     functionName: 'mint',
     args: [form.values.address as Address, utils.parseUnits((form.values.amount ?? 0).toString(), 18).toBigInt()],
   });

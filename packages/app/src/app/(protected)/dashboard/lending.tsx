@@ -2,7 +2,7 @@
 
 import { Tables } from '@credbull/api';
 import {
-  CredbullKYCProvider__factory,
+  CredbullWhiteListProvider__factory,
   ERC20__factory,
   ERC4626__factory,
   FixedYieldVault__factory,
@@ -43,7 +43,7 @@ function Vault(props: VaultProps) {
   const { data: client } = useWalletClient();
   const isMatured = props.data.status === 'matured';
 
-  const kycProvider = _.find(props.entities, { type: 'kyc_provider' });
+  const whiteListProvider = _.find(props.entities, { type: 'whitelist_provider' });
   const custodian = _.find(props.entities, { type: 'custodian' });
   const reward = _.find(props.entities, { type: 'activity_reward' });
 
@@ -62,13 +62,13 @@ function Vault(props: VaultProps) {
     enabled: !!props.data.address && !!props.address,
   });
 
-  const { data: kycStatus } = useContractRead({
-    address: kycProvider?.address as Address,
-    abi: CredbullKYCProvider__factory.abi,
+  const { data: whiteListStatus } = useContractRead({
+    address: whiteListProvider?.address as Address,
+    abi: CredbullWhiteListProvider__factory.abi,
     functionName: 'status',
     watch: true,
     args: [props.address as Address],
-    enabled: !!kycProvider?.address && !!props.address,
+    enabled: !!whiteListProvider?.address && !!props.address,
   });
 
   const { data: vaultTotalAssets } = useContractRead({
@@ -299,10 +299,10 @@ function Vault(props: VaultProps) {
 
       <Group position="apart" mt="md" mb="xs">
         <Text size="sm" color="gray">
-          Your KYC Status
+          Your White List Status
         </Text>
         <Text size="sm" color="gray">
-          {kycStatus ? 'Active' : 'Inactive'}
+          {whiteListStatus ? 'Active' : 'Inactive'}
         </Text>
       </Group>
 
