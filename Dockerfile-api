@@ -23,4 +23,5 @@ COPY yarn.lock /app
 WORKDIR /app/api
 EXPOSE 3001
 
-CMD [ "yarn", "run", "start:prod" ]
+# CMD [ "yarn", "run", "start:prod" ]
+CMD [ "node", "dist/src/main" ]

@@ -63,9 +63,7 @@ jobs:
       # Docker compose detached (-d) so other jobs can continue
       # Env variables are sourced and then exported (set -a)
       - name: Run Docker Compose with Background Services
-        run: |
-          source packages/api/.env
-          docker compose up --detach --build --wait
+        run: docker compose --env-file packages/api/.env up --detach --build --wait
 
       - name: Deploy Credbull Contracts
         run: yarn deploy
@@ -75,17 +73,15 @@ jobs:
         run: yarn op --create-default-users
         working-directory: packages/ops
 
-      - name: See API Logs
-        run: docker logs api --tail all
-
       - name: Run SDK Integration Tests
         run: yarn int-test
         working-directory: packages/sdk
 
+      - name: See API Logs
+        run: docker logs api
+
       - name: Shutdown Docker Compose detached
-        run: |
-          source packages/api/.env
-          docker compose down
+        run: docker compose --env-file packages/api/.env down
         if: always()
 
       - name: Stop Supabase
