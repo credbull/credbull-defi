@@ -13,7 +13,7 @@ contract CBL is ERC20, ERC20Permit, ERC20Burnable, ERC20Pausable, AccessControl 
 
     error CBL__MaxSupplyExceeded();
 
-    uint256 public maxSupply;
+    uint256 public immutable maxSupply;
 
     constructor(address _owner, address _minter, uint256 _maxSupply) ERC20("Credbull", "CBL") ERC20Permit("Credbull") {
         maxSupply = _maxSupply;
