@@ -2,22 +2,18 @@
 
 pragma solidity ^0.8.19;
 
-import { Script } from "forge-std/Script.sol";
 import { stdToml } from "forge-std/StdToml.sol";
-import { console2 } from "forge-std/console2.sol";
-
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import { DeployMocks } from "./DeployMocks.s.sol";
+import { TomlConfig } from "./TomlConfig.s.sol";
 
 struct FactoryParams {
     address owner;
     address operator;
     address custodian;
-    uint256 collateralPercentage; // TODO - is this required or can we remove it?
 }
 
-// TODO - add other contract addresses here, including USDC
 struct NetworkConfig {
     FactoryParams factoryParams;
     IERC20 usdcToken;
@@ -27,7 +23,7 @@ struct NetworkConfig {
 /// @title Helper to centralize any chain-specific config and code into one place
 /// Each chain has different addresses for contracts such as USDC and (Gnosis) Safe
 /// This is the only place in the contract code that knows about different chains and environment settings
-contract HelperConfig is Script {
+contract HelperConfig is TomlConfig {
     using stdToml for string;
 
     NetworkConfig private activeNetworkConfig;
@@ -56,13 +52,6 @@ contract HelperConfig is Script {
         return activeNetworkConfig;
     }
 
-    function loadTomlConfiguration() internal view returns (string memory) {
-        string memory environment = vm.envString("ENVIRONMENT");
-        string memory path = string.concat(vm.projectRoot(), "/resource/", environment, ".toml");
-        console2.log(string.concat("Loading toml configuration from: ", path));
-        return vm.readFile(path);
-    }
-
     /// Creates the active Network Config, or returns it if already created.
     /// @return The active Network Config
     function createNetworkConfig() internal returns (NetworkConfig memory) {
@@ -88,8 +77,7 @@ contract HelperConfig is Script {
         FactoryParams memory factoryParams = FactoryParams({
             owner: tomlConfig.readAddress(".evm.address.owner"),
             operator: tomlConfig.readAddress(".evm.address.operator"),
-            custodian: tomlConfig.readAddress(".evm.address.custodian"),
-            collateralPercentage: tomlConfig.readUint(".evm.contracts.upside_vault.collateral_percentage")
+            custodian: tomlConfig.readAddress(".evm.address.custodian")
         });
 
         return factoryParams;
