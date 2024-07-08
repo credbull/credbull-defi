@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.19;
 
-import { Script } from "forge-std/Script.sol";
 import { stdToml } from "forge-std/StdToml.sol";
 
 import { CBL } from "../src/token/CBL.sol";

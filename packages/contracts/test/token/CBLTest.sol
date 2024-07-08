@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
 import { CBL } from "../../src/token/CBL.sol";
-import { HelperConfig } from "../../script/HelperConfig.s.sol";
 import { DeployCBLToken, CBLTokenParams } from "../../script/DeployCBLToken.s.sol";
 
 contract CBLTest is Test {

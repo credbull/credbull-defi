@@ -2,10 +2,7 @@
 
 pragma solidity ^0.8.19;
 
-import { Script } from "forge-std/Script.sol";
 import { stdToml } from "forge-std/StdToml.sol";
-import { console2 } from "forge-std/console2.sol";
-
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import { DeployMocks } from "./DeployMocks.s.sol";
