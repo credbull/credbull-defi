@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import { Vault } from "@credbull/vault/Vault.sol";
 import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";

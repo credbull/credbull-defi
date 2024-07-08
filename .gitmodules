@@ -1,60 +1,6 @@
-[submodule "packages/vault-services/lib/safe-contracts-1.3.0"]
-	path = spikes/spike-vault-services/lib/safe-contracts-1.3.0
-	url = https://github.com/gnosis/safe-contracts/
-[submodule "packages/vault-services/lib/safe-modules-master"]
-	path = spikes/spike-vault-services/lib/safe-modules-master
-	url = https://github.com/safe-global/safe-modules.git
-[submodule "packages/foundry/lib/forge-std"]
-	path = packages/foundry/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "packages/foundry/lib/openzeppelin-contracts"]
-	path = packages/foundry/lib/openzeppelin-contracts
-	url = https://github.com/openzeppelin/openzeppelin-contracts
-[submodule "packages/foundry/lib/solidity-bytes-utils"]
-	path = packages/foundry/lib/solidity-bytes-utils
-	url = https://github.com/GNSPS/solidity-bytes-utils
-[submodule "packages/spike-timelock/lib/forge-std"]
-	path = spikes/spike-timelock/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "packages/spike-timelock/lib/openzeppelin-contracts"]
-	path = spikes/spike-timelock/lib/openzeppelin-contracts
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts
-[submodule "packages/spike-timelock/lib/zodiac"]
-	path = spikes/spike-timelock/lib/zodiac
-	url = https://github.com/gnosis/zodiac
-[submodule "packages/spike-timelock/lib/safe-contracts"]
-	path = spikes/spike-timelock/lib/safe-contracts
-	url = https://github.com/gnosis/safe-contracts
-[submodule "packages/spike-timelock/lib/openzeppelin-contracts-upgradeable"]
-	path = spikes/spike-timelock/lib/openzeppelin-contracts-upgradeable
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
-[submodule "packages/spike-granular-roles/lib/forge-std"]
-	path = spikes/spike-granular-roles/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "packages/spike-granular-roles/lib/openzeppelin-contracts"]
-	path = spikes/spike-granular-roles/lib/openzeppelin-contracts
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts
-[submodule "packages/spike-granular-roles/lib/zodiac"]
-	path = spikes/spike-granular-roles/lib/zodiac
-	url = https://github.com/gnosis/zodiac
-[submodule "packages/spike-granular-roles/lib/safe-contracts"]
-	path = spikes/spike-granular-roles/lib/safe-contracts
-	url = https://github.com/gnosis/safe-contracts
-[submodule "packages/spike-granular-roles/lib/openzeppelin-contracts-upgradeable"]
-	path = spikes/spike-granular-roles/lib/openzeppelin-contracts-upgradeable
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
-[submodule "packages/spike-granular-roles/lib/zodiac-modifier-roles"]
-	path = spikes/spike-granular-roles/lib/zodiac-modifier-roles
-	url = https://github.com/gnosis/zodiac-modifier-roles
-[submodule "packages/vault-services/lib/safe-contracts-1.4.1"]
-	path = packages/vault-services/lib/safe-contracts-1.4.1
-	url = https://github.com/gnosis/safe-contracts/
 [submodule "packages/contracts/lib/forge-std"]
 	path = packages/contracts/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
 [submodule "packages/contracts/lib/openzeppelin-contracts"]
 	path = packages/contracts/lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
-[submodule "spikes/spike-keystore/lib/forge-std"]
-	path = spikes/spike-keystore/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
