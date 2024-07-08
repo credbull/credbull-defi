@@ -17,9 +17,11 @@ contract CBLTest is Test {
 
     function setUp() public {
         deployCBLToken = new DeployCBLToken();
+
         cblTokenParams = deployCBLToken.getCBLTokenParams();
         owner = cblTokenParams.owner;
         minter = cblTokenParams.minter;
+
         cbl = deployCBLToken.runTest();
     }
 
@@ -27,7 +29,7 @@ contract CBLTest is Test {
         cbl = new CBL(cblTokenParams.owner, cblTokenParams.minter, cblTokenParams.maxSupply);
         assertTrue(cbl.hasRole(cbl.DEFAULT_ADMIN_ROLE(), cblTokenParams.owner));
         assertTrue(cbl.hasRole(cbl.MINTER_ROLE(), cblTokenParams.minter));
-        assertEq(cbl.maxSupply(), cblTokenParams.maxSupply);
+        assertEq(cbl.MAX_SUPPLY(), cblTokenParams.maxSupply);
     }
 
     function test__CBL__ShouldAllowMinterToMint() public {
@@ -58,7 +60,7 @@ contract CBLTest is Test {
 
     function test__CBL__ShouldRevertIfTotalSupplyExceedsMaxSupply() public {
         vm.startPrank(minter);
-        cbl.mint(minter, cbl.maxSupply());
+        cbl.mint(minter, cbl.MAX_SUPPLY());
 
         vm.expectRevert(CBL.CBL__MaxSupplyExceeded.selector);
         cbl.mint(minter, 1);
