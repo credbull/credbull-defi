@@ -24,8 +24,9 @@ struct NetworkConfig {
     IERC20 cblToken;
 }
 
-struct TokenParams {
+struct CBLTokenParams {
     address owner;
+    address minter;
     uint256 maxSupply;
 }
 
@@ -63,8 +64,8 @@ contract HelperConfig is Script {
         return activeNetworkConfig;
     }
 
-    function getTokenParams() public view returns (TokenParams memory) {
-        return createTokenParamsFromConfig();
+    function getTokenParams() public view returns (CBLTokenParams memory) {
+        return createCBLTokenParamsFromConfig();
     }
 
     function loadTomlConfiguration() internal view returns (string memory) {
@@ -106,10 +107,11 @@ contract HelperConfig is Script {
         return factoryParams;
     }
 
-    function createTokenParamsFromConfig() internal view returns (TokenParams memory) {
-        TokenParams memory tokenParams = TokenParams({
-            owner: tomlConfig.readAddress(".evm.address.owner"),
-            maxSupply: vm.parseUint(tomlConfig.readString(".evm.contracts.token.cbl.max_supply")) * PRECISION
+    function createCBLTokenParamsFromConfig() internal view returns (CBLTokenParams memory) {
+        CBLTokenParams memory tokenParams = CBLTokenParams({
+            owner: tomlConfig.readAddress(".evm.contracts.cbl.owner"),
+            minter: tomlConfig.readAddress(".evm.contracts.cbl.minter"),
+            maxSupply: vm.parseUint(tomlConfig.readString(".evm.contracts.cbl.max_supply")) * PRECISION
         });
 
         return tokenParams;
