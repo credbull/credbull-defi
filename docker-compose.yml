@@ -25,26 +25,3 @@ services:
       SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
       CRON_SECRET: ${CRON_SECRET}
       SLACK_TOKEN: ${SLACK_TOKEN}
-
-  #   depends_on:
-  #     - supabase
-
-  # supabase:
-  #   container_name: supabase
-  #   image: public.ecr.aws/supabase/postgres:15.1.1.9
-  #   ports:
-  #     - 5432:5432
-  #   environment:
-  #     POSTGRES_PASSWORD: postgres
-  #     POSTGRES_USER: postgres
-
-  # supabase-kong:
-  #   container_name: supabase-kong
-  #   image: public.ecr.aws/supabase/kong:2.8.1
-  #   ports:
-  #     - 54321:8000
-  #   environment:
-  #     POSTGRES_PASSWORD: postgres
-  #     POSTGRES_USER: postgres
-
-# docker build -f Dockerfile -t imagename ../..
