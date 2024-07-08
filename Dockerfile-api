@@ -14,14 +14,12 @@ WORKDIR /app
 ENV NODE_ENV="production"
 ENV APP_PORT=3001
 
-# Copy built application
+# Copy already-built application.
 COPY packages/contracts /app/contracts
 COPY packages/api /app/api
 COPY yarn.lock /app
 
-# Start the server by default, this can be overwritten at runtime
 WORKDIR /app/api
 EXPOSE 3001
 
-# CMD [ "yarn", "run", "start:prod" ]
 CMD [ "node", "dist/src/main" ]
