@@ -1,9 +1,9 @@
 # syntax = docker/dockerfile:1
 
 # Adjust NODE_VERSION as desired
-ARG NODE_VERSION=20.11.0
+ARG NODE_VERSION=20.15.0
 
-FROM node:${NODE_VERSION}-slim as base
+FROM node:${NODE_VERSION}-slim AS base
 
 LABEL fly_launch_runtime="NestJS"
 
@@ -14,21 +14,12 @@ WORKDIR /app
 ENV NODE_ENV="production"
 ENV APP_PORT=3001
 
-
-
-# Copy built application
+# Copy already-built application.
 COPY packages/contracts /app/contracts
 COPY packages/api /app/api
 COPY yarn.lock /app
 
-# Start the server by default, this can be overwritten at runtime
-
-WORKDIR /app
-RUN yarn install
-
 WORKDIR /app/api
-RUN yarn build
 EXPOSE 3001
 
-
-CMD [ "yarn", "run", "start:prod" ]
+CMD [ "node", "dist/src/main" ]

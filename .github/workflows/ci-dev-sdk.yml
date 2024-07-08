@@ -10,7 +10,6 @@ on:
     branches:
       - "main*"
       - "development*"
-      - "ops*"
     paths:
       - "packages/sdk/**"
       - ".github/workflows/ci-dev-sdk.yml"
@@ -18,10 +17,10 @@ on:
 jobs:
   sdk-int-test:
     runs-on: ubuntu-latest
-    environment: testnet
+    environment: local
 
     steps:
-      - name: Checkout
+      - name: Checkout credbull-defi
         uses: actions/checkout@v4
 
       - name: Install yarn
@@ -43,26 +42,12 @@ jobs:
       - name: Install Project Dependencies
         run: yarn install
 
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
       - name: Setup Local Environment
         run: find . -type f -name ".env*.sample" -exec sh -c 'F={}; cp -nv $F $(dirname $F)/$(basename $F .sample)' \;
-        working-directory: .
 
-      # Docker compose detached (-d) so other jobs can continue
-      # Env variables are sourced and then exported (set -a)
-      - name: Run Docker compose detached
-        run: |
-          set -a
-          source packages/api/.env
-          set +a
-          docker-compose up -d --build
+      - name: Build Project
+        run: yarn build
 
-      # TODO: using local supabase for SDK.
-      # if we want a deployed instance, we need to set up a new one for the SDK.
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1.3.0
         with:
@@ -72,6 +57,9 @@ jobs:
         run: supabase start
         working-directory: packages/api
 
+      - name: Run Docker Compose with Background Services
+        run: docker compose --env-file packages/api/.env up --detach --build --wait
+
       - name: Deploy Credbull Contracts
         run: yarn deploy
         working-directory: packages/contracts
@@ -80,19 +68,19 @@ jobs:
         run: yarn op --create-default-users
         working-directory: packages/ops
 
-      - name: Logs
-        run: docker logs api --tail all
-
-      - name: Run SDK tests
-        run: |
-          set -a
-          source ../api/.env
-          source .env
-          set +a
-          yarn int-test
+      - name: Run SDK Integration Tests
+        run: yarn int-test
         working-directory: packages/sdk
 
-      - name: Clean vault data
-        run: yarn op --clean-vault-table
-        working-directory: packages/ops
+      - name: See API Logs, If Tests Failed
+        run: docker logs api
+        if: ${{ failure() }}
 
+      - name: Shutdown Docker Compose detached
+        run: docker compose --env-file packages/api/.env down
+        if: ${{ always() }}
+
+      - name: Stop Supabase
+        run: supabase stop --no-backup
+        working-directory: packages/api
+        if: ${{ always() }}
