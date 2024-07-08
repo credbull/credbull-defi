@@ -13,11 +13,13 @@ contract CBLTest is Test {
 
     address private alice = makeAddr("alice");
     address private owner;
+    address private minter;
 
     function setUp() public {
         deployCBLToken = new DeployCBLToken();
         cblTokenParams = deployCBLToken.getCBLTokenParams();
         owner = cblTokenParams.owner;
+        minter = cblTokenParams.minter;
         cbl = deployCBLToken.runTest();
     }
 
@@ -28,26 +30,26 @@ contract CBLTest is Test {
         assertEq(cbl.maxSupply(), cblTokenParams.maxSupply);
     }
 
-    function test__CBL__ShouldAllowOwnerToMint() public {
-        vm.prank(owner);
+    function test__CBL__ShouldAllowMinterToMint() public {
+        vm.prank(minter);
         cbl.mint(alice, 100);
     }
 
-    function test__CBL__ShouldRevertIfNotOwnerMint() public {
+    function test__CBL__ShouldRevertIfNotMinterMint() public {
         vm.prank(alice);
         vm.expectRevert();
         cbl.mint(alice, 100);
     }
 
-    function test__CBL__ShouldAllowOwnerToBurn() public {
-        vm.startPrank(owner);
-        cbl.mint(owner, 100);
+    function test__CBL__ShouldAllowMinterToBurn() public {
+        vm.startPrank(minter);
+        cbl.mint(minter, 100);
         cbl.burn(100);
         vm.stopPrank();
     }
 
-    function test__CBL__ShouldAllowNonOwnerToBurn() public {
-        vm.prank(owner);
+    function test__CBL__ShouldAllowUserToBurn() public {
+        vm.prank(minter);
         cbl.mint(alice, 100);
 
         vm.prank(alice);
@@ -55,17 +57,17 @@ contract CBLTest is Test {
     }
 
     function test__CBL__ShouldRevertIfTotalSupplyExceedsMaxSupply() public {
-        vm.startPrank(owner);
-        cbl.mint(owner, cbl.maxSupply());
+        vm.startPrank(minter);
+        cbl.mint(minter, cbl.maxSupply());
 
         vm.expectRevert(CBL.CBL__MaxSupplyExceeded.selector);
-        cbl.mint(owner, 1);
+        cbl.mint(minter, 1);
         vm.stopPrank();
     }
 
     function test__CBL__ShouldReturnCorrectTotalSupply() public {
-        vm.prank(owner);
-        cbl.mint(owner, 100);
+        vm.prank(minter);
+        cbl.mint(minter, 100);
         assertEq(cbl.totalSupply(), 100);
     }
 }
