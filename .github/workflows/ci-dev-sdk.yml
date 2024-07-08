@@ -75,6 +75,9 @@ jobs:
         run: yarn op --create-default-users
         working-directory: packages/ops
 
+      - name: See API Logs
+        run: docker logs api --tail all
+
       - name: Run SDK Integration Tests
         run: yarn int-test
         working-directory: packages/sdk
