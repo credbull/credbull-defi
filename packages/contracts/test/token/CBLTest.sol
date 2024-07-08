@@ -5,29 +5,28 @@ pragma solidity ^0.8.19;
 import { Test } from "forge-std/Test.sol";
 import { CBL } from "../../src/token/CBL.sol";
 import { HelperConfig } from "../../script/HelperConfig.s.sol";
-import { DeployCBLToken } from "../../script/DeployCBLToken.s.sol";
+import { DeployCBLToken, CBLTokenParams } from "../../script/DeployCBLToken.s.sol";
 
 contract CBLTest is Test {
     CBL private cbl;
-    HelperConfig private helperConfig;
+    DeployCBLToken private deployCBLToken;
+    CBLTokenParams private cblTokenParams;
+
     address private alice = makeAddr("alice");
     address private owner;
-    address private minter;
-
-    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
     function setUp() public {
-        (cbl, helperConfig) = new DeployCBLToken().runTest();
-        owner = helperConfig.getTokenParams().owner;
-        minter = helperConfig.getTokenParams().minter;
+        deployCBLToken = new DeployCBLToken();
+        cblTokenParams = deployCBLToken.getCBLTokenParams();
+        owner = cblTokenParams.owner;
+        cbl = deployCBLToken.runTest();
     }
 
     function test__CBL__SuccessfullyDeployCBLToken() public {
-        uint256 maxSupply = helperConfig.getTokenParams().maxSupply;
-        cbl = new CBL(owner, minter, maxSupply);
-        assertTrue(cbl.hasRole(cbl.DEFAULT_ADMIN_ROLE(), owner));
-        assertTrue(cbl.hasRole(cbl.MINTER_ROLE(), minter));
-        assertEq(cbl.maxSupply(), maxSupply);
+        cbl = new CBL(cblTokenParams.owner, cblTokenParams.minter, cblTokenParams.maxSupply);
+        assertTrue(cbl.hasRole(cbl.DEFAULT_ADMIN_ROLE(), cblTokenParams.owner));
+        assertTrue(cbl.hasRole(cbl.MINTER_ROLE(), cblTokenParams.minter));
+        assertEq(cbl.maxSupply(), cblTokenParams.maxSupply);
     }
 
     function test__CBL__ShouldAllowOwnerToMint() public {
