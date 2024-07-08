@@ -9,31 +9,24 @@ import { console2 } from "forge-std/console2.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import { DeployMocks } from "./DeployMocks.s.sol";
+import { TomlConfig } from "./TomlConfig.s.sol";
 
 struct FactoryParams {
     address owner;
     address operator;
     address custodian;
-    uint256 collateralPercentage; // TODO - is this required or can we remove it?
 }
 
-// TODO - add other contract addresses here, including USDC
 struct NetworkConfig {
     FactoryParams factoryParams;
     IERC20 usdcToken;
     IERC20 cblToken;
 }
 
-struct CBLTokenParams {
-    address owner;
-    address minter;
-    uint256 maxSupply;
-}
-
 /// @title Helper to centralize any chain-specific config and code into one place
 /// Each chain has different addresses for contracts such as USDC and (Gnosis) Safe
 /// This is the only place in the contract code that knows about different chains and environment settings
-contract HelperConfig is Script {
+contract HelperConfig is TomlConfig {
     using stdToml for string;
 
     NetworkConfig private activeNetworkConfig;
@@ -41,8 +34,6 @@ contract HelperConfig is Script {
     string private tomlConfig;
 
     bool private testMode = false;
-
-    uint256 private constant PRECISION = 1e18;
 
     constructor(bool _test) {
         testMode = _test;
@@ -62,17 +53,6 @@ contract HelperConfig is Script {
 
     function getNetworkConfig() public view returns (NetworkConfig memory) {
         return activeNetworkConfig;
-    }
-
-    function getTokenParams() public view returns (CBLTokenParams memory) {
-        return createCBLTokenParamsFromConfig();
-    }
-
-    function loadTomlConfiguration() internal view returns (string memory) {
-        string memory environment = vm.envString("ENVIRONMENT");
-        string memory path = string.concat(vm.projectRoot(), "/resource/", environment, ".toml");
-        console2.log(string.concat("Loading toml configuration from: ", path));
-        return vm.readFile(path);
     }
 
     /// Creates the active Network Config, or returns it if already created.
@@ -100,20 +80,9 @@ contract HelperConfig is Script {
         FactoryParams memory factoryParams = FactoryParams({
             owner: tomlConfig.readAddress(".evm.address.owner"),
             operator: tomlConfig.readAddress(".evm.address.operator"),
-            custodian: tomlConfig.readAddress(".evm.address.custodian"),
-            collateralPercentage: tomlConfig.readUint(".evm.contracts.upside_vault.collateral_percentage")
+            custodian: tomlConfig.readAddress(".evm.address.custodian")
         });
 
         return factoryParams;
-    }
-
-    function createCBLTokenParamsFromConfig() internal view returns (CBLTokenParams memory) {
-        CBLTokenParams memory tokenParams = CBLTokenParams({
-            owner: tomlConfig.readAddress(".evm.contracts.cbl.owner"),
-            minter: tomlConfig.readAddress(".evm.contracts.cbl.minter"),
-            maxSupply: vm.parseUint(tomlConfig.readString(".evm.contracts.cbl.max_supply")) * PRECISION
-        });
-
-        return tokenParams;
     }
 }
