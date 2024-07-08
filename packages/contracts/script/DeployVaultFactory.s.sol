@@ -10,7 +10,6 @@ import { HelperConfig, NetworkConfig } from "@script/HelperConfig.s.sol";
 import { CredbullFixedYieldVaultFactory } from "@credbull/CredbullFixedYieldVaultFactory.sol";
 import { CredbullUpsideVaultFactory } from "@credbull/CredbullUpsideVaultFactory.sol";
 import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
-import { CredbullFixedYieldVault } from "@credbull/CredbullFixedYieldVault.sol";
 
 import { DeployedContracts } from "./DeployedContracts.s.sol";
 
