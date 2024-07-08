@@ -30,7 +30,7 @@ contract CBL is ERC20, ERC20Permit, ERC20Burnable, ERC20Pausable, AccessControl 
     }
 
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
-        if (totalSupply() + amount > maxSupply) {
+        if (totalSupply() + amount > MAX_SUPPLY) {
             revert CBL__MaxSupplyExceeded();
         }
         _mint(to, amount);
