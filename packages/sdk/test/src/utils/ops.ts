@@ -4,13 +4,13 @@ import { Schema } from './schema';
 
 export async function createFixedYieldVault(
   config: any,
-  treasuryAddress: string,
-  activityRewardAddress: string,
-  collateralPercentage: number,
+  treasuryAddress?: string,
+  activityRewardAddress?: string,
+  collateralPercentage?: number,
 ): Promise<any> {
-  Schema.ADDRESS.parse(treasuryAddress);
-  Schema.ADDRESS.parse(activityRewardAddress);
-  Schema.PERCENTAGE.parse(collateralPercentage);
+  Schema.ADDRESS.optional().parse(treasuryAddress);
+  Schema.ADDRESS.optional().parse(activityRewardAddress);
+  Schema.PERCENTAGE.optional().parse(collateralPercentage);
 
   const modifiedConfig = {
     ...config,
@@ -18,15 +18,15 @@ export async function createFixedYieldVault(
       ...config.evm,
       address: {
         ...config.evm.address,
-        treasury: treasuryAddress,
-        activity_reward: activityRewardAddress,
+        ...(treasuryAddress ? { treasury: treasuryAddress } : {}),
+        ...(activityRewardAddress ? { activity_reward: activityRewardAddress } : {}),
       },
     },
     operation: {
       ...config.operation,
       createVault: {
         ...config.operation.createVault,
-        collateral_percentage: collateralPercentage,
+        ...(collateralPercentage ? { collateral_percentage: collateralPercentage } : {}),
       },
     },
   };
