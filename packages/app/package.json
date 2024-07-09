@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "clean": "rm -rf .next",
+    "clean": "rm -rf .next next-env.d.ts",
     "dev": "next dev",
     "build": "next build",
     "build:ci": "yarn build",
