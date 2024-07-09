@@ -5,7 +5,7 @@
   "scripts": {
     "clean": "rm -rf .next next-env.d.ts",
     "dev": "next dev",
-    "build": "next build --debug",
+    "build": "next build",
     "build:ci": "yarn build",
     "start": "next start",
     "test": "vitest --run",
