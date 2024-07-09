@@ -70,6 +70,13 @@ jobs:
       - name: Build Project Artifacts
         run: |
           env -0|sort -z|tr '\0' '\n'
+          cat >.env.local <<EOS
+          API_BASE_URL: http://localhost:3001
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.TEST_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.TEST_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: ${{ vars.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID }}
+          EOS
           vercel build --debug --cwd ../.. --token=${{ secrets.VERCEL_TOKEN }}
         env:
           API_BASE_URL: http://localhost:3001
