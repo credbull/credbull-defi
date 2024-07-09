@@ -15,14 +15,6 @@ List jobs, with optional "--container-architecture" flag for Mac m chips
 act --list --container-architecture linux/amd64
 ```
 
-### Run check-env sample jobs
-
-Run all jobs in ci-check-env.yml. Pass in an .env file as Environment variables and Secrets
-
-```bash
-act -W .github/workflows/ci-check-env.yml --var-file packages/contracts/.env --secret-file packages/contracts/.secret --container-architecture linux/amd64
-```
-
 ### Run Contracts jobs
 
 Runs the contracts job - only the Env should be an .env (configs are in .toml) - local secrets are in .env
@@ -37,6 +29,14 @@ Runs the api job - only the Env should be an .env (configs are in .toml) - local
 
 ```bash
 act -W .github/workflows/ci-dev-api.yml --var ENVIRONMENT=local --secret-file packages/api/.env --container-architecture linux/amd64
+```
+
+### Run APP jobs
+
+Runs the app job - only the Env should be an .env (configs are in .toml) - local secrets are in .env
+
+```bash
+act -W .github/workflows/ci-dev-app.yml  --var-file packages/app/.env.local --secret-file packages/app/.env.local --container-architecture linux/amd64
 ```
 
 ### Run Ops jobs

@@ -1,4 +1,4 @@
 {
   "buildCommand": "turbo run build:ci",
-  "outputDirectory": "packages/app/.next"
+  "outputDirectory": ".next"
 }
