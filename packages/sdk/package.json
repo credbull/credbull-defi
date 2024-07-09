@@ -7,6 +7,7 @@
     "clean": "tsc --build --clean && rm -rf playwright-report test-results",
     "dev": "tsc --build --watch",
     "build": "tsc --build",
+    "build:ci": "yarn build",
     "int-test": "playwright test",
     "format": "prettier . --write",
     "lint": "eslint --fix --ignore-path .gitignore",

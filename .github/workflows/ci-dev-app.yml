@@ -46,10 +46,6 @@ jobs:
         run: yarn install
         working-directory: .
 
-      - name: Build the `sdk`
-        run: yarn build
-        working-directory: packages/sdk
-
       - name: Run app Tests
         run: yarn run test
         env:

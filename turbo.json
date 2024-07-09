@@ -10,15 +10,12 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", "types/**", "out/**"]
     },
     "build:ci": {
-      "dependsOn": ["^build:ci"]
+      "dependsOn": ["^build:ci"],
+      "outputs": ["dist/**"]
     },
     "app#build:ci": {
       "dependsOn": ["^build:ci"],
       "outputs": [".next/**", "!.next/cache/**"]
-    },
-    "api#build:ci": {
-      "dependsOn": ["^build:ci"],
-      "outputs": ["dist/**"]
     },
     "test": {
       "dependsOn": ["^test"]
