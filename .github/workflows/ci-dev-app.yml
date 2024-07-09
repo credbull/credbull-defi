@@ -42,12 +42,11 @@ jobs:
         with:
           version: nightly
 
-      - name: Install Project dependencies and Build
-        run: |
-          yarn install
-          yarn build
+      - name: Install Project dependencies
+        run: yarn install
+        working-directory: .
 
-      - name: Run Tests
+      - name: Run app Tests
         run: yarn run test
         env:
           API_BASE_URL: http://localhost:3001
@@ -63,11 +62,16 @@ jobs:
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=preview --cwd ../.. --token=${{ secrets.VERCEL_TOKEN }}
 
+        # NOTE (JL,2024-07-09): We create a `.env.local` file on the fly, to get the server-side Env Variables past
+        #   the `vercel build` invocation.
       - name: Build Project Artifacts
-        run: vercel build --cwd ../.. --token=${{ secrets.VERCEL_TOKEN }}
-        env:
+        run: |
+          cat >.env.local <<EOS
           API_BASE_URL: http://localhost:3001
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+          EOS
+          vercel build --cwd ../.. --token=${{ secrets.VERCEL_TOKEN }}
+        env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.TEST_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.TEST_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: ${{ vars.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID }}
