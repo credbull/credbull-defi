@@ -17,17 +17,12 @@
       "dependsOn": ["^build:ci"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
-    "test": {
-      "dependsOn": ["^test"]
-    },
-    "int-test": {
-      "dependsOn": ["^int-test"]
-    },
-    "format": {
-      "dependsOn": ["^format"]
-    },
-    "lint": {
-      "dependsOn": ["^lint"]
+    "test": {},
+    "int-test": {},
+    "format": {},
+    "lint": {},
+    "dev": {
+      "cache": false
     }
   }
 }
