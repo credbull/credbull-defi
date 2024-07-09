@@ -51,9 +51,6 @@ jobs:
         run: yarn build
         working-directory: packages/sdk
 
-      - name: Build everything else.
-        run: yarn build
-
       - name: Run Tests
         run: yarn run test
         env:
