@@ -9,6 +9,7 @@
   "scripts": {
     "migrate:pull": "supabase db pull && supabase gen types typescript --linked --schema public > src/types/supabase.ts && yarn format",
     "migrate:local": "supabase migration up —local",
+    "clean": "rm -rf dist",
     "dev": "nest start --watch",
     "build": "nest build",
     "build:ci": "yarn build",

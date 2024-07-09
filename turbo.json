@@ -1,20 +1,32 @@
 {
-  "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
-    "build": {},
+  "tasks": {
+    "clean": {
+      "dependsOn": ["^clean"],
+      "cache": false
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "types/**", "out/**"]
+    },
     "build:ci": {
       "dependsOn": ["^build:ci"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "types/**", "out/**"]
     },
     "api#build:ci": {
       "dependsOn": ["^build:ci"],
       "outputs": ["dist/**"]
     },
-    "test": {},
-    "format": {},
-    "lint": {},
-    "dev": {
-      "cache": false
+    "test": {
+      "dependsOn": ["^test"]
+    },
+    "int-test": {
+      "dependsOn": ["^int-test"]
+    },
+    "format": {
+      "dependsOn": ["^format"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
     }
   }
 }
