@@ -5,8 +5,8 @@
   "scripts": {
     "clean": "rm -rf .next next-env.d.ts",
     "dev": "next dev",
-    "build": "echo 'YARN BUILD' && env -0|sort -z|tr '\\0' '\n' && next build",
-    "build:ci": "echo 'YARN BUILD:CI' && env -0|sort -z|tr '\\0' '\n' && yarn build",
+    "build": "next build",
+    "build:ci": "yarn build",
     "start": "next start",
     "test": "vitest --run",
     "test:watch": "vitest",
