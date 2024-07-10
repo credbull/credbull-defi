@@ -5,6 +5,7 @@
 [evm]
 # blockchain id
 chain_id = 31337
+deploy_mocks = true
 
 [evm.address]
 # Dev/Anvil Wallet, Account[0]

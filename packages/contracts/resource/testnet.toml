@@ -5,6 +5,7 @@
 [evm]
 # blockchain id, e.g. baseSepolia=84532, arbSepolia=421614
 chain_id = 84532
+deploy_mocks = true
 
 [evm.address]
 # credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)

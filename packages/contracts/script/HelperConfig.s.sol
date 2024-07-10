@@ -16,8 +16,8 @@ struct FactoryParams {
 
 struct NetworkConfig {
     FactoryParams factoryParams;
-    IERC20 usdcToken;
     IERC20 cblToken;
+    IERC20 usdcToken;
 }
 
 /// @title Helper to centralize any chain-specific config and code into one place
@@ -37,15 +37,7 @@ contract HelperConfig is TomlConfig {
 
         tomlConfig = loadTomlConfiguration();
 
-        // TODO: move to using StdChains, e.g. `getChain(block.chainid) == "Arbitrum"`
-        if (
-            block.chainid == 31337 || block.chainid == 421614 || block.chainid == 80001 || block.chainid == 84532
-                || block.chainid == 200810
-        ) {
-            activeNetworkConfig = createNetworkConfig();
-        } else {
-            revert(string.concat("Unsupported chain with chainId ", vm.toString(block.chainid)));
-        }
+        activeNetworkConfig = createNetworkConfig();
     }
 
     function getNetworkConfig() public view returns (NetworkConfig memory) {
@@ -62,11 +54,10 @@ contract HelperConfig is TomlConfig {
 
         FactoryParams memory factoryParams = createFactoryParamsFromConfig();
 
-        DeployMocks deployMocks = new DeployMocks(testMode, factoryParams.owner);
-        (IERC20 mockToken, IERC20 mockStablecoin) = deployMocks.run();
+        (IERC20 cblToken, IERC20 usdcToken) = getTokensFromConfigOrDeployMocks(factoryParams.owner);
 
         NetworkConfig memory networkConfig =
-            NetworkConfig({ factoryParams: factoryParams, usdcToken: mockStablecoin, cblToken: mockToken });
+            NetworkConfig({ factoryParams: factoryParams, usdcToken: usdcToken, cblToken: cblToken });
 
         return networkConfig;
     }
@@ -81,5 +72,25 @@ contract HelperConfig is TomlConfig {
         });
 
         return factoryParams;
+    }
+
+    /// Fetch the CBL Token and USDC Token addresses for this chain or deploy Mock Tokens and return those
+    function getTokensFromConfigOrDeployMocks(address mocksOwner)
+        internal
+        returns (IERC20 cblToken, IERC20 usdcToken)
+    {
+        string memory shouldDeployMocksKey = ".evm.deploy_mocks";
+        bool shouldDeployMocks =
+            vm.keyExistsToml(tomlConfig, shouldDeployMocksKey) && tomlConfig.readBool(shouldDeployMocksKey);
+
+        if (shouldDeployMocks) {
+            DeployMocks deployMocks = new DeployMocks(testMode, mocksOwner);
+            return deployMocks.run();
+        } else {
+            address cblTokenAddr = tomlConfig.readAddress(".evm.address.cbl_token");
+            address usdcTokenAddr = tomlConfig.readAddress(".evm.address.usdc_token");
+
+            return (IERC20(cblTokenAddr), IERC20(usdcTokenAddr));
+        }
     }
 }
