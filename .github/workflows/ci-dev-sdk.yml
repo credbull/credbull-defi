@@ -12,6 +12,8 @@ on:
       - "development*"
     paths:
       - "packages/sdk/**"
+      - "packages/contracts/**"
+      - "packages/api/**"
       - ".github/workflows/ci-dev-sdk.yml"
 
 jobs:
