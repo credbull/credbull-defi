@@ -40,7 +40,7 @@ forge build
 forge test
 ```
 
-### Advanced Testing
+## Advanced Testing
 
 1. Code Coverage Summary
    ```bash
@@ -52,3 +52,17 @@ forge test
        forge coverage --report lcov
        genhtml lcov.info -o out/coverage
       ```
+
+## Reset Submodules 
+
+Update each submodules to latest commit recorded
+```bash
+# run from project root dir
+git submodule update --init --recursive
+```
+
+Reset the checked out commit for each submodule
+```bash
+cd packages/contracts/lib/<SUBMODULE>
+git reset --hard HEAD
+```

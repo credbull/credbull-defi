@@ -100,6 +100,18 @@ contract CredbullFixedYieldVaultTest is Test {
         assertEq(vault.expectedAssetsOnMaturity(), expectedAssetValue);
     }
 
+    function test__FixedYieldVault__ExpectedAssetOnMaturityZeroFixedYield() public {
+        params.promisedYield = 0; // zero fixed yield
+
+        CredbullFixedYieldVault zeroFixedYieldVault = new CredbullFixedYieldVault(params);
+
+        uint256 depositAmount = 10 * precision;
+        deposit(zeroFixedYieldVault, alice, depositAmount, false);
+
+        uint256 expectedAssetValue = depositAmount;
+        assertEq(zeroFixedYieldVault.expectedAssetsOnMaturity(), expectedAssetValue);
+    }
+
     function test__FixedYieldVault__RevertMaturityToggleIfNotAdmin() public {
         vm.startPrank(params.roles.operator);
         vm.expectRevert(
@@ -295,16 +307,23 @@ contract CredbullFixedYieldVaultTest is Test {
     }
 
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
+        return deposit(vault, user, assets, warp);
+    }
+
+    function deposit(CredbullFixedYieldVault fixedYieldVault, address user, uint256 assets, bool warp)
+        internal
+        returns (uint256 shares)
+    {
         // first, approve the deposit
         vm.startPrank(user);
-        params.maturityVault.vault.asset.approve(address(vault), assets);
+        params.maturityVault.vault.asset.approve(address(fixedYieldVault), assets);
 
         // wrap if set to true
         if (warp) {
             vm.warp(params.windowPlugin.depositWindow.opensAt);
         }
 
-        shares = vault.deposit(assets, user);
+        shares = fixedYieldVault.deposit(assets, user);
         vm.stopPrank();
     }
 }
