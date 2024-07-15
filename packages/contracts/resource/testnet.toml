@@ -32,5 +32,5 @@ max_supply = 10_000_000 # 10 million in wei
 [services.supabase]
 url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
 
-# Export contract details to supabase.
-export_contracts = true
+# Save the contract deployment details to the database.
+update_contract_addresses = true
