@@ -32,4 +32,4 @@ max_supply = 10_000_000 # 10 million in wei
 url = "http://127.0.0.1:54321"
 
 # Save the contract deployment details to the database.
-update_contracts_addresses = true
+update_contract_addresses = true
