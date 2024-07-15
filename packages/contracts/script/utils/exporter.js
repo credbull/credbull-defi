@@ -56,7 +56,7 @@ async function exportAddress(config) {
         dataToStoreOnDB.push(data);
       }
     }
-    if (config.services.supabase.export_contracts === true) {
+    if (config.services.supabase.update_contract_addresses === true) {
       await exportToSupabase(client, dataToStoreOnDB);
     }
   }
