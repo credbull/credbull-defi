@@ -16,6 +16,8 @@ contract BatchManager {
 
     BatchInfo[] public batches;
 
+    error BatchManager__VaultNotFoundForTimestamp(uint256);
+
     event NewBatchCreated(address indexed vaultAddress, uint256 fromTimestamp, uint256 toTimestamp);
 
     function createNewBatch(address vaultAddress, uint256 duration) public {
@@ -34,6 +36,7 @@ contract BatchManager {
                 return batches[i].vaultAddress;
             }
         }
-        revert("No vault found for the given timestamp");
+
+        revert BatchManager__VaultNotFoundForTimestamp(timestamp);
     }
 }

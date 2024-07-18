@@ -13,8 +13,8 @@ import { SimpleVault } from "@test/test/vault/SimpleVault.t.sol";
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
 contract BatchManagerTest is Test {
-    BatchManager batchManager;
-    IERC20 token;
+    BatchManager private batchManager;
+    IERC20 private token;
 
     SimpleVault private vault;
     HelperConfig private helperConfig;
