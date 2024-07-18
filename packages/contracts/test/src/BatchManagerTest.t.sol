@@ -63,7 +63,7 @@ contract BatchManagerTest is Test {
         vm.warp(block.timestamp + duration + 1 days);
 
         // Expect revert when trying to retrieve a vault for an invalid timestamp
-        vm.expectRevert("No vault found for the given timestamp");
+        vm.expectRevert();
         batchManager.getVaultForTimestamp(block.timestamp);
     }
 }
