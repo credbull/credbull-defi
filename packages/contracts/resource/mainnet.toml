@@ -2,37 +2,37 @@
 # The Deployment Configuration for the MainNet Environment.
 ##
 
-[network.Arbitrum]
-chain_id = 42161
+[services.supabase]
+url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
+update_contract_addresses = true
 
-[network.Arbitrum.deployment.support]
+[deployment.support]
 deploy = false
 
-[network.Arbitrum.deployment.support.address]
+[deployment.support.address]
 usdt = "0xdac17f958d2ee523a2206206994597c13d831ec7"
 
-[network.Arbitrum.deployment.vaults.address]
+[deployment.vaults.address]
 owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
 
-[network.Arbitrum.deployment.token.cbl]
+[deployment.token.cbl]
 max_supply = 10_000_000 # 10 million in wei
 
-[network.Arbitrum.deployment.token.cbl.address]
+[deployment.token.cbl.address]
 owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 minter = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 
-[network.Arbitrum.deployment.services.supabase]
-# NOTE (JL,2024-07-16): Given we upsert the deployed Contract Addresses to a Supabase instance, we need a Supabase
-#   instance PER DEPLOYMENT NETWORK!
-url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
-update_contract_addresses = true
+# =============================================================================
 
-# =================================================================================================
+# NOTE (JL,2024-07-18): The network name, i.e. 'arbitrumSepolia', is the Chain Alias from foundry configuration.
+[network.arbitrumSepolia.deployment.support.address]
+usdt = "0xdac17f958d2ee523a2206206994597c13d831ec7"
 
-[network.BaseSepolia]
-chain_id = 22222
+# =============================================================================
+
+[network.baseSepolia]
 
 [network.BaseSepolia.deployment.support]
 deploy = false
@@ -51,9 +51,3 @@ max_supply = 10_000_000 # 10 million in wei
 [network.BaseSepolia.deployment.token.cbl.address]
 owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 minter = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
-
-[network.BaseSepolia.deployment.services.supabase]
-# NOTE (JL,2024-07-16): Given we upsert the deployed Contract Addresses to a Supabase instance, we need a Supabase
-#   instance PER DEPLOYMENT NETWORK!
-url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
-update_contract_addresses = true
