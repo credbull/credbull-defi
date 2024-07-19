@@ -1,5 +1,5 @@
-# NOTE (JL,2024-05-20): Hierarchical Environment loading does not simply work with `make`. A custom 
-#	solution may be possible, but given that `forge` auto-loads any `.env` file in the invocation 
+# NOTE (JL,2024-05-20): Hierarchical Environment loading does not simply work with `make`. A custom
+#	solution may be possible, but given that `forge` auto-loads any `.env` file in the invocation
 #	directory and our deployment scripts depend on this, it seems unnecessary to change this now.
 -include .env
 
@@ -24,6 +24,15 @@ deploy-baseSepolia:
 deploy:
 	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	@rm -rf out && \
+	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
+	yarn gen-types && \
+	yarn db-export
+
+deploy-alt:
+	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
+	@rm -rf out && \
+	node script/deployer/canDeploy.js --chain-id $$(cast chain-id --rpc-url $(RPC_URL)) --contract-names
 	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
 	yarn gen-types && \
