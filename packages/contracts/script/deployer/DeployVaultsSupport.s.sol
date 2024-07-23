@@ -16,12 +16,21 @@ import { ConfiguredToDeployVaultsSupport } from "./Configured.s.sol";
 contract DeployVaultsSupport is ConfiguredToDeployVaultsSupport {
     uint128 public constant MAXIMUM_SUPPLY = type(uint128).max;
 
+    /**
+     * @notice The `forge script` invocation entrypoint, this conditionally deploys a [$CBL] representative token, a
+     *  [$USDC] representative stablecoin token and an example [Vault].
+     * @dev Deployment is conditional on it being enabled. The return values are ignored, but included for test
+     *  usages.
+     *
+     * @return cbl The deployed [IERC20] token (a [SimpleToken]) representing the [$CBL].
+     * @return usdc The deployed [IERC20] token (a [SimpleUSDC]) representing [$USDC] (i.e. a stablecoin).
+     * @return vault The deployed [Vault] (a [SimpleVault]]).
+     */
     function run() external returns (IERC20 cbl, IERC20 usdc, Vault vault) {
         if (deploySupport()) {
             address custodian = custodian();
 
             vm.startBroadcast();
-            // NOTE (JL,2024-07-18): Use actual CBL?
             cbl = new SimpleToken(MAXIMUM_SUPPLY);
             usdc = new SimpleUSDC(MAXIMUM_SUPPLY);
             vault = new SimpleVault(
