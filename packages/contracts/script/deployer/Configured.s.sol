@@ -31,15 +31,15 @@ abstract contract ConfiguredToDeployVaults is Configured {
     using stdToml for string;
 
     function owner() internal view returns (address) {
-        return config.readAddress("deployment.vaults.address.owner");
+        return config.readAddress(".deployment.vaults.address.owner");
     }
 
     function operator() internal view returns (address) {
-        return config.readAddress("deployment.vaults.address.operator");
+        return config.readAddress(".deployment.vaults.address.operator");
     }
 
     function custodian() internal view returns (address) {
-        return config.readAddress("deployment.vaults.address.custodian");
+        return config.readAddress(".deployment.vaults.address.custodian");
     }
 }
 
@@ -47,7 +47,7 @@ abstract contract ConfiguredToDeployVaultsSupport is ConfiguredToDeployVaults {
     using stdToml for string;
 
     function deploySupport() internal view returns (bool) {
-        return config.readBool("deployment.support.deploy");
+        return config.readBool(".deployment.support.deploy");
     }
 }
 
@@ -57,14 +57,14 @@ abstract contract ConfiguredToDeployCBL is Configured {
     uint256 internal constant PRECISION = 1e18;
 
     function maxSupply() internal view returns (uint256) {
-        return config.readUint("deployment.token.cbl.max_supply") * PRECISION;
+        return config.readUint(".deployment.token.cbl.max_supply") * PRECISION;
     }
 
     function owner() internal view returns (address) {
-        return config.readAddress("deployment.token.cbl.address.owner");
+        return config.readAddress(".deployment.token.cbl.address.owner");
     }
 
     function minter() internal view returns (address) {
-        return config.readAddress("deployment.token.cbl.address.minter");
+        return config.readAddress(".deployment.token.cbl.address.minter");
     }
 }
