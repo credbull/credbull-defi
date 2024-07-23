@@ -14,7 +14,7 @@ async function isAnyDeployed(config: any, chainId: string, contracts: string[]):
   if (error) throw error;
   const someDeployed = data?.length > 0;
   if (someDeployed) {
-    console.log(`  Deployed Contract(s)= '${data.join(', ')}'`);
+    console.log(`  Deployed Contract(s)= '${data.map((d) => d.contract_name).join(', ')}'`);
   }
   return someDeployed;
 }
@@ -31,18 +31,19 @@ function usage(reason: string) {
 }
 
 async function main() {
-  let exitCode = 1;
+  process.exitCode = 1;
   try {
     if (process.argv.length < 6) usage('insufficient parameters provided.');
     const chainId = new Number(process.argv[3]) || usage(`Chain Id '${process.argv[3]}' is not a number.`);
     const contracts = process.argv[5].split(',').map((s) => s.trim());
     console.log(`Checking for contracts '${contracts.join(', ')}' on Chain '${chainId}'.`);
     const noneDeployed = !(await isAnyDeployed(loadConfiguration(), chainId.toString(), contracts));
-    if (noneDeployed) exitCode = 0;
+    if (noneDeployed) {
+      console.log(`None of '${contracts.join(', ')}' are deployed on Chain '${chainId}'.`);
+      process.exitCode = 0;
+    }
   } catch (e) {
     console.log(e);
-  } finally {
-    process.exit(exitCode);
   }
 }
 
