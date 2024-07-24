@@ -22,22 +22,37 @@ async function isAnyDeployed(config: any, chainId: string, contracts: string[]):
 function usage(reason: string) {
   const msg = `
   FAILED: ${reason}
-  Usage: ${process.argv0} --chain-id <chain id> --contracts <contract names>
+  Usage: ${process.argv0} --chain-id <chain id> --deploy-units <deploy unit names>
     - <chain id>: The Chain Id number
-    - <contract names>: A comma-separated list of Contract Names, e.g. 'Contract1,Contract2'
-    NOTE: parameter order is exactly as above
-    Result: 0 if none of <contract names> are deployed on <chain id> network. 1 otherwise.`;
+    - <deploy unit names>: A comma-separated list of the deployment unit names ('vaults', 'vaults_support' and 'cbl').
+    NOTE: Only parameter order exactly as above is supported.
+    Result: 0 if none of the contracts of the deployment unit(s) are deployed on <chain id> network. 1 otherwise.`;
   throw new Error(msg);
 }
 
+type DeploymentUnit = 'vaults' | 'vaults_support' | 'cbl';
+
 async function main() {
+  // We default to failing by setting 1 as the Exit Code.
   process.exitCode = 1;
+
   try {
     if (process.argv.length < 6) usage('Insufficient parameters provided.');
+    process.argv[2] === '--chain-id' || usage("Parameter 1 is not '--chain-id'.");
     const chainId = new Number(process.argv[3]) || usage(`Chain Id '${process.argv[3]}' is not a number.`);
-    const contracts = process.argv[5].split(',').map((s) => s.trim());
+    process.argv[4] === '--deploy-units' || usage("Parameter 3 is not '--deploy-units'.");
+    process.argv[5]?.trim() || usage(`Deployment Units '${process.argv[5]}' is empty.`);
+
+    const config = loadConfiguration();
+    const contracts = process.argv[5]
+      .split(',')
+      .map((du) => du.trim() as DeploymentUnit)
+      .flatMap((du: DeploymentUnit) => config.deployment[du].contracts);
+
+    console.log('Contracts=', contracts);
+
     console.log(`Checking for contracts '${contracts.join(', ')}' on Chain '${chainId}'.`);
-    const noneDeployed = !(await isAnyDeployed(loadConfiguration(), chainId.toString(), contracts));
+    const noneDeployed = !(await isAnyDeployed(config, chainId.toString(), contracts));
     if (noneDeployed) {
       console.log(`None of '${contracts.join(', ')}' are deployed on Chain '${chainId}'.`);
       process.exitCode = 0;
