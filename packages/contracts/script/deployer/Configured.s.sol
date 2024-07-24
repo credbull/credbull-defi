@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.20;
 
@@ -25,46 +25,73 @@ abstract contract Configured is StdChains, Script {
         console2.log(string.concat("Loading TOML configuration from: ", path));
         return vm.readFile(path);
     }
+
+    /**
+     * @notice Enables network-specific configuration overriding by key substitution.
+     *
+     * @dev Computes the Network Override Config Key for [configKey] and determines if that key is present in the
+     * configuration. If present, returns the Network Override Config Key, if not, returns the [configKey].
+     *
+     * The Network Override Key is the [configKey] prefixed by `.network.chainAlias`, where
+     * the Chain Alias is that of the current chain (determined by forge).
+     *
+     * @param configKey The [string] Configuration Key to check.
+     *
+     * @return The effective Configuration Key.
+     */
+    function configKeyFor(string memory configKey) internal view returns (string memory) {
+        string memory overrideKey = string.concat(".network.", chain.chainAlias, configKey);
+        return vm.keyExistsToml(config, overrideKey) ? overrideKey : configKey;
+    }
 }
 
 abstract contract ConfiguredToDeployVaults is Configured {
     using stdToml for string;
 
+    string private constant KEY_ADDRESS_OWNER = ".deployment.vaults.address.owner";
+    string private constant KEY_ADDRESS_OPERATOR = ".deployment.vaults.address.operator";
+    string private constant KEY_ADDRESS_CUSTODIAN = ".deployment.vaults.address.custodian";
+
     function owner() internal view returns (address) {
-        return config.readAddress(".deployment.vaults.address.owner");
+        return config.readAddress(configKeyFor(KEY_ADDRESS_OWNER));
     }
 
     function operator() internal view returns (address) {
-        return config.readAddress(".deployment.vaults.address.operator");
+        return config.readAddress(configKeyFor(KEY_ADDRESS_OPERATOR));
     }
 
     function custodian() internal view returns (address) {
-        return config.readAddress(".deployment.vaults.address.custodian");
+        return config.readAddress(configKeyFor(KEY_ADDRESS_CUSTODIAN));
     }
 }
 
 abstract contract ConfiguredToDeployVaultsSupport is ConfiguredToDeployVaults {
     using stdToml for string;
 
-    function deploySupport() internal view returns (bool) {
-        return config.readBool(".deployment.support.deploy");
+    string private constant KEY_DEPLOY_SUPPORT = ".deployment.vaults_support.deploy";
+
+    function isDeploySupport() public view returns (bool) {
+        return config.readBool(configKeyFor(KEY_DEPLOY_SUPPORT));
     }
 }
 
 abstract contract ConfiguredToDeployCBL is Configured {
     using stdToml for string;
 
-    uint256 internal constant PRECISION = 1e18;
+    string private constant KEY_MAX_SUPPLY = ".deployment.cbl.max_supply";
+    string private constant KEY_ADDRESS_OWNER = ".deployment.cbl.address.owner";
+    string private constant KEY_ADDRESS_MINTER = ".deployment.cbl.address.minter";
+    uint256 private constant PRECISION = 1e18;
 
     function maxSupply() internal view returns (uint256) {
-        return config.readUint(".deployment.token.cbl.max_supply") * PRECISION;
+        return config.readUint(configKeyFor(KEY_MAX_SUPPLY)) * PRECISION;
     }
 
     function owner() internal view returns (address) {
-        return config.readAddress(".deployment.token.cbl.address.owner");
+        return config.readAddress(configKeyFor(KEY_ADDRESS_OWNER));
     }
 
     function minter() internal view returns (address) {
-        return config.readAddress(".deployment.token.cbl.address.minter");
+        return config.readAddress(configKeyFor(KEY_ADDRESS_MINTER));
     }
 }
