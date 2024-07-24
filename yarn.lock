@@ -643,6 +643,7 @@ __metadata:
     js-toml: ^1.0.0
     prettier: ^3.2.2
     solhint: ^5.0.1
+    ts-node: ^10.9.2
     typechain: ^8.3.2
     typescript: ^5.4.5
   languageName: unknown
