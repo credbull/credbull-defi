@@ -25,15 +25,15 @@ contract CBL is ERC20, ERC20Permit, ERC20Burnable, ERC20Pausable, AccessControl 
         _grantRole(MINTER_ROLE, _minter);
     }
 
-    function pause() public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _pause();
     }
 
-    function unpause() public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
     }
 
-    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+    function mint(address to, uint256 amount) external onlyRole(MINTER_ROLE) {
         if (totalSupply() + amount > MAX_SUPPLY) {
             revert CBL__MaxSupplyExceeded();
         }
