@@ -5,6 +5,7 @@ pragma solidity ^0.8.20;
 import { Test } from "forge-std/Test.sol";
 import { CBL } from "@credbull/token/CBL.sol";
 import { DeployCBLToken, CBLTokenParams } from "../../../script/DeployCBLToken.s.sol";
+import { ERC20Capped } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 
 contract CBLTest is Test {
     CBL private cbl;
@@ -27,14 +28,14 @@ contract CBLTest is Test {
 
     function test__CBL__ShouldRevertOnZeroAddress() public {
         vm.expectRevert(CBL.CBL__ZeroAddress.selector);
-        new CBL(address(0), address(0), 0);
+        new CBL(address(0), address(0), type(uint32).max);
     }
 
     function test__CBL__SuccessfullyDeployCBLToken() public {
         cbl = new CBL(cblTokenParams.owner, cblTokenParams.minter, cblTokenParams.maxSupply);
         assertTrue(cbl.hasRole(cbl.DEFAULT_ADMIN_ROLE(), cblTokenParams.owner));
         assertTrue(cbl.hasRole(cbl.MINTER_ROLE(), cblTokenParams.minter));
-        assertEq(cbl.MAX_SUPPLY(), cblTokenParams.maxSupply);
+        assertEq(cbl.cap(), cblTokenParams.maxSupply);
     }
 
     function test__CBL__ShouldAllowMinterToMint() public {
@@ -65,9 +66,9 @@ contract CBLTest is Test {
 
     function test__CBL__ShouldRevertIfTotalSupplyExceedsMaxSupply() public {
         vm.startPrank(minter);
-        cbl.mint(minter, cbl.MAX_SUPPLY());
+        cbl.mint(minter, cbl.cap());
 
-        vm.expectRevert(CBL.CBL__MaxSupplyExceeded.selector);
+        vm.expectRevert(abi.encodeWithSelector(ERC20Capped.ERC20ExceededCap.selector, cbl.totalSupply() + 1, cbl.cap()));
         cbl.mint(minter, 1);
         vm.stopPrank();
     }
