@@ -3,12 +3,8 @@
 #	directory and our deployment scripts depend on this, it seems unnecessary to change this now.
 -include .env
 
-build:; forge build
-
-anvil: anvil
-
 deploy-local:
-	$(MAKE) deploy RPC_URL=localhost EXTRA_FLAGS=
+	$(MAKE) deploy-alt RPC_URL=localhost EXTRA_FLAGS=
 
 # TODO: change this to use the network config from foundry.toml
 deploy-arbSepolia:
@@ -27,16 +23,15 @@ deploy:
 	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
 	yarn gen-types && \
-	yarn db-export
+	yarn db-export $$(cast chain-id --rpc-url $(RPC_URL))
 
 deploy-alt:
-	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
-	@rm -rf out && \
-	node script/deployer/canDeploy.js --chain-id $$(cast chain-id --rpc-url $(RPC_URL)) --contract-names
-	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
+	@echo "Running deploy ALT '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
+	node script/deployer/canDeploy.js --chain-id $$(cast chain-id --rpc-url $(RPC_URL)) \
+		--deploy-units 'vaults, vaults_support' && \
+	forge script script/deployer/DeployVaults.s.sol:DeployVaults --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
-	yarn gen-types && \
-	yarn db-export
+    yarn db-export $$(cast chain-id --rpc-url $(RPC_URL))
 
 # TODO: add --verifier flag.  forge isn't happy --etherscan-api-key is empty.
 deploy-bitlayerTestnet:
