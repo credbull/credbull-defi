@@ -9,11 +9,10 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
 import { ERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
 contract CBL is ERC20, ERC20Permit, ERC20Burnable, ERC20Pausable, AccessControl {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
     error CBL__MaxSupplyExceeded();
     error CBL__ZeroAddress();
 
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     uint256 public immutable MAX_SUPPLY;
 
     constructor(address _owner, address _minter, uint256 _maxSupply) ERC20("Credbull", "CBL") ERC20Permit("Credbull") {
