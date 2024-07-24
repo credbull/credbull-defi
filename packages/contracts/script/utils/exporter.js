@@ -99,7 +99,7 @@ async function clearExistingData(client) {
 (async () => {
   try {
     const chainId = Number(process.argv[2]);
-    assert(chainId);
+    if (isNaN(chainId)) throw new Error(`The specified Chain Id, '${process.argv[2]}', is invalid.`);
     await exportAddress(loadConfiguration(), chainId.toString());
   } catch (e) {
     console.log(e);
