@@ -12,10 +12,15 @@ contract CBL is ERC20, ERC20Permit, ERC20Burnable, ERC20Pausable, AccessControl 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     error CBL__MaxSupplyExceeded();
+    error CBL__ZeroAddress();
 
     uint256 public immutable MAX_SUPPLY;
 
     constructor(address _owner, address _minter, uint256 _maxSupply) ERC20("Credbull", "CBL") ERC20Permit("Credbull") {
+        if (_owner == address(0) || _minter == address(0)) {
+            revert CBL__ZeroAddress();
+        }
+
         MAX_SUPPLY = _maxSupply;
         _grantRole(DEFAULT_ADMIN_ROLE, _owner);
         _grantRole(MINTER_ROLE, _minter);

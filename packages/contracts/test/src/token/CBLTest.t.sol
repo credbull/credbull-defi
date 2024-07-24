@@ -25,6 +25,11 @@ contract CBLTest is Test {
         cbl = deployCBLToken.runTest();
     }
 
+    function test__CBL__ShouldRevertOnZeroAddress() public {
+        vm.expectRevert(CBL.CBL__ZeroAddress.selector);
+        new CBL(address(0), address(0), 0);
+    }
+
     function test__CBL__SuccessfullyDeployCBLToken() public {
         cbl = new CBL(cblTokenParams.owner, cblTokenParams.minter, cblTokenParams.maxSupply);
         assertTrue(cbl.hasRole(cbl.DEFAULT_ADMIN_ROLE(), cblTokenParams.owner));
