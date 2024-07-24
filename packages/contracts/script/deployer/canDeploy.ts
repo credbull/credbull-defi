@@ -33,7 +33,7 @@ function usage(reason: string) {
 async function main() {
   process.exitCode = 1;
   try {
-    if (process.argv.length < 6) usage('insufficient parameters provided.');
+    if (process.argv.length < 6) usage('Insufficient parameters provided.');
     const chainId = new Number(process.argv[3]) || usage(`Chain Id '${process.argv[3]}' is not a number.`);
     const contracts = process.argv[5].split(',').map((s) => s.trim());
     console.log(`Checking for contracts '${contracts.join(', ')}' on Chain '${chainId}'.`);
