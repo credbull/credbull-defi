@@ -4,50 +4,34 @@
 
 [services.supabase]
 url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
+
+[deployment]
 update_contract_addresses = true
-
-[deployment.support]
-deploy = false
-
-[deployment.support.address]
-usdt = "0xdac17f958d2ee523a2206206994597c13d831ec7"
 
 [deployment.vaults.address]
 owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
 
-[deployment.token.cbl]
-max_supply = 10_000_000 # 10 million in wei
-
-[deployment.token.cbl.address]
-owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
-minter = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
-
-# =============================================================================
-
-# NOTE (JL,2024-07-18): The network name, i.e. 'arbitrumSepolia', is the Chain Alias from foundry configuration.
-[network.arbitrumSepolia.deployment.support.address]
-usdt = "0xdac17f958d2ee523a2206206994597c13d831ec7"
-
-# =============================================================================
-
-[network.baseSepolia]
-
-[network.BaseSepolia.deployment.support]
+[deployment.vaults_support]
 deploy = false
 
-[network.BaseSepolia.deployment.support.address]
-usdt = "0xdac17f958d2ee523a2206206994597c13d831ec7"
-
-[network.BaseSepolia.deployment.vaults.address]
-owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
-operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
-custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
-
-[network.BaseSepolia.deployment.token.cbl]
+[deployment.cbl]
 max_supply = 10_000_000 # 10 million in wei
 
-[network.BaseSepolia.deployment.token.cbl.address]
+[deployment.cbl.address]
 owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 minter = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
+
+# NOTE (JL,2024-07-24): Below are examples only.
+[network.arbitrumOne.address]
+usdt = "0xdac17f958d2ee523a2206206994597c13d831ec7"
+usdc = "0xaf88d065e77c8cc2239327c5edb3a432268e5831"
+
+# NOTE (JL,2024-07-24): The following is an example Network Override of Deployment configuration.
+[network.arbitrumOne.deployment.vaults.address]
+operator = "0xOurArbitrumOneOperatorAddress"
+
+[network.base.address]
+usdt = "0xdac17f958d2ee523a2206206994597c13d831ec7"
+usdc = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
