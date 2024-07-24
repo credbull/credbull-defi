@@ -27,7 +27,7 @@ deploy:
 
 deploy-alt:
 	@echo "Running deploy ALT '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
-	node script/deployer/canDeploy.js --chain-id $$(cast chain-id --rpc-url $(RPC_URL)) \
+	yarn run ts-node script/deployer/canDeploy.ts --chain-id $$(cast chain-id --rpc-url $(RPC_URL)) \
 		--deploy-units 'vaults, vaults_support' && \
 	forge script script/deployer/DeployVaults.s.sol:DeployVaults --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
