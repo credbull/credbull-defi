@@ -4,7 +4,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 const { loadConfiguration } = require('./config');
 
-async function exportAddress(config) {
+async function exportAddress(config, chainId) {
   const client = createClient(config.services.supabase.url, config.env.SUPABASE_SERVICE_ROLE_KEY);
   await clearExistingData(client);
 
@@ -14,13 +14,12 @@ async function exportAddress(config) {
   const outputPath = path.resolve(__dirname, '../../deployments/');
   const outputFileName = path.resolve(__dirname, '../../deployments/index.json');
 
-  const chainDir = config.evm.chain_id.toString();
   const deployFiles = await fs.promises.readdir(folderPath);
   for (const deployFile of deployFiles) {
     const deployFilePath = path.resolve(folderPath, deployFile);
 
-    contracts[chainDir] = contracts[chainDir] || {};
-    const runBuffer = fs.readFileSync(path.resolve(deployFilePath, chainDir, 'run-latest.json'));
+    contracts[chainId] = contracts[chainId] || {};
+    const runBuffer = fs.readFileSync(path.resolve(deployFilePath, chainId, 'run-latest.json'));
 
     const output = JSON.parse(runBuffer.toString('utf-8'));
     const transactions = output['transactions'];
@@ -28,7 +27,7 @@ async function exportAddress(config) {
       if (tx['transactionType'] === 'CREATE') {
         const contractName = tx['contractName'];
 
-        contracts[chainDir][contractName] = (contracts[chainDir][contractName] || []).concat({
+        contracts[chainId][contractName] = (contracts[chainId][contractName] || []).concat({
           name: contractName,
           address: tx['contractAddress'],
           arguments: tx['arguments'],
@@ -43,20 +42,20 @@ async function exportAddress(config) {
     fs.writeFileSync(path.resolve(outputFileName), JSON.stringify(contracts));
 
     let dataToStoreOnDB = [];
-    for (let chainId in contracts) {
-      for (let localContracts in contracts[chainId]) {
-        console.log(`Exporting ${localContracts} on chain ${chainId}`);
+    for (let localChainId in contracts) {
+      for (let localContracts in contracts[localChainId]) {
+        console.log(`Exporting ${localContracts} on chain ${localChainId}`);
         const data = {
-          chain_id: chainId,
+          chain_id: localChainId,
           contract_name: localContracts,
-          address: contracts[chainId][localContracts][0].address,
+          address: contracts[localChainId][localContracts][0].address,
           outdated: false,
         };
 
         dataToStoreOnDB.push(data);
       }
     }
-    if (config.services.supabase.update_contract_addresses === true) {
+    if (config.deployment.update_contract_addresses === true) {
       await exportToSupabase(client, dataToStoreOnDB);
     }
   }
@@ -99,7 +98,9 @@ async function clearExistingData(client) {
 
 (async () => {
   try {
-    await exportAddress(loadConfiguration());
+    const chainId = Number(process.argv[2]);
+    assert(chainId);
+    await exportAddress(loadConfiguration(), chainId.toString());
   } catch (e) {
     console.log(e);
   } finally {
