@@ -24,7 +24,8 @@ contract CBL is ERC20, ERC20Permit, ERC20Burnable, ERC20Capped, ERC20Pausable, A
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /**
-     * @dev Constructor to initialize the token contract.
+     * @notice Constructor to initialize the token contract.
+     * @dev Sets the owner and minter roles, and initializes the capped supply.
      * @param _owner The address of the owner who will have the admin role.
      * @param _minter The address of the minter who will have the minter role.
      * @param _maxSupply The maximum supply of the token.
@@ -47,24 +48,24 @@ contract CBL is ERC20, ERC20Permit, ERC20Burnable, ERC20Capped, ERC20Pausable, A
     }
 
     /**
-     * @dev Pauses all token transfers.
-     * Can only be called by an account with the admin role.
+     * @notice Pauses token transfers, minting and burning.
+     * @dev Can only be called by an account with the admin role.
      */
     function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _pause();
     }
 
     /**
-     * @dev Unpauses all token transfers.
-     * Can only be called by an account with the admin role.
+     * @notice Unpauses token transfers, minting and burning.
+     * @dev Can only be called by an account with the admin role.
      */
     function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
     }
 
     /**
-     * @dev Mints new tokens.
-     * Can only be called by an account with the minter role.
+     * @notice Mints new tokens.
+     * @dev Can only be called by an account with the minter role.
      * @param to The address to mint tokens to.
      * @param amount The amount of tokens to mint.
      */
@@ -74,6 +75,9 @@ contract CBL is ERC20, ERC20Permit, ERC20Burnable, ERC20Capped, ERC20Pausable, A
 
     /**
      * @dev Overrides required by Solidity for multiple inheritance.
+     * @param from The address from which tokens are transferred.
+     * @param to The address to which tokens are transferred.
+     * @param value The amount of tokens transferred.
      */
     function _update(address from, address to, uint256 value) internal override(ERC20, ERC20Pausable, ERC20Capped) {
         super._update(from, to, value);
