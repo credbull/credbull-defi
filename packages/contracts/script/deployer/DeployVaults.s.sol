@@ -2,7 +2,9 @@
 
 pragma solidity ^0.8.20;
 
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { Script } from "forge-std/Script.sol";
+
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { CredbullFixedYieldVaultFactory } from "@credbull/CredbullFixedYieldVaultFactory.sol";
 import { CredbullUpsideVaultFactory } from "@credbull/CredbullUpsideVaultFactory.sol";
@@ -13,14 +15,15 @@ import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 import { SimpleVault } from "@test/test/vault/SimpleVault.t.sol";
 
-import { ConfiguredToDeployVaults } from "./Configured.s.sol";
-import { ConfiguredToDeployVaultsSupport } from "./Configured.s.sol";
+import { VaultsConfigured } from "./Configured.s.sol";
+import { VaultsSupportConfigured } from "./Configured.s.sol";
 
 /// @notice The [Script] used to deploy the Credbull Vaults Distribution.
-contract DeployVaults is ConfiguredToDeployVaults {
+contract DeployVaults is Script, VaultsConfigured {
     /**
-     * @notice The `forge script` invocation entrypoint, this deploys the Credbull Vaults Distribution.
-     * @dev For command line invocation, the return values are ignored, but are included for test usages.
+     * @notice The `forge script` invocation entrypoint, this deploys the Vaults Distribution Unit and, optionally,
+     *  the Vaults Support Distribution Unit, if deployment is enabled.
+     * @dev For command line invocation, the return values are ignored.
      *
      * @return fixedYieldVaultFactory The deployed [CredbullFixedYieldVaultFactory].
      * @return upsideVaultFactory The deployed [CredbullUpsideVaultFactory].
@@ -30,14 +33,20 @@ contract DeployVaults is ConfiguredToDeployVaults {
         external
         returns (CredbullFixedYieldVaultFactory, CredbullUpsideVaultFactory, CredbullWhiteListProvider)
     {
-        DeployVaultsSupport deployer = new DeployVaultsSupport();
-        if (deployer.isDeploySupport()) deployer.run();
+        new DeployVaultsSupport().run();
 
         return deploy();
     }
 
+    /**
+     * @dev Deploys the Vaults Distribution Unit. Intended as the test usage.
+     *
+     * @return fixedYieldVaultFactory The deployed [CredbullFixedYieldVaultFactory].
+     * @return upsideVaultFactory The deployed [CredbullUpsideVaultFactory].
+     * @return whiteListProvider The deployed [CredbullWhiteListProvider].
+     */
     function deploy()
-        private
+        public
         returns (
             CredbullFixedYieldVaultFactory fixedYieldVaultFactory,
             CredbullUpsideVaultFactory upsideVaultFactory,
@@ -59,29 +68,40 @@ contract DeployVaults is ConfiguredToDeployVaults {
     }
 }
 
-/**
- * @notice A deployment utility contract for deploying support contracts under controlled circumstances.
- */
-contract DeployVaultsSupport is ConfiguredToDeployVaultsSupport {
+/// @notice The [Script] for deploying the Vaults Support Distribution Unit.
+contract DeployVaultsSupport is Script, VaultsSupportConfigured {
     uint128 public constant MAXIMUM_SUPPLY = type(uint128).max;
 
     /**
-     * @notice The `forge script` invocation entrypoint, this deploys the Credbull Vaults Support Distribution,
-     *  a [$CBL] representative token, a [$USDC] representative stablecoin token and an example [Vault].
-     * @dev For command line invocation, the return values are ignored, but included for test usages.
+     * @notice The `forge script` invocation entrypoint, this deploys the Vaults Support Distribution Unit, if enabled.
+     *  This comprises of a [$CBL] representative token, a [$USDC] representative stablecoin token and an example
+     *  [Vault].
+     * @dev For command line invocation, the return values are ignored.
      *
-     * @return cbl The deployed [IERC20] token (a [SimpleToken]) representing the [$CBL].
-     * @return usdc The deployed [IERC20] token (a [SimpleUSDC]) representing [$USDC] (i.e. a stablecoin).
+     * @return cbl The deployed [ERC20] token (a [SimpleToken]) representing the [$CBL].
+     * @return usdc The deployed [ERC20] token (a [SimpleUSDC]) representing [$USDC] (i.e. a stablecoin).
      * @return vault The deployed [Vault] (a [SimpleVault]]).
      */
-    function run() external returns (IERC20 cbl, IERC20 usdc, Vault vault) {
-        address custodian = custodian();
+    function run() external returns (ERC20 cbl, ERC20 usdc, Vault vault) {
+        if (isDeploySupport()) {
+            (cbl, usdc, vault) = deploy();
+        }
+        return (cbl, usdc, vault);
+    }
 
+    /**
+     * @dev Deploys the Vaults Support Distribution Unit, unconditionally. Intended as the test usage.
+     *
+     * @return cbl The deployed [ERC20] token (a [SimpleToken]) representing the [$CBL].
+     * @return usdc The deployed [ERC20] token (a [SimpleUSDC]) representing [$USDC] (i.e. a stablecoin).
+     * @return vault The deployed [Vault] (a [SimpleVault]]).
+     */
+    function deploy() public returns (ERC20 cbl, ERC20 usdc, Vault vault) {
         vm.startBroadcast();
         cbl = new SimpleToken(MAXIMUM_SUPPLY);
         usdc = new SimpleUSDC(MAXIMUM_SUPPLY);
         vault = new SimpleVault(
-            Vault.VaultParams({ asset: usdc, shareName: "Simple Vault", shareSymbol: "sVLT", custodian: custodian })
+            Vault.VaultParams({ asset: usdc, shareName: "Simple Vault", shareSymbol: "sVLT", custodian: custodian() })
         );
         vm.stopBroadcast();
 
