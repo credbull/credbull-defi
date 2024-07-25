@@ -17,6 +17,7 @@ deployments
 types
 index.js
 config.js
+canDeploy.js
 
 # supabase export
 /script/output/dbdata.json
