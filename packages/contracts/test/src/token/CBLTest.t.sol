@@ -27,8 +27,11 @@ contract CBLTest is Test {
     }
 
     function test__CBL__ShouldRevertOnZeroAddress() public {
-        vm.expectRevert(CBL.CBL__ZeroAddress.selector);
-        new CBL(address(0), address(0), type(uint32).max);
+        vm.expectRevert(CBL.CBL__InvalidOwnerAddress.selector);
+        new CBL(address(0), makeAddr("minter"), type(uint32).max);
+
+        vm.expectRevert(CBL.CBL__InvalidMinterAddress.selector);
+        new CBL(makeAddr("owner"), address(0), type(uint32).max);
     }
 
     function test__CBL__SuccessfullyDeployCBLToken() public {
