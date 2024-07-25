@@ -2,46 +2,54 @@
 
 pragma solidity ^0.8.20;
 
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-import { HelperConfig } from "@script/HelperConfig.s.sol";
-import { DeployVaultFactory } from "@script/DeployVaultFactory.s.sol";
+import { VaultsSupportConfigured } from "@script/deployer/Configured.s.sol";
+import { DeployVaults, DeployVaultsSupport } from "@script/deployer/DeployVaults.s.sol";
 
 import { CredbullFixedYieldVault } from "@credbull/CredbullFixedYieldVault.sol";
 import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
 import { WhiteListProvider } from "@credbull/provider/whiteList/WhiteListProvider.sol";
 import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
 
-import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
+import { AltParamsFactory } from "@test/test/vault/utils/AltParamsFactory.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
-contract CredbullFixedYieldVaultTest is Test {
-    CredbullFixedYieldVault private vault;
-    HelperConfig private helperConfig;
-    DeployVaultFactory private deployer;
-    CredbullWhiteListProvider private whiteListProvider;
-
-    CredbullFixedYieldVault.FixedYieldVaultParams private params;
+contract CredbullFixedYieldVaultTest is Test, VaultsSupportConfigured {
+    uint256 private constant INITIAL_BALANCE = 1000;
+    uint256 private constant ADDITIONAL_PRECISION = 1e12;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
 
+    DeployVaults private vaultsDeployer;
+    DeployVaultsSupport private vaultsSupportDeployer;
+    CredbullFixedYieldVault private vault;
+    CredbullWhiteListProvider private whiteListProvider;
+
+    CredbullFixedYieldVault.FixedYieldVaultParams private params;
+
     uint256 private precision;
-    uint256 private constant INITIAL_BALANCE = 1000;
-    uint256 private constant ADDITIONAL_PRECISION = 1e12;
 
     function setUp() public {
-        deployer = new DeployVaultFactory();
-        (,, whiteListProvider, helperConfig) = deployer.runTest();
-        params = new ParamsFactory(helperConfig.getNetworkConfig()).createFixedYieldVaultParams();
+        vaultsDeployer = new DeployVaults();
+        vaultsSupportDeployer = new DeployVaultsSupport();
+
+        (,, whiteListProvider) = vaultsDeployer.deploy();
+        (ERC20 cbl, ERC20 usdc,) = vaultsSupportDeployer.deploy();
+
+        params = new AltParamsFactory(usdc, cbl).createFixedYieldVaultParams();
         params.whiteListPlugin.whiteListProvider = address(whiteListProvider);
 
         vault = new CredbullFixedYieldVault(params);
 
-        precision = 10 ** SimpleUSDC(address(params.maturityVault.vault.asset)).decimals();
+        SimpleUSDC asset = SimpleUSDC(address(params.maturityVault.vault.asset));
+
+        precision = 10 ** asset.decimals();
 
         address[] memory whiteListAddresses = new address[](2);
         whiteListAddresses[0] = alice;
@@ -55,8 +63,8 @@ contract CredbullFixedYieldVaultTest is Test {
         vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
-        SimpleUSDC(address(params.maturityVault.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
-        SimpleUSDC(address(params.maturityVault.vault.asset)).mint(bob, INITIAL_BALANCE * precision);
+        asset.mint(alice, INITIAL_BALANCE * precision);
+        asset.mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__FixedYieldVault__ShouldAllowOwnerToChangeOperator() public {

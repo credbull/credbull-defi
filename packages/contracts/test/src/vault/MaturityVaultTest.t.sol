@@ -4,19 +4,22 @@ pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
 
-import { HelperConfig } from "@script/HelperConfig.s.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+import { VaultsSupportConfigured } from "@script/deployer/Configured.s.sol";
+import { DeployVaultsSupport } from "@script/deployer/DeployVaults.s.sol";
 
 import { MaturityVault } from "@credbull/vault/MaturityVault.sol";
 
 import { SimpleMaturityVault } from "@test/test/vault/SimpleMaturityVault.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
-import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
+import { AltParamsFactory } from "@test/test/vault/utils/AltParamsFactory.t.sol";
 
-contract MaturityVaultTest is Test {
+contract MaturityVaultTest is Test, VaultsSupportConfigured {
+    DeployVaultsSupport private deployer;
     SimpleMaturityVault private vault;
 
     MaturityVault.MaturityVaultParams private params;
-    HelperConfig private helperConfig;
     uint256 private precision;
 
     address private alice = makeAddr("alice");
@@ -25,14 +28,16 @@ contract MaturityVaultTest is Test {
     uint256 private constant INITIAL_BALANCE = 1e6;
 
     function setUp() public {
-        helperConfig = new HelperConfig(true);
-        params = new ParamsFactory(helperConfig.getNetworkConfig()).createMaturityVaultParams();
+        deployer = new DeployVaultsSupport();
+        (ERC20 cbl, ERC20 usdc,) = deployer.deploy();
+        params = new AltParamsFactory(usdc, cbl).createMaturityVaultParams();
 
         vault = new SimpleMaturityVault(params);
         precision = 10 ** SimpleUSDC(address(params.vault.asset)).decimals();
 
-        SimpleUSDC(address(params.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
-        SimpleUSDC(address(params.vault.asset)).mint(bob, INITIAL_BALANCE * precision);
+        SimpleUSDC asset = SimpleUSDC(address(params.vault.asset));
+        asset.mint(alice, INITIAL_BALANCE * precision);
+        asset.mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__MaturityVault__WithdrawAssetAndBurnShares() public {
