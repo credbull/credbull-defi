@@ -2,11 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import { Test } from "forge-std/Test.sol";
-
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-import { VaultsConfigured } from "@script/deployer/Configured.s.sol";
 
 import { MaxCapPlugin } from "@credbull/plugin/MaxCapPlugin.sol";
 import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
@@ -16,10 +12,10 @@ import { FixedYieldVault } from "@credbull/vault/FixedYieldVault.sol";
 import { MaturityVault } from "@credbull/vault/MaturityVault.sol";
 import { Vault } from "@credbull/vault/Vault.sol";
 
-/**
- * @notice A test utility for creating 'Params' instances for the various [Vault] types.
- */
-contract AltParamsFactory is Test, VaultsConfigured {
+import { VaultsSupportConfiguredTest } from "@test/test/deployer/ConfiguredTest.t.sol";
+
+/// @notice A test utility for creating 'Params' instances for the various [Vault] types.
+contract AltParamsFactory is VaultsSupportConfiguredTest {
     uint256 private constant PROMISED_FIXED_YIELD = 10;
 
     ERC20 private usdc;
