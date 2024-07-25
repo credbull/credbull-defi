@@ -6,6 +6,7 @@ import { Test } from "forge-std/Test.sol";
 import { CBL } from "@credbull/token/CBL.sol";
 import { DeployCBLToken, CBLTokenParams } from "../../../script/DeployCBLToken.s.sol";
 import { ERC20Capped } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract CBLTest is Test {
     CBL private cbl;
@@ -80,5 +81,30 @@ contract CBLTest is Test {
         vm.prank(minter);
         cbl.mint(minter, 100);
         assertEq(cbl.totalSupply(), 100);
+    }
+
+    function test__CBL__PauseAndUnPauseMintAndBurn() public {
+        vm.prank(minter);
+        cbl.mint(alice, 100);
+
+        vm.prank(owner);
+        cbl.pause();
+
+        vm.prank(minter);
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        cbl.mint(alice, 100);
+
+        vm.prank(alice);
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        cbl.burn(100);
+
+        vm.prank(owner);
+        cbl.unpause();
+
+        vm.prank(minter);
+        cbl.mint(alice, 100);
+
+        vm.prank(alice);
+        cbl.burn(100);
     }
 }
