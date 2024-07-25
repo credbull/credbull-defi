@@ -31,7 +31,7 @@ deploy-alt:
 		--deploy-units 'vaults, vaults_support' && \
 	forge script script/deployer/DeployVaults.s.sol:DeployVaults --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
-    yarn db-export $$(cast chain-id --rpc-url $(RPC_URL))
+	yarn db-export $$(cast chain-id --rpc-url $(RPC_URL))
 
 # TODO: add --verifier flag.  forge isn't happy --etherscan-api-key is empty.
 deploy-bitlayerTestnet:
