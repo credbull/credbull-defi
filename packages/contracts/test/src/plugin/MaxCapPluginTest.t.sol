@@ -4,21 +4,25 @@ pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
 
-import { HelperConfig } from "@script/HelperConfig.s.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { Vault } from "@credbull/vault/Vault.sol";
 import { MaxCapPlugin } from "@credbull/plugin/MaxCapPlugin.sol";
+
+import { DeployVaultsSupport } from "@script/DeployVaults.s.sol";
+import { VaultsSupportConfigured } from "@script/Configured.s.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { SimpleMaxCapVault } from "@test/test/vault/SimpleMaxCapVault.t.sol";
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract MaxCapPluginTest is Test {
+contract MaxCapPluginTest is Test, VaultsSupportConfigured {
+    DeployVaultsSupport private deployer;
+
     SimpleMaxCapVault private vault;
 
     Vault.VaultParams private vaultParams;
     MaxCapPlugin.MaxCapPluginParams private maxCapParams;
-    HelperConfig private helperConfig;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
@@ -27,16 +31,20 @@ contract MaxCapPluginTest is Test {
     uint256 private constant INITIAL_BALANCE = 1e6;
 
     function setUp() public {
-        helperConfig = new HelperConfig(true);
-        ParamsFactory pf = new ParamsFactory(helperConfig.getNetworkConfig());
+        deployer = new DeployVaultsSupport();
+        (ERC20 cbl, ERC20 usdc,) = deployer.deploy();
+
+        ParamsFactory pf = new ParamsFactory(usdc, cbl);
         vaultParams = pf.createVaultParams();
         maxCapParams = pf.createMaxCapPluginParams();
 
         vault = new SimpleMaxCapVault(vaultParams, maxCapParams);
-        precision = 10 ** SimpleUSDC(address(vaultParams.asset)).decimals();
 
-        SimpleUSDC(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
-        SimpleUSDC(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
+        SimpleUSDC asset = SimpleUSDC(address(vaultParams.asset));
+        precision = 10 ** asset.decimals();
+
+        asset.mint(alice, INITIAL_BALANCE * precision);
+        asset.mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__MaxCapVault__ShouldRevertDepositIfReachedMaxCap() public {

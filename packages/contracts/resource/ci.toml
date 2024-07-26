@@ -2,12 +2,22 @@
 # The Application Configuration for the TestNet Environment.
 ##
 
-[evm]
-# blockchain id, e.g. baseSepolia=84532, arbSepolia=421614
-chain_id = 84532
-deploy_mocks = true
+[services.supabase]
+url = "https://iucsqvvjujqcncowypnr.supabase.co"
 
-[evm.address]
+[deployment]
+# After contract deployment, update the `contract_addresses` table, or not.
+update_contract_addresses = true
+
+[deployment.vaults]
+# The contracts that are in the 'vaults' deployment unit.
+contracts = [
+    "CredbullFixedYieldVaultFactory",
+    "CredbullUpsideVaultFactory",
+    "CredbullWhiteListProvider",
+]
+
+[deployment.vaults.address]
 # credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)
 # devops admin/owner (wallet 1) - public address, okay to share
 owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
@@ -16,21 +26,21 @@ operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # devops custodian (wallet 3) - public address, okay to share
 custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
 
-[evm.contracts.upside_vault]
-# 2 decimal place percentage (meaining value divided by 100) as integer.
-collateral_percentage = 200
+[deployment.vaults_support]
+# The contracts that are in the 'vaults_support' deployment unit.
+contracts = ["SimpleToken", "SimpleUSDC", "SimpleVault"]
 
-[evm.contracts.cbl]
-# CBL token params
+# Whether to deploy the Vaults Support contracts or not.
+deploy = true
+
+[deployment.cbl]
+# The contracts that are in the 'cbl' deployment unit.
+contracts = ["CBL"]
+
+max_supply = 10_000_000 # 10 million in wei
+
+[deployment.cbl.address]
 # devops admin/owner (wallet 1) - public address, okay to share
 owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 # devops operator (wallet 2) - public address, okay to share
 minter = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
-# CBL token params
-max_supply = 10_000_000 # 10 million in wei
-
-[services.supabase]
-url = "https://iucsqvvjujqcncowypnr.supabase.co"
-
-# Save the contract deployment details to the database.
-update_contract_addresses = true

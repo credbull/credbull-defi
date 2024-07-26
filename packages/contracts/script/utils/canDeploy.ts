@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-import { loadConfiguration } from '../utils/config';
+import { loadConfiguration } from './config';
 
 async function isAnyDeployed(config: any, chainId: string, contracts: string[]): Promise<boolean> {
   const supabaseClient = createClient(config.services.supabase.url, config.env.SUPABASE_SERVICE_ROLE_KEY);

@@ -2,15 +2,12 @@
 
 pragma solidity ^0.8.20;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
 
-import { DeployVaultFactory } from "@script/DeployVaultFactory.s.sol";
-import { HelperConfig } from "@script/HelperConfig.s.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { CredbullFixedYieldVaultWithUpside } from "@credbull/CredbullFixedYieldVaultWithUpside.sol";
 import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
@@ -20,17 +17,26 @@ import { FixedYieldVault } from "@credbull/vault/FixedYieldVault.sol";
 import { UpsideVault } from "@credbull/vault/UpsideVault.sol";
 import { Vault } from "@credbull/vault/Vault.sol";
 
+import { DeployVaults, DeployVaultsSupport } from "@script/DeployVaults.s.sol";
+import { VaultsSupportConfigured } from "@script/Configured.s.sol";
+
 import { DecimalToken } from "@test/test/token/DecimalToken.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract CredbullFixedYieldVaultWithUpsideTest is Test {
+contract CredbullFixedYieldVaultWithUpsideTest is Test, VaultsSupportConfigured {
     using Math for uint256;
 
+    uint256 private constant INITIAL_BALANCE = 1e6;
+    uint256 private constant REQUIRED_COLLATERAL_PERCENTAGE = 20_00;
+    uint256 private constant ADDITIONAL_PRECISION = 1e12;
+    uint16 private constant MAX_PERCENTAGE = 100_00;
+
+    DeployVaults private deployer;
+    DeployVaultsSupport private supportDeployer;
+
     CredbullFixedYieldVaultWithUpside private vault;
-    HelperConfig private helperConfig;
-    DeployVaultFactory private deployer;
     CredbullWhiteListProvider private whiteListProvider;
 
     FixedYieldVault.FixedYieldVaultParams private vaultParams;
@@ -38,24 +44,25 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
     address private alice = makeAddr("alice");
 
-    uint256 private constant INITIAL_BALANCE = 1e6;
-    uint256 private constant REQUIRED_COLLATERAL_PERCENTAGE = 20_00;
-    uint256 private constant ADDITIONAL_PRECISION = 1e12;
-    uint16 private constant MAX_PERCENTAGE = 100_00;
-    IERC20 private cblToken;
+    ERC20 private cbl;
+    ERC20 private usdc;
 
     uint256 private precision;
 
     function setUp() public {
-        deployer = new DeployVaultFactory();
-        (,, whiteListProvider, helperConfig) = deployer.runTest();
-        (upsideVaultParams) = new ParamsFactory(helperConfig.getNetworkConfig()).createUpsideVaultParams();
+        deployer = new DeployVaults();
+        supportDeployer = new DeployVaultsSupport();
+
+        (,, whiteListProvider) = deployer.deploy();
+        (cbl, usdc,) = supportDeployer.deploy();
+
+        (upsideVaultParams) = new ParamsFactory(usdc, cbl).createUpsideVaultParams();
         vaultParams = upsideVaultParams.fixedYieldVault;
         upsideVaultParams.fixedYieldVault.whiteListPlugin.whiteListProvider = address(whiteListProvider);
-        cblToken = upsideVaultParams.cblToken;
-
         vault = new CredbullFixedYieldVaultWithUpside(upsideVaultParams);
-        precision = 10 ** SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).decimals();
+
+        SimpleUSDC asset = SimpleUSDC(address(vaultParams.maturityVault.vault.asset));
+        precision = 10 ** asset.decimals();
 
         address[] memory whiteListAddresses = new address[](1);
         whiteListAddresses[0] = alice;
@@ -67,8 +74,8 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
-        SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
-        SimpleToken(address(cblToken)).mint(alice, 200 ether);
+        asset.mint(alice, INITIAL_BALANCE * precision);
+        SimpleToken(address(cbl)).mint(alice, 200 ether);
     }
 
     function test__UpsideVault__VaultCreationShouldRevertOnUnsupportedDecimalValue() public {
@@ -120,7 +127,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         // Alice should have the shares
         assertEq(shares, depositAmount, "User should now have the Shares");
         assertEq(
-            cblToken.balanceOf(address(vault)),
+            cbl.balanceOf(address(vault)),
             (depositAmount * ADDITIONAL_PRECISION).mulDiv(REQUIRED_COLLATERAL_PERCENTAGE, MAX_PERCENTAGE),
             "Vault should now have the Tokens"
         );
@@ -214,7 +221,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         // Alice should have the shares
         assertEq(assets, sharesAmount, "User should now have the Shares");
         assertEq(
-            cblToken.balanceOf(address(vault)),
+            cbl.balanceOf(address(vault)),
             (sharesAmount * ADDITIONAL_PRECISION).mulDiv(REQUIRED_COLLATERAL_PERCENTAGE, MAX_PERCENTAGE),
             "Vault should now have the Tokens"
         );
@@ -236,7 +243,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     function depositWithRevert(address user, uint256 assets) internal returns (uint256 shares) {
         vm.startPrank(user);
         vaultParams.maturityVault.vault.asset.approve(address(vault), assets);
-        cblToken.approve(address(vault), assets * ADDITIONAL_PRECISION);
+        cbl.approve(address(vault), assets * ADDITIONAL_PRECISION);
         vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__InvalidAssetAmount.selector, assets));
         shares = vault.deposit(assets, user);
         vm.stopPrank();
@@ -309,7 +316,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
         console2.log("assets", assets);
 
-        assertEq(cblToken.balanceOf(alice), collateralToRedeem, "Alice should now have the Tokens");
+        assertEq(cbl.balanceOf(alice), collateralToRedeem, "Alice should now have the Tokens");
         assertEq(
             vaultParams.maturityVault.vault.asset.balanceOf(alice),
             balanceBeforeRedeem + assets,
@@ -351,7 +358,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         vm.prank(alice);
         vault.withdraw(assetToReceive, alice, alice);
 
-        assertEq(cblToken.balanceOf(alice), 200 ether, "Alice should now have the Tokens");
+        assertEq(cbl.balanceOf(alice), 200 ether, "Alice should now have the Tokens");
         assertEq(
             vaultParams.maturityVault.vault.asset.balanceOf(alice),
             assetBalanceBeforeWithdraw + assetToReceive,
@@ -363,7 +370,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         // first, approve the deposit
         vm.startPrank(user);
         vaultParams.maturityVault.vault.asset.approve(address(vault), assets);
-        cblToken.approve(address(vault), assets * ADDITIONAL_PRECISION);
+        cbl.approve(address(vault), assets * ADDITIONAL_PRECISION);
 
         // wrap if set to true
         if (warp) {
@@ -378,7 +385,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         // first, approve the deposit
         vm.startPrank(user);
         vaultParams.maturityVault.vault.asset.approve(address(vault), shares);
-        cblToken.approve(address(vault), shares * ADDITIONAL_PRECISION);
+        cbl.approve(address(vault), shares * ADDITIONAL_PRECISION);
 
         // wrap if set to true
         if (warp) {

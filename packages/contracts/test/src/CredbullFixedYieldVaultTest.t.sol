@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.20;
 
+import { Test } from "forge-std/Test.sol";
+
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -11,20 +13,22 @@ import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.s
 import { WhiteListProvider } from "@credbull/provider/whiteList/WhiteListProvider.sol";
 import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
 
-import { AltParamsFactory } from "@test/test/vault/utils/AltParamsFactory.t.sol";
-import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
-import { TestDeployVaults, TestDeployVaultsSupport } from "@test/test/deployer/TestDeployVaults.t.sol";
-import { VaultsSupportConfiguredTest } from "@test/test/deployer/ConfiguredTest.t.sol";
+import { DeployVaults, DeployVaultsSupport } from "@script/DeployVaults.s.sol";
+import { VaultsSupportConfigured } from "@script/Configured.s.sol";
 
-contract CredbullFixedYieldVaultTest is VaultsSupportConfiguredTest {
+import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
+import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
+
+contract CredbullFixedYieldVaultTest is Test, VaultsSupportConfigured {
     uint256 private constant INITIAL_BALANCE = 1000;
     uint256 private constant ADDITIONAL_PRECISION = 1e12;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
 
-    TestDeployVaults private vaultsDeployer;
-    TestDeployVaultsSupport private vaultsSupportDeployer;
+    DeployVaults private deployer;
+    DeployVaultsSupport private supportDeployer;
+
     CredbullFixedYieldVault private vault;
     CredbullWhiteListProvider private whiteListProvider;
 
@@ -33,13 +37,13 @@ contract CredbullFixedYieldVaultTest is VaultsSupportConfiguredTest {
     uint256 private precision;
 
     function setUp() public {
-        vaultsDeployer = new TestDeployVaults();
-        vaultsSupportDeployer = new TestDeployVaultsSupport();
+        deployer = new DeployVaults();
+        supportDeployer = new DeployVaultsSupport();
 
-        (,, whiteListProvider) = vaultsDeployer.deploy();
-        (ERC20 cbl, ERC20 usdc,) = vaultsSupportDeployer.deploy();
+        (,, whiteListProvider) = deployer.deploy();
+        (ERC20 cbl, ERC20 usdc,) = supportDeployer.deploy();
 
-        params = new AltParamsFactory(usdc, cbl).createFixedYieldVaultParams();
+        params = new ParamsFactory(usdc, cbl).createFixedYieldVaultParams();
         params.whiteListPlugin.whiteListProvider = address(whiteListProvider);
 
         vault = new CredbullFixedYieldVault(params);

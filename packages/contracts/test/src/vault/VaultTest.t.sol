@@ -8,7 +8,8 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import { HelperConfig } from "@script/HelperConfig.s.sol";
+import { DeployVaultsSupport } from "@script/DeployVaults.s.sol";
+import { VaultsSupportConfigured } from "@script/Configured.s.sol";
 
 import { Vault } from "@credbull/vault/Vault.sol";
 
@@ -16,13 +17,13 @@ import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { SimpleVault } from "@test/test/vault/SimpleVault.t.sol";
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract VaultTest is Test {
+contract VaultTest is Test, VaultsSupportConfigured {
     using Math for uint256;
 
+    DeployVaultsSupport private deployer;
     SimpleVault private vault;
-    HelperConfig private helperConfig;
 
-    Vault.VaultParams private vaultParams;
+    Vault.VaultParams private params;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
@@ -33,23 +34,25 @@ contract VaultTest is Test {
     uint256 private constant MAX_PERCENTAGE = 100_00;
 
     function setUp() public {
-        helperConfig = new HelperConfig(true);
-        vaultParams = new ParamsFactory(helperConfig.getNetworkConfig()).createVaultParams();
+        deployer = new DeployVaultsSupport();
+        (ERC20 cbl, ERC20 usdc,) = deployer.deploy();
+        params = new ParamsFactory(usdc, cbl).createVaultParams();
+        vault = createTestVault(params);
 
-        vault = createTestVault(vaultParams);
-        precision = 10 ** SimpleUSDC(address(vaultParams.asset)).decimals();
+        SimpleUSDC asset = SimpleUSDC(address(params.asset));
+        precision = 10 ** asset.decimals();
 
-        SimpleUSDC(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
-        SimpleUSDC(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
+        asset.mint(alice, INITIAL_BALANCE * precision);
+        asset.mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__Vault__ShareNameAndSymbol() public view {
-        assertEq(vault.name(), vaultParams.shareName);
-        assertEq(vault.symbol(), vaultParams.shareSymbol);
+        assertEq(vault.name(), params.shareName);
+        assertEq(vault.symbol(), params.shareSymbol);
     }
 
     function test__Vault__CustodianAddress() public view {
-        assertEq(vault.CUSTODIAN(), vaultParams.custodian);
+        assertEq(vault.CUSTODIAN(), params.custodian);
     }
 
     function test__Vault__ShouldRevertOnInvalidAsset() public {
@@ -60,7 +63,7 @@ contract VaultTest is Test {
                 asset: IERC20(zeroAddress),
                 shareName: "Test",
                 shareSymbol: "test",
-                custodian: vaultParams.custodian
+                custodian: params.custodian
             })
         );
     }
@@ -70,24 +73,19 @@ contract VaultTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__InvalidCustodianAddress.selector, zeroAddress));
         new SimpleVault(
-            Vault.VaultParams({
-                asset: vaultParams.asset,
-                shareName: "Test",
-                shareSymbol: "test",
-                custodian: zeroAddress
-            })
+            Vault.VaultParams({ asset: params.asset, shareName: "Test", shareSymbol: "test", custodian: zeroAddress })
         );
     }
 
     function test__Vault__ShouldReturnCorrectDecimalValue() public view {
-        assertEq(vault.decimals(), SimpleUSDC(address(vaultParams.asset)).decimals());
+        assertEq(vault.decimals(), SimpleUSDC(address(params.asset)).decimals());
     }
 
     function test__Vault__DepositAssetsAndGetShares() public {
-        uint256 custodiansBalance = vaultParams.asset.balanceOf(vaultParams.custodian);
+        uint256 custodiansBalance = params.asset.balanceOf(params.custodian);
 
         // ---- Setup Part 1, Check balance before deposit ----
-        assertEq(vaultParams.asset.balanceOf(address(vault)), 0, "Vault should start with no assets");
+        assertEq(params.asset.balanceOf(address(vault)), 0, "Vault should start with no assets");
         assertEq(vault.totalAssets(), 0, "Vault should start with no assets");
         assertEq(vault.balanceOf(alice), 0, "User should start with no Shares");
 
@@ -101,7 +99,7 @@ contract VaultTest is Test {
         // Vault should have the assets
         assertEq(vault.totalAssets(), depositAmount, "Vault should now have the assets");
         assertEq(
-            vaultParams.asset.balanceOf(vaultParams.custodian),
+            params.asset.balanceOf(params.custodian),
             depositAmount + custodiansBalance,
             "Custodian should have received the assets"
         );
@@ -118,18 +116,18 @@ contract VaultTest is Test {
         uint256 shares = deposit(alice, depositAmount);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        SimpleUSDC(address(vaultParams.asset)).mint(vaultParams.custodian, 1 * precision);
-        uint256 finalBalance = SimpleUSDC(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
+        SimpleUSDC(address(params.asset)).mint(params.custodian, 1 * precision);
+        uint256 finalBalance = SimpleUSDC(address(params.asset)).balanceOf(params.custodian);
 
-        vm.prank(vaultParams.custodian);
-        vaultParams.asset.transfer(address(vault), finalBalance);
+        vm.prank(params.custodian);
+        params.asset.transfer(address(vault), finalBalance);
 
         // ---- Assert Vault burns shares and Alice receive asset with additional 10% ---
-        uint256 balanceBeforeRedeem = vaultParams.asset.balanceOf(alice);
+        uint256 balanceBeforeRedeem = params.asset.balanceOf(alice);
         vm.startPrank(alice);
         vault.approve(address(vault), shares);
         uint256 assets = vault.redeem(shares, alice, alice);
-        uint256 balanceAfterRedeem = vaultParams.asset.balanceOf(alice);
+        uint256 balanceAfterRedeem = params.asset.balanceOf(alice);
         vm.stopPrank();
 
         assertEq(balanceAfterRedeem, balanceBeforeRedeem + assets, "Alice should recieve finalBalance with 10% yeild");
@@ -174,15 +172,15 @@ contract VaultTest is Test {
 
     function test__ShouldRevertIfDecimalIsNotSupported() public {
         vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__UnsupportedDecimalValue.selector, 24));
-        vm.mockCall(address(vaultParams.asset), abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(24));
-        createTestVault(vaultParams);
+        vm.mockCall(address(params.asset), abi.encodeWithSelector(ERC20.decimals.selector), abi.encode(24));
+        createTestVault(params);
     }
 
     function test__Vault__Deposit__Fuzz(uint256 depositAmount) public {
-        uint256 custodiansBalance = vaultParams.asset.balanceOf(vaultParams.custodian);
+        uint256 custodiansBalance = params.asset.balanceOf(params.custodian);
 
         // ---- Setup Part 1, Check balance before deposit ----
-        assertEq(vaultParams.asset.balanceOf(address(vault)), 0, "Vault should start with no assets");
+        assertEq(params.asset.balanceOf(address(vault)), 0, "Vault should start with no assets");
         assertEq(vault.totalAssets(), 0, "Vault should start with no assets");
         assertEq(vault.balanceOf(alice), 0, "User should start with no Shares");
 
@@ -200,7 +198,7 @@ contract VaultTest is Test {
             // Vault should have the assets
             assertEq(vault.totalAssets(), depositAmount, "Vault should now have the assets");
             assertEq(
-                vaultParams.asset.balanceOf(vaultParams.custodian),
+                params.asset.balanceOf(params.custodian),
                 depositAmount + custodiansBalance,
                 "Custodian should have received the assets"
             );
@@ -212,10 +210,10 @@ contract VaultTest is Test {
     }
 
     function test__Vault__MultiDepositAndWithdraw__Fuzz(uint256 aliceDepositAmount, uint256 bobDepositAmount) public {
-        uint256 custodiansBalance = vaultParams.asset.balanceOf(vaultParams.custodian);
+        uint256 custodiansBalance = params.asset.balanceOf(params.custodian);
 
         // ---- Setup Part 1, Check balance before deposit ----
-        assertEq(vaultParams.asset.balanceOf(address(vault)), 0, "Vault should start with no assets");
+        assertEq(params.asset.balanceOf(address(vault)), 0, "Vault should start with no assets");
         assertEq(vault.totalAssets(), 0, "Vault should start with no assets");
         assertEq(vault.balanceOf(alice), 0, "User A should start with no Shares");
         assertEq(vault.balanceOf(bob), 0, "User B should start with no Shares");
@@ -250,7 +248,7 @@ contract VaultTest is Test {
         assertEq(vault.totalAssets(), totalDepositAmount, "Vault should now have the assets");
 
         assertEq(
-            vaultParams.asset.balanceOf(vaultParams.custodian),
+            params.asset.balanceOf(params.custodian),
             totalDepositAmount + custodiansBalance,
             "Custodian should have received the assets"
         );
@@ -259,22 +257,20 @@ contract VaultTest is Test {
         assertEq(vault.balanceOf(bob), bobShares, "Bob should now have the Shares");
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        SimpleUSDC(address(vaultParams.asset)).mint(
-            vaultParams.custodian, totalDepositAmount.mulDiv(10_00, MAX_PERCENTAGE)
-        );
-        uint256 finalBalance = SimpleUSDC(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
+        SimpleUSDC(address(params.asset)).mint(params.custodian, totalDepositAmount.mulDiv(10_00, MAX_PERCENTAGE));
+        uint256 finalBalance = SimpleUSDC(address(params.asset)).balanceOf(params.custodian);
 
-        vm.prank(vaultParams.custodian);
-        vaultParams.asset.transfer(address(vault), finalBalance);
+        vm.prank(params.custodian);
+        params.asset.transfer(address(vault), finalBalance);
 
         if (aliceShares > 0) {
             // ---- Assert Vault burns shares and Alice receive asset with additional 10% ---
             uint256 vaultSupplyBeofreRedeem = vault.totalSupply();
-            uint256 balanceBeforeRedeem = vaultParams.asset.balanceOf(alice);
+            uint256 balanceBeforeRedeem = params.asset.balanceOf(alice);
             vm.startPrank(alice);
             vault.approve(address(vault), aliceShares);
             uint256 assets = vault.redeem(aliceShares, alice, alice);
-            uint256 balanceAfterRedeem = vaultParams.asset.balanceOf(alice);
+            uint256 balanceAfterRedeem = params.asset.balanceOf(alice);
             vm.stopPrank();
 
             assertEq(
@@ -286,11 +282,11 @@ contract VaultTest is Test {
         if (bobShares > 0) {
             // ---- Assert Vault burns shares and Bob receive asset with additional 10% ---
             uint256 vaultSupplyBeofreRedeem = vault.totalSupply();
-            uint256 balanceBeforeRedeem = vaultParams.asset.balanceOf(bob);
+            uint256 balanceBeforeRedeem = params.asset.balanceOf(bob);
             vm.startPrank(bob);
             vault.approve(address(vault), bobShares);
             uint256 assets = vault.redeem(bobShares, bob, bob);
-            uint256 balanceAfterRedeem = vaultParams.asset.balanceOf(bob);
+            uint256 balanceAfterRedeem = params.asset.balanceOf(bob);
             vm.stopPrank();
 
             assertEq(balanceAfterRedeem, balanceBeforeRedeem + assets, "Bob should recieve finalBalance with 10% yeild");
@@ -304,11 +300,11 @@ contract VaultTest is Test {
         uint256 shares = deposit(alice, depositAmount);
 
         // ----- Setup Part 2 - Deposit asset from custodian vault with 10% addition yeild ---- //
-        SimpleUSDC(address(vaultParams.asset)).mint(vaultParams.custodian, depositAmount.mulDiv(10_00, MAX_PERCENTAGE));
-        uint256 finalBalance = SimpleUSDC(address(vaultParams.asset)).balanceOf(vaultParams.custodian);
+        SimpleUSDC(address(params.asset)).mint(params.custodian, depositAmount.mulDiv(10_00, MAX_PERCENTAGE));
+        uint256 finalBalance = SimpleUSDC(address(params.asset)).balanceOf(params.custodian);
 
-        vm.prank(vaultParams.custodian);
-        vaultParams.asset.transfer(address(vault), finalBalance);
+        vm.prank(params.custodian);
+        params.asset.transfer(address(vault), finalBalance);
 
         // ---- Assert Vault burns shares
         vm.startPrank(alice);
@@ -358,7 +354,7 @@ contract VaultTest is Test {
     function deposit(address user, uint256 assets) internal returns (uint256 shares) {
         // first, approve the deposit
         vm.startPrank(user);
-        vaultParams.asset.approve(address(vault), assets);
+        params.asset.approve(address(vault), assets);
 
         shares = vault.deposit(assets, user);
         vm.stopPrank();
@@ -366,7 +362,7 @@ contract VaultTest is Test {
 
     function depositWithRevert(address user, uint256 assets) internal returns (uint256 shares) {
         vm.startPrank(user);
-        vaultParams.asset.approve(address(vault), assets);
+        params.asset.approve(address(vault), assets);
         vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__InvalidAssetAmount.selector, assets));
         shares = vault.deposit(assets, alice);
         vm.stopPrank();

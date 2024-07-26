@@ -19,7 +19,7 @@ abstract contract Configured is CommonBase, StdChains {
     Chain internal chain;
 
     constructor() {
-        config = loadConfiguration();
+        config = loadConfiguration(environment());
         chain = getChain(block.chainid);
     }
 
@@ -28,8 +28,13 @@ abstract contract Configured is CommonBase, StdChains {
         return vm.envString("ENVIRONMENT");
     }
 
-    function loadConfiguration() private view returns (string memory) {
-        string memory path = string.concat(vm.projectRoot(), "/resource/", environment(), ".toml");
+    /// @dev Clients can invoke this to load a specific environment.
+    function loadEnvironment(string memory _environment) public {
+        config = loadConfiguration(_environment);
+    }
+
+    function loadConfiguration(string memory _environment) private view returns (string memory) {
+        string memory path = string.concat(vm.projectRoot(), "/resource/", _environment, ".toml");
         console2.log(string.concat("Loading TOML configuration from: ", path));
         return vm.readFile(path);
     }

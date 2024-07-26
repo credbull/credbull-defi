@@ -4,7 +4,7 @@
 -include .env
 
 deploy-local:
-	$(MAKE) deploy-alt RPC_URL=localhost EXTRA_FLAGS=
+	$(MAKE) deploy RPC_URL=localhost EXTRA_FLAGS=
 
 # TODO: change this to use the network config from foundry.toml
 deploy-arbSepolia:
@@ -16,20 +16,11 @@ resume-arbSepolia:
 deploy-baseSepolia:
 	$(MAKE) deploy RPC_URL=baseSepolia EXTRA_FLAGS="--verify --slow"
 
-# NOTE (JL,2024-05-20): `forge` auto-includes any `.env` file in the invocation directory.
 deploy:
 	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
-	@rm -rf out && \
-	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
-	yarn gen-types && \
-	yarn db-export $$(cast chain-id --rpc-url $(RPC_URL))
-
-deploy-alt:
-	@echo "Running deploy ALT '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
-	yarn run ts-node script/deployer/canDeploy.ts --chain-id $$(cast chain-id --rpc-url $(RPC_URL)) \
+	yarn run ts-node script/utils/canDeploy.ts --chain-id $$(cast chain-id --rpc-url $(RPC_URL)) \
 		--deploy-units 'vaults, vaults_support' && \
-	forge script script/deployer/DeployVaults.s.sol:DeployVaults --rpc-url $(RPC_URL) \
+	forge script script/DeployVaults.s.sol:DeployVaults --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
 	yarn db-export $$(cast chain-id --rpc-url $(RPC_URL))
 
@@ -44,4 +35,4 @@ verify:
 	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume -vvvv && \
 	yarn gen-types && \
-	yarn db-export
+	yarn db-export $$(cast chain-id --rpc-url $(RPC_URL))
