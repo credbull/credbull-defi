@@ -17,12 +17,8 @@ contract DeployCBLToken is Script, CBLConfigured {
      * @return cbl The deployed [CBL] token.
      */
     function run() external returns (CBL cbl) {
-        address owner = owner();
-        address minter = minter();
-        uint256 maxSupply = maxSupply();
-
         vm.startBroadcast();
-        cbl = new CBL(owner, minter, maxSupply);
+        cbl = new CBL(owner(), minter(), maxSupply());
         vm.stopBroadcast();
 
         return cbl;
