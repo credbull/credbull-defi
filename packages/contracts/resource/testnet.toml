@@ -4,7 +4,7 @@
 
 [evm]
 # blockchain id, e.g. baseSepolia=84532, arbSepolia=421614
-chain_id = 84532
+chain_id = 421614
 deploy_mocks = true
 
 [evm.address]
@@ -22,12 +22,12 @@ collateral_percentage = 200
 
 [evm.contracts.cbl]
 # CBL token params
-# devops admin/owner (wallet 1) - public address, okay to share
-owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
-# devops operator (wallet 2) - public address, okay to share
-minter = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
+# primevault Wallet "TEST - Testnet Owner Role v1.0"
+owner = "0xd0065B8662846EaDB3F619c2e2b5b20Bdf47da36"
+# primevault Wallet "TEST - Testnet Operator Role v1.0"
+minter = "0x5103697D83F52D6184B55506345e4B7bbB300E2f"
 # CBL token params
-max_supply = 10_000_000 # 10 million in wei
+max_supply = 1_000_000_000 # 1 billion in wei
 
 [services.supabase]
 url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"

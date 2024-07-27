@@ -26,7 +26,7 @@ owner = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 # Dev/Anvil Wallet, Account[1]
 minter = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
 
-max_supply = 10_000_000 # 10 million in wei
+max_supply = 1_000_000_000 # 1 billion in wei
 
 [services.supabase]
 url = "http://127.0.0.1:54321"

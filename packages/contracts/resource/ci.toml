@@ -27,7 +27,7 @@ owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 # devops operator (wallet 2) - public address, okay to share
 minter = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # CBL token params
-max_supply = 10_000_000 # 10 million in wei
+max_supply = 1_000_000_000 # 1 billion in wei
 
 [services.supabase]
 url = "https://iucsqvvjujqcncowypnr.supabase.co"
