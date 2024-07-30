@@ -12,6 +12,7 @@ import { CredbullFixedYieldVault } from "@credbull/CredbullFixedYieldVault.sol";
 import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
 import { WhiteListProvider } from "@credbull/provider/whiteList/WhiteListProvider.sol";
 import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
+import { FixedYieldVault } from "@credbull/vault/FixedYieldVault.sol";
 
 import { DeployVaults } from "@script/DeployVaults.s.sol";
 import { DeployVaultsSupport } from "@script/DeployVaultsSupport.s.sol";
@@ -68,6 +69,17 @@ contract CredbullFixedYieldVaultTest is Test, VaultsSupportConfig {
 
         asset.mint(alice, INITIAL_BALANCE * precision);
         asset.mint(bob, INITIAL_BALANCE * precision);
+    }
+
+    function test__FixedYieldVault__RevertOnInvalidAddress() public {
+        params.roles.owner = address(0);
+        vm.expectRevert(abi.encodeWithSelector(FixedYieldVault.FixedYieldVault__InvalidOwnerAddress.selector));
+        new CredbullFixedYieldVault(params);
+
+        params.roles.owner = makeAddr("owner");
+        params.roles.operator = address(0);
+        vm.expectRevert(abi.encodeWithSelector(FixedYieldVault.FixedYieldVault__InvalidOperatorAddress.selector));
+        new CredbullFixedYieldVault(params);
     }
 
     function test__FixedYieldVault__ShouldAllowOwnerToChangeOperator() public {

@@ -14,6 +14,15 @@ abstract contract VaultFactory is AccessControl {
     /// @notice Error to revert if custodian is not allowed
     error CredbullVaultFactory__CustodianNotAllowed();
 
+    /// @notice Error to indicate that the provided owner address is invalid.
+    error CredbullVaultFactory__InvalidOwnerAddress();
+
+    /// @notice Error to indicate that the provided operator address is invalid.
+    error CredbullVaultFactory__InvalidOperatorAddress();
+
+    /// @notice Error to indicate that the provided custodian address is invalid.
+    error CredbullVaultFactory__InvalidCustodianAddress();
+
     /// @notice Address set that contains list of all vault address
     EnumerableSet.AddressSet internal allVaults;
 
@@ -29,6 +38,13 @@ abstract contract VaultFactory is AccessControl {
      * @param custodians - Initial set of custodians allowable for the vaults
      */
     constructor(address owner, address operator, address[] memory custodians) {
+        if (owner == address(0)) {
+            revert CredbullVaultFactory__InvalidOwnerAddress();
+        }
+
+        if (operator == address(0)) {
+            revert CredbullVaultFactory__InvalidOperatorAddress();
+        }
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
         _grantRole(OPERATOR_ROLE, operator);
 
@@ -58,6 +74,9 @@ abstract contract VaultFactory is AccessControl {
 
     /// @notice Add custodian address to the set
     function allowCustodian(address _custodian) public onlyRole(DEFAULT_ADMIN_ROLE) returns (bool) {
+        if (_custodian == address(0)) {
+            revert CredbullVaultFactory__InvalidCustodianAddress();
+        }
         return allowedCustodians.add(_custodian);
     }
 
