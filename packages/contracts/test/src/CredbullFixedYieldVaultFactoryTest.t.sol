@@ -31,8 +31,8 @@ contract CredbullFixedYieldVaultFactoryTest is Test, VaultsSupportConfigured {
         deployer = new DeployVaults();
         supportDeployer = new DeployVaultsSupport();
 
-        (factory,, whiteListProvider) = deployer.deploy();
-        (ERC20 cbl, ERC20 usdc,) = supportDeployer.deploy();
+        (factory,, whiteListProvider) = deployer.deploy(true);
+        (ERC20 cbl, ERC20 usdc,) = supportDeployer.deploy(true);
 
         params = new ParamsFactory(usdc, cbl).createFixedYieldVaultParams();
         params.whiteListPlugin.whiteListProvider = address(whiteListProvider);

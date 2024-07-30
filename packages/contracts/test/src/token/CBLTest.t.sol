@@ -22,7 +22,7 @@ contract CBLTest is Test, CBLConfigured {
     function setUp() public {
         deployer = new DeployCBLToken();
 
-        cbl = deployer.run();
+        cbl = deployer.deploy(true);
     }
 
     function test__CBL__ShouldRevertOnZeroAddress() public {

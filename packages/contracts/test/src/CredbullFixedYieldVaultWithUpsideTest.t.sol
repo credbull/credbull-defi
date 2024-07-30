@@ -53,8 +53,8 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test, VaultsSupportConfigured 
         deployer = new DeployVaults();
         supportDeployer = new DeployVaultsSupport();
 
-        (,, whiteListProvider) = deployer.deploy();
-        (cbl, usdc,) = supportDeployer.deploy();
+        (,, whiteListProvider) = deployer.deploy(true);
+        (cbl, usdc,) = supportDeployer.deploy(true);
 
         (upsideVaultParams) = new ParamsFactory(usdc, cbl).createUpsideVaultParams();
         vaultParams = upsideVaultParams.fixedYieldVault;

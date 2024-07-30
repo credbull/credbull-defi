@@ -29,7 +29,7 @@ contract MaturityVaultTest is Test, VaultsSupportConfigured {
 
     function setUp() public {
         deployer = new DeployVaultsSupport();
-        (ERC20 cbl, ERC20 usdc,) = deployer.deploy();
+        (ERC20 cbl, ERC20 usdc,) = deployer.deploy(true);
         params = new ParamsFactory(usdc, cbl).createMaturityVaultParams();
         vault = new SimpleMaturityVault(params);
 

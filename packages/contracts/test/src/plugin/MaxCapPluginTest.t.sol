@@ -32,7 +32,7 @@ contract MaxCapPluginTest is Test, VaultsSupportConfigured {
 
     function setUp() public {
         deployer = new DeployVaultsSupport();
-        (ERC20 cbl, ERC20 usdc,) = deployer.deploy();
+        (ERC20 cbl, ERC20 usdc,) = deployer.deploy(true);
 
         ParamsFactory pf = new ParamsFactory(usdc, cbl);
         vaultParams = pf.createVaultParams();

@@ -30,8 +30,8 @@ contract CredbullUpsideVaultFactoryTest is Test, VaultsSupportConfigured {
         deployer = new DeployVaults();
         supportDeployer = new DeployVaultsSupport();
 
-        (, factory, whiteListProvider) = deployer.deploy();
-        (ERC20 cbl, ERC20 usdc,) = supportDeployer.deploy();
+        (, factory, whiteListProvider) = deployer.deploy(true);
+        (ERC20 cbl, ERC20 usdc,) = supportDeployer.deploy(true);
 
         paramsFactory = new ParamsFactory(usdc, cbl);
     }
