@@ -15,12 +15,19 @@ import { stdToml } from "forge-std/StdToml.sol";
 abstract contract Configured is CommonBase, StdChains {
     using stdToml for string;
 
-    string internal config;
+    string private _config;
     Chain internal chain;
 
     constructor() {
-        config = loadConfiguration(environment());
         chain = getChain(block.chainid);
+    }
+
+    /// @dev Returns the loaded configuration [string], loading it if necessary.
+    function config() internal returns (string memory) {
+        if (bytes(_config).length == 0) {
+            loadEnvironment(environment());
+        }
+        return _config;
     }
 
     /// @dev Realisations can override this function to control what environment configuration file is loaded.
@@ -30,7 +37,7 @@ abstract contract Configured is CommonBase, StdChains {
 
     /// @dev Clients can invoke this to load a specific environment.
     function loadEnvironment(string memory _environment) public {
-        config = loadConfiguration(_environment);
+        _config = loadConfiguration(_environment);
     }
 
     function loadConfiguration(string memory _environment) private view returns (string memory) {
@@ -52,9 +59,9 @@ abstract contract Configured is CommonBase, StdChains {
      *
      * @return The effective Configuration Key.
      */
-    function configKeyFor(string memory configKey) internal view returns (string memory) {
+    function configKeyFor(string memory configKey) internal returns (string memory) {
         string memory overrideKey = string.concat(".network.", chain.chainAlias, configKey);
-        return vm.keyExistsToml(config, overrideKey) ? overrideKey : configKey;
+        return vm.keyExistsToml(config(), overrideKey) ? overrideKey : configKey;
     }
 }
 
@@ -66,16 +73,16 @@ abstract contract VaultsConfigured is Configured {
     string private constant CONFIG_KEY_ADDRESS_OPERATOR = ".deployment.vaults.address.operator";
     string private constant CONFIG_KEY_ADDRESS_CUSTODIAN = ".deployment.vaults.address.custodian";
 
-    function owner() internal view returns (address) {
-        return config.readAddress(configKeyFor(CONFIG_KEY_ADDRESS_OWNER));
+    function owner() internal returns (address) {
+        return config().readAddress(configKeyFor(CONFIG_KEY_ADDRESS_OWNER));
     }
 
-    function operator() internal view returns (address) {
-        return config.readAddress(configKeyFor(CONFIG_KEY_ADDRESS_OPERATOR));
+    function operator() internal returns (address) {
+        return config().readAddress(configKeyFor(CONFIG_KEY_ADDRESS_OPERATOR));
     }
 
-    function custodian() internal view returns (address) {
-        return config.readAddress(configKeyFor(CONFIG_KEY_ADDRESS_CUSTODIAN));
+    function custodian() internal returns (address) {
+        return config().readAddress(configKeyFor(CONFIG_KEY_ADDRESS_CUSTODIAN));
     }
 }
 
@@ -85,8 +92,8 @@ abstract contract VaultsSupportConfigured is VaultsConfigured {
 
     string private constant CONFIG_KEY_DEPLOY_SUPPORT = ".deployment.vaults_support.deploy";
 
-    function isDeploySupport() public view returns (bool) {
-        return config.readBool(configKeyFor(CONFIG_KEY_DEPLOY_SUPPORT));
+    function isDeploySupport() public returns (bool) {
+        return config().readBool(configKeyFor(CONFIG_KEY_DEPLOY_SUPPORT));
     }
 }
 
@@ -99,15 +106,15 @@ abstract contract CBLConfigured is Configured {
     string private constant CONFIG_KEY_ADDRESS_MINTER = ".deployment.cbl.address.minter";
     uint256 private constant PRECISION = 1e18;
 
-    function maxSupply() internal view returns (uint256) {
-        return config.readUint(configKeyFor(CONFIG_KEY_MAX_SUPPLY)) * PRECISION;
+    function maxSupply() internal returns (uint256) {
+        return config().readUint(configKeyFor(CONFIG_KEY_MAX_SUPPLY)) * PRECISION;
     }
 
-    function owner() internal view returns (address) {
-        return config.readAddress(configKeyFor(CONFIG_KEY_ADDRESS_OWNER));
+    function owner() internal returns (address) {
+        return config().readAddress(configKeyFor(CONFIG_KEY_ADDRESS_OWNER));
     }
 
-    function minter() internal view returns (address) {
-        return config.readAddress(configKeyFor(CONFIG_KEY_ADDRESS_MINTER));
+    function minter() internal returns (address) {
+        return config().readAddress(configKeyFor(CONFIG_KEY_ADDRESS_MINTER));
     }
 }

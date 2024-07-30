@@ -28,7 +28,7 @@ contract ParamsFactory is Test, VaultsConfigured {
         cbl = _cbl;
     }
 
-    function createVaultParams() public view returns (Vault.VaultParams memory) {
+    function createVaultParams() public returns (Vault.VaultParams memory) {
         return Vault.VaultParams({ asset: usdc, shareName: "Shares", shareSymbol: "SHS", custodian: custodian() });
     }
 
@@ -51,7 +51,7 @@ contract ParamsFactory is Test, VaultsConfigured {
         });
     }
 
-    function createMaturityVaultParams() public view returns (MaturityVault.MaturityVaultParams memory params) {
+    function createMaturityVaultParams() public returns (MaturityVault.MaturityVaultParams memory params) {
         params = MaturityVault.MaturityVaultParams({ vault: createVaultParams() });
     }
 
@@ -78,7 +78,7 @@ contract ParamsFactory is Test, VaultsConfigured {
         params = WindowPlugin.WindowPluginParams({ depositWindow: depositWindow, redemptionWindow: redemptionWindow });
     }
 
-    function createContractRoles() public view returns (FixedYieldVault.ContractRoles memory) {
+    function createContractRoles() public returns (FixedYieldVault.ContractRoles memory) {
         return FixedYieldVault.ContractRoles({ owner: owner(), operator: operator(), custodian: custodian() });
     }
 }
