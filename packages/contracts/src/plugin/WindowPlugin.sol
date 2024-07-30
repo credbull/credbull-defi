@@ -9,6 +9,11 @@ abstract contract WindowPlugin {
         uint256 windowOpensAt, uint256 windowClosesAt, uint256 timestamp
     );
 
+    /// @notice Event emitted when the window is updated
+    event WindowUpdated(
+        uint256 depositOpensAt, uint256 depositClosesAt, uint256 redemptionOpensAt, uint256 redemptionClosesAt
+    );
+
     /// @notice A Window is essentially a Time Span, denoted by an Opening and Closing Time pair.
     struct Window {
         uint256 opensAt;
@@ -73,6 +78,8 @@ abstract contract WindowPlugin {
         depositClosesAtTimestamp = _depositClose;
         redemptionOpensAtTimestamp = _redeemOpen;
         redemptionClosesAtTimestamp = _redeemClose;
+
+        emit WindowUpdated(_depositOpen, _depositClose, _redeemOpen, _redeemClose);
     }
 
     /// @notice - Function to toggle check for window

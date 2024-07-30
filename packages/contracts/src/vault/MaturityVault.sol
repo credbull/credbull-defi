@@ -23,6 +23,9 @@ abstract contract MaturityVault is Vault {
     /// @notice Reverts on mature if there is not enough balance.
     error CredbullVault__NotEnoughBalanceToMature();
 
+    /// @notice Event emitted when the vault matures.
+    event VaultMatured(uint256 indexed totalAssetDeposited);
+
     /// @notice Determine if the vault is matured or not.
     bool public isMatured;
 
@@ -48,6 +51,8 @@ abstract contract MaturityVault is Vault {
 
         totalAssetDeposited = currentBalance;
         isMatured = true;
+
+        emit VaultMatured(totalAssetDeposited);
     }
 
     /// @notice - Returns expected assets on maturity
