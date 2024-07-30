@@ -12,7 +12,7 @@ async function exportAddress(config, chainId) {
 
   const folderPath = path.resolve(__dirname, '../../broadcast');
   const outputPath = path.resolve(__dirname, '../../deployments/');
-  const outputFileName = path.resolve(__dirname, '../../deployments/index.json');
+  const outputFileName = path.resolve(outputPath, 'index.json');
 
   const deployFiles = await fs.promises.readdir(folderPath);
   for (const deployFile of deployFiles) {
