@@ -16,11 +16,12 @@ deployments
 
 types
 index.js
-config.js
-canDeploy.js
+script/utils/config.js
+script/utils/deployedContracts.js
+script/utils/truncateTables.js
 
 # supabase export
-/script/output/dbdata.json
+script/output/
 
 # code coverage
 lcov.info
