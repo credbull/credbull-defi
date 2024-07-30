@@ -74,6 +74,8 @@ contract MaxCapPluginTest is Test, VaultsSupportConfig {
 
         assertTrue(newValue != currentValue);
 
+        vm.expectEmit();
+        emit MaxCapPlugin.MaxCapUpdated(newValue);
         vault.updateMaxCap(newValue);
 
         assertTrue(vault.maxCap() == newValue);

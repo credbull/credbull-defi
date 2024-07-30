@@ -180,6 +180,8 @@ contract WindowPluginTest is Test, VaultsSupportConfig {
         assertTrue(currentWithdrawOpen != newWithdrawOpen);
         assertTrue(currentWithdrawClose != newWithdrawClose);
 
+        vm.expectEmit();
+        emit WindowPlugin.WindowUpdated(newDepositOpen, newDepositClose, newWithdrawOpen, newWithdrawClose);
         vault.updateWindow(newDepositOpen, newDepositClose, newWithdrawOpen, newWithdrawClose);
 
         assertTrue(vault.depositOpensAtTimestamp() == newDepositOpen);
