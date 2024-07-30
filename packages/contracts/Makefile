@@ -6,7 +6,6 @@
 deploy-local:
 	$(MAKE) deploy RPC_URL=localhost EXTRA_FLAGS=
 
-# TODO: change this to use the network config from foundry.toml
 deploy-arbSepolia:
 	$(MAKE) deploy RPC_URL=arbitrumSepolia EXTRA_FLAGS="--verify --slow"
 
@@ -18,11 +17,10 @@ deploy-baseSepolia:
 
 deploy:
 	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
-	yarn run ts-node script/utils/canDeploy.ts --chain-id $$(cast chain-id --rpc-url $(RPC_URL)) \
-		--deploy-units 'vaults, vaults_support' && \
-	forge script script/DeployVaults.s.sol:DeployVaults --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
-	yarn db-export $$(cast chain-id --rpc-url $(RPC_URL))
+	@yarn run ts-node script/utils/deployedContracts.ts --chain-id $$(cast chain-id --rpc-url $(RPC_URL))
+	@forge script script/DeployVaults.s.sol:DeployVaults --rpc-url $(RPC_URL) \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv
+	@node script/utils/exporter.js $$(cast chain-id --rpc-url $(RPC_URL))
 
 # TODO: add --verifier flag.  forge isn't happy --etherscan-api-key is empty.
 deploy-bitlayerTestnet:
@@ -31,8 +29,6 @@ deploy-bitlayerTestnet:
 
 verify:
 	@echo "Running verify '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
-	rm -rf out && \
-	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume -vvvv && \
-	yarn gen-types && \
-	yarn db-export $$(cast chain-id --rpc-url $(RPC_URL))
+	@forge script script/DeployVaults.s.sol:DeployVaults --rpc-url $(RPC_URL) \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume -vvvv
+	@node script/utils/exporter.js $$(cast chain-id --rpc-url $(RPC_URL))
