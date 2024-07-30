@@ -32,7 +32,7 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
     }
 
     /// @dev The fixed yield value in percentage(100) that's promised to the users on deposit.
-    uint256 private _fixedYield;
+    uint256 private immutable _fixedYield;
 
     constructor(FixedYieldVaultParams memory params)
         MaturityVault(params.maturityVault)
