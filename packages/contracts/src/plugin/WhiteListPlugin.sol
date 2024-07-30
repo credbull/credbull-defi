@@ -18,13 +18,13 @@ abstract contract WhiteListPlugin {
     }
 
     /// @notice - Address of the White List Provider.
-    IWhiteListProvider public whiteListProvider;
+    IWhiteListProvider public immutable whiteListProvider;
 
     /// @notice - Flag to check for whiteList
     bool public checkWhiteList;
 
     /// @notice - Deposit threshold amount to check for whiteListing
-    uint256 public depositThresholdForWhiteListing;
+    uint256 public immutable depositThresholdForWhiteListing;
 
     constructor(WhiteListPluginParams memory params) {
         if (params.whiteListProvider == address(0)) {
