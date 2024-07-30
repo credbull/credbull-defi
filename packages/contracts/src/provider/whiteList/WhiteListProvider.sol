@@ -30,6 +30,7 @@ contract WhiteListProvider is IWhiteListProvider, Ownable {
         uint256 length = _addresses.length;
 
         for (uint256 i; i < length;) {
+            if (_addresses[i] == address(0)) continue;
             isWhiteListed[_addresses[i]] = _statuses[i];
 
             unchecked {

@@ -13,6 +13,12 @@ import { MaxCapPlugin } from "../plugin/MaxCapPlugin.sol";
 contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCapPlugin, AccessControl {
     using Math for uint256;
 
+    /// @notice Error to indicate that the provided owner address is invalid.
+    error FixedYieldVault__InvalidOwnerAddress();
+
+    /// @notice Error to indicate that the provided operator address is invalid.
+    error FixedYieldVault__InvalidOperatorAddress();
+
     /// @notice - Hash of operator role
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
@@ -40,6 +46,14 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
         WindowPlugin(params.windowPlugin)
         MaxCapPlugin(params.maxCapPlugin)
     {
+        if (params.roles.owner == address(0)) {
+            revert FixedYieldVault__InvalidOwnerAddress();
+        }
+
+        if (params.roles.operator == address(0)) {
+            revert FixedYieldVault__InvalidOperatorAddress();
+        }
+
         _grantRole(DEFAULT_ADMIN_ROLE, params.roles.owner);
         _grantRole(OPERATOR_ROLE, params.roles.operator);
 
