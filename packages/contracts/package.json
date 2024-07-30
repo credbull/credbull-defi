@@ -4,19 +4,16 @@
   "main": "index.js",
   "types": "index.ts",
   "scripts": {
-    "rm-dbdata": "rm -f ./script/output/dbdata.json",
-    "chain": "yarn rm-dbdata && anvil --config-out localhost.json",
-    "clean": "forge clean && rm -rf broadcast cache deployments types localhost.json index.js",
+    "chain": "ts-node script/utils/truncateTables.ts && anvil --config-out localhost.json",
+    "clean": "forge clean && rm -rf broadcast cache deployments types script/output/*.json localhost.json index.js",
     "build": "forge build && yarn gen-types",
     "test": "forge test",
     "format": "forge fmt && prettier './script/**/*.js' --write",
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint './*(test|src)/**/*.sol'",
-    "db-check": "node ./script/utils/checkDb.js",
-    "db-export": "node ./script/utils/exporter.js",
     "deploy": "make deploy-local",
     "deploy:ci": "make deploy-baseSepolia",
     "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
-    "postinstall": "yarn build && yarn gen-types"
+    "postinstall": "yarn build"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
