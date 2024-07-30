@@ -50,6 +50,8 @@ contract MaturityVaultTest is Test {
         params.vault.asset.transferFrom(params.vault.custodian, address(vault), finalBalance);
         vm.stopPrank();
 
+        vm.expectEmit();
+        emit MaturityVault.VaultMatured(finalBalance);
         vault.mature();
 
         // ---- Assert Vault burns shares and Alice receive asset with additional 10% ---
