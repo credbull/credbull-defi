@@ -17,6 +17,7 @@ import { SimpleVault } from "@test/test/vault/SimpleVault.t.sol";
 
 import { VaultsConfigured } from "./Configured.s.sol";
 import { VaultsSupportConfigured } from "./Configured.s.sol";
+import { DeployedContracts } from "./DeployedContracts.s.sol";
 
 /// @notice The [Script] used to deploy the Credbull Vaults Distribution.
 contract DeployVaults is Script, VaultsConfigured {
@@ -35,17 +36,19 @@ contract DeployVaults is Script, VaultsConfigured {
     {
         new DeployVaultsSupport().run();
 
-        return deploy();
+        return deploy(false);
     }
 
     /**
-     * @dev Deploys the Vaults Distribution Unit. Intended as the test usage.
+     * @dev Deploys the Vaults Distribution Unit, if the contracts are deployable.
+     *
+     * @param skipDeployCheck A [bool] flag determining whether to check if deployment is possible or not.
      *
      * @return fixedYieldVaultFactory The deployed [CredbullFixedYieldVaultFactory].
      * @return upsideVaultFactory The deployed [CredbullUpsideVaultFactory].
      * @return whiteListProvider The deployed [CredbullWhiteListProvider].
      */
-    function deploy()
+    function deploy(bool skipDeployCheck)
         public
         returns (
             CredbullFixedYieldVaultFactory fixedYieldVaultFactory,
@@ -58,10 +61,18 @@ contract DeployVaults is Script, VaultsConfigured {
         address[] memory custodians = new address[](1);
         custodians[0] = custodian();
 
+        DeployedContracts deployChecker = new DeployedContracts();
+
         vm.startBroadcast();
-        fixedYieldVaultFactory = new CredbullFixedYieldVaultFactory(owner, operator, custodians);
-        upsideVaultFactory = new CredbullUpsideVaultFactory(owner, operator, custodians);
-        whiteListProvider = new CredbullWhiteListProvider(operator);
+        if (skipDeployCheck || deployChecker.isDeployRequired("CredbullFixedYieldVaultFactory")) {
+            fixedYieldVaultFactory = new CredbullFixedYieldVaultFactory(owner, operator, custodians);
+        }
+        if (skipDeployCheck || deployChecker.isDeployRequired("CredbullUpsideVaultFactory")) {
+            upsideVaultFactory = new CredbullUpsideVaultFactory(owner, operator, custodians);
+        }
+        if (skipDeployCheck || deployChecker.isDeployRequired("CredbullWhiteListProvider")) {
+            whiteListProvider = new CredbullWhiteListProvider(operator);
+        }
         vm.stopBroadcast();
 
         return (fixedYieldVaultFactory, upsideVaultFactory, whiteListProvider);
@@ -84,25 +95,35 @@ contract DeployVaultsSupport is Script, VaultsSupportConfigured {
      */
     function run() external returns (ERC20 cbl, ERC20 usdc, Vault vault) {
         if (isDeploySupport()) {
-            (cbl, usdc, vault) = deploy();
+            (cbl, usdc, vault) = deploy(false);
         }
         return (cbl, usdc, vault);
     }
 
     /**
-     * @dev Deploys the Vaults Support Distribution Unit, unconditionally. Intended as the test usage.
+     * @dev Deploys the Vaults Support Distribution Unit, if deployable.
+     *
+     * @param skipDeployCheck A [bool] flag determining whether to check if deployment is possible or not.
      *
      * @return cbl The deployed [ERC20] token (a [SimpleToken]) representing the [$CBL].
      * @return usdc The deployed [ERC20] token (a [SimpleUSDC]) representing [$USDC] (i.e. a stablecoin).
      * @return vault The deployed [Vault] (a [SimpleVault]]).
      */
-    function deploy() public returns (ERC20 cbl, ERC20 usdc, Vault vault) {
+    function deploy(bool skipDeployCheck) public returns (ERC20 cbl, ERC20 usdc, Vault vault) {
+        DeployedContracts deployChecker = new DeployedContracts();
+
         vm.startBroadcast();
-        cbl = new SimpleToken(MAXIMUM_SUPPLY);
-        usdc = new SimpleUSDC(MAXIMUM_SUPPLY);
-        vault = new SimpleVault(
-            Vault.VaultParams({ asset: usdc, shareName: "Simple Vault", shareSymbol: "sVLT", custodian: custodian() })
-        );
+        if (skipDeployCheck || deployChecker.isDeployRequired("SimpleToken")) {
+            cbl = new SimpleToken(MAXIMUM_SUPPLY);
+        }
+        if (skipDeployCheck || deployChecker.isDeployRequired("SimpleUSDC")) {
+            usdc = new SimpleUSDC(MAXIMUM_SUPPLY);
+        }
+        if (skipDeployCheck || deployChecker.isDeployRequired("SimpleVault")) {
+            vault = new SimpleVault(
+                Vault.VaultParams({ asset: usdc, shareName: "Simple Vault", shareSymbol: "sVLT", custodian: custodian() })
+            );
+        }
         vm.stopBroadcast();
 
         return (cbl, usdc, vault);
