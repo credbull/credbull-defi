@@ -64,7 +64,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         statuses[0] = true;
 
         vm.startPrank(vaultParams.roles.operator);
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
         SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).mint(alice, INITIAL_BALANCE * precision);

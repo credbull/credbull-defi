@@ -32,7 +32,7 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
     }
 
     /// @dev The fixed yield value in percentage(100) that's promised to the users on deposit.
-    uint256 private immutable _fixedYield;
+    uint256 private immutable FIXED_YIELD;
 
     constructor(FixedYieldVaultParams memory params)
         MaturityVault(params.maturityVault)
@@ -43,7 +43,7 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
         _grantRole(DEFAULT_ADMIN_ROLE, params.roles.owner);
         _grantRole(OPERATOR_ROLE, params.roles.operator);
 
-        _fixedYield = params.promisedYield;
+        FIXED_YIELD = params.promisedYield;
     }
 
     /// @dev - Overridden deposit modifer
@@ -70,7 +70,7 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
 
     // @notice - Returns expected assets on maturity
     function expectedAssetsOnMaturity() public view override returns (uint256) {
-        return totalAssetDeposited.mulDiv(100 + _fixedYield, 100);
+        return totalAssetDeposited.mulDiv(100 + FIXED_YIELD, 100);
     }
 
     /// @notice Mature the vault
