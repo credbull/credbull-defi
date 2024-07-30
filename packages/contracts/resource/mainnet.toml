@@ -6,15 +6,8 @@
 url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
 
 [deployment]
+# After contract deployment, update the `contract_addresses` table, or not.
 update_contract_addresses = true
-
-[deployment.vaults]
-# The contracts that are in the 'vaults' deployment unit.
-contracts = [
-    "CredbullFixedYieldVaultFactory",
-    "CredbullUpsideVaultFactory",
-    "CredbullWhiteListProvider",
-]
 
 [deployment.vaults.address]
 owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
@@ -22,31 +15,12 @@ operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
 
 [deployment.vaults_support]
-# The contracts that are in the 'vaults_support' deployment unit.
-contracts = ["SimpleToken", "SimpleUSDC", "SimpleVault"]
-
 # Whether to deploy the Vaults Support contracts or not.
 deploy = false
 
 [deployment.cbl]
-# The contracts that are in the 'cbl' deployment unit.
-contracts = ["CBL"]
-
-max_supply = 10_000_000 # 10 million in wei
+max_supply = 1_000_000_000 # 1 Billion in wei
 
 [deployment.cbl.address]
 owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 minter = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
-
-# NOTE (JL,2024-07-24): Below are examples only.
-[network.arbitrumOne.address]
-usdt = "0xdac17f958d2ee523a2206206994597c13d831ec7"
-usdc = "0xaf88d065e77c8cc2239327c5edb3a432268e5831"
-
-# NOTE (JL,2024-07-24): The following is an example Network Override of Deployment configuration.
-[network.arbitrumOne.deployment.vaults.address]
-operator = "0xOurArbitrumOneOperatorAddress"
-
-[network.base.address]
-usdt = "0xdac17f958d2ee523a2206206994597c13d831ec7"
-usdc = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
