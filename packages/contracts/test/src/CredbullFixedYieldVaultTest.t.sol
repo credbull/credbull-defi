@@ -52,7 +52,7 @@ contract CredbullFixedYieldVaultTest is Test {
         statuses[1] = true;
 
         vm.startPrank(params.roles.operator);
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
         SimpleUSDC(address(params.maturityVault.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
@@ -168,7 +168,7 @@ contract CredbullFixedYieldVaultTest is Test {
         statuses[0] = false;
 
         vm.startPrank(params.roles.operator);
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
         uint256 depositAmount = 1000 * precision;
 
@@ -186,7 +186,7 @@ contract CredbullFixedYieldVaultTest is Test {
         statuses[0] = false;
 
         vm.startPrank(params.roles.operator);
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
         uint256 depositAmount = 1000 * precision;
