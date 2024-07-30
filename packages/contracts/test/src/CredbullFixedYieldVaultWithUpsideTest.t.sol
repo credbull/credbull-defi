@@ -80,6 +80,13 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test, VaultsSupportConfig {
         SimpleToken(address(cbl)).mint(alice, 200 ether);
     }
 
+    function test__UpsideVault__ShouldRevertOnInvalidCollateralPercentage() public {
+        CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params = upsideVaultParams;
+        params.collateralPercentage = 100_01;
+        vm.expectRevert(abi.encodeWithSelector(UpsideVault.CredbullVault__InvalidCollateralPercentage.selector));
+        new CredbullFixedYieldVaultWithUpside(params);
+    }
+
     function test__UpsideVault__VaultCreationShouldRevertOnUnsupportedDecimalValue() public {
         CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params = upsideVaultParams;
         params.cblToken = new DecimalToken(1e6, 19);

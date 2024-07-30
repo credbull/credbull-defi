@@ -9,7 +9,11 @@ import { FixedYieldVault } from "./FixedYieldVault.sol";
 contract UpsideVault is FixedYieldVault {
     using Math for uint256;
 
+    /// @notice Error to indicate that the provided share balance is insufficient.
     error CredbullVault__InsufficientShareBalance();
+
+    /// @notice Error to indicate that the provided collateral percentage is invalid.
+    error CredbullVault__InvalidCollateralPercentage();
 
     struct UpsideVaultParams {
         FixedYieldVaultParams fixedYieldVault;
@@ -40,6 +44,9 @@ contract UpsideVault is FixedYieldVault {
     uint256 private additionalPrecision;
 
     constructor(UpsideVaultParams memory params) FixedYieldVault(params.fixedYieldVault) {
+        if (params.collateralPercentage > MAX_PERCENTAGE) {
+            revert CredbullVault__InvalidCollateralPercentage();
+        }
         collateralPercentage = params.collateralPercentage;
         token = params.cblToken;
 
