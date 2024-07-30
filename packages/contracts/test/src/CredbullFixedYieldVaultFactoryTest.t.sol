@@ -57,7 +57,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test, VaultsSupportConfig {
         assertEq(vault.asset(), address(params.maturityVault.vault.asset));
         assertEq(vault.name(), params.maturityVault.vault.shareName);
         assertEq(vault.symbol(), params.maturityVault.vault.shareSymbol);
-        assertEq(address(vault.whiteListProvider()), params.whiteListPlugin.whiteListProvider);
+        assertEq(address(vault.WHITELIST_PROVIDER()), params.whiteListPlugin.whiteListProvider);
         assertEq(vault.CUSTODIAN(), params.maturityVault.vault.custodian);
     }
 

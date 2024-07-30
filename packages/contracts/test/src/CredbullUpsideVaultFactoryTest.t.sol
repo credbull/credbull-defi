@@ -60,7 +60,7 @@ contract CredbullUpsideVaultFactoryTest is Test, VaultsSupportConfig {
         assertEq(vault.asset(), address(params.fixedYieldVault.maturityVault.vault.asset));
         assertEq(vault.name(), params.fixedYieldVault.maturityVault.vault.shareName);
         assertEq(vault.symbol(), params.fixedYieldVault.maturityVault.vault.shareSymbol);
-        assertEq(address(vault.whiteListProvider()), params.fixedYieldVault.whiteListPlugin.whiteListProvider);
+        assertEq(address(vault.WHITELIST_PROVIDER()), params.fixedYieldVault.whiteListPlugin.whiteListProvider);
         assertEq(vault.CUSTODIAN(), params.fixedYieldVault.maturityVault.vault.custodian);
     }
 }

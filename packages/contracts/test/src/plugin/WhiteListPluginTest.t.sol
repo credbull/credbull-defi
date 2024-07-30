@@ -61,7 +61,7 @@ contract WhiteListPluginTest is Test, VaultsSupportConfig {
         statuses[1] = true;
 
         vm.startPrank(whiteListProvider.owner());
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
         asset.mint(alice, INITIAL_BALANCE * precision);
@@ -76,7 +76,7 @@ contract WhiteListPluginTest is Test, VaultsSupportConfig {
         statuses[0] = false;
 
         vm.startPrank(whiteListProvider.owner());
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
         uint256 depositAmount = 1000 * precision;
@@ -127,7 +127,7 @@ contract WhiteListPluginTest is Test, VaultsSupportConfig {
         statuses[0] = false;
 
         vm.startPrank(whiteListProvider.owner());
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
         vault.toggleWhiteListCheck(false);
