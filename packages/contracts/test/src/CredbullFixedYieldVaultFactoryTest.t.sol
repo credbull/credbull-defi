@@ -35,6 +35,15 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         params.whiteListPlugin.whiteListProvider = address(whiteListProvider);
     }
 
+    function test__ShouldRevertOnInvalidParams() public {
+        vm.prank(config.factoryParams.owner);
+        vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidOwnerAddress.selector);
+        new CredbullFixedYieldVaultFactory(address(0), config.factoryParams.operator, new address[](0));
+
+        vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidOperatorAddress.selector);
+        new CredbullFixedYieldVaultFactory(config.factoryParams.owner, address(0), new address[](0));
+    }
+
     function test__ShouldSuccefullyCreateFactoryFixedYield() public {
         address[] memory custodians = new address[](1);
         custodians[0] = config.factoryParams.custodian;
@@ -127,6 +136,15 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
 
         factory.removeCustodian(params.maturityVault.vault.custodian);
         assertTrue(!factory.isCustodianAllowed(params.maturityVault.vault.custodian));
+        vm.stopPrank();
+    }
+
+    function test__ShouldRevertOnInvalidCustodian() public {
+        vm.startPrank(config.factoryParams.owner);
+        factory.allowCustodian(params.maturityVault.vault.custodian);
+
+        vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidCustodianAddress.selector);
+        factory.allowCustodian(address(0));
         vm.stopPrank();
     }
 
