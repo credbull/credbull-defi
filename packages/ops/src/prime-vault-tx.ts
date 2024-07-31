@@ -43,6 +43,8 @@ const createTransaction = async (contractAddress: string, method: string, params
 }
 
 
-export async function main() {
-    await createTransaction("0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39", 'pauseVault', []);
+export async function main(opts: any[], args: any) {
+  //TODO: Fix this
+  const params = args.params ? args.params.split(","): [];
+  await createTransaction(args.contract, args.method, params);
 }
