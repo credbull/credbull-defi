@@ -16,11 +16,7 @@ abstract contract Configured is CommonBase, StdChains {
     using stdToml for string;
 
     string private _config;
-    Chain internal chain;
-
-    constructor() {
-        chain = getChain(block.chainid);
-    }
+    Chain private _chain;
 
     /// @dev Returns the loaded configuration [string], loading it if necessary.
     function config() internal returns (string memory) {
@@ -28,6 +24,14 @@ abstract contract Configured is CommonBase, StdChains {
             loadEnvironment(environment());
         }
         return _config;
+    }
+
+    /// @dev Realisations can override this function to control what [Chain] is effective.
+    function chain() internal virtual returns (Chain memory) {
+        if (bytes(_chain.chainAlias).length == 0) {
+            _chain = getChain(block.chainid);
+        }
+        return _chain;
     }
 
     /// @dev Realisations can override this function to control what environment configuration file is loaded.
@@ -60,7 +64,7 @@ abstract contract Configured is CommonBase, StdChains {
      * @return The effective Configuration Key.
      */
     function configKeyFor(string memory configKey) internal returns (string memory) {
-        string memory overrideKey = string.concat(".network.", chain.chainAlias, configKey);
+        string memory overrideKey = string.concat(".network.", chain().chainAlias, configKey);
         return vm.keyExistsToml(config(), overrideKey) ? overrideKey : configKey;
     }
 }
@@ -104,7 +108,7 @@ abstract contract CBLConfigured is Configured {
     string private constant CONFIG_KEY_MAX_SUPPLY = ".deployment.cbl.max_supply";
     string private constant CONFIG_KEY_ADDRESS_OWNER = ".deployment.cbl.address.owner";
     string private constant CONFIG_KEY_ADDRESS_MINTER = ".deployment.cbl.address.minter";
-    uint256 private constant PRECISION = 1e18;
+    uint256 internal constant PRECISION = 1e18;
 
     function maxSupply() internal returns (uint256) {
         return config().readUint(configKeyFor(CONFIG_KEY_MAX_SUPPLY)) * PRECISION;
