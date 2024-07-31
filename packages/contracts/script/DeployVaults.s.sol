@@ -4,8 +4,6 @@ pragma solidity ^0.8.20;
 
 import { Script } from "forge-std/Script.sol";
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 import { CredbullFixedYieldVaultFactory } from "@credbull/CredbullFixedYieldVaultFactory.sol";
 import { CredbullUpsideVaultFactory } from "@credbull/CredbullUpsideVaultFactory.sol";
 import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
@@ -89,11 +87,11 @@ contract DeployVaultsSupport is Script, VaultsSupportConfigured {
      *  [Vault].
      * @dev For command line invocation, the return values are ignored.
      *
-     * @return cbl The deployed [ERC20] token (a [SimpleToken]) representing the [$CBL].
-     * @return usdc The deployed [ERC20] token (a [SimpleUSDC]) representing [$USDC] (i.e. a stablecoin).
-     * @return vault The deployed [Vault] (a [SimpleVault]]).
+     * @return cbl The deployed [SimpleToken] token representing the [$CBL].
+     * @return usdc The deployed [SimpleUSDC] token representing [$USDC] (i.e. a stablecoin).
+     * @return vault The deployed [SimpleVault].
      */
-    function run() external returns (ERC20 cbl, ERC20 usdc, Vault vault) {
+    function run() external returns (SimpleToken cbl, SimpleUSDC usdc, SimpleVault vault) {
         if (isDeploySupport()) {
             (cbl, usdc, vault) = deploy(false);
         }
@@ -105,11 +103,11 @@ contract DeployVaultsSupport is Script, VaultsSupportConfigured {
      *
      * @param skipDeployCheck A [bool] flag determining whether to check if deployment is possible or not.
      *
-     * @return cbl The deployed [ERC20] token (a [SimpleToken]) representing the [$CBL].
-     * @return usdc The deployed [ERC20] token (a [SimpleUSDC]) representing [$USDC] (i.e. a stablecoin).
-     * @return vault The deployed [Vault] (a [SimpleVault]]).
+     * @return cbl The deployed [SimpleToken] token representing the [$CBL].
+     * @return usdc The deployed [SimpleUSDC] token representing [$USDC] (i.e. a stablecoin).
+     * @return vault The deployed [SimpleVault].
      */
-    function deploy(bool skipDeployCheck) public returns (ERC20 cbl, ERC20 usdc, Vault vault) {
+    function deploy(bool skipDeployCheck) public returns (SimpleToken cbl, SimpleUSDC usdc, SimpleVault vault) {
         DeployedContracts deployChecker = new DeployedContracts();
 
         vm.startBroadcast();
