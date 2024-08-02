@@ -36,7 +36,7 @@ contract ParamsFactory is Test, VaultsConfig {
         params = UpsideVault.UpsideVaultParams({
             fixedYieldVault: createFixedYieldVaultParams(),
             cblToken: cbl,
-            collateralPercentage: 20_00
+            upsidePercentage: 20_00
         });
     }
 
