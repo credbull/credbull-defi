@@ -119,7 +119,7 @@ contract WhiteListPluginTest is Test {
         vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
-        vault.toggleWhiteListCheck(false);
+        vault.toggleWhiteListCheck();
 
         deposit(alice, 10 * precision);
         assertEq(vault.balanceOf(alice), 10 * precision);
@@ -127,7 +127,7 @@ contract WhiteListPluginTest is Test {
 
     function test__WhiteListVault__ShouldToggleWhiteList() public {
         bool beforeToggle = vault.checkWhiteList();
-        vault.toggleWhiteListCheck(!beforeToggle);
+        vault.toggleWhiteListCheck();
         bool afterToggle = vault.checkWhiteList();
         assertEq(afterToggle, !beforeToggle);
     }

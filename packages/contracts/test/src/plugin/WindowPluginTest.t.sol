@@ -143,7 +143,7 @@ contract WindowPluginTest is Test {
     }
 
     function test__WindowVault__ShouldNotRevertOnWindowModifier() public {
-        vault.toggleWindowCheck(false);
+        vault.toggleWindowCheck();
 
         deposit(alice, 10 * precision);
         assertEq(vault.balanceOf(alice), 10 * precision);
@@ -151,7 +151,7 @@ contract WindowPluginTest is Test {
 
     function test__WindowVault__ShouldToggleWhiteList() public {
         bool beforeToggle = vault.checkWindow();
-        vault.toggleWindowCheck(!beforeToggle);
+        vault.toggleWindowCheck();
         bool afterToggle = vault.checkWindow();
         assertEq(afterToggle, !beforeToggle);
     }

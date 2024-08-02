@@ -9,6 +9,9 @@ abstract contract MaxCapPlugin {
     /// @notice Event emitted when the max cap is updated
     event MaxCapUpdated(uint256 indexed maxCap);
 
+    /// @notice Event emitted when the max cap check is updated
+    event MaxCapCheckUpdated(bool indexed checkMaxCap);
+
     /// @notice - Params for the MaxCap Plugin
     struct MaxCapPluginParams {
         uint256 maxCap;
@@ -36,8 +39,10 @@ abstract contract MaxCapPlugin {
     }
 
     /// @notice - Toggle the max cap check status
-    function _toggleMaxCapCheck(bool status) internal virtual {
-        checkMaxCap = status;
+    function _toggleMaxCapCheck() internal virtual {
+        checkMaxCap = !checkMaxCap;
+
+        emit MaxCapCheckUpdated(checkMaxCap);
     }
 
     /// @notice - Update the max cap value
