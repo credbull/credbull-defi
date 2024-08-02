@@ -3,7 +3,7 @@
 ##
 
 [services.supabase]
-url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
+url = "https://NotYetSetup.supabase.co"
 
 [deployment]
 # After contract deployment, update the `contract_addresses` table, or not.
