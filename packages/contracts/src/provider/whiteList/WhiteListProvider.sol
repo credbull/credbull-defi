@@ -3,8 +3,9 @@ pragma solidity ^0.8.20;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IWhiteListProvider } from "./IWhiteListProvider.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
-contract WhiteListProvider is IWhiteListProvider, Ownable {
+contract WhiteListProvider is IWhiteListProvider, Ownable2Step {
     error LengthMismatch();
 
     /**
