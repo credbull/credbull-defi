@@ -13,12 +13,12 @@ contract UpsideVault is FixedYieldVault {
     error CredbullVault__InsufficientShareBalance();
 
     /// @notice Error to indicate that the provided collateral percentage is invalid.
-    error CredbullVault__InvalidCollateralPercentage();
+    error CredbullVault__InvalidUpsidePercentage();
 
     struct UpsideVaultParams {
         FixedYieldVaultParams fixedYieldVault;
         IERC20 cblToken;
-        uint256 collateralPercentage;
+        uint256 upsidePercentage;
     }
 
     /// @notice address of the Credbull token CBL
@@ -27,9 +27,9 @@ contract UpsideVault is FixedYieldVault {
     uint256 public twap = 100_00;
 
     /// @notice Percentage of collateral (100_00) is 100%
-    uint256 public collateralPercentage;
+    uint256 public upsidePercentage;
 
-    mapping(address account => uint256) private _collateralBalance;
+    mapping(address account => uint256) private _upsideBalance;
 
     /// @notice Total collateral deposited
     // uint256 public totalCollateralDeposited;
@@ -44,10 +44,10 @@ contract UpsideVault is FixedYieldVault {
     uint256 private additionalPrecision;
 
     constructor(UpsideVaultParams memory params) FixedYieldVault(params.fixedYieldVault) {
-        if (params.collateralPercentage > MAX_PERCENTAGE) {
-            revert CredbullVault__InvalidCollateralPercentage();
+        if (params.upsidePercentage > MAX_PERCENTAGE) {
+            revert CredbullVault__InvalidUpsidePercentage();
         }
-        collateralPercentage = params.collateralPercentage;
+        upsidePercentage = params.upsidePercentage;
         token = params.cblToken;
 
         uint8 assetDecimal = _checkValidDecimalValue(address(params.fixedYieldVault.maturityVault.vault.asset));
@@ -74,7 +74,7 @@ contract UpsideVault is FixedYieldVault {
 
         uint256 collateral = getCollateralAmount(assets);
 
-        _collateralBalance[receiver] += collateral;
+        _upsideBalance[receiver] += collateral;
         totalAssetDeposited += assets;
 
         if (totalAssetDeposited > maxCap) {
@@ -102,7 +102,7 @@ contract UpsideVault is FixedYieldVault {
 
         uint256 collateral = calculateTokenRedemption(shares, owner);
 
-        _collateralBalance[owner] -= collateral;
+        _upsideBalance[owner] -= collateral;
         totalAssetDeposited -= assets;
 
         SafeERC20.safeTransfer(token, receiver, collateral);
@@ -115,8 +115,7 @@ contract UpsideVault is FixedYieldVault {
 
     /// @notice - Get the collateral amount to deposit for the given asset
     function getCollateralAmount(uint256 assets) public view virtual returns (uint256) {
-        return
-            ((assets * additionalPrecision).mulDiv(collateralPercentage, MAX_PERCENTAGE)).mulDiv(MAX_PERCENTAGE, twap);
+        return ((assets * additionalPrecision).mulDiv(upsidePercentage, MAX_PERCENTAGE)).mulDiv(MAX_PERCENTAGE, twap);
     }
 
     /// @notice - Get the collateral amount to redeem for the given shares
@@ -126,7 +125,7 @@ contract UpsideVault is FixedYieldVault {
         }
 
         uint256 sharePercent = shares.mulDiv(PRECISION, balanceOf(account));
-        return _collateralBalance[account].mulDiv(sharePercent, PRECISION);
+        return _upsideBalance[account].mulDiv(sharePercent, PRECISION);
     }
 
     /// @notice - Update the twap value
