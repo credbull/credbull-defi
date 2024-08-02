@@ -19,6 +19,9 @@ abstract contract WindowPlugin {
         uint256 depositOpensAt, uint256 depositClosesAt, uint256 redemptionOpensAt, uint256 redemptionClosesAt
     );
 
+    /// @notice Event emitted when the window check is updated
+    event WindowCheckUpdated(bool indexed checkWindow);
+
     modifier validateWindows(uint256 _depositOpen, uint256 _depositClose, uint256 _redeemOpen, uint256 _redeemClose) {
         if (!(_depositOpen < _depositClose && _depositClose < _redeemOpen && _redeemOpen < _redeemClose)) {
             revert WindowPlugin__IncorrectWindowValues(_depositOpen, _depositClose, _redeemOpen, _redeemClose);
@@ -103,7 +106,8 @@ abstract contract WindowPlugin {
     }
 
     /// @notice - Function to toggle check for window
-    function _toggleWindowCheck(bool status) internal {
-        checkWindow = status;
+    function _toggleWindowCheck() internal {
+        checkWindow = !checkWindow;
+        emit WindowCheckUpdated(checkWindow);
     }
 }

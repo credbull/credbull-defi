@@ -133,11 +133,11 @@ contract CredbullFixedYieldVaultTest is Test {
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
-        vault.toggleMaturityCheck(false);
+        vault.toggleMaturityCheck();
         vm.stopPrank();
 
         vm.prank(params.roles.owner);
-        vault.toggleMaturityCheck(false);
+        vault.toggleMaturityCheck();
     }
 
     function test__FixedYieldVault__RevertWhiteListToggleIfNotAdmin() public {
@@ -149,11 +149,11 @@ contract CredbullFixedYieldVaultTest is Test {
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
-        vault.toggleWhiteListCheck(false);
+        vault.toggleWhiteListCheck();
         vm.stopPrank();
 
         vm.prank(params.roles.owner);
-        vault.toggleWhiteListCheck(false);
+        vault.toggleWhiteListCheck();
     }
 
     function test__FixedYieldVault__RevertWindowToggleIfNotAdmin() public {
@@ -165,11 +165,11 @@ contract CredbullFixedYieldVaultTest is Test {
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
-        vault.toggleWindowCheck(false);
+        vault.toggleWindowCheck();
         vm.stopPrank();
 
         vm.prank(params.roles.owner);
-        vault.toggleWindowCheck(false);
+        vault.toggleWindowCheck();
     }
 
     function test__FixedYieldVault__ShouldCheckForWhiteListedAddresses() public {
@@ -220,11 +220,11 @@ contract CredbullFixedYieldVaultTest is Test {
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
-        vault.toggleMaxCapCheck(false);
+        vault.toggleMaxCapCheck();
         vm.stopPrank();
 
         vm.prank(params.roles.owner);
-        vault.toggleMaxCapCheck(false);
+        vault.toggleMaxCapCheck();
     }
 
     function test__FixedYieldVault__RevertUdpateMaxCapIfNotAdmin() public {
@@ -245,7 +245,7 @@ contract CredbullFixedYieldVaultTest is Test {
 
     function test__FixedYieldVault__RevertOpsIfVaultIsPaused() public {
         vm.startPrank(params.roles.owner);
-        vault.toggleWindowCheck(false);
+        vault.toggleWindowCheck();
         vault.pauseVault();
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         vault.deposit(1000 * precision, alice);
@@ -258,7 +258,7 @@ contract CredbullFixedYieldVaultTest is Test {
 
     function test__FixedYieldVault__ShouldAllowAdminToUnpauseVault() public {
         vm.startPrank(params.roles.owner);
-        vault.toggleWindowCheck(false);
+        vault.toggleWindowCheck();
         vault.pauseVault();
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         vault.deposit(1000 * precision, alice);
