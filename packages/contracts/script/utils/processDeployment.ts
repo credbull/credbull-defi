@@ -38,7 +38,7 @@ async function extractTransactions(chainId: string): Promise<Tx[]> {
  * @param chainId The [string] effective Chain Id.
  * @param transactions The array of [Tx] that is the Create Transaction details.
  */
-async function writeDeploymentsReport(chainId: string, transactions: Tx[]) {
+async function writeDeploymentReport(chainId: string, transactions: Tx[]) {
   const deployed = transactions.reduce(
     (acc: any, v: any) => {
       const mapped = v.map((tx: any) => ({ [tx['name']]: (acc[chainId][tx['name']] || []).concat(tx) }));
@@ -90,7 +90,7 @@ async function updateDatabase(config: any, chainId: string, transactions: Tx[]) 
 async function processDeployment(config: any, chainId: string) {
   const transactions = await extractTransactions(chainId);
 
-  writeDeploymentsReport(chainId, transactions);
+  writeDeploymentReport(chainId, transactions);
 
   // If enabled, update the 'contract_addresses' table with the deployed contracts details.
   if (config.deployment.update_contract_addresses === true) {
