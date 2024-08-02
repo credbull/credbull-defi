@@ -16,9 +16,7 @@ deployments
 
 types
 index.js
-script/utils/config.js
-script/utils/deployedContracts.js
-script/utils/truncateTables.js
+script/utils/*.js
 
 # supabase export
 script/output/
