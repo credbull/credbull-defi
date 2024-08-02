@@ -11,12 +11,14 @@ import { CredbullFixedYieldVaultWithUpside } from "@credbull/CredbullFixedYieldV
 import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
 import { CredbullUpsideVaultFactory } from "@credbull/CredbullUpsideVaultFactory.sol";
 
-import { DeployVaults, DeployVaultsSupport } from "@script/DeployVaults.s.sol";
-import { VaultsSupportConfigured } from "@script/Configured.s.sol";
+import { DeployVaults } from "@script/DeployVaults.s.sol";
+import { DeployVaultsSupport } from "@script/DeployVaultsSupport.s.sol";
+
+import { VaultsSupportConfig } from "@script/TomlConfig.s.sol";
 
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract CredbullUpsideVaultFactoryTest is Test, VaultsSupportConfigured {
+contract CredbullUpsideVaultFactoryTest is Test, VaultsSupportConfig {
     DeployVaults private deployer;
     DeployVaultsSupport private supportDeployer;
 
@@ -27,11 +29,11 @@ contract CredbullUpsideVaultFactoryTest is Test, VaultsSupportConfigured {
     string private OPTIONS = "{}";
 
     function setUp() public {
-        deployer = new DeployVaults();
-        supportDeployer = new DeployVaultsSupport();
+        deployer = new DeployVaults().skipDeployCheck();
+        supportDeployer = new DeployVaultsSupport().skipDeployCheck();
 
-        (, factory, whiteListProvider) = deployer.deploy(true);
-        (ERC20 cbl, ERC20 usdc,) = supportDeployer.deploy(true);
+        (, factory, whiteListProvider) = deployer.run();
+        (ERC20 cbl, ERC20 usdc,) = supportDeployer.run();
 
         paramsFactory = new ParamsFactory(usdc, cbl);
     }

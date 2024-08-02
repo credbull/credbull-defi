@@ -13,13 +13,15 @@ import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.s
 import { WhiteListProvider } from "@credbull/provider/whiteList/WhiteListProvider.sol";
 import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
 
-import { DeployVaults, DeployVaultsSupport } from "@script/DeployVaults.s.sol";
-import { VaultsSupportConfigured } from "@script/Configured.s.sol";
+import { DeployVaults } from "@script/DeployVaults.s.sol";
+import { DeployVaultsSupport } from "@script/DeployVaultsSupport.s.sol";
+
+import { VaultsSupportConfig } from "@script/TomlConfig.s.sol";
 
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
-contract CredbullFixedYieldVaultTest is Test, VaultsSupportConfigured {
+contract CredbullFixedYieldVaultTest is Test, VaultsSupportConfig {
     uint256 private constant INITIAL_BALANCE = 1000;
     uint256 private constant ADDITIONAL_PRECISION = 1e12;
 
@@ -37,11 +39,11 @@ contract CredbullFixedYieldVaultTest is Test, VaultsSupportConfigured {
     uint256 private precision;
 
     function setUp() public {
-        deployer = new DeployVaults();
-        supportDeployer = new DeployVaultsSupport();
+        deployer = new DeployVaults().skipDeployCheck();
+        supportDeployer = new DeployVaultsSupport().skipDeployCheck();
 
-        (,, whiteListProvider) = deployer.deploy(true);
-        (ERC20 cbl, ERC20 usdc,) = supportDeployer.deploy(true);
+        (,, whiteListProvider) = deployer.run();
+        (ERC20 cbl, ERC20 usdc,) = supportDeployer.run();
 
         params = new ParamsFactory(usdc, cbl).createFixedYieldVaultParams();
         params.whiteListPlugin.whiteListProvider = address(whiteListProvider);

@@ -8,14 +8,14 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { MaturityVault } from "@credbull/vault/MaturityVault.sol";
 
-import { DeployVaultsSupport } from "@script/DeployVaults.s.sol";
-import { VaultsSupportConfigured } from "@script/Configured.s.sol";
+import { DeployVaultsSupport } from "@script/DeployVaultsSupport.s.sol";
+import { VaultsSupportConfig } from "@script/TomlConfig.s.sol";
 
 import { SimpleMaturityVault } from "@test/test/vault/SimpleMaturityVault.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract MaturityVaultTest is Test, VaultsSupportConfigured {
+contract MaturityVaultTest is Test, VaultsSupportConfig {
     DeployVaultsSupport private deployer;
     SimpleMaturityVault private vault;
 
@@ -28,8 +28,8 @@ contract MaturityVaultTest is Test, VaultsSupportConfigured {
     uint256 private constant INITIAL_BALANCE = 1e6;
 
     function setUp() public {
-        deployer = new DeployVaultsSupport();
-        (ERC20 cbl, ERC20 usdc,) = deployer.deploy(true);
+        deployer = new DeployVaultsSupport().skipDeployCheck();
+        (ERC20 cbl, ERC20 usdc,) = deployer.run();
         params = new ParamsFactory(usdc, cbl).createMaturityVaultParams();
         vault = new SimpleMaturityVault(params);
 

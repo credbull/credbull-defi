@@ -10,28 +10,21 @@ import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.s
 
 import { DeployVaults } from "@script/DeployVaults.s.sol";
 
-contract DeployVaultsTest is DeployVaults, Test {
+contract DeployVaultsTest is Test {
     function test_DeployVaults_RunDeploys() public {
+        DeployVaults deployer = new DeployVaults().skipDeployCheck();
         (CredbullFixedYieldVaultFactory fyvf, CredbullUpsideVaultFactory uvf, CredbullWhiteListProvider wlp) =
-            this.run();
+            deployer.run();
 
         assertNotEq(address(0), address(fyvf));
         assertNotEq(address(0), address(uvf));
         assertNotEq(address(0), address(wlp));
     }
 
-    function test_DeployVaults_DeploySkipDeploys() public {
+    function test_DeployVaults_RunSkipDeploys() public {
+        DeployVaults deployer = new DeployVaults().skipDeployCheck();
         (CredbullFixedYieldVaultFactory fyvf, CredbullUpsideVaultFactory uvf, CredbullWhiteListProvider wlp) =
-            this.deploy(true);
-
-        assertNotEq(address(0), address(fyvf));
-        assertNotEq(address(0), address(uvf));
-        assertNotEq(address(0), address(wlp));
-    }
-
-    function test_DeployVaults_DeployNoSkipDeploys() public {
-        (CredbullFixedYieldVaultFactory fyvf, CredbullUpsideVaultFactory uvf, CredbullWhiteListProvider wlp) =
-            this.deploy(false);
+            deployer.run();
 
         assertNotEq(address(0), address(fyvf));
         assertNotEq(address(0), address(uvf));

@@ -7,8 +7,9 @@ import { Test } from "forge-std/Test.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import { DeployVaults, DeployVaultsSupport } from "@script/DeployVaults.s.sol";
-import { VaultsSupportConfigured } from "@script/Configured.s.sol";
+import { DeployVaults } from "@script/DeployVaults.s.sol";
+import { DeployVaultsSupport } from "@script/DeployVaultsSupport.s.sol";
+import { VaultsSupportConfig } from "@script/TomlConfig.s.sol";
 
 import { CredbullFixedYieldVaultFactory } from "@credbull/CredbullFixedYieldVaultFactory.sol";
 import { CredbullFixedYieldVault } from "@credbull/CredbullFixedYieldVault.sol";
@@ -17,7 +18,7 @@ import { VaultFactory } from "@credbull/factory/VaultFactory.sol";
 
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract CredbullFixedYieldVaultFactoryTest is Test, VaultsSupportConfigured {
+contract CredbullFixedYieldVaultFactoryTest is Test, VaultsSupportConfig {
     DeployVaults private deployer;
     DeployVaultsSupport private supportDeployer;
 
@@ -28,11 +29,11 @@ contract CredbullFixedYieldVaultFactoryTest is Test, VaultsSupportConfigured {
     string private OPTIONS = "{}";
 
     function setUp() public {
-        deployer = new DeployVaults();
-        supportDeployer = new DeployVaultsSupport();
+        deployer = new DeployVaults().skipDeployCheck();
+        supportDeployer = new DeployVaultsSupport().skipDeployCheck();
 
-        (factory,, whiteListProvider) = deployer.deploy(true);
-        (ERC20 cbl, ERC20 usdc,) = supportDeployer.deploy(true);
+        (factory,, whiteListProvider) = deployer.run();
+        (ERC20 cbl, ERC20 usdc,) = supportDeployer.run();
 
         params = new ParamsFactory(usdc, cbl).createFixedYieldVaultParams();
         params.whiteListPlugin.whiteListProvider = address(whiteListProvider);

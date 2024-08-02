@@ -9,10 +9,9 @@ import { stdToml } from "forge-std/StdToml.sol";
 
 /**
  * @notice Any script that is based upon the multi-network syntax TOML Configuration should extend this.
- *
  * @dev This contract extends [CommonBase] to avoid directly extending [Script] or [Test], where it will be used.
  */
-abstract contract Configured is CommonBase, StdChains {
+abstract contract TomlConfig is CommonBase, StdChains {
     using stdToml for string;
 
     string private _config;
@@ -26,7 +25,7 @@ abstract contract Configured is CommonBase, StdChains {
         return _config;
     }
 
-    /// @dev Realisations can override this function to control what [Chain] is effective.
+    /// @dev Determines the effective [Chain], by default using the `block.chainid` value.
     function chain() internal virtual returns (Chain memory) {
         if (bytes(_chain.chainAlias).length == 0) {
             _chain = getChain(block.chainid);
@@ -34,7 +33,7 @@ abstract contract Configured is CommonBase, StdChains {
         return _chain;
     }
 
-    /// @dev Realisations can override this function to control what environment configuration file is loaded.
+    /// @dev Determines the effective Environment Specifier, by default reading the 'ENVIRONMENT' Environment Variable.
     function environment() internal view virtual returns (string memory) {
         return vm.envString("ENVIRONMENT");
     }
@@ -44,7 +43,8 @@ abstract contract Configured is CommonBase, StdChains {
         _config = loadConfiguration(_environment);
     }
 
-    function loadConfiguration(string memory _environment) private view returns (string memory) {
+    /// @dev Loads the effective configuration, by default loading the Environment specific resource file.
+    function loadConfiguration(string memory _environment) internal view virtual returns (string memory) {
         string memory path = string.concat(vm.projectRoot(), "/resource/", _environment, ".toml");
         console2.log(string.concat("Loading TOML configuration from: ", path));
         return vm.readFile(path);
@@ -69,8 +69,8 @@ abstract contract Configured is CommonBase, StdChains {
     }
 }
 
-/// @dev The [Configured] realisation for the Vaults Deployment Unit.
-abstract contract VaultsConfigured is Configured {
+/// @dev The [TomlConfig] realisation for the Vaults Deployment Unit.
+abstract contract VaultsConfig is TomlConfig {
     using stdToml for string;
 
     string private constant CONFIG_KEY_ADDRESS_OWNER = ".deployment.vaults.address.owner";
@@ -90,8 +90,8 @@ abstract contract VaultsConfigured is Configured {
     }
 }
 
-/// @dev The [Configured] realisation for the Vaults Support Deployment Unit.
-abstract contract VaultsSupportConfigured is VaultsConfigured {
+/// @dev The [TomlConfig] realisation for the Vaults Support Deployment Unit.
+abstract contract VaultsSupportConfig is VaultsConfig {
     using stdToml for string;
 
     string private constant CONFIG_KEY_DEPLOY_SUPPORT = ".deployment.vaults_support.deploy";
@@ -101,8 +101,8 @@ abstract contract VaultsSupportConfigured is VaultsConfigured {
     }
 }
 
-/// @dev The [Configured] realisation for the CBL Deployment Unit.
-abstract contract CBLConfigured is Configured {
+/// @dev The [TomlConfig] realisation for the CBL Deployment Unit.
+abstract contract CBLConfig is TomlConfig {
     using stdToml for string;
 
     string private constant CONFIG_KEY_MAX_SUPPLY = ".deployment.cbl.max_supply";

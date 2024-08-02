@@ -8,8 +8,8 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import { DeployVaultsSupport } from "@script/DeployVaults.s.sol";
-import { VaultsSupportConfigured } from "@script/Configured.s.sol";
+import { DeployVaultsSupport } from "@script/DeployVaultsSupport.s.sol";
+import { VaultsSupportConfig } from "@script/TomlConfig.s.sol";
 
 import { Vault } from "@credbull/vault/Vault.sol";
 
@@ -17,7 +17,7 @@ import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { SimpleVault } from "@test/test/vault/SimpleVault.t.sol";
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract VaultTest is Test, VaultsSupportConfigured {
+contract VaultTest is Test, VaultsSupportConfig {
     using Math for uint256;
 
     DeployVaultsSupport private deployer;
@@ -34,8 +34,8 @@ contract VaultTest is Test, VaultsSupportConfigured {
     uint256 private constant MAX_PERCENTAGE = 100_00;
 
     function setUp() public {
-        deployer = new DeployVaultsSupport();
-        (ERC20 cbl, ERC20 usdc,) = deployer.deploy(true);
+        deployer = new DeployVaultsSupport().skipDeployCheck();
+        (ERC20 cbl, ERC20 usdc,) = deployer.run();
         params = new ParamsFactory(usdc, cbl).createVaultParams();
         vault = createTestVault(params);
 

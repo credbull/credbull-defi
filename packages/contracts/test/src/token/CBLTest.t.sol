@@ -10,9 +10,9 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { CBL } from "@credbull/token/CBL.sol";
 
 import { DeployCBLToken } from "@script/DeployCBLToken.s.sol";
-import { CBLConfigured } from "@script/Configured.s.sol";
+import { CBLConfig } from "@script/TomlConfig.s.sol";
 
-contract CBLTest is Test, CBLConfigured {
+contract CBLTest is Test, CBLConfig {
     DeployCBLToken private deployer;
 
     CBL private cbl;
@@ -20,9 +20,9 @@ contract CBLTest is Test, CBLConfigured {
     address private alice = makeAddr("alice");
 
     function setUp() public {
-        deployer = new DeployCBLToken();
+        deployer = new DeployCBLToken().skipDeployCheck();
 
-        cbl = deployer.deploy(true);
+        cbl = deployer.run();
     }
 
     function test__CBL__ShouldRevertOnZeroAddress() public {

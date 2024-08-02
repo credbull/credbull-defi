@@ -14,10 +14,10 @@ import { FixedYieldVault } from "@credbull/vault/FixedYieldVault.sol";
 import { MaturityVault } from "@credbull/vault/MaturityVault.sol";
 import { Vault } from "@credbull/vault/Vault.sol";
 
-import { VaultsConfigured } from "@script/Configured.s.sol";
+import { VaultsConfig } from "@script/TomlConfig.s.sol";
 
 /// @notice A test utility for creating 'Params' instances for the various [Vault] types.
-contract ParamsFactory is Test, VaultsConfigured {
+contract ParamsFactory is Test, VaultsConfig {
     uint256 private constant PROMISED_FIXED_YIELD = 10;
 
     ERC20 private usdc;

@@ -17,15 +17,17 @@ import { FixedYieldVault } from "@credbull/vault/FixedYieldVault.sol";
 import { UpsideVault } from "@credbull/vault/UpsideVault.sol";
 import { Vault } from "@credbull/vault/Vault.sol";
 
-import { DeployVaults, DeployVaultsSupport } from "@script/DeployVaults.s.sol";
-import { VaultsSupportConfigured } from "@script/Configured.s.sol";
+import { DeployVaults } from "@script/DeployVaults.s.sol";
+import { DeployVaultsSupport } from "@script/DeployVaultsSupport.s.sol";
+
+import { VaultsSupportConfig } from "@script/TomlConfig.s.sol";
 
 import { DecimalToken } from "@test/test/token/DecimalToken.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract CredbullFixedYieldVaultWithUpsideTest is Test, VaultsSupportConfigured {
+contract CredbullFixedYieldVaultWithUpsideTest is Test, VaultsSupportConfig {
     using Math for uint256;
 
     uint256 private constant INITIAL_BALANCE = 1e6;
@@ -50,11 +52,11 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test, VaultsSupportConfigured 
     uint256 private precision;
 
     function setUp() public {
-        deployer = new DeployVaults();
-        supportDeployer = new DeployVaultsSupport();
+        deployer = new DeployVaults().skipDeployCheck();
+        supportDeployer = new DeployVaultsSupport().skipDeployCheck();
 
-        (,, whiteListProvider) = deployer.deploy(true);
-        (cbl, usdc,) = supportDeployer.deploy(true);
+        (,, whiteListProvider) = deployer.run();
+        (cbl, usdc,) = supportDeployer.run();
 
         (upsideVaultParams) = new ParamsFactory(usdc, cbl).createUpsideVaultParams();
         vaultParams = upsideVaultParams.fixedYieldVault;

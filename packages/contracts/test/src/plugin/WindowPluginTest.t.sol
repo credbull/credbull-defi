@@ -9,14 +9,14 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Vault } from "@credbull/vault/Vault.sol";
 import { WindowPlugin } from "@credbull/plugin/WindowPlugin.sol";
 
-import { DeployVaultsSupport } from "@script/DeployVaults.s.sol";
-import { VaultsSupportConfigured } from "@script/Configured.s.sol";
+import { DeployVaultsSupport } from "@script/DeployVaultsSupport.s.sol";
+import { VaultsSupportConfig } from "@script/TomlConfig.s.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { SimpleWindowVault } from "@test/test/vault/SimpleWindowVault.t.sol";
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract WindowPluginTest is Test, VaultsSupportConfigured {
+contract WindowPluginTest is Test, VaultsSupportConfig {
     DeployVaultsSupport private deployer;
 
     SimpleWindowVault private vault;
@@ -31,8 +31,8 @@ contract WindowPluginTest is Test, VaultsSupportConfigured {
     uint256 private precision;
 
     function setUp() public {
-        deployer = new DeployVaultsSupport();
-        (ERC20 cbl, ERC20 usdc,) = deployer.deploy(true);
+        deployer = new DeployVaultsSupport().skipDeployCheck();
+        (ERC20 cbl, ERC20 usdc,) = deployer.run();
 
         ParamsFactory pf = new ParamsFactory(usdc, cbl);
         vaultParams = pf.createVaultParams();
