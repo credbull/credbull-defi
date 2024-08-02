@@ -40,7 +40,7 @@ contract ParamsFactory is Test {
         params = UpsideVault.UpsideVaultParams({
             fixedYieldVault: createFixedYieldVaultParams(),
             cblToken: networkConfig.cblToken,
-            collateralPercentage: 20_00
+            upsidePercentage: 20_00
         });
     }
 
