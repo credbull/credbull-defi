@@ -5,14 +5,14 @@
   "types": "index.ts",
   "scripts": {
     "chain": "ts-node script/utils/truncateTables.ts && anvil --config-out localhost.json",
-    "clean": "forge clean && rm -rf broadcast cache deployments types script/output/*.json localhost.json index.js",
-    "build": "forge build && yarn gen-types",
+    "clean": "forge clean && rm -rf broadcast cache deployments types 'script/output/*.json' localhost.json index.js",
+    "build": "forge build && yarn gen-types && tsc",
     "test": "forge test",
     "format": "forge fmt && prettier './script/**/*.js' --write",
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint './*(test|src)/**/*.sol'",
     "deploy": "make deploy-local",
     "deploy:ci": "make deploy-baseSepolia",
-    "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
+    "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json",
     "postinstall": "yarn build"
   },
   "packageManager": "yarn@3.2.3",
