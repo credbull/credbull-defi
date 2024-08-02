@@ -9,10 +9,22 @@ abstract contract WindowPlugin {
         uint256 windowOpensAt, uint256 windowClosesAt, uint256 timestamp
     );
 
+    /// @notice Error to revert when incorrect window values are provided
+    error WindowPlugin__IncorrectWindowValues(
+        uint256 depositOpen, uint256 depositClose, uint256 redeemOpen, uint256 redeemClose
+    );
+
     /// @notice Event emitted when the window is updated
     event WindowUpdated(
         uint256 depositOpensAt, uint256 depositClosesAt, uint256 redemptionOpensAt, uint256 redemptionClosesAt
     );
+
+    modifier validateWindows(uint256 _depositOpen, uint256 _depositClose, uint256 _redeemOpen, uint256 _redeemClose) {
+        if (!(_depositOpen < _depositClose && _depositClose < _redeemOpen && _redeemOpen < _redeemClose)) {
+            revert WindowPlugin__IncorrectWindowValues(_depositOpen, _depositClose, _redeemOpen, _redeemClose);
+        }
+        _;
+    }
 
     /// @notice A Window is essentially a Time Span, denoted by an Opening and Closing Time pair.
     struct Window {
@@ -41,7 +53,14 @@ abstract contract WindowPlugin {
     /// @notice - Flag to check for window
     bool public checkWindow;
 
-    constructor(WindowPluginParams memory params) {
+    constructor(WindowPluginParams memory params)
+        validateWindows(
+            params.depositWindow.opensAt,
+            params.depositWindow.closesAt,
+            params.redemptionWindow.opensAt,
+            params.redemptionWindow.closesAt
+        )
+    {
         depositOpensAtTimestamp = params.depositWindow.opensAt;
         depositClosesAtTimestamp = params.depositWindow.closesAt;
         redemptionOpensAtTimestamp = params.redemptionWindow.opensAt;
@@ -73,6 +92,7 @@ abstract contract WindowPlugin {
     function _updateWindow(uint256 _depositOpen, uint256 _depositClose, uint256 _redeemOpen, uint256 _redeemClose)
         internal
         virtual
+        validateWindows(_depositOpen, _depositClose, _redeemOpen, _redeemClose)
     {
         depositOpensAtTimestamp = _depositOpen;
         depositClosesAtTimestamp = _depositClose;
