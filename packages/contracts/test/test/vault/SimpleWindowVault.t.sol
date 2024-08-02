@@ -33,7 +33,7 @@ contract SimpleWindowVault is Vault, WindowPlugin {
         _updateWindow(_depositOpen, _depositClose, _withdrawOpen, _withdrawClose);
     }
 
-    function toggleWindowCheck(bool status) public {
-        _toggleWindowCheck(status);
+    function toggleWindowCheck() public {
+        _toggleWindowCheck();
     }
 }

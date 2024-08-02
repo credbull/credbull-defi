@@ -11,6 +11,9 @@ abstract contract WhiteListPlugin {
     /// @notice Error to revert if the address is not whiteListed
     error CredbullVault__NotWhiteListed(address, uint256);
 
+    /// @notice Event emitted when the whiteList check is updated
+    event WhiteListCheckUpdated(bool indexed checkWhiteList);
+
     /// @notice - Params for the WhiteList Plugin
     struct WhiteListPluginParams {
         address whiteListProvider;
@@ -44,7 +47,8 @@ abstract contract WhiteListPlugin {
     }
 
     /// @notice - Function to toggle check for whiteListed address
-    function _toggleWhiteListCheck(bool status) internal virtual {
-        checkWhiteList = status;
+    function _toggleWhiteListCheck() internal virtual {
+        checkWhiteList = !checkWhiteList;
+        emit WhiteListCheckUpdated(checkWhiteList);
     }
 }

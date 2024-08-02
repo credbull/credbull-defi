@@ -78,9 +78,8 @@ abstract contract MaturityVault is Vault {
     /**
      * @notice Enables/disables the Maturity Check according to the [status] value.
      * @dev 'Toggling' means flipping the existing state. This is simply a mutator.
-     * @param status Boolean value to toggle
      */
-    function _toggleMaturityCheck(bool status) internal {
-        checkMaturity = status;
+    function _toggleMaturityCheck() internal {
+        checkMaturity = !checkMaturity;
     }
 }

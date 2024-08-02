@@ -119,7 +119,7 @@ contract MaturityVaultTest is Test, VaultsSupportConfig {
         vm.startPrank(alice);
         vault.approve(address(vault), shares);
 
-        vault.toogleMaturityCheck(false);
+        vault.toogleMaturityCheck();
 
         vault.redeem(shares, alice, alice);
         assertEq(params.vault.asset.balanceOf(alice), INITIAL_BALANCE * precision);
@@ -128,7 +128,7 @@ contract MaturityVaultTest is Test, VaultsSupportConfig {
 
     function test__MaturityVault__ShouldToggleMaturityCheck() public {
         bool beforeToggle = vault.checkMaturity();
-        vault.toogleMaturityCheck(!beforeToggle);
+        vault.toogleMaturityCheck();
         bool afterToggle = vault.checkMaturity();
         assertEq(afterToggle, !beforeToggle);
     }
