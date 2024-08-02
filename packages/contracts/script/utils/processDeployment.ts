@@ -17,7 +17,9 @@ type Tx = { name: string; address: string; arguments: string[] };
 async function extractTransactions(chainId: string): Promise<Tx[]> {
   const broadcastDir = path.resolve(__dirname, '../../broadcast');
   const deployScripts = await fs.promises.readdir(broadcastDir);
-  const txLogFiles = deployScripts.map((ds) => path.resolve(broadcastDir, ds, chainId, 'run-latest.json'));
+  const txLogFiles = deployScripts
+    .map((ds) => path.resolve(broadcastDir, ds, chainId, 'run-latest.json'))
+    .filter((tlf) => fs.existsSync(tlf));
   const txLogs = txLogFiles.map((tlf) => JSON.parse(fs.readFileSync(tlf).toString('utf-8')));
   return txLogs.map((tl) =>
     tl['transactions']
