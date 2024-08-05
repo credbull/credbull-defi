@@ -1,0 +1,20 @@
+##
+# The Application Configuration for the TestNet Environment.
+##
+
+[evm]
+# blockchain id, e.g. arbitrumOne=42161
+chain_id = 42161
+
+[evm.address]
+# CBL on arbitrum one (mainnet)
+cbl_token = "0x577349C99830D3c078034087A532581EF5381A08"
+
+[evm.contracts.cbl]
+# CBL token params
+# primevault Wallet "CBL Token - Owner Role v1.0"
+owner = "0x4a17E7E841d1a90979e849570E8BDD2728aad635"
+# primevault Wallet "CBL Token - Minter Role v1.0"
+minter = "0xb663a7068fC5f33528A53AcdF7B773e2d9e59060"
+# CBL token params
+max_supply = 1_000_000_000 # 1 billion in wei
