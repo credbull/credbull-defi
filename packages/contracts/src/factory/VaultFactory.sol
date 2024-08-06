@@ -23,6 +23,12 @@ abstract contract VaultFactory is AccessControl {
     /// @notice Error to indicate that the provided custodian address is invalid.
     error CredbullVaultFactory__InvalidCustodianAddress();
 
+    /// @notice Event to emit when a new custodian is allowed
+    event CustodianAllowed(address indexed custodian);
+
+    /// @notice Event to emit when a custodian is removed
+    event CustodianRemoved(address indexed custodian);
+
     /// @notice Address set that contains list of all vault address
     EnumerableSet.AddressSet internal allVaults;
 
@@ -77,6 +83,8 @@ abstract contract VaultFactory is AccessControl {
         if (_custodian == address(0)) {
             revert CredbullVaultFactory__InvalidCustodianAddress();
         }
+
+        emit CustodianAllowed(_custodian);
         return allowedCustodians.add(_custodian);
     }
 
@@ -84,6 +92,7 @@ abstract contract VaultFactory is AccessControl {
     function removeCustodian(address _custodian) public onlyRole(DEFAULT_ADMIN_ROLE) {
         if (allowedCustodians.contains(_custodian)) {
             allowedCustodians.remove(_custodian);
+            emit CustodianRemoved(_custodian);
         }
     }
 
