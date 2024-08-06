@@ -26,6 +26,9 @@ abstract contract MaturityVault is Vault {
     /// @notice Event emitted when the vault matures.
     event VaultMatured(uint256 indexed totalAssetDeposited);
 
+    /// @notice Event emitted when the maturity check is updated.
+    event MaturityCheckUpdated(bool indexed checkMaturity);
+
     /// @notice Determine if the vault is matured or not.
     bool public isMatured;
 
@@ -79,7 +82,9 @@ abstract contract MaturityVault is Vault {
      * @notice Enables/disables the Maturity Check according to the [status] value.
      * @dev 'Toggling' means flipping the existing state. This is simply a mutator.
      */
-    function _toggleMaturityCheck() internal {
-        checkMaturity = !checkMaturity;
+    function _setMaturityCheck(bool _setMaturityCheckStatus) internal {
+        checkMaturity = _setMaturityCheckStatus;
+
+        emit MaturityCheckUpdated(checkMaturity);
     }
 }

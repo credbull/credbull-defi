@@ -124,6 +124,8 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
 
     function test__ShouldAllowAdminToAddCustodians() public {
         vm.prank(config.factoryParams.owner);
+        vm.expectEmit();
+        emit VaultFactory.CustodianAllowed(params.maturityVault.vault.custodian);
         factory.allowCustodian(params.maturityVault.vault.custodian);
 
         assertTrue(factory.isCustodianAllowed(params.maturityVault.vault.custodian));
@@ -134,6 +136,8 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         factory.allowCustodian(params.maturityVault.vault.custodian);
         assertTrue(factory.isCustodianAllowed(params.maturityVault.vault.custodian));
 
+        vm.expectEmit();
+        emit VaultFactory.CustodianRemoved(params.maturityVault.vault.custodian);
         factory.removeCustodian(params.maturityVault.vault.custodian);
         assertTrue(!factory.isCustodianAllowed(params.maturityVault.vault.custodian));
         vm.stopPrank();

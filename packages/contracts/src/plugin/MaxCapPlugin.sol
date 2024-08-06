@@ -39,8 +39,8 @@ abstract contract MaxCapPlugin {
     }
 
     /// @notice - Toggle the max cap check status
-    function _toggleMaxCapCheck() internal virtual {
-        checkMaxCap = !checkMaxCap;
+    function _setCheckMaxCap(bool _checkMaxCapStatus) internal virtual {
+        checkMaxCap = _checkMaxCapStatus;
 
         emit MaxCapCheckUpdated(checkMaxCap);
     }
