@@ -20,8 +20,8 @@ contract SimpleMaxCapVault is Vault, MaxCapPlugin {
         _;
     }
 
-    function toggleMaxCapCheck() public {
-        _toggleMaxCapCheck();
+    function setCheckMaxCap(bool _checkMaxCapStatus) public {
+        _setCheckMaxCap(_checkMaxCapStatus);
     }
 
     function updateMaxCap(uint256 _value) public {

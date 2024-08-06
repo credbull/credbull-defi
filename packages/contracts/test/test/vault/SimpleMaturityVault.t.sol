@@ -17,7 +17,7 @@ contract SimpleMaturityVault is MaturityVault {
         _;
     }
 
-    function toogleMaturityCheck() public {
-        _toggleMaturityCheck();
+    function setMaturityCheck(bool _setMaturityCheckStatus) public {
+        _setMaturityCheck(_setMaturityCheckStatus);
     }
 }

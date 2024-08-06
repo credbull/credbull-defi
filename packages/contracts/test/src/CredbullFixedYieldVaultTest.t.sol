@@ -136,6 +136,7 @@ contract CredbullFixedYieldVaultTest is Test, VaultsSupportConfig {
     }
 
     function test__FixedYieldVault__RevertMaturityToggleIfNotAdmin() public {
+        bool previousMaturityStatus = vault.checkMaturity();
         vm.startPrank(params.roles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -144,11 +145,11 @@ contract CredbullFixedYieldVaultTest is Test, VaultsSupportConfig {
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
-        vault.toggleMaturityCheck();
+        vault.setMaturityCheck(!previousMaturityStatus);
         vm.stopPrank();
 
         vm.prank(params.roles.owner);
-        vault.toggleMaturityCheck();
+        vault.setMaturityCheck(!previousMaturityStatus);
     }
 
     function test__FixedYieldVault__RevertWhiteListToggleIfNotAdmin() public {
@@ -223,6 +224,7 @@ contract CredbullFixedYieldVaultTest is Test, VaultsSupportConfig {
     }
 
     function test__FixedYieldVault__RevertMaxCapToggleIfNotAdmin() public {
+        bool previousStatus = vault.checkMaxCap();
         vm.startPrank(params.roles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -231,11 +233,11 @@ contract CredbullFixedYieldVaultTest is Test, VaultsSupportConfig {
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
-        vault.toggleMaxCapCheck();
+        vault.setCheckMaxCap(!previousStatus);
         vm.stopPrank();
 
         vm.prank(params.roles.owner);
-        vault.toggleMaxCapCheck();
+        vault.setCheckMaxCap(!previousStatus);
     }
 
     function test__FixedYieldVault__RevertUdpateMaxCapIfNotAdmin() public {
