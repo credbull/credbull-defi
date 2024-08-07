@@ -14,6 +14,9 @@ import { stdToml } from "forge-std/StdToml.sol";
 abstract contract TomlConfig is CommonBase, StdChains {
     using stdToml for string;
 
+    /// @notice When a sought Configuration Item is not found, revert with this error.
+    error ConfigurationNotFound(string missingConfigKey);
+
     string private _config;
     Chain private _chain;
 
@@ -67,25 +70,39 @@ abstract contract TomlConfig is CommonBase, StdChains {
         string memory overrideKey = string.concat(".network.", chain().chainAlias, configKey);
         return vm.keyExistsToml(config(), overrideKey) ? overrideKey : configKey;
     }
+
+    /**
+     * Utility function that asserts the presence of a [configKey] value, or throws [ConfigurationNotFound].
+     *
+     * @param configKey The [string] Configuration Key to get.
+     */
+    function requireValueAt(string memory configKey) internal {
+        if (!vm.keyExistsToml(config(), configKey)) {
+            revert ConfigurationNotFound(configKey);
+        }
+    }
 }
 
 /// @dev The [TomlConfig] realisation for the Vaults Deployment Unit.
 abstract contract VaultsConfig is TomlConfig {
     using stdToml for string;
 
-    string private constant CONFIG_KEY_ADDRESS_OWNER = ".deployment.vaults.address.owner";
-    string private constant CONFIG_KEY_ADDRESS_OPERATOR = ".deployment.vaults.address.operator";
-    string private constant CONFIG_KEY_ADDRESS_CUSTODIAN = ".deployment.vaults.address.custodian";
+    string internal constant CONFIG_KEY_ADDRESS_OWNER = ".deployment.vaults.address.owner";
+    string internal constant CONFIG_KEY_ADDRESS_OPERATOR = ".deployment.vaults.address.operator";
+    string internal constant CONFIG_KEY_ADDRESS_CUSTODIAN = ".deployment.vaults.address.custodian";
 
     function owner() internal returns (address) {
+        requireValueAt(CONFIG_KEY_ADDRESS_OWNER);
         return config().readAddress(configKeyFor(CONFIG_KEY_ADDRESS_OWNER));
     }
 
     function operator() internal returns (address) {
+        requireValueAt(CONFIG_KEY_ADDRESS_OPERATOR);
         return config().readAddress(configKeyFor(CONFIG_KEY_ADDRESS_OPERATOR));
     }
 
     function custodian() internal returns (address) {
+        requireValueAt(CONFIG_KEY_ADDRESS_CUSTODIAN);
         return config().readAddress(configKeyFor(CONFIG_KEY_ADDRESS_CUSTODIAN));
     }
 }
@@ -94,9 +111,10 @@ abstract contract VaultsConfig is TomlConfig {
 abstract contract VaultsSupportConfig is VaultsConfig {
     using stdToml for string;
 
-    string private constant CONFIG_KEY_DEPLOY_SUPPORT = ".deployment.vaults_support.deploy";
+    string internal constant CONFIG_KEY_DEPLOY_SUPPORT = ".deployment.vaults_support.deploy";
 
     function isDeploySupport() public returns (bool) {
+        requireValueAt(CONFIG_KEY_DEPLOY_SUPPORT);
         return config().readBool(configKeyFor(CONFIG_KEY_DEPLOY_SUPPORT));
     }
 }
@@ -105,20 +123,23 @@ abstract contract VaultsSupportConfig is VaultsConfig {
 abstract contract CBLConfig is TomlConfig {
     using stdToml for string;
 
-    string private constant CONFIG_KEY_MAX_SUPPLY = ".deployment.cbl.max_supply";
-    string private constant CONFIG_KEY_ADDRESS_OWNER = ".deployment.cbl.address.owner";
-    string private constant CONFIG_KEY_ADDRESS_MINTER = ".deployment.cbl.address.minter";
+    string internal constant CONFIG_KEY_MAX_SUPPLY = ".deployment.cbl.max_supply";
+    string internal constant CONFIG_KEY_ADDRESS_OWNER = ".deployment.cbl.address.owner";
+    string internal constant CONFIG_KEY_ADDRESS_MINTER = ".deployment.cbl.address.minter";
     uint256 internal constant PRECISION = 1e18;
 
     function maxSupply() internal returns (uint256) {
+        requireValueAt(CONFIG_KEY_MAX_SUPPLY);
         return config().readUint(configKeyFor(CONFIG_KEY_MAX_SUPPLY)) * PRECISION;
     }
 
     function owner() internal returns (address) {
+        requireValueAt(CONFIG_KEY_ADDRESS_OWNER);
         return config().readAddress(configKeyFor(CONFIG_KEY_ADDRESS_OWNER));
     }
 
     function minter() internal returns (address) {
+        requireValueAt(CONFIG_KEY_ADDRESS_MINTER);
         return config().readAddress(configKeyFor(CONFIG_KEY_ADDRESS_MINTER));
     }
 }

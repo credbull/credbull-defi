@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
 
+import { TomlConfig } from "@script/TomlConfig.s.sol";
 import { VaultsConfig } from "@script/TomlConfig.s.sol";
 
 contract VaultsConfigTest is Test, VaultsConfig {
@@ -30,5 +31,41 @@ contract VaultsConfigTest is Test, VaultsConfig {
 
     function test_VaultsConfig_CustodianAddress() public {
         assertEq(EXPECTED_CUSTODIAN, custodian(), "Unexpected Custodian Address");
+    }
+}
+
+contract AbsentVaultsConfigTest is Test, VaultsConfig {
+    string private constant CONFIG =
+        "[deployment.vaults.address]\n" 'treasury = "0x1111111111111111111111111111111111111111"\n';
+
+    function loadConfiguration(string memory) internal pure override returns (string memory) {
+        return CONFIG;
+    }
+
+    function testFail_VaultsConfig_RevertWhenOwnerAddressAbsent() public {
+        owner();
+    }
+
+    function test_VaultsConfig_ExactRevertWhenOwnerAddressAbsent() public {
+        vm.expectRevert(abi.encodeWithSelector(ConfigurationNotFound.selector, CONFIG_KEY_ADDRESS_OWNER));
+        owner();
+    }
+
+    function testFail_VaultsConfig_RevertWhenOperatorAddressAbsent() public {
+        operator();
+    }
+
+    function test_VaultsConfig_ExactRevertsWhenOperatorAddressAbsent() public {
+        vm.expectRevert(abi.encodeWithSelector(ConfigurationNotFound.selector, CONFIG_KEY_ADDRESS_OPERATOR));
+        operator();
+    }
+
+    function testFail_VaultsConfig_RevertWhenCustodianAddressAbsent() public {
+        custodian();
+    }
+
+    function test_VaultsConfig_ExactRevertsWhenCustodianAddressAbsent() public {
+        vm.expectRevert(abi.encodeWithSelector(ConfigurationNotFound.selector, CONFIG_KEY_ADDRESS_CUSTODIAN));
+        custodian();
     }
 }

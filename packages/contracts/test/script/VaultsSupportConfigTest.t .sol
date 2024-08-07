@@ -37,3 +37,44 @@ contract VaultsSupportConfigTest is Test, VaultsSupportConfig {
         assertEq(EXPECTED_CUSTODIAN, custodian(), "Unexpected Custodian Address");
     }
 }
+
+contract AbsentVaultsSupportConfigTest is Test, VaultsSupportConfig {
+    string private constant CONFIG =
+        "[deployment.vaults.address]\n" 'treasury = "0x1111111111111111111111111111111111111111"\n';
+
+    function loadConfiguration(string memory) internal pure override returns (string memory) {
+        return CONFIG;
+    }
+
+    function testFail_VaultsSupportConfig_RevertWhenIsDeploySupportFlagAbsent() public {
+        isDeploySupport();
+    }
+
+    function test_VaultsSupportConfig_ExactRevertWhenIsDeploySupportFlagAbsent() public {
+        vm.expectRevert(abi.encodeWithSelector(ConfigurationNotFound.selector, CONFIG_KEY_DEPLOY_SUPPORT));
+        isDeploySupport();
+    }
+
+    function test_VaultsConfig_ExactRevertWhenOwnerAddressAbsent() public {
+        vm.expectRevert(abi.encodeWithSelector(ConfigurationNotFound.selector, CONFIG_KEY_ADDRESS_OWNER));
+        owner();
+    }
+
+    function testFail_VaultsConfig_RevertWhenOperatorAddressAbsent() public {
+        operator();
+    }
+
+    function test_VaultsConfig_ExactRevertsWhenOperatorAddressAbsent() public {
+        vm.expectRevert(abi.encodeWithSelector(ConfigurationNotFound.selector, CONFIG_KEY_ADDRESS_OPERATOR));
+        operator();
+    }
+
+    function testFail_VaultsConfig_RevertWhenCustodianAddressAbsent() public {
+        custodian();
+    }
+
+    function test_VaultsConfig_ExactRevertsWhenCustodianAddressAbsent() public {
+        vm.expectRevert(abi.encodeWithSelector(ConfigurationNotFound.selector, CONFIG_KEY_ADDRESS_CUSTODIAN));
+        custodian();
+    }
+}

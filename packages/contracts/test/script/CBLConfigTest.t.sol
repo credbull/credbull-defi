@@ -31,3 +31,39 @@ contract CBLConfigTest is Test, CBLConfig {
         assertEq(EXPECTED_MAX_SUPPLY, maxSupply(), "Unexpected Max Supply Amount");
     }
 }
+
+contract AbsentCBLConfigTest is Test, CBLConfig {
+    string private constant CONFIG =
+        "[deployment.cbl]\n" "[deployment.cbl.address]\n" 'treasury = "0x4444444444444444444444444444444444444444"\n';
+
+    function loadConfiguration(string memory) internal pure override returns (string memory) {
+        return CONFIG;
+    }
+
+    function testFail_CBLConfig_RevertWhenOwnerAddressAbsent() public {
+        owner();
+    }
+
+    function test_CBLConfig_ExactRevertWhenOwnerAddressAbsent() public {
+        vm.expectRevert(abi.encodeWithSelector(ConfigurationNotFound.selector, CONFIG_KEY_ADDRESS_OWNER));
+        owner();
+    }
+
+    function testFail_CBLConfig_RevertWhenMinterAddressAbsent() public {
+        minter();
+    }
+
+    function test_CBLConfig_ExactRevertWhenMinterAddressAbsent() public {
+        vm.expectRevert(abi.encodeWithSelector(ConfigurationNotFound.selector, CONFIG_KEY_ADDRESS_MINTER));
+        minter();
+    }
+
+    function testFail_CBLConfig_RevertWhenMaxSupplyAbsent() public {
+        maxSupply();
+    }
+
+    function test_CBLConfig_ExactRevertWhenMaxSupplyAbsent() public {
+        vm.expectRevert(abi.encodeWithSelector(ConfigurationNotFound.selector, CONFIG_KEY_MAX_SUPPLY));
+        maxSupply();
+    }
+}
