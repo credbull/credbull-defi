@@ -3,7 +3,7 @@ src = "src"
 out = "out"
 libs = ["lib"]
 fs_permissions = [{ access = "read-write", path = "./" }]
-solc_version="0.8.23"
+solc_version = "0.8.23"
 
 [fmt]
 bracket_spacing = true
@@ -25,9 +25,9 @@ bitlayerTestnet = "https://testnet-rpc.bitlayer.org"
 
 
 [etherscan]
-localhost = { key = "" , url="http://127.0.0.1:8545"}
+localhost = { key = "", url = "http://127.0.0.1:8545" }
 base = { key = "${BASE_ETHERSCAN_API_KEY}" }
 baseSepolia = { key = "${BASE_SEPOLIA_ETHERSCAN_API_KEY}" }
-arbitrumSepolia = { key = "${ARB_SEPOLIA_ETHERSCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api", chain=421614 }
-bitlayer = { key = "bitlayer", url="https://rpc.bitlayer.org" }
-bitlayerTestnet = { key = "bitlayerTestnet", url="https://testnet-scan.bitlayer.org" }
+arbitrumSepolia = { key = "${ARB_SEPOLIA_ETHERSCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api", chain = 421614 }
+bitlayer = { key = "bitlayer", url = "https://rpc.bitlayer.org" }
+bitlayerTestnet = { key = "bitlayerTestnet", url = "https://testnet-scan.bitlayer.org" }
