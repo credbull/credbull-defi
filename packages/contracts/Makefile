@@ -3,6 +3,11 @@
 #	directory and our deployment scripts depend on this, it seems unnecessary to change this now.
 -include .env
 
+DEPLOY_SCRIPT ?= script/DeployVaultFactory.s.sol:DeployVaultFactory
+
+# How the deployer is authenticated. Can override to use `cast wallet` output or `--account x --password y` etc.
+DEPLOYER_AUTHENTICATION ?= --private-key $(DEPLOYER_PRIVATE_KEY)
+
 deploy-local:
 	$(MAKE) deploy RPC_URL=localhost EXTRA_FLAGS=
 
@@ -23,18 +28,16 @@ deploy-bitlayerTestnet:
 
 # NOTE (JL,2024-05-20): `forge` auto-includes any `.env` file in the invocation directory.
 deploy:
-	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
+	@echo "Running deploy script '$(DEPLOY_SCRIPT)' against '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	@yarn clean
 	@yarn build
-	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
-		--chain-id $$(cast chain-id --rpc-url $(RPC_URL)) --private-key $(DEPLOYER_PRIVATE_KEY) --broadcast \
-		$(EXTRA_FLAGS) -vvvv
+	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) --chain-id $$(cast chain-id --rpc-url $(RPC_URL)) \
+		$(DEPLOYER_AUTHENTICATION) --broadcast $(EXTRA_FLAGS) -vvvv
 	yarn db-export
 
 verify:
-	@echo "Running verify '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
-	rm -rf out && \
-	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume -vvvv && \
-	yarn gen-types && \
+	@echo "Running verify of script '$(DEPLOY_SCRIPT)' against '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
+	@yarn clean
+	@yarn build
+	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) $(DEPLOYER_AUTHENTICATION) --verify --resume -vvvv
 	yarn db-export
