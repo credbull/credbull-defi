@@ -112,3 +112,9 @@ error CBL__InvalidOwnerAddress();
 error CBL__InvalidMinterAddress();
 ```
 
+## Roadmap - Future Features
+
+### Governance & Governance Token ($gCBL) Contract
+
+Governance will be implemented in a separate Governance Token ($gCBL) smart contract.   The $gCBL contract will include functions 
+related to governance and voting.  Users lock $CBL to receive Governance Tokens ($gCBL) in return.
