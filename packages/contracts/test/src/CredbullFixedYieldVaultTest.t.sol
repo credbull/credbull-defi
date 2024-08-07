@@ -14,6 +14,7 @@ import { CredbullFixedYieldVault } from "@credbull/CredbullFixedYieldVault.sol";
 import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
 import { WhiteListProvider } from "@credbull/provider/whiteList/WhiteListProvider.sol";
 import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
+import { FixedYieldVault } from "@credbull/vault/FixedYieldVault.sol";
 
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
@@ -52,11 +53,22 @@ contract CredbullFixedYieldVaultTest is Test {
         statuses[1] = true;
 
         vm.startPrank(params.roles.operator);
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
         SimpleUSDC(address(params.maturityVault.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
         SimpleUSDC(address(params.maturityVault.vault.asset)).mint(bob, INITIAL_BALANCE * precision);
+    }
+
+    function test__FixedYieldVault__RevertOnInvalidAddress() public {
+        params.roles.owner = address(0);
+        vm.expectRevert(abi.encodeWithSelector(FixedYieldVault.FixedYieldVault__InvalidOwnerAddress.selector));
+        new CredbullFixedYieldVault(params);
+
+        params.roles.owner = makeAddr("owner");
+        params.roles.operator = address(0);
+        vm.expectRevert(abi.encodeWithSelector(FixedYieldVault.FixedYieldVault__InvalidOperatorAddress.selector));
+        new CredbullFixedYieldVault(params);
     }
 
     function test__FixedYieldVault__ShouldAllowOwnerToChangeOperator() public {
@@ -113,6 +125,7 @@ contract CredbullFixedYieldVaultTest is Test {
     }
 
     function test__FixedYieldVault__RevertMaturityToggleIfNotAdmin() public {
+        bool previousMaturityStatus = vault.checkMaturity();
         vm.startPrank(params.roles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -121,11 +134,11 @@ contract CredbullFixedYieldVaultTest is Test {
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
-        vault.toggleMaturityCheck(false);
+        vault.setMaturityCheck(!previousMaturityStatus);
         vm.stopPrank();
 
         vm.prank(params.roles.owner);
-        vault.toggleMaturityCheck(false);
+        vault.setMaturityCheck(!previousMaturityStatus);
     }
 
     function test__FixedYieldVault__RevertWhiteListToggleIfNotAdmin() public {
@@ -137,11 +150,11 @@ contract CredbullFixedYieldVaultTest is Test {
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
-        vault.toggleWhiteListCheck(false);
+        vault.toggleWhiteListCheck();
         vm.stopPrank();
 
         vm.prank(params.roles.owner);
-        vault.toggleWhiteListCheck(false);
+        vault.toggleWhiteListCheck();
     }
 
     function test__FixedYieldVault__RevertWindowToggleIfNotAdmin() public {
@@ -153,11 +166,11 @@ contract CredbullFixedYieldVaultTest is Test {
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
-        vault.toggleWindowCheck(false);
+        vault.toggleWindowCheck();
         vm.stopPrank();
 
         vm.prank(params.roles.owner);
-        vault.toggleWindowCheck(false);
+        vault.toggleWindowCheck();
     }
 
     function test__FixedYieldVault__ShouldCheckForWhiteListedAddresses() public {
@@ -168,7 +181,7 @@ contract CredbullFixedYieldVaultTest is Test {
         statuses[0] = false;
 
         vm.startPrank(params.roles.operator);
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
         uint256 depositAmount = 1000 * precision;
 
@@ -186,7 +199,7 @@ contract CredbullFixedYieldVaultTest is Test {
         statuses[0] = false;
 
         vm.startPrank(params.roles.operator);
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
         uint256 depositAmount = 1000 * precision;
@@ -200,6 +213,7 @@ contract CredbullFixedYieldVaultTest is Test {
     }
 
     function test__FixedYieldVault__RevertMaxCapToggleIfNotAdmin() public {
+        bool previousStatus = vault.checkMaxCap();
         vm.startPrank(params.roles.operator);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -208,11 +222,11 @@ contract CredbullFixedYieldVaultTest is Test {
                 vault.DEFAULT_ADMIN_ROLE()
             )
         );
-        vault.toggleMaxCapCheck(false);
+        vault.setCheckMaxCap(!previousStatus);
         vm.stopPrank();
 
         vm.prank(params.roles.owner);
-        vault.toggleMaxCapCheck(false);
+        vault.setCheckMaxCap(!previousStatus);
     }
 
     function test__FixedYieldVault__RevertUdpateMaxCapIfNotAdmin() public {
@@ -233,7 +247,7 @@ contract CredbullFixedYieldVaultTest is Test {
 
     function test__FixedYieldVault__RevertOpsIfVaultIsPaused() public {
         vm.startPrank(params.roles.owner);
-        vault.toggleWindowCheck(false);
+        vault.toggleWindowCheck();
         vault.pauseVault();
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         vault.deposit(1000 * precision, alice);
@@ -246,7 +260,7 @@ contract CredbullFixedYieldVaultTest is Test {
 
     function test__FixedYieldVault__ShouldAllowAdminToUnpauseVault() public {
         vm.startPrank(params.roles.owner);
-        vault.toggleWindowCheck(false);
+        vault.toggleWindowCheck();
         vault.pauseVault();
         vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
         vault.deposit(1000 * precision, alice);

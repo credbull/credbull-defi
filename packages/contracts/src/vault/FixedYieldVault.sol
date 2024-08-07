@@ -13,6 +13,12 @@ import { MaxCapPlugin } from "../plugin/MaxCapPlugin.sol";
 contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCapPlugin, AccessControl {
     using Math for uint256;
 
+    /// @notice Error to indicate that the provided owner address is invalid.
+    error FixedYieldVault__InvalidOwnerAddress();
+
+    /// @notice Error to indicate that the provided operator address is invalid.
+    error FixedYieldVault__InvalidOperatorAddress();
+
     /// @notice - Hash of operator role
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
@@ -32,7 +38,7 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
     }
 
     /// @dev The fixed yield value in percentage(100) that's promised to the users on deposit.
-    uint256 private _fixedYield;
+    uint256 private immutable FIXED_YIELD;
 
     constructor(FixedYieldVaultParams memory params)
         MaturityVault(params.maturityVault)
@@ -40,10 +46,18 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
         WindowPlugin(params.windowPlugin)
         MaxCapPlugin(params.maxCapPlugin)
     {
+        if (params.roles.owner == address(0)) {
+            revert FixedYieldVault__InvalidOwnerAddress();
+        }
+
+        if (params.roles.operator == address(0)) {
+            revert FixedYieldVault__InvalidOperatorAddress();
+        }
+
         _grantRole(DEFAULT_ADMIN_ROLE, params.roles.owner);
         _grantRole(OPERATOR_ROLE, params.roles.operator);
 
-        _fixedYield = params.promisedYield;
+        FIXED_YIELD = params.promisedYield;
     }
 
     /// @dev - Overridden deposit modifer
@@ -70,7 +84,7 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
 
     // @notice - Returns expected assets on maturity
     function expectedAssetsOnMaturity() public view override returns (uint256) {
-        return totalAssetDeposited.mulDiv(100 + _fixedYield, 100);
+        return totalAssetDeposited.mulDiv(100 + FIXED_YIELD, 100);
     }
 
     /// @notice Mature the vault
@@ -79,23 +93,23 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
     }
 
     /// @notice Toggle check for maturity
-    function toggleMaturityCheck(bool status) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _toggleMaturityCheck(status);
+    function setMaturityCheck(bool _setMaturityCheckStatus) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setMaturityCheck(_setMaturityCheckStatus);
     }
 
     /// @notice Toggle check for whiteList
-    function toggleWhiteListCheck(bool status) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _toggleWhiteListCheck(status);
+    function toggleWhiteListCheck() public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _toggleWhiteListCheck();
     }
 
     /// @notice Toggle check for window
-    function toggleWindowCheck(bool status) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _toggleWindowCheck(status);
+    function toggleWindowCheck() public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _toggleWindowCheck();
     }
 
     /// @notice Toggle check for max cap
-    function toggleMaxCapCheck(bool status) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _toggleMaxCapCheck(status);
+    function setCheckMaxCap(bool _checkMaxCapStatus) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setCheckMaxCap(_checkMaxCapStatus);
     }
 
     /// @notice Update max cap value

@@ -143,7 +143,7 @@ contract WindowPluginTest is Test {
     }
 
     function test__WindowVault__ShouldNotRevertOnWindowModifier() public {
-        vault.toggleWindowCheck(false);
+        vault.toggleWindowCheck();
 
         deposit(alice, 10 * precision);
         assertEq(vault.balanceOf(alice), 10 * precision);
@@ -151,7 +151,7 @@ contract WindowPluginTest is Test {
 
     function test__WindowVault__ShouldToggleWhiteList() public {
         bool beforeToggle = vault.checkWindow();
-        vault.toggleWindowCheck(!beforeToggle);
+        vault.toggleWindowCheck();
         bool afterToggle = vault.checkWindow();
         assertEq(afterToggle, !beforeToggle);
     }
@@ -172,12 +172,85 @@ contract WindowPluginTest is Test {
         assertTrue(currentWithdrawOpen != newWithdrawOpen);
         assertTrue(currentWithdrawClose != newWithdrawClose);
 
+        vm.expectEmit();
+        emit WindowPlugin.WindowUpdated(newDepositOpen, newDepositClose, newWithdrawOpen, newWithdrawClose);
         vault.updateWindow(newDepositOpen, newDepositClose, newWithdrawOpen, newWithdrawClose);
 
         assertTrue(vault.depositOpensAtTimestamp() == newDepositOpen);
         assertTrue(vault.depositClosesAtTimestamp() == newDepositClose);
         assertTrue(vault.redemptionOpensAtTimestamp() == newWithdrawOpen);
         assertTrue(vault.redemptionClosesAtTimestamp() == newWithdrawClose);
+    }
+
+    function test__WindowVault__RevertOnIncorrectWindowParams() public {
+        // Withdraw window opens before deposit window
+        uint256 newDepositOpen = 100;
+        uint256 newDepositClose = 300;
+        uint256 newWithdrawOpen = 200;
+        uint256 newWithdrawClose = 400;
+
+        // Deposit window closes before it opens
+        uint256 newDepositOpen_1 = 300;
+        uint256 newDepositClose_1 = 100;
+        uint256 newWithdrawOpen_1 = 200;
+        uint256 newWithdrawClose_1 = 400;
+
+        WindowPlugin.WindowPluginParams memory localWindowParams = WindowPlugin.WindowPluginParams({
+            depositWindow: WindowPlugin.Window({ opensAt: newDepositOpen, closesAt: newDepositClose }),
+            redemptionWindow: WindowPlugin.Window({ opensAt: newWithdrawOpen, closesAt: newWithdrawClose })
+        });
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                WindowPlugin.WindowPlugin__IncorrectWindowValues.selector,
+                newDepositOpen,
+                newDepositClose,
+                newWithdrawOpen,
+                newWithdrawClose
+            )
+        );
+        vault.updateWindow(newDepositOpen, newDepositClose, newWithdrawOpen, newWithdrawClose);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                WindowPlugin.WindowPlugin__IncorrectWindowValues.selector,
+                newDepositOpen_1,
+                newDepositClose_1,
+                newWithdrawOpen_1,
+                newWithdrawClose_1
+            )
+        );
+        vault.updateWindow(newDepositOpen_1, newDepositClose_1, newWithdrawOpen_1, newWithdrawClose_1);
+
+        {
+            // Withdraw window closes before it opens
+            uint256 newDepositOpen_2 = 100;
+            uint256 newDepositClose_2 = 300;
+            uint256 newWithdrawOpen_2 = 400;
+            uint256 newWithdrawClose_2 = 200;
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    WindowPlugin.WindowPlugin__IncorrectWindowValues.selector,
+                    newDepositOpen_2,
+                    newDepositClose_2,
+                    newWithdrawOpen_2,
+                    newWithdrawClose_2
+                )
+            );
+            vault.updateWindow(newDepositOpen_2, newDepositClose_2, newWithdrawOpen_2, newWithdrawClose_2);
+        }
+
+        //checking modifier on constructor
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                WindowPlugin.WindowPlugin__IncorrectWindowValues.selector,
+                newDepositOpen,
+                newDepositClose,
+                newWithdrawOpen,
+                newWithdrawClose
+            )
+        );
+        new SimpleWindowVault(vaultParams, localWindowParams);
     }
 
     function deposit(address user, uint256 assets) internal returns (uint256 shares) {

@@ -64,11 +64,18 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         statuses[0] = true;
 
         vm.startPrank(vaultParams.roles.operator);
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
         SimpleUSDC(address(vaultParams.maturityVault.vault.asset)).mint(alice, INITIAL_BALANCE * precision);
         SimpleToken(address(cblToken)).mint(alice, 200 ether);
+    }
+
+    function test__UpsideVault__ShouldRevertOnInvalidUpsidePercentage() public {
+        CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params = upsideVaultParams;
+        params.upsidePercentage = 100_01;
+        vm.expectRevert(abi.encodeWithSelector(UpsideVault.CredbullVault__InvalidUpsidePercentage.selector));
+        new CredbullFixedYieldVaultWithUpside(params);
     }
 
     function test__UpsideVault__VaultCreationShouldRevertOnUnsupportedDecimalValue() public {

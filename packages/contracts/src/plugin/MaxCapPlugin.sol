@@ -6,6 +6,12 @@ pragma solidity ^0.8.20;
 abstract contract MaxCapPlugin {
     error CredbullVault__MaxCapReached();
 
+    /// @notice Event emitted when the max cap is updated
+    event MaxCapUpdated(uint256 indexed maxCap);
+
+    /// @notice Event emitted when the max cap check is updated
+    event MaxCapCheckUpdated(bool indexed checkMaxCap);
+
     /// @notice - Params for the MaxCap Plugin
     struct MaxCapPluginParams {
         uint256 maxCap;
@@ -33,12 +39,16 @@ abstract contract MaxCapPlugin {
     }
 
     /// @notice - Toggle the max cap check status
-    function _toggleMaxCapCheck(bool status) internal virtual {
-        checkMaxCap = status;
+    function _setCheckMaxCap(bool _checkMaxCapStatus) internal virtual {
+        checkMaxCap = _checkMaxCapStatus;
+
+        emit MaxCapCheckUpdated(checkMaxCap);
     }
 
     /// @notice - Update the max cap value
     function _updateMaxCap(uint256 _value) internal virtual {
         maxCap = _value;
+
+        emit MaxCapUpdated(maxCap);
     }
 }

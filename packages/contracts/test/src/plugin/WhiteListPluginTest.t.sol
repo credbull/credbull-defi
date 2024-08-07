@@ -50,7 +50,7 @@ contract WhiteListPluginTest is Test {
         statuses[1] = true;
 
         vm.startPrank(whiteListProvider.owner());
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
         SimpleUSDC(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
@@ -65,7 +65,7 @@ contract WhiteListPluginTest is Test {
         statuses[0] = false;
 
         vm.startPrank(whiteListProvider.owner());
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
         uint256 depositAmount = 1000 * precision;
@@ -116,10 +116,10 @@ contract WhiteListPluginTest is Test {
         statuses[0] = false;
 
         vm.startPrank(whiteListProvider.owner());
-        vault.whiteListProvider().updateStatus(whiteListAddresses, statuses);
+        vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
-        vault.toggleWhiteListCheck(false);
+        vault.toggleWhiteListCheck();
 
         deposit(alice, 10 * precision);
         assertEq(vault.balanceOf(alice), 10 * precision);
@@ -127,7 +127,7 @@ contract WhiteListPluginTest is Test {
 
     function test__WhiteListVault__ShouldToggleWhiteList() public {
         bool beforeToggle = vault.checkWhiteList();
-        vault.toggleWhiteListCheck(!beforeToggle);
+        vault.toggleWhiteListCheck();
         bool afterToggle = vault.checkWhiteList();
         assertEq(afterToggle, !beforeToggle);
     }

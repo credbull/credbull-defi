@@ -24,7 +24,6 @@ abstract contract Vault is ERC4626, Pausable {
     error CredbullVault__TransferOutsideEcosystem(address);
     error CredbullVault__InvalidAssetAmount(uint256);
     error CredbullVault__UnsupportedDecimalValue(uint8);
-    error CredbullVault__NativeTransferNotAllowed();
 
     /// @notice The set of parameters required to create a Credbull Vault instance.
     struct VaultParams {
@@ -161,16 +160,6 @@ abstract contract Vault is ERC4626, Pausable {
     /// @notice Decimal value of share token is same as asset token
     function decimals() public view override returns (uint8) {
         return VAULT_DECIMALS;
-    }
-
-    /// @notice Revert any ETH transfer to contract
-    receive() external payable {
-        revert CredbullVault__NativeTransferNotAllowed();
-    }
-
-    /// @notice Revert any ETH transfer to contract
-    fallback() external payable {
-        revert CredbullVault__NativeTransferNotAllowed();
     }
 
     /// @notice Withdraw any ERC20 tokens sent directly to contract.

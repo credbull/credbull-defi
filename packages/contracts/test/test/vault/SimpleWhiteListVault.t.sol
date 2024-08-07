@@ -20,7 +20,7 @@ contract SimpleWhiteListVault is Vault, WhiteListPlugin {
         _;
     }
 
-    function toggleWhiteListCheck(bool status) public {
-        _toggleWhiteListCheck(status);
+    function toggleWhiteListCheck() public {
+        _toggleWhiteListCheck();
     }
 }
