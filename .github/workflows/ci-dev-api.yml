@@ -10,7 +10,6 @@ on:
     branches:
       - "main*"
       - "development*"
-      - "ops*"
     paths:
       - "packages/api/**"
       - "packages/contracts/**"
@@ -52,7 +51,7 @@ jobs:
           OPERATOR_PRIVATE_KEY: anything-testing-only
           SUPABASE_SERVICE_ROLE_KEY: anything-testing-only
           SUPABASE_JWT_SECRET: anything-testing-only
-          CRON_SECRET : anything-testing-only
+          CRON_SECRET: anything-testing-only
           SLACK_TOKEN: anything-testing-only
 
       - name: Build API
@@ -60,7 +59,7 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
-       # docker build --platform needs to match the fly.io instances.  currently linux/amd64.
+        # docker build --platform needs to match the fly.io instances.  currently linux/amd64.
       - name: Build Docker image
         run: docker build --platform linux/amd64 -f Dockerfile -t credbull-defi-api ../..
 
