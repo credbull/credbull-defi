@@ -12,10 +12,10 @@ deploy-local:
 	$(MAKE) deploy RPC_URL=localhost EXTRA_FLAGS=
 
 deploy-arbitrumSepolia:
-	$(MAKE) deploy RPC_URL=arbitrumSepolia EXTRA_FLAGS="--verify --slow"
+	$(MAKE) deploy RPC_URL=arbitrumSepolia EXTRA_FLAGS="--verify --verifier blockscout --slow"
 
 resume-arbitrumSepolia:
-	$(MAKE) deploy RPC_URL=arbitrumSepolia EXTRA_FLAGS="--verify --slow --resume"
+	$(MAKE) deploy RPC_URL=arbitrumSepolia EXTRA_FLAGS="--verify --verifier blockscout --slow --resume"
 
 deploy-baseSepolia:
 	$(MAKE) deploy RPC_URL=baseSepolia EXTRA_FLAGS="--verify --slow"
