@@ -11,7 +11,6 @@ DEPLOYER_AUTHENTICATION ?= --private-key $(DEPLOYER_PRIVATE_KEY)
 deploy-local:
 	$(MAKE) deploy RPC_URL=localhost EXTRA_FLAGS=
 
-# TODO: change this to use the network config from foundry.toml
 deploy-arbitrumSepolia:
 	$(MAKE) deploy RPC_URL=arbitrumSepolia EXTRA_FLAGS="--verify --slow"
 
@@ -27,17 +26,19 @@ deploy-bitlayerTestnet:
 		EXTRA_FLAGS='--etherscan-api-key "" --verifier-url "https://testnet-scan.bitlayer.org" --legacy --slow'
 
 # NOTE (JL,2024-05-20): `forge` auto-includes any `.env` file in the invocation directory.
+# NOTE (JL,2024-08-08): For verification, ensure that ETHERSCAN_API_KEY is explicitly set.
+# NOTE (JL,2024-08-08): We run a `clean` and `build` to ensure the local build state is consistent.
 deploy:
 	@echo "Running deploy script '$(DEPLOY_SCRIPT)' against '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	@yarn clean
 	@yarn build
-	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) --chain-id $$(cast chain-id --rpc-url $(RPC_URL)) \
-		$(DEPLOYER_AUTHENTICATION) --broadcast $(EXTRA_FLAGS) -vvvv
-	yarn db-export
+	@forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) $(DEPLOYER_AUTHENTICATION) --broadcast $(EXTRA_FLAGS) -vvvv
+	@yarn db-export
 
+# NOTE (JL,2024-08-08): Verify is a 'recovery' operation, requiring the `broadcast` directory contrents. So, no `clean`.
+#	Also, as such, we run `db-export` afterwards in case it resumed Contract Deployment.
 verify:
 	@echo "Running verify of script '$(DEPLOY_SCRIPT)' against '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
-	@yarn clean
 	@yarn build
-	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) $(DEPLOYER_AUTHENTICATION) --verify --resume -vvvv
-	yarn db-export
+	@forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) $(DEPLOYER_AUTHENTICATION) --verify --resume -vvvv
+	@yarn db-export
