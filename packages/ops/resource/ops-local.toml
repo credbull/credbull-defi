@@ -32,5 +32,9 @@ alice.email_address = "test+alice@credbull.io"
 # Associated with Dev/Anvil Wallet, Account[8]
 bob.email_address = "test+bob@credbull.io"
 
+[primevault]
+# url
+url = "https://app.primevault.com"
+
 [operation.createVault]
 collateral_percentage = 300
