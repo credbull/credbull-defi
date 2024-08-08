@@ -24,6 +24,9 @@ interface Config {
     ALICE_PRIVATE_KEY?: string;
     BOB_PASSWORD?: string;
     BOB_PRIVATE_KEY?: string;
+    API_USER_API_KEY?: string;
+    API_USER_KEYPAIR_PRIVATE_KEY?: string;
+    VAULT_ID?: string;
   };
   [key: string]: any;
 }
@@ -54,6 +57,11 @@ export function loadConfiguration(): Config {
   config.secret.ALICE_PRIVATE_KEY = process.env.ALICE_PRIVATE_KEY;
   config.secret.BOB_PASSWORD = process.env.BOB_PASSWORD;
   config.secret.BOB_PRIVATE_KEY = process.env.BOB_PRIVATE_KEY;
+
+  //Prime vault envs
+  config.secret.API_USER_API_KEY = process.env.API_USER_API_KEY;
+  config.secret.API_USER_KEYPAIR_PRIVATE_KEY = process.env.API_USER_KEYPAIR_PRIVATE_KEY;
+  config.secret.VAULT_ID = process.env.VAULT_ID;
 
   return config;
 }

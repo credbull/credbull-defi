@@ -1,6 +1,8 @@
 (async () => {
   const file = process.argv[2].replace('--', '');
 
+  console.log(process.argv);
+
   const scenarios = process.argv[3]
     ? process.argv[3].split(',').reduce((acc, cur) => {
         return { ...acc, [cur]: true };
