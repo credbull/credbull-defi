@@ -10,7 +10,7 @@ on:
     branches:
       - "main*"
       - "development*"
-      - "ops*"
+      - "deploy-ci-arb-*"
     paths:
       - "packages/contracts/**"
       - ".github/workflows/ci-dev-contracts.yml"
