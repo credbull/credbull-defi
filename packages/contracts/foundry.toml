@@ -28,7 +28,6 @@ bitlayerTestnet = "https://testnet-rpc.bitlayer.org"
 localhost = { key = "", url = "http://127.0.0.1:8545" }
 base = { key = "${BASE_ETHERSCAN_API_KEY}" }
 baseSepolia = { key = "${BASE_SEPOLIA_ETHERSCAN_API_KEY}" }
-# Arbiscan: https://docs.arbiscan.io/getting-started/endpoint-urls; Blockscout: https://docs.blockscout.com/for-users/api/rpc-endpoints
-arbitrumSepolia = { key = "${ARBITRUM_SEPOLIA_ETHERSCAN_API_KEY}", url = "https://arbitrum-sepolia.blockscout.com/api", chain = 421614 }
+arbitrumSepolia = { key = "${ARBITRUM_SEPOLIA_ETHERSCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api", chain = 421614 }
 bitlayer = { key = "bitlayer", url = "https://rpc.bitlayer.org" }
 bitlayerTestnet = { key = "bitlayerTestnet", url = "https://testnet-scan.bitlayer.org" }
