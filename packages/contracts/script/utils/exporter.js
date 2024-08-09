@@ -102,6 +102,7 @@ async function clearExistingData(client) {
     await exportAddress(loadConfiguration());
   } catch (e) {
     console.log(e);
+    process.exitCode = 1;
   } finally {
     console.log(`Finished exporting contracts`);
   }
