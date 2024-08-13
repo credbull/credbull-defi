@@ -34,7 +34,7 @@ deploy:
 	@yarn clean
 	@yarn build
 	@forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) $(DEPLOYER_AUTHENTICATION) --broadcast $(EXTRA_FLAGS) -vvvv \
-		-e ${ETHERSCAN_API_KEY}
+		--etherscan-api-key ${ETHERSCAN_API_KEY}
 	@yarn db-export
 
 # NOTE (JL,2024-08-08): Verify is a 'recovery' operation, requiring the `broadcast` directory contrents. So, no `clean`.
