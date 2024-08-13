@@ -46,6 +46,9 @@ contract CredbullFixedYieldVaultFactoryTest is Test, VaultsSupportConfig {
 
         vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidOperatorAddress.selector);
         new CredbullFixedYieldVaultFactory(config.factoryParams.owner, address(0), new address[](0));
+
+        vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidCustodianAddress.selector);
+        new CredbullFixedYieldVaultFactory(config.factoryParams.owner, config.factoryParams.operator, new address[](1));
     }
 
     function test__ShouldSuccefullyCreateFactoryFixedYield() public {
