@@ -9,5 +9,7 @@ import { WhiteListProvider } from "./provider/whiteList/WhiteListProvider.sol";
  * @notice The deployable white list provider contract.
  */
 contract CredbullWhiteListProvider is WhiteListProvider {
+    string private constant HASH = "change the checksum";
+
     constructor(address _owner) WhiteListProvider(_owner) { }
 }

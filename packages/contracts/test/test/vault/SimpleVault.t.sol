@@ -8,6 +8,8 @@ import { Vault } from "@credbull/vault/Vault.sol";
  * @notice A simple [Vault] realisation for testing purposes.
  */
 contract SimpleVault is Vault {
+    string private constant HASH = "change the checksum";
+
     constructor(Vault.VaultParams memory params) Vault(params) { }
 
     function withdrawERC20(address[] calldata _tokens, address _to) external {
