@@ -11,4 +11,8 @@ contract SimpleUSDC is OwnableToken {
     string private constant HASH = "change the checksum";
 
     constructor(uint256 initialSupply) OwnableToken("Simple USDC", "sUSDC", 6, initialSupply) { }
+
+    function hashed() external pure returns (string memory) {
+        return HASH;
+    }
 }

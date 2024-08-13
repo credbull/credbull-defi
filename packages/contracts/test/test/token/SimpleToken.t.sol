@@ -11,4 +11,8 @@ contract SimpleToken is OwnableToken {
     string private constant HASH = "change the checksum";
 
     constructor(uint256 initialSupply) OwnableToken("Simple Token", "SMPL", 18, initialSupply) { }
+
+    function hashed() external pure returns (string memory) {
+        return HASH;
+    }
 }

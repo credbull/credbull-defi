@@ -12,4 +12,8 @@ contract CredbullWhiteListProvider is WhiteListProvider {
     string private constant HASH = "change the checksum";
 
     constructor(address _owner) WhiteListProvider(_owner) { }
+
+    function hashed() external pure returns (string memory) {
+        return HASH;
+    }
 }

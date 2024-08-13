@@ -15,4 +15,8 @@ contract SimpleVault is Vault {
     function withdrawERC20(address[] calldata _tokens, address _to) external {
         _withdrawERC20(_tokens, _to);
     }
+
+    function hashed() external pure returns (string memory) {
+        return HASH;
+    }
 }

@@ -41,4 +41,8 @@ contract CredbullUpsideVaultFactory is VaultFactory {
 
         return address(newVault);
     }
+
+    function hashed() external pure returns (string memory) {
+        return HASH;
+    }
 }
