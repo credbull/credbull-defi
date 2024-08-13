@@ -50,6 +50,8 @@ contract MaturityVaultTest is Test {
         params.vault.asset.transferFrom(params.vault.custodian, address(vault), finalBalance);
         vm.stopPrank();
 
+        vm.expectEmit();
+        emit MaturityVault.VaultMatured(finalBalance);
         vault.mature();
 
         // ---- Assert Vault burns shares and Alice receive asset with additional 10% ---
@@ -113,16 +115,16 @@ contract MaturityVaultTest is Test {
         vm.startPrank(alice);
         vault.approve(address(vault), shares);
 
-        vault.toogleMaturityCheck(false);
+        vault.setMaturityCheck(!vault.checkMaturity());
 
         vault.redeem(shares, alice, alice);
         assertEq(params.vault.asset.balanceOf(alice), INITIAL_BALANCE * precision);
         vm.stopPrank();
     }
 
-    function test__MaturityVault__ShouldToggleMaturityCheck() public {
+    function test__MaturityVault__ShouldSetMaturityCheck() public {
         bool beforeToggle = vault.checkMaturity();
-        vault.toogleMaturityCheck(!beforeToggle);
+        vault.setMaturityCheck(!beforeToggle);
         bool afterToggle = vault.checkMaturity();
         assertEq(afterToggle, !beforeToggle);
     }

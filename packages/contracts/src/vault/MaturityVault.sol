@@ -23,6 +23,12 @@ abstract contract MaturityVault is Vault {
     /// @notice Reverts on mature if there is not enough balance.
     error CredbullVault__NotEnoughBalanceToMature();
 
+    /// @notice Event emitted when the vault matures.
+    event VaultMatured(uint256 indexed totalAssetDeposited);
+
+    /// @notice Event emitted when the maturity check is updated.
+    event MaturityCheckUpdated(bool indexed checkMaturity);
+
     /// @notice Determine if the vault is matured or not.
     bool public isMatured;
 
@@ -48,6 +54,8 @@ abstract contract MaturityVault is Vault {
 
         totalAssetDeposited = currentBalance;
         isMatured = true;
+
+        emit VaultMatured(totalAssetDeposited);
     }
 
     /// @notice - Returns expected assets on maturity
@@ -73,9 +81,10 @@ abstract contract MaturityVault is Vault {
     /**
      * @notice Enables/disables the Maturity Check according to the [status] value.
      * @dev 'Toggling' means flipping the existing state. This is simply a mutator.
-     * @param status Boolean value to toggle
      */
-    function _toggleMaturityCheck(bool status) internal {
-        checkMaturity = status;
+    function _setMaturityCheck(bool _setMaturityCheckStatus) internal {
+        checkMaturity = _setMaturityCheckStatus;
+
+        emit MaturityCheckUpdated(checkMaturity);
     }
 }

@@ -35,6 +35,18 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         params.whiteListPlugin.whiteListProvider = address(whiteListProvider);
     }
 
+    function test__ShouldRevertOnInvalidParams() public {
+        vm.prank(config.factoryParams.owner);
+        vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidOwnerAddress.selector);
+        new CredbullFixedYieldVaultFactory(address(0), config.factoryParams.operator, new address[](0));
+
+        vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidOperatorAddress.selector);
+        new CredbullFixedYieldVaultFactory(config.factoryParams.owner, address(0), new address[](0));
+
+        vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidCustodianAddress.selector);
+        new CredbullFixedYieldVaultFactory(config.factoryParams.owner, config.factoryParams.operator, new address[](1));
+    }
+
     function test__ShouldSuccefullyCreateFactoryFixedYield() public {
         address[] memory custodians = new address[](1);
         custodians[0] = config.factoryParams.custodian;
@@ -53,7 +65,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         assertEq(vault.asset(), address(params.maturityVault.vault.asset));
         assertEq(vault.name(), params.maturityVault.vault.shareName);
         assertEq(vault.symbol(), params.maturityVault.vault.shareSymbol);
-        assertEq(address(vault.whiteListProvider()), params.whiteListPlugin.whiteListProvider);
+        assertEq(address(vault.WHITELIST_PROVIDER()), params.whiteListPlugin.whiteListProvider);
         assertEq(vault.CUSTODIAN(), params.maturityVault.vault.custodian);
     }
 
@@ -115,6 +127,8 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
 
     function test__ShouldAllowAdminToAddCustodians() public {
         vm.prank(config.factoryParams.owner);
+        vm.expectEmit();
+        emit VaultFactory.CustodianAllowed(params.maturityVault.vault.custodian);
         factory.allowCustodian(params.maturityVault.vault.custodian);
 
         assertTrue(factory.isCustodianAllowed(params.maturityVault.vault.custodian));
@@ -125,8 +139,19 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
         factory.allowCustodian(params.maturityVault.vault.custodian);
         assertTrue(factory.isCustodianAllowed(params.maturityVault.vault.custodian));
 
+        vm.expectEmit();
+        emit VaultFactory.CustodianRemoved(params.maturityVault.vault.custodian);
         factory.removeCustodian(params.maturityVault.vault.custodian);
         assertTrue(!factory.isCustodianAllowed(params.maturityVault.vault.custodian));
+        vm.stopPrank();
+    }
+
+    function test__ShouldRevertOnInvalidCustodian() public {
+        vm.startPrank(config.factoryParams.owner);
+        factory.allowCustodian(params.maturityVault.vault.custodian);
+
+        vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidCustodianAddress.selector);
+        factory.allowCustodian(address(0));
         vm.stopPrank();
     }
 

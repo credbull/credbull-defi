@@ -14,6 +14,21 @@ abstract contract VaultFactory is AccessControl {
     /// @notice Error to revert if custodian is not allowed
     error CredbullVaultFactory__CustodianNotAllowed();
 
+    /// @notice Error to indicate that the provided owner address is invalid.
+    error CredbullVaultFactory__InvalidOwnerAddress();
+
+    /// @notice Error to indicate that the provided operator address is invalid.
+    error CredbullVaultFactory__InvalidOperatorAddress();
+
+    /// @notice Error to indicate that the provided custodian address is invalid.
+    error CredbullVaultFactory__InvalidCustodianAddress();
+
+    /// @notice Event to emit when a new custodian is allowed
+    event CustodianAllowed(address indexed custodian);
+
+    /// @notice Event to emit when a custodian is removed
+    event CustodianRemoved(address indexed custodian);
+
     /// @notice Address set that contains list of all vault address
     EnumerableSet.AddressSet internal allVaults;
 
@@ -29,12 +44,22 @@ abstract contract VaultFactory is AccessControl {
      * @param custodians - Initial set of custodians allowable for the vaults
      */
     constructor(address owner, address operator, address[] memory custodians) {
+        if (owner == address(0)) {
+            revert CredbullVaultFactory__InvalidOwnerAddress();
+        }
+
+        if (operator == address(0)) {
+            revert CredbullVaultFactory__InvalidOperatorAddress();
+        }
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
         _grantRole(OPERATOR_ROLE, operator);
 
         // set the allowed custodians directly in the constructor, without access restriction
         bool[] memory result = new bool[](custodians.length);
         for (uint256 i = 0; i < custodians.length; i++) {
+            if (custodians[i] == address(0)) {
+                revert CredbullVaultFactory__InvalidCustodianAddress();
+            }
             result[i] = allowedCustodians.add(custodians[i]);
         }
     }
@@ -58,6 +83,11 @@ abstract contract VaultFactory is AccessControl {
 
     /// @notice Add custodian address to the set
     function allowCustodian(address _custodian) public onlyRole(DEFAULT_ADMIN_ROLE) returns (bool) {
+        if (_custodian == address(0)) {
+            revert CredbullVaultFactory__InvalidCustodianAddress();
+        }
+
+        emit CustodianAllowed(_custodian);
         return allowedCustodians.add(_custodian);
     }
 
@@ -65,6 +95,7 @@ abstract contract VaultFactory is AccessControl {
     function removeCustodian(address _custodian) public onlyRole(DEFAULT_ADMIN_ROLE) {
         if (allowedCustodians.contains(_custodian)) {
             allowedCustodians.remove(_custodian);
+            emit CustodianRemoved(_custodian);
         }
     }
 

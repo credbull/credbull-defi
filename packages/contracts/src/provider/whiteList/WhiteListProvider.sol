@@ -3,8 +3,9 @@ pragma solidity ^0.8.20;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IWhiteListProvider } from "./IWhiteListProvider.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
-contract WhiteListProvider is IWhiteListProvider, Ownable {
+contract WhiteListProvider is IWhiteListProvider, Ownable2Step {
     error LengthMismatch();
 
     /**
@@ -30,6 +31,7 @@ contract WhiteListProvider is IWhiteListProvider, Ownable {
         uint256 length = _addresses.length;
 
         for (uint256 i; i < length;) {
+            if (_addresses[i] == address(0)) continue;
             isWhiteListed[_addresses[i]] = _statuses[i];
 
             unchecked {
