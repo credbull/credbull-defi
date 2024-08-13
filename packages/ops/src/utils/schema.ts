@@ -111,7 +111,7 @@ export abstract class Schema {
   static readonly CONFIG_OPERATION_CREATE_VAULT = z.object({
     operation: z.object({
       createVault: z.object({
-        collateral_percentage: this.PERCENTAGE,
+        upside_percentage: this.PERCENTAGE,
       }),
     }),
   });

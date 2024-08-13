@@ -17,7 +17,7 @@ custodian = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
 
 [evm.contracts.upside_vault]
 # 2 decimal place percentage (meaining value divided by 100) as integer.
-collateral_percentage = 20_00
+upside_percentage = 20_00
 
 [evm.contracts.cbl]
 # CBL token params
