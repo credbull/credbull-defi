@@ -33,7 +33,8 @@ deploy:
 	@echo "Running deploy script '$(DEPLOY_SCRIPT)' against '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	@yarn clean
 	@yarn build
-	@forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) $(DEPLOYER_AUTHENTICATION) --broadcast $(EXTRA_FLAGS) -vvvv
+	@forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) $(DEPLOYER_AUTHENTICATION) --broadcast $(EXTRA_FLAGS) -vvvv \
+		-e ${ETHERSCAN_API_KEY}
 	@yarn db-export
 
 # NOTE (JL,2024-08-08): Verify is a 'recovery' operation, requiring the `broadcast` directory contrents. So, no `clean`.
