@@ -57,6 +57,9 @@ abstract contract VaultFactory is AccessControl {
         // set the allowed custodians directly in the constructor, without access restriction
         bool[] memory result = new bool[](custodians.length);
         for (uint256 i = 0; i < custodians.length; i++) {
+            if (custodians[i] == address(0)) {
+                revert CredbullVaultFactory__InvalidCustodianAddress();
+            }
             result[i] = allowedCustodians.add(custodians[i]);
         }
     }
