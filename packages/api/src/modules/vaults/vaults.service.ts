@@ -59,7 +59,7 @@ export class VaultsService {
   async createVault(
     params: VaultParamsDto,
     upside?: boolean,
-    collateralPercentage?: number,
+    upsidePercentage?: number,
   ): Promise<ServiceResponse<Tables<'vaults'>>> {
     const chainId = await this.ethers.networkId();
     const factoryAddress = upside
@@ -74,9 +74,9 @@ export class VaultsService {
 
     const options = JSON.stringify({ entities: params.entities, tenant: params.tenant });
 
-    if (!collateralPercentage) collateralPercentage = 0;
+    if (!upsidePercentage) upsidePercentage = 0;
 
-    const vaultParams = this.createVaultParams(params, upside, collateralPercentage);
+    const vaultParams = this.createVaultParams(params, upside, upsidePercentage);
 
     const readMethod: Promise<BigNumber> = upside
       ? upsideFactory.estimateGas.createVault(vaultParams as UpsideVault.UpsideVaultParamsStruct, options)

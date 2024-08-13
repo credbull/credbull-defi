@@ -71,11 +71,11 @@ test.describe.skip('Multi user Interaction - Upside', async () => {
     });
 
     //MINT USDC for user
-    const collateralRequired = await test.step('MINT USDC and CBL token for user', async () => {
+    const upsideRequired = await test.step('MINT USDC and CBL token for user', async () => {
       const vault = await alice.sdk.getUpsideVaultInstance(vaultAddress);
       const usdc = await alice.sdk.getAssetInstance(vaultAddress);
 
-      const collateralRequired = await vault.getCollateralAmount(depositAmount);
+      const upsideRequired = await vault.getUpsideAmount(depositAmount);
 
       const userABalance = await usdc.balanceOf(alice.address);
       const userBBalance = await usdc.balanceOf(bob.address);
@@ -85,10 +85,10 @@ test.describe.skip('Multi user Interaction - Upside', async () => {
       if (userBBalance.lt(depositAmount))
         await __mockMint(bob.address, depositAmount, vault, bob.testSigner.getDelegate());
 
-      await __mockMintToken(alice.address, collateralRequired, vault, alice.testSigner.getDelegate());
-      await __mockMintToken(bob.address, collateralRequired, vault, bob.testSigner.getDelegate());
+      await __mockMintToken(alice.address, upsideRequired, vault, alice.testSigner.getDelegate());
+      await __mockMintToken(bob.address, upsideRequired, vault, bob.testSigner.getDelegate());
 
-      return collateralRequired;
+      return upsideRequired;
     });
 
     //Get approval for deposit
@@ -98,14 +98,14 @@ test.describe.skip('Multi user Interaction - Upside', async () => {
       await usdc.connect(bob.testSigner.getDelegate()).approve(vaultAddress, depositAmount);
 
       const token = await alice.sdk.getTokenInstance(vaultAddress);
-      await token.connect(alice.testSigner.getDelegate()).approve(vaultAddress, collateralRequired);
-      await token.connect(bob.testSigner.getDelegate()).approve(vaultAddress, collateralRequired);
+      await token.connect(alice.testSigner.getDelegate()).approve(vaultAddress, upsideRequired);
+      await token.connect(bob.testSigner.getDelegate()).approve(vaultAddress, upsideRequired);
 
       const tokenApprovalA = await token.allowance(alice.address, vaultAddress);
       const tokenApprovalB = await token.allowance(bob.address, vaultAddress);
 
-      expect(tokenApprovalA.toString()).toEqual(collateralRequired.toString());
-      expect(tokenApprovalB.toString()).toEqual(collateralRequired.toString());
+      expect(tokenApprovalA.toString()).toEqual(upsideRequired.toString());
+      expect(tokenApprovalB.toString()).toEqual(upsideRequired.toString());
 
       const approvalA = await usdc.allowance(alice.address, vaultAddress);
       const approvalB = await usdc.allowance(bob.address, vaultAddress);
@@ -133,7 +133,7 @@ test.describe.skip('Multi user Interaction - Upside', async () => {
 
       const vaultTokenBalanceAfterDeposit = await token.balanceOf(vaultAddress);
 
-      expect(vaultTokenBalanceBeforeDeposit.add(collateralRequired.mul(2)).toString()).toEqual(
+      expect(vaultTokenBalanceBeforeDeposit.add(upsideRequired.mul(2)).toString()).toEqual(
         vaultTokenBalanceAfterDeposit.toString(),
       );
 

@@ -39,7 +39,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     address private alice = makeAddr("alice");
 
     uint256 private constant INITIAL_BALANCE = 1e6;
-    uint256 private constant REQUIRED_COLLATERAL_PERCENTAGE = 20_00;
+    uint256 private constant REQUIRED_upside_PERCENTAGE = 20_00;
     uint256 private constant ADDITIONAL_PRECISION = 1e12;
     uint16 private constant MAX_PERCENTAGE = 100_00;
     IERC20 private cblToken;
@@ -128,15 +128,15 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         assertEq(shares, depositAmount, "User should now have the Shares");
         assertEq(
             cblToken.balanceOf(address(vault)),
-            (depositAmount * ADDITIONAL_PRECISION).mulDiv(REQUIRED_COLLATERAL_PERCENTAGE, MAX_PERCENTAGE),
+            (depositAmount * ADDITIONAL_PRECISION).mulDiv(REQUIRED_upside_PERCENTAGE, MAX_PERCENTAGE),
             "Vault should now have the Tokens"
         );
         assertEq(vault.balanceOf(alice), depositAmount, "User should now have the Shares");
     }
 
-    function test__UpsideVault__CorrectCollateralAmount() public view {
-        uint256 collateral = vault.getCollateralAmount(1000 * precision);
-        assertEq(collateral, 200 ether, "Collateral should be 20% of the deposit amount");
+    function test__UpsideVault__CorrectupsideAmount() public view {
+        uint256 upside = vault.getUpsideAmount(1000 * precision);
+        assertEq(upside, 200 ether, "upside should be 20% of the deposit amount");
     }
 
     function test__UpsideVault__CorrectCalculateTokenRedemption() public {
@@ -144,14 +144,12 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         //Call internal deposit function
         mint(alice, sharesAmount, true);
         uint256 shares = 1000 * precision;
-        uint256 collateral = vault.getCollateralAmount(1000 * precision);
+        uint256 upside = vault.getUpsideAmount(1000 * precision);
         uint256 sharePercent = shares.mulDiv(1e12, shares);
-        uint256 collateralToRedeem = collateral.mulDiv(sharePercent, 1e12);
+        uint256 upsideToRedeem = upside.mulDiv(sharePercent, 1e12);
         vm.prank(alice);
         assertEq(
-            vault.calculateTokenRedemption(shares, alice),
-            collateralToRedeem,
-            "Collateral should be 20% of the deposit amount"
+            vault.calculateTokenRedemption(shares, alice), upsideToRedeem, "upside should be 20% of the deposit amount"
         );
     }
 
@@ -222,7 +220,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         assertEq(assets, sharesAmount, "User should now have the Shares");
         assertEq(
             cblToken.balanceOf(address(vault)),
-            (sharesAmount * ADDITIONAL_PRECISION).mulDiv(REQUIRED_COLLATERAL_PERCENTAGE, MAX_PERCENTAGE),
+            (sharesAmount * ADDITIONAL_PRECISION).mulDiv(REQUIRED_upside_PERCENTAGE, MAX_PERCENTAGE),
             "Vault should now have the Tokens"
         );
         assertEq(vault.balanceOf(alice), sharesAmount, "User should now have the Shares");
@@ -307,16 +305,16 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
         vm.warp(vaultParams.windowPlugin.redemptionWindow.opensAt + 1);
         vm.stopPrank();
 
-        uint256 collateralToRedeem = vault.calculateTokenRedemption(shares, alice);
+        uint256 upsideToRedeem = vault.calculateTokenRedemption(shares, alice);
 
-        console2.log(collateralToRedeem);
+        console2.log(upsideToRedeem);
 
         vm.prank(alice);
         uint256 assets = vault.redeem(shares, alice, alice);
 
         console2.log("assets", assets);
 
-        assertEq(cblToken.balanceOf(alice), collateralToRedeem, "Alice should now have the Tokens");
+        assertEq(cblToken.balanceOf(alice), upsideToRedeem, "Alice should now have the Tokens");
         assertEq(
             vaultParams.maturityVault.vault.asset.balanceOf(alice),
             balanceBeforeRedeem + assets,

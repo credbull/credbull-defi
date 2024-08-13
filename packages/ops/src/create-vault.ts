@@ -15,7 +15,7 @@ import { userByOrThrow } from './utils/user';
 type CreateVaultParams = {
   treasury: string | undefined;
   activityReward: string | undefined;
-  collateralPercentage: number;
+  upsidePercentage: number;
   entities: Array<{ type: string; address: string | undefined; percentage?: number }>;
   tenant?: string;
 };
@@ -34,7 +34,7 @@ function createParams(
 ): [FixedYieldVault.FixedYieldVaultParamsStruct | UpsideVault.UpsideVaultParamsStruct, CreateVaultParams, any] {
   const treasury = config.evm.address.treasury;
   const activityReward = config.evm.address.activity_reward;
-  const collateralPercentage = config.operation.createVault.collateral_percentage;
+  const upsidePercentage = config.operation.createVault.upside_percentage;
 
   const whiteListProvider = params.whiteListProvider;
   const custodian = params.custodian;
@@ -117,13 +117,13 @@ function createParams(
   const upsideVaultParams: UpsideVault.UpsideVaultParamsStruct = {
     fixedYieldVault: fixedYieldVaultParams,
     cblToken: tempParams.token,
-    collateralPercentage: collateralPercentage,
+    upsidePercentage: upsidePercentage,
   };
 
   const vaultExtraParams: CreateVaultParams = {
     treasury: treasury,
     activityReward: activityReward,
-    collateralPercentage: collateralPercentage,
+    upsidePercentage: upsidePercentage,
     entities,
     tenant: params.tenant,
   };

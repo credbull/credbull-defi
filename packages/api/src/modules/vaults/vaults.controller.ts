@@ -104,7 +104,7 @@ export class VaultsController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 500, description: 'Internal Error' })
   async createVaultUpside(@Body() dto: UpsideVaultParamsDto): Promise<VaultsDto> {
-    const { data, error } = await this.vaults.createVault(dto as VaultParamsDto, true, dto.collateralPercentage);
+    const { data, error } = await this.vaults.createVault(dto as VaultParamsDto, true, dto.upsidePercentage);
 
     if (isKnownError(error)) throw new BadRequestException(error);
     if (error) throw new InternalServerErrorException(error);

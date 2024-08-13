@@ -12,7 +12,7 @@ contract UpsideVault is FixedYieldVault {
     /// @notice Error to indicate that the provided share balance is insufficient.
     error CredbullVault__InsufficientShareBalance();
 
-    /// @notice Error to indicate that the provided collateral percentage is invalid.
+    /// @notice Error to indicate that the provided upside percentage is invalid.
     error CredbullVault__InvalidUpsidePercentage();
 
     struct UpsideVaultParams {
@@ -26,13 +26,13 @@ contract UpsideVault is FixedYieldVault {
 
     uint256 public twap = 100_00;
 
-    /// @notice Percentage of collateral (100_00) is 100%
+    /// @notice Percentage of upside (100_00) is 100%
     uint256 public upsidePercentage;
 
     mapping(address account => uint256) private _upsideBalance;
 
-    /// @notice Total collateral deposited
-    // uint256 public totalCollateralDeposited;
+    /// @notice Total upside deposited
+    // uint256 public totalupsideDeposited;
 
     /// @notice Maximum percentage value (100%)
     uint256 private constant MAX_PERCENTAGE = 100_00;
@@ -60,7 +60,7 @@ contract UpsideVault is FixedYieldVault {
         }
     }
 
-    /// @dev - Overridden internal deposit method to handle collateral
+    /// @dev - Overridden internal deposit method to handle upside
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares)
         internal
         override
@@ -72,16 +72,16 @@ contract UpsideVault is FixedYieldVault {
             revert CredbullVault__InvalidAssetAmount(assets);
         }
 
-        uint256 collateral = getCollateralAmount(assets);
+        uint256 upside = getUpsideAmount(assets);
 
-        _upsideBalance[receiver] += collateral;
+        _upsideBalance[receiver] += upside;
         totalAssetDeposited += assets;
 
         if (totalAssetDeposited > maxCap) {
             revert CredbullVault__MaxCapReached();
         }
 
-        SafeERC20.safeTransferFrom(token, caller, address(this), collateral);
+        SafeERC20.safeTransferFrom(token, caller, address(this), upside);
         SafeERC20.safeTransferFrom(IERC20(asset()), caller, CUSTODIAN, assets);
 
         _mint(receiver, shares);
@@ -89,7 +89,7 @@ contract UpsideVault is FixedYieldVault {
         emit Deposit(caller, receiver, assets, shares);
     }
 
-    /// @dev - Overridden withdraw method to handle collateral
+    /// @dev - Overridden withdraw method to handle upside
     function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         internal
         override
@@ -100,12 +100,12 @@ contract UpsideVault is FixedYieldVault {
             _spendAllowance(owner, caller, shares);
         }
 
-        uint256 collateral = calculateTokenRedemption(shares, owner);
+        uint256 upside = calculateTokenRedemption(shares, owner);
 
-        _upsideBalance[owner] -= collateral;
+        _upsideBalance[owner] -= upside;
         totalAssetDeposited -= assets;
 
-        SafeERC20.safeTransfer(token, receiver, collateral);
+        SafeERC20.safeTransfer(token, receiver, upside);
 
         _burn(owner, shares);
         SafeERC20.safeTransfer(IERC20(asset()), receiver, assets);
@@ -113,12 +113,12 @@ contract UpsideVault is FixedYieldVault {
         emit Withdraw(caller, receiver, owner, assets, shares);
     }
 
-    /// @notice - Get the collateral amount to deposit for the given asset
-    function getCollateralAmount(uint256 assets) public view virtual returns (uint256) {
+    /// @notice - Get the upside amount to deposit for the given asset
+    function getUpsideAmount(uint256 assets) public view virtual returns (uint256) {
         return ((assets * additionalPrecision).mulDiv(upsidePercentage, MAX_PERCENTAGE)).mulDiv(MAX_PERCENTAGE, twap);
     }
 
-    /// @notice - Get the collateral amount to redeem for the given shares
+    /// @notice - Get the upside amount to redeem for the given shares
     function calculateTokenRedemption(uint256 shares, address account) public view virtual returns (uint256) {
         if (balanceOf(account) < shares) {
             revert CredbullVault__InsufficientShareBalance();

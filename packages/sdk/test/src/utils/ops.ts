@@ -6,11 +6,11 @@ export async function createFixedYieldVault(
   config: any,
   treasuryAddress?: string,
   activityRewardAddress?: string,
-  collateralPercentage?: number,
+  upsidePercentage?: number,
 ): Promise<any> {
   Schema.ADDRESS.optional().parse(treasuryAddress);
   Schema.ADDRESS.optional().parse(activityRewardAddress);
-  Schema.PERCENTAGE.optional().parse(collateralPercentage);
+  Schema.PERCENTAGE.optional().parse(upsidePercentage);
 
   const modifiedConfig = {
     ...config,
@@ -26,7 +26,7 @@ export async function createFixedYieldVault(
       ...config.operation,
       createVault: {
         ...config.operation.createVault,
-        ...(collateralPercentage ? { collateral_percentage: collateralPercentage } : {}),
+        ...(upsidePercentage ? { upside_percentage: upsidePercentage } : {}),
       },
     },
   };
@@ -39,12 +39,12 @@ export async function createFixedYieldWithUpsideVault(
   upsideVaultAddress?: string,
   treasuryAddress?: string,
   activityRewardAddress?: string,
-  collateralPercentage?: number,
+  upsidePercentage?: number,
 ): Promise<any> {
   Schema.ADDRESS.optional().parse(upsideVaultAddress);
   Schema.ADDRESS.optional().parse(treasuryAddress);
   Schema.ADDRESS.optional().parse(activityRewardAddress);
-  Schema.PERCENTAGE.optional().parse(collateralPercentage);
+  Schema.PERCENTAGE.optional().parse(upsidePercentage);
 
   const modifiedConfig = {
     ...config,
@@ -60,7 +60,7 @@ export async function createFixedYieldWithUpsideVault(
       ...config.operation,
       createVault: {
         ...config.operation.createVault,
-        ...(collateralPercentage ? { collateral_percentage: collateralPercentage } : {}),
+        ...(upsidePercentage ? { upside_percentage: upsidePercentage } : {}),
       },
     },
   };

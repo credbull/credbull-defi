@@ -121,5 +121,5 @@ export class VaultParamsDto extends EntitiesDto {
 export class UpsideVaultParamsDto extends VaultParamsDto {
   @ApiProperty({ type: Number })
   @IsNumber()
-  collateralPercentage: number;
+  upsidePercentage: number;
 }
