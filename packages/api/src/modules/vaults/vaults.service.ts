@@ -113,7 +113,7 @@ export class VaultsService {
   private createVaultParams(
     params: VaultParamsDto,
     upside: boolean = false,
-    collateralPercentage?: number,
+    upsidePercentage?: number,
   ): FixedYieldVault.FixedYieldVaultParamsStruct | UpsideVault.UpsideVaultParamsStruct {
     const vaultParams = {
       asset: params.asset,
@@ -172,7 +172,7 @@ export class VaultsService {
     const upsideVaultParams: UpsideVault.UpsideVaultParamsStruct = {
       fixedYieldVault: fixedYieldVaultParams,
       cblToken: params.token,
-      collateralPercentage: collateralPercentage as unknown as BigNumber,
+      upsidePercentage: upsidePercentage as unknown as BigNumber,
     };
 
     return upsideVaultParams;
