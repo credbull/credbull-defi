@@ -30,7 +30,7 @@ contract SimpleInterest {
         FREQUENCY = frequency * SCALE;
     }
 
-    function interest(uint256 principal, uint256 timePeriods) public returns (uint256) {
+    function interest(uint256 principal, uint256 timePeriods) public view returns (uint256) {
         uint256 principalScaled = principal * SCALE;
 
         uint256 numerator = INTEREST_RATE * principalScaled * timePeriods;
@@ -54,39 +54,32 @@ contract SimpleInterest {
 
         return simpleInterest;
     }
-
-    //    // interest represents at a percentage, e.g. 1 (as opposed to 100%)
-    //    function interest(uint256 principal, uint256 timePeriods) public returns (uint256) {
-    //        uint256 result = interestScaled(principal, timePeriods);
-    //
-    //        console2.log("Result!", result);
-    //
-    //        console2.log("Result!", result / SCALE);
-    //
-    //        return result / SCALE;
-    //    }
 }
 
 contract LinearPriceTest is Test {
-    // annual interest of 3% APY
     function test__LinearPriceTest_Annual() public {
-        SimpleInterest simpleInterest = new SimpleInterest(3, 1);
+        uint256 apy = 3; // APY in percentage
+        uint256 oneYear = 1; // 1 is a year
+
+        SimpleInterest simpleInterest = new SimpleInterest(apy, oneYear);
 
         uint256 principal = 100;
         assertEq(0, simpleInterest.interest(principal, 0));
-        assertEq(3, simpleInterest.interest(principal, 1));
-        assertEq(6, simpleInterest.interest(principal, 2));
+        assertEq(apy, simpleInterest.interest(principal, 1)); // 1 year
+        assertEq(apy * 2, simpleInterest.interest(principal, 2)); // 2 years
     }
 
     // daily interest of 12% APY (uses 360 day count)
     function test__LinearPriceTest_Daily() public {
-        SimpleInterest simpleInterest = new SimpleInterest(12, 360);
+        uint256 apy = 12; // 12% APY
+        uint256 numberOfDays = 360; // days
+
+        SimpleInterest simpleInterest = new SimpleInterest(apy, numberOfDays);
 
         uint256 principal = 100;
         assertEq(0, simpleInterest.interest(principal, 0));
         assertEq(1, simpleInterest.interest(principal, 30));
-        assertEq(2, simpleInterest.interest(principal, 60));
-        assertEq(6, simpleInterest.interest(principal, 180));
-        assertEq(12, simpleInterest.interest(principal, 360));
+        assertEq(apy / 2, simpleInterest.interest(principal, 180));
+        assertEq(apy, simpleInterest.interest(principal, 360));
     }
 }
