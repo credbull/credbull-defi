@@ -12,8 +12,7 @@ deploy-local:
 	$(MAKE) deploy RPC_URL=localhost EXTRA_FLAGS=
 
 deploy-arbitrumSepolia:
-	$(MAKE) deploy RPC_URL=arbitrum-sepolia EXTRA_FLAGS="--slow"
-	script/utils/verifyContracts.sh arbitrum-sepolia
+	$(MAKE) deploy RPC_URL=arbitrumSepolia EXTRA_FLAGS="--verify --slow --verifier-url https://api-sepolia.arbiscan.io/api?"
 
 resume-arbitrumSepolia:
 	$(MAKE) deploy RPC_URL=arbitrumSepolia EXTRA_FLAGS="--verify --slow --resume"
