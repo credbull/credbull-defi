@@ -67,9 +67,9 @@ export async function redeem(config: any): Promise<void> {
     config.secret.ADMIN_PRIVATE_KEY,
   );
   const adminVault = vault.connect(userAdmin.signer);
-  const windowCheckTx = await adminVault.toggleWindowCheck(false);
+  const windowCheckTx = await adminVault.toggleWindowCheck();
   await windowCheckTx.wait();
-  const maturityCheckTx = await adminVault.toggleMaturityCheck(false);
+  const maturityCheckTx = await adminVault.setMaturityCheck(false);
   await maturityCheckTx.wait();
   console.log(' Admin disables the Vault Maturity and Window Checks');
 

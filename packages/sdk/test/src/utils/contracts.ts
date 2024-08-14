@@ -34,13 +34,15 @@ export async function toggleMaturityCheck(
   vault: CredbullFixedYieldVault | CredbullFixedYieldVaultWithUpside,
   value: boolean,
 ): Promise<ContractTransaction> {
-  return vault.connect(admin.testSigner.getDelegate()).toggleMaturityCheck(value);
+  return vault.connect(admin.testSigner.getDelegate()).setMaturityCheck(value);
 }
 
 export async function toggleWindowCheck(
   admin: User,
   vault: CredbullFixedYieldVault | CredbullFixedYieldVaultWithUpside,
-  value: boolean,
-): Promise<ContractTransaction> {
-  return vault.connect(admin.testSigner.getDelegate()).toggleWindowCheck(value);
+) {
+  const previousValue = await vault.checkWindow();
+  if (previousValue) {
+    return vault.connect(admin.testSigner.getDelegate()).toggleWindowCheck();
+  }
 }

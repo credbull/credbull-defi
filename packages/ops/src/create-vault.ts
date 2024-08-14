@@ -249,7 +249,7 @@ export async function createVault(
 
   if (isMatured) {
     const vault = CredbullFixedYieldVault__factory.connect(created.address, adminSigner);
-    const toggleTx = await vault.toggleWindowCheck(false);
+    const toggleTx = await vault.toggleWindowCheck();
     await toggleTx.wait();
     console.log('  Toggled Window Check OFF for Vault: ', created.address);
   }
