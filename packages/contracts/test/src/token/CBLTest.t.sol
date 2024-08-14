@@ -3,28 +3,26 @@
 pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
-import { CBL } from "@credbull/token/CBL.sol";
-import { DeployCBLToken, CBLTokenParams } from "../../../script/DeployCBLToken.s.sol";
+
 import { ERC20Capped } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract CBLTest is Test {
+import { CBL } from "@credbull/token/CBL.sol";
+
+import { DeployCBLToken } from "@script/DeployCBLToken.s.sol";
+import { CBLConfig } from "@script/TomlConfig.s.sol";
+
+contract CBLTest is Test, CBLConfig {
+    DeployCBLToken private deployer;
+
     CBL private cbl;
-    DeployCBLToken private deployCBLToken;
-    CBLTokenParams private cblTokenParams;
 
     address private alice = makeAddr("alice");
-    address private owner;
-    address private minter;
 
     function setUp() public {
-        deployCBLToken = new DeployCBLToken();
+        deployer = new DeployCBLToken().skipDeployCheck();
 
-        cblTokenParams = deployCBLToken.getCBLTokenParams();
-        owner = cblTokenParams.owner;
-        minter = cblTokenParams.minter;
-
-        cbl = deployCBLToken.runTest();
+        cbl = deployer.run();
     }
 
     function test__CBL__ShouldRevertOnZeroAddress() public {
@@ -36,14 +34,14 @@ contract CBLTest is Test {
     }
 
     function test__CBL__SuccessfullyDeployCBLToken() public {
-        cbl = new CBL(cblTokenParams.owner, cblTokenParams.minter, cblTokenParams.maxSupply);
-        assertTrue(cbl.hasRole(cbl.DEFAULT_ADMIN_ROLE(), cblTokenParams.owner));
-        assertTrue(cbl.hasRole(cbl.MINTER_ROLE(), cblTokenParams.minter));
-        assertEq(cbl.cap(), cblTokenParams.maxSupply);
+        cbl = new CBL(owner(), minter(), maxSupply());
+        assertTrue(cbl.hasRole(cbl.DEFAULT_ADMIN_ROLE(), owner()));
+        assertTrue(cbl.hasRole(cbl.MINTER_ROLE(), minter()));
+        assertEq(cbl.cap(), maxSupply());
     }
 
     function test__CBL__ShouldAllowMinterToMint() public {
-        vm.prank(minter);
+        vm.prank(minter());
         cbl.mint(alice, 100);
     }
 
@@ -54,14 +52,14 @@ contract CBLTest is Test {
     }
 
     function test__CBL__ShouldAllowMinterToBurn() public {
-        vm.startPrank(minter);
-        cbl.mint(minter, 100);
+        vm.startPrank(minter());
+        cbl.mint(minter(), 100);
         cbl.burn(100);
         vm.stopPrank();
     }
 
     function test__CBL__ShouldAllowUserToBurn() public {
-        vm.prank(minter);
+        vm.prank(minter());
         cbl.mint(alice, 100);
 
         vm.prank(alice);
@@ -69,28 +67,28 @@ contract CBLTest is Test {
     }
 
     function test__CBL__ShouldRevertIfTotalSupplyExceedsMaxSupply() public {
-        vm.startPrank(minter);
-        cbl.mint(minter, cbl.cap());
+        vm.startPrank(minter());
+        cbl.mint(minter(), cbl.cap());
 
         vm.expectRevert(abi.encodeWithSelector(ERC20Capped.ERC20ExceededCap.selector, cbl.totalSupply() + 1, cbl.cap()));
-        cbl.mint(minter, 1);
+        cbl.mint(minter(), 1);
         vm.stopPrank();
     }
 
     function test__CBL__ShouldReturnCorrectTotalSupply() public {
-        vm.prank(minter);
-        cbl.mint(minter, 100);
+        vm.prank(minter());
+        cbl.mint(minter(), 100);
         assertEq(cbl.totalSupply(), 100);
     }
 
     function test__CBL__PauseAndUnPauseMintAndBurn() public {
-        vm.prank(minter);
+        vm.prank(minter());
         cbl.mint(alice, 100);
 
-        vm.prank(owner);
+        vm.prank(owner());
         cbl.pause();
 
-        vm.prank(minter);
+        vm.prank(minter());
         vm.expectRevert(Pausable.EnforcedPause.selector);
         cbl.mint(alice, 100);
 
@@ -98,10 +96,10 @@ contract CBLTest is Test {
         vm.expectRevert(Pausable.EnforcedPause.selector);
         cbl.burn(100);
 
-        vm.prank(owner);
+        vm.prank(owner());
         cbl.unpause();
 
-        vm.prank(minter);
+        vm.prank(minter());
         cbl.mint(alice, 100);
 
         vm.prank(alice);

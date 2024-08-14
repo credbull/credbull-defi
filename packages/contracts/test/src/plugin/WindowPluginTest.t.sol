@@ -4,21 +4,25 @@ pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
 
-import { HelperConfig } from "@script/HelperConfig.s.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { Vault } from "@credbull/vault/Vault.sol";
 import { WindowPlugin } from "@credbull/plugin/WindowPlugin.sol";
+
+import { DeployVaultsSupport } from "@script/DeployVaultsSupport.s.sol";
+import { VaultsSupportConfig } from "@script/TomlConfig.s.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { SimpleWindowVault } from "@test/test/vault/SimpleWindowVault.t.sol";
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract WindowPluginTest is Test {
+contract WindowPluginTest is Test, VaultsSupportConfig {
+    DeployVaultsSupport private deployer;
+
     SimpleWindowVault private vault;
 
     Vault.VaultParams private vaultParams;
     WindowPlugin.WindowPluginParams private windowParams;
-    HelperConfig private helperConfig;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
@@ -27,16 +31,20 @@ contract WindowPluginTest is Test {
     uint256 private precision;
 
     function setUp() public {
-        helperConfig = new HelperConfig(true);
-        ParamsFactory pf = new ParamsFactory(helperConfig.getNetworkConfig());
+        deployer = new DeployVaultsSupport().skipDeployCheck();
+        (ERC20 cbl, ERC20 usdc,) = deployer.run();
+
+        ParamsFactory pf = new ParamsFactory(usdc, cbl);
         vaultParams = pf.createVaultParams();
         windowParams = pf.createWindowPluginParams();
 
         vault = new SimpleWindowVault(vaultParams, windowParams);
-        precision = 10 ** SimpleUSDC(address(vaultParams.asset)).decimals();
 
-        SimpleUSDC(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
-        SimpleUSDC(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
+        SimpleUSDC asset = SimpleUSDC(address(vaultParams.asset));
+        precision = 10 ** asset.decimals();
+
+        asset.mint(alice, INITIAL_BALANCE * precision);
+        asset.mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__WindowVault__RevertDepositIfBehindWindow() public {

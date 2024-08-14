@@ -2,12 +2,14 @@
 
 pragma solidity ^0.8.20;
 
-import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
-
 import { Test } from "forge-std/Test.sol";
 
-import { HelperConfig, NetworkConfig } from "@script/HelperConfig.s.sol";
-import { DeployVaultFactory } from "@script/DeployVaultFactory.s.sol";
+import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+import { DeployVaults } from "@script/DeployVaults.s.sol";
+import { DeployVaultsSupport } from "@script/DeployVaultsSupport.s.sol";
+import { VaultsSupportConfig } from "@script/TomlConfig.s.sol";
 
 import { CredbullFixedYieldVaultFactory } from "@credbull/CredbullFixedYieldVaultFactory.sol";
 import { CredbullFixedYieldVault } from "@credbull/CredbullFixedYieldVault.sol";
@@ -16,50 +18,52 @@ import { VaultFactory } from "@credbull/factory/VaultFactory.sol";
 
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract CredbullFixedYieldVaultFactoryTest is Test {
+contract CredbullFixedYieldVaultFactoryTest is Test, VaultsSupportConfig {
+    DeployVaults private deployer;
+    DeployVaultsSupport private supportDeployer;
+
     CredbullFixedYieldVaultFactory private factory;
-    DeployVaultFactory private deployer;
-    HelperConfig private helperConfig;
     CredbullWhiteListProvider private whiteListProvider;
-    NetworkConfig private config;
     CredbullFixedYieldVault.FixedYieldVaultParams private params;
 
     string private OPTIONS = "{}";
 
     function setUp() public {
-        deployer = new DeployVaultFactory();
-        (factory,, whiteListProvider, helperConfig) = deployer.runTest();
-        config = helperConfig.getNetworkConfig();
-        params = new ParamsFactory(config).createFixedYieldVaultParams();
+        deployer = new DeployVaults().skipDeployCheck();
+        supportDeployer = new DeployVaultsSupport().skipDeployCheck();
 
+        (factory,, whiteListProvider) = deployer.run();
+        (ERC20 cbl, ERC20 usdc,) = supportDeployer.run();
+
+        params = new ParamsFactory(usdc, cbl).createFixedYieldVaultParams();
         params.whiteListPlugin.whiteListProvider = address(whiteListProvider);
     }
 
     function test__ShouldRevertOnInvalidParams() public {
-        vm.prank(config.factoryParams.owner);
+        vm.prank(owner());
         vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidOwnerAddress.selector);
-        new CredbullFixedYieldVaultFactory(address(0), config.factoryParams.operator, new address[](0));
+        new CredbullFixedYieldVaultFactory(address(0), operator(), new address[](0));
 
         vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidOperatorAddress.selector);
-        new CredbullFixedYieldVaultFactory(config.factoryParams.owner, address(0), new address[](0));
+        new CredbullFixedYieldVaultFactory(owner(), address(0), new address[](0));
 
         vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidCustodianAddress.selector);
-        new CredbullFixedYieldVaultFactory(config.factoryParams.owner, config.factoryParams.operator, new address[](1));
+        new CredbullFixedYieldVaultFactory(owner(), operator(), new address[](1));
     }
 
     function test__ShouldSuccefullyCreateFactoryFixedYield() public {
         address[] memory custodians = new address[](1);
-        custodians[0] = config.factoryParams.custodian;
+        custodians[0] = custodian();
         CredbullFixedYieldVaultFactory vaultFactory =
-            new CredbullFixedYieldVaultFactory(config.factoryParams.owner, config.factoryParams.operator, custodians);
-        vaultFactory.hasRole(vaultFactory.OPERATOR_ROLE(), config.factoryParams.operator);
+            new CredbullFixedYieldVaultFactory(owner(), operator(), custodians);
+        vaultFactory.hasRole(vaultFactory.OPERATOR_ROLE(), operator());
     }
 
     function test__CreateVaultFromFactory() public {
-        vm.prank(config.factoryParams.owner);
+        vm.prank(owner());
         factory.allowCustodian(params.maturityVault.vault.custodian);
 
-        vm.prank(config.factoryParams.operator);
+        vm.prank(operator());
         CredbullFixedYieldVault vault = CredbullFixedYieldVault(payable(factory.createVault(params, OPTIONS)));
 
         assertEq(vault.asset(), address(params.maturityVault.vault.asset));
@@ -70,7 +74,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     }
 
     function test__ShouldRevertCreateVaultOnUnAuthorizedUser() public {
-        vm.prank(config.factoryParams.owner);
+        vm.prank(owner());
         vm.expectRevert();
         factory.createVault(params, OPTIONS);
     }
@@ -78,18 +82,16 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     function test__ShouldAllowAdminToChangeOperator() public {
         address newOperator = makeAddr("new_operator");
 
-        vm.startPrank(config.factoryParams.owner);
+        vm.startPrank(owner());
         factory.allowCustodian(params.maturityVault.vault.custodian);
-        factory.revokeRole(factory.OPERATOR_ROLE(), config.factoryParams.operator);
+        factory.revokeRole(factory.OPERATOR_ROLE(), operator());
         factory.grantRole(factory.OPERATOR_ROLE(), newOperator);
         vm.stopPrank();
 
-        vm.startPrank(config.factoryParams.operator);
+        vm.startPrank(operator());
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                config.factoryParams.operator,
-                factory.OPERATOR_ROLE()
+                IAccessControl.AccessControlUnauthorizedAccount.selector, operator(), factory.OPERATOR_ROLE()
             )
         );
         factory.createVault(params, OPTIONS);
@@ -115,18 +117,18 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     }
 
     function test__ShouldRevertOnNotAllowedCustodians() public {
-        vm.prank(config.factoryParams.owner);
+        vm.prank(owner());
         factory.allowCustodian(params.maturityVault.vault.custodian);
 
         params.maturityVault.vault.custodian = makeAddr("randomCustodian");
 
-        vm.prank(config.factoryParams.operator);
+        vm.prank(operator());
         vm.expectRevert(VaultFactory.CredbullVaultFactory__CustodianNotAllowed.selector);
         factory.createVault(params, OPTIONS);
     }
 
     function test__ShouldAllowAdminToAddCustodians() public {
-        vm.prank(config.factoryParams.owner);
+        vm.prank(owner());
         vm.expectEmit();
         emit VaultFactory.CustodianAllowed(params.maturityVault.vault.custodian);
         factory.allowCustodian(params.maturityVault.vault.custodian);
@@ -135,7 +137,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     }
 
     function test__ShoulRemoveCustodianIfExist() public {
-        vm.startPrank(config.factoryParams.owner);
+        vm.startPrank(owner());
         factory.allowCustodian(params.maturityVault.vault.custodian);
         assertTrue(factory.isCustodianAllowed(params.maturityVault.vault.custodian));
 
@@ -147,7 +149,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     }
 
     function test__ShouldRevertOnInvalidCustodian() public {
-        vm.startPrank(config.factoryParams.owner);
+        vm.startPrank(owner());
         factory.allowCustodian(params.maturityVault.vault.custodian);
 
         vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidCustodianAddress.selector);
@@ -162,10 +164,10 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
     }
 
     function createVault() internal returns (CredbullFixedYieldVault vault) {
-        vm.prank(config.factoryParams.owner);
+        vm.prank(owner());
         factory.allowCustodian(params.maturityVault.vault.custodian);
 
-        vm.prank(config.factoryParams.operator);
+        vm.prank(operator());
         vault = CredbullFixedYieldVault(payable(factory.createVault(params, OPTIONS)));
     }
 }

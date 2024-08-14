@@ -4,20 +4,16 @@
   "main": "index.js",
   "types": "index.ts",
   "scripts": {
-    "rm-dbdata": "rm -f ./script/output/dbdata.json",
-    "chain": "yarn rm-dbdata && anvil --config-out localhost.json",
-    "clean": "forge clean && rm -rf broadcast cache deployments types localhost.json index.js",
-    "dev": "yarn rm-dbdata && anvil --config-out localhost.json & make deploy-local",
-    "build": "forge build && yarn gen-types",
+    "chain": "ts-node script/utils/truncateTables.ts && anvil --config-out localhost.json",
+    "clean": "forge clean && rm -rf broadcast cache deployments types 'script/output/*.json' localhost.json index.js",
+    "build": "forge build && yarn gen-types && tsc",
     "test": "forge test",
     "format": "forge fmt && prettier './script/**/*.js' --write",
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint './*(test|src)/**/*.sol'",
-    "db-check": "tsc && node ./script/utils/checkDb.js",
-    "db-export": "tsc && node ./script/utils/exporter.js",
     "deploy": "make deploy-local",
-    "deploy:ci": "yarn db-export && make deploy-baseSepolia",
-    "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
-    "postinstall": "yarn build && yarn gen-types"
+    "deploy:ci": "make deploy-baseSepolia",
+    "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json",
+    "postinstall": "yarn build"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
@@ -28,7 +24,8 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
     "prettier": "^3.2.2",
-    "solhint": "^5.0.1",
+    "solhint": "^5.0.3",
+    "ts-node": "^10.9.2",
     "typechain": "^8.3.2",
     "typescript": "^5.4.5"
   },

@@ -2,66 +2,39 @@
 
 pragma solidity ^0.8.20;
 
-import { stdToml } from "forge-std/StdToml.sol";
+import { Script } from "forge-std/Script.sol";
 
-import { CBL } from "../src/token/CBL.sol";
+import { CBL } from "@credbull/token/CBL.sol";
+
+import { CBLConfig } from "./TomlConfig.s.sol";
 import { DeployedContracts } from "./DeployedContracts.s.sol";
-import { TomlConfig } from "./TomlConfig.s.sol";
 
-struct CBLTokenParams {
-    address owner;
-    address minter;
-    uint256 maxSupply;
-}
+/// @notice The [Script] used to deploy the Credbull CBL Token Distribution.
+contract DeployCBLToken is Script, CBLConfig {
+    /// @dev Whether to skip the deployment check, or not. By default, do not skip.
+    bool private _skipDeployCheck = false;
 
-contract DeployCBLToken is TomlConfig {
-    using stdToml for string;
-
-    uint256 private constant PRECISION = 1e18;
-
-    string private tomlConfig;
-    bool private isTestMode;
-
-    CBLTokenParams private cblTokenParams;
-
-    constructor() {
-        tomlConfig = loadTomlConfiguration();
-
-        cblTokenParams = createCBLTokenParamsFromConfig();
-    }
-
-    function runTest() public returns (CBL cbl) {
-        isTestMode = true;
-        return run();
-    }
-
-    function run() public returns (CBL cbl) {
-        CBLTokenParams memory params = createCBLTokenParamsFromConfig();
-
+    /**
+     * @notice The `forge script` invocation entrypoint, this deploys the Credbull [$CBL] token, if
+     * @dev The return values are ignored, but included for test usages.
+     *
+     * @return cbl The deployed [CBL] token, if any.
+     */
+    function run() external returns (CBL cbl) {
         DeployedContracts deployChecker = new DeployedContracts();
 
         vm.startBroadcast();
-
-        if (isTestMode || deployChecker.isDeployRequired("CBL")) {
-            cbl = new CBL(params.owner, params.minter, params.maxSupply);
+        if (_skipDeployCheck || deployChecker.isDeployRequired("CBL")) {
+            cbl = new CBL(owner(), minter(), maxSupply());
         }
-
         vm.stopBroadcast();
 
         return cbl;
     }
 
-    function getCBLTokenParams() public view returns (CBLTokenParams memory) {
-        return cblTokenParams;
-    }
-
-    function createCBLTokenParamsFromConfig() internal view returns (CBLTokenParams memory) {
-        CBLTokenParams memory tokenParams = CBLTokenParams({
-            owner: tomlConfig.readAddress(".evm.contracts.cbl.owner"),
-            minter: tomlConfig.readAddress(".evm.contracts.cbl.minter"),
-            maxSupply: vm.parseUint(tomlConfig.readString(".evm.contracts.cbl.max_supply")) * PRECISION
-        });
-
-        return tokenParams;
+    /// @dev A Fluent API mutator that disable the Deployment Check and returns [this] [DeployCBLToken].
+    function skipDeployCheck() public returns (DeployCBLToken) {
+        _skipDeployCheck = true;
+        return this;
     }
 }
