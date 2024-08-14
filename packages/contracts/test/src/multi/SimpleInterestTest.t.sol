@@ -19,8 +19,8 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
  * - f is the frequency of applying interest
  */
 contract SimpleInterest {
-    uint256 immutable INTEREST_RATE;
-    uint256 immutable FREQUENCY;
+    uint256 public immutable INTEREST_RATE;
+    uint256 public immutable FREQUENCY;
 
     uint256 public constant DECIMALS = 2;
     uint256 public constant SCALE = 10 ** DECIMALS;

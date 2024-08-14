@@ -62,9 +62,9 @@ contract SimpleMultiToken is ERC1155, Ownable, ERC1155Pausable, ERC1155Burnable,
 }
 
 contract SimpleMultiTokenTest is Test {
-    SimpleMultiToken token;
-    address owner;
-    address addr1;
+    SimpleMultiToken private token;
+    address private owner;
+    address private addr1;
 
     function setUp() public {
         // owner = address(this);
