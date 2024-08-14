@@ -70,7 +70,7 @@ export async function deposit(config: any) {
   await approveTx.wait();
   console.log(" Bob approves transfers of the Vault's USDC.");
 
-  const toggleTx = await vault.connect(userAdmin.signer).toggleWindowCheck(false);
+  const toggleTx = await vault.connect(userAdmin.signer).toggleWindowCheck();
   await toggleTx.wait();
   console.log(' Admin disables the Vault Window Check');
 

@@ -137,7 +137,7 @@ test.describe('Multi user Interaction - Fixed', async () => {
       const usdcBalanceBeofreRedeemB = await usdc.balanceOf(bob.address);
 
       await vault.connect(testSigners.operator.getDelegate()).mature();
-      await toggleWindowCheck(admin, vault, false);
+      await toggleWindowCheck(admin, vault);
 
       const redeemPreviewA = await vault.previewRedeem(shares);
 

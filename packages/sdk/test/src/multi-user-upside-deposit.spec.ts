@@ -171,7 +171,7 @@ test.describe.skip('Multi user Interaction - Upside', async () => {
 
       //Skip checks
       await vault.connect(testSigners.operator.getDelegate()).mature();
-      await toggleWindowCheck(admin, vault, false);
+      await toggleWindowCheck(admin, vault);
 
       const redeemPreviewA = await vault.previewRedeem(shares);
       await alice.sdk.redeem(vaultAddress, shares, alice.address);
