@@ -13,7 +13,7 @@ import { VaultsSupportConfig } from "@script/TomlConfig.s.sol";
 
 import { SimpleMaturityVault } from "@test/test/vault/SimpleMaturityVault.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
-import { AltParamsFactory } from "@test/test/vault/utils/AltParamsFactory.t.sol";
+import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
 contract MaturityVaultTest is Test, VaultsSupportConfig {
     DeployVaultsSupport private deployer;

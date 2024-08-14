@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
 
-import { TomlConfig } from "@script/TomlConfig.s.sol";
 import { VaultsConfig } from "@script/TomlConfig.s.sol";
 
 contract VaultsConfigTest is Test, VaultsConfig {

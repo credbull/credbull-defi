@@ -40,15 +40,15 @@ contract CredbullFixedYieldVaultFactoryTest is Test, VaultsSupportConfig {
     }
 
     function test__ShouldRevertOnInvalidParams() public {
-        vm.prank(config.factoryParams.owner);
+        vm.prank(owner());
         vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidOwnerAddress.selector);
-        new CredbullFixedYieldVaultFactory(address(0), config.factoryParams.operator, new address[](0));
+        new CredbullFixedYieldVaultFactory(address(0), operator(), new address[](0));
 
         vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidOperatorAddress.selector);
-        new CredbullFixedYieldVaultFactory(config.factoryParams.owner, address(0), new address[](0));
+        new CredbullFixedYieldVaultFactory(owner(), address(0), new address[](0));
 
         vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidCustodianAddress.selector);
-        new CredbullFixedYieldVaultFactory(config.factoryParams.owner, config.factoryParams.operator, new address[](1));
+        new CredbullFixedYieldVaultFactory(owner(), operator(), new address[](1));
     }
 
     function test__ShouldSuccefullyCreateFactoryFixedYield() public {
@@ -149,7 +149,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test, VaultsSupportConfig {
     }
 
     function test__ShouldRevertOnInvalidCustodian() public {
-        vm.startPrank(config.factoryParams.owner);
+        vm.startPrank(owner());
         factory.allowCustodian(params.maturityVault.vault.custodian);
 
         vm.expectRevert(VaultFactory.CredbullVaultFactory__InvalidCustodianAddress.selector);
