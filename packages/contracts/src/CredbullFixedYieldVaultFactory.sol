@@ -6,7 +6,7 @@ import { CredbullFixedYieldVault } from "./CredbullFixedYieldVault.sol";
 import { VaultFactory } from "./factory/VaultFactory.sol";
 
 contract CredbullFixedYieldVaultFactory is VaultFactory {
-    string private constant HASH = "change the checksum";
+    string private constant HASH = "change the checksum again";
 
     /// @notice Event to emit when a new vault is created
     event VaultDeployed(address indexed vault, CredbullFixedYieldVault.FixedYieldVaultParams params, string options);
@@ -21,8 +21,9 @@ contract CredbullFixedYieldVaultFactory is VaultFactory {
     { }
 
     /**
-     * @notice - Function to create a new vault. Should be called only by the owner
-     * @param params - The VaultParams
+     * @notice Function to create a new vault.
+     * @param params The [VaultParams] that defines the [Vault] to create.
+     * @param options A [string] of options, emitted in the [VaultDeployed] event.
      */
     function createVault(CredbullFixedYieldVault.FixedYieldVaultParams memory params, string memory options)
         public

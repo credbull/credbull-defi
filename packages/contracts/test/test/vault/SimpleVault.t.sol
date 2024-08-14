@@ -8,7 +8,7 @@ import { Vault } from "@credbull/vault/Vault.sol";
  * @notice A simple [Vault] realisation for testing purposes.
  */
 contract SimpleVault is Vault {
-    string private constant HASH = "change the checksum";
+    string private constant HASH = "change the checksum again";
 
     constructor(Vault.VaultParams memory params) Vault(params) { }
 

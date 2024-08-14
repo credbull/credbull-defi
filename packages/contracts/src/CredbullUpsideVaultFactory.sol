@@ -6,7 +6,7 @@ import { CredbullFixedYieldVaultWithUpside } from "./CredbullFixedYieldVaultWith
 import { VaultFactory } from "./factory/VaultFactory.sol";
 
 contract CredbullUpsideVaultFactory is VaultFactory {
-    string private constant HASH = "change the checksum";
+    string private constant HASH = "change the checksum again";
 
     /// @notice Event to emit when a new vault is created
     event VaultDeployed(
