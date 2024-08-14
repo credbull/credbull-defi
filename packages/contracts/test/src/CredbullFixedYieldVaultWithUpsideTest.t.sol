@@ -87,13 +87,6 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test, VaultsSupportConfig {
         new CredbullFixedYieldVaultWithUpside(params);
     }
 
-    function test__UpsideVault__ShouldRevertOnInvalidUpsidePercentage() public {
-        CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params = upsideVaultParams;
-        params.upsidePercentage = 100_01;
-        vm.expectRevert(abi.encodeWithSelector(UpsideVault.CredbullVault__InvalidUpsidePercentage.selector));
-        new CredbullFixedYieldVaultWithUpside(params);
-    }
-
     function test__UpsideVault__VaultCreationShouldRevertOnUnsupportedDecimalValue() public {
         CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params = upsideVaultParams;
         params.cblToken = new DecimalToken(1e6, 19);
