@@ -8,11 +8,5 @@ import { OwnableToken } from "./OwnableToken.t.sol";
  * @dev The Symbol, Name and decimals are hard-coded, so an instance cannot represent anything other than 'SMPL'.
  */
 contract SimpleToken is OwnableToken {
-    string private constant HASH = "change the checksum again";
-
     constructor(uint256 initialSupply) OwnableToken("Simple Token", "SMPL", 18, initialSupply) { }
-
-    function hashed() external pure returns (string memory) {
-        return HASH;
-    }
 }
