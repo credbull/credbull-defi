@@ -19,8 +19,9 @@ contract CredbullFixedYieldVaultFactory is VaultFactory {
     { }
 
     /**
-     * @notice - Function to create a new vault. Should be called only by the owner
-     * @param params - The VaultParams
+     * @notice Function to create a new vault.
+     * @param params The [VaultParams] that defines the [Vault] to create.
+     * @param options A [string] of options, emitted in the [VaultDeployed] event.
      */
     function createVault(CredbullFixedYieldVault.FixedYieldVaultParams memory params, string memory options)
         public
