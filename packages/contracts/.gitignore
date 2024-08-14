@@ -16,10 +16,10 @@ deployments
 
 types
 index.js
-config.js
+script/utils/*.js
 
 # supabase export
-/script/output/dbdata.json
+script/output/
 
 # code coverage
 lcov.info

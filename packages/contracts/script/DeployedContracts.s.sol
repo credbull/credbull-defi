@@ -9,9 +9,9 @@ import { console2 } from "forge-std/console2.sol";
 /// @author ian lucas
 /// @title Helper to find previously deployed contracts.  For example, within a supabase db export.
 contract DeployedContracts is Script {
-    string private EMPTY_STRING = "";
-
     using stdJson for string;
+
+    string private EMPTY_STRING = "";
 
     /// Logic to determine whether or not to deploy
     /// @return whether to deploy or not
@@ -32,9 +32,8 @@ contract DeployedContracts is Script {
         string memory json = parseDeployedContracts();
 
         if (bytes(json).length == 0) {
-            // return address(0);
             revert(
-                string.concat("Contract ", contractName, "not found in db export.  Were deploy and export successfull?")
+                string.concat("Contract ", contractName, "not found in db export.  Were deploy and export successful?")
             );
         }
 
@@ -77,8 +76,8 @@ contract DeployedContracts is Script {
     /// Read the deployed contracts from a supabase db export
     /// @return json with a list of deployed contracts or EMPTY_STRING ("")
     function parseDeployedContracts() internal returns (string memory) {
-        string memory root = vm.projectRoot();
-        string memory path = string.concat(root, "/script/output/dbdata.json");
+        string memory path =
+            string.concat(vm.projectRoot(), "/script/output/deployedContracts-", vm.toString(block.chainid), ".json");
 
         if (vm.exists(path)) {
             string memory json = vm.readFile(path);

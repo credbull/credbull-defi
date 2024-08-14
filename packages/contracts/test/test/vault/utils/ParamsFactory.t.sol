@@ -1,10 +1,10 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
 
-import { NetworkConfig } from "@script/HelperConfig.s.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { MaxCapPlugin } from "@credbull/plugin/MaxCapPlugin.sol";
 import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
@@ -14,32 +14,28 @@ import { FixedYieldVault } from "@credbull/vault/FixedYieldVault.sol";
 import { MaturityVault } from "@credbull/vault/MaturityVault.sol";
 import { Vault } from "@credbull/vault/Vault.sol";
 
-/**
- * @notice A test utility for creating 'Params' instances for the various [Vault] types.
- */
-contract ParamsFactory is Test {
-    uint256 private constant PROMISED_FIXED_YIELD = 10;
-    NetworkConfig private networkConfig;
+import { VaultsConfig } from "@script/TomlConfig.s.sol";
 
-    constructor(NetworkConfig memory _networkConfig) {
-        networkConfig = _networkConfig;
+/// @notice A test utility for creating 'Params' instances for the various [Vault] types.
+contract ParamsFactory is Test, VaultsConfig {
+    uint256 private constant PROMISED_FIXED_YIELD = 10;
+
+    ERC20 private usdc;
+    ERC20 private cbl;
+
+    constructor(ERC20 _usdc, ERC20 _cbl) {
+        usdc = _usdc;
+        cbl = _cbl;
     }
 
-    function createVaultParams() public returns (Vault.VaultParams memory params) {
-        address custodian = makeAddr("custodianAddress");
-
-        params = Vault.VaultParams({
-            asset: networkConfig.usdcToken,
-            shareName: "Share_sep",
-            shareSymbol: "SYM_sep",
-            custodian: custodian
-        });
+    function createVaultParams() public returns (Vault.VaultParams memory) {
+        return Vault.VaultParams({ asset: usdc, shareName: "Shares", shareSymbol: "SHS", custodian: custodian() });
     }
 
     function createUpsideVaultParams() public returns (UpsideVault.UpsideVaultParams memory params) {
         params = UpsideVault.UpsideVaultParams({
             fixedYieldVault: createFixedYieldVaultParams(),
-            cblToken: networkConfig.cblToken,
+            cblToken: cbl,
             upsidePercentage: 20_00
         });
     }
@@ -82,11 +78,7 @@ contract ParamsFactory is Test {
         params = WindowPlugin.WindowPluginParams({ depositWindow: depositWindow, redemptionWindow: redemptionWindow });
     }
 
-    function createContractRoles() public returns (FixedYieldVault.ContractRoles memory roles) {
-        roles = FixedYieldVault.ContractRoles({
-            owner: networkConfig.factoryParams.owner,
-            operator: networkConfig.factoryParams.operator,
-            custodian: makeAddr("custodianAddress")
-        });
+    function createContractRoles() public returns (FixedYieldVault.ContractRoles memory) {
+        return FixedYieldVault.ContractRoles({ owner: owner(), operator: operator(), custodian: custodian() });
     }
 }

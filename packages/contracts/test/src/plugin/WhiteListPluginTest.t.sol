@@ -4,25 +4,30 @@ pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
 
-import { DeployVaultFactory } from "@script/DeployVaultFactory.s.sol";
-import { HelperConfig } from "@script/HelperConfig.s.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
 import { Vault } from "@credbull/vault/Vault.sol";
 import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
 
+import { DeployVaults } from "@script/DeployVaults.s.sol";
+import { DeployVaultsSupport } from "@script/DeployVaultsSupport.s.sol";
+
+import { VaultsSupportConfig } from "@script/TomlConfig.s.sol";
+
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { SimpleWhiteListVault } from "@test/test/vault/SimpleWhiteListVault.t.sol";
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 
-contract WhiteListPluginTest is Test {
+contract WhiteListPluginTest is Test, VaultsSupportConfig {
+    DeployVaults private deployer;
+    DeployVaultsSupport private supportDeployer;
+
     SimpleWhiteListVault private vault;
-    DeployVaultFactory private deployer;
     CredbullWhiteListProvider private whiteListProvider;
 
     Vault.VaultParams private vaultParams;
     WhiteListPlugin.WhiteListPluginParams private whiteListParams;
-    HelperConfig private helperConfig;
 
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
@@ -31,15 +36,21 @@ contract WhiteListPluginTest is Test {
     uint256 private constant INITIAL_BALANCE = 1e6;
 
     function setUp() public {
-        deployer = new DeployVaultFactory();
-        (,, whiteListProvider, helperConfig) = deployer.runTest();
-        ParamsFactory pf = new ParamsFactory(helperConfig.getNetworkConfig());
+        deployer = new DeployVaults().skipDeployCheck();
+        supportDeployer = new DeployVaultsSupport().skipDeployCheck();
+
+        (,, whiteListProvider) = deployer.run();
+        (ERC20 cbl, ERC20 usdc,) = supportDeployer.run();
+
+        ParamsFactory pf = new ParamsFactory(usdc, cbl);
         vaultParams = pf.createVaultParams();
         whiteListParams = pf.createWhiteListPluginParams();
         whiteListParams.whiteListProvider = address(whiteListProvider);
 
         vault = new SimpleWhiteListVault(vaultParams, whiteListParams);
-        precision = 10 ** SimpleUSDC(address(vaultParams.asset)).decimals();
+
+        SimpleUSDC asset = SimpleUSDC(address(vaultParams.asset));
+        precision = 10 ** asset.decimals();
 
         address[] memory whiteListAddresses = new address[](2);
         whiteListAddresses[0] = alice;
@@ -53,8 +64,8 @@ contract WhiteListPluginTest is Test {
         vault.WHITELIST_PROVIDER().updateStatus(whiteListAddresses, statuses);
         vm.stopPrank();
 
-        SimpleUSDC(address(vaultParams.asset)).mint(alice, INITIAL_BALANCE * precision);
-        SimpleUSDC(address(vaultParams.asset)).mint(bob, INITIAL_BALANCE * precision);
+        asset.mint(alice, INITIAL_BALANCE * precision);
+        asset.mint(bob, INITIAL_BALANCE * precision);
     }
 
     function test__WhiteListVault__RevertDepositIfReceiverNotWhiteListed() public {
