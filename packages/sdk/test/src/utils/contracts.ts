@@ -41,8 +41,5 @@ export async function toggleWindowCheck(
   admin: User,
   vault: CredbullFixedYieldVault | CredbullFixedYieldVaultWithUpside,
 ) {
-  const previousValue = await vault.toggleWindowCheck();
-  if (previousValue) {
     return vault.connect(admin.testSigner.getDelegate()).toggleWindowCheck();
-  }
 }
