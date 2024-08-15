@@ -9,8 +9,8 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 
-import { console2 } from "forge-std/console2.sol";
-// import { Test } from "forge-std/Test.sol";
+// import { console2 } from "forge-std/console2.sol";
+import { Test } from "forge-std/Test.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
