@@ -8,3 +8,6 @@
 [submodule "spikes/spike-short-term-fixed/packages/foundry/lib/forge-std"]
 	path = spikes/spike-short-term-fixed/packages/foundry/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "spikes/spike-short-term-fixed/packages/foundry/lib/openzeppelin-foundry-upgrades"]
+	path = spikes/spike-short-term-fixed/packages/foundry/lib/openzeppelin-foundry-upgrades
+	url = https://github.com/OpenZeppelin/openzeppelin-foundry-upgrades
