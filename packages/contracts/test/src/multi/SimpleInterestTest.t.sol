@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import { console2 } from "forge-std/console2.sol";
 import { Test } from "forge-std/Test.sol";
-// import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
@@ -19,6 +19,8 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
  * - f is the frequency of applying interest
  */
 contract SimpleInterest {
+    using Math for uint256;
+
     uint256 public immutable INTEREST_RATE;
     uint256 public immutable FREQUENCY;
 
@@ -54,32 +56,90 @@ contract SimpleInterest {
 
         return simpleInterest;
     }
+
+    function principalFromDiscounted(uint256 discounted, uint256 timePeriods) public view returns (uint256) {
+        uint256 discountFactor = INTEREST_RATE * timePeriods; // interest over periods = eg. 3% * 2 = 6%
+        uint256 denominator = 100 - discountFactor; // 100% - 3% = 97%
+        uint256 principal = discounted.mulDiv(100, denominator); // discounted * 100 / 97
+
+        return principal;
+    }
 }
 
 contract LinearPriceTest is Test {
-    function test__LinearPriceTest_Annual() public {
+    using Math for uint256;
+
+    function test__LinearPriceTest_Interest_Annual() public {
         uint256 apy = 3; // APY in percentage
         uint256 oneYear = 1; // 1 is a year
 
         SimpleInterest simpleInterest = new SimpleInterest(apy, oneYear);
 
-        uint256 principal = 100;
-        assertEq(0, simpleInterest.interest(principal, 0));
-        assertEq(apy, simpleInterest.interest(principal, 1)); // 1 year
-        assertEq(apy * 2, simpleInterest.interest(principal, 2)); // 2 years
+        uint256 principal = 500;
+        assertEq(0, simpleInterest.interest(principal, 0), "wrong interest at year 0");
+        assertEq(principal.mulDiv(apy, 100), simpleInterest.interest(principal, 1), "wrong interest at year 1"); // 1 year
+        assertEq(principal.mulDiv(apy * 2, 100), simpleInterest.interest(principal, 2), "wrong interest at year 2"); // 2 years
+
+        uint256 discounted = principal - simpleInterest.interest(principal, 1);
+        assertEq(
+            principal,
+            simpleInterest.principalFromDiscounted(discounted, 1),
+            "wrong principal from discounted at year 1"
+        );
+    }
+
+    function test__LinearPriceTest_Discounting_Annual() public {
+        uint256 apy = 10; // APY in percentage
+        uint256 oneYear = 1; // 1 is a year
+
+        SimpleInterest simpleInterest = new SimpleInterest(apy, oneYear);
+
+        uint256 principal = 500;
+        assertEq(
+            principal, simpleInterest.principalFromDiscounted(principal, 0), "wrong principal from discounted at year 0"
+        );
+        assertEq(principal, simpleInterest.principalFromDiscounted(500, 0), "wrong principal from discounted at year 0");
+
+        uint256 discountedYearOne = principal - simpleInterest.interest(principal, 1);
+        assertEq(
+            principal,
+            simpleInterest.principalFromDiscounted(discountedYearOne, 1),
+            "wrong principal from discounted at year 1"
+        );
+        assertEq(principal, simpleInterest.principalFromDiscounted(450, 1), "wrong principal from discounted at year 1");
+
+        uint256 discountedYearTwo = principal - 2 * (simpleInterest.interest(principal, 1));
+        assertEq(
+            principal,
+            simpleInterest.principalFromDiscounted(discountedYearTwo, 2),
+            "wrong principal from discounted at year 2"
+        );
+        assertEq(principal, simpleInterest.principalFromDiscounted(400, 2), "wrong principal from discounted at year 2");
+
+        uint256 discountedYearThree = principal - 3 * (simpleInterest.interest(principal, 1));
+        assertEq(
+            principal,
+            simpleInterest.principalFromDiscounted(discountedYearThree, 3),
+            "wrong principal from discounted at year 3"
+        );
+        assertEq(principal, simpleInterest.principalFromDiscounted(350, 3), "wrong principal from discounted at year 3");
     }
 
     // daily interest of 12% APY (uses 360 day count)
-    function test__LinearPriceTest_Daily() public {
+    function test__LinearPriceTest_Interest_Daily() public {
         uint256 apy = 12; // 12% APY
         uint256 numberOfDays = 360; // days
 
         SimpleInterest simpleInterest = new SimpleInterest(apy, numberOfDays);
 
-        uint256 principal = 100;
-        assertEq(0, simpleInterest.interest(principal, 0));
-        assertEq(1, simpleInterest.interest(principal, 30));
-        assertEq(apy / 2, simpleInterest.interest(principal, 180));
-        assertEq(apy, simpleInterest.interest(principal, 360));
+        uint256 principal = 400;
+        assertEq(0, simpleInterest.interest(principal, 0), "wrong interest at day 0");
+        assertEq(
+            principal.mulDiv(apy / (numberOfDays / 30), 100),
+            simpleInterest.interest(principal, 30),
+            "wrong interest at day 30"
+        );
+        assertEq(principal.mulDiv(apy / 2, 100), simpleInterest.interest(principal, 180), "wrong interest at day 180");
+        assertEq(principal.mulDiv(apy, 100), simpleInterest.interest(principal, 360), "wrong interest at day 360");
     }
 }
