@@ -2,7 +2,7 @@
 src = 'contracts'
 out = 'out'
 libs = ['lib']
-fs_permissions = [{ access = "read-write", path = "./"}]
+fs_permissions = [{ access = "read-write", path = "./" }]
 
 [rpc_endpoints]
 default_network = "http://127.0.0.1:8545"
@@ -35,7 +35,7 @@ sepolia = { key = "${ETHERSCAN_API_KEY}" }
 
 [fmt]
 multiline_func_header = "params_first"
-line_length = 80
+line_length = 120
 tab_width = 2
 quote_style = "double"
 bracket_spacing = true
