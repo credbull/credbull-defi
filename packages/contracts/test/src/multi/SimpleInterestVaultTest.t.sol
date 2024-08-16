@@ -13,12 +13,11 @@ import { Frequencies } from "./Frequencies.s.sol";
 
 import { console2 } from "forge-std/console2.sol";
 import { Test } from "forge-std/Test.sol";
-import { SimpleInterestVault } from "./SimpleInterestVault.s.sol";
 
 contract SimpleInterestVaultTest is Test {
     using Math for uint256;
 
-    IERC20 private token;
+    IERC20 private asset;
 
     address private owner = makeAddr("owner");
     address private alice = makeAddr("alice");
@@ -29,18 +28,18 @@ contract SimpleInterestVaultTest is Test {
         uint256 tokenSupply = 100000;
 
         vm.startPrank(owner);
-        token = new SimpleToken(tokenSupply);
+        asset = new SimpleToken(tokenSupply);
         vm.stopPrank();
 
         uint256 userTokenAmount = 1000;
 
-        assertEq(token.balanceOf(owner), tokenSupply, "owner should start with total supply");
-        transferAndAssert(token, alice, userTokenAmount);
-        transferAndAssert(token, bob, userTokenAmount);
-        transferAndAssert(token, charlie, userTokenAmount);
+        assertEq(asset.balanceOf(owner), tokenSupply, "owner should start with total supply");
+        transferAndAssert(asset, alice, userTokenAmount);
+        transferAndAssert(asset, bob, userTokenAmount);
+        transferAndAssert(asset, charlie, userTokenAmount);
     }
 
-    function test__SimpleInterestVault_Annual() public {
+    function test__SimpleInterestVault__Annual() public {
         uint256 apy = 12; // APY in percentage, e.g. 12%
 
         Deposit memory depositAlice = Deposit("alice 0 years", alice, 200, 0);
@@ -50,7 +49,7 @@ contract SimpleInterestVaultTest is Test {
         simpleInterestVaultTesDaily(apy, Frequencies.YEARS_ONE, depositAlice, depositBob, depositCharlie);
     }
 
-    function test__SimpleInterestVault_Daily() public {
+    function test__SimpleInterestVault__Daily() public {
         uint256 apy = 6; // APY in percentage, e.g. 12%
 
         Deposit memory depositAlice = Deposit("alice 0 days", alice, 400, 0);
@@ -76,7 +75,7 @@ contract SimpleInterestVaultTest is Test {
     ) internal {
         // set up vault
         SimpleInterest simpleInterest = new SimpleInterest(apy, frequency);
-        SimpleInterestVault vault = new SimpleInterestVault(token, simpleInterest);
+        SimpleInterestVault vault = new SimpleInterestVault(asset, simpleInterest);
 
         uint256 sharesAlice = depositAndVerify(depositAlice, vault);
         uint256 sharesBob = depositAndVerify(depositBob, vault);
@@ -92,7 +91,7 @@ contract SimpleInterestVaultTest is Test {
 
         // add enough interest to cover all redeems
         vm.startPrank(owner);
-        token.transfer(address(vault), (depositAlice.amount + depositBob.amount + depositCharlie.amount)); // enough for 100% interest
+        asset.transfer(address(vault), (depositAlice.amount + depositBob.amount + depositCharlie.amount)); // enough for 100% interest
         vm.stopPrank();
 
         // now actually redeem - exchange shares back for assets
