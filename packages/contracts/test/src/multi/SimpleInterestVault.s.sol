@@ -8,10 +8,6 @@ import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import { Frequencies } from "./Frequencies.s.sol";
-
-import { console2 } from "forge-std/console2.sol";
-
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
 // - At interestFrequency 1, 1 asset gives 1 / APY shares

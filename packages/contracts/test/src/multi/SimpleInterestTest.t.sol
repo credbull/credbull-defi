@@ -6,7 +6,6 @@ import { SimpleInterest } from "./SimpleInterest.s.sol";
 import { Frequencies } from "./Frequencies.s.sol";
 
 import { Test } from "forge-std/Test.sol";
-import { console2 } from "forge-std/console2.sol";
 
 contract SimpleInterestTest is Test {
     using Math for uint256;
