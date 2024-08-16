@@ -10,6 +10,8 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 
+import { Frequencies } from "./Frequencies.s.sol";
+
 import { console2 } from "forge-std/console2.sol";
 import { Test } from "forge-std/Test.sol";
 
@@ -23,8 +25,8 @@ import { Test } from "forge-std/Test.sol";
 contract SimpleInterestVault is ERC4626 {
     using Math for uint256;
 
-    SimpleInterest private simpleInterest;
-    uint256 public currentInterestFrequency; // the current interest frequency
+    SimpleInterest public simpleInterest;
+    uint256 public currentInterestFrequency = 0; // the current interest frequency
 
     constructor(IERC20 asset, SimpleInterest _simpleInterest)
         ERC4626(asset)
@@ -35,8 +37,8 @@ contract SimpleInterestVault is ERC4626 {
 
     // =============== deposit ===============
 
-    // amount of shares that would be exchanged for the amount of assets provided
-    // at the frequency of applying interest in the associated SimpleInterest contract
+    // shares that would be exchanged for the amount of assets
+    // for a given frequency of applying interest
     // shares = assets - simpleInterest
     function convertToSharesAtFrequency(uint256 assets, uint256 interestFrequency)
         public
@@ -50,9 +52,6 @@ contract SimpleInterestVault is ERC4626 {
         return assets - interest;
     }
 
-    /**
-     * @dev See {IERC4626-previewDeposit}.
-     */
     function previewDeposit(uint256 assets) public view override returns (uint256) {
         return convertToShares(assets);
     }
@@ -63,8 +62,9 @@ contract SimpleInterestVault is ERC4626 {
 
     // =============== redeem ===============
 
-    // amount of shares that would be exchanged for the amount of assets provided
-    // at the frequency of applying interest in the associated SimpleInterest contract
+    // asset that would be exchanged for the amount of shares
+    // for a given frequency to calculate the non-discounted "principal" from the shares
+    // assets = principal + interest
     function convertToAssetsAtFrequency(uint256 shares, uint256 interestFrequency)
         public
         view
@@ -72,9 +72,9 @@ contract SimpleInterestVault is ERC4626 {
     {
         if (interestFrequency == 0) return shares;
 
-        uint256 principal = simpleInterest.principalFromDiscounted(shares, (interestFrequency - 1));
+        uint256 principal = simpleInterest.principalFromDiscounted(shares, interestFrequency);
 
-        uint256 interest = simpleInterest.interest(principal, 1); // only ever give one period of interest
+        uint256 interest = simpleInterest.interest(principal, interestFrequency); // only ever give one period of interest
 
         return principal + interest;
     }
@@ -106,7 +106,7 @@ contract SimpleInterestVaultTest is Test {
     address private charlie = makeAddr("charlie");
 
     function setUp() public {
-        uint256 tokenSupply = 10000;
+        uint256 tokenSupply = 100000;
 
         vm.startPrank(owner);
         token = new SimpleToken(tokenSupply);
@@ -120,141 +120,134 @@ contract SimpleInterestVaultTest is Test {
         transferAndAssert(token, charlie, userTokenAmount);
     }
 
-    function test__MultiVaultTest_Convert_Shares_Annual() public {
-        uint256 apy = 5; // APY in percentage, e.g. 5%
-        uint256 oneYear = 1; // 1 is a year
+    function test__SimpleInterestVault_Annual() public {
+        uint256 apy = 12; // APY in percentage, e.g. 12%
 
+        Deposit memory depositAlice = Deposit("alice 0 years", alice, 200, 0);
+        Deposit memory depositBob = Deposit("bob 1 year", bob, 100, 1);
+        Deposit memory depositCharlie = Deposit("bob 2 years", charlie, 500, 2);
+
+        simpleInterestVaultTesDaily(apy, Frequencies.YEARS_ONE, depositAlice, depositBob, depositCharlie);
+    }
+
+    function test__SimpleInterestVault_Daily() public {
+        uint256 apy = 6; // APY in percentage, e.g. 12%
+
+        Deposit memory depositAlice = Deposit("alice 0 days", alice, 400, 0);
+        Deposit memory depositBob = Deposit("bob 180 days", bob, 300, 180);
+        Deposit memory depositCharlie = Deposit("charlie 360 days", charlie, 600, 360);
+
+        simpleInterestVaultTesDaily(apy, Frequencies.DAYS_360, depositAlice, depositBob, depositCharlie);
+    }
+
+    struct Deposit {
+        string name;
+        address wallet;
+        uint256 amount;
+        uint256 frequency;
+    }
+
+    function simpleInterestVaultTesDaily(
+        uint256 apy,
+        uint256 frequency,
+        Deposit memory depositAlice,
+        Deposit memory depositBob,
+        Deposit memory depositCharlie
+    ) internal {
         // set up vault
-        SimpleInterest simpleInterest = new SimpleInterest(apy, oneYear);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, frequency);
         SimpleInterestVault vault = new SimpleInterestVault(token, simpleInterest);
 
-        uint256 depositAmount = 500;
-        uint256 interestOneYear = simpleInterest.interest(depositAmount, 1); // equivalent of depositAmount.mulDiv(apy, 100);
-
-        // 1 : 1 assets to shares to start
-        uint256 zeroInterest = 0;
-        assertVaultSharesCalculation(vault, depositAmount, 0, zeroInterest, "frequency Zero");
-        depositAndAssert(vault, alice, depositAmount, zeroInterest, "frequency Zero");
-
-        // 1 / APY shares for each asset at year 1
-        assertVaultSharesCalculation(vault, depositAmount, interestOneYear, 1, "frequency One");
-        vault.setCurrentInterestFrequency(1);
-        depositAndAssert(vault, bob, depositAmount, interestOneYear, "frequency One");
-
-        // 1 / (2 * APY) shares for each asset at year 2
-        assertVaultSharesCalculation(vault, depositAmount, interestOneYear * 2, 2, "frequency Two");
-        vault.setCurrentInterestFrequency(2);
-        depositAndAssert(vault, charlie, depositAmount, interestOneYear * 2, "frequency Two");
+        uint256 sharesAlice = depositAndVerify(depositAlice, vault);
+        uint256 sharesBob = depositAndVerify(depositBob, vault);
+        uint256 sharesCharlie = depositAndVerify(depositCharlie, vault);
 
         // ============== redeem ==============
         console2.log("================ start redeem ==============");
 
-        uint256 expectedRedeem = (depositAmount + interestOneYear); // everyone should get 1 years worth of interest
+        // verify the previewRedeem and convertToAsset (these don't actually redeem)
+        previewRedeemAndVerify(depositAlice, sharesAlice, vault);
+        previewRedeemAndVerify(depositBob, sharesBob, vault);
+        previewRedeemAndVerify(depositCharlie, sharesCharlie, vault);
 
-        // checking the calculation before the redeems from the vault
-        assertVaultAssetsCalculation(vault, vault.balanceOf(alice), expectedRedeem, 1, " assets end of year 1");
-        assertVaultAssetsCalculation(vault, vault.balanceOf(bob), expectedRedeem, 2, " assets end of year 2");
-        assertVaultAssetsCalculation(vault, vault.balanceOf(charlie), expectedRedeem, 3, " assets end of year 3");
-
-        // now actually redeem - transfer from the vault to the users
-
-        // add enough interest for everyone
+        // add enough interest to cover all redeems
         vm.startPrank(owner);
-        token.transfer(address(vault), 3 * interestOneYear);
+        token.transfer(address(vault), (depositAlice.amount + depositBob.amount + depositCharlie.amount)); // enough for 100% interest
         vm.stopPrank();
 
-        vault.setCurrentInterestFrequency(1);
-        vm.startPrank(alice);
-        assertEq(expectedRedeem, vault.redeem(vault.balanceOf(alice), alice, alice), "redeem at year 1");
-        vm.stopPrank();
-
-        vault.setCurrentInterestFrequency(2);
-        vm.startPrank(bob);
-        assertEq(expectedRedeem, vault.redeem(vault.balanceOf(bob), bob, bob), "redeem at year 2");
-        vm.stopPrank();
-
-        vault.setCurrentInterestFrequency(3);
-        vm.startPrank(charlie);
-        assertEq(expectedRedeem, vault.redeem(vault.balanceOf(charlie), charlie, charlie), "redeem at year 3");
-        vm.stopPrank();
+        // now actually redeem - exchange shares back for assets
+        redeemAndVerify(depositAlice, sharesAlice, vault);
+        redeemAndVerify(depositBob, sharesBob, vault);
+        redeemAndVerify(depositCharlie, sharesCharlie, vault);
     }
 
-    function assertVaultSharesCalculation(
-        SimpleInterestVault _vault,
-        uint256 depositAmount,
-        uint256 expectedInterest,
-        uint256 interestFrequency,
-        string memory msgSuffix
-    ) public {
-        uint256 expectedShares = (depositAmount - expectedInterest);
-        uint256 previousInterestFrequency = _vault.currentInterestFrequency();
+    function depositAndVerify(Deposit memory deposit, SimpleInterestVault vault) internal returns (uint256 shares) {
+        uint256 expectedInterest = getExpectedInterest(deposit, vault.simpleInterest());
+        uint256 expectedShares = (deposit.amount - expectedInterest);
 
+        // assertVaultSharesCalculation(vault, deposit.amount, expectedInterest, deposit.frequency, string.concat("frequency ", deposit.name));
         assertEq(
             expectedShares,
-            _vault.convertToSharesAtFrequency(depositAmount, interestFrequency),
-            string.concat("wrong convertToSharesAtFrequency ", msgSuffix)
+            vault.convertToSharesAtFrequency(deposit.amount, deposit.frequency),
+            string.concat("wrong convertToSharesAtFrequency ", deposit.name)
         );
 
-        _vault.setCurrentInterestFrequency(interestFrequency);
+        vault.setCurrentInterestFrequency(deposit.frequency);
+
         assertEq(
-            expectedShares, _vault.previewDeposit(depositAmount), string.concat("wrong previewDeposit ", msgSuffix)
+            expectedShares, vault.previewDeposit(deposit.amount), string.concat("wrong previewDeposit ", deposit.name)
         );
         assertEq(
-            expectedShares, _vault.convertToShares(depositAmount), string.concat("wrong convertToShares ", msgSuffix)
+            expectedShares, vault.convertToShares(deposit.amount), string.concat("wrong convertToShares ", deposit.name)
         );
 
-        _vault.setCurrentInterestFrequency(previousInterestFrequency);
+        vm.startPrank(deposit.wallet);
+        IERC20 vaultAsset = (IERC20)(vault.asset());
+        vaultAsset.approve(address(vault), deposit.amount);
+        uint256 actualShares = vault.deposit(deposit.amount, deposit.wallet);
+        vm.stopPrank();
+
+        assertEq(expectedShares, actualShares, string.concat("vault balance wrong ", deposit.name));
+
+        return actualShares;
     }
 
-    function assertVaultAssetsCalculation(
-        SimpleInterestVault _vault,
-        uint256 sharesAmount,
-        uint256 expectedAssets,
-        uint256 interestFrequency, // okay
-        string memory msgSuffix
-    ) public {
-        uint256 previousInterestFrequency = _vault.currentInterestFrequency();
+    function previewRedeemAndVerify(Deposit memory deposit, uint256 shares, SimpleInterestVault vault) public {
+        console2.log("=========== preview redeem for ", deposit.name);
+
+        uint256 previousInterestFrequency = vault.currentInterestFrequency();
+
+        uint256 expectedAssets = deposit.amount + getExpectedInterest(deposit, vault.simpleInterest());
 
         assertEq(
             expectedAssets,
-            _vault.convertToAssetsAtFrequency(sharesAmount, interestFrequency),
-            string.concat("wrong convertToAssetsAtFrequency ", msgSuffix)
+            vault.convertToAssetsAtFrequency(shares, deposit.frequency),
+            string.concat("wrong convertToAssetsAtFrequency ", deposit.name)
         );
 
-        _vault.setCurrentInterestFrequency(interestFrequency);
-        assertEq(expectedAssets, _vault.previewRedeem(sharesAmount), string.concat("wrong previewRedeem ", msgSuffix));
-        assertEq(
-            expectedAssets, _vault.convertToAssets(sharesAmount), string.concat("wrong convertToAssets ", msgSuffix)
-        );
+        vault.setCurrentInterestFrequency(deposit.frequency);
+        assertEq(expectedAssets, vault.previewRedeem(shares), string.concat("wrong previewRedeem ", deposit.name));
+        assertEq(expectedAssets, vault.convertToAssets(shares), string.concat("wrong convertToAssets ", deposit.name));
 
-        _vault.setCurrentInterestFrequency(previousInterestFrequency);
+        vault.setCurrentInterestFrequency(previousInterestFrequency);
     }
 
-    function depositAndAssert(
-        ERC4626 _vault,
-        address toAddress,
-        uint256 depositAmount,
-        uint256 expectedInterest,
-        string memory msgSuffix
-    ) public {
-        uint256 expectedShares = (depositAmount - expectedInterest);
+    function redeemAndVerify(Deposit memory deposit, uint256 shares, SimpleInterestVault vault)
+        internal
+        returns (uint256 assets)
+    {
+        address wallet = deposit.wallet;
+        uint256 expectedAssets = deposit.amount + getExpectedInterest(deposit, vault.simpleInterest());
 
-        vm.startPrank(toAddress);
+        vault.setCurrentInterestFrequency(deposit.frequency);
+        vm.startPrank(wallet);
 
-        uint256 beforeBalance = _vault.balanceOf(toAddress);
-
-        IERC20 vaultAsset = (IERC20)(_vault.asset());
-        vaultAsset.approve(address(_vault), depositAmount);
-
-        _vault.deposit(depositAmount, toAddress);
+        uint256 actualAssets = vault.redeem(shares, wallet, wallet);
+        assertEq(expectedAssets, actualAssets, string.concat("redeem for ", deposit.name));
 
         vm.stopPrank();
 
-        assertEq(
-            beforeBalance + expectedShares,
-            _vault.balanceOf(toAddress),
-            string.concat("vault balance wrong ", msgSuffix)
-        );
+        return actualAssets;
     }
 
     function transferAndAssert(IERC20 _token, address toAddress, uint256 amount) public {
@@ -265,5 +258,13 @@ contract SimpleInterestVaultTest is Test {
         vm.stopPrank();
 
         assertEq(beforeBalance + amount, _token.balanceOf(toAddress));
+    }
+
+    function getExpectedInterest(Deposit memory deposit, SimpleInterest simpleInterest)
+        internal
+        view
+        returns (uint256 expectedInterest)
+    {
+        return simpleInterest.interest(deposit.amount, deposit.frequency);
     }
 }
