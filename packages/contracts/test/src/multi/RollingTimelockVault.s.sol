@@ -13,6 +13,8 @@ struct LockInfo {
 contract RollingTimelockVault is ERC4626 {
     mapping(address => LockInfo[]) private lockedShares;
 
+    error InsufficientUnlockedShares(uint256 requested, uint256 available);
+
     constructor(IERC20 asset, string memory name, string memory symbol) ERC20(name, symbol) ERC4626(asset) { }
 
     function deposit(uint256 assets, address receiver) public override returns (uint256) {
@@ -22,37 +24,44 @@ contract RollingTimelockVault is ERC4626 {
     }
 
     function redeem(uint256 shares, address receiver, address owner) public override returns (uint256) {
-        uint256 remainingShares = shares;
+        _ensureSufficientUnlockedShares(owner, shares);
+        _deductSharesFromLocks(owner, shares);
+
+        return super.redeem(shares, receiver, owner);
+    }
+
+    function _ensureSufficientUnlockedShares(address account, uint256 shares) internal view {
         uint256 totalUnlocked = 0;
 
-        // First, check if there are enough unlocked shares
-        for (uint256 i = 0; i < lockedShares[owner].length; i++) {
-            if (block.timestamp >= lockedShares[owner][i].releaseTime) {
-                totalUnlocked += lockedShares[owner][i].shares;
+        for (uint256 i = 0; i < lockedShares[account].length; i++) {
+            if (block.timestamp >= lockedShares[account][i].releaseTime) {
+                totalUnlocked += lockedShares[account][i].shares;
                 if (totalUnlocked >= shares) {
-                    break;
+                    return; // Sufficient unlocked shares found, exit the function
                 }
             }
         }
 
-        require(totalUnlocked >= shares, "Not enough unlocked shares");
+        // If we reach here, it means there aren't enough unlocked shares
+        revert InsufficientUnlockedShares(shares, totalUnlocked);
+    }
 
-        // Then, deduct the shares from the locked amounts
-        for (uint256 i = 0; i < lockedShares[owner].length && remainingShares > 0; i++) {
-            if (block.timestamp >= lockedShares[owner][i].releaseTime) {
-                uint256 unlockedShares = lockedShares[owner][i].shares;
+    function _deductSharesFromLocks(address account, uint256 shares) internal {
+        uint256 remainingShares = shares;
+
+        for (uint256 i = 0; i < lockedShares[account].length && remainingShares > 0; i++) {
+            if (block.timestamp >= lockedShares[account][i].releaseTime) {
+                uint256 unlockedShares = lockedShares[account][i].shares;
 
                 if (unlockedShares <= remainingShares) {
                     remainingShares -= unlockedShares;
-                    lockedShares[owner][i].shares = 0;
+                    lockedShares[account][i].shares = 0; // Leave the lock with zero shares
                 } else {
-                    lockedShares[owner][i].shares -= remainingShares;
+                    lockedShares[account][i].shares -= remainingShares;
                     remainingShares = 0;
                 }
             }
         }
-
-        return super.redeem(shares, receiver, owner);
     }
 
     function _lockShares(address account, uint256 shares) internal returns (LockInfo memory) {

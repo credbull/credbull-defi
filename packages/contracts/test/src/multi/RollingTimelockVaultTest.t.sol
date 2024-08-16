@@ -6,14 +6,13 @@ import { RollingTimelockVault, LockInfo } from "./RollingTimelockVault.s.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { Test } from "forge-std/Test.sol";
 
 contract RollingTimelockVaultTest is Test {
     IERC20 private asset;
     RollingTimelockVault private timelockVault;
-    address private immutable owner = makeAddr("owner");
+    address private owner = makeAddr("owner");
 
     function setUp() public {
         uint256 tokenSupply = 100000;
@@ -93,7 +92,13 @@ contract RollingTimelockVaultTest is Test {
         uint256 shares = timelockVault.deposit(depositAmount, owner);
 
         // Attempt to redeem shares before they are unlocked
-        vm.expectRevert("Not enough unlocked shares");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RollingTimelockVault.InsufficientUnlockedShares.selector,
+                shares, // requested amount
+                0 // available amount (since none are unlocked)
+            )
+        );
         timelockVault.redeem(shares, owner, owner);
 
         vm.stopPrank();
