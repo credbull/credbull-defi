@@ -79,6 +79,14 @@ contract SimpleInterestVault is ERC4626 {
         return principal + interest;
     }
 
+    function previewRedeem(uint256 shares) public view override returns (uint256) {
+        return convertToAssets(shares);
+    }
+
+    function convertToAssets(uint256 shares) public view override returns (uint256) {
+        return convertToAssetsAtFrequency(shares, currentInterestFrequency);
+    }
+
     /**
      * @dev See {IERC4626-previewDeposit}.
      */
@@ -143,9 +151,32 @@ contract SimpleInterestVaultTest is Test {
 
         uint256 expectedRedeem = (depositAmount + interestOneYear); // everyone should get 1 years worth of interest
 
-        assertEq(expectedRedeem, vault.convertToAssetsAtFrequency(vault.balanceOf(alice), 1), "redeem at year 1");
-        assertEq(expectedRedeem, vault.convertToAssetsAtFrequency(vault.balanceOf(bob), 2), "redeem at year 2");
-        assertEq(expectedRedeem, vault.convertToAssetsAtFrequency(vault.balanceOf(charlie), 3), "redeem at year 3");
+        // checking the calculation before the redeems from the vault
+        assertVaultAssetsCalculation(vault, vault.balanceOf(alice), expectedRedeem, 1, " assets end of year 1");
+        assertVaultAssetsCalculation(vault, vault.balanceOf(bob), expectedRedeem, 2, " assets end of year 2");
+        assertVaultAssetsCalculation(vault, vault.balanceOf(charlie), expectedRedeem, 3, " assets end of year 3");
+
+        // now actually redeem - transfer from the vault to the users
+
+        // add enough interest for everyone
+        vm.startPrank(owner);
+        token.transfer(address(vault), 3 * interestOneYear);
+        vm.stopPrank();
+
+        vault.setCurrentInterestFrequency(1);
+        vm.startPrank(alice);
+        assertEq(expectedRedeem, vault.redeem(vault.balanceOf(alice), alice, alice), "redeem at year 1");
+        vm.stopPrank();
+
+        vault.setCurrentInterestFrequency(2);
+        vm.startPrank(bob);
+        assertEq(expectedRedeem, vault.redeem(vault.balanceOf(bob), bob, bob), "redeem at year 2");
+        vm.stopPrank();
+
+        vault.setCurrentInterestFrequency(3);
+        vm.startPrank(charlie);
+        assertEq(expectedRedeem, vault.redeem(vault.balanceOf(charlie), charlie, charlie), "redeem at year 3");
+        vm.stopPrank();
     }
 
     function assertVaultSharesCalculation(
@@ -170,6 +201,30 @@ contract SimpleInterestVaultTest is Test {
         );
         assertEq(
             expectedShares, _vault.convertToShares(depositAmount), string.concat("wrong convertToShares ", msgSuffix)
+        );
+
+        _vault.setCurrentInterestFrequency(previousInterestFrequency);
+    }
+
+    function assertVaultAssetsCalculation(
+        SimpleInterestVault _vault,
+        uint256 sharesAmount,
+        uint256 expectedAssets,
+        uint256 interestFrequency, // okay
+        string memory msgSuffix
+    ) public {
+        uint256 previousInterestFrequency = _vault.currentInterestFrequency();
+
+        assertEq(
+            expectedAssets,
+            _vault.convertToAssetsAtFrequency(sharesAmount, interestFrequency),
+            string.concat("wrong convertToAssetsAtFrequency ", msgSuffix)
+        );
+
+        _vault.setCurrentInterestFrequency(interestFrequency);
+        assertEq(expectedAssets, _vault.previewRedeem(sharesAmount), string.concat("wrong previewRedeem ", msgSuffix));
+        assertEq(
+            expectedAssets, _vault.convertToAssets(sharesAmount), string.concat("wrong convertToAssets ", msgSuffix)
         );
 
         _vault.setCurrentInterestFrequency(previousInterestFrequency);
