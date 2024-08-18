@@ -60,7 +60,7 @@ contract SimpleInterest {
 
     // P = Discounted / (1 - ((IR * m) / f))
     function principalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed) public view returns (uint256) {
-        uint256 interestFactor = INTEREST_RATE.mulDiv(numTimePeriodsElapsed * SCALE, FREQUENCY); // interest rate times the number of periods (IR * m / f)
+        uint256 interestFactor = INTEREST_RATE.mulDiv(numTimePeriodsElapsed * SCALE, FREQUENCY); // interest rate times the number of periods divided by frequency (IR * m / f)
 
         uint256 denominator = (1 * SCALE) - interestFactor; // (1 - interestFactor)
 

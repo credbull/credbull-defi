@@ -146,13 +146,6 @@ contract SimpleInterestVaultTest is Test {
             string.concat("wrong convertToAssetsAtFrequency ", deposit.name)
         );
 
-        // check shares at frequency * 2 (one roll-over)
-        //        assertEq(
-        //            deposit.amount + 2 * (getExpectedInterest(deposit, vault.simpleInterest())),
-        //            vault.convertToAssetsAtFrequency(shares, 2 * (deposit.frequency)),
-        //            string.concat("wrong convertToAssetsAtFrequency ", deposit.name)
-        //        );
-
         vault.setCurrentTimePeriodsElapsed(deposit.numTimePeriodsElapsed);
         assertEq(expectedAssets, vault.previewRedeem(shares), string.concat("wrong previewRedeem ", deposit.name));
         assertEq(expectedAssets, vault.convertToAssets(shares), string.concat("wrong convertToAssets ", deposit.name));
