@@ -7,6 +7,7 @@ import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { TimelockVault } from "./TimelockVault.s.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
@@ -15,15 +16,14 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 // - and so on...
 //
 // This is like having linear deflation over time.
-contract SimpleInterestVault is ERC4626 {
+contract SimpleInterestVault is TimelockVault {
     using Math for uint256;
 
     SimpleInterest public simpleInterest;
     uint256 public currentInterestFrequency = 0; // the current interest frequency
 
     constructor(IERC20 asset, SimpleInterest _simpleInterest)
-        ERC4626(asset)
-        ERC20("Simple Interest Rate Claim", "cSIR")
+        TimelockVault(asset, "Simple Interest Rate Claim", "cSIR", 0)
     {
         simpleInterest = _simpleInterest;
     }
