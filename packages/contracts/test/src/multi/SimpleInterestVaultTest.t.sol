@@ -46,7 +46,7 @@ contract SimpleInterestVaultTest is Test {
         Deposit memory depositBob = Deposit("bob 1 year", bob, 100, 1);
         Deposit memory depositCharlie = Deposit("bob 2 years", charlie, 500, 2);
 
-        simpleInterestVaultTesDaily(apy, Frequencies.YEARS_ONE, depositAlice, depositBob, depositCharlie);
+        verifySimpleInterestVault(apy, Frequencies.YEARS_ONE, depositAlice, depositBob, depositCharlie);
     }
 
     function test__SimpleInterestVault__Daily() public {
@@ -56,17 +56,18 @@ contract SimpleInterestVaultTest is Test {
         Deposit memory depositBob = Deposit("bob 180 days", bob, 300, 180);
         Deposit memory depositCharlie = Deposit("charlie 360 days", charlie, 600, 360);
 
-        simpleInterestVaultTesDaily(apy, Frequencies.DAYS_360, depositAlice, depositBob, depositCharlie);
+        verifySimpleInterestVault(apy, Frequencies.DAYS_360, depositAlice, depositBob, depositCharlie);
     }
 
     struct Deposit {
         string name;
         address wallet;
         uint256 amount;
-        uint256 frequency;
+        // vault state at time of deposit
+        uint256 numTimePeriodsElapsed;
     }
 
-    function simpleInterestVaultTesDaily(
+    function verifySimpleInterestVault(
         uint256 apy,
         uint256 frequency,
         Deposit memory depositAlice,
@@ -84,7 +85,7 @@ contract SimpleInterestVaultTest is Test {
         // ============== redeem ==============
         console2.log("================ start redeem ==============");
 
-        // verify the previewRedeem and convertToAsset (these don't actually redeem)
+        // verify the previewRedeem and convertToAsset (these don't actually redeem) - cycle 1 (no roll-over)
         previewRedeemAndVerify(depositAlice, sharesAlice, vault);
         previewRedeemAndVerify(depositBob, sharesBob, vault);
         previewRedeemAndVerify(depositCharlie, sharesCharlie, vault);
@@ -107,11 +108,11 @@ contract SimpleInterestVaultTest is Test {
         // assertVaultSharesCalculation(vault, deposit.amount, expectedInterest, deposit.frequency, string.concat("frequency ", deposit.name));
         assertEq(
             expectedShares,
-            vault.convertToSharesAtFrequency(deposit.amount, deposit.frequency),
+            vault.convertToSharesAtNumTimePeriodsElapsed(deposit.amount, deposit.numTimePeriodsElapsed),
             string.concat("wrong convertToSharesAtFrequency ", deposit.name)
         );
 
-        vault.setCurrentInterestFrequency(deposit.frequency);
+        vault.setCurrentTimePeriodsElapsed(deposit.numTimePeriodsElapsed);
 
         assertEq(
             expectedShares, vault.previewDeposit(deposit.amount), string.concat("wrong previewDeposit ", deposit.name)
@@ -134,21 +135,29 @@ contract SimpleInterestVaultTest is Test {
     function previewRedeemAndVerify(Deposit memory deposit, uint256 shares, SimpleInterestVault vault) public {
         console2.log("=========== preview redeem for ", deposit.name);
 
-        uint256 previousInterestFrequency = vault.currentInterestFrequency();
+        uint256 previousInterestFrequency = vault.currentTimePeriodsElapsed();
 
         uint256 expectedAssets = deposit.amount + getExpectedInterest(deposit, vault.simpleInterest());
 
+        // check shares at frequency * 1 (no roll-over)
         assertEq(
             expectedAssets,
-            vault.convertToAssetsAtFrequency(shares, deposit.frequency),
+            vault.convertToAssetsAtFrequency(shares, deposit.numTimePeriodsElapsed),
             string.concat("wrong convertToAssetsAtFrequency ", deposit.name)
         );
 
-        vault.setCurrentInterestFrequency(deposit.frequency);
+        // check shares at frequency * 2 (one roll-over)
+        //        assertEq(
+        //            deposit.amount + 2 * (getExpectedInterest(deposit, vault.simpleInterest())),
+        //            vault.convertToAssetsAtFrequency(shares, 2 * (deposit.frequency)),
+        //            string.concat("wrong convertToAssetsAtFrequency ", deposit.name)
+        //        );
+
+        vault.setCurrentTimePeriodsElapsed(deposit.numTimePeriodsElapsed);
         assertEq(expectedAssets, vault.previewRedeem(shares), string.concat("wrong previewRedeem ", deposit.name));
         assertEq(expectedAssets, vault.convertToAssets(shares), string.concat("wrong convertToAssets ", deposit.name));
 
-        vault.setCurrentInterestFrequency(previousInterestFrequency);
+        vault.setCurrentTimePeriodsElapsed(previousInterestFrequency);
     }
 
     function redeemAndVerify(Deposit memory deposit, uint256 shares, SimpleInterestVault vault)
@@ -158,7 +167,7 @@ contract SimpleInterestVaultTest is Test {
         address wallet = deposit.wallet;
         uint256 expectedAssets = deposit.amount + getExpectedInterest(deposit, vault.simpleInterest());
 
-        vault.setCurrentInterestFrequency(deposit.frequency);
+        vault.setCurrentTimePeriodsElapsed(deposit.numTimePeriodsElapsed);
         vm.startPrank(wallet);
 
         uint256 actualAssets = vault.redeem(shares, wallet, wallet);
@@ -184,6 +193,6 @@ contract SimpleInterestVaultTest is Test {
         view
         returns (uint256 expectedInterest)
     {
-        return simpleInterest.interest(deposit.amount, deposit.frequency);
+        return simpleInterest.interest(deposit.amount, deposit.numTimePeriodsElapsed);
     }
 }

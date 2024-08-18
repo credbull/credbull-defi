@@ -18,7 +18,7 @@ contract SimpleInterestVault is TimelockVault {
     using Math for uint256;
 
     SimpleInterest public simpleInterest;
-    uint256 public currentInterestFrequency = 0; // the current interest frequency
+    uint256 public currentTimePeriodsElapsed = 0; // the current interest frequency
 
     constructor(IERC20 asset, SimpleInterest _simpleInterest)
         TimelockVault(asset, "Simple Interest Rate Claim", "cSIR", 0)
@@ -29,16 +29,16 @@ contract SimpleInterestVault is TimelockVault {
     // =============== deposit ===============
 
     // shares that would be exchanged for the amount of assets
-    // for a given frequency of applying interest
+    // at the given numberOfTimePeriodsElapsed
     // shares = assets - simpleInterest
-    function convertToSharesAtFrequency(uint256 assets, uint256 interestFrequency)
+    function convertToSharesAtNumTimePeriodsElapsed(uint256 assets, uint256 numTimePeriodsElapsed)
         public
         view
         returns (uint256 shares)
     {
-        if (interestFrequency == 0) return assets;
+        if (numTimePeriodsElapsed == 0) return assets;
 
-        uint256 interest = simpleInterest.interest(assets, interestFrequency);
+        uint256 interest = simpleInterest.interest(assets, numTimePeriodsElapsed);
 
         return assets - interest;
     }
@@ -48,24 +48,24 @@ contract SimpleInterestVault is TimelockVault {
     }
 
     function convertToShares(uint256 assets) public view override returns (uint256) {
-        return convertToSharesAtFrequency(assets, currentInterestFrequency);
+        return convertToSharesAtNumTimePeriodsElapsed(assets, currentTimePeriodsElapsed);
     }
 
     // =============== redeem ===============
 
     // asset that would be exchanged for the amount of shares
-    // for a given frequency to calculate the non-discounted "principal" from the shares
+    // for a given numberOfTimePeriodsElapsed.  to calculate the non-discounted "principal" from the shares
     // assets = principal + interest
-    function convertToAssetsAtFrequency(uint256 shares, uint256 interestFrequency)
+    function convertToAssetsAtFrequency(uint256 shares, uint256 numTimePeriodsElapsed)
         public
         view
         returns (uint256 assets)
     {
-        if (interestFrequency == 0) return shares;
+        if (numTimePeriodsElapsed == 0) return shares;
 
-        uint256 principal = simpleInterest.principalFromDiscounted(shares, interestFrequency);
+        uint256 principal = simpleInterest.principalFromDiscounted(shares, numTimePeriodsElapsed);
 
-        uint256 interest = simpleInterest.interest(principal, interestFrequency); // only ever give one period of interest
+        uint256 interest = simpleInterest.interest(principal, numTimePeriodsElapsed); // only ever give one period of interest
 
         return principal + interest;
     }
@@ -75,13 +75,13 @@ contract SimpleInterestVault is TimelockVault {
     }
 
     function convertToAssets(uint256 shares) public view override returns (uint256) {
-        return convertToAssetsAtFrequency(shares, currentInterestFrequency);
+        return convertToAssetsAtFrequency(shares, currentTimePeriodsElapsed);
     }
 
     /**
      * @dev See {IERC4626-previewDeposit}.
      */
-    function setCurrentInterestFrequency(uint256 _interestFrequency) public {
-        currentInterestFrequency = _interestFrequency;
+    function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public {
+        currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
     }
 }

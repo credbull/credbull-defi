@@ -39,7 +39,6 @@ contract SimpleInterestTest is Test {
         assertEq(
             principal, simpleInterest.principalFromDiscounted(principal, 0), "wrong principal from discounted at year 0"
         );
-        assertEq(principal, simpleInterest.principalFromDiscounted(500, 0), "wrong principal from discounted at year 0");
 
         uint256 discountedYearOne = principal - simpleInterest.interest(principal, 1);
         assertEq(
