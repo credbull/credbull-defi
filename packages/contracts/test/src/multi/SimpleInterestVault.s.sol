@@ -38,7 +38,7 @@ contract SimpleInterestVault is TimelockVault {
     {
         if (numTimePeriodsElapsed == 0) return assets;
 
-        uint256 interest = simpleInterest.interest(assets, numTimePeriodsElapsed);
+        uint256 interest = simpleInterest.calcInterest(assets, numTimePeriodsElapsed);
 
         return assets - interest;
     }
@@ -63,9 +63,9 @@ contract SimpleInterestVault is TimelockVault {
     {
         if (numTimePeriodsElapsed == 0) return shares;
 
-        uint256 principal = simpleInterest.principalFromDiscounted(shares, numTimePeriodsElapsed);
+        uint256 principal = simpleInterest.calcPrincipalFromDiscounted(shares, numTimePeriodsElapsed);
 
-        uint256 interest = simpleInterest.interest(principal, numTimePeriodsElapsed); // only ever give one period of interest
+        uint256 interest = simpleInterest.calcInterest(principal, numTimePeriodsElapsed); // only ever give one period of interest
 
         return principal + interest;
     }

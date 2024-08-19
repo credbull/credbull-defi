@@ -186,6 +186,6 @@ contract SimpleInterestVaultTest is Test {
         view
         returns (uint256 expectedInterest)
     {
-        return simpleInterest.interest(deposit.amount, deposit.numTimePeriodsElapsed);
+        return simpleInterest.calcInterest(deposit.amount, deposit.numTimePeriodsElapsed);
     }
 }

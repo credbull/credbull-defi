@@ -21,46 +21,72 @@ import { console2 } from "forge-std/console2.sol";
 contract SimpleInterest {
     using Math for uint256;
 
-    uint256 public immutable INTEREST_RATE;
+    uint256 public immutable INTEREST_RATE_PERCENTAGE; // in percentage terms 100 = 1
     uint256 public immutable FREQUENCY;
 
-    uint256 public constant DECIMALS = 2;
+    uint256 public constant DECIMALS = 18;
     uint256 public constant SCALE = 10 ** DECIMALS;
 
     constructor(uint256 interestRatePercentage, uint256 frequency) {
-        INTEREST_RATE = interestRatePercentage;
-        FREQUENCY = frequency * SCALE;
+        INTEREST_RATE_PERCENTAGE = interestRatePercentage;
+        FREQUENCY = frequency;
     }
 
     // Interest = (IR * P * m) / f
-    function interest(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
-        uint256 principalScaled = principal * SCALE;
+    function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
+        uint256 interestScaled = calcInterestScaleDecimals(principal, numTimePeriodsElapsed);
 
-        uint256 numerator = INTEREST_RATE * principalScaled * numTimePeriodsElapsed;
+        uint256 interest = interestScaled / SCALE;
 
-        uint256 simpleInterest = numerator / (FREQUENCY * SCALE);
+        console2.log(
+            string.concat(
+                "interest = interestScaled / SCALE ",
+                Strings.toString(interestScaled),
+                " / ",
+                Strings.toString(SCALE),
+                " = ",
+                Strings.toString(interest)
+            )
+        );
+
+        return interest;
+    }
+
+    // Interest = (IR * P * m) / f
+    function calcInterestScaleDecimals(uint256 principal, uint256 numTimePeriodsElapsed)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 interestScaled =
+            principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100); // divide by 100 to convert IR to decimal
 
         console2.log(
             string.concat(
                 "(IR * P * m) / f = ",
-                Strings.toString(INTEREST_RATE),
-                " * ",
-                Strings.toString(principalScaled),
+                Strings.toString(INTEREST_RATE_PERCENTAGE),
+                "% * ",
+                Strings.toString(principal),
                 " * ",
                 Strings.toString(numTimePeriodsElapsed),
                 " / ",
                 Strings.toString(FREQUENCY),
                 " = ",
-                Strings.toString(simpleInterest)
+                Strings.toString(interestScaled)
             )
         );
 
-        return simpleInterest;
+        return interestScaled;
     }
 
     // P = Discounted / (1 - ((IR * m) / f))
-    function principalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed) public view returns (uint256) {
-        uint256 interestFactor = INTEREST_RATE.mulDiv(numTimePeriodsElapsed * SCALE, FREQUENCY); // interest rate times the number of periods divided by frequency (IR * m / f)
+    // NB - the discount is scaled already here !!!
+    function calcPrincipalFromDiscountedScaledScaleDecimals(uint256 discounted, uint256 numTimePeriodsElapsed)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 interestFactor = INTEREST_RATE_PERCENTAGE.mulDiv(numTimePeriodsElapsed * SCALE, FREQUENCY * 100); // interestRate *  numPerods / frequency (IR * m / f) // divide that by 100 to convert IR to decimal
 
         uint256 denominator = (1 * SCALE) - interestFactor; // (1 - interestFactor)
 
@@ -71,11 +97,36 @@ contract SimpleInterest {
                 "Discounted / (1 - ((IR * m) / f)) = ",
                 Strings.toString(discounted),
                 " / (1 - ((",
-                Strings.toString(INTEREST_RATE),
+                Strings.toString(INTEREST_RATE_PERCENTAGE),
                 " * ",
                 Strings.toString(numTimePeriodsElapsed),
                 " ) / ",
                 Strings.toString(FREQUENCY),
+                " = ",
+                Strings.toString(principal)
+            )
+        );
+
+        return principal;
+    }
+
+    // P = Discounted / (1 - ((IR * m) / f))
+    function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 principalFromDiscountedScaled =
+            calcPrincipalFromDiscountedScaledScaleDecimals(discounted * SCALE, numTimePeriodsElapsed);
+
+        uint256 principal = principalFromDiscountedScaled / SCALE;
+
+        console2.log(
+            string.concat(
+                "principal = principalFromDiscountedScaled / SCALE ",
+                Strings.toString(principalFromDiscountedScaled),
+                " / ",
+                Strings.toString(SCALE),
                 " = ",
                 Strings.toString(principal)
             )
