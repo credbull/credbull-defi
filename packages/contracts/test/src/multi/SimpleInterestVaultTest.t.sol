@@ -23,7 +23,7 @@ contract SimpleInterestVaultTest is Test {
     address private bob = makeAddr("bob");
     address private charlie = makeAddr("charlie");
 
-    uint256 constant TOLERANCE = 100; // with 18 decimals, means allowed difference of 1E+16
+    uint256 public constant TOLERANCE = 100; // with 18 decimals, means allowed difference of 1E+16
 
     function setUp() public {
         uint256 tokenSupply = 100000 ether;
