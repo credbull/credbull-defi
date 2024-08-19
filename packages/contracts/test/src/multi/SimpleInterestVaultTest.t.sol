@@ -3,13 +3,12 @@ pragma solidity ^0.8.23;
 
 import { SimpleInterest } from "./SimpleInterest.s.sol";
 import { SimpleInterestVault } from "./SimpleInterestVault.s.sol";
-import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
-
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { Tenors } from "./Tenors.s.sol";
 
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 
-import { Tenors } from "./Tenors.s.sol";
+import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
+import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import { console2 } from "forge-std/console2.sol";
 import { Test } from "forge-std/Test.sol";
@@ -24,14 +23,16 @@ contract SimpleInterestVaultTest is Test {
     address private bob = makeAddr("bob");
     address private charlie = makeAddr("charlie");
 
+    uint256 constant TOLERANCE = 100; // with 18 decimals, means allowed difference of 1E+16
+
     function setUp() public {
-        uint256 tokenSupply = 100000;
+        uint256 tokenSupply = 100000 ether;
 
         vm.startPrank(owner);
         asset = new SimpleToken(tokenSupply);
         vm.stopPrank();
 
-        uint256 userTokenAmount = 1000;
+        uint256 userTokenAmount = 1000 ether;
 
         assertEq(asset.balanceOf(owner), tokenSupply, "owner should start with total supply");
         transferAndAssert(asset, alice, userTokenAmount);
@@ -39,37 +40,47 @@ contract SimpleInterestVaultTest is Test {
         transferAndAssert(asset, charlie, userTokenAmount);
     }
 
-    function test__SimpleInterestVault__Annual() public {
-        uint256 apy = 12; // APY in percentage, e.g. 12%
+    function test__SimpleInterestVault__Daily_0_1_2() public {
+        uint256 apy = 10; // APY in percentage, e.g. 12%
+        Tenors.Tenor tenorDays365 = Tenors.Tenor.DAYS_365;
 
-        Deposit memory depositAlice = Deposit("alice 0 years", alice, 200, 0, 0);
-        Deposit memory depositBob = Deposit("bob 1 year", bob, 100, 1, 1);
-        Deposit memory depositCharlie = Deposit("charlie 2 years", charlie, 500, 2, 2);
+        Deposit memory depositAlice = Deposit("alice 0 days", alice, 100 ether, 0);
+        Deposit memory depositBob = Deposit("bob 2 day", bob, 100 ether, 1);
+        Deposit memory depositCharlie = Deposit("charlie 3 days", charlie, 100 ether, 2);
 
-        verifySimpleInterestVault(apy, Tenors.Tenor.YEARS_TWO, depositAlice, depositBob, depositCharlie);
+        verifySimpleInterestVault(apy, tenorDays365, depositAlice, depositBob, depositCharlie);
     }
 
-    function test__SimpleInterestVault__Daily() public {
-        uint256 apy = 6; // APY in percentage, e.g. 12%
+    // represents the second cycle - days 30, 31, 32 (equiv to 1,2,3)
+    function test__SimpleInterestVault__Daily_30_31_32() public {
+        uint256 apy = 10; // APY in percentage, e.g. 12%
+        Tenors.Tenor tenorDays365 = Tenors.Tenor.DAYS_365;
 
-        Tenors.Tenor days365 = Tenors.Tenor.DAYS_365;
-        uint256 days365Value = Tenors.toValue(days365);
+        Deposit memory depositAlice = Deposit("alice 30 days", alice, 100 ether, 30);
+        Deposit memory depositBob = Deposit("bob 31 days", bob, 100 ether, 31); // 365 / 5 = 73
+        Deposit memory depositCharlie = Deposit("charlie 32 days", charlie, 100 ether, 32);
 
-        Deposit memory depositAlice = Deposit("alice 0 days", alice, 400, 0, 0);
-        Deposit memory depositBob = Deposit("bob 1 day", bob, 300, 1, 1);
-        Deposit memory depositCharlie = Deposit("charlie 365 days", charlie, 600, days365Value, days365Value);
+        verifySimpleInterestVault(apy, tenorDays365, depositAlice, depositBob, depositCharlie);
+    }
 
-        verifySimpleInterestVault(apy, Tenors.Tenor.DAYS_365, depositAlice, depositBob, depositCharlie);
+    // represents the second cycle - days 30, 31, 32 (equiv to 1,2,3)
+    function test__SimpleInterestVault__Daily_10_20_29() public {
+        uint256 apy = 10; // APY in percentage, e.g. 12%
+        Tenors.Tenor tenorDays365 = Tenors.Tenor.DAYS_365;
+
+        Deposit memory depositAlice = Deposit("alice 10 days", alice, 100 ether, 10);
+        Deposit memory depositBob = Deposit("bob 20 days", bob, 100 ether, 20); // 365 / 5 = 73
+        Deposit memory depositCharlie = Deposit("charlie 29 days", charlie, 100 ether, 29);
+
+        verifySimpleInterestVault(apy, tenorDays365, depositAlice, depositBob, depositCharlie);
     }
 
     struct Deposit {
         string name;
         address wallet;
-        uint256 amount;
+        uint256 amountInWei;
         // vault state at time of deposit
         uint256 numTimePeriodsElapsedAtDeposit;
-        // vault state at time of redeem
-        uint256 numTimePeriodsElapsedAtRedeem;
     }
 
     function verifySimpleInterestVault(
@@ -83,77 +94,101 @@ contract SimpleInterestVaultTest is Test {
         SimpleInterest simpleInterest = new SimpleInterest(apy, frequency);
         SimpleInterestVault vault = new SimpleInterestVault(asset, simpleInterest);
 
-        uint256 sharesAlice = depositAndVerify(depositAlice, vault);
-        uint256 sharesBob = depositAndVerify(depositBob, vault);
-        uint256 sharesCharlie = depositAndVerify(depositCharlie, vault);
+        uint256 sharesInWeiAlice = depositAndVerify(depositAlice, vault);
+        uint256 sharesInWeiBob = depositAndVerify(depositBob, vault);
+        uint256 sharesInWeiCharlie = depositAndVerify(depositCharlie, vault);
 
         // ============== redeem ==============
         console2.log("================ start redeem ==============");
 
         // verify the previewRedeem and convertToAsset (these don't actually redeem) - cycle 1 (no roll-over)
-        previewRedeemAndVerify(depositAlice, sharesAlice, vault);
-        previewRedeemAndVerify(depositBob, sharesBob, vault);
-        previewRedeemAndVerify(depositCharlie, sharesCharlie, vault);
+        previewRedeemAndVerify(depositAlice, sharesInWeiAlice, vault);
+        previewRedeemAndVerify(depositBob, sharesInWeiBob, vault);
+        previewRedeemAndVerify(depositCharlie, sharesInWeiCharlie, vault);
 
         // add enough interest to cover all redeems
         vm.startPrank(owner);
-        asset.transfer(address(vault), (depositAlice.amount + depositBob.amount + depositCharlie.amount)); // enough for 100% interest
+        asset.transfer(address(vault), (depositAlice.amountInWei + depositBob.amountInWei + depositCharlie.amountInWei)); // enough for 100% interest
         vm.stopPrank();
 
         // now actually redeem - exchange shares back for assets
-        redeemAndVerify(depositAlice, sharesAlice, vault);
-        redeemAndVerify(depositBob, sharesBob, vault);
-        redeemAndVerify(depositCharlie, sharesCharlie, vault);
+        redeemAndVerify(depositAlice, sharesInWeiAlice, vault);
+        redeemAndVerify(depositBob, sharesInWeiBob, vault);
+        redeemAndVerify(depositCharlie, sharesInWeiCharlie, vault);
     }
 
     function depositAndVerify(Deposit memory deposit, SimpleInterestVault vault) internal returns (uint256 shares) {
-        uint256 expectedInterest = getExpectedInterest(deposit, vault.simpleInterest());
-        uint256 expectedShares = (deposit.amount - expectedInterest);
+        // vaults loop every TENOR. e.g. for a 30 day vault, day 30 = 0, day 31 = 1, day 32 = 2
+        uint256 numTimePeriodsElapsedAtDepositModTenor =
+            deposit.numTimePeriodsElapsedAtDeposit % Tenors.toValue(vault.TENOR());
 
-        // assertVaultSharesCalculation(vault, deposit.amount, expectedInterest, deposit.frequency, string.concat("frequency ", deposit.name));
+        uint256 expectedInterestInWei = getExpectedInterestInWei(deposit, vault);
+
+        uint256 expectedSharesInWei = (deposit.amountInWei - expectedInterestInWei);
+
         assertEq(
-            expectedShares,
-            vault.convertToSharesAtNumTimePeriodsElapsed(deposit.amount, deposit.numTimePeriodsElapsedAtDeposit),
+            expectedSharesInWei,
+            vault.convertToSharesAtNumTimePeriodsElapsed(deposit.amountInWei, numTimePeriodsElapsedAtDepositModTenor),
             string.concat("wrong convertToSharesAtFrequency ", deposit.name)
         );
 
-        vault.setCurrentTimePeriodsElapsed(deposit.numTimePeriodsElapsedAtDeposit);
+        vault.setCurrentTimePeriodsElapsed(numTimePeriodsElapsedAtDepositModTenor);
 
         assertEq(
-            expectedShares, vault.previewDeposit(deposit.amount), string.concat("wrong previewDeposit ", deposit.name)
+            expectedSharesInWei,
+            vault.previewDeposit(deposit.amountInWei),
+            string.concat("wrong previewDeposit ", deposit.name)
         );
+
         assertEq(
-            expectedShares, vault.convertToShares(deposit.amount), string.concat("wrong convertToShares ", deposit.name)
+            expectedSharesInWei,
+            vault.convertToShares(deposit.amountInWei),
+            string.concat("wrong convertToShares ", deposit.name)
         );
 
         vm.startPrank(deposit.wallet);
         IERC20 vaultAsset = (IERC20)(vault.asset());
-        vaultAsset.approve(address(vault), deposit.amount);
-        uint256 actualShares = vault.deposit(deposit.amount, deposit.wallet);
+        vaultAsset.approve(address(vault), deposit.amountInWei);
+        uint256 actualShares = vault.deposit(deposit.amountInWei, deposit.wallet);
         vm.stopPrank();
 
-        assertEq(expectedShares, actualShares, string.concat("vault balance wrong ", deposit.name));
+        assertEq(expectedSharesInWei, actualShares, string.concat("vault balance wrong ", deposit.name));
 
         return actualShares;
     }
 
-    function previewRedeemAndVerify(Deposit memory deposit, uint256 shares, SimpleInterestVault vault) public {
+    function previewRedeemAndVerify(Deposit memory deposit, uint256 sharesInWei, SimpleInterestVault vault) public {
+        // redeem happens TENOR days after deposit // this is financially
+        uint256 numTimePeriodsAtRedeem =
+            vault.calcNumTimePeriodsForRedeem(deposit.numTimePeriodsElapsedAtDeposit + Tenors.toValue(vault.TENOR()));
+
         console2.log("=========== preview redeem for ", deposit.name);
 
         uint256 previousInterestFrequency = vault.currentTimePeriodsElapsed();
 
-        uint256 expectedAssets = deposit.amount + getExpectedInterest(deposit, vault.simpleInterest());
+        uint256 expectedAssetsInWei = deposit.amountInWei + getExpectedInterestInWei(deposit, vault);
 
         // check shares at frequency * 1 (no roll-over)
-        assertEq(
-            expectedAssets,
-            vault.convertToAssetsAtFrequency(shares, deposit.numTimePeriodsElapsedAtRedeem),
+        assertApproxEqAbs(
+            expectedAssetsInWei,
+            vault.convertToAssetsAtFrequency(sharesInWei, numTimePeriodsAtRedeem),
+            TOLERANCE,
             string.concat("wrong convertToAssetsAtFrequency ", deposit.name)
         );
 
-        vault.setCurrentTimePeriodsElapsed(deposit.numTimePeriodsElapsedAtRedeem);
-        assertEq(expectedAssets, vault.previewRedeem(shares), string.concat("wrong previewRedeem ", deposit.name));
-        assertEq(expectedAssets, vault.convertToAssets(shares), string.concat("wrong convertToAssets ", deposit.name));
+        vault.setCurrentTimePeriodsElapsed(numTimePeriodsAtRedeem);
+        assertApproxEqAbs(
+            expectedAssetsInWei,
+            vault.previewRedeem(sharesInWei),
+            TOLERANCE,
+            string.concat("wrong previewRedeem ", deposit.name)
+        );
+        assertApproxEqAbs(
+            expectedAssetsInWei,
+            vault.convertToAssets(sharesInWei),
+            TOLERANCE,
+            string.concat("wrong convertToAssets ", deposit.name)
+        );
 
         vault.setCurrentTimePeriodsElapsed(previousInterestFrequency);
     }
@@ -163,13 +198,15 @@ contract SimpleInterestVaultTest is Test {
         returns (uint256 assets)
     {
         address wallet = deposit.wallet;
-        uint256 expectedAssets = deposit.amount + getExpectedInterest(deposit, vault.simpleInterest());
+        uint256 expectedAssets = deposit.amountInWei + getExpectedInterestInWei(deposit, vault);
 
-        vault.setCurrentTimePeriodsElapsed(deposit.numTimePeriodsElapsedAtRedeem);
+        uint256 numTimePeriodsAtRedeem = vault.calcNumTimePeriodsForRedeem(deposit.numTimePeriodsElapsedAtDeposit);
+
+        vault.setCurrentTimePeriodsElapsed(numTimePeriodsAtRedeem);
         vm.startPrank(wallet);
 
         uint256 actualAssets = vault.redeem(shares, wallet, wallet);
-        assertEq(expectedAssets, actualAssets, string.concat("redeem for ", deposit.name));
+        assertApproxEqAbs(expectedAssets, actualAssets, TOLERANCE, string.concat("redeem for ", deposit.name));
 
         vm.stopPrank();
 
@@ -186,11 +223,13 @@ contract SimpleInterestVaultTest is Test {
         assertEq(beforeBalance + amount, _token.balanceOf(toAddress));
     }
 
-    function getExpectedInterest(Deposit memory deposit, SimpleInterest simpleInterest)
+    function getExpectedInterestInWei(Deposit memory deposit, SimpleInterestVault vault)
         internal
         view
-        returns (uint256 expectedInterest)
+        returns (uint256)
     {
-        return simpleInterest.calcInterest(deposit.amount, deposit.numTimePeriodsElapsedAtDeposit);
+        uint256 numTimePeriodsForDeposit = vault.calcNumTimePeriodsForDeposit(deposit.numTimePeriodsElapsedAtDeposit);
+
+        return vault.simpleInterest().calcInterest(deposit.amountInWei, numTimePeriodsForDeposit);
     }
 }
