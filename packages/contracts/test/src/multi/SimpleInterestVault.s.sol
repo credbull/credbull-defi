@@ -9,8 +9,8 @@ import { TimelockVault } from "./TimelockVault.s.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
-// - At interestFrequency 1, 1 asset gives 1 / APY shares
-// - At interestFrequency 2, 1 asset gives 1 / (2 * APY) shares,
+// - At interestFrequency 1, 1 asset gives 1 - SimpleInterest shares
+// - At interestFrequency 2, 1 asset gives 1 - (2 * SimpleInterest) shares,
 // - and so on...
 //
 // This is like having linear deflation over time.
@@ -20,10 +20,13 @@ contract SimpleInterestVault is TimelockVault {
     SimpleInterest public simpleInterest;
     uint256 public currentTimePeriodsElapsed = 0; // the current interest frequency
 
+    uint256 public immutable SCALE;
+
     constructor(IERC20 asset, SimpleInterest _simpleInterest)
         TimelockVault(asset, "Simple Interest Rate Claim", "cSIR", 0)
     {
         simpleInterest = _simpleInterest;
+        SCALE = _simpleInterest.SCALE(); // calcs require to use the same scaling
     }
 
     // =============== deposit ===============

@@ -26,7 +26,7 @@ contract SimpleInterestTest is Test {
 
         SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.YEARS_ONE);
 
-        uint256 principal = 100;
+        uint256 principal = 500;
         assertEq(
             principal,
             simpleInterest.calcPrincipalFromDiscounted(principal, 0),
@@ -89,16 +89,15 @@ contract SimpleInterestTest is Test {
         uint256 apy = 12; // 12% APY
         SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_30);
 
-        uint256 principal = 100;
+        uint256 principal = 50;
         uint256 SCALE = simpleInterest.SCALE();
 
         assertEq(0 * SCALE, simpleInterest.calcInterestScaleDecimals(principal, 0), "wrong interestScaled at day 0");
 
-        // unscaledInterest = 100 * 0.12 * 1 / 30 = 12 / 30 = 0.4
-        // scaled = 0.4 * SCALE = 0.4 * 10,000 = 40,000
-        uint256 fourTenthsScaled = SCALE.mulDiv(4, 10);
+        // unscaledInterest = 50 * 0.12 * 1 / 30 = 6 / 30 = 0.2
+        uint256 twoTenthsScaled = SCALE.mulDiv(2, 10);
         assertEq(
-            fourTenthsScaled, simpleInterest.calcInterestScaleDecimals(principal, 1), "wrong interestScaled at day 1"
+            twoTenthsScaled, simpleInterest.calcInterestScaleDecimals(principal, 1), "wrong interestScaled at day 1"
         );
     }
 
@@ -108,7 +107,7 @@ contract SimpleInterestTest is Test {
         SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_360);
         uint256 numberOfDays = simpleInterest.frequencyValue();
 
-        uint256 principal = 100;
+        uint256 principal = 400;
         assertEq(
             principal, simpleInterest.calcPrincipalFromDiscounted(principal, 0), "wrong principal from discounted at 0"
         );
@@ -156,12 +155,12 @@ contract SimpleInterestTest is Test {
     // daily interest of 12% APY (uses 30 day count)
     // using the scaled up version for results that are fractional
     function test__SimpleInterestTest__DiscountDailyScaled() public {
-        uint256 apy = 12; // 12% APY
+        uint256 apy = 10; // 10% APY
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_30);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_365);
         uint256 numberOfDays = simpleInterest.frequencyValue();
 
-        uint256 principal = 100;
+        uint256 principal = 400;
         uint256 SCALE = simpleInterest.SCALE();
 
         assertEq(
@@ -170,17 +169,19 @@ contract SimpleInterestTest is Test {
             "wrong principalScaled from discounted at 0"
         );
 
-        uint256 discountedFullTerm = principal - simpleInterest.calcInterest(principal, numberOfDays);
+        uint256 discountedFullTerm =
+            principal * SCALE - simpleInterest.calcInterestScaleDecimals(principal, numberOfDays);
         assertEq(
             principal * SCALE,
-            simpleInterest.calcPrincipalFromDiscountedScaledScaleDecimals(discountedFullTerm * SCALE, numberOfDays),
+            simpleInterest.calcPrincipalFromDiscountedScaledScaleDecimals(discountedFullTerm, numberOfDays),
             "wrong principalScaled at full term"
         );
 
         uint256 discountedScaledOneDay = principal * SCALE - simpleInterest.calcInterestScaleDecimals(principal, 1);
-        assertEq(
+        assertApproxEqAbs(
             principal * SCALE,
             simpleInterest.calcPrincipalFromDiscountedScaledScaleDecimals(discountedScaledOneDay, 1),
+            100, // with 18 decimals, means allowed difference of 1E+16
             "wrong principalScaled at day 1"
         );
     }

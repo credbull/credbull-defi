@@ -18,7 +18,7 @@ import { console2 } from "forge-std/console2.sol";
  * - IR is the simple annual interest rate
  * - P is the Principal (aka initial amount)
  * - m is the number of time periods elapsed
- * - f is the frequency of applying interest
+ * - f is the frequency of applying interest (how many interest periods in a year)
  */
 contract SimpleInterest {
     using Math for uint256;
