@@ -104,7 +104,7 @@ contract SimpleInterestTest is Test {
     function test__SimpleInterestTest__DiscountingDaily() public {
         uint256 apy = 12; // APY in percentage
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_360);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_365);
         uint256 numberOfDays = simpleInterest.frequencyValue();
 
         uint256 principal = 400;
@@ -119,12 +119,12 @@ contract SimpleInterestTest is Test {
             "wrong principal from discounted at full term"
         );
 
-        uint256 halfTerm = numberOfDays / 2;
-        uint256 discountedHalfTerm = principal - simpleInterest.calcInterest(principal, halfTerm);
+        uint256 oneFifthTerm = numberOfDays / 5; // 365 / 5 = 73 days
+        uint256 discountedOneFifthTerm = principal - simpleInterest.calcInterest(principal, oneFifthTerm);
         assertEq(
             principal,
-            simpleInterest.calcPrincipalFromDiscounted(discountedHalfTerm, halfTerm),
-            "wrong principal from discounted at half term"
+            simpleInterest.calcPrincipalFromDiscounted(discountedOneFifthTerm, oneFifthTerm),
+            "wrong principal from discounted at oneFifth term (365/5 = 73 days)"
         );
 
         uint256 oneDay = 1;
