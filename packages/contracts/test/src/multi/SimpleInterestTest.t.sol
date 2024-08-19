@@ -12,9 +12,8 @@ contract SimpleInterestTest is Test {
 
     function test__SimpleInterestTest__InterestAnnual() public {
         uint256 apy = 3; // APY in percentage
-        uint256 oneYear = 1; // 1 is a year
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, oneYear);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.Frequency.ONE_YEAR);
 
         uint256 principal = 500;
         assertEq(0, simpleInterest.calcInterest(principal, 0), "wrong interest at year 0");
@@ -24,9 +23,8 @@ contract SimpleInterestTest is Test {
 
     function test__SimpleInterestTest__DiscountingAnnual() public {
         uint256 apy = 10; // APY in percentage
-        uint256 oneYear = 1; // 1 is a year
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, oneYear);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.Frequency.ONE_YEAR);
 
         uint256 principal = 100;
         assertEq(
@@ -60,16 +58,16 @@ contract SimpleInterestTest is Test {
     // daily interest of 12% APY (uses 360 day count)
     function test__SimpleInterestTest__InterestDaily() public {
         uint256 apy = 12; // 12% APY
-        uint256 numberOfDays = Frequencies.DAYS_360; // days
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, numberOfDays);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.Frequency.DAYS_360);
+        uint256 numberOfDays = simpleInterest.frequencyValue();
 
         uint256 principal = 400;
         assertEq(0, simpleInterest.calcInterest(principal, 0), "wrong interest at day 0");
 
         assertEq(
-            principal.mulDiv(apy / (numberOfDays / Frequencies.DAYS_30), 100),
-            simpleInterest.calcInterest(principal, Frequencies.DAYS_30),
+            principal.mulDiv(apy / (numberOfDays / 30), 100),
+            simpleInterest.calcInterest(principal, 30),
             "wrong interest at day 30"
         );
         assertEq(
@@ -89,9 +87,7 @@ contract SimpleInterestTest is Test {
     // using the scaled up version for results that are fractional
     function test__SimpleInterestTest__InterestDailyScaled() public {
         uint256 apy = 12; // 12% APY
-        uint256 numberOfDays = 30; // 30 days
-
-        SimpleInterest simpleInterest = new SimpleInterest(apy, numberOfDays);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.Frequency.DAYS_30);
 
         uint256 principal = 100;
         uint256 SCALE = simpleInterest.SCALE();
@@ -108,9 +104,9 @@ contract SimpleInterestTest is Test {
 
     function test__SimpleInterestTest__DiscountingDaily() public {
         uint256 apy = 12; // APY in percentage
-        uint256 numberOfDays = Frequencies.DAYS_360; // days
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, numberOfDays);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.Frequency.DAYS_360);
+        uint256 numberOfDays = simpleInterest.frequencyValue();
 
         uint256 principal = 100;
         assertEq(
@@ -161,9 +157,9 @@ contract SimpleInterestTest is Test {
     // using the scaled up version for results that are fractional
     function test__SimpleInterestTest__DiscountDailyScaled() public {
         uint256 apy = 12; // 12% APY
-        uint256 numberOfDays = 30; // 30 days
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, numberOfDays);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.Frequency.DAYS_30);
+        uint256 numberOfDays = simpleInterest.frequencyValue();
 
         uint256 principal = 100;
         uint256 SCALE = simpleInterest.SCALE();

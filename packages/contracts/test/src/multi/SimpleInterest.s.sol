@@ -5,6 +5,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { console2 } from "forge-std/console2.sol";
+import { Frequencies } from "./Frequencies.s.sol";
 
 /**
  * https://en.wikipedia.org/wiki/Interest
@@ -22,12 +23,12 @@ contract SimpleInterest {
     using Math for uint256;
 
     uint256 public immutable INTEREST_RATE_PERCENTAGE; // in percentage terms 100 = 1
-    uint256 public immutable FREQUENCY;
+    Frequencies.Frequency public immutable FREQUENCY;
 
     uint256 public constant DECIMALS = 18;
     uint256 public constant SCALE = 10 ** DECIMALS;
 
-    constructor(uint256 interestRatePercentage, uint256 frequency) {
+    constructor(uint256 interestRatePercentage, Frequencies.Frequency frequency) {
         INTEREST_RATE_PERCENTAGE = interestRatePercentage;
         FREQUENCY = frequency;
     }
@@ -59,7 +60,7 @@ contract SimpleInterest {
         returns (uint256)
     {
         uint256 interestScaled =
-            principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100); // divide by 100 to convert IR to decimal
+            principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, frequencyValue() * 100); // divide by 100 to convert IR to decimal
 
         console2.log(
             string.concat(
@@ -70,7 +71,7 @@ contract SimpleInterest {
                 " * ",
                 Strings.toString(numTimePeriodsElapsed),
                 " / ",
-                Strings.toString(FREQUENCY),
+                Strings.toString(frequencyValue()),
                 " = ",
                 Strings.toString(interestScaled)
             )
@@ -86,7 +87,7 @@ contract SimpleInterest {
         view
         returns (uint256)
     {
-        uint256 interestFactor = INTEREST_RATE_PERCENTAGE.mulDiv(numTimePeriodsElapsed * SCALE, FREQUENCY * 100); // interestRate *  numPerods / frequency (IR * m / f) // divide that by 100 to convert IR to decimal
+        uint256 interestFactor = INTEREST_RATE_PERCENTAGE.mulDiv(numTimePeriodsElapsed * SCALE, frequencyValue() * 100); // interestRate *  numPerods / frequency (IR * m / f) // divide that by 100 to convert IR to decimal
 
         uint256 denominator = (1 * SCALE) - interestFactor; // (1 - interestFactor)
 
@@ -101,7 +102,7 @@ contract SimpleInterest {
                 " * ",
                 Strings.toString(numTimePeriodsElapsed),
                 " ) / ",
-                Strings.toString(FREQUENCY),
+                Strings.toString(frequencyValue()),
                 " = ",
                 Strings.toString(principal)
             )
@@ -133,5 +134,9 @@ contract SimpleInterest {
         );
 
         return principal;
+    }
+
+    function frequencyValue() public view returns (uint256) {
+        return Frequencies.toValue(FREQUENCY);
     }
 }

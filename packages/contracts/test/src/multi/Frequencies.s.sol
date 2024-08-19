@@ -2,11 +2,19 @@
 pragma solidity ^0.8.23;
 
 library Frequencies {
-    uint256 public constant YEARS_ONE = 1;
-    uint256 public constant YEARS_TWO = 2;
-    uint256 public constant YEARS_THREE = 3;
+    enum Frequency {
+        ONE_YEAR,
+        DAYS_30,
+        DAYS_180,
+        DAYS_360
+    }
 
-    uint256 public constant DAYS_30 = 30;
-    uint256 public constant DAYS_180 = 180;
-    uint256 public constant DAYS_360 = 360;
+    // Helper function to convert enum value to corresponding uint256 frequency
+    function toValue(Frequency frequency) external pure returns (uint256) {
+        if (frequency == Frequency.ONE_YEAR) return 1;
+        if (frequency == Frequency.DAYS_30) return 30;
+        if (frequency == Frequency.DAYS_180) return 180;
+        if (frequency == Frequency.DAYS_360) return 360;
+        revert("Invalid frequency");
+    }
 }
