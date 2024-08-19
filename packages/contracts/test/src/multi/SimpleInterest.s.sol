@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
+import { Tenors } from "./Tenors.s.sol";
+
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { console2 } from "forge-std/console2.sol";
-import { Frequencies } from "./Frequencies.s.sol";
 
 /**
  * https://en.wikipedia.org/wiki/Interest
@@ -23,12 +24,12 @@ contract SimpleInterest {
     using Math for uint256;
 
     uint256 public immutable INTEREST_RATE_PERCENTAGE; // in percentage terms 100 = 1
-    Frequencies.Frequency public immutable FREQUENCY;
+    Tenors.Tenor public immutable FREQUENCY;
 
     uint256 public constant DECIMALS = 18;
     uint256 public constant SCALE = 10 ** DECIMALS;
 
-    constructor(uint256 interestRatePercentage, Frequencies.Frequency frequency) {
+    constructor(uint256 interestRatePercentage, Tenors.Tenor frequency) {
         INTEREST_RATE_PERCENTAGE = interestRatePercentage;
         FREQUENCY = frequency;
     }
@@ -137,6 +138,6 @@ contract SimpleInterest {
     }
 
     function frequencyValue() public view returns (uint256) {
-        return Frequencies.toValue(FREQUENCY);
+        return Tenors.toValue(FREQUENCY);
     }
 }

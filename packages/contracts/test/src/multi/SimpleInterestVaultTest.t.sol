@@ -9,7 +9,7 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 
-import { Frequencies } from "./Frequencies.s.sol";
+import { Tenors } from "./Tenors.s.sol";
 
 import { console2 } from "forge-std/console2.sol";
 import { Test } from "forge-std/Test.sol";
@@ -46,7 +46,7 @@ contract SimpleInterestVaultTest is Test {
         Deposit memory depositBob = Deposit("bob 1 year", bob, 100, 1, 1);
         Deposit memory depositCharlie = Deposit("charlie 2 years", charlie, 500, 2, 2);
 
-        verifySimpleInterestVault(apy, Frequencies.Frequency.ONE_YEAR, depositAlice, depositBob, depositCharlie);
+        verifySimpleInterestVault(apy, Tenors.Tenor.YEARS_TWO, depositAlice, depositBob, depositCharlie);
     }
 
     function test__SimpleInterestVault__Daily() public {
@@ -56,7 +56,7 @@ contract SimpleInterestVaultTest is Test {
         Deposit memory depositBob = Deposit("bob 180 days", bob, 300, 180, 180);
         Deposit memory depositCharlie = Deposit("charlie 360 days", charlie, 600, 360, 360);
 
-        verifySimpleInterestVault(apy, Frequencies.Frequency.DAYS_360, depositAlice, depositBob, depositCharlie);
+        verifySimpleInterestVault(apy, Tenors.Tenor.DAYS_360, depositAlice, depositBob, depositCharlie);
     }
 
     struct Deposit {
@@ -71,7 +71,7 @@ contract SimpleInterestVaultTest is Test {
 
     function verifySimpleInterestVault(
         uint256 apy,
-        Frequencies.Frequency frequency,
+        Tenors.Tenor frequency,
         Deposit memory depositAlice,
         Deposit memory depositBob,
         Deposit memory depositCharlie

@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SimpleInterest } from "./SimpleInterest.s.sol";
-import { Frequencies } from "./Frequencies.s.sol";
+import { Tenors } from "./Tenors.s.sol";
 
 import { Test } from "forge-std/Test.sol";
 
@@ -13,7 +13,7 @@ contract SimpleInterestTest is Test {
     function test__SimpleInterestTest__InterestAnnual() public {
         uint256 apy = 3; // APY in percentage
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.Frequency.ONE_YEAR);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.YEARS_ONE);
 
         uint256 principal = 500;
         assertEq(0, simpleInterest.calcInterest(principal, 0), "wrong interest at year 0");
@@ -24,7 +24,7 @@ contract SimpleInterestTest is Test {
     function test__SimpleInterestTest__DiscountingAnnual() public {
         uint256 apy = 10; // APY in percentage
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.Frequency.ONE_YEAR);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.YEARS_ONE);
 
         uint256 principal = 100;
         assertEq(
@@ -59,7 +59,7 @@ contract SimpleInterestTest is Test {
     function test__SimpleInterestTest__InterestDaily() public {
         uint256 apy = 12; // 12% APY
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.Frequency.DAYS_360);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_360);
         uint256 numberOfDays = simpleInterest.frequencyValue();
 
         uint256 principal = 400;
@@ -87,7 +87,7 @@ contract SimpleInterestTest is Test {
     // using the scaled up version for results that are fractional
     function test__SimpleInterestTest__InterestDailyScaled() public {
         uint256 apy = 12; // 12% APY
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.Frequency.DAYS_30);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_30);
 
         uint256 principal = 100;
         uint256 SCALE = simpleInterest.SCALE();
@@ -105,7 +105,7 @@ contract SimpleInterestTest is Test {
     function test__SimpleInterestTest__DiscountingDaily() public {
         uint256 apy = 12; // APY in percentage
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.Frequency.DAYS_360);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_360);
         uint256 numberOfDays = simpleInterest.frequencyValue();
 
         uint256 principal = 100;
@@ -158,7 +158,7 @@ contract SimpleInterestTest is Test {
     function test__SimpleInterestTest__DiscountDailyScaled() public {
         uint256 apy = 12; // 12% APY
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.Frequency.DAYS_30);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_30);
         uint256 numberOfDays = simpleInterest.frequencyValue();
 
         uint256 principal = 100;
