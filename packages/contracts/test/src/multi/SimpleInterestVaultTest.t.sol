@@ -52,11 +52,14 @@ contract SimpleInterestVaultTest is Test {
     function test__SimpleInterestVault__Daily() public {
         uint256 apy = 6; // APY in percentage, e.g. 12%
 
-        Deposit memory depositAlice = Deposit("alice 0 days", alice, 400, 0, 0);
-        Deposit memory depositBob = Deposit("bob 180 days", bob, 300, 180, 180);
-        Deposit memory depositCharlie = Deposit("charlie 360 days", charlie, 600, 360, 360);
+        Tenors.Tenor days365 = Tenors.Tenor.DAYS_365;
+        uint256 days365Value = Tenors.toValue(days365);
 
-        verifySimpleInterestVault(apy, Tenors.Tenor.DAYS_360, depositAlice, depositBob, depositCharlie);
+        Deposit memory depositAlice = Deposit("alice 0 days", alice, 400, 0, 0);
+        Deposit memory depositBob = Deposit("bob 1 day", bob, 300, 1, 1);
+        Deposit memory depositCharlie = Deposit("charlie 365 days", charlie, 600, days365Value, days365Value);
+
+        verifySimpleInterestVault(apy, Tenors.Tenor.DAYS_365, depositAlice, depositBob, depositCharlie);
     }
 
     struct Deposit {
