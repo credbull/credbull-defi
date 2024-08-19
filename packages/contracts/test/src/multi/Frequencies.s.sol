@@ -2,6 +2,8 @@
 pragma solidity ^0.8.23;
 
 library Frequencies {
+    error InvalidFrequency(Frequency frequency);
+
     enum Frequency {
         ONE_YEAR,
         DAYS_30,
@@ -15,6 +17,7 @@ library Frequencies {
         if (frequency == Frequency.DAYS_30) return 30;
         if (frequency == Frequency.DAYS_180) return 180;
         if (frequency == Frequency.DAYS_360) return 360;
-        revert("Invalid frequency");
+
+        revert InvalidFrequency(frequency);
     }
 }
