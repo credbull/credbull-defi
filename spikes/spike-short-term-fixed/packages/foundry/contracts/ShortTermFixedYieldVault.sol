@@ -16,4 +16,6 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
  */
 abstract contract ShortTermFixedYieldVault is ERC4626, Pausable {
   using Math for uint256;
+
+  constructor(IERC20 asset) ERC4626(asset) ERC20("Short Term Fixed Yield Claim", "STFY") { }
 }
