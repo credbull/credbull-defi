@@ -3,7 +3,6 @@ pragma solidity ^0.8.23;
 
 import { SimpleInterest } from "./SimpleInterest.s.sol";
 import { TimelockVault } from "./TimelockVault.s.sol";
-
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
@@ -34,8 +33,7 @@ contract SimpleInterestVault is SimpleInterest, TimelockVault {
 
     // shares that would be exchanged for the amount of assets
     // at the given numberOfTimePeriodsElapsed
-    // shares = assets - simpleInterest
-    function calcSharesAtPeriod(uint256 assetsInWei, uint256 numTimePeriodsElapsed)
+    function convertToSharesAtPeriod(uint256 assetsInWei, uint256 numTimePeriodsElapsed)
         public
         view
         returns (uint256 shares)
@@ -54,18 +52,16 @@ contract SimpleInterestVault is SimpleInterest, TimelockVault {
     }
 
     function convertToShares(uint256 assets) public view override returns (uint256) {
-        return calcSharesAtPeriod(assets, currentTimePeriodsElapsed);
+        return convertToSharesAtPeriod(assets, currentTimePeriodsElapsed);
     }
 
     // =============== redeem ===============
 
-    // asset that would be exchanged for the amount of shares
-    // for a given numberOfTimePeriodsElapsed.  to calculate the non-discounted "principal" from the shares
-    // assets = principal + interest
-    function calcPrincipalAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
+    // convert shares back to the principal
+    function convertToPrincipalAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
         public
         view
-        returns (uint256 assets)
+        returns (uint256 principal)
     {
         uint256 cycle = calculateCycle(numTimePeriodsElapsed);
 
@@ -77,14 +73,14 @@ contract SimpleInterestVault is SimpleInterest, TimelockVault {
     }
 
     // asset that would be exchanged for the amount of shares
-    // for a given numberOfTimePeriodsElapsed.  to calculate the non-discounted "principal" from the shares
+    // for a given numberOfTimePeriodsElapsed
     // assets = principal + interest
-    function calcAssetsAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
+    function convertToAssetsAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
         public
         view
         returns (uint256 assets)
     {
-        uint256 principal = calcPrincipalAtPeriod(sharesInWei, numTimePeriodsElapsed);
+        uint256 principal = convertToPrincipalAtPeriod(sharesInWei, numTimePeriodsElapsed);
 
         uint256 interest = calcInterest(principal, TENOR); // only ever give one period of interest
 
@@ -96,7 +92,7 @@ contract SimpleInterestVault is SimpleInterest, TimelockVault {
     }
 
     function convertToAssets(uint256 shares) public view override returns (uint256) {
-        return calcAssetsAtPeriod(shares, currentTimePeriodsElapsed);
+        return convertToAssetsAtPeriod(shares, currentTimePeriodsElapsed);
     }
 
     function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public {
@@ -106,8 +102,6 @@ contract SimpleInterestVault is SimpleInterest, TimelockVault {
     // =============== helper ===============
 
     function calculateCycle(uint256 numTimePeriods) public view returns (uint256) {
-        if (numTimePeriods == 0) return 0;
-
         return numTimePeriods % TENOR;
     }
 }
