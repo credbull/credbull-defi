@@ -40,6 +40,17 @@ contract SimpleInterestVaultTest is Test {
         transferAndAssert(asset, charlie, userTokenAmount);
     }
 
+    function test__SimpleInterestVault__Monthly() public {
+        uint256 apy = 12; // APY in percentage, e.g. 12%
+        Tenors.Tenor tenorDays365 = Tenors.Tenor.DAYS_365;
+
+        Deposit memory depositAlice = Deposit("alice 0 days", alice, 100 ether, 0);
+        Deposit memory depositBob = Deposit("bob 2 day", bob, 100 ether, 1);
+        Deposit memory depositCharlie = Deposit("charlie 3 days", charlie, 100 ether, 2);
+
+        verifySimpleInterestVault(apy, tenorDays365, depositAlice, depositBob, depositCharlie);
+    }
+
     function test__SimpleInterestVault__Daily_0_1_2() public {
         uint256 apy = 10; // APY in percentage, e.g. 12%
         Tenors.Tenor tenorDays365 = Tenors.Tenor.DAYS_365;
@@ -91,12 +102,18 @@ contract SimpleInterestVaultTest is Test {
         Deposit memory depositCharlie
     ) internal {
         // set up vault
-        SimpleInterest simpleInterest = new SimpleInterest(apy, frequency);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.toValue(frequency));
         SimpleInterestVault vault = new SimpleInterestVault(asset, simpleInterest);
+
+        console2.log("================ start deposit ==============");
 
         uint256 sharesInWeiAlice = depositAndVerify(depositAlice, vault);
         uint256 sharesInWeiBob = depositAndVerify(depositBob, vault);
         uint256 sharesInWeiCharlie = depositAndVerify(depositCharlie, vault);
+
+        console2.log("!! sharesInWeiAlice", sharesInWeiAlice);
+        console2.log("!! sharesInWeiBob", sharesInWeiBob);
+        console2.log("!! sharesInWeiCharlie", sharesInWeiCharlie);
 
         // ============== redeem ==============
         console2.log("================ start redeem ==============");
@@ -161,8 +178,6 @@ contract SimpleInterestVaultTest is Test {
         // redeem happens TENOR days after deposit // this is financially
         uint256 numTimePeriodsAtRedeem =
             vault.calcNumTimePeriodsForRedeem(deposit.numTimePeriodsElapsedAtDeposit + Tenors.toValue(vault.TENOR()));
-
-        console2.log("=========== preview redeem for ", deposit.name);
 
         uint256 previousInterestFrequency = vault.currentTimePeriodsElapsed();
 

@@ -24,7 +24,7 @@ contract SimpleInterestVault is TimelockVault {
     SimpleInterest public simpleInterest;
     uint256 public currentTimePeriodsElapsed = 0; // the current interest frequency
 
-    Tenors.Tenor public immutable TENOR = Tenors.Tenor.DAYS_30;
+    Tenors.Tenor public immutable TENOR = Tenors.Tenor.MONTHLY;
 
     uint256 public immutable SCALE;
 

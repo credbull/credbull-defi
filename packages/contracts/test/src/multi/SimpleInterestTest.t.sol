@@ -13,7 +13,8 @@ contract SimpleInterestTest is Test {
     function test__SimpleInterestTest__InterestAnnual() public {
         uint256 apy = 3; // APY in percentage
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.YEARS_ONE);
+        uint256 annual = Tenors.toValue(Tenors.Tenor.ANNUAL);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, annual);
 
         uint256 principal = 500;
         assertEq(0, simpleInterest.calcInterest(principal, 0), "wrong interest at year 0");
@@ -23,8 +24,8 @@ contract SimpleInterestTest is Test {
 
     function test__SimpleInterestTest__DiscountingAnnual() public {
         uint256 apy = 10; // APY in percentage
-
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.YEARS_ONE);
+        uint256 annual = Tenors.toValue(Tenors.Tenor.ANNUAL);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, annual);
 
         uint256 principal = 500;
         assertEq(
@@ -58,27 +59,26 @@ contract SimpleInterestTest is Test {
     // daily interest of 12% APY (uses 360 day count)
     function test__SimpleInterestTest__InterestDaily() public {
         uint256 apy = 12; // 12% APY
-
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_360);
-        uint256 numberOfDays = simpleInterest.frequencyValue();
+        uint256 dailyFrequency = Tenors.toValue(Tenors.Tenor.DAYS_360);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, dailyFrequency);
 
         uint256 principal = 400;
         assertEq(0, simpleInterest.calcInterest(principal, 0), "wrong interest at day 0");
 
         assertEq(
-            principal.mulDiv(apy / (numberOfDays / 30), 100),
+            principal.mulDiv(apy / (dailyFrequency / 30), 100),
             simpleInterest.calcInterest(principal, 30),
             "wrong interest at day 30"
         );
         assertEq(
             principal.mulDiv(apy / 2, 100),
-            simpleInterest.calcInterest(principal, numberOfDays / 2),
+            simpleInterest.calcInterest(principal, dailyFrequency / 2),
             "wrong interest at day 180"
         );
 
         assertEq(
             principal.mulDiv(apy, 100),
-            simpleInterest.calcInterest(principal, numberOfDays),
+            simpleInterest.calcInterest(principal, dailyFrequency),
             "wrong interest at day 360"
         );
     }
@@ -86,40 +86,41 @@ contract SimpleInterestTest is Test {
     // daily interest of 12% APY (uses 30 day count)
     // using the scaled up version for results that are fractional
     function test__SimpleInterestTest__InterestDailyScaled() public {
-        uint256 apy = 12; // 12% APY
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_30);
+        uint256 apy = 10; // 10% APY
+        uint256 dailyFrequency = Tenors.toValue(Tenors.Tenor.DAYS_360);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, dailyFrequency);
 
-        uint256 principal = 50;
+        uint256 principal = 540;
         uint256 SCALE = simpleInterest.SCALE();
 
         assertEq(0 * SCALE, simpleInterest.calcInterestScaleDecimals(principal, 0), "wrong interestScaled at day 0");
 
-        // unscaledInterest = 50 * 0.12 * 1 / 30 = 6 / 30 = 0.2
-        uint256 twoTenthsScaled = SCALE.mulDiv(2, 10);
+        // unscaledInterest = 540 * 0.10 * 1 / 360 = 54 / 360 = 0.15
+        uint256 fifteenOver100 = SCALE.mulDiv(15, 100);
         assertEq(
-            twoTenthsScaled, simpleInterest.calcInterestScaleDecimals(principal, 1), "wrong interestScaled at day 1"
+            fifteenOver100, simpleInterest.calcInterestScaleDecimals(principal, 1), "wrong interestScaled at day 1"
         );
     }
 
     function test__SimpleInterestTest__DiscountingDaily() public {
         uint256 apy = 12; // APY in percentage
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_365);
-        uint256 numberOfDays = simpleInterest.frequencyValue();
+        uint256 dailyFrequency = Tenors.toValue(Tenors.Tenor.DAYS_365);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, dailyFrequency);
 
         uint256 principal = 400;
         assertEq(
             principal, simpleInterest.calcPrincipalFromDiscounted(principal, 0), "wrong principal from discounted at 0"
         );
 
-        uint256 discountedFullTerm = principal - simpleInterest.calcInterest(principal, numberOfDays);
+        uint256 discountedFullTerm = principal - simpleInterest.calcInterest(principal, dailyFrequency);
         assertEq(
             principal,
-            simpleInterest.calcPrincipalFromDiscounted(discountedFullTerm, numberOfDays),
+            simpleInterest.calcPrincipalFromDiscounted(discountedFullTerm, dailyFrequency),
             "wrong principal from discounted at full term"
         );
 
-        uint256 oneFifthTerm = numberOfDays / 5; // 365 / 5 = 73 days
+        uint256 oneFifthTerm = dailyFrequency / 5; // 365 / 5 = 73 days
         uint256 discountedOneFifthTerm = principal - simpleInterest.calcInterest(principal, oneFifthTerm);
         assertEq(
             principal,
@@ -156,9 +157,8 @@ contract SimpleInterestTest is Test {
     // using the scaled up version for results that are fractional
     function test__SimpleInterestTest__DiscountDailyScaled() public {
         uint256 apy = 10; // 10% APY
-
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Tenors.Tenor.DAYS_365);
-        uint256 numberOfDays = simpleInterest.frequencyValue();
+        uint256 dailyFrequency = Tenors.toValue(Tenors.Tenor.DAYS_365);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, dailyFrequency);
 
         uint256 principal = 400;
         uint256 SCALE = simpleInterest.SCALE();
@@ -170,10 +170,10 @@ contract SimpleInterestTest is Test {
         );
 
         uint256 discountedFullTerm =
-            principal * SCALE - simpleInterest.calcInterestScaleDecimals(principal, numberOfDays);
+            principal * SCALE - simpleInterest.calcInterestScaleDecimals(principal, dailyFrequency);
         assertEq(
             principal * SCALE,
-            simpleInterest.calcPrincipalFromDiscountedScaledScaleDecimals(discountedFullTerm, numberOfDays),
+            simpleInterest.calcPrincipalFromDiscountedScaledScaleDecimals(discountedFullTerm, dailyFrequency),
             "wrong principalScaled at full term"
         );
 
