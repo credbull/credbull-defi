@@ -6,9 +6,6 @@ import { TimelockVault } from "./TimelockVault.s.sol";
 
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-
-import { console2 } from "forge-std/console2.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share

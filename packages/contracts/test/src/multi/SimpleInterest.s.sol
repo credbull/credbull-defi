@@ -40,6 +40,28 @@ contract SimpleInterest {
         return unscaleAmount(interestScaled);
     }
 
+    function _calcInterestWithScale(uint256 principal, uint256 numTimePeriodsElapsed) internal view returns (uint256) {
+        uint256 interestScaled =
+            principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
+
+        console2.log(
+            string.concat(
+                "(IR * P * m) / f = ",
+                Strings.toString(INTEREST_RATE_PERCENTAGE),
+                "% * ",
+                Strings.toString(principal),
+                " * ",
+                Strings.toString(numTimePeriodsElapsed),
+                " / ",
+                Strings.toString(FREQUENCY),
+                " = ",
+                Strings.toString(interestScaled)
+            )
+        );
+
+        return interestScaled;
+    }
+
     function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed)
         public
         view
@@ -50,10 +72,6 @@ contract SimpleInterest {
         return unscaleAmount(scaledPrincipal);
     }
 
-    function _calcInterestWithScale(uint256 principal, uint256 numTimePeriodsElapsed) internal view returns (uint256) {
-        return principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
-    }
-
     function _calcPrincipalFromDiscountedWithScale(uint256 discounted, uint256 numTimePeriodsElapsed)
         internal
         view
@@ -62,7 +80,24 @@ contract SimpleInterest {
         uint256 interestFactor =
             INTEREST_RATE_PERCENTAGE.mulDiv(numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
 
-        return discounted.mulDiv(SCALE, SCALE - interestFactor, ROUNDING);
+        uint256 principal = discounted.mulDiv(SCALE, SCALE - interestFactor, ROUNDING);
+
+        console2.log(
+            string.concat(
+                "Principal = Discounted / (1 - ((IR * m) / f)) = ",
+                Strings.toString(discounted),
+                " / (1 - ((",
+                Strings.toString(INTEREST_RATE_PERCENTAGE),
+                " * ",
+                Strings.toString(numTimePeriodsElapsed),
+                " ) / ",
+                Strings.toString(FREQUENCY),
+                " = ",
+                Strings.toString(principal)
+            )
+        );
+
+        return principal;
     }
 
     function scaleAmount(uint256 amount) internal pure returns (uint256) {
