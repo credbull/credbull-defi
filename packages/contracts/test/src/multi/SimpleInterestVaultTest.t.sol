@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { SimpleInterest } from "./SimpleInterest.s.sol";
 import { SimpleInterestVault } from "./SimpleInterestVault.s.sol";
 import { Frequencies } from "./Frequencies.s.sol";
 
