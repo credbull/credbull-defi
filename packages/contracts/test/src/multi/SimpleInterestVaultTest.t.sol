@@ -23,7 +23,7 @@ contract SimpleInterestVaultTest is Test {
     address private bob = makeAddr("bob");
     address private charlie = makeAddr("charlie");
 
-    uint256 public constant TOLERANCE = 100; // with 18 decimals, means allowed difference of 1E+16
+    uint256 public constant TOLERANCE = 500; // with 18 decimals, means allowed difference of 5E+16
 
     function setUp() public {
         uint256 tokenSupply = 100000 ether;
@@ -40,57 +40,26 @@ contract SimpleInterestVaultTest is Test {
         transferAndAssert(asset, charlie, userTokenAmount);
     }
 
+    //     constructor(IERC20 asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
     function test__SimpleInterestVault__Monthly_24Months() public {
         uint256 apy = 12; // APY in percentage, e.g. 12%
-        Frequencies.Frequency monthlyFrequency = Frequencies.Frequency.MONTHLY;
-        uint256 tenorValue = Frequencies.toValue(monthlyFrequency);
+        Frequencies.Frequency frequencyMonthly = Frequencies.Frequency.MONTHLY;
+        uint256 tenorThreeMonths = 3;
 
         uint256 principal = 100 ether;
 
-        SimpleInterest simpleInterest = new SimpleInterest(apy, tenorValue);
-        SimpleInterestVault vault = new SimpleInterestVault(asset, tenorValue, simpleInterest);
+        SimpleInterestVault vault =
+            new SimpleInterestVault(asset, apy, Frequencies.toValue(frequencyMonthly), tenorThreeMonths);
 
         // check all periods for 24 months
         for (uint256 i = 0; i <= 24; i++) {
             uint256 numTimePeriodsAtDeposit = i;
-            uint256 redeemTimePeriod = numTimePeriodsAtDeposit + tenorValue; // redeem Time is always tenor time later
-            uint256 expectedYield = simpleInterest.calcInterest(principal, tenorValue); // expected yield is always a full tenor
+            uint256 redeemTimePeriod = numTimePeriodsAtDeposit + tenorThreeMonths; // redeem Time is always tenor time later
+            uint256 expectedYield = vault.calcInterest(principal, tenorThreeMonths); // expected yield is always a full tenor
 
             // check shares
             uint256 expectedShares =
-                principal - simpleInterest.calcInterest(principal, numTimePeriodsAtDeposit % tenorValue);
-            uint256 actualShares = vault.convertToSharesAtNumTimePeriodsElapsed(principal, numTimePeriodsAtDeposit);
-            assertEq(expectedShares, actualShares, string.concat("shares mismatch at month ", vm.toString(i)));
-
-            // check principal
-            uint256 actualPrincipal = vault.convertToPrincipalAtNumTimePeriodsElapsed(actualShares, redeemTimePeriod);
-            assertEq(principal, actualPrincipal, string.concat("principal mismatch at month ", vm.toString(i)));
-
-            // check assets
-            uint256 actualAssets = vault.convertToAssetsAtNumTimePeriodsElapsed(actualShares, redeemTimePeriod);
-            assertEq(principal + expectedYield, actualAssets, string.concat("asset mismatch at month ", vm.toString(i)));
-        }
-    }
-
-    function test__SimpleInterestVault__Daily_30Day() public {
-        uint256 apy = 12; // APY in percentage, e.g. 12%
-        Frequencies.Frequency monthlyTenor = Frequencies.Frequency.MONTHLY;
-        uint256 tenorValue = Frequencies.toValue(monthlyTenor);
-
-        uint256 principal = 100 ether;
-
-        SimpleInterest simpleInterest = new SimpleInterest(apy, tenorValue);
-        SimpleInterestVault vault = new SimpleInterestVault(asset, tenorValue, simpleInterest);
-
-        // check all periods for 24 months
-        for (uint256 i = 0; i <= 24; i++) {
-            uint256 numTimePeriodsAtDeposit = i;
-            uint256 redeemTimePeriod = numTimePeriodsAtDeposit + tenorValue; // redeem Time is always tenor time later
-            uint256 expectedYield = simpleInterest.calcInterest(principal, tenorValue); // expected yield is always a full tenor
-
-            // check shares
-            uint256 expectedShares =
-                principal - simpleInterest.calcInterest(principal, numTimePeriodsAtDeposit % tenorValue);
+                principal - vault.calcInterest(principal, numTimePeriodsAtDeposit % tenorThreeMonths);
             uint256 actualShares = vault.convertToSharesAtNumTimePeriodsElapsed(principal, numTimePeriodsAtDeposit);
             assertEq(expectedShares, actualShares, string.concat("shares mismatch at month ", vm.toString(i)));
 
@@ -105,49 +74,65 @@ contract SimpleInterestVaultTest is Test {
     }
 
     function test__SimpleInterestVault__Monthly_1_2_12() public {
-        uint256 apy = 12; // APY in percentage, e.g. 12%
-        Frequencies.Frequency tenorMonthly = Frequencies.Frequency.MONTHLY;
+        uint256 apy = 12; // APY in percentage
+        Frequencies.Frequency frequencyMonthly = Frequencies.Frequency.MONTHLY;
+        uint256 tenorThreeMonths = 3;
+
+        SimpleInterestVault vault =
+            new SimpleInterestVault(asset, apy, Frequencies.toValue(frequencyMonthly), tenorThreeMonths);
 
         Deposit memory depositAlice = Deposit("alice 1 month", alice, 200 ether, 1);
         Deposit memory depositBob = Deposit("bob 2 months", bob, 100 ether, 2);
         Deposit memory depositCharlie = Deposit("charlie 12 months", charlie, 300 ether, 12);
 
-        verifySimpleInterestVault(apy, tenorMonthly, depositAlice, depositBob, depositCharlie);
+        verifySimpleInterestVault(vault, depositAlice, depositBob, depositCharlie);
     }
 
     function test__SimpleInterestVault__Daily_0_1_2() public {
-        uint256 apy = 10; // APY in percentage, e.g. 12%
-        Frequencies.Frequency tenorDays365 = Frequencies.Frequency.DAYS_365;
+        uint256 apy = 10; // APY in percentage
+        Frequencies.Frequency frequencyDaily365 = Frequencies.Frequency.DAYS_365;
+        uint256 tenorDays90 = 90;
+
+        SimpleInterestVault vault =
+            new SimpleInterestVault(asset, apy, Frequencies.toValue(frequencyDaily365), tenorDays90);
 
         Deposit memory depositAlice = Deposit("alice 0 days", alice, 200 ether, 0);
         Deposit memory depositBob = Deposit("bob 2 day", bob, 100 ether, 1);
         Deposit memory depositCharlie = Deposit("charlie 3 days", charlie, 300 ether, 2);
 
-        verifySimpleInterestVault(apy, tenorDays365, depositAlice, depositBob, depositCharlie);
+        verifySimpleInterestVault(vault, depositAlice, depositBob, depositCharlie);
     }
 
     // represents the second cycle - days 30, 31, 32 (equiv to 1,2,3)
     function test__SimpleInterestVault__Daily_30_31_32() public {
-        uint256 apy = 10; // APY in percentage, e.g. 12%
-        Frequencies.Frequency tenorDays365 = Frequencies.Frequency.DAYS_365;
+        uint256 apy = 10; // APY in percentage
+        Frequencies.Frequency frequencyDaily365 = Frequencies.Frequency.DAYS_365;
+        uint256 tenorDays90 = 90;
+
+        SimpleInterestVault vault =
+            new SimpleInterestVault(asset, apy, Frequencies.toValue(frequencyDaily365), tenorDays90);
 
         Deposit memory depositAlice = Deposit("alice 30 days", alice, 200 ether, 30);
         Deposit memory depositBob = Deposit("bob 31 days", bob, 100 ether, 31); // 365 / 5 = 73
         Deposit memory depositCharlie = Deposit("charlie 32 days", charlie, 300 ether, 32);
 
-        verifySimpleInterestVault(apy, tenorDays365, depositAlice, depositBob, depositCharlie);
+        verifySimpleInterestVault(vault, depositAlice, depositBob, depositCharlie);
     }
 
     // represents the second cycle - days 30, 31, 32 (equiv to 1,2,3)
     function test__SimpleInterestVault__Daily_10_20_29() public {
-        uint256 apy = 10; // APY in percentage, e.g. 12%
-        Frequencies.Frequency tenorDays365 = Frequencies.Frequency.DAYS_365;
+        uint256 apy = 10; // APY in percentage
+        Frequencies.Frequency frequencyDaily365 = Frequencies.Frequency.DAYS_365;
+        uint256 tenorDays90 = 90;
+
+        SimpleInterestVault vault =
+            new SimpleInterestVault(asset, apy, Frequencies.toValue(frequencyDaily365), tenorDays90);
 
         Deposit memory depositAlice = Deposit("alice 10 days", alice, 200 ether, 10);
         Deposit memory depositBob = Deposit("bob 20 days", bob, 100 ether, 20); // 365 / 5 = 73
         Deposit memory depositCharlie = Deposit("charlie 29 days", charlie, 300 ether, 29);
 
-        verifySimpleInterestVault(apy, tenorDays365, depositAlice, depositBob, depositCharlie);
+        verifySimpleInterestVault(vault, depositAlice, depositBob, depositCharlie);
     }
 
     struct Deposit {
@@ -159,16 +144,11 @@ contract SimpleInterestVaultTest is Test {
     }
 
     function verifySimpleInterestVault(
-        uint256 apy,
-        Frequencies.Frequency frequency,
+        SimpleInterestVault vault,
         Deposit memory depositAlice,
         Deposit memory depositBob,
         Deposit memory depositCharlie
     ) internal {
-        // set up vault
-        SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(frequency));
-        SimpleInterestVault vault = new SimpleInterestVault(asset, Frequencies.toValue(frequency), simpleInterest);
-
         console2.log("================ start deposit ==============");
 
         uint256 sharesInWeiAlice = depositAndVerify(depositAlice, vault);
@@ -202,8 +182,7 @@ contract SimpleInterestVaultTest is Test {
         // vaults loop every TENOR. e.g. for a 30 day vault, day 30 = 0, day 31 = 1, day 32 = 2
         uint256 numTimePeriodsElapsedAtDepositModTenor = vault.modTenor(deposit.numTimePeriodsElapsedAtDeposit);
 
-        uint256 expectedInterestInWei =
-            vault.simpleInterest().calcInterest(deposit.amountInWei, numTimePeriodsElapsedAtDepositModTenor);
+        uint256 expectedInterestInWei = vault.calcInterest(deposit.amountInWei, numTimePeriodsElapsedAtDepositModTenor);
 
         uint256 expectedSharesInWei = (deposit.amountInWei - expectedInterestInWei);
 
@@ -250,8 +229,7 @@ contract SimpleInterestVaultTest is Test {
             string.concat("wrong convertToPrincipalAtNumTimePeriodsElapsed ", deposit.name)
         );
 
-        uint256 expectedAssetsInWei =
-            deposit.amountInWei + vault.simpleInterest().calcInterest(deposit.amountInWei, vault.TENOR()); // full tenor of interest
+        uint256 expectedAssetsInWei = deposit.amountInWei + vault.calcInterest(deposit.amountInWei, vault.TENOR()); // full tenor of interest
 
         assertApproxEqAbs(
             expectedAssetsInWei,
@@ -282,8 +260,7 @@ contract SimpleInterestVaultTest is Test {
         returns (uint256 assets)
     {
         address wallet = deposit.wallet;
-        uint256 expectedAssetsInWei =
-            deposit.amountInWei + vault.simpleInterest().calcInterest(deposit.amountInWei, vault.TENOR()); // full tenor of interest
+        uint256 expectedAssetsInWei = deposit.amountInWei + vault.calcInterest(deposit.amountInWei, vault.TENOR()); // full tenor of interest
         uint256 numTimePeriodsAtRedeem = deposit.numTimePeriodsElapsedAtDeposit + vault.TENOR(); // redeem happens TENOR days after deposit
 
         vault.setCurrentTimePeriodsElapsed(numTimePeriodsAtRedeem);

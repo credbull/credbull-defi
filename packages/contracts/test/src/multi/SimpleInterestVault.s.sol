@@ -9,6 +9,7 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { console2 } from "forge-std/console2.sol";
+import { Frequencies } from "./Frequencies.s.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
@@ -17,26 +18,20 @@ import { console2 } from "forge-std/console2.sol";
 // - and so on...
 //
 // This is like having linear deflation over time.
-contract SimpleInterestVault is TimelockVault {
+contract SimpleInterestVault is SimpleInterest, TimelockVault {
     using Math for uint256;
 
-    SimpleInterest public simpleInterest;
     uint256 public currentTimePeriodsElapsed = 0; // the current interest frequency
 
     // how many time periods for vault redeem
     // should use the same time unit (day / month or years) as the interest frequency
     uint256 public immutable TENOR;
 
-    uint256 public immutable SCALE;
-
-    constructor(IERC20 asset, uint256 tenor, SimpleInterest _simpleInterest)
+    constructor(IERC20 asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
+        SimpleInterest(interestRatePercentage, frequency)
         TimelockVault(asset, "Simple Interest Rate Claim", "cSIR", 0)
     {
-        simpleInterest = _simpleInterest;
-        // TENOR = tenor;  // TODO: fix this!
-        console2.log(tenor);
-        TENOR = 12;
-        SCALE = _simpleInterest.SCALE(); // calcs require to use the same scaling
+        TENOR = tenor;
     }
 
     // =============== deposit ===============
@@ -53,7 +48,7 @@ contract SimpleInterestVault is TimelockVault {
 
         if (cycle == 0) return assetsInWei;
 
-        uint256 interest = simpleInterest.calcInterest(assetsInWei, cycle);
+        uint256 interest = calcInterest(assetsInWei, cycle);
 
         return assetsInWei - interest;
     }
@@ -80,7 +75,7 @@ contract SimpleInterestVault is TimelockVault {
 
         if (cycle == 0) return sharesInWei;
 
-        uint256 principal = simpleInterest.calcPrincipalFromDiscounted(sharesInWei, cycle);
+        uint256 principal = calcPrincipalFromDiscounted(sharesInWei, cycle);
 
         return principal;
     }
@@ -101,7 +96,7 @@ contract SimpleInterestVault is TimelockVault {
     {
         uint256 principal = convertToPrincipalAtNumTimePeriodsElapsed(sharesInWei, numTimePeriodsElapsed);
 
-        uint256 interest = simpleInterest.calcInterest(principal, TENOR); // only ever give one period of interest
+        uint256 interest = calcInterest(principal, TENOR); // only ever give one period of interest
 
         return principal + interest;
     }
