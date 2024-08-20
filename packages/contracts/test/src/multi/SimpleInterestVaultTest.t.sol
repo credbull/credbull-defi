@@ -59,15 +59,15 @@ contract SimpleInterestVaultTest is Test {
             // check shares
             uint256 expectedShares =
                 principal - vault.calcInterest(principal, numTimePeriodsAtDeposit % tenorThreeMonths);
-            uint256 actualShares = vault.convertToSharesAtNumTimePeriodsElapsed(principal, numTimePeriodsAtDeposit);
+            uint256 actualShares = vault.calcSharesAtPeriod(principal, numTimePeriodsAtDeposit);
             assertEq(expectedShares, actualShares, string.concat("shares mismatch at month ", vm.toString(i)));
 
             // check principal
-            uint256 actualPrincipal = vault.convertToPrincipalAtNumTimePeriodsElapsed(actualShares, redeemTimePeriod);
+            uint256 actualPrincipal = vault.calcPrincipalAtPeriod(actualShares, redeemTimePeriod);
             assertEq(principal, actualPrincipal, string.concat("principal mismatch at month ", vm.toString(i)));
 
             // check assets
-            uint256 actualAssets = vault.convertToAssetsAtNumTimePeriodsElapsed(actualShares, redeemTimePeriod);
+            uint256 actualAssets = vault.calcAssetsAtPeriod(actualShares, redeemTimePeriod);
             assertEq(principal + expectedYield, actualAssets, string.concat("asset mismatch at month ", vm.toString(i)));
         }
     }
@@ -179,7 +179,7 @@ contract SimpleInterestVaultTest is Test {
 
     function depositAndVerify(Deposit memory deposit, SimpleInterestVault vault) internal returns (uint256 shares) {
         // vaults loop every TENOR. e.g. for a 30 day vault, day 30 = 0, day 31 = 1, day 32 = 2
-        uint256 numTimePeriodsElapsedAtDepositModTenor = vault.modTenor(deposit.numTimePeriodsElapsedAtDeposit);
+        uint256 numTimePeriodsElapsedAtDepositModTenor = vault.calculateCycle(deposit.numTimePeriodsElapsedAtDeposit);
 
         uint256 expectedInterestInWei = vault.calcInterest(deposit.amountInWei, numTimePeriodsElapsedAtDepositModTenor);
 
@@ -187,7 +187,7 @@ contract SimpleInterestVaultTest is Test {
 
         assertEq(
             expectedSharesInWei,
-            vault.convertToSharesAtNumTimePeriodsElapsed(deposit.amountInWei, numTimePeriodsElapsedAtDepositModTenor),
+            vault.calcSharesAtPeriod(deposit.amountInWei, numTimePeriodsElapsedAtDepositModTenor),
             string.concat("wrong convertToSharesAtFrequency ", deposit.name)
         );
 
@@ -223,7 +223,7 @@ contract SimpleInterestVaultTest is Test {
 
         assertApproxEqAbs(
             deposit.amountInWei,
-            vault.convertToPrincipalAtNumTimePeriodsElapsed(sharesInWei, numTimePeriodsAtRedeem),
+            vault.calcPrincipalAtPeriod(sharesInWei, numTimePeriodsAtRedeem),
             TOLERANCE,
             string.concat("wrong convertToPrincipalAtNumTimePeriodsElapsed ", deposit.name)
         );
@@ -232,7 +232,7 @@ contract SimpleInterestVaultTest is Test {
 
         assertApproxEqAbs(
             expectedAssetsInWei,
-            vault.convertToAssetsAtNumTimePeriodsElapsed(sharesInWei, numTimePeriodsAtRedeem),
+            vault.calcAssetsAtPeriod(sharesInWei, numTimePeriodsAtRedeem),
             TOLERANCE,
             string.concat("wrong convertToAssetsAtNumTimePeriodsElapsed ", deposit.name)
         );

@@ -38,12 +38,12 @@ contract SimpleInterestVault is SimpleInterest, TimelockVault {
     // shares that would be exchanged for the amount of assets
     // at the given numberOfTimePeriodsElapsed
     // shares = assets - simpleInterest
-    function convertToSharesAtNumTimePeriodsElapsed(uint256 assetsInWei, uint256 numTimePeriodsElapsed)
+    function calcSharesAtPeriod(uint256 assetsInWei, uint256 numTimePeriodsElapsed)
         public
         view
         returns (uint256 shares)
     {
-        uint256 cycle = modTenor(numTimePeriodsElapsed);
+        uint256 cycle = calculateCycle(numTimePeriodsElapsed);
 
         if (cycle == 0) return assetsInWei;
 
@@ -57,7 +57,7 @@ contract SimpleInterestVault is SimpleInterest, TimelockVault {
     }
 
     function convertToShares(uint256 assets) public view override returns (uint256) {
-        return convertToSharesAtNumTimePeriodsElapsed(assets, currentTimePeriodsElapsed);
+        return calcSharesAtPeriod(assets, currentTimePeriodsElapsed);
     }
 
     // =============== redeem ===============
@@ -65,12 +65,12 @@ contract SimpleInterestVault is SimpleInterest, TimelockVault {
     // asset that would be exchanged for the amount of shares
     // for a given numberOfTimePeriodsElapsed.  to calculate the non-discounted "principal" from the shares
     // assets = principal + interest
-    function convertToPrincipalAtNumTimePeriodsElapsed(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
+    function calcPrincipalAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
         public
         view
         returns (uint256 assets)
     {
-        uint256 cycle = modTenor(numTimePeriodsElapsed);
+        uint256 cycle = calculateCycle(numTimePeriodsElapsed);
 
         if (cycle == 0) return sharesInWei;
 
@@ -79,21 +79,15 @@ contract SimpleInterestVault is SimpleInterest, TimelockVault {
         return principal;
     }
 
-    function modTenor(uint256 numTimePeriods) public view returns (uint256) {
-        if (numTimePeriods == 0) return 0;
-
-        return numTimePeriods % TENOR;
-    }
-
     // asset that would be exchanged for the amount of shares
     // for a given numberOfTimePeriodsElapsed.  to calculate the non-discounted "principal" from the shares
     // assets = principal + interest
-    function convertToAssetsAtNumTimePeriodsElapsed(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
+    function calcAssetsAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
         public
         view
         returns (uint256 assets)
     {
-        uint256 principal = convertToPrincipalAtNumTimePeriodsElapsed(sharesInWei, numTimePeriodsElapsed);
+        uint256 principal = calcPrincipalAtPeriod(sharesInWei, numTimePeriodsElapsed);
 
         uint256 interest = calcInterest(principal, TENOR); // only ever give one period of interest
 
@@ -105,36 +99,18 @@ contract SimpleInterestVault is SimpleInterest, TimelockVault {
     }
 
     function convertToAssets(uint256 shares) public view override returns (uint256) {
-        return convertToAssetsAtNumTimePeriodsElapsed(shares, currentTimePeriodsElapsed);
+        return calcAssetsAtPeriod(shares, currentTimePeriodsElapsed);
     }
 
-    /**
-     * @dev See {IERC4626-previewDeposit}.
-     */
     function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public {
         currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
     }
 
-    // calculate the vaultNumTimePeriods given the numTimePeriodsElapsed
-    // the vault cycles through dates based on the vault tenor
-    function calcNumTimePeriodsForDeposit(uint256 numTimePeriodsElapsed)
-        public
-        view
-        returns (uint256 numTimePeriodsForRedeem)
-    {
-        uint256 _numTimePeriodsForDeposit = numTimePeriodsElapsed % TENOR;
+    // =============== helper ===============
 
-        console2.log(
-            string.concat(
-                "numTimePeriodsElapsed mod tenorValue",
-                Strings.toString(numTimePeriodsElapsed),
-                " mod ",
-                Strings.toString(TENOR),
-                " = ",
-                Strings.toString(_numTimePeriodsForDeposit)
-            )
-        );
+    function calculateCycle(uint256 numTimePeriods) public view returns (uint256) {
+        if (numTimePeriods == 0) return 0;
 
-        return _numTimePeriodsForDeposit;
+        return numTimePeriods % TENOR;
     }
 }
