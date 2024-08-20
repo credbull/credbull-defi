@@ -10,49 +10,65 @@ import { Test } from "forge-std/Test.sol";
 contract SimpleInterestTest is Test {
     using Math for uint256;
 
-    function test__SimpleInterestTest__InterestAnnual() public {
-        uint256 apy = 3; // APY in percentage
+    function test__SimpleInterestTest__InterestMonthly() public {
+        uint256 apy = 12; // APY in percentage
 
-        uint256 annual = Tenors.toValue(Tenors.Tenor.ANNUAL);
-        SimpleInterest simpleInterest = new SimpleInterest(apy, annual);
+        uint256 monthlyFrequency = Tenors.toValue(Tenors.Tenor.MONTHLY);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, monthlyFrequency);
 
         uint256 principal = 500;
-        assertEq(0, simpleInterest.calcInterest(principal, 0), "wrong interest at year 0");
-        assertEq(principal.mulDiv(apy, 100), simpleInterest.calcInterest(principal, 1), "wrong interest at year 1"); // 1 year
-        assertEq(principal.mulDiv(apy * 2, 100), simpleInterest.calcInterest(principal, 2), "wrong interest at year 2"); // 2 years
+        assertEq(0, simpleInterest.calcInterest(principal, 0), "wrong interest at month 0");
+        assertEq(
+            principal.mulDiv(apy / 12, 100), simpleInterest.calcInterest(principal, 1), "wrong interest at month 1"
+        );
+        assertEq(principal.mulDiv(apy / 6, 100), simpleInterest.calcInterest(principal, 2), "wrong interest at month 2");
     }
 
-    function test__SimpleInterestTest__DiscountingAnnual() public {
-        uint256 apy = 10; // APY in percentage
-        uint256 annual = Tenors.toValue(Tenors.Tenor.ANNUAL);
-        SimpleInterest simpleInterest = new SimpleInterest(apy, annual);
+    function test__SimpleInterestTest__DiscountingMonthly() public {
+        uint256 apy = 12; // APY in percentage
+        uint256 monthlyFrequency = Tenors.toValue(Tenors.Tenor.MONTHLY);
+        SimpleInterest simpleInterest = new SimpleInterest(apy, monthlyFrequency);
 
         uint256 principal = 500;
         assertEq(
             principal,
             simpleInterest.calcPrincipalFromDiscounted(principal, 0),
-            "wrong principal from discounted at year 0"
+            "wrong principal from discounted at month 0"
         );
 
-        uint256 discountedYearOne = principal - simpleInterest.calcInterest(principal, 1);
+        uint256 discountedMonthOne = principal - simpleInterest.calcInterest(principal, 1);
         assertEq(
             principal,
-            simpleInterest.calcPrincipalFromDiscounted(discountedYearOne, 1),
-            "wrong principal from discounted at year 1"
+            simpleInterest.calcPrincipalFromDiscounted(discountedMonthOne, 1),
+            "wrong principal from discountedMonthOne"
         );
 
-        uint256 discountedYearTwo = principal - 2 * (simpleInterest.calcInterest(principal, 1));
+        uint256 discountedMonthTwo = principal - 2 * (simpleInterest.calcInterest(principal, 1));
         assertEq(
             principal,
-            simpleInterest.calcPrincipalFromDiscounted(discountedYearTwo, 2),
-            "wrong principal from discounted at year 2"
+            simpleInterest.calcPrincipalFromDiscounted(discountedMonthTwo, 2),
+            "wrong principal from discountedMonthTwo"
         );
 
-        uint256 discountedYearThree = principal - 3 * (simpleInterest.calcInterest(principal, 1));
+        uint256 discountedMonthThree = principal - 3 * (simpleInterest.calcInterest(principal, 1));
         assertEq(
             principal,
-            simpleInterest.calcPrincipalFromDiscounted(discountedYearThree, 3),
-            "wrong principal from discounted at year 3"
+            simpleInterest.calcPrincipalFromDiscounted(discountedMonthThree, 3),
+            "wrong principal from discountedMonthThree"
+        );
+
+        uint256 discountedMonthTwelve = principal - 12 * (simpleInterest.calcInterest(principal, 1));
+        assertEq(
+            principal,
+            simpleInterest.calcPrincipalFromDiscounted(discountedMonthTwelve, 12),
+            "wrong principal from discountedMonthTwelve"
+        );
+
+        uint256 discountedMonthTwentyFour = principal - 24 * (simpleInterest.calcInterest(principal, 1));
+        assertEq(
+            principal,
+            simpleInterest.calcPrincipalFromDiscounted(discountedMonthTwentyFour, 24),
+            "wrong principal from discountedMonthTwentyFour"
         );
     }
 
