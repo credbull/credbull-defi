@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SimpleInterest } from "./SimpleInterest.s.sol";
-import { Tenors } from "./Tenors.s.sol";
+import { Frequencies } from "./Frequencies.s.sol";
 
 import { Test } from "forge-std/Test.sol";
 
@@ -13,7 +13,7 @@ contract SimpleInterestTest is Test {
     function test__SimpleInterestTest__InterestMonthly() public {
         uint256 apy = 12; // APY in percentage
 
-        uint256 monthlyFrequency = Tenors.toValue(Tenors.Tenor.MONTHLY);
+        uint256 monthlyFrequency = Frequencies.toValue(Frequencies.Frequency.MONTHLY);
         SimpleInterest simpleInterest = new SimpleInterest(apy, monthlyFrequency);
 
         uint256 principal = 500;
@@ -22,11 +22,17 @@ contract SimpleInterestTest is Test {
             principal.mulDiv(apy / 12, 100), simpleInterest.calcInterest(principal, 1), "wrong interest at month 1"
         );
         assertEq(principal.mulDiv(apy / 6, 100), simpleInterest.calcInterest(principal, 2), "wrong interest at month 2");
+
+        assertEq(principal.mulDiv(apy, 100), simpleInterest.calcInterest(principal, 12), "wrong interest at month 12");
+
+        assertEq(
+            principal.mulDiv(2 * apy, 100), simpleInterest.calcInterest(principal, 24), "wrong interest at month 24"
+        );
     }
 
     function test__SimpleInterestTest__DiscountingMonthly() public {
         uint256 apy = 12; // APY in percentage
-        uint256 monthlyFrequency = Tenors.toValue(Tenors.Tenor.MONTHLY);
+        uint256 monthlyFrequency = Frequencies.toValue(Frequencies.Frequency.MONTHLY);
         SimpleInterest simpleInterest = new SimpleInterest(apy, monthlyFrequency);
 
         uint256 principal = 500;
@@ -75,7 +81,7 @@ contract SimpleInterestTest is Test {
     // daily interest of 12% APY (uses 360 day count)
     function test__SimpleInterestTest__InterestDaily() public {
         uint256 apy = 12; // 12% APY
-        uint256 dailyFrequency = Tenors.toValue(Tenors.Tenor.DAYS_360);
+        uint256 dailyFrequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
         SimpleInterest simpleInterest = new SimpleInterest(apy, dailyFrequency);
 
         uint256 principal = 400;
@@ -103,7 +109,7 @@ contract SimpleInterestTest is Test {
     // using the scaled up version for results that are fractional
     function test__SimpleInterestTest__InterestDailyScaled() public {
         uint256 apy = 10; // 10% APY
-        uint256 dailyFrequency = Tenors.toValue(Tenors.Tenor.DAYS_360);
+        uint256 dailyFrequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
         SimpleInterest simpleInterest = new SimpleInterest(apy, dailyFrequency);
 
         uint256 principal = 540;
@@ -121,7 +127,7 @@ contract SimpleInterestTest is Test {
     function test__SimpleInterestTest__DiscountingDaily() public {
         uint256 apy = 12; // APY in percentage
 
-        uint256 dailyFrequency = Tenors.toValue(Tenors.Tenor.DAYS_365);
+        uint256 dailyFrequency = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
         SimpleInterest simpleInterest = new SimpleInterest(apy, dailyFrequency);
 
         uint256 principal = 400;
@@ -173,7 +179,7 @@ contract SimpleInterestTest is Test {
     // using the scaled up version for results that are fractional
     function test__SimpleInterestTest__DiscountDailyScaled() public {
         uint256 apy = 10; // 10% APY
-        uint256 dailyFrequency = Tenors.toValue(Tenors.Tenor.DAYS_365);
+        uint256 dailyFrequency = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
         SimpleInterest simpleInterest = new SimpleInterest(apy, dailyFrequency);
 
         uint256 principal = 400;

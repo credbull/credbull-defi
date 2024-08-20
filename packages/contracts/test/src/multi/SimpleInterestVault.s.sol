@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import { SimpleInterest } from "./SimpleInterest.s.sol";
 import { TimelockVault } from "./TimelockVault.s.sol";
-import { Tenors } from "./Tenors.s.sol";
+import { Frequencies } from "./Frequencies.s.sol";
 
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
@@ -24,14 +24,19 @@ contract SimpleInterestVault is TimelockVault {
     SimpleInterest public simpleInterest;
     uint256 public currentTimePeriodsElapsed = 0; // the current interest frequency
 
-    Tenors.Tenor public immutable TENOR = Tenors.Tenor.MONTHLY;
+    // how many time periods for vault redeem
+    // should use the same time unit (day / month or years) as the interest frequency
+    uint256 public immutable TENOR;
 
     uint256 public immutable SCALE;
 
-    constructor(IERC20 asset, SimpleInterest _simpleInterest)
+    constructor(IERC20 asset, uint256 tenor, SimpleInterest _simpleInterest)
         TimelockVault(asset, "Simple Interest Rate Claim", "cSIR", 0)
     {
         simpleInterest = _simpleInterest;
+        // TENOR = tenor;  // TODO: fix this!
+        console2.log(tenor);
+        TENOR = 12;
         SCALE = _simpleInterest.SCALE(); // calcs require to use the same scaling
     }
 
@@ -45,9 +50,11 @@ contract SimpleInterestVault is TimelockVault {
         view
         returns (uint256 shares)
     {
-        if (numTimePeriodsElapsed == 0) return assetsInWei;
+        uint256 cycle = modTenor(numTimePeriodsElapsed);
 
-        uint256 interest = simpleInterest.calcInterest(assetsInWei, numTimePeriodsElapsed);
+        if (cycle == 0) return assetsInWei;
+
+        uint256 interest = simpleInterest.calcInterest(assetsInWei, cycle);
 
         return assetsInWei - interest;
     }
@@ -65,16 +72,37 @@ contract SimpleInterestVault is TimelockVault {
     // asset that would be exchanged for the amount of shares
     // for a given numberOfTimePeriodsElapsed.  to calculate the non-discounted "principal" from the shares
     // assets = principal + interest
-    function convertToAssetsAtFrequency(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
+    function convertToPrincipalAtNumTimePeriodsElapsed(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
         public
         view
         returns (uint256 assets)
     {
-        if (numTimePeriodsElapsed == 0) return sharesInWei;
+        uint256 cycle = modTenor(numTimePeriodsElapsed);
 
-        uint256 principal = simpleInterest.calcPrincipalFromDiscounted(sharesInWei, numTimePeriodsElapsed);
+        if (cycle == 0) return sharesInWei;
 
-        uint256 interest = simpleInterest.calcInterest(principal, numTimePeriodsElapsed); // only ever give one period of interest
+        uint256 principal = simpleInterest.calcPrincipalFromDiscounted(sharesInWei, cycle);
+
+        return principal;
+    }
+
+    function modTenor(uint256 numTimePeriods) public view returns (uint256) {
+        if (numTimePeriods == 0) return 0;
+
+        return numTimePeriods % TENOR;
+    }
+
+    // asset that would be exchanged for the amount of shares
+    // for a given numberOfTimePeriodsElapsed.  to calculate the non-discounted "principal" from the shares
+    // assets = principal + interest
+    function convertToAssetsAtNumTimePeriodsElapsed(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
+        public
+        view
+        returns (uint256 assets)
+    {
+        uint256 principal = convertToPrincipalAtNumTimePeriodsElapsed(sharesInWei, numTimePeriodsElapsed);
+
+        uint256 interest = simpleInterest.calcInterest(principal, TENOR); // only ever give one period of interest
 
         return principal + interest;
     }
@@ -84,7 +112,7 @@ contract SimpleInterestVault is TimelockVault {
     }
 
     function convertToAssets(uint256 shares) public view override returns (uint256) {
-        return convertToAssetsAtFrequency(shares, currentTimePeriodsElapsed);
+        return convertToAssetsAtNumTimePeriodsElapsed(shares, currentTimePeriodsElapsed);
     }
 
     /**
@@ -101,48 +129,19 @@ contract SimpleInterestVault is TimelockVault {
         view
         returns (uint256 numTimePeriodsForRedeem)
     {
-        uint256 tenorValue = Tenors.toValue(TENOR);
-
-        uint256 _numTimePeriodsForDeposit = numTimePeriodsElapsed % tenorValue;
+        uint256 _numTimePeriodsForDeposit = numTimePeriodsElapsed % TENOR;
 
         console2.log(
             string.concat(
                 "numTimePeriodsElapsed mod tenorValue",
                 Strings.toString(numTimePeriodsElapsed),
                 " mod ",
-                Strings.toString(tenorValue),
+                Strings.toString(TENOR),
                 " = ",
                 Strings.toString(_numTimePeriodsForDeposit)
             )
         );
 
         return _numTimePeriodsForDeposit;
-    }
-
-    // calculate the numTimePeriodsForRedeem given the numTimePeriodsElapsedAtDeposit
-    // early redeems are not prevented, but there is a financial penalty (the principal will not be calculated correctly)
-    function calcNumTimePeriodsForRedeem(uint256 numTimePeriodsElapsedAtDeposit)
-        public
-        view
-        returns (uint256 numTimePeriodsForRedeem)
-    {
-        uint256 tenorValue = Tenors.toValue(TENOR);
-
-        uint256 _numTimePeriodsForRedeem = (numTimePeriodsElapsedAtDeposit + tenorValue) % tenorValue;
-
-        console2.log(
-            string.concat(
-                "(numTimePeriodsElapsed + tenorValue) mod tenorValue",
-                Strings.toString(numTimePeriodsElapsedAtDeposit),
-                " + ",
-                Strings.toString(tenorValue),
-                " mod ",
-                Strings.toString(tenorValue),
-                " = ",
-                Strings.toString(_numTimePeriodsForRedeem)
-            )
-        );
-
-        return _numTimePeriodsForRedeem;
     }
 }
