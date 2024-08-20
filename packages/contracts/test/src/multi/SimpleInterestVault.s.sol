@@ -3,7 +3,6 @@ pragma solidity ^0.8.23;
 
 import { SimpleInterest } from "./SimpleInterest.s.sol";
 import { TimelockVault } from "./TimelockVault.s.sol";
-import { Frequencies } from "./Frequencies.s.sol";
 
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
