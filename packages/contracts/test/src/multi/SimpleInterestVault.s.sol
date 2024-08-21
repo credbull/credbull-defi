@@ -2,7 +2,10 @@
 pragma solidity ^0.8.23;
 
 import { SimpleInterest } from "./SimpleInterest.s.sol";
+import { ISimpleInterest } from "./ISimpleInterest.s.sol";
+import { IERC4626Interest } from "./IERC4626Interest.s.sol";
 import { TimelockVault } from "./TimelockVault.s.sol";
+
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
@@ -13,7 +16,7 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 // - and so on...
 //
 // This is like having linear deflation over time.
-contract SimpleInterestVault is SimpleInterest, TimelockVault {
+contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault {
     using Math for uint256;
 
     uint256 public currentTimePeriodsElapsed = 0; // the current interest frequency
@@ -67,9 +70,9 @@ contract SimpleInterestVault is SimpleInterest, TimelockVault {
 
         if (cycle == 0) return sharesInWei;
 
-        uint256 principal = calcPrincipalFromDiscounted(sharesInWei, cycle);
+        uint256 _principal = calcPrincipalFromDiscounted(sharesInWei, cycle);
 
-        return principal;
+        return _principal;
     }
 
     // asset that would be exchanged for the amount of shares
@@ -84,7 +87,9 @@ contract SimpleInterestVault is SimpleInterest, TimelockVault {
 
         uint256 interest = calcInterest(principal, TENOR); // only ever give one period of interest
 
-        return principal + interest;
+        uint256 _assets = principal + interest;
+
+        return _assets;
     }
 
     function previewRedeem(uint256 shares) public view override returns (uint256) {
