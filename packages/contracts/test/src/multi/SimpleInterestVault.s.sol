@@ -13,13 +13,11 @@ import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
+import { console2 } from "forge-std/console2.sol";
+
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
-// - At interestFrequency 1, 1 asset gives 1 - SimpleInterest shares
-// - At interestFrequency 2, 1 asset gives 1 - (2 * SimpleInterest) shares,
-// - and so on...
-//
-// This is like having linear deflation over time.
+// - As time progresses, the price increases, resulting in fewer shares
 contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault {
     using Math for uint256;
 
@@ -29,29 +27,40 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
     // should use the same time unit (day / month or years) as the interest frequency
     uint256 public immutable TENOR;
 
+    uint256 public immutable PAR;
+
     constructor(IERC20 asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
         SimpleInterest(interestRatePercentage, frequency)
         TimelockVault(asset, "Simple Interest Rate Claim", "cSIR", 0)
     {
         TENOR = tenor;
+        PAR = 1 * SCALE; // PAR value of 1
     }
 
-    // =============== deposit ===============
+    // =============== Price Calculation ===============
 
-    // shares that would be exchanged for the amount of assets
-    // at the given numberOfTimePeriodsElapsed
+    function calcPrice(uint256 numTimePeriodsElapsed) public view returns (uint256) {
+        uint256 cycle = calcCycle(numTimePeriodsElapsed);
+
+        if (cycle == 0) return PAR;
+
+        uint256 interest = calcInterest(PAR, cycle);
+
+        // Price = PAR / (PAR - Interest)
+        return PAR.mulDiv(SCALE, PAR - interest);
+    }
+
+    // =============== Deposit ===============
+
     function convertToSharesAtPeriod(uint256 assetsInWei, uint256 numTimePeriodsElapsed)
         public
         view
         returns (uint256 shares)
     {
-        uint256 cycle = calculateCycle(numTimePeriodsElapsed);
+        uint256 price = calcPrice(numTimePeriodsElapsed);
 
-        if (cycle == 0) return assetsInWei;
-
-        uint256 interest = calcInterest(assetsInWei, cycle);
-
-        return assetsInWei - interest;
+        // Shares = Principal / price
+        return assetsInWei.mulDiv(SCALE, price);
     }
 
     function previewDeposit(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256) {
@@ -62,22 +71,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         return convertToSharesAtPeriod(assets, currentTimePeriodsElapsed);
     }
 
-    // =============== redeem ===============
-
-    // convert shares back to the principal
-    function convertToPrincipalAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
-        public
-        view
-        returns (uint256 principal)
-    {
-        uint256 cycle = calculateCycle(numTimePeriodsElapsed);
-
-        if (cycle == 0) return sharesInWei;
-
-        uint256 _principal = calcPrincipalFromDiscounted(sharesInWei, cycle);
-
-        return _principal;
-    }
+    // =============== Redeem ===============
 
     // asset that would be exchanged for the amount of shares
     // for a given numberOfTimePeriodsElapsed
@@ -87,13 +81,11 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         view
         returns (uint256 assets)
     {
-        uint256 principal = convertToPrincipalAtPeriod(sharesInWei, numTimePeriodsElapsed);
+        uint256 cycle = calcCycle(numTimePeriodsElapsed);
 
-        uint256 interest = calcInterest(principal, TENOR); // only ever give one period of interest
+        uint256 principal = cycle == 0 ? sharesInWei : calcPrincipalFromDiscounted(sharesInWei, cycle);
 
-        uint256 _assets = principal + interest;
-
-        return _assets;
+        return principal + calcInterest(principal, TENOR);
     }
 
     function previewRedeem(uint256 shares) public view override(ERC4626, IERC4626) returns (uint256 assets) {
@@ -104,6 +96,8 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         return convertToAssetsAtPeriod(shares, currentTimePeriodsElapsed);
     }
 
+    // =============== Utility ===============
+
     function getCurrentTimePeriodsElapsed() public pure returns (uint256 currentTimePeriodElapsed) {
         return currentTimePeriodElapsed;
     }
@@ -112,14 +106,12 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
     }
 
-    // =============== helper ===============
+    function calcCycle(uint256 numTimePeriods) public view returns (uint256 cycle) {
+        return numTimePeriods % TENOR;
+    }
 
     function getTenor() public view returns (uint256 tenor) {
         return TENOR;
-    }
-
-    function calculateCycle(uint256 numTimePeriods) public view returns (uint256 cycle) {
-        return numTimePeriods % TENOR;
     }
 
     function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed)

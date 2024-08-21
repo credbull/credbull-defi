@@ -20,10 +20,7 @@ interface IERC4626Interest is IERC4626, ISimpleInterest {
         view
         returns (uint256 assets);
 
-    function convertToPrincipalAtPeriod(uint256 shares, uint256 numTimePeriodsElapsed)
-        external
-        view
-        returns (uint256 assets);
+    function calcPrice(uint256 numTimePeriodsElapsed) external view returns (uint256 price);
 
     // TODO - confirm if required on interface
     function getCurrentTimePeriodsElapsed() external pure returns (uint256 currentTimePeriodsElapsed);
@@ -32,7 +29,7 @@ interface IERC4626Interest is IERC4626, ISimpleInterest {
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
 
     // TODO - confirm if required on interface
-    function calculateCycle(uint256 numTimePeriods) external view returns (uint256 cycle);
+    function calcCycle(uint256 numTimePeriods) external view returns (uint256 cycle);
 
     // TODO - confirm if required on interface
     function getTenor() external view returns (uint256 tenor);
