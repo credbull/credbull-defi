@@ -6,6 +6,7 @@ import { SimpleInterest } from "./SimpleInterest.s.sol";
 import { Frequencies } from "./Frequencies.s.sol";
 
 import { Test } from "forge-std/Test.sol";
+import { console2 } from "forge-std/console2.sol";
 
 // exposes otherwise internal mechanisms for testing
 contract SimpleInterestWithScale is SimpleInterest {
@@ -26,6 +27,8 @@ contract SimpleInterestWithScale is SimpleInterest {
 }
 
 contract SimpleInterestTest is Test {
+    uint256 public constant TOLERANCE = 500; // with 18 decimals, means allowed difference of 5E+16
+
     using Math for uint256;
 
     function test__SimpleInterestTest__InterestMonthly() public {
@@ -110,6 +113,7 @@ contract SimpleInterestTest is Test {
             simpleInterest.calcInterest(principal, 30),
             "wrong interest at day 30"
         );
+
         assertEq(
             principal.mulDiv(apy / 2, 100),
             simpleInterest.calcInterest(principal, dailyFrequency / 2),
@@ -120,6 +124,42 @@ contract SimpleInterestTest is Test {
             principal.mulDiv(apy, 100),
             simpleInterest.calcInterest(principal, dailyFrequency),
             "wrong interest at day 360"
+        );
+    }
+
+    // daily interest of 12% APY (uses 360 day count)
+    function test__SimpleInterestTest__PriceDaily() public {
+        uint256 apy = 12; // 12% APY
+        uint256 dailyFrequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
+
+        SimpleInterestWithScale simpleInterest = new SimpleInterestWithScale(apy, dailyFrequency);
+
+        uint256 PAR = simpleInterest.PAR();
+        uint256 PAR_SCALED = PAR * simpleInterest.SCALE();
+
+        uint256 simpleInterestOneDay = simpleInterest.calcInterestWithScale(100, 1);
+
+        assertEq(PAR_SCALED, simpleInterest.calcPriceWithScale(0), "wrong price at day 0");
+        assertEq(PAR_SCALED + simpleInterestOneDay, simpleInterest.calcPriceWithScale(1), "wrong price at day 1");
+
+        assertEq(PAR_SCALED + 2 * (simpleInterestOneDay), simpleInterest.calcPriceWithScale(2), "wrong price at day 2");
+        assertApproxEqAbs(
+            PAR_SCALED + 30 * (simpleInterestOneDay),
+            TOLERANCE,
+            simpleInterest.calcPriceWithScale(30),
+            "wrong price at day 30"
+        );
+        assertApproxEqAbs(
+            PAR_SCALED + 360 * (simpleInterestOneDay),
+            TOLERANCE,
+            simpleInterest.calcPriceWithScale(360),
+            "wrong price at day 360"
+        );
+        assertApproxEqAbs(
+            PAR_SCALED + 720 * (simpleInterestOneDay),
+            TOLERANCE,
+            simpleInterest.calcPriceWithScale(720),
+            "wrong price at day 720"
         );
     }
 
@@ -201,7 +241,7 @@ contract SimpleInterestTest is Test {
         assertApproxEqAbs(
             principal * SCALE,
             simpleInterest.calcPrincipalFromDiscountedWithScale(discountedScaledOneDay, 1),
-            100, // with 18 decimals, means allowed difference of 1E+16
+            TOLERANCE,
             "wrong principalScaled at day 1"
         );
     }

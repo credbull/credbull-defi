@@ -25,14 +25,15 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
     // should use the same time unit (day / month or years) as the interest frequency
     uint256 public immutable TENOR;
 
-    uint256 public immutable PAR;
+    uint256 public immutable VAULT_PAR;
 
     constructor(IERC20 asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
         SimpleInterest(interestRatePercentage, frequency)
         TimelockVault(asset, "Simple Interest Rate Claim", "cSIR", 0)
     {
         TENOR = tenor;
-        PAR = 1 * SCALE; // PAR value of 1
+
+        VAULT_PAR = 1 * SCALE;
     }
 
     // =============== Price Calculation ===============
@@ -40,12 +41,12 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
     function calcPrice(uint256 numTimePeriodsElapsed) public view returns (uint256) {
         uint256 cycle = calcCycle(numTimePeriodsElapsed);
 
-        if (cycle == 0) return PAR;
+        if (cycle == 0) return VAULT_PAR;
 
-        uint256 interest = calcInterest(PAR, cycle);
+        uint256 interest = calcInterest(VAULT_PAR, cycle);
 
         // Price = PAR / (PAR - Interest)
-        return PAR.mulDiv(SCALE, PAR - interest);
+        return VAULT_PAR.mulDiv(SCALE, VAULT_PAR - interest);
     }
 
     // =============== Deposit ===============
