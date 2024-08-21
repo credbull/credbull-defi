@@ -184,7 +184,7 @@ contract SimpleInterestVaultTest is Test {
     function depositAndVerify(Deposit memory deposit, IERC4626Interest vault) internal returns (uint256 shares) {
         console2.log(
             string.concat("-------------- price for ", deposit.name, "= "),
-            vault.calcPrice(deposit.numTimePeriodsElapsedAtDeposit)
+            vault.calcPriceWithScale(deposit.numTimePeriodsElapsedAtDeposit)
         );
 
         // vaults loop every TENOR. e.g. for a 30 day vault, day 30 = 0, day 31 = 1, day 32 = 2

@@ -20,8 +20,6 @@ interface IERC4626Interest is IERC4626, ISimpleInterest {
         view
         returns (uint256 assets);
 
-    function calcPrice(uint256 numTimePeriodsElapsed) external view returns (uint256 price);
-
     // TODO - confirm if required on interface
     function getCurrentTimePeriodsElapsed() external pure returns (uint256 currentTimePeriodsElapsed);
 

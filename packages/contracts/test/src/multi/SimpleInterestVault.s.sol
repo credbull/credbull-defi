@@ -130,4 +130,13 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
     {
         return SimpleInterest.calcPrincipalFromDiscounted(discounted, numTimePeriodsElapsed);
     }
+
+    function calcPriceWithScale(uint256 numTimePeriodsElapsed)
+        public
+        view
+        override(ISimpleInterest, SimpleInterest)
+        returns (uint256)
+    {
+        return SimpleInterest.calcPriceWithScale(numTimePeriodsElapsed);
+    }
 }

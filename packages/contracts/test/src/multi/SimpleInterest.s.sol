@@ -103,18 +103,28 @@ contract SimpleInterest {
         return principal;
     }
 
-    // you almost always want the scaled version - as prices will be near 1
+    // uses PAR as Principal - you almost always want the scaled version - as prices will be near 1
     function calcPriceWithScale(uint256 numTimePeriodsElapsed) public view virtual returns (uint256) {
-        uint256 interestWithScale = _calcInterestWithScale(PAR, numTimePeriodsElapsed);
+        return calcPriceWithScale(PAR, numTimePeriodsElapsed);
+    }
 
-        uint256 parWithScale = scaleAmount(PAR);
+    // you almost always want the scaled version - as prices will be near 1
+    function calcPriceWithScale(uint256 principal, uint256 numTimePeriodsElapsed)
+        public
+        view
+        virtual
+        returns (uint256)
+    {
+        uint256 interestWithScale = _calcInterestWithScale(principal, numTimePeriodsElapsed);
 
-        uint256 price = parWithScale + interestWithScale;
+        uint256 principalWithScale = scaleAmount(principal);
+
+        uint256 price = principalWithScale + interestWithScale;
 
         console2.log(
             string.concat(
-                "PriceWithScale = parWithScale + interestWithScale = ",
-                Strings.toString(parWithScale),
+                "PriceWithScale = principalWithScale + interestWithScale = ",
+                Strings.toString(principalWithScale),
                 " + ",
                 Strings.toString(interestWithScale),
                 " = ",
