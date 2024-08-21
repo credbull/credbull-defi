@@ -9,7 +9,7 @@ import { ISimpleInterest } from "./ISimpleInterest.s.sol";
 /**
  * @dev Extension to Interface Vault Standard
  */
-interface IERC4626Interest {
+interface IERC4626Interest is IERC4626, ISimpleInterest {
     function convertToSharesAtPeriod(uint256 assets, uint256 numTimePeriodsElapsed)
         external
         view
@@ -25,5 +25,15 @@ interface IERC4626Interest {
         view
         returns (uint256 assets);
 
+    // TODO - confirm if required on interface
+    function getCurrentTimePeriodsElapsed() external pure returns (uint256 currentTimePeriodsElapsed);
+
+    // TODO - confirm if required on interface
+    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
+
+    // TODO - confirm if required on interface
     function calculateCycle(uint256 numTimePeriods) external view returns (uint256 cycle);
+
+    // TODO - confirm if required on interface
+    function getTenor() external view returns (uint256 tenor);
 }

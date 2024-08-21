@@ -34,7 +34,7 @@ contract SimpleInterest {
         FREQUENCY = frequency;
     }
 
-    function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
+    function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) public view virtual returns (uint256) {
         uint256 interestScaled = _calcInterestWithScale(principal, numTimePeriodsElapsed);
 
         return unscaleAmount(interestScaled);
@@ -65,6 +65,7 @@ contract SimpleInterest {
     function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed)
         public
         view
+        virtual
         returns (uint256)
     {
         uint256 scaledPrincipal = _calcPrincipalFromDiscountedWithScale(scaleAmount(discounted), numTimePeriodsElapsed);

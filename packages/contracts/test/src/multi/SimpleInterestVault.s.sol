@@ -7,6 +7,10 @@ import { IERC4626Interest } from "./IERC4626Interest.s.sol";
 import { TimelockVault } from "./TimelockVault.s.sol";
 
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
+
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
@@ -50,11 +54,11 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         return assetsInWei - interest;
     }
 
-    function previewDeposit(uint256 assets) public view override returns (uint256) {
+    function previewDeposit(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256) {
         return convertToShares(assets);
     }
 
-    function convertToShares(uint256 assets) public view override returns (uint256) {
+    function convertToShares(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256) {
         return convertToSharesAtPeriod(assets, currentTimePeriodsElapsed);
     }
 
@@ -92,12 +96,16 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         return _assets;
     }
 
-    function previewRedeem(uint256 shares) public view override returns (uint256) {
+    function previewRedeem(uint256 shares) public view override(ERC4626, IERC4626) returns (uint256 assets) {
         return convertToAssets(shares);
     }
 
-    function convertToAssets(uint256 shares) public view override returns (uint256) {
+    function convertToAssets(uint256 shares) public view override(ERC4626, IERC4626) returns (uint256 assets) {
         return convertToAssetsAtPeriod(shares, currentTimePeriodsElapsed);
+    }
+
+    function getCurrentTimePeriodsElapsed() public pure returns (uint256 currentTimePeriodElapsed) {
+        return currentTimePeriodElapsed;
     }
 
     function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public {
@@ -106,7 +114,29 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
 
     // =============== helper ===============
 
-    function calculateCycle(uint256 numTimePeriods) public view returns (uint256) {
+    function getTenor() public view returns (uint256 tenor) {
+        return TENOR;
+    }
+
+    function calculateCycle(uint256 numTimePeriods) public view returns (uint256 cycle) {
         return numTimePeriods % TENOR;
+    }
+
+    function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed)
+        public
+        view
+        override(ISimpleInterest, SimpleInterest)
+        returns (uint256)
+    {
+        return SimpleInterest.calcInterest(principal, numTimePeriodsElapsed);
+    }
+
+    function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed)
+        public
+        view
+        override(ISimpleInterest, SimpleInterest)
+        returns (uint256)
+    {
+        return SimpleInterest.calcPrincipalFromDiscounted(discounted, numTimePeriodsElapsed);
     }
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
+import { IERC4626Interest } from "./IERC4626Interest.s.sol";
 import { SimpleInterestVault } from "./SimpleInterestVault.s.sol";
 import { Frequencies } from "./Frequencies.s.sol";
 
@@ -96,8 +97,8 @@ contract SimpleInterestVaultTest is Test {
             new SimpleInterestVault(asset, apy, Frequencies.toValue(frequencyDaily365), tenorDays90);
 
         Deposit memory depositAlice = Deposit("alice 0 days", alice, 200 ether, 0);
-        Deposit memory depositBob = Deposit("bob 2 day", bob, 100 ether, 1);
-        Deposit memory depositCharlie = Deposit("charlie 3 days", charlie, 300 ether, 2);
+        Deposit memory depositBob = Deposit("bob 1 day", bob, 100 ether, 1);
+        Deposit memory depositCharlie = Deposit("charlie 2 days", charlie, 300 ether, 2);
 
         verifySimpleInterestVault(vault, depositAlice, depositBob, depositCharlie);
     }
@@ -177,7 +178,7 @@ contract SimpleInterestVaultTest is Test {
         redeemAndVerify(depositCharlie, sharesInWeiCharlie, vault);
     }
 
-    function depositAndVerify(Deposit memory deposit, SimpleInterestVault vault) internal returns (uint256 shares) {
+    function depositAndVerify(Deposit memory deposit, IERC4626Interest vault) internal returns (uint256 shares) {
         // vaults loop every TENOR. e.g. for a 30 day vault, day 30 = 0, day 31 = 1, day 32 = 2
         uint256 numTimePeriodsElapsedAtDepositModTenor = vault.calculateCycle(deposit.numTimePeriodsElapsedAtDeposit);
 
@@ -216,10 +217,10 @@ contract SimpleInterestVaultTest is Test {
         return actualShares;
     }
 
-    function previewRedeemAndVerify(Deposit memory deposit, uint256 sharesInWei, SimpleInterestVault vault) public {
-        uint256 numTimePeriodsAtRedeem = deposit.numTimePeriodsElapsedAtDeposit + vault.TENOR(); // redeem happens TENOR days after deposit
+    function previewRedeemAndVerify(Deposit memory deposit, uint256 sharesInWei, IERC4626Interest vault) public {
+        uint256 numTimePeriodsAtRedeem = deposit.numTimePeriodsElapsedAtDeposit + vault.getTenor(); // redeem happens TENOR days after deposit
 
-        uint256 previousInterestFrequency = vault.currentTimePeriodsElapsed();
+        uint256 previousInterestFrequency = vault.getCurrentTimePeriodsElapsed();
 
         assertApproxEqAbs(
             deposit.amountInWei,
@@ -228,7 +229,7 @@ contract SimpleInterestVaultTest is Test {
             string.concat("wrong convertToPrincipalAtNumTimePeriodsElapsed ", deposit.name)
         );
 
-        uint256 expectedAssetsInWei = deposit.amountInWei + vault.calcInterest(deposit.amountInWei, vault.TENOR()); // full tenor of interest
+        uint256 expectedAssetsInWei = deposit.amountInWei + vault.calcInterest(deposit.amountInWei, vault.getTenor()); // full tenor of interest
 
         assertApproxEqAbs(
             expectedAssetsInWei,
@@ -254,13 +255,13 @@ contract SimpleInterestVaultTest is Test {
         vault.setCurrentTimePeriodsElapsed(previousInterestFrequency);
     }
 
-    function redeemAndVerify(Deposit memory deposit, uint256 shares, SimpleInterestVault vault)
+    function redeemAndVerify(Deposit memory deposit, uint256 shares, IERC4626Interest vault)
         internal
         returns (uint256 assets)
     {
         address wallet = deposit.wallet;
-        uint256 expectedAssetsInWei = deposit.amountInWei + vault.calcInterest(deposit.amountInWei, vault.TENOR()); // full tenor of interest
-        uint256 numTimePeriodsAtRedeem = deposit.numTimePeriodsElapsedAtDeposit + vault.TENOR(); // redeem happens TENOR days after deposit
+        uint256 expectedAssetsInWei = deposit.amountInWei + vault.calcInterest(deposit.amountInWei, vault.getTenor()); // full tenor of interest
+        uint256 numTimePeriodsAtRedeem = deposit.numTimePeriodsElapsedAtDeposit + vault.getTenor(); // redeem happens TENOR days after deposit
 
         vault.setCurrentTimePeriodsElapsed(numTimePeriodsAtRedeem);
         vm.startPrank(wallet);
