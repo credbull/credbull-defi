@@ -64,6 +64,16 @@ contract SimpleInterest {
         return interestScaled;
     }
 
+    function calcDiscountedWithScale(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
+        return principal * SCALE - _calcInterestWithScale(principal, numTimePeriodsElapsed);
+    }
+
+    function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
+        uint256 discounted = principal - calcInterest(principal, numTimePeriodsElapsed);
+
+        return discounted;
+    }
+
     function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed)
         public
         view
@@ -103,31 +113,22 @@ contract SimpleInterest {
         return principal;
     }
 
-    // uses PAR as Principal - you almost always want the scaled version - as prices will be near 1
     function calcPriceWithScale(uint256 numTimePeriodsElapsed) public view virtual returns (uint256) {
-        return calcPriceWithScale(PAR, numTimePeriodsElapsed);
-    }
+        uint256 interestWithScale = _calcInterestWithScale(PAR, numTimePeriodsElapsed); // TODO : this is the discounted rate - we can use that
 
-    // you almost always want the scaled version - as prices will be near 1
-    function calcPriceWithScale(uint256 principal, uint256 numTimePeriodsElapsed)
-        public
-        view
-        virtual
-        returns (uint256)
-    {
-        uint256 interestWithScale = _calcInterestWithScale(principal, numTimePeriodsElapsed);
+        uint256 parScaled = scaleAmount(PAR);
 
-        uint256 principalWithScale = scaleAmount(principal);
-
-        uint256 price = principalWithScale + interestWithScale;
+        uint256 price = parScaled.mulDiv(SCALE, (scaleAmount(PAR) - interestWithScale));
 
         console2.log(
             string.concat(
-                "PriceWithScale = principalWithScale + interestWithScale = ",
-                Strings.toString(principalWithScale),
-                " + ",
+                "PriceWithScale = parScaled / (parScaled - interestWithScale) = ",
+                Strings.toString(parScaled),
+                " / (",
+                Strings.toString(parScaled),
+                " - ",
                 Strings.toString(interestWithScale),
-                " = ",
+                ") = ",
                 Strings.toString(price)
             )
         );

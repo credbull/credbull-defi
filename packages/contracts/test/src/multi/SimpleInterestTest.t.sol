@@ -6,6 +6,7 @@ import { SimpleInterest } from "./SimpleInterest.s.sol";
 import { Frequencies } from "./Frequencies.s.sol";
 
 import { Test } from "forge-std/Test.sol";
+import { console2 } from "forge-std/console2.sol";
 
 // exposes otherwise internal mechanisms for testing
 contract SimpleInterestWithScale is SimpleInterest {
@@ -134,32 +135,26 @@ contract SimpleInterestTest is Test {
         SimpleInterestWithScale simpleInterest = new SimpleInterestWithScale(apy, dailyFrequency);
 
         uint256 PAR = simpleInterest.PAR();
-        uint256 PAR_SCALED = PAR * simpleInterest.SCALE();
-
-        uint256 simpleInterestOneDay = simpleInterest.calcInterestWithScale(PAR, 1);
+        uint256 SCALE = simpleInterest.SCALE();
+        uint256 PAR_SCALED = PAR * SCALE;
 
         assertEq(PAR_SCALED, simpleInterest.calcPriceWithScale(0), "wrong price at day 0");
-        assertEq(PAR_SCALED + simpleInterestOneDay, simpleInterest.calcPriceWithScale(1), "wrong price at day 1");
 
-        assertEq(PAR_SCALED + 2 * (simpleInterestOneDay), simpleInterest.calcPriceWithScale(2), "wrong price at day 2");
-        assertApproxEqAbs(
-            PAR_SCALED + 30 * (simpleInterestOneDay),
-            TOLERANCE,
-            simpleInterest.calcPriceWithScale(30),
-            "wrong price at day 30"
-        );
-        assertApproxEqAbs(
-            PAR_SCALED + 360 * (simpleInterestOneDay),
-            TOLERANCE,
-            simpleInterest.calcPriceWithScale(360),
-            "wrong price at day 360"
-        );
-        assertApproxEqAbs(
-            PAR_SCALED + 720 * (simpleInterestOneDay),
-            TOLERANCE,
-            simpleInterest.calcPriceWithScale(720),
-            "wrong price at day 720"
-        );
+        uint256 expectedOneDay = PAR_SCALED.mulDiv(SCALE, simpleInterest.calcDiscountedWithScale(PAR, 1));
+        assertEq(expectedOneDay, simpleInterest.calcPriceWithScale(1), "wrong price at day 1");
+
+        uint256 expectedTwoDays = PAR_SCALED.mulDiv(SCALE, simpleInterest.calcDiscountedWithScale(PAR, 2));
+        assertEq(expectedTwoDays, simpleInterest.calcPriceWithScale(2), "wrong price at day 2");
+
+        uint256 expectedThirtyDays = PAR_SCALED.mulDiv(SCALE, simpleInterest.calcDiscountedWithScale(PAR, 30));
+        assertEq(expectedThirtyDays, simpleInterest.calcPriceWithScale(30), "wrong price at day 30");
+
+        uint256 expectedFullTerm = PAR_SCALED.mulDiv(SCALE, simpleInterest.calcDiscountedWithScale(PAR, dailyFrequency));
+        assertEq(expectedFullTerm, simpleInterest.calcPriceWithScale(dailyFrequency), "wrong price at day 360");
+
+        uint256 expectedTwoTerms =
+            PAR_SCALED.mulDiv(SCALE, simpleInterest.calcDiscountedWithScale(PAR, 2 * dailyFrequency));
+        assertEq(expectedTwoTerms, simpleInterest.calcPriceWithScale(2 * dailyFrequency), "wrong price at day 720");
     }
 
     function test__SimpleInterestTest__DiscountingDaily() public {
@@ -173,7 +168,7 @@ contract SimpleInterestTest is Test {
             principal, simpleInterest.calcPrincipalFromDiscounted(principal, 0), "wrong principal from discounted at 0"
         );
 
-        uint256 discountedFullTerm = principal - simpleInterest.calcInterest(principal, dailyFrequency);
+        uint256 discountedFullTerm = simpleInterest.calcDiscounted(principal, dailyFrequency);
         assertEq(
             principal,
             simpleInterest.calcPrincipalFromDiscounted(discountedFullTerm, dailyFrequency),
@@ -181,7 +176,7 @@ contract SimpleInterestTest is Test {
         );
 
         uint256 oneFifthTerm = dailyFrequency / 5; // 365 / 5 = 73 days
-        uint256 discountedOneFifthTerm = principal - simpleInterest.calcInterest(principal, oneFifthTerm);
+        uint256 discountedOneFifthTerm = simpleInterest.calcDiscounted(principal, oneFifthTerm);
         assertEq(
             principal,
             simpleInterest.calcPrincipalFromDiscounted(discountedOneFifthTerm, oneFifthTerm),
@@ -189,7 +184,7 @@ contract SimpleInterestTest is Test {
         );
 
         uint256 oneDay = 1;
-        uint256 discountedOneDay = principal - simpleInterest.calcInterest(principal, oneDay);
+        uint256 discountedOneDay = simpleInterest.calcDiscounted(principal, oneDay);
         assertEq(
             principal,
             simpleInterest.calcPrincipalFromDiscounted(discountedOneDay, oneDay),
@@ -197,7 +192,7 @@ contract SimpleInterestTest is Test {
         );
 
         uint256 threeDays = 3;
-        uint256 discountedThreeDays = principal - simpleInterest.calcInterest(principal, threeDays);
+        uint256 discountedThreeDays = simpleInterest.calcDiscounted(principal, threeDays);
         assertEq(
             principal,
             simpleInterest.calcPrincipalFromDiscounted(discountedThreeDays, threeDays),
@@ -205,7 +200,7 @@ contract SimpleInterestTest is Test {
         );
 
         uint256 thirtyDays = 30;
-        uint256 discountedThirtyDays = principal - simpleInterest.calcInterest(principal, thirtyDays);
+        uint256 discountedThirtyDays = simpleInterest.calcDiscounted(principal, thirtyDays);
         assertEq(
             principal,
             simpleInterest.calcPrincipalFromDiscounted(discountedThirtyDays, thirtyDays),
@@ -229,14 +224,14 @@ contract SimpleInterestTest is Test {
             "wrong principalScaled from discounted at 0"
         );
 
-        uint256 discountedFullTerm = principal * SCALE - simpleInterest.calcInterestWithScale(principal, dailyFrequency);
+        uint256 discountedFullTerm = simpleInterest.calcDiscountedWithScale(principal, dailyFrequency);
         assertEq(
             principal * SCALE,
             simpleInterest.calcPrincipalFromDiscountedWithScale(discountedFullTerm, dailyFrequency),
             "wrong principalScaled at full term"
         );
 
-        uint256 discountedScaledOneDay = principal * SCALE - simpleInterest.calcInterestWithScale(principal, 1);
+        uint256 discountedScaledOneDay = simpleInterest.calcDiscountedWithScale(principal, 1);
         assertApproxEqAbs(
             principal * SCALE,
             simpleInterest.calcPrincipalFromDiscountedWithScale(discountedScaledOneDay, 1),

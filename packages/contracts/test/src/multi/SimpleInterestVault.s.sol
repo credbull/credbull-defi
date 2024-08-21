@@ -12,6 +12,7 @@ import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { console2 } from "forge-std/console2.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
@@ -36,19 +37,6 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         VAULT_PAR = 1 * SCALE;
     }
 
-    // =============== Price Calculation ===============
-
-    function calcPrice(uint256 numTimePeriodsElapsed) public view returns (uint256) {
-        uint256 cycle = calcCycle(numTimePeriodsElapsed);
-
-        if (cycle == 0) return VAULT_PAR;
-
-        uint256 interest = calcInterest(VAULT_PAR, cycle);
-
-        // Price = PAR / (PAR - Interest)
-        return VAULT_PAR.mulDiv(SCALE, VAULT_PAR - interest);
-    }
-
     // =============== Deposit ===============
 
     function convertToSharesAtPeriod(uint256 assetsInWei, uint256 numTimePeriodsElapsed)
@@ -56,7 +44,11 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         view
         returns (uint256 shares)
     {
-        uint256 price = calcPrice(numTimePeriodsElapsed);
+        uint256 cycle = calcCycle(numTimePeriodsElapsed);
+
+        if (cycle == 0) return assetsInWei;
+
+        uint256 price = calcPriceWithScale(cycle);
 
         // Shares = Principal / price
         return assetsInWei.mulDiv(SCALE, price);
