@@ -27,7 +27,7 @@ contract SimpleInterest {
     uint256 public constant DECIMALS = 18;
     uint256 public constant SCALE = 10 ** DECIMALS;
 
-    uint256 public immutable PAR = 100;
+    uint256 public immutable PAR = 1;
 
     Math.Rounding public constant ROUNDING = Math.Rounding.Floor;
 
@@ -107,12 +107,14 @@ contract SimpleInterest {
     function calcPriceWithScale(uint256 numTimePeriodsElapsed) public view virtual returns (uint256) {
         uint256 interestWithScale = _calcInterestWithScale(PAR, numTimePeriodsElapsed);
 
-        uint256 price = scaleAmount(PAR) + interestWithScale;
+        uint256 parWithScale = scaleAmount(PAR);
+
+        uint256 price = parWithScale + interestWithScale;
 
         console2.log(
             string.concat(
-                "Price = PAR + interestWithScale = ",
-                Strings.toString(PAR),
+                "PriceWithScale = parWithScale + interestWithScale = ",
+                Strings.toString(parWithScale),
                 " + ",
                 Strings.toString(interestWithScale),
                 " = ",

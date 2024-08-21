@@ -136,7 +136,7 @@ contract SimpleInterestTest is Test {
         uint256 PAR = simpleInterest.PAR();
         uint256 PAR_SCALED = PAR * simpleInterest.SCALE();
 
-        uint256 simpleInterestOneDay = simpleInterest.calcInterestWithScale(100, 1);
+        uint256 simpleInterestOneDay = simpleInterest.calcInterestWithScale(PAR, 1);
 
         assertEq(PAR_SCALED, simpleInterest.calcPriceWithScale(0), "wrong price at day 0");
         assertEq(PAR_SCALED + simpleInterestOneDay, simpleInterest.calcPriceWithScale(1), "wrong price at day 1");
