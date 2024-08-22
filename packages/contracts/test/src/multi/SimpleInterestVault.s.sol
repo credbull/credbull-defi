@@ -17,6 +17,8 @@ import { console2 } from "forge-std/console2.sol";
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
 // - As time progresses, the price increases, resulting in fewer shares
+//
+// TODO - there's a bug in the principal calc for deposit at 0 and redeem at 1
 contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault {
     using Math for uint256;
 
@@ -64,9 +66,15 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         view
         returns (uint256 assets)
     {
-        uint256 cycle = calcTenorCycle(numTimePeriodsElapsed);
+        // TODO - or we could actually revert if the (numTimePeriods - TENOR) < 0
 
-        uint256 principal = cycle == 0 ? sharesInWei : calcPrincipalFromDiscounted(sharesInWei, cycle);
+        // trying to redeem before TENOR - just give back the Discounted Amount
+        // this is a slash of Principal and no Interest
+        if (numTimePeriodsElapsed < TENOR) return sharesInWei;
+
+        uint256 impliedNumTimePeriodsAtDeposit = calcTenorCycle(numTimePeriodsElapsed - TENOR);
+
+        uint256 principal = calcPrincipalFromDiscounted(sharesInWei, impliedNumTimePeriodsAtDeposit);
 
         // we could calculate the assets from the price for symmetry with convertToShares.
         // however, we already have an "easy" way to calculate the returns, so using that.
