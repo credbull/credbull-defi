@@ -56,7 +56,6 @@ contract SimpleInterestVaultTest is Test {
             uint256 numTimePeriodsAtDeposit = i;
 
             uint256 redeemTimePeriod = numTimePeriodsAtDeposit + tenorThreeMonths; // redeem Time is always tenor time later
-
             uint256 expectedYield = vault.calcInterest(principal, tenorThreeMonths); // expected yield is always a full tenor
 
             // check shares
@@ -74,6 +73,22 @@ contract SimpleInterestVaultTest is Test {
                 actualAssets,
                 TOLERANCE,
                 string.concat("asset mismatch at month ", vm.toString(i))
+            );
+
+            // early redemptions result in no gains (or even losses) - this is a penalty for early redemption
+            uint256 assetsAtDepositPlusOne = vault.convertToAssetsAtPeriod(actualShares, numTimePeriodsAtDeposit + 1);
+            assertGe(
+                principal + vault.calcInterest(principal, 1), // principal plus one period of interest is the max they should receive
+                assetsAtDepositPlusOne,
+                string.concat("asset mismatch assetsAtDepositPlusOne ", vm.toString(i))
+            );
+
+            // early redemptions result in no gains (or even losses) - this is a penalty for early redemption
+            uint256 assetsAtRedeemMinus1 = vault.convertToAssetsAtPeriod(actualShares, redeemTimePeriod - 1);
+            assertGe(
+                principal + vault.calcInterest(principal, redeemTimePeriod - 1), // principal plus # of time periods
+                assetsAtRedeemMinus1,
+                string.concat("asset mismatch assetsAtRedeemMinus1 ", vm.toString(i))
             );
         }
     }
@@ -188,9 +203,6 @@ contract SimpleInterestVaultTest is Test {
             string.concat("-------------- price for ", deposit.name, "= "),
             vault.calcPriceAtPeriodWithScale(deposit.numTimePeriodsElapsedAtDeposit)
         );
-
-        // vaults loop every TENOR. e.g. for a 30 day vault, day 30 = 0, day 31 = 1, day 32 = 2
-        // uint256 numTimePeriodsElapsedAtDepositModTenor = vault.calcTenorCycle(deposit.numTimePeriodsElapsedAtDeposit);
 
         uint256 expectedInterestInWei = vault.calcInterest(deposit.amountInWei, deposit.numTimePeriodsElapsedAtDeposit);
 

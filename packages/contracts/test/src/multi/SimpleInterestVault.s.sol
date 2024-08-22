@@ -17,8 +17,6 @@ import { console2 } from "forge-std/console2.sol";
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
 // - As time progresses, the price increases, resulting in fewer shares
-//
-// TODO - there's a bug in the principal calc for deposit at 0 and redeem at 1
 contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault {
     using Math for uint256;
 
