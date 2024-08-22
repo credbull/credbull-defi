@@ -113,27 +113,25 @@ contract SimpleInterest {
         return principal;
     }
 
-    function calcPriceWithScale(uint256 numTimePeriodsElapsed) public view virtual returns (uint256) {
-        uint256 interestWithScale = _calcInterestWithScale(PAR, numTimePeriodsElapsed); // TODO : this is the discounted rate - we can use that
-
+    function calcPriceAtPeriodWithScale(uint256 numTimePeriodsElapsed) public view virtual returns (uint256) {
         uint256 parScaled = scaleAmount(PAR);
 
-        uint256 price = parScaled.mulDiv(SCALE, (scaleAmount(PAR) - interestWithScale));
+        uint256 parDiscounted = calcDiscountedWithScale(PAR, numTimePeriodsElapsed);
+
+        uint256 priceScaled = parScaled.mulDiv(SCALE, parDiscounted);
 
         console2.log(
             string.concat(
-                "PriceWithScale = parScaled / (parScaled - interestWithScale) = ",
+                "PriceWithScale = parScaled / parDiscounted = ",
                 Strings.toString(parScaled),
                 " / (",
-                Strings.toString(parScaled),
-                " - ",
-                Strings.toString(interestWithScale),
+                Strings.toString(parDiscounted),
                 ") = ",
-                Strings.toString(price)
+                Strings.toString(priceScaled)
             )
         );
 
-        return price;
+        return priceScaled;
     }
 
     function scaleAmount(uint256 amount) internal pure returns (uint256) {

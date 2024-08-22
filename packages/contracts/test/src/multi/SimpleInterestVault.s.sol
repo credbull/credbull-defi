@@ -12,6 +12,7 @@ import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { console2 } from "forge-std/console2.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
@@ -25,15 +26,11 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
     // should use the same time unit (day / month or years) as the interest frequency
     uint256 public immutable TENOR;
 
-    uint256 public immutable VAULT_PAR;
-
     constructor(IERC20 asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
         SimpleInterest(interestRatePercentage, frequency)
         TimelockVault(asset, "Simple Interest Rate Claim", "cSIR", 0)
     {
         TENOR = tenor;
-
-        VAULT_PAR = 1 * SCALE;
     }
 
     // =============== Deposit ===============
@@ -43,13 +40,9 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         view
         returns (uint256 shares)
     {
-        uint256 cycle = calcCycle(numTimePeriodsElapsed);
+        uint256 price = calcPriceAtPeriodWithScale(numTimePeriodsElapsed);
 
-        if (cycle == 0) return assetsInWei;
-
-        uint256 price = calcPriceWithScale(cycle);
-
-        // Shares = Principal / price
+        // Shares = Principal / parPrice
         return assetsInWei.mulDiv(SCALE, price);
     }
 
@@ -71,9 +64,12 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         view
         returns (uint256 assets)
     {
-        uint256 cycle = calcCycle(numTimePeriodsElapsed);
+        uint256 cycle = calcTenorCycle(numTimePeriodsElapsed);
 
         uint256 principal = cycle == 0 ? sharesInWei : calcPrincipalFromDiscounted(sharesInWei, cycle);
+
+        // we could calculate the assets from the price for symmetry with convertToShares.
+        // however, we already have an "easy" way to calculate the returns, so using that.
 
         return principal + calcInterest(principal, TENOR);
     }
@@ -96,8 +92,12 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
     }
 
-    function calcCycle(uint256 numTimePeriods) public view returns (uint256 cycle) {
-        return numTimePeriods % TENOR;
+    function calcTenorCycle(uint256 numTimePeriods) public view returns (uint256 cycle) {
+        uint256 tenorCycle = numTimePeriods % TENOR;
+
+        console2.log("numTimePeriods, numTimePeriods mod TENOR", numTimePeriods, (numTimePeriods % TENOR));
+
+        return tenorCycle;
     }
 
     function getTenor() public view returns (uint256 tenor) {
@@ -122,12 +122,16 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         return SimpleInterest.calcPrincipalFromDiscounted(discounted, numTimePeriodsElapsed);
     }
 
-    function calcPriceWithScale(uint256 numTimePeriodsElapsed)
+    function calcPriceAtPeriodWithScale(uint256 numTimePeriodsElapsed)
         public
         view
         override(ISimpleInterest, SimpleInterest)
         returns (uint256)
     {
-        return SimpleInterest.calcPriceWithScale(numTimePeriodsElapsed);
+        uint256 cycle = calcTenorCycle(numTimePeriodsElapsed);
+
+        if (cycle == 0) return scaleAmount(PAR);
+
+        return SimpleInterest.calcPriceAtPeriodWithScale(cycle);
     }
 }
