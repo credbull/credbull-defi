@@ -66,13 +66,12 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         view
         returns (uint256 assets)
     {
-        // TODO - or we could actually revert if the (numTimePeriods - TENOR) < 0
-
         // trying to redeem before TENOR - just give back the Discounted Amount
-        // this is a slash of Principal and no Interest
+        // this is a slash of Principal (and no Interest)
+        // NB - according to spec, this function should not revert
         if (numTimePeriodsElapsed < TENOR) return sharesInWei;
 
-        uint256 impliedNumTimePeriodsAtDeposit = calcTenorCycle(numTimePeriodsElapsed - TENOR);
+        uint256 impliedNumTimePeriodsAtDeposit = (numTimePeriodsElapsed - TENOR);
 
         uint256 principal = calcPrincipalFromDiscounted(sharesInWei, impliedNumTimePeriodsAtDeposit);
 
@@ -136,10 +135,8 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         override(ISimpleInterest, SimpleInterest)
         returns (uint256)
     {
-        uint256 cycle = calcTenorCycle(numTimePeriodsElapsed);
+        if (numTimePeriodsElapsed == 0) return scaleAmount(PAR);
 
-        if (cycle == 0) return scaleAmount(PAR);
-
-        return SimpleInterest.calcPriceAtPeriodWithScale(cycle);
+        return SimpleInterest.calcPriceAtPeriodWithScale(numTimePeriodsElapsed);
     }
 }
