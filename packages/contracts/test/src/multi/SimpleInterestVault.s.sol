@@ -71,6 +71,8 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         view
         returns (uint256 assetsInWei)
     {
+        if (sharesInWei < SCALE) return 0; // no assets for fractional shares
+
         // trying to redeem before TENOR - just give back the Discounted Amount
         // this is a slash of Principal (and no Interest)
         // NB - according to spec, this function should not revert
