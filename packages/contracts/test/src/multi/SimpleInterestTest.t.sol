@@ -39,7 +39,7 @@ contract SimpleInterestTest is Test {
         // check all periods for 24 months
         for (uint256 numTimePeriods = 0; numTimePeriods <= maxNumPeriods; numTimePeriods++) {
             // SimpleInterest has the nice property
-            uint256 discountedWithScale = simpleInterest.calcDiscountedWithScale(principal, numTimePeriods); // TODO - why just principal ??
+            uint256 discountedWithScale = simpleInterest.calcDiscountedWithScale(principal, numTimePeriods);
 
             console2.log("discountedWithScale", discountedWithScale);
 
@@ -55,14 +55,46 @@ contract SimpleInterestTest is Test {
                 principalInWei,
                 principalFromDiscountedWithScale,
                 TOLERANCE,
-                assertMsg("principalFromDiscount not inverse of principal", simpleInterest, numTimePeriods)
+                assertMsg(
+                    "principalFromDiscountWithScale not inverse of principalInWei", simpleInterest, numTimePeriods
+                )
             );
 
             //  discountedFactor = principal - interest, therefore interest = principal - discountedFactor
+            uint256 interestScaled = principalInWei - discountedWithScale;
             assertEq(
-                principalInWei - discountedWithScale,
+                interestScaled,
                 simpleInterest.calcInterestWithScale(principal, numTimePeriods),
+                assertMsg("calcInterestWithScale incorrect for ", simpleInterest, numTimePeriods)
+            );
+
+            //  verify scaled versions
+            assertEq(
+                interestScaled / simpleInterest.getScale(),
+                simpleInterest.calcInterest(principal, numTimePeriods),
                 assertMsg("calcInterest incorrect for ", simpleInterest, numTimePeriods)
+            );
+
+            // verify unscaled versions - these are dangerous !!
+            uint256 interest = simpleInterest.calcInterest(principal, numTimePeriods);
+
+            assertEq(
+                principal - interest,
+                simpleInterest.calcDiscounted(principal, numTimePeriods),
+                assertMsg("calcPrincipalFromDiscounted incorrect for ", simpleInterest, numTimePeriods)
+            );
+
+            // TODO - Not the Large Tolerance here - Inverse property does not hold for very small numbers
+            // [FAIL. Reason: principalFromDiscount not inverse of principalInWei  ISimpleInterest [  IR = 10 Freq = 360 ]  timePeriod= 18: 200 != 199] test__SimpleInterestTest__Daily360() (gas: 2661896)
+            //[FAIL. Reason: principalFromDiscount not inverse of principalInWei  ISimpleInterest [  IR = 12 Freq = 12 ]  timePeriod= 1: 200 != 197] test__SimpleInterestTest__Monthly() (gas: 901792)
+            // property does not hold for very small fractions
+            uint256 discounted = simpleInterest.calcDiscounted(principal, numTimePeriods);
+
+            assertApproxEqAbs(
+                principal,
+                simpleInterest.calcDiscounted(discounted, numTimePeriods),
+                100,
+                assertMsg("principalFromDiscount not inverse of principalInWei ", simpleInterest, numTimePeriods)
             );
         }
     }
