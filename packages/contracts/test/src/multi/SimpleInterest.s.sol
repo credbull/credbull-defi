@@ -48,18 +48,24 @@ contract SimpleInterest is ISimpleInterest {
 
     Math.Rounding public constant ROUNDING = Math.Rounding.Floor;
 
+    error PrincipalLessThanScale(uint256 principal, uint256 scale);
+
     constructor(uint256 interestRatePercentage, uint256 frequency) {
         INTEREST_RATE_PERCENTAGE = interestRatePercentage;
         FREQUENCY = frequency;
     }
 
     function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) public view virtual returns (uint256) {
-        uint256 interestScaled = calcInterestWithScale(principal, numTimePeriodsElapsed);
+        if (principal < SCALE) {
+            revert PrincipalLessThanScale(principal, SCALE);
+        }
+
+        uint256 interestScaled = _calcInterestWithScale(principal, numTimePeriodsElapsed);
 
         return unscaleAmount(interestScaled);
     }
 
-    function calcInterestWithScale(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
+    function _calcInterestWithScale(uint256 principal, uint256 numTimePeriodsElapsed) internal view returns (uint256) {
         uint256 interestScaled =
             principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
 
@@ -81,11 +87,19 @@ contract SimpleInterest is ISimpleInterest {
         return interestScaled;
     }
 
-    function calcDiscountedWithScale(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
-        return principal * SCALE - calcInterestWithScale(principal, numTimePeriodsElapsed);
+    function _calcDiscountedWithScale(uint256 principal, uint256 numTimePeriodsElapsed)
+        internal
+        view
+        returns (uint256)
+    {
+        return principal * SCALE - _calcInterestWithScale(principal, numTimePeriodsElapsed);
     }
 
     function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
+        if (principal < SCALE) {
+            revert PrincipalLessThanScale(principal, SCALE);
+        }
+
         uint256 discounted = principal - calcInterest(principal, numTimePeriodsElapsed);
 
         return discounted;
@@ -97,12 +111,12 @@ contract SimpleInterest is ISimpleInterest {
         virtual
         returns (uint256)
     {
-        uint256 scaledPrincipal = calcPrincipalFromDiscountedWithScale(scaleAmount(discounted), numTimePeriodsElapsed);
+        uint256 scaledPrincipal = _calcPrincipalFromDiscountedWithScale(scaleAmount(discounted), numTimePeriodsElapsed);
 
         return unscaleAmount(scaledPrincipal);
     }
 
-    function calcPrincipalFromDiscountedWithScale(uint256 discounted, uint256 numTimePeriodsElapsed)
+    function _calcPrincipalFromDiscountedWithScale(uint256 discounted, uint256 numTimePeriodsElapsed)
         public
         view
         returns (uint256)

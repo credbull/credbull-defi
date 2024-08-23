@@ -21,28 +21,6 @@ pragma solidity ^0.8.20;
  * making the system consistent and predictable.
  */
 interface ISimpleInterest {
-    // ============= scaled ================
-
-    function calcInterestWithScale(uint256 principal, uint256 numTimePeriodsElapsed)
-        external
-        view
-        returns (uint256 interest);
-
-    function calcDiscountedWithScale(uint256 principal, uint256 numTimePeriodsElapsed)
-        external
-        view
-        returns (uint256 discounted);
-
-    function calcPrincipalFromDiscountedWithScale(uint256 discounted, uint256 numTimePeriodsElapsed)
-        external
-        view
-        returns (uint256 principal);
-
-    function getScale() external view returns (uint256 scale);
-
-    // ============= unscaled ================
-    // TODO - should these be deprecated ??
-
     function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) external view returns (uint256 interest);
 
     function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed)
