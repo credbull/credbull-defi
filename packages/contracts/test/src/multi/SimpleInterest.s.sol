@@ -113,27 +113,6 @@ contract SimpleInterest {
         return principal;
     }
 
-    function calcPriceAtPeriodWithScale(uint256 numTimePeriodsElapsed) public view virtual returns (uint256) {
-        uint256 parScaled = scaleAmount(PAR);
-
-        uint256 parDiscounted = calcDiscountedWithScale(PAR, numTimePeriodsElapsed);
-
-        uint256 priceScaled = parScaled.mulDiv(SCALE, parDiscounted);
-
-        console2.log(
-            string.concat(
-                "PriceWithScale = parScaled / parDiscounted = ",
-                Strings.toString(parScaled),
-                " / (",
-                Strings.toString(parDiscounted),
-                ") = ",
-                Strings.toString(priceScaled)
-            )
-        );
-
-        return priceScaled;
-    }
-
     function scaleAmount(uint256 amount) internal pure returns (uint256) {
         return amount * SCALE;
     }

@@ -199,11 +199,6 @@ contract SimpleInterestVaultTest is Test {
     }
 
     function depositAndVerify(Deposit memory deposit, IERC4626Interest vault) internal returns (uint256 shares) {
-        console2.log(
-            string.concat("-------------- price for ", deposit.name, "= "),
-            vault.calcPriceAtPeriodWithScale(deposit.numTimePeriodsElapsedAtDeposit)
-        );
-
         uint256 expectedInterestInWei = vault.calcInterest(deposit.amountInWei, deposit.numTimePeriodsElapsedAtDeposit);
 
         uint256 expectedSharesInWei = (deposit.amountInWei - expectedInterestInWei);

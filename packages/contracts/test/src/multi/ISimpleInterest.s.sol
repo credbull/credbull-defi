@@ -12,6 +12,4 @@ interface ISimpleInterest {
         external
         view
         returns (uint256 principal);
-
-    function calcPriceAtPeriodWithScale(uint256 numTimePeriodsElapsed) external view returns (uint256 price);
 }

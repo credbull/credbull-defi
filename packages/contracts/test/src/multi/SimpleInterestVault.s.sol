@@ -40,10 +40,11 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         view
         returns (uint256 shares)
     {
-        uint256 price = calcPriceAtPeriodWithScale(numTimePeriodsElapsed);
+        uint256 interest = calcInterest(assetsInWei, numTimePeriodsElapsed);
 
-        // Shares = Principal / parPrice
-        return assetsInWei.mulDiv(SCALE, price);
+        uint256 sharesInWei = assetsInWei - interest;
+
+        return sharesInWei;
     }
 
     function previewDeposit(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256) {
@@ -72,9 +73,6 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         uint256 impliedNumTimePeriodsAtDeposit = (numTimePeriodsElapsed - TENOR);
 
         uint256 principal = calcPrincipalFromDiscounted(sharesInWei, impliedNumTimePeriodsAtDeposit);
-
-        // we could calculate the assets from the price for symmetry with convertToShares.
-        // however, we already have an "easy" way to calculate the returns, so using that.
 
         return principal + calcInterest(principal, TENOR);
     }
@@ -125,16 +123,5 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         returns (uint256)
     {
         return SimpleInterest.calcPrincipalFromDiscounted(discounted, numTimePeriodsElapsed);
-    }
-
-    function calcPriceAtPeriodWithScale(uint256 numTimePeriodsElapsed)
-        public
-        view
-        override(ISimpleInterest, SimpleInterest)
-        returns (uint256)
-    {
-        if (numTimePeriodsElapsed == 0) return scaleAmount(PAR);
-
-        return SimpleInterest.calcPriceAtPeriodWithScale(numTimePeriodsElapsed);
     }
 }

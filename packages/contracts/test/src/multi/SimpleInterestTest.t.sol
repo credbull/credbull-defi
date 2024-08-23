@@ -126,38 +126,6 @@ contract SimpleInterestTest is Test {
         );
     }
 
-    // daily interest of 12% APY (uses 360 day count)
-    function test__SimpleInterestTest__PriceDaily() public {
-        uint256 apy = 12; // 12% APY
-        uint256 dailyFrequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-
-        SimpleInterestWithScale simpleInterest = new SimpleInterestWithScale(apy, dailyFrequency);
-
-        uint256 PAR = simpleInterest.PAR();
-        uint256 SCALE = simpleInterest.SCALE();
-        uint256 PAR_SCALED = PAR * SCALE;
-
-        assertEq(PAR_SCALED, simpleInterest.calcPriceAtPeriodWithScale(0), "wrong price at day 0");
-
-        uint256 expectedOneDay = PAR_SCALED.mulDiv(SCALE, simpleInterest.calcDiscountedWithScale(PAR, 1));
-        assertEq(expectedOneDay, simpleInterest.calcPriceAtPeriodWithScale(1), "wrong price at day 1");
-
-        uint256 expectedTwoDays = PAR_SCALED.mulDiv(SCALE, simpleInterest.calcDiscountedWithScale(PAR, 2));
-        assertEq(expectedTwoDays, simpleInterest.calcPriceAtPeriodWithScale(2), "wrong price at day 2");
-
-        uint256 expectedThirtyDays = PAR_SCALED.mulDiv(SCALE, simpleInterest.calcDiscountedWithScale(PAR, 30));
-        assertEq(expectedThirtyDays, simpleInterest.calcPriceAtPeriodWithScale(30), "wrong price at day 30");
-
-        uint256 expectedFullTerm = PAR_SCALED.mulDiv(SCALE, simpleInterest.calcDiscountedWithScale(PAR, dailyFrequency));
-        assertEq(expectedFullTerm, simpleInterest.calcPriceAtPeriodWithScale(dailyFrequency), "wrong price at day 360");
-
-        uint256 expectedTwoTerms =
-            PAR_SCALED.mulDiv(SCALE, simpleInterest.calcDiscountedWithScale(PAR, 2 * dailyFrequency));
-        assertEq(
-            expectedTwoTerms, simpleInterest.calcPriceAtPeriodWithScale(2 * dailyFrequency), "wrong price at day 720"
-        );
-    }
-
     function test__SimpleInterestTest__DiscountingDaily() public {
         uint256 apy = 12; // APY in percentage
 
