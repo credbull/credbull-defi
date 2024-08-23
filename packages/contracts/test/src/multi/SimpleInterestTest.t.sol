@@ -5,7 +5,6 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SimpleInterest } from "./SimpleInterest.s.sol";
 import { Frequencies } from "./Frequencies.s.sol";
 
-import { Test } from "forge-std/Test.sol";
 import { ISimpleInterest } from "./ISimpleInterest.s.sol";
 import { InterestTest } from "./InterestTest.t.sol";
 

@@ -13,9 +13,6 @@ import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-import { console2 } from "forge-std/console2.sol";
-import { Test } from "forge-std/Test.sol";
-
 contract SimpleInterestVaultTest is InterestTest {
     using Math for uint256;
 
