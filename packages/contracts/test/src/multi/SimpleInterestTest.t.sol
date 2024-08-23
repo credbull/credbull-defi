@@ -77,9 +77,10 @@ contract SimpleInterestTest is Test {
             );
 
             //  discountedFactor = principal - interest, therefore interest = principal - discountedFactor
-            assertEq(
+            assertApproxEqAbs(
                 principal - discounted,
                 simpleInterest.calcInterest(principal, numTimePeriods),
+                10, // even smaller tolerance here
                 assertMsg("calcInterest incorrect for ", simpleInterest, numTimePeriods)
             );
         }

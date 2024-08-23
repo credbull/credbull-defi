@@ -60,9 +60,25 @@ contract SimpleInterest is ISimpleInterest {
             revert PrincipalLessThanScale(principal, SCALE);
         }
 
-        uint256 interestScaled = _calcInterestWithScale(principal, numTimePeriodsElapsed);
+        uint256 interestScaled =
+            principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
 
-        return unscaleAmount(interestScaled);
+        console2.log(
+            string.concat(
+                "Interest = (IR * P * m) / f = ",
+                Strings.toString(INTEREST_RATE_PERCENTAGE),
+                "% * ",
+                Strings.toString(principal),
+                " * ",
+                Strings.toString(numTimePeriodsElapsed),
+                " / ",
+                Strings.toString(FREQUENCY),
+                " = ",
+                Strings.toString(interestScaled)
+            )
+        );
+
+        return unscale(interestScaled);
     }
 
     function _calcInterestWithScale(uint256 principal, uint256 numTimePeriodsElapsed) internal view returns (uint256) {
@@ -87,22 +103,14 @@ contract SimpleInterest is ISimpleInterest {
         return interestScaled;
     }
 
-    function _calcDiscountedWithScale(uint256 principal, uint256 numTimePeriodsElapsed)
-        internal
-        view
-        returns (uint256)
-    {
-        return principal * SCALE - _calcInterestWithScale(principal, numTimePeriodsElapsed);
-    }
-
     function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
         if (principal < SCALE) {
             revert PrincipalLessThanScale(principal, SCALE);
         }
 
-        uint256 discounted = principal - calcInterest(principal, numTimePeriodsElapsed);
+        uint256 discountedScaled = principal * SCALE - _calcInterestWithScale(principal, numTimePeriodsElapsed);
 
-        return discounted;
+        return unscale(discountedScaled);
     }
 
     function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed)
@@ -111,20 +119,10 @@ contract SimpleInterest is ISimpleInterest {
         virtual
         returns (uint256)
     {
-        uint256 scaledPrincipal = _calcPrincipalFromDiscountedWithScale(scaleAmount(discounted), numTimePeriodsElapsed);
-
-        return unscaleAmount(scaledPrincipal);
-    }
-
-    function _calcPrincipalFromDiscountedWithScale(uint256 discounted, uint256 numTimePeriodsElapsed)
-        public
-        view
-        returns (uint256)
-    {
         uint256 interestFactor =
             INTEREST_RATE_PERCENTAGE.mulDiv(numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
 
-        uint256 principal = discounted.mulDiv(SCALE, SCALE - interestFactor, ROUNDING);
+        uint256 scaledPrincipal = discounted.mulDiv(SCALE * SCALE, SCALE - interestFactor, ROUNDING);
 
         console2.log(
             string.concat(
@@ -137,18 +135,14 @@ contract SimpleInterest is ISimpleInterest {
                 " ) / ",
                 Strings.toString(FREQUENCY),
                 " = ",
-                Strings.toString(principal)
+                Strings.toString(scaledPrincipal)
             )
         );
 
-        return principal;
+        return unscale(scaledPrincipal);
     }
 
-    function scaleAmount(uint256 amount) internal pure returns (uint256) {
-        return amount * SCALE;
-    }
-
-    function unscaleAmount(uint256 amount) internal pure returns (uint256) {
+    function unscale(uint256 amount) internal pure returns (uint256) {
         return amount / SCALE;
     }
 
