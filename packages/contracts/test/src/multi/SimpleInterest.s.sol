@@ -55,7 +55,12 @@ contract SimpleInterest is ISimpleInterest {
         FREQUENCY = frequency;
     }
 
-    function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) public view virtual returns (uint256) {
+    function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed)
+        public
+        view
+        virtual
+        returns (uint256 interest)
+    {
         if (principal < SCALE) {
             revert PrincipalLessThanScale(principal, SCALE);
         }
@@ -81,7 +86,11 @@ contract SimpleInterest is ISimpleInterest {
         return unscale(interestScaled);
     }
 
-    function _calcInterestWithScale(uint256 principal, uint256 numTimePeriodsElapsed) internal view returns (uint256) {
+    function _calcInterestWithScale(uint256 principal, uint256 numTimePeriodsElapsed)
+        internal
+        view
+        returns (uint256 _interestScaled)
+    {
         uint256 interestScaled =
             principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
 
@@ -144,10 +153,6 @@ contract SimpleInterest is ISimpleInterest {
 
     function unscale(uint256 amount) internal pure returns (uint256) {
         return amount / SCALE;
-    }
-
-    function getScale() public view returns (uint256 frequency) {
-        return SCALE;
     }
 
     function getFrequency() public view returns (uint256 frequency) {

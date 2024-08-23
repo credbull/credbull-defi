@@ -38,21 +38,29 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
     function convertToSharesAtPeriod(uint256 assetsInWei, uint256 numTimePeriodsElapsed)
         public
         view
-        returns (uint256 shares)
+        returns (uint256 sharesInWei)
     {
-        uint256 interest = calcInterest(assetsInWei, numTimePeriodsElapsed);
+        if (assetsInWei < SCALE) return 0; // no shares for fractional assets
 
-        uint256 sharesInWei = assetsInWei - interest;
-
-        return sharesInWei;
+        return calcDiscounted(assetsInWei, numTimePeriodsElapsed);
     }
 
-    function previewDeposit(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256) {
-        return convertToShares(assets);
+    function previewDeposit(uint256 assetsInWei)
+        public
+        view
+        override(ERC4626, IERC4626)
+        returns (uint256 sharesInWei)
+    {
+        return convertToShares(assetsInWei);
     }
 
-    function convertToShares(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256) {
-        return convertToSharesAtPeriod(assets, currentTimePeriodsElapsed);
+    function convertToShares(uint256 assetsInWei)
+        public
+        view
+        override(ERC4626, IERC4626)
+        returns (uint256 sharesInWei)
+    {
+        return convertToSharesAtPeriod(assetsInWei, currentTimePeriodsElapsed);
     }
 
     // =============== Redeem ===============
@@ -63,7 +71,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
     function convertToAssetsAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
         public
         view
-        returns (uint256 assets)
+        returns (uint256 assetsInWei)
     {
         // trying to redeem before TENOR - just give back the Discounted Amount
         // this is a slash of Principal (and no Interest)
@@ -77,12 +85,17 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         return principal + calcInterest(principal, TENOR);
     }
 
-    function previewRedeem(uint256 shares) public view override(ERC4626, IERC4626) returns (uint256 assets) {
-        return convertToAssets(shares);
+    function previewRedeem(uint256 sharesInWei) public view override(ERC4626, IERC4626) returns (uint256 assetsInWei) {
+        return convertToAssets(sharesInWei);
     }
 
-    function convertToAssets(uint256 shares) public view override(ERC4626, IERC4626) returns (uint256 assets) {
-        return convertToAssetsAtPeriod(shares, currentTimePeriodsElapsed);
+    function convertToAssets(uint256 sharesInWei)
+        public
+        view
+        override(ERC4626, IERC4626)
+        returns (uint256 assetsInWei)
+    {
+        return convertToAssetsAtPeriod(sharesInWei, currentTimePeriodsElapsed);
     }
 
     // =============== Utility ===============
@@ -95,33 +108,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
         currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
     }
 
-    function calcTenorCycle(uint256 numTimePeriods) public view returns (uint256 cycle) {
-        uint256 tenorCycle = numTimePeriods % TENOR;
-
-        console2.log("numTimePeriods, numTimePeriods mod TENOR", numTimePeriods, (numTimePeriods % TENOR));
-
-        return tenorCycle;
-    }
-
     function getTenor() public view returns (uint256 tenor) {
         return TENOR;
-    }
-
-    function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed)
-        public
-        view
-        override(ISimpleInterest, SimpleInterest)
-        returns (uint256)
-    {
-        return SimpleInterest.calcInterest(principal, numTimePeriodsElapsed);
-    }
-
-    function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed)
-        public
-        view
-        override(ISimpleInterest, SimpleInterest)
-        returns (uint256)
-    {
-        return SimpleInterest.calcPrincipalFromDiscounted(discounted, numTimePeriodsElapsed);
     }
 }
