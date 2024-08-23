@@ -5,6 +5,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { console2 } from "forge-std/console2.sol";
+import { ISimpleInterest } from "./ISimpleInterest.s.sol";
 
 /**
  * https://en.wikipedia.org/wiki/Interest
@@ -17,8 +18,24 @@ import { console2 } from "forge-std/console2.sol";
  * - P is the Principal (aka initial amount)
  * - m is the number of time periods elapsed
  * - f is the frequency of applying interest (how many interest periods in a year)
+ *
+ *
+ *  @notice The `calcPrincipalFromDiscounted` and `calcDiscounted` functions are designed to be mathematical inverses of each other.
+ * This means that applying `calcPrincipalFromDiscounted` to the output of `calcDiscounted` will return the original principal amount.
+ *
+ * For example:
+ * ```
+ * uint256 originalPrincipal = 1000;
+ * uint256 discountedValue = calcDiscounted(originalPrincipal);
+ * uint256 recoveredPrincipal = calcPrincipalFromDiscounted(discountedValue);
+ * assert(recoveredPrincipal == originalPrincipal);
+ * ```
+ *
+ * This property ensures that no information is lost when discounting and then recovering the principal,
+ * making the system consistent and predictable.
+ *
  */
-contract SimpleInterest {
+contract SimpleInterest is ISimpleInterest {
     using Math for uint256;
 
     uint256 public immutable INTEREST_RATE_PERCENTAGE;
@@ -119,5 +136,13 @@ contract SimpleInterest {
 
     function unscaleAmount(uint256 amount) internal pure returns (uint256) {
         return amount / SCALE;
+    }
+
+    function getFrequency() public view returns (uint256 frequency) {
+        return FREQUENCY;
+    }
+
+    function getInterestInPercentage() public view returns (uint256 interestRateInPercentage) {
+        return INTEREST_RATE_PERCENTAGE;
     }
 }
