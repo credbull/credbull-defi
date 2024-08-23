@@ -8,23 +8,7 @@ import { Frequencies } from "./Frequencies.s.sol";
 import { Test } from "forge-std/Test.sol";
 import { ISimpleInterest } from "./ISimpleInterest.s.sol";
 
-// exposes otherwise internal mechanisms for testing
-contract SimpleInterestWithScale is SimpleInterest {
-    constructor(uint256 interestRatePercentage, uint256 frequency) SimpleInterest(interestRatePercentage, frequency) { }
-
-    // Override the internal function to change its visibility for testing
-    function calcInterestWithScale(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
-        return super._calcInterestWithScale(principal, numTimePeriodsElapsed);
-    }
-
-    function calcPrincipalFromDiscountedWithScale(uint256 discounted, uint256 numTimePeriodsElapsed)
-        public
-        view
-        returns (uint256)
-    {
-        return super._calcPrincipalFromDiscountedWithScale(discounted, numTimePeriodsElapsed);
-    }
-}
+import { console2 } from "forge-std/console2.sol";
 
 contract SimpleInterestTest is Test {
     uint256 public constant TOLERANCE = 500; // with 18 decimals, means allowed difference of 5E+16
@@ -40,51 +24,55 @@ contract SimpleInterestTest is Test {
         simpleInterestTestHarness(200, simpleInterest);
     }
 
-    //    function test__SimpleInterestTest__Daily360() public {
-    //        uint256 apy = 12; // APY in percentage
-    //
-    //        ISimpleInterest simpleInterest =
-    //                    new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360));
-    //
-    //        simpleInterestTestHarness(200, simpleInterest);
-    //    }
+    function test__SimpleInterestTest__Daily360() public {
+        uint256 apy = 10; // APY in percentage
+
+        ISimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360));
+
+        simpleInterestTestHarness(200, simpleInterest);
+    }
 
     function simpleInterestTestHarness(uint256 principal, ISimpleInterest simpleInterest) public {
         uint256 maxNumPeriods = simpleInterest.getFrequency() * NUM_CYCLES_TO_TEST; // e.g. 2 years, 24 months, 720 days
+        uint256 principalInWei = principal * simpleInterest.getScale();
 
         // check all periods for 24 months
         for (uint256 numTimePeriods = 0; numTimePeriods <= maxNumPeriods; numTimePeriods++) {
             // SimpleInterest has the nice property
-            uint256 discountedFactor = simpleInterest.calcDiscounted(principal, numTimePeriods);
-            uint256 principalFromDiscounted =
-                simpleInterest.calcPrincipalFromDiscounted(discountedFactor, numTimePeriods);
+            uint256 discountedWithScale = simpleInterest.calcDiscountedWithScale(principal, numTimePeriods); // TODO - why just principal ??
+
+            console2.log("discountedWithScale", discountedWithScale);
+
+            uint256 principalFromDiscountedWithScale =
+                simpleInterest.calcPrincipalFromDiscountedWithScale(discountedWithScale, numTimePeriods);
+
+            console2.log("principalFromDiscountedWithScale", discountedWithScale);
 
             // The `calcPrincipalFromDiscounted` and `calcDiscounted` functions are designed to be mathematical inverses of each other.
             //  This means that applying `calcPrincipalFromDiscounted` to the output of `calcDiscounted` will return the original principal amount.
 
-            //  discountedFactor = principal - interest, therefore interest = principal - discountedFactor
-            assertEq(
-                principal - discountedFactor,
-                simpleInterest.calcInterest(principal, numTimePeriods),
-                string.concat(
-                    "calcInterest incorrect for ",
-                    toString(simpleInterest),
-                    ", numTimePeriods = ",
-                    vm.toString(numTimePeriods)
-                )
+            assertApproxEqAbs(
+                principalInWei,
+                principalFromDiscountedWithScale,
+                TOLERANCE,
+                assertMsg("principalFromDiscount not inverse of principal", simpleInterest, numTimePeriods)
             );
 
+            //  discountedFactor = principal - interest, therefore interest = principal - discountedFactor
             assertEq(
-                principal,
-                principalFromDiscounted,
-                string.concat(
-                    "calcDiscountFactor and calcPrincipalFromDiscount not inverses of each other ",
-                    toString(simpleInterest),
-                    ", numTimePeriods = ",
-                    vm.toString(numTimePeriods)
-                )
+                principalInWei - discountedWithScale,
+                simpleInterest.calcInterestWithScale(principal, numTimePeriods),
+                assertMsg("calcInterest incorrect for ", simpleInterest, numTimePeriods)
             );
         }
+    }
+
+    function assertMsg(string memory prefix, ISimpleInterest simpleInterest, uint256 numTimePeriods)
+        public
+        view
+        returns (string memory)
+    {
+        return string.concat(prefix, toString(simpleInterest), " timePeriod= ", vm.toString(numTimePeriods));
     }
 
     function toString(ISimpleInterest simpleInterest) public view returns (string memory) {

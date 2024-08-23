@@ -54,12 +54,12 @@ contract SimpleInterest is ISimpleInterest {
     }
 
     function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) public view virtual returns (uint256) {
-        uint256 interestScaled = _calcInterestWithScale(principal, numTimePeriodsElapsed);
+        uint256 interestScaled = calcInterestWithScale(principal, numTimePeriodsElapsed);
 
         return unscaleAmount(interestScaled);
     }
 
-    function _calcInterestWithScale(uint256 principal, uint256 numTimePeriodsElapsed) internal view returns (uint256) {
+    function calcInterestWithScale(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
         uint256 interestScaled =
             principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
 
@@ -82,7 +82,7 @@ contract SimpleInterest is ISimpleInterest {
     }
 
     function calcDiscountedWithScale(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
-        return principal * SCALE - _calcInterestWithScale(principal, numTimePeriodsElapsed);
+        return principal * SCALE - calcInterestWithScale(principal, numTimePeriodsElapsed);
     }
 
     function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
@@ -97,13 +97,13 @@ contract SimpleInterest is ISimpleInterest {
         virtual
         returns (uint256)
     {
-        uint256 scaledPrincipal = _calcPrincipalFromDiscountedWithScale(scaleAmount(discounted), numTimePeriodsElapsed);
+        uint256 scaledPrincipal = calcPrincipalFromDiscountedWithScale(scaleAmount(discounted), numTimePeriodsElapsed);
 
         return unscaleAmount(scaledPrincipal);
     }
 
-    function _calcPrincipalFromDiscountedWithScale(uint256 discounted, uint256 numTimePeriodsElapsed)
-        internal
+    function calcPrincipalFromDiscountedWithScale(uint256 discounted, uint256 numTimePeriodsElapsed)
+        public
         view
         returns (uint256)
     {
@@ -136,6 +136,10 @@ contract SimpleInterest is ISimpleInterest {
 
     function unscaleAmount(uint256 amount) internal pure returns (uint256) {
         return amount / SCALE;
+    }
+
+    function getScale() public view returns (uint256 frequency) {
+        return SCALE;
     }
 
     function getFrequency() public view returns (uint256 frequency) {
