@@ -14,7 +14,7 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
-// - As time progresses, the price increases, resulting in fewer shares
+// - At numPeriod of N, 1 asset gives as discounted amount of "1 - N * interest"
 contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault {
     using Math for uint256;
 
