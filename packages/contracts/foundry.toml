@@ -22,6 +22,7 @@ polygon = "https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
 polygonMumbai = "https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
 bitlayer = "https://rpc.bitlayer.org"
 bitlayerTestnet = "https://testnet-rpc.bitlayer.org"
+plumeTestnet = "https://testnet-rpc.plumenetwork.xyz/http"
 
 
 [etherscan]
@@ -31,3 +32,4 @@ baseSepolia = { key = "${BASE_SEPOLIA_ETHERSCAN_API_KEY}" }
 arbitrumSepolia = { key = "${ARB_SEPOLIA_ETHERSCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api", chain=421614 }
 bitlayer = { key = "bitlayer", url="https://rpc.bitlayer.org" }
 bitlayerTestnet = { key = "bitlayerTestnet", url="https://testnet-scan.bitlayer.org" }
+plumeTestnet = { key = "plumeTestnet", url = 'https://testnet-explorer.plumenetwork.xyz/api\?', chain=161221135 }

@@ -3,6 +3,8 @@
 #	directory and our deployment scripts depend on this, it seems unnecessary to change this now.
 -include .env
 
+DEPLOY_SCRIPT ?= script/DeployVaultFactory.s.sol:DeployVaultFactory
+
 build:; forge build
 
 anvil: anvil
@@ -20,11 +22,22 @@ resume-arbSepolia:
 deploy-baseSepolia:
 	$(MAKE) deploy RPC_URL=baseSepolia EXTRA_FLAGS="--verify --slow"
 
+# From https://docs.plumenetwork.xyz/plume/deploying-on-plume/deploy-with-foundry
+# Foundry has a bug with gas estimation on L2s (https://github.com/foundry-rs/foundry/issues/6542).  To work-around:
+# in foundry.toml set the `evm_version = "cancun"`
+# forge script includes `--legacy --skip-simulation`
+deploy-plumeTestnet:
+	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://testnet-explorer.plumenetwork.xyz/api\? --legacy --slow"
+
+resume-plumeTestnet:
+	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://testnet-explorer.plumenetwork.xyz/api\? --legacy --slow --resume"
+
+
 # NOTE (JL,2024-05-20): `forge` auto-includes any `.env` file in the invocation directory.
 deploy:
 	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	@rm -rf out && \
-	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
+	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
 	yarn gen-types && \
 	yarn db-export
@@ -37,7 +50,7 @@ deploy-bitlayerTestnet:
 verify:
 	@echo "Running verify '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	rm -rf out && \
-	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
+	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume -vvvv && \
 	yarn gen-types && \
 	yarn db-export
