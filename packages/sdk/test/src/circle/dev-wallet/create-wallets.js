@@ -9,12 +9,20 @@ const entitySecret = process.env.CIRCLE_WEB3_ENTITY_SECRET;
 const apiKey = process.env.CIRCLE_WEB3_API_KEY;
 const walletSetId = process.env.CIRCLE_WEB3_WALLET_SET_ID;
 
-async function createWallets() {
-  const client = initiateDeveloperControlledWalletsClient({
-    apiKey: apiKey,
-    entitySecret: entitySecret,
+const client = initiateDeveloperControlledWalletsClient({
+  apiKey: apiKey,
+  entitySecret: entitySecret,
+});
+
+async function createWalletSet() {
+  const response = await client.createWalletSet({
+    name: walletSetName,
   });
 
+  return response;
+}
+
+async function createWallets() {
   const response = await client.createWallets({
     blockchains: ['ETH-SEPOLIA', 'MATIC-AMOY', 'AVAX-FUJI'],
     count: 2,

@@ -1,0 +1,34 @@
+{
+  "request": {
+    "method": "GET",
+    "headers": {
+      "Authorization": "Bearer TEST_API_KEY:3b83cfb81a396e96d5d2254c2636cf98:a34b0ff80f77cc5803ddc56e44082275",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "walletId": "eb497795-866c-59df-869e-c1baa8f9106d"
+    }
+  },
+  "response": {
+    "data": {
+      "tokenBalances": [
+        {
+          "token": {
+            "id": "5797fbd6-3795-519d-84ca-ec4c5f80c3b1",
+            "blockchain": "ETH-SEPOLIA",
+            "tokenAddress": "0x1c7d4b196cb0c7b01d743fbc6116a902379c7238",
+            "standard": "ERC20",
+            "name": "USDC",
+            "symbol": "USDC",
+            "decimals": 6,
+            "isNative": false,
+            "updateDate": "2024-01-19T09:14:43Z",
+            "createDate": "2024-01-19T09:14:43Z"
+          },
+          "amount": "10",
+          "updateDate": "2024-08-26T21:15:31Z"
+        }
+      ]
+    }
+  }
+}

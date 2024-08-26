@@ -1,0 +1,72 @@
+{
+  "data": {
+    "wallets": [
+      {
+        "id": "eb497795-866c-59df-869e-c1baa8f9106d",
+        "state": "LIVE",
+        "walletSetId": "098d8326-7333-5048-bf82-9c84d9a6f3b9",
+        "custodyType": "DEVELOPER",
+        "address": "0x0a942473692b72afe985c606aa08a12d66fca165",
+        "blockchain": "ETH-SEPOLIA",
+        "accountType": "EOA",
+        "updateDate": "2024-08-26T20:40:26Z",
+        "createDate": "2024-08-26T20:40:26Z"
+      },
+      {
+        "id": "f495bda1-28b9-5162-9c56-7f39e2ef6843",
+        "state": "LIVE",
+        "walletSetId": "098d8326-7333-5048-bf82-9c84d9a6f3b9",
+        "custodyType": "DEVELOPER",
+        "address": "0x8eb4f4d173bbfef15a21da91e8413bc084d239ed",
+        "blockchain": "ETH-SEPOLIA",
+        "accountType": "EOA",
+        "updateDate": "2024-08-26T20:40:26Z",
+        "createDate": "2024-08-26T20:40:26Z"
+      },
+      {
+        "id": "caaedbc6-cecd-5164-ab26-4d20e91475cc",
+        "state": "LIVE",
+        "walletSetId": "098d8326-7333-5048-bf82-9c84d9a6f3b9",
+        "custodyType": "DEVELOPER",
+        "address": "0x8eb4f4d173bbfef15a21da91e8413bc084d239ed",
+        "blockchain": "MATIC-AMOY",
+        "accountType": "EOA",
+        "updateDate": "2024-08-26T20:40:26Z",
+        "createDate": "2024-08-26T20:40:26Z"
+      },
+      {
+        "id": "574efa25-df05-59c2-820a-9773d7d3ce8d",
+        "state": "LIVE",
+        "walletSetId": "098d8326-7333-5048-bf82-9c84d9a6f3b9",
+        "custodyType": "DEVELOPER",
+        "address": "0x0a942473692b72afe985c606aa08a12d66fca165",
+        "blockchain": "MATIC-AMOY",
+        "accountType": "EOA",
+        "updateDate": "2024-08-26T20:40:26Z",
+        "createDate": "2024-08-26T20:40:26Z"
+      },
+      {
+        "id": "bffaab01-c82d-5f13-a115-f17a1951127c",
+        "state": "LIVE",
+        "walletSetId": "098d8326-7333-5048-bf82-9c84d9a6f3b9",
+        "custodyType": "DEVELOPER",
+        "address": "0x8eb4f4d173bbfef15a21da91e8413bc084d239ed",
+        "blockchain": "AVAX-FUJI",
+        "accountType": "EOA",
+        "updateDate": "2024-08-26T20:40:26Z",
+        "createDate": "2024-08-26T20:40:26Z"
+      },
+      {
+        "id": "a91dbe48-ccef-51a8-a777-e6bbf9db34cc",
+        "state": "LIVE",
+        "walletSetId": "098d8326-7333-5048-bf82-9c84d9a6f3b9",
+        "custodyType": "DEVELOPER",
+        "address": "0x0a942473692b72afe985c606aa08a12d66fca165",
+        "blockchain": "AVAX-FUJI",
+        "accountType": "EOA",
+        "updateDate": "2024-08-26T20:40:26Z",
+        "createDate": "2024-08-26T20:40:26Z"
+      }
+    ]
+  }
+}
