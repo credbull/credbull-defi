@@ -21,12 +21,7 @@ contract YourContract {
   mapping(address => uint256) public userGreetingCounter;
 
   // Events: a way to emit log statements from smart contract that can be listened to by external parties
-  event GreetingChange(
-    address indexed greetingSetter,
-    string newGreeting,
-    bool premium,
-    uint256 value
-  );
+  event GreetingChange(address indexed greetingSetter, string newGreeting, bool premium, uint256 value);
 
   // Constructor: Called once on contract deployment
   // Check packages/foundry/deploy/Deploy.s.sol
