@@ -12,32 +12,30 @@ import { APY, SimpleFixedYieldVault, Term } from "../contracts/SimpleFixedYieldV
 contract SimpleFixedYieldVaultTest is Test {
     address private immutable OWNER = makeAddr("OWNER");
     address private immutable ALICE = makeAddr("ALICE");
-    uint256 private constant INITIAL_SUPPLY = 100_000;
+    uint8 private constant DECIMALS = 6;
+    uint256 private constant INITIAL_SUPPLY = 1_000_000;
     ERC20 private underlyingAsset;
     SimpleFixedYieldVault private vault;
 
     function setUp() public {
         vm.startPrank(OWNER);
-        underlyingAsset = new OwnableToken("Fake USDC", "USDC", 6, INITIAL_SUPPLY * 10 ** 6);
+        underlyingAsset = new OwnableToken("Fake USDC", "fUSDC", DECIMALS, INITIAL_SUPPLY * 10 ** DECIMALS);
         vm.stopPrank();
 
         vault = new SimpleFixedYieldVault(APY.SIX_PERCENT, Term.THIRTY_DAYS, underlyingAsset);
     }
 
-    function scaleForAsset(uint256 value) private view returns (uint256) {
-        return value * 10 ** underlyingAsset.decimals();
-    }
-
-    function unscaleForAsset(uint256 value) private view returns (uint256) {
-        return value / 10 ** underlyingAsset.decimals();
+    function assetScale() private view returns (uint256) {
+        return 10 ** underlyingAsset.decimals();
     }
 
     function test_SimpleFixedYieldVault_ExpectedSharesReturned() public {
-        uint256 depositAmount = scaleForAsset(1_000);
+        uint256 depositAmount = 1_000 * assetScale();
         uint256 maxAmount = depositAmount * 10;
 
         vm.startPrank(OWNER);
         underlyingAsset.transfer(ALICE, maxAmount);
+        underlyingAsset.transfer(address(vault), maxAmount);
         vm.stopPrank();
 
         vm.startPrank(ALICE);
@@ -46,15 +44,17 @@ contract SimpleFixedYieldVaultTest is Test {
         uint256 shares = vault.deposit(depositAmount, ALICE);
         vm.warp(vm.getBlockTimestamp() + 5 seconds);
         vm.stopPrank();
-        assertEq(1004931506, shares, "Incorrect amount of shares returned.");
+        assertEq(1004931400, shares, "Incorrect amount of shares returned.");
+        assertEq(shares, ERC20(address(vault)).balanceOf(ALICE), "Incorrect amount of shares minted to ALICE.");
     }
 
     function test_SimpleFixedYieldVault_ExpectedAssetsRedeemed() public {
-        uint256 depositAmount = scaleForAsset(1_000);
+        uint256 depositAmount = 1_000 * assetScale();
         uint256 maxAmount = depositAmount * 10;
 
         vm.startPrank(OWNER);
         underlyingAsset.transfer(ALICE, maxAmount);
+        underlyingAsset.transfer(address(vault), maxAmount);
         vm.stopPrank();
 
         vm.startPrank(ALICE);
@@ -65,12 +65,10 @@ contract SimpleFixedYieldVaultTest is Test {
         vm.stopPrank();
 
         vm.startPrank(ALICE);
-        underlyingAsset.approve(address(vault), maxAmount);
-        vm.warp(vm.getBlockTimestamp() + 5 seconds);
         uint256 assets = vault.redeem(shares, ALICE, ALICE);
         vm.warp(vm.getBlockTimestamp() + 5 seconds);
         vm.stopPrank();
 
-        assertEq(1004931506, assets, "Incorrect amount of assets returned.");
+        assertEq(1004931400, assets, "Incorrect amount of assets returned.");
     }
 }

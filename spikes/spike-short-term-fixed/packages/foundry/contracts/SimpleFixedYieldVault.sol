@@ -20,13 +20,17 @@ enum APY {
     EIGHT_PERCENT
 }
 
+/**
+ * @notice An example Fixed Yield, Short Term Vault predicated on pre-calculating the interest on `asset`, adding it to
+ *  `asset` and returning that as `shares`. At withdrawal, `shares` provide 1:1 assets.
+ * @dev This subverts the ERC4626 asset/share ratio/calculation. Is this a possible security risk? I doubt it as the
+ *  calcultion is based upon the Interest Rate and does not depends on the contents of the Vault.
+ */
 contract SimpleFixedYieldVault is ERC4626 {
     using Math for uint256;
 
     error NotSupported();
 
-    uint256 public constant DECIMALS = 18;
-    uint256 public constant SCALE = 10 ** DECIMALS;
     uint256 public constant DAYS_IN_YEAR = 365;
 
     Term public immutable TERM;
@@ -35,28 +39,35 @@ contract SimpleFixedYieldVault is ERC4626 {
     constructor(APY _apy, Term _term, IERC20 asset) ERC4626(asset) ERC20("Simple Fixed Yield Claim", "SFYC") {
         // Save the term explicitly, for reading from the contract. Maybe unneeded?
         TERM = _term;
-        // CalcuTHIRTY_DAYSerm value.
+
+        // NOTE (JL,2024-08-26): We use the Asset/Share Scaling to calculate the Scaled Term Interest Rate.
         uint256 _daysInTerm = _term == Term.THIRTY_DAYS ? 30 : 90;
         uint256 _interestRate = _apy == APY.SIX_PERCENT ? 6 : 8;
-        console.log("Days In Term=", _daysInTerm, ", Interest Rate=", _interestRate);
-        console.log("Scaled Interest Rate=", _interestRate * SCALE);
-        uint256 _scaledDailyInterestRate = (_interestRate * SCALE) / DAYS_IN_YEAR;
-        console.log("Scaled Daily Interest Rate=", _scaledDailyInterestRate);
+        uint256 _scaledDailyInterestRate = _interestRate * scale() / DAYS_IN_YEAR;
         SCALED_TERM_INTEREST_RATE = _scaledDailyInterestRate * _daysInTerm;
+
+        console.log("Days In Term=", _daysInTerm, ", Interest Rate=", _interestRate);
+        console.log("Scaled Interest Rate=", _interestRate * scale());
+        console.log("Scaled Daily Interest Rate=", _scaledDailyInterestRate);
         console.log("Scaled Term Interest Rate=", SCALED_TERM_INTEREST_RATE);
     }
 
     /**
-     * @dev Returns shares to the tune of `assets` increased by the Term Interest Rate. The shares should be
-     *  locked until the Term is complete.
+     * @dev The Number Scaling effective for the Vault Shares. This is the same scaling as for the `asset`.
+     */
+    function scale() private view returns (uint256) {
+        return 10 ** decimals();
+    }
+
+    /**
+     * @dev Returns shares to the tune of `assets` plus the Term Interest Rate.
      */
     function _convertToShares(uint256 assets, Math.Rounding rounding) internal view override returns (uint256) {
-        console.log("Converting to Shares=", assets);
-        console.log("Scaled Assets=", assets * SCALE);
-        console.log("Scaled Interest Rate=", SCALED_TERM_INTEREST_RATE);
-        console.log("Term Interest=", assets.mulDiv(SCALED_TERM_INTEREST_RATE, SCALE * 100));
+        console.log(
+            "Assets=", assets, " + Term Interest=", assets.mulDiv(SCALED_TERM_INTEREST_RATE, 100 * scale(), rounding)
+        );
 
-        return assets + assets.mulDiv(SCALED_TERM_INTEREST_RATE, SCALE * 100, rounding);
+        return assets + assets.mulDiv(SCALED_TERM_INTEREST_RATE, 100 * scale(), rounding);
     }
 
     /**
