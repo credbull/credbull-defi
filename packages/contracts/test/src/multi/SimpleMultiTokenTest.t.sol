@@ -5,7 +5,6 @@ import { SimpleMultiToken } from "./SimpleMultiToken.s.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { Test } from "forge-std/Test.sol";
-import { console2 } from "forge-std/console2.sol";
 
 contract SimpleUSDC is ERC20 {
     constructor() ERC20("USD Coin", "USDC") {
