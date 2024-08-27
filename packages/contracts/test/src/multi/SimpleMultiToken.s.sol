@@ -9,6 +9,8 @@ import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
+import { console2 } from "forge-std/console2.sol";
+
 contract SimpleMultiToken is ERC1155, ERC1155Supply, IERC4626Interest, Ownable {
     uint256 public constant PERIODS_0 = 0;
     uint256 public constant PERIODS_1 = 1;
@@ -122,17 +124,19 @@ contract SimpleMultiToken is ERC1155, ERC1155Supply, IERC4626Interest, Ownable {
         return assets;
     }
 
-    function convertToAssetsAtPeriod(uint256 shares, uint256 /*numTimePeriodsElapsed */ )
+    function convertToAssetsAtPeriod(uint256 shares, uint256 numTimePeriodsElapsed)
         public
-        pure
+        view
         override
         returns (uint256 assets)
     {
+        if (TENOR > numTimePeriodsElapsed) return 0; // no early redeems allowed
+
         return shares;
     }
 
-    function getCurrentTimePeriodsElapsed() public pure returns (uint256 currentTimePeriodElapsed) {
-        return currentTimePeriodElapsed;
+    function getCurrentTimePeriodsElapsed() public view returns (uint256) {
+        return currentTimePeriodsElapsed;
     }
 
     function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public {
@@ -194,15 +198,24 @@ contract SimpleMultiToken is ERC1155, ERC1155Supply, IERC4626Interest, Ownable {
     }
 
     function redeem(uint256 shares, address receiver, address owner) public returns (uint256 assets) {
+        console2.log("1");
+        console2.log(TENOR);
+        console2.log(currentTimePeriodsElapsed);
+        if (TENOR > currentTimePeriodsElapsed) return 0;
+        console2.log("2");
+
         uint256 _assets = convertToAssets(shares);
+        console2.log("3");
 
         // Ensure the vault has enough assets to pay out
         if (_assets > ASSET.balanceOf(address(this))) {
             revert InsufficientAssetsInVault();
         }
 
+        uint256 depositPeriod = currentTimePeriodsElapsed - TENOR;
+
         // Burn the shares
-        _burn(owner, currentTimePeriodsElapsed, shares);
+        _burn(owner, depositPeriod, shares);
 
         // Transfer the assets (e.g., USDC) from the vault to the receiver
         bool success = ASSET.transfer(receiver, _assets);

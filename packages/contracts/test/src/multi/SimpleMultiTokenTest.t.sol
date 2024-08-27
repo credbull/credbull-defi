@@ -5,6 +5,7 @@ import { SimpleMultiToken } from "./SimpleMultiToken.s.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { Test } from "forge-std/Test.sol";
+import { console2 } from "forge-std/console2.sol";
 
 contract SimpleUSDC is ERC20 {
     constructor() ERC20("USD Coin", "USDC") {
@@ -74,14 +75,20 @@ contract SimpleMultiTokenTest is Test {
         uint256 aliceUsdcBalanceBefore = usdc.balanceOf(alice);
         uint256 depositAmount = 100 * 10 ** usdc.decimals();
 
+        uint256 depositTimePeriod = multiToken.getCurrentTimePeriodsElapsed();
+
         // Alice approves the multiToken contract to spend her USDC and deposits the full amount
         vm.startPrank(alice);
         usdc.approve(address(multiToken), depositAmount);
-        multiToken.deposit(depositAmount, alice);
+        uint256 shares = multiToken.deposit(depositAmount, alice);
+
+        // mimic TENOR time periods passing
+        uint256 redeemTimePeriod = depositTimePeriod + multiToken.getTenor();
+        multiToken.setCurrentTimePeriodsElapsed(redeemTimePeriod);
 
         // Alice redeems all her shares
-        uint256 shares = multiToken.balanceOf(alice);
         uint256 assets = multiToken.redeem(shares, alice, alice);
+
         vm.stopPrank();
 
         assertEq(assets, depositAmount, "Incorrect number of assets returned after full redeem");

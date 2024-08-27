@@ -21,7 +21,7 @@ interface IERC4626Interest is IERC4626, ISimpleInterest {
         returns (uint256 assets);
 
     // TODO - confirm if required on interface
-    function getCurrentTimePeriodsElapsed() external pure returns (uint256 currentTimePeriodsElapsed);
+    function getCurrentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
 
     // TODO - confirm if required on interface
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;

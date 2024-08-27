@@ -100,8 +100,8 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
 
     // =============== Utility ===============
 
-    function getCurrentTimePeriodsElapsed() public pure returns (uint256 currentTimePeriodElapsed) {
-        return currentTimePeriodElapsed;
+    function getCurrentTimePeriodsElapsed() public view returns (uint256) {
+        return currentTimePeriodsElapsed;
     }
 
     function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public {
