@@ -23,14 +23,24 @@ contract TimeLockVault is ERC4626 {
     }
 
     uint256 public lockDuration;
+    uint256 private _totalSupply;
 
     /// @dev The User/Client to Array of [Locked].
     // NOTE (JL,2024-08-21): Dynamic array. Is this storage? Or do I need to 'new' it?
     // NOTE (JL,2024-08-21): The array will be inherently time ordered
     mapping(address => Locked[]) public locksByDepositer;
 
-    constructor(IERC20 asset, uint256 lockDuration_) ERC4626(asset) ERC20("Time Lock Claim", "TLC") {
+    constructor(
+        IERC20 asset,
+        uint256 lockDuration_,
+        uint256 totalSupply_
+    ) ERC4626(asset) ERC20("Time Lock Claim", "TLC") {
+        _totalSupply = totalSupply_;
         lockDuration = lockDuration_;
+    }
+
+    function totalSupply() public view override(ERC20, IERC20) returns (uint256) {
+        return _totalSupply;
     }
 
     function setLockDuration(uint256 lockDuration_) public {
@@ -50,6 +60,8 @@ contract TimeLockVault is ERC4626 {
 
     function deposit(uint256 assets, address receiver) public override returns (uint256) {
         uint256 shares = super.deposit(assets, receiver);
+
+        console.log("Assets=", assets, ", Shares=", shares);
 
         // NOTE (JL,2024-08-21): The Time comparison should match a whole Day. So, 'All of the nth Day' matches.
         locksByDepositer[receiver].push(Locked(shares, block.timestamp + lockDuration * 1 days));

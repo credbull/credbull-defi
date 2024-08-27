@@ -13,24 +13,30 @@ contract TimeLockVaultTest is Test {
     address private immutable OWNER = makeAddr("OWNER");
     address private immutable ALICE = makeAddr("ALICE");
     uint256 private constant LOCK_DURATION = 3 days;
-    uint256 private constant INITIAL_SUPPLU = 1_000_000;
+    uint256 private constant ASSET_INITIAL_SUPPLY = 1_000_000;
+    uint256 private constant VAULT_TOTAL_SUPPLY = 1_000_000_000;
     ERC20 private underlyingAsset;
     TimeLockVault private vault;
 
     function setUp() public {
         vm.startPrank(OWNER);
-        underlyingAsset = new OwnableToken("Asset", "AST", 18, 10_000);
+        underlyingAsset = new OwnableToken("Fake USDC", "fUSDC", 6, ASSET_INITIAL_SUPPLY * 10 ** 6);
         vm.stopPrank();
 
-        vault = new TimeLockVault(underlyingAsset, LOCK_DURATION);
+        vault = new TimeLockVault(underlyingAsset, LOCK_DURATION, VAULT_TOTAL_SUPPLY * 10 ** 6);
+    }
+
+    function assetScale() private view returns (uint256) {
+        return 10 ** underlyingAsset.decimals();
     }
 
     function test_TimeLockVault_SharesAreLockedOnDeposit() public {
-        uint256 depositAmount = 1_000;
+        uint256 depositAmount = 1_000 * assetScale();
         uint256 maxAmount = depositAmount * 10;
 
-        // Transfer underlying assets to Alice
+        // Transfer underlying assets to Vault and Alice
         vm.startPrank(OWNER);
+        underlyingAsset.transfer(address(vault), maxAmount);
         underlyingAsset.transfer(ALICE, maxAmount);
         vm.stopPrank();
 
@@ -50,11 +56,11 @@ contract TimeLockVaultTest is Test {
     }
 
     function test_TimeLockVault_RedemptionFails_WhenSharesAreLocked() public {
-        uint256 depositAmount = 1_000;
+        uint256 depositAmount = 1_000 * assetScale();
         uint256 maxAmount = depositAmount * 10;
 
-        // Transfer underlying assets to Alice
         vm.startPrank(OWNER);
+        underlyingAsset.transfer(address(vault), maxAmount);
         underlyingAsset.transfer(ALICE, maxAmount);
         vm.stopPrank();
 
@@ -73,11 +79,11 @@ contract TimeLockVaultTest is Test {
     }
 
     function test_TimeLockVault_AllShareAllocationsLockedOnDeposit() public {
-        uint256 depositAmount = 1_000;
+        uint256 depositAmount = 1_000 * assetScale();
         uint256 maxAmount = depositAmount * 10;
 
-        // Transfer underlying assets to Alice
         vm.startPrank(OWNER);
+        underlyingAsset.transfer(address(vault), maxAmount);
         underlyingAsset.transfer(ALICE, maxAmount);
         vm.stopPrank();
 
@@ -115,11 +121,11 @@ contract TimeLockVaultTest is Test {
     }
 
     function test_TimeLockVault_RedemptionPossibleOnUnlock() public {
-        uint256 depositAmount = 1_000;
+        uint256 depositAmount = 1_000 * assetScale();
         uint256 maxAmount = depositAmount * 10;
 
-        // Transfer underlying assets to Alice
         vm.startPrank(OWNER);
+        underlyingAsset.transfer(address(vault), maxAmount);
         underlyingAsset.transfer(ALICE, maxAmount);
         vm.stopPrank();
 
@@ -147,11 +153,11 @@ contract TimeLockVaultTest is Test {
     }
 
     function test_TimeLockVault_ForMultipleDeposits_RedemptionPossibleOnUnlock() public {
-        uint256 depositAmount = 1_000;
+        uint256 depositAmount = 1_000 * assetScale();
         uint256 maxAmount = depositAmount * 10;
 
-        // Transfer underlying assets to Alice
         vm.startPrank(OWNER);
+        underlyingAsset.transfer(address(vault), maxAmount);
         underlyingAsset.transfer(ALICE, maxAmount);
         vm.stopPrank();
 
@@ -197,11 +203,11 @@ contract TimeLockVaultTest is Test {
     }
 
     function test_TimeLockVault_ForMultipleDeposits_RedemptionPossibleOnUnlock_MatchedShares() public {
-        uint256 depositAmount = 1_000;
+        uint256 depositAmount = 1_000 * assetScale();
         uint256 maxAmount = depositAmount * 10;
 
-        // Transfer underlying assets to Alice
         vm.startPrank(OWNER);
+        underlyingAsset.transfer(address(vault), maxAmount);
         underlyingAsset.transfer(ALICE, maxAmount);
         vm.stopPrank();
 
