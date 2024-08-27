@@ -9,8 +9,6 @@ import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-import { console2 } from "forge-std/console2.sol";
-
 contract SimpleMultiToken is ERC1155, ERC1155Supply, IERC4626Interest, Ownable {
     uint256 public constant PERIODS_0 = 0;
     uint256 public constant PERIODS_1 = 1;
