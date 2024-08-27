@@ -198,14 +198,8 @@ contract SimpleMultiToken is ERC1155, ERC1155Supply, IERC4626Interest, Ownable {
     }
 
     function redeem(uint256 shares, address receiver, address owner) public returns (uint256 assets) {
-        console2.log("1");
-        console2.log(TENOR);
-        console2.log(currentTimePeriodsElapsed);
         if (TENOR > currentTimePeriodsElapsed) return 0;
-        console2.log("2");
-
         uint256 _assets = convertToAssets(shares);
-        console2.log("3");
 
         // Ensure the vault has enough assets to pay out
         if (_assets > ASSET.balanceOf(address(this))) {
