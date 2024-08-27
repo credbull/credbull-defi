@@ -18,7 +18,7 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault {
     using Math for uint256;
 
-    uint256 public currentTimePeriodsElapsed = 0; // the current interest frequency
+    uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapse
 
     // how many time periods for vault redeem
     // should use the same time unit (day / month or years) as the interest frequency
