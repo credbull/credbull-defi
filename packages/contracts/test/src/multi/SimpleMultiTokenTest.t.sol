@@ -2,13 +2,9 @@
 pragma solidity ^0.8.20;
 
 import { SimpleMultiToken } from "./SimpleMultiToken.s.sol";
-import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
-
-import { Test } from "forge-std/Test.sol";
-
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import { SimpleMultiToken } from "./SimpleMultiToken.s.sol";
+import { Test } from "forge-std/Test.sol";
 
 contract SimpleUSDC is ERC20 {
     constructor() ERC20("USD Coin", "USDC") {

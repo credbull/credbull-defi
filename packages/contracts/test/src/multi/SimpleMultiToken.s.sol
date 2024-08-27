@@ -6,11 +6,8 @@ import { IERC4626Interest } from "./IERC4626Interest.s.sol";
 
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 
 contract SimpleMultiToken is ERC1155, ERC1155Supply, IERC4626Interest, Ownable {
     uint256 public constant PERIODS_0 = 0;
