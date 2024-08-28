@@ -26,7 +26,7 @@ contract TimelockInterestVaultTest is InterestTest {
         asset = new SimpleToken(tokenSupply);
         vm.stopPrank();
 
-        uint256 userTokenAmount = 1000 ether;
+        uint256 userTokenAmount = 10000 ether;
 
         assertEq(asset.balanceOf(owner), tokenSupply, "owner should start with total supply");
         transferAndAssert(asset, owner, alice, userTokenAmount);
@@ -53,6 +53,7 @@ contract TimelockInterestVaultTest is InterestTest {
 
         // test the vault related
         IERC4626Interest vault = (IERC4626Interest)(address(simpleInterest));
-        super.testIERC4626InterestAtPeriod(principal, vault, numTimePeriods);
+        super.testConvertToAssetAndSharesAtPeriod(principal, vault, numTimePeriods); // previews only
+        super.testDepositAndRedeemAtPeriod(owner, alice, principal, vault, numTimePeriods); // actual deposits/redeems
     }
 }

@@ -19,15 +19,21 @@ contract SimpleInterestVaultTest is InterestTest {
     IERC20 private asset;
 
     address private owner = makeAddr("owner");
+    address private alice = makeAddr("alice");
+    address private bob = makeAddr("bob");
 
     function setUp() public {
-        uint256 tokenSupply = 100000 ether;
+        uint256 tokenSupply = 1000000 ether; // 1 million
 
         vm.startPrank(owner);
         asset = new SimpleToken(tokenSupply);
         vm.stopPrank();
 
+        uint256 userTokenAmount = 100000 ether; // 100,000 each
+
         assertEq(asset.balanceOf(owner), tokenSupply, "owner should start with total supply");
+        transferAndAssert(asset, owner, alice, userTokenAmount);
+        transferAndAssert(asset, owner, bob, userTokenAmount);
     }
 
     function test__SimpleInterestVaultTest__CheckScale() public {
@@ -73,6 +79,7 @@ contract SimpleInterestVaultTest is InterestTest {
 
         // test the vault related
         IERC4626Interest vault = (IERC4626Interest)(address(simpleInterest));
-        super.testIERC4626InterestAtPeriod(principal, vault, numTimePeriods);
+        super.testConvertToAssetAndSharesAtPeriod(principal, vault, numTimePeriods); // previews only
+        super.testDepositAndRedeemAtPeriod(owner, alice, principal, vault, numTimePeriods); // actual deposits/redeems
     }
 }

@@ -58,7 +58,8 @@ abstract contract InterestTest is Test {
         );
     }
 
-    function testIERC4626InterestAtPeriod(uint256 principal, IERC4626Interest vault, uint256 numTimePeriods)
+    // these are previews only - vault assets and shares are not updated.   however, it doesn't *actually* deposit or redeem anything!
+    function testConvertToAssetAndSharesAtPeriod(uint256 principal, IERC4626Interest vault, uint256 numTimePeriods)
         internal
         virtual
     {
@@ -89,6 +90,66 @@ abstract contract InterestTest is Test {
 
         assertApproxEqAbs(
             principal + vault.calcInterest(principal, vault.getTenor()),
+            assetsInWei,
+            TOLERANCE,
+            assertMsg("yield does not equal principal + interest", vault, numTimePeriods)
+        );
+
+        vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed); // restore the vault to previous state
+    }
+
+    // this modifies the assets and shares - it *actually* deposits and redeems
+    function testDepositAndRedeemAtPeriod(
+        address owner,
+        address receiver,
+        uint256 principal,
+        IERC4626Interest vault,
+        uint256 numTimePeriods
+    ) internal virtual {
+        IERC20 asset = IERC20(vault.asset());
+
+        // capture state before for validations
+        uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
+        uint256 prevReceiverVaultBalance = vault.balanceOf(receiver);
+        uint256 prevReceiverAssetBalance = asset.balanceOf(receiver);
+
+        // deposit
+        vault.setCurrentTimePeriodsElapsed(numTimePeriods); // set deposit numTimePeriods
+        vm.startPrank(receiver);
+        assertGe(
+            asset.balanceOf(receiver), principal, assertMsg("not enough assets for deposit ", vault, numTimePeriods)
+        );
+        asset.approve(address(vault), principal); // grant the vault allowance
+        uint256 sharesInWei = vault.deposit(principal, receiver); // now deposit
+        vm.stopPrank();
+        assertEq(
+            prevReceiverVaultBalance + sharesInWei,
+            vault.balanceOf(receiver),
+            assertMsg("receiver did not receive the correct vault shares ", vault, numTimePeriods)
+        );
+
+        // give the vault enough to cover the earned interest
+
+        uint256 interest = vault.calcInterest(principal, vault.getTenor());
+        vm.startPrank(owner);
+        transferAndAssert(asset, owner, address(vault), interest);
+        vm.stopPrank();
+
+        // redeem
+        vault.setCurrentTimePeriodsElapsed(numTimePeriods + vault.getTenor()); // warp the vault to redeem period
+
+        vm.startPrank(receiver);
+        uint256 assetsInWei = vault.redeem(sharesInWei, receiver, receiver);
+        vm.stopPrank();
+        assertApproxEqAbs(
+            prevReceiverAssetBalance + interest,
+            asset.balanceOf(receiver),
+            TOLERANCE,
+            assertMsg("receiver did not receive the correct yield", vault, numTimePeriods)
+        );
+
+        assertApproxEqAbs(
+            principal + interest,
             assetsInWei,
             TOLERANCE,
             assertMsg("yield does not equal principal + interest", vault, numTimePeriods)
