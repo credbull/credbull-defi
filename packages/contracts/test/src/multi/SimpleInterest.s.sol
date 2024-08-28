@@ -155,11 +155,11 @@ contract SimpleInterest is ISimpleInterest {
         return amount / SCALE;
     }
 
-    function getFrequency() public view returns (uint256 frequency) {
+    function getFrequency() public view virtual returns (uint256 frequency) {
         return FREQUENCY;
     }
 
-    function getInterestInPercentage() public view returns (uint256 interestRateInPercentage) {
+    function getInterestInPercentage() public view virtual returns (uint256 interestRateInPercentage) {
         return INTEREST_RATE_PERCENTAGE;
     }
 }

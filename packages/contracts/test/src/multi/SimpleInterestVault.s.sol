@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
+import { ISimpleInterest } from "./ISimpleInterest.s.sol";
 import { SimpleInterest } from "./SimpleInterest.s.sol";
 import { IERC4626Interest } from "./IERC4626Interest.s.sol";
 
@@ -11,11 +12,12 @@ import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { IProduct } from "./IProduct.s.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
 // - At numPeriod of N, 1 asset gives as discounted amount of "1 - N * interest"
-contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626 {
+contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProduct {
     using Math for uint256;
 
     uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapse
@@ -33,6 +35,10 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626 {
     }
 
     // =============== Deposit ===============
+
+    function deposit(uint256 assets, address receiver) public override(IERC4626, ERC4626, IProduct) returns (uint256) {
+        return ERC4626.deposit(assets, receiver);
+    }
 
     function convertToSharesAtPeriod(uint256 assetsInWei, uint256 numTimePeriodsElapsed)
         public
@@ -63,6 +69,26 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626 {
     }
 
     // =============== Redeem ===============
+
+    function redeem(uint256 shares, address receiver, address owner)
+        public
+        override(IERC4626, ERC4626, IProduct)
+        returns (uint256)
+    {
+        return ERC4626.redeem(shares, receiver, owner);
+    }
+
+    function redeemAtPeriod(uint256 shares, address receiver, address owner, uint256 redeemTimePeriod)
+        external
+        returns (uint256 assets)
+    {
+        // TODO - not sure this method is required...
+        if (currentTimePeriodsElapsed != redeemTimePeriod) {
+            revert();
+        }
+
+        return redeem(shares, receiver, owner);
+    }
 
     // asset that would be exchanged for the amount of shares
     // for a given numberOfTimePeriodsElapsed
@@ -101,15 +127,38 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626 {
 
     // =============== Utility ===============
 
-    function getCurrentTimePeriodsElapsed() public view returns (uint256) {
+    function getCurrentTimePeriodsElapsed() public view override(IERC4626Interest, IProduct) returns (uint256) {
         return currentTimePeriodsElapsed;
     }
 
-    function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public {
+    function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed)
+        public
+        override(IERC4626Interest, IProduct)
+    {
         currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
     }
 
     function getTenor() public view returns (uint256 tenor) {
         return TENOR;
+    }
+
+    // =============== IProduct Interface ===============
+
+    function getFrequency()
+        public
+        view
+        override(ISimpleInterest, SimpleInterest, IProduct)
+        returns (uint256 frequency)
+    {
+        return SimpleInterest.getFrequency();
+    }
+
+    function getInterestInPercentage()
+        public
+        view
+        override(ISimpleInterest, SimpleInterest, IProduct)
+        returns (uint256 interestRateInPercentage)
+    {
+        return SimpleInterest.getInterestInPercentage();
     }
 }
