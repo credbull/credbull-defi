@@ -68,6 +68,14 @@ contract TimelockVault is ERC4626, ITimelock, Ownable {
         }
     }
 
+    function previewUnlock(address account, uint256 lockReleasePeriod) external view override returns (uint256) {
+        if (lockReleasePeriod >= _locks[account].releaseTime) {
+            return _locks[account].amount; // All tokens are unlocked if the current time has passed the release time.
+        } else {
+            return 0; // No tokens are unlocked if the current time has not reached the release time.
+        }
+    }
+
     function transfer(address, uint256) public pure override(ERC20, IERC20) returns (bool) {
         revert TransferNotSupported();
     }

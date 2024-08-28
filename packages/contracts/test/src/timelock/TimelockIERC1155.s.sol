@@ -27,6 +27,16 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
         _mint(account, lockReleasePeriod, value, "");
     }
 
+    // TODO - need to think about this one.  this is preview for that lockReleasePeriod.
+    // but we need to check every lockReleasePeriod individually to get the aggregate number
+    function previewUnlock(address account, uint256 lockReleasePeriod) external view override returns (uint256) {
+        if (currentPeriod >= lockReleasePeriod) {
+            return balanceOf(account, lockReleasePeriod); // All tokens are unlocked if the current period has passed the release time.
+        } else {
+            return 0; // No tokens are unlocked if the current period has not reached the release time.
+        }
+    }
+
     function unlock(address account, uint256 lockReleasePeriod, uint256 value) public onlyOwner {
         if (currentPeriod < lockReleasePeriod) {
             revert LockDurationNotExpired(currentPeriod, lockReleasePeriod);

@@ -22,8 +22,14 @@ abstract contract TimelockTest is Test {
         timelock.lock(alice, lockReleasePeriod, depositAmount);
         vm.stopPrank();
 
-        uint256 lockedAmount = timelock.getLockedAmount(alice, lockReleasePeriod);
-        assertEq(lockedAmount, depositAmount, "Incorrect locked amount");
+        assertEq(depositAmount, timelock.getLockedAmount(alice, lockReleasePeriod), "Incorrect locked amount");
+
+        // Ensure that the unlocked amount is initially zero before any unlock operation
+        assertEq(
+            0,
+            timelock.previewUnlock(alice, lockReleasePeriod - 1),
+            "preview unlock should be zero before lockRelease period"
+        );
     }
 
     function test__Timelock__OnlyOwnerCanLockAndUnlock() public {
@@ -69,6 +75,10 @@ abstract contract TimelockTest is Test {
 
         warpToPeriod(timelock, lockReleasePeriod);
 
+        assertEq(
+            depositAmount, timelock.previewUnlock(alice, lockReleasePeriod), "preview unlock should be the full amount"
+        );
+
         // Partial unlock
         vm.startPrank(owner);
         timelock.unlock(alice, lockReleasePeriod, partialUnlockAmount);
@@ -79,6 +89,12 @@ abstract contract TimelockTest is Test {
             remainingLockedAmount,
             depositAmount - partialUnlockAmount,
             "Incorrect remaining locked amount after partial unlock"
+        );
+
+        assertEq(
+            remainingLockedAmount,
+            timelock.previewUnlock(alice, lockReleasePeriod),
+            "preview unlock should be the residual amount"
         );
 
         // Full unlock of the remaining amount
