@@ -8,6 +8,8 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
+import { console2 } from "forge-std/console2.sol";
+
 contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
     uint256 public lockDuration;
 
@@ -24,27 +26,42 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
     }
 
     function lock(address account, uint256 lockReleasePeriod, uint256 value) public override onlyOwner {
+        _lockInternal(account, lockReleasePeriod, value);
+    }
+
+    // NB - this is internal.  it does not have the onlyOwner modifier
+    function _lockInternal(address account, uint256 lockReleasePeriod, uint256 value) internal {
         _mint(account, lockReleasePeriod, value, "");
     }
 
     // TODO - need to think about this one.  this is preview for that lockReleasePeriod.
     // but we need to check every lockReleasePeriod individually to get the aggregate number
-    function previewUnlock(address account, uint256 lockReleasePeriod) external view override returns (uint256) {
+    function previewUnlock(address account, uint256 lockReleasePeriod) public view override returns (uint256) {
         if (currentPeriod >= lockReleasePeriod) {
-            return balanceOf(account, lockReleasePeriod); // All tokens are unlocked if the current period has passed the release time.
+            return getLockedAmount(account, lockReleasePeriod); // All tokens are unlocked if the current period has passed the release time.
         } else {
             return 0; // No tokens are unlocked if the current period has not reached the release time.
         }
     }
 
     function unlock(address account, uint256 lockReleasePeriod, uint256 value) public onlyOwner {
+        _unlockInternal(account, lockReleasePeriod, value);
+    }
+
+    // NB - this is internal.  it does not have the onlyOwner modifier
+    function _unlockInternal(address account, uint256 lockReleasePeriod, uint256 value) internal {
+        console2.log("!!!!!!_unlockInternal");
+
+        console2.log("!!!!!!currentPeriod", currentPeriod);
+        console2.log("!!!!!!lockReleasePeriod", lockReleasePeriod);
+
         if (currentPeriod < lockReleasePeriod) {
             revert LockDurationNotExpired(currentPeriod, lockReleasePeriod);
         }
 
-        uint256 lockedBalance = getLockedAmount(account, lockReleasePeriod);
-        if (lockedBalance < value) {
-            revert InsufficientLockedBalance(lockedBalance, value);
+        uint256 unlockableAmount = previewUnlock(account, lockReleasePeriod);
+        if (unlockableAmount < value) {
+            revert InsufficientLockedBalance(unlockableAmount, value);
         }
 
         _burn(account, lockReleasePeriod, value);
@@ -80,7 +97,7 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
         return currentPeriod;
     }
 
-    function setCurrentPeriod(uint256 _currentPeriod) public {
+    function setCurrentPeriod(uint256 _currentPeriod) public virtual {
         currentPeriod = _currentPeriod;
     }
 }

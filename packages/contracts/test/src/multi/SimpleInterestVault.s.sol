@@ -36,7 +36,12 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
 
     // =============== Deposit ===============
 
-    function deposit(uint256 assets, address receiver) public override(IERC4626, ERC4626, IProduct) returns (uint256) {
+    function deposit(uint256 assets, address receiver)
+        public
+        virtual
+        override(IERC4626, ERC4626, IProduct)
+        returns (uint256)
+    {
         return ERC4626.deposit(assets, receiver);
     }
 
@@ -72,6 +77,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
 
     function redeem(uint256 shares, address receiver, address owner)
         public
+        virtual
         override(IERC4626, ERC4626, IProduct)
         returns (uint256)
     {
@@ -127,12 +133,19 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
 
     // =============== Utility ===============
 
-    function getCurrentTimePeriodsElapsed() public view override(IERC4626Interest, IProduct) returns (uint256) {
+    function getCurrentTimePeriodsElapsed()
+        public
+        view
+        virtual
+        override(IERC4626Interest, IProduct)
+        returns (uint256)
+    {
         return currentTimePeriodsElapsed;
     }
 
     function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed)
         public
+        virtual
         override(IERC4626Interest, IProduct)
     {
         currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
