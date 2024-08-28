@@ -8,8 +8,6 @@ import { TimelockTest } from "./TimelockTest.t.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 
-import { console2 } from "forge-std/console2.sol";
-
 contract TimelockVaultTest is TimelockTest {
     ERC20 private underlyingAsset;
 

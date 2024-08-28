@@ -3,7 +3,6 @@ pragma solidity ^0.8.23;
 
 import { SimpleInterest } from "./SimpleInterest.s.sol";
 import { IERC4626Interest } from "./IERC4626Interest.s.sol";
-import { TimelockVault } from "./TimelockVault.s.sol";
 
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 
@@ -24,11 +23,6 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626 {
     // how many time periods for vault redeem
     // should use the same time unit (day / month or years) as the interest frequency
     uint256 public immutable TENOR;
-    /*
-    constructor(IERC20 asset, string memory name, string memory symbol, uint256 _lockDuration)
-    ERC4626(asset)
-    ERC20(name, symbol)
-    */
 
     constructor(IERC20 asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
         SimpleInterest(interestRatePercentage, frequency)
