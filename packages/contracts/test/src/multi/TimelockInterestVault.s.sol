@@ -8,9 +8,6 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-
 contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
     constructor(address initialOwner, IERC20 asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
         TimelockIERC1155(initialOwner, tenor)
