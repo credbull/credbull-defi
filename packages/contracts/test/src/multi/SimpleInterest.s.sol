@@ -4,7 +4,6 @@ pragma solidity ^0.8.23;
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-import { console2 } from "forge-std/console2.sol";
 import { ISimpleInterest } from "./ISimpleInterest.s.sol";
 
 /**
@@ -68,21 +67,6 @@ contract SimpleInterest is ISimpleInterest {
         uint256 interestScaled =
             principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
 
-        console2.log(
-            string.concat(
-                "Interest = (IR * P * m) / f = ",
-                Strings.toString(INTEREST_RATE_PERCENTAGE),
-                "% * ",
-                Strings.toString(principal),
-                " * ",
-                Strings.toString(numTimePeriodsElapsed),
-                " / ",
-                Strings.toString(FREQUENCY),
-                " = ",
-                Strings.toString(interestScaled)
-            )
-        );
-
         return unscale(interestScaled);
     }
 
@@ -93,21 +77,6 @@ contract SimpleInterest is ISimpleInterest {
     {
         uint256 interestScaled =
             principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
-
-        console2.log(
-            string.concat(
-                "Interest = (IR * P * m) / f = ",
-                Strings.toString(INTEREST_RATE_PERCENTAGE),
-                "% * ",
-                Strings.toString(principal),
-                " * ",
-                Strings.toString(numTimePeriodsElapsed),
-                " / ",
-                Strings.toString(FREQUENCY),
-                " = ",
-                Strings.toString(interestScaled)
-            )
-        );
 
         return interestScaled;
     }
@@ -132,21 +101,6 @@ contract SimpleInterest is ISimpleInterest {
             INTEREST_RATE_PERCENTAGE.mulDiv(numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
 
         uint256 scaledPrincipal = discounted.mulDiv(SCALE * SCALE, SCALE - interestFactor, ROUNDING);
-
-        console2.log(
-            string.concat(
-                "Principal = Discounted / (1 - ((IR * m) / f)) = ",
-                Strings.toString(discounted),
-                " / (1 - ((",
-                Strings.toString(INTEREST_RATE_PERCENTAGE),
-                " * ",
-                Strings.toString(numTimePeriodsElapsed),
-                " ) / ",
-                Strings.toString(FREQUENCY),
-                " = ",
-                Strings.toString(scaledPrincipal)
-            )
-        );
 
         return unscale(scaledPrincipal);
     }

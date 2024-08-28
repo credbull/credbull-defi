@@ -50,6 +50,23 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
         _burn(account, lockReleasePeriod, value);
     }
 
+    function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value) external override onlyOwner {
+        uint256 unlockableAmount = this.previewUnlock(account, lockReleasePeriod);
+
+        // Check if the account has enough unlockable tokens to roll over
+        if (value > unlockableAmount) {
+            revert InsufficientLockedBalance(unlockableAmount, value);
+        }
+
+        // Burn the unlocked tokens
+        _burn(account, lockReleasePeriod, value);
+
+        uint256 rolloverLockReleasePeriod = lockReleasePeriod + lockDuration;
+
+        // Mint new tokens for the new lock period
+        _mint(account, rolloverLockReleasePeriod, value, "");
+    }
+
     // TODO - choose which to use
     function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
         internal
