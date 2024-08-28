@@ -2,8 +2,6 @@
 pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-
 import { ISimpleInterest } from "./ISimpleInterest.s.sol";
 
 /**
