@@ -143,7 +143,7 @@ contract TimelockInterestVaultTest is InterestTest {
 
         // Attempt to redeem after the rollover lock period, should succeed
         vm.startPrank(alice);
-        uint256 redeemedAssets = vault.redeem(shares, alice, alice);
+        vault.redeem(shares, alice, alice);
         vm.stopPrank();
 
         // Assert that Alice's share balance is now zero
