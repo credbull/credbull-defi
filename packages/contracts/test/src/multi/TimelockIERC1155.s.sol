@@ -12,9 +12,6 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
     uint256 public lockDuration;
     uint256 public currentTimePeriodsElapsed = 0;
 
-    error InsufficientBalanceToLock(uint256 available, uint256 required);
-    error InsufficientLockedBalance(uint256 available, uint256 required);
-
     constructor(address _initialOwner, uint256 _lockDuration) ERC1155("credbull.io/funds/1") Ownable(_initialOwner) {
         lockDuration = _lockDuration;
     }

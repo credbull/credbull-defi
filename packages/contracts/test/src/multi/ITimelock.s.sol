@@ -8,6 +8,7 @@ interface ITimelock {
      * @param lockReleasePeriod The required time or period that must be reached to unlock the tokens.
      */
     error LockDurationNotExpired(uint256 currentPeriod, uint256 lockReleasePeriod);
+    error InsufficientLockedBalance(uint256 available, uint256 required);
 
     /**
      * @dev Locks a specified amount of tokens for a particular account until a given release period.

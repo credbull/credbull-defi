@@ -10,12 +10,13 @@ import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
 // - At numPeriod of N, 1 asset gives as discounted amount of "1 - N * interest"
-contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault {
+contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626 {
     using Math for uint256;
 
     uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapse
@@ -23,10 +24,16 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, TimelockVault 
     // how many time periods for vault redeem
     // should use the same time unit (day / month or years) as the interest frequency
     uint256 public immutable TENOR;
+    /*
+    constructor(IERC20 asset, string memory name, string memory symbol, uint256 _lockDuration)
+    ERC4626(asset)
+    ERC20(name, symbol)
+    */
 
     constructor(IERC20 asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
         SimpleInterest(interestRatePercentage, frequency)
-        TimelockVault(asset, "Simple Interest Rate Claim", "cSIR", 0)
+        ERC4626(asset)
+        ERC20("Simple Interest Rate Claim", "cSIR")
     {
         TENOR = tenor;
     }

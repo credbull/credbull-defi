@@ -2,11 +2,11 @@
 pragma solidity ^0.8.20;
 
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ITimelock } from "./ITimelock.s.sol";
 
-contract TimelockVault is ERC4626 {
+contract TimelockVault is ERC4626, ITimelock {
     struct LockInfo {
         uint256 amount;
         uint256 releaseTime;
@@ -14,32 +14,56 @@ contract TimelockVault is ERC4626 {
 
     mapping(address => LockInfo) private _locks;
     uint256 public lockDuration;
+    uint256 internal currentTimePeriodsElapsed = 0;
 
     error SharesLocked(uint256 releaseTime);
     error TransferNotSupported();
 
-    constructor(IERC20 asset, string memory name, string memory symbol, uint256 initialLockDuration)
+    constructor(IERC20 asset, string memory name, string memory symbol, uint256 _lockDuration)
         ERC4626(asset)
         ERC20(name, symbol)
     {
-        lockDuration = initialLockDuration;
+        lockDuration = _lockDuration;
     }
 
-    function setLockDuration(uint256 newLockDuration) external {
-        lockDuration = newLockDuration;
-    }
+    // Deposit and Redeem Functions
 
     function deposit(uint256 assets, address receiver) public override returns (uint256) {
-        uint256 shares = super.deposit(assets, receiver);
-        _locks[receiver] = LockInfo(shares, block.timestamp + lockDuration);
-        return shares;
+        uint256 shares = convertToShares(assets);
+        lock(receiver, lockDuration, shares);
+        return super.deposit(assets, receiver);
     }
 
     function redeem(uint256 shares, address receiver, address owner) public override returns (uint256) {
-        if (block.timestamp < _locks[owner].releaseTime) {
-            revert SharesLocked(_locks[owner].releaseTime);
-        }
+        unlock(owner, lockDuration, shares);
         return super.redeem(shares, receiver, owner);
+    }
+
+    // ITimelock Interface Implementation
+
+    function lock(address account, uint256 lockReleasePeriod, uint256 value) public override {
+        _locks[account] = LockInfo(value, lockReleasePeriod);
+    }
+
+    function unlock(address account, uint256 lockReleasePeriod, uint256 value) public override {
+        if (currentTimePeriodsElapsed < lockReleasePeriod) {
+            revert LockDurationNotExpired(currentTimePeriodsElapsed, lockReleasePeriod);
+        }
+
+        uint256 lockedBalance = getLockedAmount(account, lockReleasePeriod);
+        if (lockedBalance < value) {
+            revert InsufficientLockedBalance(lockedBalance, value);
+        }
+
+        _locks[account].amount -= value;
+    }
+
+    function getLockedAmount(address account, uint256 lockReleasePeriod) public view override returns (uint256) {
+        if (lockReleasePeriod == _locks[account].releaseTime) {
+            return _locks[account].amount;
+        } else {
+            return 0; // Return 0 if the lock period has expired.
+        }
     }
 
     function transfer(address, uint256) public pure override(ERC20, IERC20) returns (bool) {
@@ -50,16 +74,11 @@ contract TimelockVault is ERC4626 {
         revert TransferNotSupported();
     }
 
-    function getLockInfo(address account) external view returns (uint256 lockedAmount, uint256 releaseTime) {
-        LockInfo memory lock = _locks[account];
-        return (lock.amount, lock.releaseTime);
+    function getCurrentTimePeriodsElapsed() public view returns (uint256) {
+        return currentTimePeriodsElapsed;
     }
 
-    function getLockTimeLeft(address account) external view returns (uint256) {
-        if (block.timestamp >= _locks[account].releaseTime) {
-            return 0;
-        } else {
-            return _locks[account].releaseTime - block.timestamp;
-        }
+    function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public {
+        currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
     }
 }
