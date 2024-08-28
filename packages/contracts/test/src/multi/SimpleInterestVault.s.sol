@@ -78,13 +78,13 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
         return ERC4626.redeem(shares, receiver, owner);
     }
 
+    // TODO - not fully implemented.   need to unlock the specific shares specific to this period.
     function redeemAtPeriod(uint256 shares, address receiver, address owner, uint256 redeemTimePeriod)
         external
         returns (uint256 assets)
     {
-        // TODO - not sure this method is required...
         if (currentTimePeriodsElapsed != redeemTimePeriod) {
-            revert();
+            revert RedeemTimePeriodNotSupported(currentTimePeriodsElapsed, redeemTimePeriod);
         }
 
         return redeem(shares, receiver, owner);

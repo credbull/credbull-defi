@@ -2,6 +2,8 @@
 pragma solidity ^0.8.20;
 
 interface IProduct {
+    error RedeemTimePeriodNotSupported(uint256 currentPeriod, uint256 redeemPeriod);
+
     // ===============  Vault / Vault-like Behavior ===============
 
     /**
