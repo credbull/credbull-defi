@@ -13,15 +13,15 @@ interface IProduct {
         external
         returns (uint256 assets);
 
-    // represents number of periods (days, months, years) in the contract since "start"
-    // Krishna's implementation refers to this as "Window"
-    function getCurrentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
-
     // =============== metadata ===============
     // meta-data related
     function getFrequency() external view returns (uint256 frequency); // e.g. Days, Months, or Years
 
     function getInterestInPercentage() external view returns (uint256 interestRateInPercentage); // e.g. 6%, 12%
+
+    // represents number of periods (days, months, years) in the contract since "start"
+    // Krishna's implementation refers to this as "Window"
+    function getCurrentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
 
     // ===============  testing purposes only ===============
 
