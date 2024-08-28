@@ -10,9 +10,15 @@ contract TimelockIERC1155Test is TimelockTest {
         timelock = new TimelockIERC1155(owner, lockReleasePeriod);
     }
 
-    function warpToPeriod(ITimelock _timelock, uint256 timePeriod) internal override {
+    function toImpl(ITimelock _timelock) internal pure returns (TimelockIERC1155) {
         // Simulate time passing by setting the current time periods elapsed
         TimelockIERC1155 timelockImpl = TimelockIERC1155(address(_timelock));
+        return timelockImpl;
+    }
+
+    function warpToPeriod(ITimelock _timelock, uint256 timePeriod) internal override {
+        // Simulate time passing by setting the current time periods elapsed
+        TimelockIERC1155 timelockImpl = toImpl(_timelock);
         timelockImpl.setCurrentTimePeriodsElapsed(timePeriod);
     }
 }

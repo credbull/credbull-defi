@@ -2,6 +2,8 @@
 pragma solidity ^0.8.20;
 
 import { ITimelock } from "./ITimelock.s.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+
 import { Test } from "forge-std/Test.sol";
 
 abstract contract TimelockTest is Test {
@@ -22,6 +24,20 @@ abstract contract TimelockTest is Test {
 
         uint256 lockedAmount = timelock.getLockedAmount(alice, lockReleasePeriod);
         assertEq(lockedAmount, depositAmount, "Incorrect locked amount");
+    }
+
+    function test__Timelock__OnlyOwnerCanLockAndUnlock() public {
+        uint256 depositAmount = 1000;
+
+        vm.startPrank(alice);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
+        timelock.lock(alice, lockReleasePeriod, depositAmount);
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
+        timelock.unlock(alice, lockReleasePeriod, depositAmount);
+        vm.stopPrank();
     }
 
     function test__Timelock__UnlockFailsBeforeTime() public {

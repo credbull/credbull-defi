@@ -15,7 +15,7 @@ contract TimelockVaultTest is TimelockTest {
         // Setup the underlying asset token and mint some to the owner
         vm.startPrank(owner);
         underlyingAsset = new SimpleToken(initialSupply);
-        timelock = new TimelockVault(underlyingAsset, "VaultToken", "VT", lockReleasePeriod);
+        timelock = new TimelockVault(owner, underlyingAsset, "VaultToken", "VT", lockReleasePeriod);
         vm.stopPrank();
     }
 

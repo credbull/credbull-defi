@@ -4,9 +4,10 @@ pragma solidity ^0.8.20;
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ITimelock } from "./ITimelock.s.sol";
 
-contract TimelockVault is ERC4626, ITimelock {
+contract TimelockVault is ERC4626, ITimelock, Ownable {
     struct LockInfo {
         uint256 amount;
         uint256 releaseTime;
@@ -19,9 +20,10 @@ contract TimelockVault is ERC4626, ITimelock {
     error SharesLocked(uint256 releaseTime);
     error TransferNotSupported();
 
-    constructor(IERC20 asset, string memory name, string memory symbol, uint256 _lockDuration)
+    constructor(address _owner, IERC20 asset, string memory name, string memory symbol, uint256 _lockDuration)
         ERC4626(asset)
         ERC20(name, symbol)
+        Ownable(_owner)
     {
         lockDuration = _lockDuration;
     }
@@ -41,11 +43,11 @@ contract TimelockVault is ERC4626, ITimelock {
 
     // ITimelock Interface Implementation
 
-    function lock(address account, uint256 lockReleasePeriod, uint256 value) public override {
+    function lock(address account, uint256 lockReleasePeriod, uint256 value) public override onlyOwner {
         _locks[account] = LockInfo(value, lockReleasePeriod);
     }
 
-    function unlock(address account, uint256 lockReleasePeriod, uint256 value) public override {
+    function unlock(address account, uint256 lockReleasePeriod, uint256 value) public override onlyOwner {
         if (currentTimePeriodsElapsed < lockReleasePeriod) {
             revert LockDurationNotExpired(currentTimePeriodsElapsed, lockReleasePeriod);
         }
