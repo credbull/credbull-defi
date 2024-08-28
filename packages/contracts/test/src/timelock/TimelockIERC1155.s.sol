@@ -8,8 +8,6 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-import { console2 } from "forge-std/console2.sol";
-
 contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
     uint256 public lockDuration;
 
@@ -50,11 +48,6 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
 
     // NB - this is internal.  it does not have the onlyOwner modifier
     function _unlockInternal(address account, uint256 lockReleasePeriod, uint256 value) internal {
-        console2.log("!!!!!!_unlockInternal");
-
-        console2.log("!!!!!!currentPeriod", currentPeriod);
-        console2.log("!!!!!!lockReleasePeriod", lockReleasePeriod);
-
         if (currentPeriod < lockReleasePeriod) {
             revert LockDurationNotExpired(currentPeriod, lockReleasePeriod);
         }

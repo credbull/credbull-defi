@@ -48,7 +48,6 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
 
     // TODO - ugly, storing state at the parent that means pretty much the same thing
     function setCurrentPeriod(uint256 _currentPeriod) public override {
-        super.setCurrentPeriod(_currentPeriod);
-        super.setCurrentTimePeriodsElapsed(_currentPeriod);
+        this.setCurrentTimePeriodsElapsed(_currentPeriod);
     }
 }
