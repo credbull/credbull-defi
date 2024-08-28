@@ -19,6 +19,6 @@ contract TimelockIERC1155Test is TimelockTest {
     function warpToPeriod(ITimelock _timelock, uint256 timePeriod) internal override {
         // Simulate time passing by setting the current time periods elapsed
         TimelockIERC1155 timelockImpl = toImpl(_timelock);
-        timelockImpl.setCurrentTimePeriodsElapsed(timePeriod);
+        timelockImpl.setCurrentPeriod(timePeriod);
     }
 }

@@ -10,7 +10,8 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
     uint256 public lockDuration;
-    uint256 public currentTimePeriodsElapsed = 0;
+
+    uint256 public currentPeriod = 0;
 
     constructor(address _initialOwner, uint256 _lockDuration) ERC1155("credbull.io/funds/1") Ownable(_initialOwner) {
         lockDuration = _lockDuration;
@@ -27,8 +28,8 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
     }
 
     function unlock(address account, uint256 lockReleasePeriod, uint256 value) public onlyOwner {
-        if (currentTimePeriodsElapsed < lockReleasePeriod) {
-            revert LockDurationNotExpired(currentTimePeriodsElapsed, lockReleasePeriod);
+        if (currentPeriod < lockReleasePeriod) {
+            revert LockDurationNotExpired(currentPeriod, lockReleasePeriod);
         }
 
         uint256 lockedBalance = getLockedAmount(account, lockReleasePeriod);
@@ -48,11 +49,11 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
         ERC1155Supply._update(from, to, ids, values);
     }
 
-    function getCurrentTimePeriodsElapsed() public view returns (uint256) {
-        return currentTimePeriodsElapsed;
+    function getCurrentPeriod() public view returns (uint256) {
+        return currentPeriod;
     }
 
-    function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public {
-        currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
+    function setCurrentPeriod(uint256 _currentPeriod) public {
+        currentPeriod = _currentPeriod;
     }
 }

@@ -10,7 +10,7 @@ import { ISimpleInterest } from "./ISimpleInterest.s.sol";
 
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 
-import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract SimpleInterestVaultTest is InterestTest {
@@ -19,9 +19,6 @@ contract SimpleInterestVaultTest is InterestTest {
     IERC20 private asset;
 
     address private owner = makeAddr("owner");
-    address private alice = makeAddr("alice");
-    address private bob = makeAddr("bob");
-    address private charlie = makeAddr("charlie");
 
     function setUp() public {
         uint256 tokenSupply = 100000 ether;
@@ -30,12 +27,7 @@ contract SimpleInterestVaultTest is InterestTest {
         asset = new SimpleToken(tokenSupply);
         vm.stopPrank();
 
-        uint256 userTokenAmount = 1000 ether;
-
         assertEq(asset.balanceOf(owner), tokenSupply, "owner should start with total supply");
-        transferAndAssert(asset, owner, alice, userTokenAmount);
-        transferAndAssert(asset, owner, bob, userTokenAmount);
-        transferAndAssert(asset, owner, charlie, userTokenAmount);
     }
 
     function test__SimpleInterestVaultTest__CheckScale() public {
@@ -81,39 +73,6 @@ contract SimpleInterestVaultTest is InterestTest {
 
         // test the vault related
         IERC4626Interest vault = (IERC4626Interest)(address(simpleInterest));
-
-        uint256 expectedYield = principal + vault.calcInterest(principal, vault.getTenor());
-
-        // check convertAtSharesAtPeriod and convertToAssetsAtPeriod
-
-        // yieldAt(Periods+Tenor) = principalAtDeposit + interestForTenor - similar to how we test the interest.
-        uint256 sharesInWeiAtPeriod = vault.convertToSharesAtPeriod(principal, numTimePeriods);
-        uint256 assetsInWeiAtPeriod =
-            vault.convertToAssetsAtPeriod(sharesInWeiAtPeriod, numTimePeriods + vault.getTenor());
-
-        assertApproxEqAbs(
-            expectedYield,
-            assetsInWeiAtPeriod,
-            TOLERANCE,
-            assertMsg("yield does not equal principal + interest", simpleInterest, numTimePeriods)
-        );
-
-        // check convertAtShares and convertToAssets -- simulates the passage of time (e.g. block times)
-        uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
-
-        vault.setCurrentTimePeriodsElapsed(numTimePeriods); // set deposit numTimePeriods
-        uint256 sharesInWei = vault.convertToShares(principal); // now deposit
-
-        vault.setCurrentTimePeriodsElapsed(numTimePeriods + vault.getTenor()); // set redeem numTimePeriods
-        uint256 assetsInWei = vault.convertToAssets(sharesInWei); // now redeem
-
-        assertApproxEqAbs(
-            principal + vault.calcInterest(principal, vault.getTenor()),
-            assetsInWei,
-            TOLERANCE,
-            assertMsg("yield does not equal principal + interest", simpleInterest, numTimePeriods)
-        );
-
-        vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed); // restore the vault to previous state
+        super.testIERC4626InterestAtPeriod(principal, vault, numTimePeriods);
     }
 }

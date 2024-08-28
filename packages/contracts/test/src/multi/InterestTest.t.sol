@@ -2,6 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { ISimpleInterest } from "./ISimpleInterest.s.sol";
+import { IERC4626Interest } from "./IERC4626Interest.s.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -55,6 +56,45 @@ abstract contract InterestTest is Test {
             10, // even smaller tolerance here
             assertMsg("calcInterest incorrect for ", simpleInterest, numTimePeriods)
         );
+    }
+
+    function testIERC4626InterestAtPeriod(uint256 principal, IERC4626Interest vault, uint256 numTimePeriods)
+        internal
+        virtual
+    {
+        uint256 expectedYield = principal + vault.calcInterest(principal, vault.getTenor());
+
+        // check convertAtSharesAtPeriod and convertToAssetsAtPeriod
+
+        // yieldAt(Periods+Tenor) = principalAtDeposit + interestForTenor - similar to how we test the interest.
+        uint256 sharesInWeiAtPeriod = vault.convertToSharesAtPeriod(principal, numTimePeriods);
+        uint256 assetsInWeiAtPeriod =
+            vault.convertToAssetsAtPeriod(sharesInWeiAtPeriod, numTimePeriods + vault.getTenor());
+
+        assertApproxEqAbs(
+            expectedYield,
+            assetsInWeiAtPeriod,
+            TOLERANCE,
+            assertMsg("yield does not equal principal + interest", vault, numTimePeriods)
+        );
+
+        // check convertAtShares and convertToAssets -- simulates the passage of time (e.g. block times)
+        uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
+
+        vault.setCurrentTimePeriodsElapsed(numTimePeriods); // set deposit numTimePeriods
+        uint256 sharesInWei = vault.convertToShares(principal); // now deposit
+
+        vault.setCurrentTimePeriodsElapsed(numTimePeriods + vault.getTenor()); // set redeem numTimePeriods
+        uint256 assetsInWei = vault.convertToAssets(sharesInWei); // now redeem
+
+        assertApproxEqAbs(
+            principal + vault.calcInterest(principal, vault.getTenor()),
+            assetsInWei,
+            TOLERANCE,
+            assertMsg("yield does not equal principal + interest", vault, numTimePeriods)
+        );
+
+        vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed); // restore the vault to previous state
     }
 
     function assertMsg(string memory prefix, ISimpleInterest simpleInterest, uint256 numTimePeriods)
