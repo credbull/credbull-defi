@@ -2,11 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { SimpleInterestVault } from "./SimpleInterestVault.s.sol";
-import { SimpleInterest } from "./SimpleInterest.s.sol";
-import { IERC4626Interest } from "./IERC4626Interest.s.sol";
 import { TimelockIERC1155 } from "../timelock/TimelockIERC1155.s.sol";
-
-import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
