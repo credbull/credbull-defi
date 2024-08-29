@@ -113,7 +113,12 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
      * @param lockReleasePeriod The period during which these tokens will be released.
      * @param value The amount of tokens to be rolled over.
      */
-    function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value) external override onlyOwner {
+    function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value)
+        public
+        virtual
+        override
+        onlyOwner
+    {
         uint256 unlockableAmount = this.previewUnlock(account, lockReleasePeriod);
 
         if (value > unlockableAmount) {

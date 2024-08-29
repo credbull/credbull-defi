@@ -4,20 +4,22 @@ pragma solidity ^0.8.23;
 import { ISimpleInterest } from "./ISimpleInterest.s.sol";
 import { SimpleInterest } from "./SimpleInterest.s.sol";
 import { IERC4626Interest } from "./IERC4626Interest.s.sol";
+import { IProduct } from "./IProduct.s.sol";
 
-import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
+import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { ERC20Burnable } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { IProduct } from "./IProduct.s.sol";
+import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
 // - At numPeriod of N, 1 asset gives as discounted amount of "1 - N * interest"
-contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProduct {
+contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProduct, ERC20Burnable {
     using Math for uint256;
 
     uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapse
@@ -129,6 +131,17 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
         returns (uint256 assetsInWei)
     {
         return convertToAssetsAtPeriod(sharesInWei, currentTimePeriodsElapsed);
+    }
+
+    // =============== ERC4626 and ERC20 ===============
+
+    function decimals() public view virtual override(ERC20, ERC4626, IERC20Metadata) returns (uint8) {
+        return ERC4626.decimals();
+    }
+
+    function _burnInternal(address account, uint256 value) internal virtual {
+        _spendAllowance(account, _msgSender(), value);
+        _burn(account, value);
     }
 
     // =============== Utility ===============
