@@ -58,19 +58,18 @@ abstract contract InterestTest is Test {
         );
     }
 
-    // these are previews only - vault assets and shares are not updated.   however, it doesn't *actually* deposit or redeem anything!
+// these are previews only - vault assets and shares are not updated.   however, it doesn't *actually* deposit or redeem anything!
     function testConvertToAssetAndSharesAtPeriod(uint256 principal, IERC4626Interest vault, uint256 numTimePeriods)
-        internal
-        virtual
+    internal
+    virtual
     {
         uint256 expectedYield = principal + vault.calcInterest(principal, vault.getTenor());
 
         // check convertAtSharesAtPeriod and convertToAssetsAtPeriod
-
         // yieldAt(Periods+Tenor) = principalAtDeposit + interestForTenor - similar to how we test the interest.
         uint256 sharesInWeiAtPeriod = vault.convertToSharesAtPeriod(principal, numTimePeriods);
         uint256 assetsInWeiAtPeriod =
-            vault.convertToAssetsAtPeriod(sharesInWeiAtPeriod, numTimePeriods + vault.getTenor());
+                            vault.convertToAssetsAtPeriod(sharesInWeiAtPeriod, numTimePeriods + vault.getTenor());
 
         assertApproxEqAbs(
             expectedYield,
@@ -93,6 +92,17 @@ abstract contract InterestTest is Test {
             assetsInWei,
             TOLERANCE,
             assertMsg("yield does not equal principal + interest", vault, numTimePeriods)
+        );
+
+        // Perform a partial conversion check (e.g., 33% of the principal)
+        uint256 expectedPartialYield = principal.mulDiv(33, 100) + vault.calcInterest(principal.mulDiv(33, 100), vault.getTenor());
+        uint256 partialAssetsInWeiAtPeriod =
+                            vault.convertToAssetsAtPeriod(sharesInWei.mulDiv(33, 100), numTimePeriods + vault.getTenor());
+        assertApproxEqAbs(
+            expectedPartialYield,
+            partialAssetsInWeiAtPeriod,
+            TOLERANCE,
+            assertMsg("partial yield does not equal principal + interest", vault, numTimePeriods)
         );
 
         vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed); // restore the vault to previous state
