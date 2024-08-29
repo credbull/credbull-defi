@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { TimelockIERC1155 } from "@test/src/timelock/TimelockIERC1155.s.sol";
-import { ITimelock } from "../interfaces/ITimelock.s.sol";
+import { ITimelock } from "@test/src/interfaces/ITimelock.s.sol";
 import { TimelockTest } from "@test/src/timelock/TimelockTest.t.sol";
 
 contract TimelockIERC1155Test is TimelockTest {

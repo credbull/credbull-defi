@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { IERC4626Interest } from "@test/src/multi/IERC4626Interest.s.sol";
-import { SimpleInterestVault } from "@test/src/multi/SimpleInterestVault.s.sol";
-import { Frequencies } from "@test/src/multi/Frequencies.s.sol";
+import { IERC4626Interest } from "@test/src/fixed/IERC4626Interest.s.sol";
+import { SimpleInterestVault } from "@test/src/fixed/SimpleInterestVault.s.sol";
+import { Frequencies } from "@test/src/fixed/Frequencies.s.sol";
 
-import { InterestTest } from "@test/src/multi/InterestTest.t.sol";
-import { ISimpleInterest } from "../interfaces/ISimpleInterest.s.sol";
+import { InterestTest } from "@test/src/fixed/InterestTest.t.sol";
+import { ISimpleInterest } from "@test/src/interfaces/ISimpleInterest.s.sol";
 
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 
