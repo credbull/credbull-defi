@@ -316,7 +316,9 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
     }
 
     if (noOfTermsElapsed > 0) {
-      uint256 remainingTerms = noOfTermsElapsed - depositInfo.lastWithdrawTermNo;
+      uint256 remainingTerms = depositInfo.lastWithdrawTermNo == 1
+        ? (noOfTermsElapsed - depositInfo.lastWithdrawTermNo)
+        : (noOfTermsElapsed - depositInfo.lastWithdrawTermNo - 1);
 
       /**
        * Calculate compounding Amount first
