@@ -113,11 +113,31 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
         // NB - according to spec, this function should not revert
         if (numTimePeriodsElapsed < TENOR) return sharesInWei;
 
-        uint256 impliedNumTimePeriodsAtDeposit = (numTimePeriodsElapsed - TENOR);
-
-        uint256 principal = calcPrincipalFromDiscounted(sharesInWei, impliedNumTimePeriodsAtDeposit);
+        uint256 principal = _calcPrincipalFromSharesAtPeriod(sharesInWei, numTimePeriodsElapsed);
 
         return principal + calcInterest(principal, TENOR);
+    }
+
+    // asset that would be exchanged for the amount of shares
+    // for a given numberOfTimePeriodsElapsed
+    // assets = principal + interest
+    function _calcPrincipalFromSharesAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
+        internal
+        view
+        returns (uint256 principal)
+    {
+        if (sharesInWei < SCALE) return 0; // no assets for fractional shares
+
+        // trying to redeem before TENOR - just give back the Discounted Amount
+        // this is a slash of Principal (and no Interest)
+        // NB - according to spec, this function should not revert
+        if (numTimePeriodsElapsed < TENOR) return sharesInWei;
+
+        uint256 impliedNumTimePeriodsAtDeposit = (numTimePeriodsElapsed - TENOR);
+
+        uint256 _principal = calcPrincipalFromDiscounted(sharesInWei, impliedNumTimePeriodsAtDeposit);
+
+        return _principal;
     }
 
     function previewRedeem(uint256 sharesInWei) public view override(ERC4626, IERC4626) returns (uint256 assetsInWei) {

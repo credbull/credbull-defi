@@ -83,9 +83,11 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
             revert InsufficientLockedBalance(unlockableAmount, value);
         }
 
-        uint256 principalCurrentPeriod = convertToAssetsAtPeriod(value, lockReleasePeriod - TENOR); // principal from the initial deposit
+        // uint256 principalCurrentPeriod = _calcPrincipalFromSharesAtPeriod(value, currentTimePeriodsElapsed); // just the principal
+        uint256 principalAndYieldFirstPeriod = convertToAssets(value); // principal + first period interest
 
-        uint256 _sharesForNextPeriod = convertToSharesAtPeriod(principalCurrentPeriod, lockReleasePeriod); // discounted principal for rollover period
+        // shares for the next period is the discounted principalAndYield for the first Period
+        uint256 _sharesForNextPeriod = convertToShares(principalAndYieldFirstPeriod); // discounted principal for rollover period
 
         return _sharesForNextPeriod;
     }

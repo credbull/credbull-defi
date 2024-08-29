@@ -12,7 +12,6 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { InterestTest } from "./InterestTest.t.sol";
 import { TimelockInterestVault } from "./TimelockInterestVault.s.sol";
 import { ITimelock } from "@test/src/timelock/ITimelock.s.sol";
-import { console2 } from "forge-std/console2.sol";
 
 contract TimelockInterestVaultTest is InterestTest {
     IERC20 private asset;
@@ -122,14 +121,12 @@ contract TimelockInterestVaultTest is InterestTest {
         // ------------- rollover the shares ---------------
 
         // vault needs permission from alice to adjust shares on the ERC4626 side for the rollover.
-        uint256 sharesNextPeriod = vault.previewConvertSharesForRollover(alice, periodOneEnd, shares);
-        assertEq(
-            depositAmount - vault.calcInterest(depositAmount, periodOneEnd),
-            sharesNextPeriod,
-            "shares next period incorrect"
-        );
+        uint256 expectedSharesNextPeriod =
+            vault.calcDiscounted(depositAmount + vault.calcInterest(depositAmount, tenor), tenor); // discounted rate of first period's principal + interest
+        uint256 actualSharesNextPeriod = vault.previewConvertSharesForRollover(alice, periodOneEnd, shares);
+        assertEq(expectedSharesNextPeriod, actualSharesNextPeriod, "shares next period incorrect");
         vm.startPrank(alice);
-        vault.approve(owner, depositAmount - sharesNextPeriod); // give the vault ability to transfer excess shares on my behalf
+        vault.approve(owner, depositAmount - actualSharesNextPeriod); // give the vault ability to transfer excess shares on my behalf
         vm.stopPrank();
 
         vm.startPrank(owner);
@@ -139,7 +136,7 @@ contract TimelockInterestVaultTest is InterestTest {
         uint256 periodTwoEnd = vault.getCurrentTimePeriodsElapsed() + tenor; // Roll over to another 30-day period
 
         // Assert that the shares are now locked under the new rollover period
-        assertEq(sharesNextPeriod, vault.balanceOf(alice), "Incorrect vault shares after full rollover");
+        assertEq(actualSharesNextPeriod, vault.balanceOf(alice), "Incorrect vault shares after full rollover");
 
         // Assert that the original lock period has no remaining shares
         assertEq(
@@ -148,7 +145,7 @@ contract TimelockInterestVaultTest is InterestTest {
             "Original lock period should have no remaining shares after rollover"
         );
         assertEq(
-            sharesNextPeriod,
+            actualSharesNextPeriod,
             vault.getLockedAmount(alice, tenor + tenor),
             "New lock period should have no remaining shares after rollover"
         );
@@ -164,7 +161,7 @@ contract TimelockInterestVaultTest is InterestTest {
 
         // Attempt to redeem after the rollover lock period, should succeed
         vm.startPrank(alice);
-        uint256 actualRedeemedAssets = vault.redeem(sharesNextPeriod, alice, alice);
+        uint256 actualRedeemedAssets = vault.redeem(actualSharesNextPeriod, alice, alice);
         vm.stopPrank();
 
         // Assert that Alice's share balance is now zero
@@ -174,19 +171,12 @@ contract TimelockInterestVaultTest is InterestTest {
         uint256 expectedInterestPeriod1 = vault.calcInterest(depositAmount, tenor);
         uint256 expectedInterestPeriod2 = vault.calcInterest(depositAmount + expectedInterestPeriod1, tenor); // compound the 2nd interest
 
-        // TODO - double check roll-over calc.  need to reduce the shares by interest.
-        // [FAIL. Reason: Alice did not receive the correct amount of assets after redeeming: 1020100000000000000000 != 1010000000000000000000] test__TimelockInterestVault__FullRolloverOfShares() (gas: 3148523)
         uint256 expectedRedeemAssets = depositAmount + expectedInterestPeriod1 + expectedInterestPeriod2;
-        if (1 != 1) {
-            console2.log("expectedRedeemAssets", expectedRedeemAssets);
-            console2.log("actualRedeemedAssets", actualRedeemedAssets);
-        }
         assertEq(
-            1010000000000000000000,
+            expectedRedeemAssets,
             actualRedeemedAssets,
             "Alice did not receive the correct amount of assets after redeeming"
         );
-        // assertEq(expectedAssets, actualRedeemedAssets, "Alice did not receive the correct amount of assets after redeeming");
     }
 
     function testInterestAtPeriod(uint256 principal, ISimpleInterest simpleInterest, uint256 numTimePeriods)

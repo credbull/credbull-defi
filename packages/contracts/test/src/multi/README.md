@@ -20,7 +20,8 @@ Imagine Alice invests $1,000 in a Credbull product that returns 12% annualized i
 
 ## Discounted Principal
 
-**Discounted Principal** refers to the principal amount excluding interest accrued prior to my investment. This concept ensures that new investors do not receive credit for interest that was accrued before their investment was made.
+**Discounted Principal** refers to the principal amount excluding interest accrued prior to my investment. This concept ensures that new investors do 
+not receive credit for interest that was accrued before their investment was made.
 
 ### Formula
 `Discounted Principal =  P - Interest[Prior]`
@@ -28,7 +29,7 @@ Imagine Alice invests $1,000 in a Credbull product that returns 12% annualized i
 - **Interest[Prior]**: interest that would have accrued if investing from the starting period
 
 ### Example
-Let's Imagine Bob invests $1,000 in the same Credbull product from above (12% APY, 30 day maturity).  In this case, Discounted Principal would be $999.67.
+Now imagine Bob invests $1,000, but on day 2, in the Credbull 12% APY product with 30 day maturity.  In this case, Discounted Principal would be $999.67.
 
 ```
 Discounted Principal = P - Interest[Prior] 
