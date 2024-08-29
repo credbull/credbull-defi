@@ -46,7 +46,7 @@ abstract contract InterestTest is Test {
             principal,
             principalFromDiscounted,
             TOLERANCE,
-            assertMsg("principalFromDiscountW not inverse of principalInWei", simpleInterest, numTimePeriods)
+            assertMsg("principalFromDiscount not inverse of principal", simpleInterest, numTimePeriods)
         );
 
         //  discountedFactor = principal - interest, therefore interest = principal - discountedFactor
@@ -56,6 +56,18 @@ abstract contract InterestTest is Test {
             10, // even smaller tolerance here
             assertMsg("calcInterest incorrect for ", simpleInterest, numTimePeriods)
         );
+
+        // verify for partial - does it hold that X% of principalFromDiscounted = X% principal
+        uint256 discountedPartial = simpleInterest.calcDiscounted(principal.mulDiv(75, 100), numTimePeriods);
+        uint256 principalFromDiscountedPartial = simpleInterest.calcPrincipalFromDiscounted(discountedPartial, numTimePeriods);
+
+        assertApproxEqAbs(
+            principal.mulDiv(75, 100),
+            principalFromDiscountedPartial,
+            TOLERANCE,
+            assertMsg("partial principalFromDiscount not inverse of principal", simpleInterest, numTimePeriods)
+        );
+
     }
 
 // these are previews only - vault assets and shares are not updated.   however, it doesn't *actually* deposit or redeem anything!
