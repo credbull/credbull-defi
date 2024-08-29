@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { OwnableToken } from "@test/token/OwnableToken.t.sol";
+import { OwnableToken } from "@credbull/contracts/token/OwnableToken.sol";
 
 /**
  * @notice A simple [ERC20] Token.

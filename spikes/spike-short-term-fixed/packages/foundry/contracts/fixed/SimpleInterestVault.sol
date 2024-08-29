@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { ISimpleInterest } from "@credbull/contracts/interfaces/ISimpleInterest.s.sol";
-import { SimpleInterest } from "@credbull/contracts/fixed/SimpleInterest.s.sol";
-import { IERC4626Interest } from "@credbull/contracts/interfaces/IERC4626Interest.s.sol";
-import { IProduct } from "@credbull/contracts/interfaces/IProduct.s.sol";
+import { ISimpleInterest } from "@credbull/contracts/interfaces/ISimpleInterest.sol";
+import { SimpleInterest } from "@credbull/contracts/fixed/SimpleInterest.sol";
+import { IERC4626Interest } from "@credbull/contracts/interfaces/IERC4626Interest.sol";
+import { IProduct } from "@credbull/contracts/interfaces/IProduct.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";

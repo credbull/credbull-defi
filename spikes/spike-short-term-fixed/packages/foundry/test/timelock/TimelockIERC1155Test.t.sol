@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { TimelockIERC1155 } from "@credbull/contracts/timelock/TimelockIERC1155.s.sol";
-import { ITimelock } from "@credbull/contracts/interfaces/ITimelock.s.sol";
+import { TimelockIERC1155 } from "@credbull/contracts/timelock/TimelockIERC1155.sol";
+import { ITimelock } from "@credbull/contracts/interfaces/ITimelock.sol";
 import { TimelockTest } from "@test/timelock/TimelockTest.t.sol";
 
 contract TimelockIERC1155Test is TimelockTest {
