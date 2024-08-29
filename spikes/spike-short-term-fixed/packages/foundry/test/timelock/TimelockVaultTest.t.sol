@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { TimelockVault } from "@test/timelock/TimelockVault.s.sol";
-import { ITimelock } from "@test/interfaces/ITimelock.s.sol";
+import { TimelockVault } from "@credbull/contracts/timelock/TimelockVault.s.sol";
+import { ITimelock } from "@credbull/contracts/interfaces/ITimelock.s.sol";
 import { TimelockTest } from "@test/timelock/TimelockTest.t.sol";
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
