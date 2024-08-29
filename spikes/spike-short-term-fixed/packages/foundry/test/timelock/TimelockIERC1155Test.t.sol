@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { TimelockIERC1155 } from "@test/src/timelock/TimelockIERC1155.s.sol";
-import { ITimelock } from "@test/src/interfaces/ITimelock.s.sol";
-import { TimelockTest } from "@test/src/timelock/TimelockTest.t.sol";
+import { TimelockIERC1155 } from "@test/timelock/TimelockIERC1155.s.sol";
+import { ITimelock } from "@test/interfaces/ITimelock.s.sol";
+import { TimelockTest } from "@test/timelock/TimelockTest.t.sol";
 
 contract TimelockIERC1155Test is TimelockTest {
     function setUp() public {

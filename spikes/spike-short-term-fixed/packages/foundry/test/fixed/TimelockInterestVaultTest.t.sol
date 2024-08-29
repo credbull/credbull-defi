@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { ISimpleInterest } from "@test/src/interfaces/ISimpleInterest.s.sol";
-import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
+import { ISimpleInterest } from "@test/interfaces/ISimpleInterest.s.sol";
+import { SimpleToken } from "@test/token/SimpleToken.t.sol";
 
-import { IERC4626Interest } from "@test/src/fixed/IERC4626Interest.s.sol";
-import { Frequencies } from "@test/src/fixed/Frequencies.s.sol";
+import { IERC4626Interest } from "../interfaces/IERC4626Interest.s.sol";
+import { Frequencies } from "@test/fixed/Frequencies.s.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-import { InterestTest } from "@test/src/fixed/InterestTest.t.sol";
-import { TimelockInterestVault } from "@test/src/fixed/TimelockInterestVault.s.sol";
-import { ITimelock } from "@test/src/interfaces/ITimelock.s.sol";
+import { InterestTest } from "@test/fixed/InterestTest.t.sol";
+import { TimelockInterestVault } from "@test/fixed/TimelockInterestVault.s.sol";
+import { ITimelock } from "@test/interfaces/ITimelock.s.sol";
 
 contract TimelockInterestVaultTest is InterestTest {
     IERC20 private asset;

@@ -2,11 +2,11 @@
 pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { SimpleInterest } from "@test/src/fixed/SimpleInterest.s.sol";
-import { Frequencies } from "@test/src/fixed/Frequencies.s.sol";
+import { SimpleInterest } from "@test/fixed/SimpleInterest.s.sol";
+import { Frequencies } from "@test/fixed/Frequencies.s.sol";
 
-import { ISimpleInterest } from "@test/src/interfaces/ISimpleInterest.s.sol";
-import { InterestTest } from "@test/src/fixed/InterestTest.t.sol";
+import { ISimpleInterest } from "@test/interfaces/ISimpleInterest.s.sol";
+import { InterestTest } from "@test/fixed/InterestTest.t.sol";
 
 contract SimpleInterestTest is InterestTest {
     using Math for uint256;
