@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { ITimelock } from "./ITimelock.s.sol";
+import { ITimelock } from "../interfaces/ITimelock.s.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 import { Test } from "forge-std/Test.sol";

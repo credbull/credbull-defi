@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { ISimpleInterest } from "./ISimpleInterest.s.sol";
+import { ISimpleInterest } from "../interfaces/ISimpleInterest.s.sol";
 
 /**
  * https://en.wikipedia.org/wiki/Interest

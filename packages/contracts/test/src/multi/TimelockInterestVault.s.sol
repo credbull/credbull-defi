@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { SimpleInterestVault } from "./SimpleInterestVault.s.sol";
+import { SimpleInterestVault } from "@test/src/multi/SimpleInterestVault.s.sol";
 import { TimelockIERC1155 } from "../timelock/TimelockIERC1155.s.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
