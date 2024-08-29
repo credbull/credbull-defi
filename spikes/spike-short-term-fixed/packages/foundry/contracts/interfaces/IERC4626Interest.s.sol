@@ -4,7 +4,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { ISimpleInterest } from "@test/interfaces/ISimpleInterest.s.sol";
+import { ISimpleInterest } from "@credbull/contracts/interfaces/ISimpleInterest.s.sol";
 
 /**
  * @dev Extension to Interface Vault Standard

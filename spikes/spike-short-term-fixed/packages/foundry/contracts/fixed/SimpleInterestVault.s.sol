@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { ISimpleInterest } from "@test/interfaces/ISimpleInterest.s.sol";
-import { SimpleInterest } from "@test/fixed/SimpleInterest.s.sol";
-import { IERC4626Interest } from "../interfaces/IERC4626Interest.s.sol";
-import { IProduct } from "@test/interfaces/IProduct.s.sol";
+import { ISimpleInterest } from "@credbull/contracts/interfaces/ISimpleInterest.s.sol";
+import { SimpleInterest } from "@credbull/contracts/fixed/SimpleInterest.s.sol";
+import { IERC4626Interest } from "@credbull/contracts/interfaces/IERC4626Interest.s.sol";
+import { IProduct } from "@credbull/contracts/interfaces/IProduct.s.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -14,7 +14,7 @@ import { ERC20Burnable } from "@openzeppelin/contracts/token/ERC20/extensions/ER
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
-import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
+import { Math } from "@openzeppelin/contracts//utils/math/Math.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share

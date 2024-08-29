@@ -2,3 +2,6 @@
 @openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @solidity-bytes-utils/=lib/solidity-bytes-utils/contracts/
+@credbull/contracts/=contracts/
+@script/=script/
+@test/=test/
