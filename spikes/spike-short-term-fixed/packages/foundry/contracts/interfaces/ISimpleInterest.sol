@@ -23,15 +23,15 @@ pragma solidity ^0.8.20;
 interface ISimpleInterest {
     function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) external view returns (uint256 interest);
 
-    function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed)
-        external
-        view
-        returns (uint256 discounted);
+    function calcDiscounted(
+        uint256 principal,
+        uint256 numTimePeriodsElapsed
+    ) external view returns (uint256 discounted);
 
-    function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed)
-        external
-        view
-        returns (uint256 principal);
+    function calcPrincipalFromDiscounted(
+        uint256 discounted,
+        uint256 numTimePeriodsElapsed
+    ) external view returns (uint256 principal);
 
     function getFrequency() external view returns (uint256 frequency);
 

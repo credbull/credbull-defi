@@ -10,5 +10,3 @@ import { OwnableToken } from "@credbull/contracts/token/OwnableToken.sol";
 contract SimpleToken is OwnableToken {
     constructor(uint256 initialSupply) OwnableToken("Simple Token", "SMPL", 18, initialSupply) { }
 }
-
-

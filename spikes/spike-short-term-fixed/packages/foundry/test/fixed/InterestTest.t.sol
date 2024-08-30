@@ -30,10 +30,11 @@ abstract contract InterestTest is Test {
         }
     }
 
-    function testInterestAtPeriod(uint256 principal, ISimpleInterest simpleInterest, uint256 numTimePeriods)
-        internal
-        virtual
-    {
+    function testInterestAtPeriod(
+        uint256 principal,
+        ISimpleInterest simpleInterest,
+        uint256 numTimePeriods
+    ) internal virtual {
         console2.log("---------------------- simpleInterestTestHarness ----------------------");
 
         // The `calcPrincipalFromDiscounted` and `calcDiscounted` functions are designed to be mathematical inverses of each other.
@@ -59,7 +60,8 @@ abstract contract InterestTest is Test {
 
         // verify for partial - does it hold that X% of principalFromDiscounted = X% principal
         uint256 discountedPartial = simpleInterest.calcDiscounted(principal.mulDiv(75, 100), numTimePeriods);
-        uint256 principalFromDiscountedPartial = simpleInterest.calcPrincipalFromDiscounted(discountedPartial, numTimePeriods);
+        uint256 principalFromDiscountedPartial =
+            simpleInterest.calcPrincipalFromDiscounted(discountedPartial, numTimePeriods);
 
         assertApproxEqAbs(
             principal.mulDiv(75, 100),
@@ -67,21 +69,21 @@ abstract contract InterestTest is Test {
             TOLERANCE,
             assertMsg("partial principalFromDiscount not inverse of principal", simpleInterest, numTimePeriods)
         );
-
     }
 
-// these are previews only - vault assets and shares are not updated.   however, it doesn't *actually* deposit or redeem anything!
-    function testConvertToAssetAndSharesAtPeriod(uint256 principal, IERC4626Interest vault, uint256 numTimePeriods)
-    internal
-    virtual
-    {
+    // these are previews only - vault assets and shares are not updated.   however, it doesn't *actually* deposit or redeem anything!
+    function testConvertToAssetAndSharesAtPeriod(
+        uint256 principal,
+        IERC4626Interest vault,
+        uint256 numTimePeriods
+    ) internal virtual {
         uint256 expectedYield = principal + vault.calcInterest(principal, vault.getTenor());
 
         // check convertAtSharesAtPeriod and convertToAssetsAtPeriod
         // yieldAt(Periods+Tenor) = principalAtDeposit + interestForTenor - similar to how we test the interest.
         uint256 sharesInWeiAtPeriod = vault.convertToSharesAtPeriod(principal, numTimePeriods);
         uint256 assetsInWeiAtPeriod =
-                            vault.convertToAssetsAtPeriod(sharesInWeiAtPeriod, numTimePeriods + vault.getTenor());
+            vault.convertToAssetsAtPeriod(sharesInWeiAtPeriod, numTimePeriods + vault.getTenor());
 
         assertApproxEqAbs(
             expectedYield,
@@ -107,9 +109,10 @@ abstract contract InterestTest is Test {
         );
 
         // Perform a partial conversion check (e.g., 33% of the principal)
-        uint256 expectedPartialYield = principal.mulDiv(33, 100) + vault.calcInterest(principal.mulDiv(33, 100), vault.getTenor());
+        uint256 expectedPartialYield =
+            principal.mulDiv(33, 100) + vault.calcInterest(principal.mulDiv(33, 100), vault.getTenor());
         uint256 partialAssetsInWeiAtPeriod =
-                            vault.convertToAssetsAtPeriod(sharesInWei.mulDiv(33, 100), numTimePeriods + vault.getTenor());
+            vault.convertToAssetsAtPeriod(sharesInWei.mulDiv(33, 100), numTimePeriods + vault.getTenor());
         assertApproxEqAbs(
             expectedPartialYield,
             partialAssetsInWeiAtPeriod,
@@ -180,11 +183,11 @@ abstract contract InterestTest is Test {
         vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed); // restore the vault to previous state
     }
 
-    function assertMsg(string memory prefix, ISimpleInterest simpleInterest, uint256 numTimePeriods)
-        internal
-        view
-        returns (string memory)
-    {
+    function assertMsg(
+        string memory prefix,
+        ISimpleInterest simpleInterest,
+        uint256 numTimePeriods
+    ) internal view returns (string memory) {
         return string.concat(prefix, toString(simpleInterest), " timePeriod= ", vm.toString(numTimePeriods));
     }
 

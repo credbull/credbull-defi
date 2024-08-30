@@ -179,10 +179,11 @@ contract TimelockInterestVaultTest is InterestTest {
         );
     }
 
-    function testInterestAtPeriod(uint256 principal, ISimpleInterest simpleInterest, uint256 numTimePeriods)
-        internal
-        override
-    {
+    function testInterestAtPeriod(
+        uint256 principal,
+        ISimpleInterest simpleInterest,
+        uint256 numTimePeriods
+    ) internal override {
         // test against the simple interest harness
         super.testInterestAtPeriod(principal, simpleInterest, numTimePeriods);
 

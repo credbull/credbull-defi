@@ -10,10 +10,13 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
 contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
-    constructor(address initialOwner, IERC20 asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
-        TimelockIERC1155(initialOwner, tenor)
-        SimpleInterestVault(asset, interestRatePercentage, frequency, tenor)
-    { }
+    constructor(
+        address initialOwner,
+        IERC20 asset,
+        uint256 interestRatePercentage,
+        uint256 frequency,
+        uint256 tenor
+    ) TimelockIERC1155(initialOwner, tenor) SimpleInterestVault(asset, interestRatePercentage, frequency, tenor) { }
 
     // we want the supply of the ERC20 token - not the locks
     function totalSupply() public view virtual override(ERC1155Supply, IERC20, ERC20) returns (uint256) {
@@ -29,11 +32,11 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
         return shares;
     }
 
-    function redeem(uint256 shares, address receiver, address owner)
-        public
-        override(SimpleInterestVault)
-        returns (uint256)
-    {
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address owner
+    ) public override(SimpleInterestVault) returns (uint256) {
         // First, unlock the shares if possible
         _unlockInternal(owner, currentTimePeriodsElapsed, shares);
 
@@ -71,11 +74,11 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
      *  Any difference will need to be credited or debited from the current balance
      * NB - this does revert unlike ERC4626 preview meethods.
      */
-    function previewConvertSharesForRollover(address account, uint256 lockReleasePeriod, uint256 value)
-        public
-        view
-        returns (uint256 sharesForNextPeriod)
-    {
+    function previewConvertSharesForRollover(
+        address account,
+        uint256 lockReleasePeriod,
+        uint256 value
+    ) public view returns (uint256 sharesForNextPeriod) {
         uint256 unlockableAmount = this.previewUnlock(account, lockReleasePeriod);
 
         // Ensure that the account has enough unlockable tokens to roll over

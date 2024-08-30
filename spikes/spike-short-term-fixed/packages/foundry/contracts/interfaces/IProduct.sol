@@ -34,9 +34,12 @@ interface IProduct {
      * @param redeemTimePeriod The time period for redeem
      * @return assets The amount of assets returned to the receiver based on the elapsed period.
      */
-    function redeemAtPeriod(uint256 shares, address receiver, address owner, uint256 redeemTimePeriod)
-        external
-        returns (uint256 assets);
+    function redeemAtPeriod(
+        uint256 shares,
+        address receiver,
+        address owner,
+        uint256 redeemTimePeriod
+    ) external returns (uint256 assets);
 
     // =============== Metadata ===============
 

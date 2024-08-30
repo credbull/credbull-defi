@@ -14,7 +14,7 @@ import { ERC20Burnable } from "@openzeppelin/contracts/token/ERC20/extensions/ER
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
-import { Math } from "@openzeppelin/contracts//utils/math/Math.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
@@ -28,30 +28,28 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     // should use the same time unit (day / month or years) as the interest frequency
     uint256 public immutable TENOR;
 
-    constructor(IERC20 asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
-        SimpleInterest(interestRatePercentage, frequency)
-        ERC4626(asset)
-        ERC20("Simple Interest Rate Claim", "cSIR")
-    {
+    constructor(
+        IERC20 asset,
+        uint256 interestRatePercentage,
+        uint256 frequency,
+        uint256 tenor
+    ) SimpleInterest(interestRatePercentage, frequency) ERC4626(asset) ERC20("Simple Interest Rate Claim", "cSIR") {
         TENOR = tenor;
     }
 
     // =============== Deposit ===============
 
-    function deposit(uint256 assets, address receiver)
-        public
-        virtual
-        override(IERC4626, ERC4626, IProduct)
-        returns (uint256)
-    {
+    function deposit(
+        uint256 assets,
+        address receiver
+    ) public virtual override(IERC4626, ERC4626, IProduct) returns (uint256) {
         return ERC4626.deposit(assets, receiver);
     }
 
-    function convertToSharesAtPeriod(uint256 assetsInWei, uint256 numTimePeriodsElapsed)
-        public
-        view
-        returns (uint256 sharesInWei)
-    {
+    function convertToSharesAtPeriod(
+        uint256 assetsInWei,
+        uint256 numTimePeriodsElapsed
+    ) public view returns (uint256 sharesInWei) {
         if (assetsInWei < SCALE) return 0; // no shares for fractional assets
 
         return calcDiscounted(assetsInWei, numTimePeriodsElapsed);
@@ -77,20 +75,21 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
 
     // =============== Redeem ===============
 
-    function redeem(uint256 shares, address receiver, address owner)
-        public
-        virtual
-        override(IERC4626, ERC4626, IProduct)
-        returns (uint256)
-    {
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address owner
+    ) public virtual override(IERC4626, ERC4626, IProduct) returns (uint256) {
         return ERC4626.redeem(shares, receiver, owner);
     }
 
     // TODO - not fully implemented.   need to unlock the specific shares specific to this period.
-    function redeemAtPeriod(uint256 shares, address receiver, address owner, uint256 redeemTimePeriod)
-        external
-        returns (uint256 assets)
-    {
+    function redeemAtPeriod(
+        uint256 shares,
+        address receiver,
+        address owner,
+        uint256 redeemTimePeriod
+    ) external returns (uint256 assets) {
         if (currentTimePeriodsElapsed != redeemTimePeriod) {
             revert RedeemTimePeriodNotSupported(currentTimePeriodsElapsed, redeemTimePeriod);
         }
@@ -101,11 +100,10 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     // asset that would be exchanged for the amount of shares
     // for a given numberOfTimePeriodsElapsed
     // assets = principal + interest
-    function convertToAssetsAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
-        public
-        view
-        returns (uint256 assetsInWei)
-    {
+    function convertToAssetsAtPeriod(
+        uint256 sharesInWei,
+        uint256 numTimePeriodsElapsed
+    ) public view returns (uint256 assetsInWei) {
         if (sharesInWei < SCALE) return 0; // no assets for fractional shares
 
         // trying to redeem before TENOR - just give back the Discounted Amount
@@ -121,11 +119,10 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     // asset that would be exchanged for the amount of shares
     // for a given numberOfTimePeriodsElapsed
     // assets = principal + interest
-    function _calcPrincipalFromSharesAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
-        internal
-        view
-        returns (uint256 principal)
-    {
+    function _calcPrincipalFromSharesAtPeriod(
+        uint256 sharesInWei,
+        uint256 numTimePeriodsElapsed
+    ) internal view returns (uint256 principal) {
         if (sharesInWei < SCALE) return 0; // no assets for fractional shares
 
         // trying to redeem before TENOR - just give back the Discounted Amount

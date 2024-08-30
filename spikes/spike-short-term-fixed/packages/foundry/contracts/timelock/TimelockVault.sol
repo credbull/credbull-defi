@@ -20,11 +20,13 @@ contract TimelockVault is ERC4626, ITimelock, Ownable {
     error SharesLocked(uint256 releaseTime);
     error TransferNotSupported();
 
-    constructor(address _owner, IERC20 asset, string memory name, string memory symbol, uint256 _lockDuration)
-        ERC4626(asset)
-        ERC20(name, symbol)
-        Ownable(_owner)
-    {
+    constructor(
+        address _owner,
+        IERC20 asset,
+        string memory name,
+        string memory symbol,
+        uint256 _lockDuration
+    ) ERC4626(asset) ERC20(name, symbol) Ownable(_owner) {
         lockDuration = _lockDuration;
     }
 

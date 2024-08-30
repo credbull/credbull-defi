@@ -19,7 +19,7 @@ abstract contract TimelockTest is Test {
     function test__Timelock__Lock() public {
         uint256 depositAmount = 1000;
 
-        // Alice locks the tokens using the Timelock contract
+        // Owner locks the tokens using the Timelock contract
         vm.startPrank(owner);
         timelock.lock(alice, lockReleasePeriod, depositAmount);
         vm.stopPrank();
@@ -51,7 +51,7 @@ abstract contract TimelockTest is Test {
     function test__Timelock__UnlockFailsBeforeTime() public {
         uint256 depositAmount = 1000;
 
-        // Alice locks the tokens using the Timelock contract
+        // Owner locks the tokens using the Timelock contract
         vm.startPrank(owner);
         timelock.lock(alice, lockReleasePeriod, depositAmount);
         vm.stopPrank();
@@ -70,7 +70,7 @@ abstract contract TimelockTest is Test {
         uint256 depositAmount = 1000;
         uint256 partialUnlockAmount = 400;
 
-        // Alice locks the tokens using the Timelock contract
+        // Owner locks the tokens using the Timelock contract
         vm.startPrank(owner);
         timelock.lock(alice, lockReleasePeriod, depositAmount);
         vm.stopPrank();

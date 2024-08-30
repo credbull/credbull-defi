@@ -16,35 +16,35 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * @dev Uses a Custodian Account to accummulate the deposited Asset.
  */
 abstract contract ShortTermFixedYieldVault is ERC4626, Pausable, Ownable {
-  using Math for uint256;
+    using Math for uint256;
 
-  event Name();
+    event Name();
 
-  enum Term {
-    THIRTY_DAY,
-    NINTY_DAY
-  }
+    enum Term {
+        THIRTY_DAY,
+        NINTY_DAY
+    }
 
-  struct DepositTHing {
-    uint256 amount;
-  }
+    struct DepositTHing {
+        uint256 amount;
+    }
 
-  /// @notice The [Term] for this vault.
-  Term private _term;
+    /// @notice The [Term] for this vault.
+    Term private _term;
 
-  uint256 private _rolloverPercent;
+    uint256 private _rolloverPercent;
 
-  constructor(
-    Term term_,
-    uint256 rolloverPercent_,
-    address owner_,
-    IERC20 asset
-  ) ERC4626(asset) ERC20("Short Term Fixed Yield Claim", "STFY") Ownable(owner_) {
-    _term = term_;
-    _rolloverPercent = rolloverPercent_;
-  }
+    constructor(
+        Term term_,
+        uint256 rolloverPercent_,
+        address owner_,
+        IERC20 asset
+    ) ERC4626(asset) ERC20("Short Term Fixed Yield Claim", "STFY") Ownable(owner_) {
+        _term = term_;
+        _rolloverPercent = rolloverPercent_;
+    }
 
-  function _calculateInterest() private returns (uint256 interest) {
-    return interest;
-  }
+    function _calculateInterest() private returns (uint256 interest) {
+        return interest;
+    }
 }
