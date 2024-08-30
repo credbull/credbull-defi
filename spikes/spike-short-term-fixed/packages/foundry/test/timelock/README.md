@@ -7,23 +7,89 @@ your investment. At Maturity, your investment unlocks, allowing you to receive y
 - Deposit: Your investment is locked for the Product's maturity period.  Your investment "locks" until "Tenor" elapsed time.
 - Redeem: At maturity, you can redeem your Principal and Yield or reinvest.  Your investment "unlocks" at "Tenor". elapsed time since deposit.
 
-## TimelockIERC1155 Contract Overview
+## Lock on Deposit
 
-The TimelockIERC1155 contract implements token locking functionality using the ERC1155 Multi Token standard. It allows investments 
-to be locked until a specified maturity period, preventing early withdrawal and ensuring that the investment remains committed for the full Tenor.
+### Lock Example 
+Alice invests $1,000 in a Credbull product with a 30-day lock period. Her 1,000 tokens are locked for 30 days, during which she cannot 
+redeem her investment.
 
+### Lock Implementation
+The `lock` function is responsible for locking a specified amount of tokens for a particular account until a given release period. 
+In TimelockIERC1155, the `lock` function mints ERC1155 tokens at the lockReleasePeriod to represent the locked amount.
+```Solidity
+/**
+ * @notice Locks a specified amount of tokens for a particular account until a given release period.
+ * @param account The address of the account whose tokens are to be locked.
+ * @param lockReleasePeriod The period during which these tokens will be released.
+ * @param value The amount of tokens to be locked.
+ */
+function lock(address account, uint256 lockReleasePeriod, uint256 value) public override onlyOwner {
+    _mint(account, lockReleasePeriod, value, "");
+}
+```
 
-# Rolling Over Investments at Maturity
+## Unlock for Redeem
 
-Rolling over your investment means that instead of withdrawing your Principal and Yield at Maturity, you automatically reinvest them into the same Product with a new Tenor.
+### Unlock Example
+If Alice tries to unlock her $1,000 investment before the 30-day period ends, the attempt will fail. After 30 days, she can successfully 
+unlock and redeem her investment.
 
-### How It Works
-At Maturity, you have a 1-day window to redeem your investment. During this period, you can choose to withdraw your Principal and Yield. 
-If you do not take any action within this time, your investment will be automatically rolled over into a new Tenor.
+### Unlock Implementation
+The `unlock` function allows tokens to be made available for transfer or redemption once the lock release period has been reached.
+In TimelockIERC1155, the `unlock` function burns the locked ERC1155 tokens, effectively releasing the amount that was previously locked.
+```Solidity
+/**
+ * @notice Unlocks a specified amount of tokens for a particular account once the lock release period has been reached.
+ * @param account The address of the account whose tokens are to be unlocked.
+ * @param lockReleasePeriod The period during which these tokens will be released.
+ * @param value The amount of tokens to be unlocked.
+ */
+function unlock(address account, uint256 lockReleasePeriod, uint256 value) public onlyOwner {
+    if (currentPeriod < lockReleasePeriod) {
+        revert LockDurationNotExpired(currentPeriod, lockReleasePeriod);
+    }
 
-Let’s say you invested $1,000 with a 30-day Tenor. At the end of the 30 days, your investment matures. You then have 1 day to redeem your Principal and Yield. If you do not 
-redeem within this 1-day window, your $1,000 plus the Yield will be automatically rolled over into a new 30-day Tenor.
+    uint256 unlockableAmount = previewUnlock(account, lockReleasePeriod);
+    if (unlockableAmount < value) {
+        revert InsufficientLockedBalance(unlockableAmount, value);
+    }
 
-## Rollover Functionality in TimelockIERC1155
-The TimelockIERC1155 contract also includes functionality to roll over investments at maturity. The contract burns the unlocked tokens from the 
-previous lock period and mints new tokens with a new lock release period, extending the investment's lock.
+    _burn(account, lockReleasePeriod, value);
+}
+```
+----
+## Rolling Over Investments
+
+Rolling over your investment means that instead of withdrawing your Principal and Yield at Maturity, you automatically reinvest them into the 
+same Product with a new Tenor.
+
+### Rollover Example
+Alice invests $1,000 with a 30-day Tenor. After 30 days, her investment matures, giving her 1 day to redeem. If she doesn't redeem within that 
+window, her $1,000 plus the Yield automatically rolls over into a new 30-day Tenor.
+
+### Rollover Implementation
+The `rolloverUnlocked` function reinvests unlocked tokens by rolling them over into a new lock period. In the TimelockIERC1155 implementation, 
+this function burns the unlocked tokens and mints new tokens for the new lock period.
+```Solidity
+/**
+ * @notice Rolls over a specified amount of unlocked tokens for a new lock period.
+ * @param account The address of the account whose tokens are to be rolled over.
+ * @param lockReleasePeriod The period during which these tokens will be released.
+ * @param value The amount of tokens to be rolled over.
+ */
+function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value) public virtual override onlyOwner
+{
+    uint256 unlockableAmount = previewUnlock(account, lockReleasePeriod);
+
+    if (value > unlockableAmount) {
+        revert InsufficientLockedBalance(unlockableAmount, value);
+    }
+
+    _burn(account, lockReleasePeriod, value);
+
+    uint256 rolloverLockReleasePeriod = lockReleasePeriod + lockDuration;
+
+    _mint(account, rolloverLockReleasePeriod, value, "");
+}
+
+```
