@@ -2,7 +2,7 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.23;
 
-import { ITimelock } from "./ITimelock.s.sol";
+import { ITimelock } from "@credbull/contracts/interfaces/ITimelock.sol";
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
@@ -113,7 +113,12 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
      * @param lockReleasePeriod The period during which these tokens will be released.
      * @param value The amount of tokens to be rolled over.
      */
-    function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value) external override onlyOwner {
+    function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value)
+        public
+        virtual
+        override
+        onlyOwner
+    {
         uint256 unlockableAmount = this.previewUnlock(account, lockReleasePeriod);
 
         if (value > unlockableAmount) {
