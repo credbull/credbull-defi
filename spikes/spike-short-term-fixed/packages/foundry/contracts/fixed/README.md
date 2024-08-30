@@ -138,8 +138,8 @@ function convertToAssetsAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElap
 ----
 # Rolling Over Investment with Discounting
 
-Rolling over your investment means that instead of withdrawing your Principal and Interest at Maturity, you automatically reinvest them into the 
-same Product with a new Tenor.
+Rolling over your investment means that instead of withdrawing your Principal and Interest at Maturity, you automatically reinvest them into the
+same Product for an additional "tenor" period of time.
 
 When you roll over, the interest earned during the first period is added to your original Principal (P1), forming a new Principal (P2) 
 for the next period. You can choose to fully or partially roll over your investment, with P2 including any amount you reinvest from P1.

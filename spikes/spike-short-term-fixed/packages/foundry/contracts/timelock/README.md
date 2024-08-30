@@ -61,7 +61,7 @@ function unlock(address account, uint256 lockReleasePeriod, uint256 value) publi
 ## Rolling Over Investments
 
 Rolling over your investment means that instead of withdrawing your Principal and Interest at Maturity, you automatically reinvest them into the 
-same Product with a new Tenor.
+same Product for an additional "tenor" period of time.
 
 ### Rollover Example
 Alice invests $1,000 with a 30-day Tenor. After 30 days, her investment matures, giving her 1 day to redeem. If she doesn't redeem within that 
