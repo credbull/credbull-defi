@@ -125,9 +125,6 @@ contract TimelockInterestVaultTest is InterestTest {
             vault.calcDiscounted(depositAmount + vault.calcInterest(depositAmount, tenor), tenor); // discounted rate of first period's principal + interest
         uint256 actualSharesNextPeriod = vault.previewConvertSharesForRollover(alice, periodOneEnd, shares);
         assertEq(expectedSharesNextPeriod, actualSharesNextPeriod, "shares next period incorrect");
-        vm.startPrank(alice);
-        vault.approve(owner, depositAmount - actualSharesNextPeriod); // give the vault ability to transfer excess shares on my behalf
-        vm.stopPrank();
 
         vm.startPrank(owner);
         vault.rolloverUnlocked(alice, vault.getCurrentTimePeriodsElapsed(), shares);

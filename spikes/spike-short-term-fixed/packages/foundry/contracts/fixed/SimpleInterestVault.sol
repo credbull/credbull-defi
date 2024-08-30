@@ -86,7 +86,6 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
         return ERC4626.redeem(shares, receiver, owner);
     }
 
-    // TODO - not fully implemented.   need to unlock the specific shares specific to this period.
     function redeemAtPeriod(uint256 shares, address receiver, address owner, uint256 redeemTimePeriod)
         external
         returns (uint256 assets)
@@ -98,9 +97,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
         return redeem(shares, receiver, owner);
     }
 
-    // asset that would be exchanged for the amount of shares
-    // for a given numberOfTimePeriodsElapsed
-    // assets = principal + interest
+    // asset that would be exchanged for the amount of shares for a given numberOfTimePeriodsElapsed
     function convertToAssetsAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
         public
         view
@@ -118,9 +115,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
         return principal + calcInterest(principal, TENOR);
     }
 
-    // asset that would be exchanged for the amount of shares
-    // for a given numberOfTimePeriodsElapsed
-    // assets = principal + interest
+    // asset that would be exchanged for the amount of shares for a given numberOfTimePeriodsElapsed
     function _calcPrincipalFromSharesAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed)
         internal
         view
@@ -159,8 +154,8 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
         return ERC4626.decimals();
     }
 
+    // NB - Internal use only ! - this does NOT check ownership of tokens.
     function _burnInternal(address account, uint256 value) internal virtual {
-        _spendAllowance(account, _msgSender(), value);
         _burn(account, value);
     }
 
@@ -197,6 +192,10 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
         returns (uint256 frequency)
     {
         return SimpleInterest.getFrequency();
+    }
+
+    function _update(address from, address to, uint256 value) internal override virtual {
+        ERC20._update(from, to, value);
     }
 
     function getInterestInPercentage()

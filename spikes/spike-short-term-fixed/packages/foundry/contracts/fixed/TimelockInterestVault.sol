@@ -63,7 +63,7 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
             SimpleInterestVault._burnInternal(account, excessValue);
         }
 
-        super.rolloverUnlocked(account, lockReleasePeriod, sharesForNextPeriod);
+        TimelockIERC1155.rolloverUnlocked(account, lockReleasePeriod, sharesForNextPeriod);
     }
 
     /**
