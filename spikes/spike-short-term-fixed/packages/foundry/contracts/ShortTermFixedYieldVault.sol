@@ -8,12 +8,43 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title Credbull Short Term Fixed Yield Vault
  * @notice The family defining contract, based upon Open Zeppelin's ERC4626 implementation.
  * @dev Uses a Custodian Account to accummulate the deposited Asset.
  */
-abstract contract ShortTermFixedYieldVault is ERC4626, Pausable {
+abstract contract ShortTermFixedYieldVault is ERC4626, Pausable, Ownable {
   using Math for uint256;
+
+  event Name();
+
+  enum Term {
+    THIRTY_DAY,
+    NINTY_DAY
+  }
+
+  struct DepositTHing {
+    uint256 amount;
+  }
+
+  /// @notice The [Term] for this vault.
+  Term private _term;
+
+  uint256 private _rolloverPercent;
+
+  constructor(
+    Term term_,
+    uint256 rolloverPercent_,
+    address owner_,
+    IERC20 asset
+  ) ERC4626(asset) ERC20("Short Term Fixed Yield Claim", "STFY") Ownable(owner_) {
+    _term = term_;
+    _rolloverPercent = rolloverPercent_;
+  }
+
+  function _calculateInterest() private returns (uint256 interest) {
+    return interest;
+  }
 }
