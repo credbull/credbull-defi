@@ -97,9 +97,9 @@ Let's stick with Bob and our Credbull Product and the Discounted Principal of $9
 
 `P = Discounted Principal + Interest[Prior] = $999.67 + $0.33 = $1,000`
 
-### Relationship Between Principal and Discounted Factor
+### Relationship Between Principal and Discounted
 
-The **Discounted Factor** represents the reduction in the principal due to accrued interest over time. By applying the above formula, you can calculate the
+Discounted Principal or just "Discounted" represents the reduction in the principal due to accrued interest over time. By applying the above formula, you can calculate the
 original principal from the discounted value, ensuring that the financial relationship between the initial investment and its adjusted value remains consistent.
 
 ### Implementation
@@ -138,7 +138,7 @@ function convertToAssetsAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElap
 ----
 # Rolling Over Investment with Discounting
 
-Rolling over your investment means that instead of withdrawing your Principal and Yield at Maturity, you automatically reinvest them into the 
+Rolling over your investment means that instead of withdrawing your Principal and Interest at Maturity, you automatically reinvest them into the 
 same Product with a new Tenor.
 
 When you roll over, the interest earned during the first period is added to your original Principal (P1), forming a new Principal (P2) 
@@ -198,9 +198,9 @@ due to interest accrual. In such cases, `rolloverUnlocked` calculates the differ
  * @param value The amount of tokens to be rolled over.
  */
 function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value) public override onlyOwner {
-    uint256 principalAndYieldFirstPeriod = convertToAssets(value); // principal + first period interest
+    uint256 principalAndInterestFirstPeriod = convertToAssets(value); // principal + first period interest
 
-    uint256 sharesForNextPeriod = convertToShares(principalAndYieldFirstPeriod); // discounted principal for rollover period
+    uint256 sharesForNextPeriod = convertToShares(principalAndInterestFirstPeriod); // discounted principal for rollover period
     
     if (value > sharesForNextPeriod) {
         uint256 excessValue = value - sharesForNextPeriod;
