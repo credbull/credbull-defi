@@ -221,12 +221,14 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
 
   /**
    * @dev Calculates the number of days the amount has been locked.
-   * @param depositTimePeriodsFromOpen The start time period of the lock.
+   * @param depositTimePeriodsFromOpen The start time period of the lock. // uint days
    */
   function getDepositLockTimePeriods(
     uint256 depositTimePeriodsFromOpen
   ) public view returns (uint256 curDepositLockTimePeriods) {
     curDepositLockTimePeriods = getCurrentTimePeriodsElapsed() - depositTimePeriodsFromOpen;
+
+    return curDepositLockTimePeriods <= 1 ? 0 : curDepositLockTimePeriods - 1;
   }
 
   /**
