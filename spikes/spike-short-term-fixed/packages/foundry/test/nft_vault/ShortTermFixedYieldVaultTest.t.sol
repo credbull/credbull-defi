@@ -65,13 +65,62 @@ contract ShortTermFixedYieldVaultTest is BaseTest, UserGenerator {
       vm.warp(vaultOpenTime + secondsElapsed);
       assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 0);
 
-      secondsElapsed = 86400 + 4300;
+      secondsElapsed = 1 days + 4300;
       vm.warp(vaultOpenTime + secondsElapsed);
       assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 0);
 
-      secondsElapsed = 86400 * 2 + 1;
+      secondsElapsed = 2 days + 1;
       vm.warp(vaultOpenTime + secondsElapsed);
       assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 1);
+  }
+
+  function test_getTimePeriodsElapsedInCurrentTerm() public {
+    uint256 vaultOpenTime = block.timestamp + 1000;
+    vm.prank(vaultOwner);
+    vault.openVault(vaultOpenTime);
+
+    uint256 secondsElapsed = 45000;
+    uint256 timePeriodsFromOpen = 0;
+    vm.warp(vaultOpenTime + secondsElapsed);
+
+    assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 0);
+
+    secondsElapsed = 1 days;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 0);
+
+    secondsElapsed = 2 days;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 1);
+
+    secondsElapsed = 30 days;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 29);
+
+    secondsElapsed = 31 days;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 0);
+
+    secondsElapsed = 33 days;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 2);
+
+
+    secondsElapsed = 67 days;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 6);
+
+    // ----------------------
+    timePeriodsFromOpen = 27;
+
+    secondsElapsed = timePeriodsFromOpen * 1 days + 1200;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    
+    assertEq(vault.getCurrentTimePeriodsElapsed(), 27);
+
+    secondsElapsed = 29 days;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 1);
   }
 
   function test_ABDKMath64x64Test() public pure {
