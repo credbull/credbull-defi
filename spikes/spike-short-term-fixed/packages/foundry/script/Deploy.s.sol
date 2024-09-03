@@ -1,11 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "../contracts/YourContract.sol";
+import "../contracts/YieldSubscription.sol";
 import "./DeployHelpers.s.sol";
-
-import { TimelockInterestVault } from "@credbull/contracts/fixed/TimelockInterestVault.sol";
-import { SimpleToken } from "@credbull/contracts/token/SimpleToken.sol";
+import "../contracts/SimpleUSDC.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
   error InvalidPrivateKey(string);
@@ -19,30 +17,12 @@ contract DeployScript is ScaffoldETHDeploy {
     }
     vm.startBroadcast(deployerPrivateKey);
 
-    address owner = vm.addr(deployerPrivateKey);
+    SimpleUSDC simpleUSDC = new SimpleUSDC(10_000_000_000_000); //10 Million
 
-    YourContract yourContract = new YourContract(vm.addr(deployerPrivateKey));
+    YieldSubscription shortTermYield = new YieldSubscription(address(simpleUSDC), 1724112000);
     console.logString(
       string.concat(
-        "YourContract deployed at: ", vm.toString(address(yourContract))
-      )
-    );
-
-    uint256 initialSupply = 10000000 ether;
-    SimpleToken simpleToken = new SimpleToken(initialSupply);
-    console.logString(
-      string.concat(
-        "SimpleToken deployed at: ", vm.toString(address(simpleToken))
-      )
-    );
-
-    uint256 apy = 12; // APY in percentage
-    uint256 frequencyValue = 360;
-    uint256 tenor = 30;
-    TimelockInterestVault timelockVault = new TimelockInterestVault(owner, simpleToken, apy, frequencyValue, tenor);
-    console.logString(
-      string.concat(
-        "TimelockInterestVault deployed at: ", vm.toString(address(timelockVault))
+        "Short term yield deployed at: ", vm.toString(address(shortTermYield))
       )
     );
 

@@ -17,3 +17,6 @@
 [submodule "spikes/spike-short-term-fixed/packages/foundry/lib/solidity-bytes-utils"]
 	path = spikes/spike-short-term-fixed/packages/foundry/lib/solidity-bytes-utils
 	url = https://github.com/GNSPS/solidity-bytes-utils
+[submodule "spikes/spike-short-term-fixed/packages/foundry/lib/openzeppelin-contracts"]
+	path = spikes/spike-short-term-fixed/packages/foundry/lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
