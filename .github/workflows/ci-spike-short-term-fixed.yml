@@ -1,0 +1,34 @@
+name: ci-dev-contracts
+
+defaults:
+  run:
+    working-directory: spikes/spike-short-term-fixed/foundry
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "prototype-ui"
+    paths:
+      - "spikes/spike-short-term-fixed/foundry/contracts/**"
+      - ".github/workflows/spike-short-term-fixed.yml"
+
+jobs:
+  contracts-test:
+    runs-on: ubuntu-latest
+    environment: local
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run tests
+        run: forge test -vvv
+        env:
+          ENVIRONMENT: local
