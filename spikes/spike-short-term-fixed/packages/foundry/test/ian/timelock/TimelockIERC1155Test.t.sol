@@ -5,14 +5,39 @@ import { TimelockIERC1155 } from "@credbull-spike/contracts/ian/timelock/Timeloc
 import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.sol";
 import { TimelockTest } from "@credbull-spike-test/ian/timelock/TimelockTest.t.sol";
 
+import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+
+contract SimpleTimelockIERC1155 is TimelockIERC1155 {
+    uint256 public lockDuration;
+    uint256 public currentPeriod = 0;
+
+    constructor(address _initialOwner, uint256 _lockDuration)
+        TimelockIERC1155(_initialOwner) {
+        lockDuration = _lockDuration;
+    }
+
+    function getLockDuration() public override view returns (uint256 _lockDuration) {
+        return lockDuration;
+    }
+
+    function getCurrentPeriod() public override view returns (uint256 _currentPeriod) {
+        return currentPeriod;
+    }
+
+    function setCurrentPeriod(uint256 _currentPeriod) public override  {
+        currentPeriod = _currentPeriod;
+    }
+}
+
 contract TimelockIERC1155Test is TimelockTest {
     function setUp() public {
-        timelock = new TimelockIERC1155(owner, lockReleasePeriod);
+        timelock = new SimpleTimelockIERC1155(owner, lockReleasePeriod);
     }
 
     function toImpl(ITimelock _timelock) internal pure returns (TimelockIERC1155) {
         // Simulate time passing by setting the current time periods elapsed
-        TimelockIERC1155 timelockImpl = TimelockIERC1155(address(_timelock));
+        TimelockIERC1155 timelockImpl = SimpleTimelockIERC1155(address(_timelock));
         return timelockImpl;
     }
 

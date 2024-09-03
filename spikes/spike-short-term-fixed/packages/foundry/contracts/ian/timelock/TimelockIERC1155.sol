@@ -21,18 +21,13 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  *      The main functionality includes locking, unlocking, and rolling over investments.
  *
  */
-contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
-    uint256 public lockDuration;
-    uint256 public currentPeriod = 0;
+abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
 
     /**
      * @dev Constructor to initialize the Timelock contract with an owner and lock duration.
      * @param _initialOwner The address of the contract owner.
-     * @param _lockDuration The duration of the lock period.
      */
-    constructor(address _initialOwner, uint256 _lockDuration) ERC1155("credbull.io/funds/1") Ownable(_initialOwner) {
-        lockDuration = _lockDuration;
-    }
+    constructor(address _initialOwner) ERC1155("credbull.io/funds/1") Ownable(_initialOwner) {}
 
     /**
      * @notice Returns the amount of tokens currently locked for a specific account and release period.
@@ -71,7 +66,7 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
      * @return The amount of tokens that can be unlocked.
      */
     function previewUnlock(address account, uint256 lockReleasePeriod) public view override returns (uint256) {
-        if (currentPeriod >= lockReleasePeriod) {
+        if (getCurrentPeriod() >= lockReleasePeriod) {
             return getLockedAmount(account, lockReleasePeriod);
         } else {
             return 0;
@@ -95,6 +90,8 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
      * @param value The amount of tokens to be unlocked.
      */
     function _unlockInternal(address account, uint256 lockReleasePeriod, uint256 value) internal {
+        uint256 currentPeriod = getCurrentPeriod();
+
         if (currentPeriod < lockReleasePeriod) {
             revert LockDurationNotExpired(currentPeriod, lockReleasePeriod);
         }
@@ -120,6 +117,7 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
         onlyOwner
     {
         uint256 unlockableAmount = this.previewUnlock(account, lockReleasePeriod);
+        uint256 lockDuration = getLockDuration();
 
         if (value > unlockableAmount) {
             revert InsufficientLockedBalance(unlockableAmount, value);
@@ -143,18 +141,24 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
     }
 
     /**
-     * @notice Returns the current period of the lock.
-     * @return The current period.
+     * @notice Returns the duration of locks.
+     * How long (how many periods must elapse) before a lock can be released.
+     * @return lockDuration The lock duration.
      */
-    function getCurrentPeriod() public view returns (uint256) {
-        return currentPeriod;
-    }
+    function getLockDuration() public virtual view returns (uint256 lockDuration);
 
     /**
-     * @notice Sets the current period of the lock.
+     * @notice Returns the current period.
+     * @dev Current period is the internal "clock" to see when a lock is unlockable.
+     * @return currentPeriod The current period.
+     */
+    function getCurrentPeriod() public virtual view returns (uint256 currentPeriod);
+
+    /**
+     * @notice Sets the current period.
+     * @dev Current period is the internal "clock" to see when a lock is unlockable.
      * @param _currentPeriod The new current period.
      */
-    function setCurrentPeriod(uint256 _currentPeriod) public virtual {
-        currentPeriod = _currentPeriod;
-    }
+    function setCurrentPeriod(uint256 _currentPeriod) public virtual;
+
 }

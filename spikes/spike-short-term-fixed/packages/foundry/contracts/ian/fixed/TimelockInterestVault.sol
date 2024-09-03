@@ -11,7 +11,7 @@ import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/
 
 contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
     constructor(address initialOwner, IERC20 asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
-        TimelockIERC1155(initialOwner, tenor)
+        TimelockIERC1155(initialOwner)
         SimpleInterestVault(asset, interestRatePercentage, frequency, tenor)
     { }
 
@@ -24,7 +24,7 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
         shares = SimpleInterestVault.deposit(assets, receiver);
 
         // Call the internal _lock function instead, which handles the locking logic
-        _lockInternal(receiver, currentTimePeriodsElapsed + lockDuration, shares);
+        _lockInternal(receiver, currentTimePeriodsElapsed + TENOR, shares);
 
         return shares;
     }
@@ -91,14 +91,16 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
         return _sharesForNextPeriod;
     }
 
-    // TODO - ugly, storing state at the parent that means pretty much the same thing
-    function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public override {
-        super.setCurrentPeriod(_currentTimePeriodsElapsed);
-        super.setCurrentTimePeriodsElapsed(_currentTimePeriodsElapsed);
+
+    function getLockDuration() public override view returns (uint256 lockDuration) {
+        return TENOR;
     }
 
-    // TODO - ugly, storing state at the parent that means pretty much the same thing
+    function getCurrentPeriod() public override virtual view returns (uint256 currentPeriod) {
+        return currentTimePeriodsElapsed;
+    }
+
     function setCurrentPeriod(uint256 _currentPeriod) public override {
-        this.setCurrentTimePeriodsElapsed(_currentPeriod);
+        setCurrentTimePeriodsElapsed(_currentPeriod);
     }
 }
