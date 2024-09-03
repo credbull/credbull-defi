@@ -14,7 +14,7 @@ import { ERC20Burnable } from "@openzeppelin/contracts/token/ERC20/extensions/ER
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
-import { Math } from "@openzeppelin/contracts//utils/math/Math.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 // Vault that uses SimpleInterest to calculate Shares per Asset
 // - At the start, 1 asset gives 1 share
