@@ -3,8 +3,8 @@
 pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
-import { YieldSubscription } from "../contracts/YieldSubscription.sol";
-import { SimpleUSDC } from "../contracts/SimpleUSDC.sol";
+import { YieldSubscription } from "../contracts/kk/YieldSubscription.sol";
+import { SimpleUSDC } from "../contracts/kk/SimpleUSDC.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { console2 } from "forge-std/console2.sol";
 

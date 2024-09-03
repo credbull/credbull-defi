@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "../contracts/YieldSubscription.sol";
+import "../contracts/kk/YieldSubscription.sol";
 import "./DeployHelpers.s.sol";
-import "../contracts/SimpleUSDC.sol";
+import "../contracts/kk/SimpleUSDC.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
   error InvalidPrivateKey(string);
