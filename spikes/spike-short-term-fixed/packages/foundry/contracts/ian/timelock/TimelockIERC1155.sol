@@ -6,6 +6,7 @@ import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.so
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { IRollable } from "@credbull-spike/contracts/ian/interfaces/IRollable.sol";
 
 /**
  * @title TimelockIERC1155
@@ -21,7 +22,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  *      The main functionality includes locking, unlocking, and rolling over investments.
  *
  */
-abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
+abstract contract TimelockIERC1155 is ITimelock, IRollable, ERC1155, ERC1155Supply, Ownable {
   /**
    * @dev Constructor to initialize the Timelock contract with an owner and lock duration.
    * @param _initialOwner The address of the contract owner.

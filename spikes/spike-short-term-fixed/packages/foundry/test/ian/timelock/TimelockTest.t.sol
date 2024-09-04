@@ -106,35 +106,5 @@ abstract contract TimelockTest is Test {
     assertEq(finalLockedAmount, 0, "All tokens should be unlocked");
   }
 
-  function test__Timelock__RolloverUnlocked() public {
-    uint256 depositAmount = 1000;
-    uint256 rolloverAmount = 500;
-
-    // Alice locks the tokens using the Timelock contract
-    vm.startPrank(owner);
-    timelock.lock(alice, lockReleasePeriod, depositAmount);
-    vm.stopPrank();
-
-    // Advance the period to make the tokens unlockable
-    warpToPeriod(timelock, lockReleasePeriod);
-
-    uint256 unlockableAmount = timelock.previewUnlock(alice, lockReleasePeriod);
-    assertEq(unlockableAmount, depositAmount, "All tokens should be unlockable after the lock period");
-
-    // Perform a rollover of the unlocked tokens
-    vm.startPrank(owner);
-    timelock.rolloverUnlocked(alice, lockReleasePeriod, rolloverAmount);
-    vm.stopPrank();
-
-    // Check that the rolled-over tokens are locked under the new period
-    uint256 lockedAmountAfterRollover = timelock.getLockedAmount(alice, rolloverPeriod);
-    assertEq(lockedAmountAfterRollover, rolloverAmount, "Incorrect locked amount after rollover");
-
-    // Check that the remaining tokens in the original period are reduced
-    // TODO - this fails for TimelockVault - partial redemption not fully implemented
-    //        uint256 remainingUnlockableAmount = timelock.previewUnlock(alice, lockReleasePeriod);
-    //        assertEq(remainingUnlockableAmount, depositAmount - rolloverAmount, "Incorrect remaining unlockable amount after rollover");
-  }
-
   function warpToPeriod(ITimelock _timelock, uint256 timePeriod) internal virtual;
 }

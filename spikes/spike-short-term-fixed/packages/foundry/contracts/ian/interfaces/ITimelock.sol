@@ -42,11 +42,4 @@ interface ITimelock {
    */
   function previewUnlock(address account, uint256 lockReleasePeriod) external view returns (uint256 amountUnlockable);
 
-  /**
-   * @dev Rolls over a specified amount of unlocked tokens for another lock period.
-   * @param account The address of the account whose tokens are to be rolled over.
-   * @param lockReleasePeriod The new period during which these tokens will be locked.
-   * @param value The amount of tokens to be rolled over and locked for the new period.
-   */
-  function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value) external;
 }

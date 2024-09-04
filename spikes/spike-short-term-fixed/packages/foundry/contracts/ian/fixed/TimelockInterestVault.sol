@@ -58,9 +58,13 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
    * @param value The amount of tokens to be rolled over.
    */
   function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value) public override onlyOwner {
-    uint256 sharesForNextPeriod = previewConvertSharesForRollover(account, lockReleasePeriod, value);
+    uint256 previewSharesNextPeriod = previewConvertSharesForRollover(account, lockReleasePeriod, value);
 
     // TODO: this probably only makes sense if lockReleasePeriod == currentTimePeriodsElapsed.  assert as such.
+
+    uint256 rolloverBonus = calcRolloverBonus(account, lockReleasePeriod, value);
+
+    uint256 sharesForNextPeriod = previewSharesNextPeriod + rolloverBonus;
 
     // Adjust the difference by burning the excess tokens if the new value is less than the original
     if (value > sharesForNextPeriod) {
@@ -74,6 +78,11 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
     }
 
     TimelockIERC1155.rolloverUnlocked(account, lockReleasePeriod, sharesForNextPeriod);
+  }
+
+  function calcRolloverBonus(address /* account */, uint256 /*lockReleasePeriod */, uint256 /*value*/)
+  public pure override returns (uint256 rolloverBonus) {
+    return 0;
   }
 
   /**

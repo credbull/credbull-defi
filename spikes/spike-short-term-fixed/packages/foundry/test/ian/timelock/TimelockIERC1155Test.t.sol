@@ -7,6 +7,7 @@ import { TimelockTest } from "@credbull-spike-test/ian/timelock/TimelockTest.t.s
 
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { IRollable } from "@credbull-spike/contracts/ian/interfaces/IRollable.sol";
 
 contract SimpleTimelockIERC1155 is TimelockIERC1155 {
   uint256 public lockDuration;
@@ -26,6 +27,11 @@ contract SimpleTimelockIERC1155 is TimelockIERC1155 {
 
   function setCurrentPeriod(uint256 _currentPeriod) public override {
     currentPeriod = _currentPeriod;
+  }
+
+  function calcRolloverBonus(address account, uint256 lockReleasePeriod, uint256 value)
+    public override returns (uint256 rolloverBonus) {
+    return 0;
   }
 }
 
@@ -61,9 +67,11 @@ contract TimelockIERC1155Test is TimelockTest {
     uint256 unlockableAmount = timelock.previewUnlock(alice, lockReleasePeriod);
     assertEq(unlockableAmount, depositAmount, "All tokens should be unlockable after the lock period");
 
+    IRollable rollable = toImpl(timelock);
+
     // Perform a rollover of the unlocked tokens
     vm.startPrank(owner);
-    timelock.rolloverUnlocked(alice, lockReleasePeriod, rolloverAmount);
+    rollable.rolloverUnlocked(alice, lockReleasePeriod, rolloverAmount);
     vm.stopPrank();
 
     // Check that the rolled-over tokens are locked under the new period

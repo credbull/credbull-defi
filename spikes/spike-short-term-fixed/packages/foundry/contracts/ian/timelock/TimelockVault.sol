@@ -78,36 +78,6 @@ contract TimelockVault is ERC4626, ITimelock, Ownable {
     }
   }
 
-  function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value) external override onlyOwner {
-    uint256 unlockableAmount = this.previewUnlock(account, lockReleasePeriod);
-
-    // Check if the account has enough unlockable tokens to roll over
-    if (value > unlockableAmount) {
-      revert InsufficientLockedBalance(unlockableAmount, value);
-    }
-    //
-    //        // Update the lock info for the new period
-    //        _locks[account].amount = _locks[account].amount - value;
-    //        _locks[account].releaseTime = lockReleasePeriod + lockDuration;
-    //
-    //        // Simulate the lock by adding the value back with the new release time
-    //        _locks[account].amount += value;
-
-    // Reduce the unlockable amount by the value being rolled over
-    _locks[account].amount -= value;
-
-    // Create a new lock info for the rolled-over amount
-    LockInfo memory newLockInfo = LockInfo({ amount: value, releaseTime: lockReleasePeriod + lockDuration });
-
-    // If there is no existing lock for the new period, create one
-    if (_locks[account].releaseTime != lockReleasePeriod + lockDuration) {
-      _locks[account] = newLockInfo;
-    } else {
-      // Otherwise, increase the amount for the existing lock
-      _locks[account].amount += value;
-    }
-  }
-
   function transfer(address, uint256) public pure override(ERC20, IERC20) returns (bool) {
     revert TransferNotSupported();
   }
