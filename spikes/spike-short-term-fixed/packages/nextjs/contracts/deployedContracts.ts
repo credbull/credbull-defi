@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     SimpleUSDC: {
-      address: "0x4000f8820522ac96c4221b299876e3e53bcc8525",
+      address: "0x9c65f85425c619a6cb6d29ff8d57ef696323d188",
       abi: [
         {
           type: "constructor",
@@ -422,23 +422,23 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {
-        allowance: "contracts/OwnableToken.sol",
-        approve: "contracts/OwnableToken.sol",
-        balanceOf: "contracts/OwnableToken.sol",
-        decimals: "contracts/OwnableToken.sol",
-        mint: "contracts/OwnableToken.sol",
-        name: "contracts/OwnableToken.sol",
-        owner: "contracts/OwnableToken.sol",
-        renounceOwnership: "contracts/OwnableToken.sol",
-        symbol: "contracts/OwnableToken.sol",
-        totalSupply: "contracts/OwnableToken.sol",
-        transfer: "contracts/OwnableToken.sol",
-        transferFrom: "contracts/OwnableToken.sol",
-        transferOwnership: "contracts/OwnableToken.sol",
+        allowance: "contracts/kk/OwnableToken.sol",
+        approve: "contracts/kk/OwnableToken.sol",
+        balanceOf: "contracts/kk/OwnableToken.sol",
+        decimals: "contracts/kk/OwnableToken.sol",
+        mint: "contracts/kk/OwnableToken.sol",
+        name: "contracts/kk/OwnableToken.sol",
+        owner: "contracts/kk/OwnableToken.sol",
+        renounceOwnership: "contracts/kk/OwnableToken.sol",
+        symbol: "contracts/kk/OwnableToken.sol",
+        totalSupply: "contracts/kk/OwnableToken.sol",
+        transfer: "contracts/kk/OwnableToken.sol",
+        transferFrom: "contracts/kk/OwnableToken.sol",
+        transferOwnership: "contracts/kk/OwnableToken.sol",
       },
     },
     YieldSubscription: {
-      address: "0x9338ca7d556248055f5751d85cda7ad6ef254433",
+      address: "0x7cf4be31f546c04787886358b9486ca3d62b9acf",
       abi: [
         {
           type: "constructor",
@@ -925,13 +925,13 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {
-        deposit: "contracts/IProduct.sol",
-        getCurrentTimePeriodsElapsed: "contracts/IProduct.sol",
-        getFrequency: "contracts/IProduct.sol",
-        getInterestInPercentage: "contracts/IProduct.sol",
-        redeem: "contracts/IProduct.sol",
-        redeemAtPeriod: "contracts/IProduct.sol",
-        setCurrentTimePeriodsElapsed: "contracts/IProduct.sol",
+        deposit: "contracts/kk/IProduct.sol",
+        getCurrentTimePeriodsElapsed: "contracts/kk/IProduct.sol",
+        getFrequency: "contracts/kk/IProduct.sol",
+        getInterestInPercentage: "contracts/kk/IProduct.sol",
+        redeem: "contracts/kk/IProduct.sol",
+        redeemAtPeriod: "contracts/kk/IProduct.sol",
+        setCurrentTimePeriodsElapsed: "contracts/kk/IProduct.sol",
       },
     },
   },

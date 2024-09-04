@@ -15,31 +15,69 @@ const contractsData = getAllContracts();
 const contractNames = Object.keys(contractsData) as ContractName[];
 
 
+
 const ViewSection = (props: any) => {
 
-    const [userData, setUserData] = useState({});
 
-    const { refetch } = useReadContract({
+    const [userData, setUserData] = useState<Number>(0);
+    const [timePeriodsElapsed, setTimePeriodsElapsed] = useState<BigInt>(0n);
+    const [interestEarned, setInterestEarned] = useState<BigInt>(0n);
+
+    const { refetch: userReserveRefetch } = useReadContract({
         address: props.data.deployedContractData.address,
         functionName: 'userReserve',
         abi: props.data.deployedContractData.abi,
-        args: [props.data.address, 1],
+        args: [props.data.address, 0],
+    });
+
+    const { refetch: getCurrentTimePeriodsElapsedRefetch } = useReadContract({
+        address: props.data.deployedContractData.address,
+        functionName: 'getCurrentTimePeriodsElapsed',
+        abi: props.data.deployedContractData.abi,
+        args: [],
+    });
+
+    const  { refetch: getInterestEarnedRefetch } = useReadContract({
+        address: props.data.deployedContractData.address,
+        functionName: 'totalInterestEarned',
+        abi: props.data.deployedContractData.abi,
+        args: [props.data.address],
     });
 
     
     useEffect(() => {   
         console.log('props', props);
 
-        if(userData !== null)
-        refetch().then((data) => {
-            console.log('userdata', data);
-            setUserData(data);
-        });
+        if(userData === 0)
+          userReserveRefetch().then((data) => {
+            setUserData(Number(Number(data.data) / 10 ** 6));
+          });
+
+        if(timePeriodsElapsed === 0n) {
+          getCurrentTimePeriodsElapsedRefetch().then((data) => {
+            console.log('getCurrentTimePeriodsElapsed', data.data);
+            setTimePeriodsElapsed(data.data as BigInt);
+          });
+        }
+
+        if(interestEarned === 0n) {
+          getInterestEarnedRefetch().then((data) => {
+            setInterestEarned(data.data as BigInt);
+          });
+        }
     }, []);
+
+    useEffect(() => {
+      console.log('userData', userData);
+      console.log('timePeriodsElapsed', timePeriodsElapsed);
+    }, [timePeriodsElapsed, userData]);
 
     return <>
         <div className='view-section'>
-            <p>Contract Address: {props.data.address}</p>
+            <p>Contract Address: {props.data.deployedContractData.address}</p>
+            <p>Time period elapsed: {(timePeriodsElapsed).toString()} </p>
+            <p> Principal amount: {(userData).toString()} USDC</p>
+            <p> Interest earned: {(interestEarned).toString()} USDC</p>
         </div>
     </>
 }
@@ -49,32 +87,11 @@ const ViewSection = (props: any) => {
 const Card = () => {
     const [amount, setAmount] = useState('');
     const { address } = useAccount();
-    const [depositAmount, setDepositAmount] = useState(0);
-    const [userData, setUserData] = useState({});
     const { targetNetwork } = useTargetNetwork();
+    console.log(contractsData);
     const { data: deployedContractDataUSDC, isLoading: deployedContractLoadingUSDC } = useDeployedContractInfo(contractNames[0]);
     const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractNames[1]);
 
-    // useEffect(() => {
-    //     console.log('contractNames', contractNames);
-        
-    //     if(deployedContractData && deployedContractDataUSDC) {
-    //         console.log('in if condition')
-    //     }
-
-    // }, [deployedContractData, deployedContractDataUSDC]);
-
-    // const { isFetching, refetch, error } = useReadContract({
-    //     address: contractAddress,
-    //     functionName: abiFunction.name,
-    //     abi: abi,
-    //     args: args,
-    //     chainId: targetNetwork.id,
-    //     query: {
-    //       enabled: false,
-    //       retry: false,
-    //     },
-    // });
 
   const handleDeposit = () => {
     
