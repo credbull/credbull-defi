@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     SimpleUSDC: {
-      address: "0x4000f8820522ac96c4221b299876e3e53bcc8525",
+      address: "0x7a9ec1d04904907de0ed7b6839ccdd59c3716ac9",
       abi: [
         {
           type: "constructor",
@@ -438,7 +438,7 @@ const deployedContracts = {
       },
     },
     YieldSubscription: {
-      address: "0x9338ca7d556248055f5751d85cda7ad6ef254433",
+      address: "0x49fd2be640db2910c2fab69bb8531ab6e76127ff",
       abi: [
         {
           type: "constructor",
@@ -472,6 +472,19 @@ const deployedContracts = {
         {
           type: "function",
           name: "FIXED_YIELD_ROLL_OVER",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "NO_OF_DAYS",
           inputs: [],
           outputs: [
             {
@@ -581,7 +594,7 @@ const deployedContracts = {
               internalType: "uint256",
             },
           ],
-          stateMutability: "view",
+          stateMutability: "pure",
         },
         {
           type: "function",
@@ -594,7 +607,7 @@ const deployedContracts = {
               internalType: "uint256",
             },
           ],
-          stateMutability: "view",
+          stateMutability: "pure",
         },
         {
           type: "function",
