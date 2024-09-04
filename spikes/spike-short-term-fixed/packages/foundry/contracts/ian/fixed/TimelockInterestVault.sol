@@ -3,13 +3,18 @@ pragma solidity ^0.8.23;
 
 import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleInterestVault.sol";
 import { TimelockIERC1155 } from "@credbull-spike/contracts/ian/timelock/TimelockIERC1155.sol";
+import { IPausable } from "@credbull-spike/contracts/ian/interfaces/IPausable.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
-contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+
+contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausable, IPausable {
     constructor(address initialOwner, IERC20 asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
         TimelockIERC1155(initialOwner)
         SimpleInterestVault(asset, interestRatePercentage, frequency, tenor)
@@ -20,7 +25,11 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
         return ERC20.totalSupply();
     }
 
-    function deposit(uint256 assets, address receiver) public override(SimpleInterestVault) returns (uint256 shares) {
+    function deposit(uint256 assets, address receiver)
+        public
+        override(SimpleInterestVault)
+        whenNotPaused returns (uint256 shares)
+    {
         shares = SimpleInterestVault.deposit(assets, receiver);
 
         // Call the internal _lock function instead, which handles the locking logic
@@ -32,7 +41,8 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
     function redeem(uint256 shares, address receiver, address owner)
         public
         override(SimpleInterestVault)
-        returns (uint256)
+        whenNotPaused
+        returns (uint256 assets)
     {
         // First, unlock the shares if possible
         _unlockInternal(owner, currentTimePeriodsElapsed, shares);
@@ -102,5 +112,13 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault {
 
     function setCurrentPeriod(uint256 _currentPeriod) public override {
         setCurrentTimePeriodsElapsed(_currentPeriod);
+    }
+
+    function pause() public onlyOwner {
+        Pausable._pause();
+    }
+
+    function unpause() public onlyOwner {
+        Pausable._unpause();
     }
 }

@@ -13,6 +13,10 @@ import { InterestTest } from "@credbull-spike-test/ian/fixed/InterestTest.t.sol"
 import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
 import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.sol";
 
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+
+import { console2 } from "forge-std/console2.sol";
+
 contract TimelockInterestVaultTest is InterestTest {
     IERC20 private asset;
 
@@ -174,6 +178,49 @@ contract TimelockInterestVaultTest is InterestTest {
             actualRedeemedAssets,
             "Alice did not receive the correct amount of assets after redeeming"
         );
+    }
+
+    function test__TimelockInterestVault__PauseAndUnPause() public {
+        uint256 apy = 12; // APY in percentage
+        uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
+        uint256 tenor = 30;
+
+        TimelockInterestVault vault = new TimelockInterestVault(owner, asset, apy, frequencyValue, tenor);
+
+        uint256 depositAmount = 1000 ether;
+
+        // ------------- pause ---------------
+        vm.prank(owner);
+        vault.pause();
+        assertTrue(vault.paused(), "vault should be paused");
+
+        vm.prank(alice);
+        vm.expectRevert(Pausable.EnforcedPause.selector); // deposit when paused - fail
+        vault.deposit(depositAmount, alice);
+
+        vm.prank(alice);
+        vm.expectRevert(Pausable.EnforcedPause.selector); // redeem when paused - fail
+        vault.redeem(depositAmount, alice, alice);
+
+        // ------------- unpause ---------------
+        vm.prank(owner);
+        vault.unpause();
+        assertFalse(vault.paused(), "vault should be unpaused");
+
+        // unpaused deposit
+        vm.startPrank(alice);
+        asset.approve(address(vault), depositAmount);
+        uint256 shares = vault.deposit(depositAmount, alice); // deposit when unpaused - succeed
+        vm.stopPrank();
+
+
+        // unpaused redeem
+        vault.setCurrentTimePeriodsElapsed(tenor); // warp to redeem time
+        vm.prank(owner);
+        transferAndAssert(asset, owner, address(vault), depositAmount); // cover the yield on the vault
+
+        vm.prank(alice);
+        vault.redeem(shares, alice, alice); // redeem when unpaused - succeed
     }
 
     function testInterestAtPeriod(uint256 principal, ISimpleInterest simpleInterest, uint256 numTimePeriods)
