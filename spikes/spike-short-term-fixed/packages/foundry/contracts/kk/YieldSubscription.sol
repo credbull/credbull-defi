@@ -43,13 +43,15 @@ contract YieldSubscription is IProduct {
         require(shares <= balance, "YieldSubscription: Amount exceeds the balance");
         require(noOfWindowsPassed >= 30, "YieldSubscription: Withdrawal not allowed before 30 days");
 
+        uint256 interestEarned = interestEarnedForWindowForAmount(user, shares, redeemTimePeriod);
+
         if (shares == balance) {
             userWindows[user].remove(redeemTimePeriod);
             userReserve[user][redeemTimePeriod] = 0;
         } else {
             userReserve[user][redeemTimePeriod] -= shares;
         }
-        uint256 interestEarned = interestEarnedForWindowForAmount(user, shares, redeemTimePeriod);
+
         IERC20(asset).transfer(receiver, shares + interestEarned);
 
         return shares + interestEarned;
@@ -130,7 +132,7 @@ contract YieldSubscription is IProduct {
         uint256 noOfWindowsPassed = getCurrentTimePeriodsElapsed() - window;
 
         if (noOfWindowsPassed > 30) {
-            uint256 interestEarnedBeofreRollOver = (userDeposit * yieldPerWindow() * 30);   
+            uint256 interestEarnedBeofreRollOver = (userDeposit * yieldPerWindow() * 30) / 1e20;   
             return (
                 interestEarnedBeofreRollOver
                     + ((userDeposit + interestEarnedBeofreRollOver) * yieldPerWindowRollOver() * (noOfWindowsPassed - 30))

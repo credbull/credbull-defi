@@ -7,25 +7,22 @@ import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagm
 import { useDeployedContractInfo, useNetworkColor } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 import { useReadContract } from "wagmi";
-import { set } from 'nprogress';
+import { useTransactor } from "~~/hooks/scaffold-eth";
 
-
-const selectedContractStorageKey = "scaffoldEth2.selectedContract";
 const contractsData = getAllContracts();
 const contractNames = Object.keys(contractsData) as ContractName[];
-
 
 
 const ViewSection = (props: any) => {
     const [userData, setUserData] = useState<Number>(0);
     const [timePeriodsElapsed, setTimePeriodsElapsed] = useState<BigInt>(0n);
-    const [interestEarned, setInterestEarned] = useState<BigInt>(0n);
+    const [interestEarned, setInterestEarned] = useState<Number>(0);
 
     const { refetch: userReserveRefetch } = useReadContract({
         address: props.data.deployedContractData.address,
-        functionName: 'userReserve',
+        functionName: 'totalUserDeposit',
         abi: props.data.deployedContractData.abi,
-        args: [props.data.address, 0],
+        args: [props.data.address],
     });
 
     const { refetch: getCurrentTimePeriodsElapsedRefetch } = useReadContract({
@@ -58,9 +55,9 @@ const ViewSection = (props: any) => {
           });
         }
 
-        if(interestEarned === 0n) {
+        if(interestEarned === 0) {
           getInterestEarnedRefetch().then((data) => {
-            setInterestEarned(data.data as BigInt);
+            setInterestEarned((Number(data.data) * 1000 / 10 ** 6)/1000);
           });
         }
     }, []);
@@ -81,19 +78,58 @@ const ViewSection = (props: any) => {
 }
 
 
-
 const Card = () => {
     const [amount, setAmount] = useState('');
+    const [redeemPeriod, setRedeemPeriod] = useState('');
     const { address } = useAccount();
     const { targetNetwork } = useTargetNetwork();
+    const writeTxn = useTransactor();
     console.log(contractsData);
     const { data: deployedContractDataUSDC, isLoading: deployedContractLoadingUSDC } = useDeployedContractInfo(contractNames[0]);
     const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractNames[1]);
-
+    const { data: result, writeContractAsync } = useWriteContract();
 
   const handleDeposit = () => {
-    
+    if(deployedContractData) {
+
+      if(writeContractAsync) {
+        try {
+          const makeWriteWithParams = () =>
+            writeContractAsync({
+              address: deployedContractData.address,
+              functionName: 'deposit',
+              abi: deployedContractData.abi,
+              args: [BigInt(amount), address as string],
+            });
+          writeTxn(makeWriteWithParams);
+        } catch (e: any) {
+          console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:deposit ~ error", e);
+        }
+      }
+      console.log('result', result);
+    }
   };
+
+  const handleRedeem = () => {
+    if(deployedContractData) {
+
+      if(writeContractAsync) {
+        try {
+          const makeWriteWithParams = () =>
+            writeContractAsync({
+              address: deployedContractData.address,
+              functionName: 'redeemAtPeriod',
+              abi: deployedContractData.abi,
+              args: [BigInt(amount), address as string, address as string, BigInt(redeemPeriod)],
+            });
+          writeTxn(makeWriteWithParams);
+        } catch (e: any) {
+          console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:redeem  ~ error", e);
+        }
+      }
+      console.log('result', result);
+    }
+  }
 
   if(deployedContractLoading || deployedContractLoadingUSDC) {
     return (
@@ -125,7 +161,17 @@ const Card = () => {
         <button onClick={handleDeposit} className='p-2 border rounded border-neutral-100 w-1/2'>
             Deposit
         </button>
-        <button onClick={handleDeposit} className='p-2 border rounded border-neutral-100 w-1/2'>
+      </div>
+
+      <div className="mt-5">
+        <h3> Enter redeem period </h3>
+        <input 
+          type='number' 
+          value={redeemPeriod} 
+          onChange={(e) => setRedeemPeriod(e.target.value )}
+          style={{ padding: '10px', width: '50%' }}
+        />
+        <button onClick={handleRedeem} className='p-2 border rounded border-neutral-100 w-1/2'>
             Redeem
         </button>
       </div>
