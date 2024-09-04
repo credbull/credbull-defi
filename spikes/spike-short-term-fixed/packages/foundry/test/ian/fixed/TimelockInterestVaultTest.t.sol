@@ -24,13 +24,20 @@ contract TimelockInterestVaultTest is InterestTest {
   address private alice = makeAddr("alice");
   address private bob = makeAddr("bob");
 
+  uint256 constant TENOR_30 = 30;
+
+  uint256 constant APY_6 = 6;
+  uint256 constant APY_12 = 12;
+
+  uint256 constant FREQUENCY_360 = 360;
+
   function setUp() public {
     uint256 tokenSupply = 1_000_000 ether;
 
     vm.prank(owner);
     asset = new SimpleUSDC(tokenSupply);
 
-    uint256 userTokenAmount = 25_000 ether;
+    uint256 userTokenAmount = 50_000 ether;
 
     assertEq(asset.balanceOf(owner), tokenSupply, "owner should start with total supply");
     transferAndAssert(asset, owner, alice, userTokenAmount);
@@ -38,31 +45,26 @@ contract TimelockInterestVaultTest is InterestTest {
   }
 
   function test__TimelockInterestVaultTest__Daily() public {
-    uint256 apy = 12; // APY in percentage
-    uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-    uint256 tenor = 30;
 
-    TimelockInterestVault vault = new TimelockInterestVault(owner, asset, apy, frequencyValue, tenor);
+    TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_12, FREQUENCY_360, TENOR_30);
 
     // check principal and interest calcs
     testInterestToMaxPeriods(200 * SCALE, vault);
   }
 
-  function test__TimelockInterestVault__DepositAndRedeemFlow() public {
-    uint256 apy = 12; // APY in percentage
-    uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-    uint256 tenor = 30;
+  // Scenario: User withdraws after the lock period
+  function test__TimelockInterestVault__Deposit_Redeem() public {
+    uint256 tenor = TENOR_30;
 
-    TimelockInterestVault vault = new TimelockInterestVault(owner, asset, apy, frequencyValue, tenor);
+    TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, TENOR_30);
 
-    uint256 depositAmount = 1000 ether;
+    uint256 depositAmount = 15_000 ether;
 
     // ------------- deposit ---------------
     vm.startPrank(alice);
     asset.approve(address(vault), depositAmount);
     uint256 shares = vault.deposit(depositAmount, alice);
     vm.stopPrank();
-
     // Assert that the shares were correctly minted
     assertEq(shares, vault.balanceOf(alice), "Incorrect number of shares minted to Alice");
     // Assert that the shares are correctly locked
@@ -75,42 +77,6 @@ contract TimelockInterestVaultTest is InterestTest {
     // when we redeem at time 0, currentlTimePeriod = unlockPeriod, so throws a shares not unlocked (rather than time lock) error.
     vm.expectRevert(abi.encodeWithSelector(ITimelock.InsufficientLockedBalance.selector, 0, depositAmount));
     vault.redeem(shares, alice, alice); // try to redeem before warping - should fail
-
-    // ------------- redeem (at tenor / maturity time period) ---------------
-    vault.setCurrentTimePeriodsElapsed(tenor);
-
-    // give the vault enough to cover the earned interest
-    uint256 interest = vault.calcInterest(depositAmount, vault.getTenor());
-    vm.prank(owner);
-    transferAndAssert(asset, owner, address(vault), interest);
-
-    // Attempt to redeem after the lock period, should succeed
-    vm.prank(alice);
-    uint256 redeemedAssets = vault.redeem(shares, alice, alice);
-
-    // Assert that Alice received the correct amount of assets, including interest
-    uint256 expectedAssets = depositAmount + vault.calcInterest(depositAmount, tenor);
-    assertEq(expectedAssets, redeemedAssets, "Alice did not receive the correct amount of assets after redeeming");
-
-    // Assert that Alice's share balance is now zero
-    assertEq(0, vault.balanceOf(alice), "Alice's share balance should be zero after redeeming");
-  }
-
-  // Scenario: User withdraws after the lock period
-  function test__TimelockInterestVault__User_withdraws_after_lock_period() public {
-    uint256 apy = 6; // APY in percentage
-    uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-    uint256 tenor = 30;
-
-    TimelockInterestVault vault = new TimelockInterestVault(owner, asset, apy, frequencyValue, tenor);
-
-    uint256 depositAmount = 15_000 ether;
-
-    // ------------- deposit ---------------
-    vm.startPrank(alice);
-    asset.approve(address(vault), depositAmount);
-    uint256 shares = vault.deposit(depositAmount, alice);
-    vm.stopPrank();
 
     // ------------- redeem (at tenor / maturity time period) ---------------
     vault.setCurrentTimePeriodsElapsed(tenor);
@@ -132,78 +98,91 @@ contract TimelockInterestVaultTest is InterestTest {
     assertEq(0, vault.balanceOf(alice), "Alice's share balance should be zero after redeeming");
   }
 
-  function test__TimelockInterestVault__FullRolloverOfShares_No_Bonus() public {
-    uint256 apy = 12; // APY in percentage
-    uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-    uint256 tenor = 30;
+  /*
+   * 40k depoist
+   * Period 1:
+   * - Principal[P1] = 40,000.00
+   * - Interest[P1]  =    200.00
+   *----------------------------
+   * Subtotal[P1]      40,200.00
+   *
+   * Period 2:
+   * - Principal[P2] = 40,200.00
+   * - Interest[P2]   =   201.00
+   * - Bonus[P2]      =    33.50
+   *----------------------------
+   * Subtotal[P2]      40,434.50
+   */
+  function test__TimelockInterestVault__Rollover_1APY_Bonus_Zero() public {
+    uint256 tenor = TENOR_30;
+    uint256 depositAmount = 40_000 ether;
 
-    TimelockInterestVault vault = new TimelockInterestVault(owner, asset, apy, frequencyValue, tenor);
+    // setup
+    TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, TENOR_30);
+    vm.prank(owner);
+    transferAndAssert(asset, owner, address(vault), 3 * vault.calcInterest(depositAmount, tenor)); // give the vault enough to cover returns
 
-    uint256 depositAmount = 1000 ether;
+
+    // ----------------------------------------------------------
+    // ------------        Start Period 1          --------------
+    // ----------------------------------------------------------
 
     // ------------- deposit ---------------
     vm.startPrank(alice);
     asset.approve(address(vault), depositAmount);
-    uint256 shares = vault.deposit(depositAmount, alice);
+    uint256 actualSharesPeriodOne = vault.deposit(depositAmount, alice);
     vm.stopPrank();
 
-    // ------------- advance time to allow unlock ---------------
-    uint256 periodOneEnd = tenor;
-    vault.setCurrentTimePeriodsElapsed(periodOneEnd);
-    // Assert that the shares are now unlockable
-    uint256 unlockableAmount = vault.previewUnlock(alice, periodOneEnd);
-    assertEq(shares, unlockableAmount, "All shares should be unlockable after the lock period");
+    // ------------- verify shares start of period 1 ---------------
+    assertEq(depositAmount, actualSharesPeriodOne, "shares start of Period 1 incorrect"); // Discounted[P1] = Principal[P1] - Interest[Prior] = $40,000 - 0 = $40,000
 
-    // ------------- rollover the shares ---------------
+    // ----------------------------------------------------------
+    // ------------ End Period 1  (Start Period 2) --------------
+    // ----------------------------------------------------------
 
-    // vault needs permission from alice to adjust shares on the ERC4626 side for the rollover.
-    uint256 expectedSharesNextPeriod =
-      vault.calcDiscounted(depositAmount + vault.calcInterest(depositAmount, tenor), tenor); // discounted rate of first period's principal + interest
-    uint256 actualSharesNextPeriod = vault.previewConvertSharesForRollover(alice, periodOneEnd, shares);
-    assertEq(expectedSharesNextPeriod, actualSharesNextPeriod, "shares next period incorrect");
+    uint256 endPeriodOne = tenor;
+    vault.setCurrentTimePeriodsElapsed(endPeriodOne); // warp to end of period 1
 
+    // ------------- verify assets end of period 1 ---------------
+    assertEq(actualSharesPeriodOne, vault.previewUnlock(alice, endPeriodOne), "full amount should be unlockable at end of period 1");
+    assertEq(40_200 ether, vault.convertToAssets(actualSharesPeriodOne), "assets end of Period 1 incorrect"); // Principal[P1] + Interest[P1] = $40,000 + $200 = $40,200
+
+    // ------------- verify shares start of period 2 ---------------
+    uint256 expectedSharesPeriodTwo = 39_999 ether; // Discounted[P2] = Principal[P2] - Interest[Prior] = $40,200 - ($40,200 * 0.6 * 30 / 360) = $40,200 - $201 = $39,999
+    assertEq(expectedSharesPeriodTwo, vault.previewConvertSharesForRollover(alice, endPeriodOne, actualSharesPeriodOne), "preview rollover shares start of Period 2 incorrect");
+
+    // ------------- rollover from period 1 to period 2 ---------------
     vm.startPrank(owner);
-    vault.rolloverUnlocked(alice, vault.getCurrentTimePeriodsElapsed(), shares);
+    vault.rolloverUnlocked(alice, vault.getCurrentTimePeriodsElapsed(), actualSharesPeriodOne);
     vm.stopPrank();
 
-    uint256 periodTwoEnd = vault.getCurrentTimePeriodsElapsed() + tenor; // Roll over to another 30-day period
+    // ------------- verify rollover of shares and locks ---------------
+    uint256 actualSharesPeriodTwo = vault.balanceOf(alice);
+    assertEq(expectedSharesPeriodTwo, actualSharesPeriodTwo, "alice should have Discounted[P2] worth of shares for Period 2");
+    assertEq(expectedSharesPeriodTwo, vault.getLockedAmount(alice, endPeriodOne + tenor), "all shares should be locked until end of Period 2");
+    assertEq(0, vault.getLockedAmount(alice, endPeriodOne), "no locks should remain on Period 1");
 
-    // Assert that the shares are now locked under the new rollover period
-    assertEq(actualSharesNextPeriod, vault.balanceOf(alice), "Incorrect vault shares after full rollover");
 
-    // Assert that the original lock period has no remaining shares
-    assertEq(
-      0, vault.getLockedAmount(alice, tenor), "Original lock period should have no remaining shares after rollover"
-    );
-    assertEq(
-      actualSharesNextPeriod,
-      vault.getLockedAmount(alice, tenor + tenor),
-      "New lock period should have no remaining shares after rollover"
-    );
+    // ----------------------------------------------------------
+    // -------------         End Period 2         ---------------
+    // ----------------------------------------------------------
 
-    // ------------- redeem (after new rollover period) ---------------
-    vault.setCurrentTimePeriodsElapsed(periodTwoEnd); // Advance time to the new rollover period
+    uint256 endPeriodTwo = endPeriodOne + tenor;
+    vault.setCurrentTimePeriodsElapsed(endPeriodTwo); // warp to end of period 2
 
-    // give the vault enough to cover the earned interest for the rollover period
-    uint256 interest = 3 * vault.calcInterest(depositAmount, tenor); // a little more than two periods interest
-    vm.prank(owner);
-    transferAndAssert(asset, owner, address(vault), interest);
+    // ------------- verify assets end of period 2---------------
+    uint256 expectedAssetsPeriodTwo = 40_401 ether; // Principal[P2] + Interest[P2] = $40,200 + $201 = $40,401
+    assertEq(actualSharesPeriodTwo, vault.previewUnlock(alice, endPeriodTwo), "full amount should be unlockable at end of period 2");
+    assertEq(expectedAssetsPeriodTwo, vault.convertToAssets(actualSharesPeriodTwo), "assets end of Period 2 incorrect");
 
-    // Attempt to redeem after the rollover lock period, should succeed
+    // ------------- redeem at end of period 2 ---------------
     vm.prank(alice);
-    uint256 actualRedeemedAssets = vault.redeem(actualSharesNextPeriod, alice, alice);
+    uint256 actualRedeemedAssets = vault.redeem(actualSharesPeriodTwo, alice, alice);
 
-    // Assert that Alice's share balance is now zero
-    assertEq(0, vault.balanceOf(alice), "Alice's share balance should be zero after redeeming");
-
-    // Assert that Alice received the correct amount of assets, including interest
-    uint256 expectedInterestPeriod1 = vault.calcInterest(depositAmount, tenor);
-    uint256 expectedInterestPeriod2 = vault.calcInterest(depositAmount + expectedInterestPeriod1, tenor); // compound the 2nd interest
-
-    uint256 expectedRedeemAssets = depositAmount + expectedInterestPeriod1 + expectedInterestPeriod2;
-    assertEq(
-      expectedRedeemAssets, actualRedeemedAssets, "Alice did not receive the correct amount of assets after redeeming"
-    );
+    // ------------- verify assets after redeeming ---------------
+    assertEq(expectedAssetsPeriodTwo, actualRedeemedAssets, "incorrect assets returned after after fully redeeming");
+    assertEq(0, vault.balanceOf(alice), "no shares should remain after fully redeeming");
+    assertEq(0, vault.getLockedAmount(alice, endPeriodTwo), "no locks should remain after fully redeeming");
   }
 
 
