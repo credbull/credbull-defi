@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { console2 } from "forge-std/console2.sol";
+import { console2 } from "@forge-std/console2.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { IProduct } from "./IProduct.sol";
 
