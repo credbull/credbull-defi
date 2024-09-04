@@ -8,7 +8,7 @@ import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 import { InterestTest } from "@credbull-spike-test/ian/fixed/InterestTest.t.sol";
 import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpleInterest.sol";
 
-import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
+import { SimpleUSDC } from "@credbull-spike/contracts/kk/SimpleUSDC.sol";
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
