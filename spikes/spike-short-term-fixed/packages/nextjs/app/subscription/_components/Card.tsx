@@ -17,8 +17,6 @@ const contractNames = Object.keys(contractsData) as ContractName[];
 
 
 const ViewSection = (props: any) => {
-
-
     const [userData, setUserData] = useState<Number>(0);
     const [timePeriodsElapsed, setTimePeriodsElapsed] = useState<BigInt>(0n);
     const [interestEarned, setInterestEarned] = useState<BigInt>(0n);
