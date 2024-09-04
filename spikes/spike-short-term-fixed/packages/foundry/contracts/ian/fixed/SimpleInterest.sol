@@ -35,128 +35,122 @@ import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpl
  * ensuring that the original principal can be recovered from the discounted value.
  */
 contract SimpleInterest is ISimpleInterest {
-    using Math for uint256;
+  using Math for uint256;
 
-    uint256 public immutable INTEREST_RATE_PERCENTAGE;
-    uint256 public immutable FREQUENCY;
+  uint256 public immutable INTEREST_RATE_PERCENTAGE;
+  uint256 public immutable FREQUENCY;
 
-    uint256 public constant DECIMALS = 18;
-    uint256 public constant SCALE = 10 ** DECIMALS;
+  uint256 public constant DECIMALS = 18;
+  uint256 public constant SCALE = 10 ** DECIMALS;
 
-    uint256 public immutable PAR = 1;
+  uint256 public immutable PAR = 1;
 
-    Math.Rounding public constant ROUNDING = Math.Rounding.Floor;
+  Math.Rounding public constant ROUNDING = Math.Rounding.Floor;
 
-    error PrincipalLessThanScale(uint256 principal, uint256 scale);
+  error PrincipalLessThanScale(uint256 principal, uint256 scale);
 
-    /**
-     * @notice Constructor to initialize the SimpleInterest contract with interest rate and frequency.
-     * @param interestRatePercentage The annual interest rate as a percentage.
-     * @param frequency The number of interest periods in a year.
-     */
-    constructor(uint256 interestRatePercentage, uint256 frequency) {
-        INTEREST_RATE_PERCENTAGE = interestRatePercentage;
-        FREQUENCY = frequency;
+  /**
+   * @notice Constructor to initialize the SimpleInterest contract with interest rate and frequency.
+   * @param interestRatePercentage The annual interest rate as a percentage.
+   * @param frequency The number of interest periods in a year.
+   */
+  constructor(uint256 interestRatePercentage, uint256 frequency) {
+    INTEREST_RATE_PERCENTAGE = interestRatePercentage;
+    FREQUENCY = frequency;
+  }
+
+  /**
+   * @notice Calculates the simple interest based on the principal and elapsed time periods.
+   * @param principal The initial principal amount.
+   * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
+   * @return interest The calculated interest amount.
+   */
+  function calcInterest(
+    uint256 principal,
+    uint256 numTimePeriodsElapsed
+  ) public view virtual returns (uint256 interest) {
+    if (principal < SCALE) {
+      revert PrincipalLessThanScale(principal, SCALE);
     }
 
-    /**
-     * @notice Calculates the simple interest based on the principal and elapsed time periods.
-     * @param principal The initial principal amount.
-     * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
-     * @return interest The calculated interest amount.
-     */
-    function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed)
-    public
-    view
-    virtual
-    returns (uint256 interest)
-    {
-        if (principal < SCALE) {
-            revert PrincipalLessThanScale(principal, SCALE);
-        }
+    uint256 interestScaled =
+      principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
 
-        uint256 interestScaled =
-                            principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
+    return unscale(interestScaled);
+  }
 
-        return unscale(interestScaled);
+  /**
+   * @notice Internal function to calculate the interest with scaling.
+   * @dev This function scales the interest calculation for internal use.
+   * @param principal The initial principal amount.
+   * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
+   * @return _interestScaled The scaled interest amount.
+   */
+  function _calcInterestWithScale(
+    uint256 principal,
+    uint256 numTimePeriodsElapsed
+  ) internal view returns (uint256 _interestScaled) {
+    uint256 interestScaled =
+      principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
+
+    return interestScaled;
+  }
+
+  /**
+   * @notice Calculates the discounted principal by subtracting the accrued interest.
+   * @param principal The initial principal amount.
+   * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
+   * @return The discounted principal amount.
+   */
+  function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
+    if (principal < SCALE) {
+      revert PrincipalLessThanScale(principal, SCALE);
     }
 
-    /**
-     * @notice Internal function to calculate the interest with scaling.
-     * @dev This function scales the interest calculation for internal use.
-     * @param principal The initial principal amount.
-     * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
-     * @return _interestScaled The scaled interest amount.
-     */
-    function _calcInterestWithScale(uint256 principal, uint256 numTimePeriodsElapsed)
-    internal
-    view
-    returns (uint256 _interestScaled)
-    {
-        uint256 interestScaled =
-                            principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
+    uint256 discountedScaled = principal * SCALE - _calcInterestWithScale(principal, numTimePeriodsElapsed);
 
-        return interestScaled;
-    }
+    return unscale(discountedScaled);
+  }
 
-    /**
-     * @notice Calculates the discounted principal by subtracting the accrued interest.
-     * @param principal The initial principal amount.
-     * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
-     * @return The discounted principal amount.
-     */
-    function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
-        if (principal < SCALE) {
-            revert PrincipalLessThanScale(principal, SCALE);
-        }
+  /**
+   * @notice Recovers the original principal from a discounted value by adding back the interest.
+   * @param discounted The discounted principal amount.
+   * @param numTimePeriodsElapsed The number of time periods for which interest was calculated.
+   * @return The recovered original principal amount.
+   */
+  function calcPrincipalFromDiscounted(
+    uint256 discounted,
+    uint256 numTimePeriodsElapsed
+  ) public view virtual returns (uint256) {
+    uint256 interestFactor = INTEREST_RATE_PERCENTAGE.mulDiv(numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
 
-        uint256 discountedScaled = principal * SCALE - _calcInterestWithScale(principal, numTimePeriodsElapsed);
+    uint256 scaledPrincipal = discounted.mulDiv(SCALE * SCALE, SCALE - interestFactor, ROUNDING);
 
-        return unscale(discountedScaled);
-    }
+    return unscale(scaledPrincipal);
+  }
 
-    /**
-     * @notice Recovers the original principal from a discounted value by adding back the interest.
-     * @param discounted The discounted principal amount.
-     * @param numTimePeriodsElapsed The number of time periods for which interest was calculated.
-     * @return The recovered original principal amount.
-     */
-    function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed)
-    public
-    view
-    virtual
-    returns (uint256)
-    {
-        uint256 interestFactor =
-                            INTEREST_RATE_PERCENTAGE.mulDiv(numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
+  /**
+   * @notice Internal utility function to unscale the amount.
+   * @param amount The scaled amount to be unscaled.
+   * @return The unscaled amount.
+   */
+  function unscale(uint256 amount) internal pure returns (uint256) {
+    return amount / SCALE;
+  }
 
-        uint256 scaledPrincipal = discounted.mulDiv(SCALE * SCALE, SCALE - interestFactor, ROUNDING);
+  /**
+   * @notice Returns the frequency of interest application (number of periods in a year).
+   * @return frequency The frequency value.
+   */
+  function getFrequency() public view virtual returns (uint256 frequency) {
+    return FREQUENCY;
+  }
 
-        return unscale(scaledPrincipal);
-    }
-
-    /**
-     * @notice Internal utility function to unscale the amount.
-     * @param amount The scaled amount to be unscaled.
-     * @return The unscaled amount.
-     */
-    function unscale(uint256 amount) internal pure returns (uint256) {
-        return amount / SCALE;
-    }
-
-    /**
-     * @notice Returns the frequency of interest application (number of periods in a year).
-     * @return frequency The frequency value.
-     */
-    function getFrequency() public view virtual returns (uint256 frequency) {
-        return FREQUENCY;
-    }
-
-    /**
-     * @notice Returns the annual interest rate as a percentage.
-     * @return interestRateInPercentage The interest rate as a percentage.
-     */
-    function getInterestInPercentage() public view virtual returns (uint256 interestRateInPercentage) {
-        return INTEREST_RATE_PERCENTAGE;
-    }
+  /**
+   * @notice Returns the annual interest rate as a percentage.
+   * @return interestRateInPercentage The interest rate as a percentage.
+   */
+  function getInterestInPercentage() public view virtual returns (uint256 interestRateInPercentage) {
+    return INTEREST_RATE_PERCENTAGE;
+  }
 }
