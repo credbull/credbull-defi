@@ -43,8 +43,6 @@ contract SimpleInterest is ISimpleInterest {
   uint256 public constant DECIMALS = 18;
   uint256 public constant SCALE = 10 ** DECIMALS;
 
-  uint256 public immutable PAR = 1;
-
   Math.Rounding public constant ROUNDING = Math.Rounding.Floor;
 
   error PrincipalLessThanScale(uint256 principal, uint256 scale);
@@ -73,10 +71,9 @@ contract SimpleInterest is ISimpleInterest {
       revert PrincipalLessThanScale(principal, SCALE);
     }
 
-    uint256 interestScaled =
-      principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
+    uint256 interestScaled = _calcInterestWithScale(principal, numTimePeriodsElapsed);
 
-    return unscale(interestScaled);
+    return _unscale(interestScaled);
   }
 
   /**
@@ -90,8 +87,8 @@ contract SimpleInterest is ISimpleInterest {
     uint256 principal,
     uint256 numTimePeriodsElapsed
   ) internal view returns (uint256 _interestScaled) {
-    uint256 interestScaled =
-      principal.mulDiv(INTEREST_RATE_PERCENTAGE * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
+
+    uint256 interestScaled = _calcInterestWithScale(principal, numTimePeriodsElapsed, INTEREST_RATE_PERCENTAGE);
 
     return interestScaled;
   }
@@ -109,8 +106,9 @@ contract SimpleInterest is ISimpleInterest {
     uint256 numTimePeriodsElapsed,
     uint256 interestRatePercentage
   ) internal view returns (uint256 _interestScaled) {
-    uint256 interestScaled =
-              principal.mulDiv(interestRatePercentage * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
+
+    uint256 interestScaled = _scale(principal).mulDiv(
+      interestRatePercentage * numTimePeriodsElapsed, FREQUENCY * 100, ROUNDING);
 
     return interestScaled;
   }
@@ -126,9 +124,9 @@ contract SimpleInterest is ISimpleInterest {
       revert PrincipalLessThanScale(principal, SCALE);
     }
 
-    uint256 discountedScaled = principal * SCALE - _calcInterestWithScale(principal, numTimePeriodsElapsed);
+    uint256 discountedScaled = _scale(principal) - _calcInterestWithScale(principal, numTimePeriodsElapsed);
 
-    return unscale(discountedScaled);
+    return _unscale(discountedScaled);
   }
 
   /**
@@ -141,20 +139,29 @@ contract SimpleInterest is ISimpleInterest {
     uint256 discounted,
     uint256 numTimePeriodsElapsed
   ) public view virtual returns (uint256) {
-    uint256 interestFactor = INTEREST_RATE_PERCENTAGE.mulDiv(numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
+    uint256 scaledInterestFactor = _scale(INTEREST_RATE_PERCENTAGE).mulDiv(numTimePeriodsElapsed, FREQUENCY * 100, ROUNDING);
 
-    uint256 scaledPrincipal = discounted.mulDiv(SCALE * SCALE, SCALE - interestFactor, ROUNDING);
+    uint256 principal = discounted.mulDiv(SCALE, SCALE - scaledInterestFactor, ROUNDING);
 
-    return unscale(scaledPrincipal);
+    return principal;
   }
 
   /**
    * @notice Internal utility function to unscale the amount.
    * @param amount The scaled amount to be unscaled.
-   * @return The unscaled amount.
+   * @return unscaledAmount The unscaled amount.
    */
-  function unscale(uint256 amount) internal pure returns (uint256) {
+  function _unscale(uint256 amount) internal view returns (uint256 unscaledAmount) {
     return amount / SCALE;
+  }
+
+  /**
+   * @notice Internal utility function to scale the amount.
+   * @param amount The unscaled amount to be scaled.
+   * @return scaledAmount The scaled amount.
+   */
+  function _scale(uint256 amount) internal view returns (uint256 scaledAmount) {
+    return amount * SCALE;
   }
 
   /**
@@ -171,5 +178,13 @@ contract SimpleInterest is ISimpleInterest {
    */
   function getInterestInPercentage() public view virtual returns (uint256 interestRateInPercentage) {
     return INTEREST_RATE_PERCENTAGE;
+  }
+
+  /**
+   * @notice Returns the scale factor for internal calculations (e.g., 10^18 for 18 decimals).
+   * @return scale The scale factor.
+   */
+  function getScale() public view virtual returns (uint256 scale) {
+    return SCALE;
   }
 }

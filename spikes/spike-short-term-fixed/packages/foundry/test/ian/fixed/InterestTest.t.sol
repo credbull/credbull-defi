@@ -22,7 +22,7 @@ abstract contract InterestTest is Test {
     uint256 maxNumPeriods = simpleInterest.getFrequency() * NUM_CYCLES_TO_TEST; // e.g. 2 years, 24 months, 720 days
 
     // due to small fractional numbers, principal needs to be SCALED to calculate correctly
-    assertGe(principal, SCALE, "principal not in SCALE");
+    assertGe(principal, simpleInterest.getScale(), "principal not in SCALE");
 
     // check all periods for 24 months
     for (uint256 numTimePeriods = 0; numTimePeriods <= maxNumPeriods; numTimePeriods++) {

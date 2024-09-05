@@ -90,7 +90,7 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
   public view override returns (uint256 rolloverBonus) {
     uint256 rolloverBonusScaled = _calcInterestWithScale(value, TENOR, 1);
 
-    return unscale(rolloverBonusScaled);
+    return _unscale(rolloverBonusScaled);
   }
 
   /**
