@@ -12,26 +12,29 @@ import { SimpleUSDC } from "@credbull-spike/contracts/kk/SimpleUSDC.sol";
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract SimpleInterestVaultTest is InterestTest {
   using Math for uint256;
 
-  IERC20 private asset;
+  IERC20Metadata private asset;
 
   address private owner = makeAddr("owner");
   address private alice = makeAddr("alice");
   address private bob = makeAddr("bob");
 
-  uint256 internal SCALE = 10 ** 18;
+  uint256 internal SCALE;
 
   function setUp() public {
-    uint256 tokenSupply = 1000000 ether; // 1 million
+    uint256 tokenSupply = 1_000_000 ether; // // USDC uses 6 decimals, so this is way more than 1m USDC
 
     vm.startPrank(owner);
     asset = new SimpleUSDC(tokenSupply);
     vm.stopPrank();
 
-    uint256 userTokenAmount = 100000 ether; // 100,000 each
+    SCALE = 10 ** asset.decimals();
+
+    uint256 userTokenAmount = 100_000 * SCALE;
 
     assertEq(asset.balanceOf(owner), tokenSupply, "owner should start with total supply");
     transferAndAssert(asset, owner, alice, userTokenAmount);

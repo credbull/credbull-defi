@@ -38,11 +38,11 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
    * @param tenor The duration of the lock period in the same unit as the interest frequency.
    */
   constructor(
-    IERC20 asset,
+    IERC20Metadata asset,
     uint256 interestRatePercentage,
     uint256 frequency,
     uint256 tenor
-  ) SimpleInterest(interestRatePercentage, frequency, 18) ERC4626(asset) ERC20("Simple Interest Rate Claim", "cSIR") {
+  ) SimpleInterest(interestRatePercentage, frequency, asset.decimals()) ERC4626(asset) ERC20("Simple Interest Rate Claim", "cSIR") {
     TENOR = tenor;
   }
 

@@ -5,6 +5,7 @@ import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleI
 import { TimelockIERC1155 } from "@credbull-spike/contracts/ian/timelock/TimelockIERC1155.sol";
 import { IPausable } from "@credbull-spike/contracts/ian/interfaces/IPausable.sol";
 
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -15,11 +16,12 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 import { console2 } from "forge-std/console2.sol";
 
+
 contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausable, IPausable {
 
   constructor(
     address initialOwner,
-    IERC20 asset,
+    IERC20Metadata asset,
     uint256 interestRatePercentage,
     uint256 frequency,
     uint256 tenor

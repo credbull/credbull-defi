@@ -8,6 +8,7 @@ import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { InterestTest } from "@credbull-spike-test/ian/fixed/InterestTest.t.sol";
 import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
@@ -18,7 +19,7 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { console2 } from "forge-std/console2.sol";
 
 contract TimelockInterestVaultTest is InterestTest {
-  IERC20 private asset;
+  IERC20Metadata private asset;
 
   address private owner = makeAddr("owner");
   address private alice = makeAddr("alice");
@@ -31,15 +32,17 @@ contract TimelockInterestVaultTest is InterestTest {
 
   uint256 constant FREQUENCY_360 = 360;
 
-  uint256 internal SCALE = 10 ** 18;
+  uint256 internal SCALE;
 
   function setUp() public {
-    uint256 tokenSupply = 1_000_000 ether;
+    uint256 tokenSupply = 1_000_000 ether; // USDC uses 6 decimals, so this is way more than 1m USDC
 
     vm.prank(owner);
     asset = new SimpleUSDC(tokenSupply);
 
-    uint256 userTokenAmount = 50_000 ether;
+    SCALE = 10 ** asset.decimals();
+
+    uint256 userTokenAmount = 50_000 * SCALE;
 
     assertEq(asset.balanceOf(owner), tokenSupply, "owner should start with total supply");
     transferAndAssert(asset, owner, alice, userTokenAmount);
@@ -60,7 +63,7 @@ contract TimelockInterestVaultTest is InterestTest {
 
     TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, TENOR_30);
 
-    uint256 depositAmount = 15_000 ether;
+    uint256 depositAmount = 15_000 * SCALE;
 
     // ------------- deposit ---------------
     vm.startPrank(alice);
@@ -94,7 +97,7 @@ contract TimelockInterestVaultTest is InterestTest {
     // Assert that Alice received the correct amount of assets, including interest
     uint256 expectedAssets = depositAmount + vault.calcInterest(depositAmount, tenor);
     assertEq(expectedAssets, redeemedAssets, "Alice did not receive the correct amount of assets after redeeming");
-    assertEq(15_075 ether, redeemedAssets, "Alice should receive $15,075 ($15,000 principal + $75 interest) back");
+    assertEq(15_075 * SCALE, redeemedAssets, "Alice should receive $15,075 ($15,000 principal + $75 interest) back");
 
     // Assert that Alice's share balance is now zero
     assertEq(0, vault.balanceOf(alice), "Alice's share balance should be zero after redeeming");
@@ -102,7 +105,7 @@ contract TimelockInterestVaultTest is InterestTest {
 
   function test__TimelockInterestVault__Rollover_1APY_Bonus() public {
     uint256 tenor = TENOR_30;
-    uint256 depositAmount = 40_000 ether;
+    uint256 depositAmount = 40_000 * SCALE;
 
     // setup
     TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, TENOR_30);
@@ -133,13 +136,13 @@ contract TimelockInterestVaultTest is InterestTest {
     // ------------- verify assets end of period 1 ---------------
     assertEq(actualSharesPeriodOne, vault.previewUnlock(alice, endPeriodOne), "full amount should be unlockable at end of period 1");
     uint256 actualAssetsPeriodOne = vault.convertToAssets(actualSharesPeriodOne);
-    assertEq(40_200 ether, actualAssetsPeriodOne, "assets end of Period 1 incorrect"); // Principal[P1] + Interest[P1] = $40,000 + $200 = $40,200
-    assertEq(33 ether + (50 ether) / 100, vault.calcRolloverBonus(alice, tenor, actualAssetsPeriodOne), "rollover bonus end of Period 1 incorrect"); // Rollover Bonus =  ($40,200 * 0.1 * 30 / 360) = $33.50
+    assertEq(40_200 * SCALE, actualAssetsPeriodOne, "assets end of Period 1 incorrect"); // Principal[P1] + Interest[P1] = $40,000 + $200 = $40,200
+    assertEq(33 * SCALE + (50 * SCALE) / 100, vault.calcRolloverBonus(alice, tenor, actualAssetsPeriodOne), "rollover bonus end of Period 1 incorrect"); // Rollover Bonus =  ($40,200 * 0.1 * 30 / 360) = $33.50
 
     // ------------- verify shares start of period 2 ---------------
     // RolloverBonus: Principal(WithBonus)[P2] = Principal[P1] + Interest[P1] + RolloverBonus[P1] = $40,000 + $200 + $33.50 = $40,233.50
     // RolloverBonus: Discounted[P2] = Principal(WithBonus)[P2] - Interest[Prior] = $40,233.50 - ($40,233.50 * 0.6 * 30 / 360) = $40,233.50 - $201.1675 = $40,032.3325
-    uint256 expectedSharesPeriodTwo = 40_032 ether + (3325 ether) / 10_000;
+    uint256 expectedSharesPeriodTwo = 40_032 * SCALE + (3325 * SCALE) / 10_000;
     assertEq(expectedSharesPeriodTwo, vault.previewConvertSharesForRollover(alice, endPeriodOne, actualSharesPeriodOne), "preview rollover shares start of Period 2 incorrect");
 
     // ------------- rollover from period 1 to period 2 ---------------
@@ -162,7 +165,7 @@ contract TimelockInterestVaultTest is InterestTest {
     vault.setCurrentTimePeriodsElapsed(endPeriodTwo); // warp to end of period 2
 
     // ------------- verify assets end of period 2---------------
-    uint256 expectedAssetsPeriodTwo =  40_434 ether + (6675 ether) / 10_000; // Principal(WithBonus)[P2] + Interest(WithBonus)[P2] = $40,233.50 + $201.1675 = $40,434.6675 // with bonus credited day 30
+    uint256 expectedAssetsPeriodTwo =  40_434 * SCALE + (6675 * SCALE) / 10_000; // Principal(WithBonus)[P2] + Interest(WithBonus)[P2] = $40,233.50 + $201.1675 = $40,434.6675 // with bonus credited day 30
     assertEq(actualSharesPeriodTwo, vault.previewUnlock(alice, endPeriodTwo), "full amount should be unlockable at end of period 2");
     assertEq(expectedAssetsPeriodTwo, vault.convertToAssets(actualSharesPeriodTwo), "assets end of Period 2 incorrect");
 
@@ -184,7 +187,7 @@ contract TimelockInterestVaultTest is InterestTest {
 
     TimelockInterestVault vault = new TimelockInterestVault(owner, asset, apy, frequencyValue, tenor);
 
-    uint256 depositAmount = 1000 ether;
+    uint256 depositAmount = 1000 * SCALE;
 
     // ------------- pause ---------------
     vm.prank(owner);

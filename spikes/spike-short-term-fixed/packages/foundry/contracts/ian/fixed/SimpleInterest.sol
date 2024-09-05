@@ -41,7 +41,7 @@ contract SimpleInterest is ISimpleInterest {
   uint256 public immutable FREQUENCY;
 
   uint256 public immutable DECIMALS;
-  uint256 public immutable SCALE = 10 ** DECIMALS;
+  uint256 public immutable SCALE;
 
   Math.Rounding public constant ROUNDING = Math.Rounding.Floor;
 
@@ -57,7 +57,7 @@ contract SimpleInterest is ISimpleInterest {
     INTEREST_RATE_PERCENTAGE = interestRatePercentage;
     FREQUENCY = frequency;
     DECIMALS = decimals;
-    SCALE = 10 ** DECIMALS;
+    SCALE = 10 ** decimals;
   }
 
   /**
