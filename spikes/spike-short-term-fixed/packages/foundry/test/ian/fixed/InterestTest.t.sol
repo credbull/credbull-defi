@@ -11,7 +11,7 @@ import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
 
 abstract contract InterestTest is Test {
-  uint256 public constant TOLERANCE = 500; // with 18 decimals, means allowed difference of 5E+16
+  uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000005
   uint256 public constant NUM_CYCLES_TO_TEST = 2; // number of cycles in test (e.g. 2 years, 24 months, 720 days)
 
   using Math for uint256;
@@ -33,8 +33,6 @@ abstract contract InterestTest is Test {
     ISimpleInterest simpleInterest,
     uint256 numTimePeriods
   ) internal virtual {
-    console2.log("---------------------- simpleInterestTestHarness ----------------------");
-
     // The `calcPrincipalFromDiscounted` and `calcDiscounted` functions are designed to be mathematical inverses of each other.
     //  This means that applying `calcPrincipalFromDiscounted` to the output of `calcDiscounted` will return the original principal amount.
 
@@ -46,14 +44,6 @@ abstract contract InterestTest is Test {
       principalFromDiscounted,
       TOLERANCE,
       assertMsg("principalFromDiscount not inverse of principal", simpleInterest, numTimePeriods)
-    );
-
-    //  discountedFactor = principal - interest, therefore interest = principal - discountedFactor
-    assertApproxEqAbs(
-      principal - discounted,
-      simpleInterest.calcInterest(principal, numTimePeriods),
-      10, // even smaller tolerance here
-      assertMsg("calcInterest incorrect for ", simpleInterest, numTimePeriods)
     );
 
     // verify for partial - does it hold that X% of principalFromDiscounted = X% principal

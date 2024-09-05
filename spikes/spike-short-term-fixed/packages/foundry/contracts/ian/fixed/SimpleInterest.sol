@@ -127,38 +127,39 @@ contract SimpleInterest is ISimpleInterest {
     return _scale(PAR) + interestScaled;
   }
 
+
   /**
-   * @notice Calculates the discounted principal by subtracting the accrued interest.
-   * @param principal The initial principal amount.
-   * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
-   * @return The discounted principal amount.
-   */
+ * @notice Calculates the discounted principal by dividing the principal by the price.
+ * @param principal The initial principal amount.
+ * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
+ * @return The discounted principal amount.
+ */
   function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256) {
     if (principal < SCALE) {
       revert PrincipalLessThanScale(principal, SCALE);
     }
+    uint256 priceScaled = calcPriceScaled(numTimePeriodsElapsed);
 
-    uint256 discountedScaled = _scale(principal) - _calcInterestWithScale(principal, numTimePeriodsElapsed);
+    uint256 discountedScaled = _scale(principal).mulDiv(SCALE, priceScaled, ROUNDING); // Discounted = Principal / Price
 
     return _unscale(discountedScaled);
   }
 
+
   /**
-   * @notice Recovers the original principal from a discounted value by adding back the interest.
-   * @param discounted The discounted principal amount.
-   * @param numTimePeriodsElapsed The number of time periods for which interest was calculated.
-   * @return The recovered original principal amount.
-   */
-  function calcPrincipalFromDiscounted(
-    uint256 discounted,
-    uint256 numTimePeriodsElapsed
-  ) public view virtual returns (uint256) {
-    uint256 scaledInterestFactor = _scale(INTEREST_RATE_PERCENTAGE).mulDiv(numTimePeriodsElapsed, FREQUENCY * 100, ROUNDING);
+ * @notice Recovers the original principal from a discounted value by multiplying with the price.
+ * @param discounted The discounted principal amount.
+ * @param numTimePeriodsElapsed The number of time periods for which interest was calculated.
+ * @return The recovered original principal amount.
+ */
+  function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed) public view virtual returns (uint256) {
+    uint256 priceScaled = calcPriceScaled(numTimePeriodsElapsed);
 
-    uint256 principal = discounted.mulDiv(SCALE, SCALE - scaledInterestFactor, ROUNDING);
+    uint256 principalScaled = _scale(discounted).mulDiv(priceScaled, SCALE, ROUNDING); // Principal = Discounted * Price
 
-    return principal;
+    return _unscale(principalScaled);
   }
+
 
   /**
    * @notice Internal utility function to unscale the amount.

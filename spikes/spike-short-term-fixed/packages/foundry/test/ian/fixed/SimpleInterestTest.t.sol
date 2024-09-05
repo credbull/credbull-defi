@@ -38,7 +38,7 @@ contract SimpleInterestTest is InterestTest {
   }
 
   function test__SimpleInterestTest__Daily360() public {
-    uint256 apy = 10; // APY in percentage
+    uint256 apy = 12; // APY in percentage
 
     ISimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360), DECIMALS);
     uint256 scale = simpleInterest.getScale();

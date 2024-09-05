@@ -124,7 +124,7 @@ contract TimelockInterestVaultTest is InterestTest {
     vm.stopPrank();
 
     // ------------- verify shares start of period 1 ---------------
-    assertEq(depositAmount, actualSharesPeriodOne, "shares start of Period 1 incorrect"); // Discounted[P1] = Principal[P1] - Interest[Prior] = $40,000 - 0 = $40,000
+    assertEq(depositAmount, actualSharesPeriodOne, "shares start of Period 1 incorrect");
 
     // ----------------------------------------------------------
     // ------------ End Period 1  (Start Period 2) --------------
@@ -141,8 +141,8 @@ contract TimelockInterestVaultTest is InterestTest {
 
     // ------------- verify shares start of period 2 ---------------
     // RolloverBonus: Principal(WithBonus)[P2] = Principal[P1] + Interest[P1] + RolloverBonus[P1] = $40,000 + $200 + $33.50 = $40,233.50
-    // RolloverBonus: Discounted[P2] = Principal(WithBonus)[P2] - Interest[Prior] = $40,233.50 - ($40,233.50 * 0.6 * 30 / 360) = $40,233.50 - $201.1675 = $40,032.3325
-    uint256 expectedSharesPeriodTwo = 40_032 * SCALE + (3325 * SCALE) / 10_000;
+    // RolloverBonus: Discounted[P2] = Principal(WithBonus)[P2] / Price[P2] = $40,233.50 / (1 * 0.6 * 30 / 360) = $40,233.50 / $1.005 = $40,033.33
+    uint256 expectedSharesPeriodTwo = 40_033 * SCALE + (333_333 * SCALE) / 1_000_000;
     assertEq(expectedSharesPeriodTwo, vault.previewConvertSharesForRollover(alice, endPeriodOne, actualSharesPeriodOne), "preview rollover shares start of Period 2 incorrect");
 
     // ------------- rollover from period 1 to period 2 ---------------
@@ -167,14 +167,14 @@ contract TimelockInterestVaultTest is InterestTest {
     // ------------- verify assets end of period 2---------------
     uint256 expectedAssetsPeriodTwo =  40_434 * SCALE + (6675 * SCALE) / 10_000; // Principal(WithBonus)[P2] + Interest(WithBonus)[P2] = $40,233.50 + $201.1675 = $40,434.6675 // with bonus credited day 30
     assertEq(actualSharesPeriodTwo, vault.previewUnlock(alice, endPeriodTwo), "full amount should be unlockable at end of period 2");
-    assertEq(expectedAssetsPeriodTwo, vault.convertToAssets(actualSharesPeriodTwo), "assets end of Period 2 incorrect");
+    assertApproxEqAbs(expectedAssetsPeriodTwo, vault.convertToAssets(actualSharesPeriodTwo), TOLERANCE, "assets end of Period 2 incorrect");
 
     // ------------- redeem at end of period 2 ---------------
     vm.prank(alice);
     uint256 actualRedeemedAssets = vault.redeem(actualSharesPeriodTwo, alice, alice);
 
     // ------------- verify assets after redeeming ---------------
-    assertEq(expectedAssetsPeriodTwo, actualRedeemedAssets, "incorrect assets returned after after fully redeeming");
+    assertApproxEqAbs(expectedAssetsPeriodTwo, actualRedeemedAssets, TOLERANCE, "incorrect assets returned after after fully redeeming");
     assertEq(0, vault.balanceOf(alice), "no shares should remain after fully redeeming");
     assertEq(0, vault.getLockedAmount(alice, endPeriodTwo), "no locks should remain after fully redeeming");
   }

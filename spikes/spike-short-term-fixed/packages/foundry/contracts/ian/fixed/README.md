@@ -31,6 +31,41 @@ function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) external
 
 [Workbook with further Examples](https://docs.google.com/spreadsheets/d/1Uc6-JW8fJx6PcD_GxczW6EkvacxXuxjZhSDRqB0ZLcY/edit?gid=1548301220#gid=1548301220)
 
+## Price
+
+**Price** shows the growth of interest over time for a Principal of 1.  Price at at day 1 is 1 and increases as interest is applied daily.
+
+### Price Formula
+Price is defined as Principal of "1" plus the interest that has accrued over time:
+`Price = P + Simple Interest`
+`Price = P + (IR * P * m) / f` //substituting formula for Simple Interest
+`Price = 1 + (IR * m) / f` // substituting Principal = 1
+
+### Price Example
+Let's look at Price for our Credbull 12% APY and 30 day maturity product over different days.
+- Price Day 0  ` 1 + (0.12 *  0) / 360 = 1`
+- Price Day 1  ` 1 + (0.12 *  1) / 360 ≈ 1.00033`
+- Price Day 30 ` 1 + (0.12 * 30) / 360 = 1.01`
+---
+
+## Discounted Principal from Price
+
+### Discounted from Price Formula
+`Discounted Principal =  P - Interest[Prior]`
+- **P**: The original Principal (initial amount).
+- **Interest[Prior]**: interest that would have accrued if investing from the starting period
+
+### Discounted Example
+Now imagine Bob invests $1,000, in the Credbull 12% APY and 30 day maturity on **DAY 2**.  In this case, Discounted Principal would be $999.67.
+
+```
+Discounted Principal = P - Interest[Prior] 
+= $,1000 - (0.12 * $1,000 * 1 / 360) 
+= $1,000 - $0.33 = $999.67
+```
+
+----
+
 ## Discounted Principal
 
 **Discounted Principal** refers to the principal amount excluding interest accrued prior to my investment. This concept ensures that new investors 
