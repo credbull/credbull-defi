@@ -42,7 +42,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     uint256 interestRatePercentage,
     uint256 frequency,
     uint256 tenor
-  ) SimpleInterest(interestRatePercentage, frequency) ERC4626(asset) ERC20("Simple Interest Rate Claim", "cSIR") {
+  ) SimpleInterest(interestRatePercentage, frequency, 18) ERC4626(asset) ERC20("Simple Interest Rate Claim", "cSIR") {
     TENOR = tenor;
   }
 

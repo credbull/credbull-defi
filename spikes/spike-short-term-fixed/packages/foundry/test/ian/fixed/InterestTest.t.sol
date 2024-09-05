@@ -14,8 +14,6 @@ abstract contract InterestTest is Test {
   uint256 public constant TOLERANCE = 500; // with 18 decimals, means allowed difference of 5E+16
   uint256 public constant NUM_CYCLES_TO_TEST = 2; // number of cycles in test (e.g. 2 years, 24 months, 720 days)
 
-  uint256 public constant SCALE = 1 * 10 ** 18; // number of cycles in test (e.g. 2 years, 24 months, 720 days)
-
   using Math for uint256;
 
   function testInterestToMaxPeriods(uint256 principal, ISimpleInterest simpleInterest) internal {

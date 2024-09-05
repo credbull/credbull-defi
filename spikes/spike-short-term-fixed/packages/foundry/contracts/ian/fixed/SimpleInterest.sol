@@ -40,8 +40,8 @@ contract SimpleInterest is ISimpleInterest {
   uint256 public immutable INTEREST_RATE_PERCENTAGE;
   uint256 public immutable FREQUENCY;
 
-  uint256 public constant DECIMALS = 18;
-  uint256 public constant SCALE = 10 ** DECIMALS;
+  uint256 public immutable DECIMALS;
+  uint256 public immutable SCALE = 10 ** DECIMALS;
 
   Math.Rounding public constant ROUNDING = Math.Rounding.Floor;
 
@@ -51,10 +51,13 @@ contract SimpleInterest is ISimpleInterest {
    * @notice Constructor to initialize the SimpleInterest contract with interest rate and frequency.
    * @param interestRatePercentage The annual interest rate as a percentage.
    * @param frequency The number of interest periods in a year.
+   * @param decimals The number of decimals for scaling calculations
    */
-  constructor(uint256 interestRatePercentage, uint256 frequency) {
+  constructor(uint256 interestRatePercentage, uint256 frequency, uint256 decimals) {
     INTEREST_RATE_PERCENTAGE = interestRatePercentage;
     FREQUENCY = frequency;
+    DECIMALS = decimals;
+    SCALE = 10 ** DECIMALS;
   }
 
   /**

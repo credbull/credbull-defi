@@ -22,6 +22,8 @@ contract SimpleInterestVaultTest is InterestTest {
   address private alice = makeAddr("alice");
   address private bob = makeAddr("bob");
 
+  uint256 internal SCALE = 10 ** 18;
+
   function setUp() public {
     uint256 tokenSupply = 1000000 ether; // 1 million
 
@@ -43,7 +45,7 @@ contract SimpleInterestVaultTest is InterestTest {
 
     IERC4626Interest vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
 
-    uint256 scaleMinus1 = SCALE - 1;
+    uint256 scaleMinus1 = vault.getScale() - 1;
 
     assertEq(0, vault.convertToAssets(scaleMinus1), "convert to assets not scaled");
 

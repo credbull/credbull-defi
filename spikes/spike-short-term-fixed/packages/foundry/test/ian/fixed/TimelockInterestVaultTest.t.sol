@@ -31,6 +31,8 @@ contract TimelockInterestVaultTest is InterestTest {
 
   uint256 constant FREQUENCY_360 = 360;
 
+  uint256 internal SCALE = 10 ** 18;
+
   function setUp() public {
     uint256 tokenSupply = 1_000_000 ether;
 

@@ -11,12 +11,14 @@ import { InterestTest } from "@credbull-spike-test/ian/fixed/InterestTest.t.sol"
 contract SimpleInterestTest is InterestTest {
   using Math for uint256;
 
+  uint256 constant DECIMALS = 10; // number of decimals for scaling
+
   function test__SimpleInterestTest__CheckScale() public {
     uint256 apy = 10; // APY in percentage
 
-    ISimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360));
+    ISimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360), DECIMALS);
 
-    uint256 scaleMinus1 = SCALE - 1;
+    uint256 scaleMinus1 = simpleInterest.getScale() - 1;
 
     // expect revert when principal not scaled
     vm.expectRevert();
@@ -29,16 +31,18 @@ contract SimpleInterestTest is InterestTest {
   function test__SimpleInterestTest__Monthly() public {
     uint256 apy = 12; // APY in percentage
 
-    ISimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.MONTHLY));
+    ISimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.MONTHLY), DECIMALS);
+    uint256 scale = simpleInterest.getScale();
 
-    testInterestToMaxPeriods(200 * SCALE, simpleInterest);
+    testInterestToMaxPeriods(200 * scale, simpleInterest);
   }
 
   function test__SimpleInterestTest__Daily360() public {
     uint256 apy = 10; // APY in percentage
 
-    ISimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360));
+    ISimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360), DECIMALS);
+    uint256 scale = simpleInterest.getScale();
 
-    testInterestToMaxPeriods(200 * SCALE, simpleInterest);
+    testInterestToMaxPeriods(200 * scale, simpleInterest);
   }
 }
