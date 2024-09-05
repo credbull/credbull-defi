@@ -43,6 +43,8 @@ contract SimpleInterest is ISimpleInterest {
   uint256 public immutable DECIMALS;
   uint256 public immutable SCALE;
 
+  uint256 public constant PAR = 1;
+
   Math.Rounding public constant ROUNDING = Math.Rounding.Floor;
 
   error PrincipalLessThanScale(uint256 principal, uint256 scale);
@@ -114,6 +116,15 @@ contract SimpleInterest is ISimpleInterest {
       interestRatePercentage * numTimePeriodsElapsed, FREQUENCY * 100, ROUNDING);
 
     return interestScaled;
+  }
+
+  function calcPriceScaled(
+    uint256 numTimePeriodsElapsed
+  ) public view virtual returns (uint256 interest) {
+
+    uint256 interestScaled = _calcInterestWithScale(PAR, numTimePeriodsElapsed);
+
+    return _scale(PAR) + interestScaled;
   }
 
   /**
