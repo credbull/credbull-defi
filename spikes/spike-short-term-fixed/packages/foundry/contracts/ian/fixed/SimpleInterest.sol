@@ -97,6 +97,25 @@ contract SimpleInterest is ISimpleInterest {
   }
 
   /**
+ * @notice Internal function to calculate the interest with scaling.
+   * @dev This function scales the interest calculation for internal use.
+   * @param principal The initial principal amount.
+   * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
+   * @param interestRatePercentage The interest rate as a Percent
+   * @return _interestScaled The scaled interest amount.
+   */
+  function _calcInterestWithScale(
+    uint256 principal,
+    uint256 numTimePeriodsElapsed,
+    uint256 interestRatePercentage
+  ) internal view returns (uint256 _interestScaled) {
+    uint256 interestScaled =
+              principal.mulDiv(interestRatePercentage * numTimePeriodsElapsed * SCALE, FREQUENCY * 100, ROUNDING);
+
+    return interestScaled;
+  }
+
+  /**
    * @notice Calculates the discounted principal by subtracting the accrued interest.
    * @param principal The initial principal amount.
    * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.

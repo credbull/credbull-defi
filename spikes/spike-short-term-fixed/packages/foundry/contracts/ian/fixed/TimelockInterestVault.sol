@@ -13,7 +13,10 @@ import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
+import { console2 } from "forge-std/console2.sol";
+
 contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausable, IPausable {
+
   constructor(
     address initialOwner,
     IERC20 asset,
@@ -58,31 +61,36 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
    * @param value The amount of tokens to be rolled over.
    */
   function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value) public override onlyOwner {
-    uint256 previewSharesNextPeriod = previewConvertSharesForRollover(account, lockReleasePeriod, value);
+    uint256 sharesForNextPeriod = previewConvertSharesForRollover(account, lockReleasePeriod, value);
 
     // TODO: this probably only makes sense if lockReleasePeriod == currentTimePeriodsElapsed.  assert as such.
 
-    uint256 rolloverBonus = calcRolloverBonus(account, lockReleasePeriod, value);
+    // case where the Shares[P1] for first period are LESS than Shares[P2], e.g. due to Rollover Bonus
+    if (sharesForNextPeriod > value) {
+      uint256 deficientValue = sharesForNextPeriod - value;
 
-    uint256 sharesForNextPeriod = previewSharesNextPeriod + rolloverBonus;
+      TimelockIERC1155._lockInternal(account, currentTimePeriodsElapsed, deficientValue); // mint from ERC1155 (Timelock)
 
-    // Adjust the difference by burning the excess tokens if the new value is less than the original
+      ERC20._mint(account, deficientValue); // mint from ER20/ERC4626 (Vault)
+    }
+
+    // case where the Shares[P1] for first period are GREATER than Shares[P2], e.g. due to Discounting
     if (value > sharesForNextPeriod) {
       uint256 excessValue = value - sharesForNextPeriod;
 
-      // Burn from ERC1155 (Timelock)
-      ERC1155._burn(account, lockReleasePeriod, excessValue);
+      ERC1155._burn(account, lockReleasePeriod, excessValue); // burn from ERC1155 (Timelock)
 
-      // Burn from ERC4626 (Vault)
-      SimpleInterestVault._burnInternal(account, excessValue);
+      ERC20._burn(account, excessValue); // burn from ERC20/ERC4626 (Vault)
     }
 
     TimelockIERC1155.rolloverUnlocked(account, lockReleasePeriod, sharesForNextPeriod);
   }
 
-  function calcRolloverBonus(address /* account */, uint256 /*lockReleasePeriod */, uint256 /*value*/)
-  public pure override returns (uint256 rolloverBonus) {
-    return 0;
+  function calcRolloverBonus(address /* account */, uint256 /* lockReleasePeriod */, uint256 value)
+  public view override returns (uint256 rolloverBonus) {
+    uint256 rolloverBonusScaled = _calcInterestWithScale(value, TENOR, 1);
+
+    return unscale(rolloverBonusScaled);
   }
 
   /**
@@ -104,8 +112,12 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
 
     uint256 principalAndYieldFirstPeriod = convertToAssets(value); // principal + first period interest
 
-    // shares for the next period is the discounted principalAndYield for the first Period
-    uint256 _sharesForNextPeriod = convertToShares(principalAndYieldFirstPeriod); // discounted principal for rollover period
+    uint256 rolloverBonus = calcRolloverBonus(account, lockReleasePeriod, principalAndYieldFirstPeriod); // bonus for rolled over assets
+
+    uint256 assetsForNextPeriod = principalAndYieldFirstPeriod + rolloverBonus;
+
+    // shares for the next period is the Discounted PrincipalAndYield for the first Period + Rollover bonus
+    uint256 _sharesForNextPeriod = convertToShares(assetsForNextPeriod); // discounted principal for rollover period
 
     return _sharesForNextPeriod;
   }

@@ -98,22 +98,7 @@ contract TimelockInterestVaultTest is InterestTest {
     assertEq(0, vault.balanceOf(alice), "Alice's share balance should be zero after redeeming");
   }
 
-  /*
-   * 40k depoist
-   * Period 1:
-   * - Principal[P1] = 40,000.00
-   * - Interest[P1]  =    200.00
-   *----------------------------
-   * Subtotal[P1]      40,200.00
-   *
-   * Period 2:
-   * - Principal[P2] = 40,200.00
-   * - Interest[P2]   =   201.00
-   * - Bonus[P2]      =    33.50
-   *----------------------------
-   * Subtotal[P2]      40,434.50
-   */
-  function test__TimelockInterestVault__Rollover_1APY_Bonus_Zero() public {
+  function test__TimelockInterestVault__Rollover_1APY_Bonus() public {
     uint256 tenor = TENOR_30;
     uint256 depositAmount = 40_000 ether;
 
@@ -145,10 +130,14 @@ contract TimelockInterestVaultTest is InterestTest {
 
     // ------------- verify assets end of period 1 ---------------
     assertEq(actualSharesPeriodOne, vault.previewUnlock(alice, endPeriodOne), "full amount should be unlockable at end of period 1");
-    assertEq(40_200 ether, vault.convertToAssets(actualSharesPeriodOne), "assets end of Period 1 incorrect"); // Principal[P1] + Interest[P1] = $40,000 + $200 = $40,200
+    uint256 actualAssetsPeriodOne = vault.convertToAssets(actualSharesPeriodOne);
+    assertEq(40_200 ether, actualAssetsPeriodOne, "assets end of Period 1 incorrect"); // Principal[P1] + Interest[P1] = $40,000 + $200 = $40,200
+    assertEq(33 ether + (50 ether) / 100, vault.calcRolloverBonus(alice, tenor, actualAssetsPeriodOne), "rollover bonus end of Period 1 incorrect"); // Rollover Bonus =  ($40,200 * 0.1 * 30 / 360) = $33.50
 
     // ------------- verify shares start of period 2 ---------------
-    uint256 expectedSharesPeriodTwo = 39_999 ether; // Discounted[P2] = Principal[P2] - Interest[Prior] = $40,200 - ($40,200 * 0.6 * 30 / 360) = $40,200 - $201 = $39,999
+    // RolloverBonus: Principal(WithBonus)[P2] = Principal[P1] + Interest[P1] + RolloverBonus[P1] = $40,000 + $200 + $33.50 = $40,233.50
+    // RolloverBonus: Discounted[P2] = Principal(WithBonus)[P2] - Interest[Prior] = $40,233.50 - ($40,233.50 * 0.6 * 30 / 360) = $40,233.50 - $201.1675 = $40,032.3325
+    uint256 expectedSharesPeriodTwo = 40_032 ether + (3325 ether) / 10_000;
     assertEq(expectedSharesPeriodTwo, vault.previewConvertSharesForRollover(alice, endPeriodOne, actualSharesPeriodOne), "preview rollover shares start of Period 2 incorrect");
 
     // ------------- rollover from period 1 to period 2 ---------------
@@ -171,7 +160,7 @@ contract TimelockInterestVaultTest is InterestTest {
     vault.setCurrentTimePeriodsElapsed(endPeriodTwo); // warp to end of period 2
 
     // ------------- verify assets end of period 2---------------
-    uint256 expectedAssetsPeriodTwo = 40_401 ether; // Principal[P2] + Interest[P2] = $40,200 + $201 = $40,401
+    uint256 expectedAssetsPeriodTwo =  40_434 ether + (6675 ether) / 10_000; // Principal(WithBonus)[P2] + Interest(WithBonus)[P2] = $40,233.50 + $201.1675 = $40,434.6675 // with bonus credited day 30
     assertEq(actualSharesPeriodTwo, vault.previewUnlock(alice, endPeriodTwo), "full amount should be unlockable at end of period 2");
     assertEq(expectedAssetsPeriodTwo, vault.convertToAssets(actualSharesPeriodTwo), "assets end of Period 2 incorrect");
 

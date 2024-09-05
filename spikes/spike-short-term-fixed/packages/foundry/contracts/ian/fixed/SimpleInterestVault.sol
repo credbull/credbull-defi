@@ -204,15 +204,6 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     return ERC4626.decimals();
   }
 
-  /**
-   * @notice Internal function to burn tokens from an account.
-   * @param account The account from which to burn tokens.
-   * @param value The amount of tokens to burn.
-   */
-  function _burnInternal(address account, uint256 value) internal virtual {
-    _burn(account, value);
-  }
-
   // =============== Utility ===============
 
   /**
