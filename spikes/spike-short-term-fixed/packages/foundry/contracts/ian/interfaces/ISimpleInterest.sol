@@ -30,17 +30,17 @@ interface ISimpleInterest {
   function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) external view returns (uint256 interest);
 
   /**
-   * @notice Calculates the discounted principal by subtracting the accrued interest.
+   * @notice Calculates the discounted principal after the elapsed time periods.
    * @param principal The initial principal amount.
-   * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
+   * @param numTimePeriodsElapsed The number of time periods for which the discount is calculated.
    * @return discounted The discounted principal amount.
    */
   function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) external view returns (uint256 discounted);
 
   /**
-   * @notice Recovers the original principal from a discounted value by adding back the interest.
+   * @notice Recovers the original principal from a discounted value after the elapsed time periods.
    * @param discounted The discounted principal amount.
-   * @param numTimePeriodsElapsed The number of time periods for which interest was calculated.
+   * @param numTimePeriodsElapsed The number of time periods for which the discount was calculated.
    * @return principal The recovered original principal amount.
    */
   function calcPrincipalFromDiscounted(
