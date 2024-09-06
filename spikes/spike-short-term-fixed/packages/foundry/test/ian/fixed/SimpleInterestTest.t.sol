@@ -54,13 +54,13 @@ contract SimpleInterestTest is InterestTest {
 
 
     uint256 day0 = 0;
-    assertEq(1 * scale, simpleInterest.calcPriceScaled(day0)); // 1 + (0.12 * 0) / 360 = 1
+    assertEq(1 * scale, simpleInterest.calcPriceWithScale(day0)); // 1 + (0.12 * 0) / 360 = 1
 
     uint256 day1 = 1;
-    assertEq((100_033_333_333 * scale / 100_000_000_000), simpleInterest.calcPriceScaled(day1)); // 1 + (0.12 * 1) / 360 ≈ 1.00033
+    assertEq((100_033_333_333 * scale / 100_000_000_000), simpleInterest.calcPriceWithScale(day1)); // 1 + (0.12 * 1) / 360 ≈ 1.00033
 
     uint256 day30 = 30;
-    assertEq((101 * scale / 100), simpleInterest.calcPriceScaled(day30)); // 1 + (0.12 * 30) / 360 = 1.01
+    assertEq((101 * scale / 100), simpleInterest.calcPriceWithScale(day30)); // 1 + (0.12 * 30) / 360 = 1.01
   }
 
   function test_SimpleInterestTest_Rounding() public {

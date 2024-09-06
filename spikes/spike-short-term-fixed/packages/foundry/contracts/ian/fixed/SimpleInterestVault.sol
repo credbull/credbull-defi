@@ -49,149 +49,129 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
   // =============== Deposit ===============
 
   /**
-   * @notice Deposits assetsInWei into the vault and mints corresponding shares to the receiver.
-   * @param assetsInWei The amount of assets to deposit.
+   * @notice Deposits assets into the vault and mints corresponding shares to the receiver.
+   * @param assets The amount of assets to deposit.
    * @param receiver The address receiving the minted shares.
-   * @return sharesInWei The number of shares minted to the receiver.
+   * @return shares The number of shares minted to the receiver.
    */
   function deposit(
-    uint256 assetsInWei,
+    uint256 assets,
     address receiver
-  ) public virtual override(IERC4626, ERC4626, IProduct) returns (uint256 sharesInWei) {
-    return ERC4626.deposit(assetsInWei, receiver);
+  ) public virtual override(IERC4626, ERC4626, IProduct) returns (uint256 shares) {
+    return ERC4626.deposit(assets, receiver);
   }
 
   /**
    * @notice Converts a given amount of assets to shares based on a specific time period.
-   * @param assetsInWei The amount of assets to convert.
+   * @param assets The amount of assets to convert.
    * @param numTimePeriodsElapsed The number of time periods elapsed.
-   * @return sharesInWei The number of shares corresponding to the assets at the specified time period.
+   * @return shares The number of shares corresponding to the assets at the specified time period.
    */
   function convertToSharesAtPeriod(
-    uint256 assetsInWei,
+    uint256 assets,
     uint256 numTimePeriodsElapsed
-  ) public view returns (uint256 sharesInWei) {
-    if (assetsInWei < SCALE) return 0; // no shares for fractional assets
+  ) public view returns (uint256 shares) {
+    if (assets < SCALE) return 0; // no shares for fractional assets
 
-    return calcDiscounted(assetsInWei, numTimePeriodsElapsed);
+    return calcDiscounted(assets, numTimePeriodsElapsed);
   }
 
   /**
    * @notice Previews the number of shares that would be minted for a given deposit amount.
-   * @param assetsInWei The amount of assets to deposit.
-   * @return sharesInWei The number of shares that would be minted.
+   * @param assets The amount of assets to deposit.
+   * @return shares The number of shares that would be minted.
    */
-  function previewDeposit(uint256 assetsInWei) public view override(ERC4626, IERC4626) returns (uint256 sharesInWei) {
-    return convertToShares(assetsInWei);
+  function previewDeposit(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256 shares) {
+    return convertToShares(assets);
   }
 
   /**
    * @notice Converts a given amount of assets to shares using the current time periods elapsed.
-   * @param assetsInWei The amount of assets to convert.
-   * @return sharesInWei The number of shares corresponding to the assets.
+   * @param assets The amount of assets to convert.
+   * @return shares The number of shares corresponding to the assets.
    */
-  function convertToShares(uint256 assetsInWei) public view override(ERC4626, IERC4626) returns (uint256 sharesInWei) {
-    return convertToSharesAtPeriod(assetsInWei, currentTimePeriodsElapsed);
+  function convertToShares(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256 shares) {
+    return convertToSharesAtPeriod(assets, currentTimePeriodsElapsed);
   }
 
   // =============== Redeem ===============
 
   /**
    * @notice Redeems shares for assets, transferring the assets to the receiver.
-   * @param sharesInWei The number of shares to redeem.
+   * @param shares The number of shares to redeem.
    * @param receiver The address receiving the assets.
    * @param owner The address that owns the shares.
    * @return assets The number of assets transferred to the receiver.
    */
   function redeem(
-    uint256 sharesInWei,
+    uint256 shares,
     address receiver,
     address owner
   ) public virtual override(IERC4626, ERC4626, IProduct) returns (uint256 assets) {
-    return ERC4626.redeem(sharesInWei, receiver, owner);
+    return ERC4626.redeem(shares, receiver, owner);
   }
 
   /**
    * @notice Redeems shares for assets at a specific time period, transferring the assets to the receiver.
-   * @param sharesInWei The number of shares to redeem.
+   * @param shares The number of shares to redeem.
    * @param receiver The address receiving the assets.
    * @param owner The address that owns the shares.
    * @param redeemTimePeriod The time period at which the shares are redeemed.
-   * @return assetsInWei The number of assets transferred to the receiver.
+   * @return assets The number of assets transferred to the receiver.
    */
   function redeemAtPeriod(
-    uint256 sharesInWei,
+    uint256 shares,
     address receiver,
     address owner,
     uint256 redeemTimePeriod
-  ) external returns (uint256 assetsInWei) {
+  ) external returns (uint256 assets) {
     if (currentTimePeriodsElapsed != redeemTimePeriod) {
       revert RedeemTimePeriodNotSupported(currentTimePeriodsElapsed, redeemTimePeriod);
     }
 
-    return redeem(sharesInWei, receiver, owner);
+    return redeem(shares, receiver, owner);
   }
 
   /**
    * @notice Converts a given amount of shares to assets based on a specific time period.
-   * @param sharesInWei The amount of shares to convert.
+   * @param shares The amount of shares to convert.
    * @param numTimePeriodsElapsed The number of time periods elapsed.
-   * @return assetsInWei The number of assets corresponding to the shares at the specified time period.
+   * @return assets The number of assets corresponding to the shares at the specified time period.
    */
   function convertToAssetsAtPeriod(
-    uint256 sharesInWei,
+    uint256 shares,
     uint256 numTimePeriodsElapsed
-  ) public view returns (uint256 assetsInWei) {
-    if (sharesInWei < SCALE) return 0; // no assets for fractional shares
+  ) public view returns (uint256 assets) {
+    if (shares < SCALE) return 0; // no assets for fractional shares
 
     // Trying to redeem before TENOR - just give back the Discounted Amount.
     // This is a slash of Principal (and no Interest).
-    if (numTimePeriodsElapsed < TENOR) return sharesInWei;
-
-    uint256 principal = _calcPrincipalFromSharesAtPeriod(sharesInWei, numTimePeriodsElapsed);
-
-    return principal + calcInterest(principal, TENOR);
-  }
-
-  /**
-   * @notice Internal function to calculate the principal from shares based on a specific time period.
-   * @param sharesInWei The amount of shares to convert.
-   * @param numTimePeriodsElapsed The number of time periods elapsed.
-   * @return principal The principal amount corresponding to the shares.
-   */
-  function _calcPrincipalFromSharesAtPeriod(
-    uint256 sharesInWei,
-    uint256 numTimePeriodsElapsed
-  ) internal view returns (uint256 principal) {
-    if (sharesInWei < SCALE) return 0; // no assets for fractional shares
-
-    // Trying to redeem before TENOR - just give back the Discounted Amount.
-    // This is a slash of Principal (and no Interest).
-    if (numTimePeriodsElapsed < TENOR) return sharesInWei;
+    // TODO - need to account for deposits after TENOR.  e.g. 30 day tenor, deposit on day 31 and redeem on day 32.
+    if (numTimePeriodsElapsed < TENOR) return shares;
 
     uint256 impliedNumTimePeriodsAtDeposit = (numTimePeriodsElapsed - TENOR);
 
-    uint256 _principal = calcPrincipalFromDiscounted(sharesInWei, impliedNumTimePeriodsAtDeposit);
+    uint256 _principal = calcPrincipalFromDiscounted(shares, impliedNumTimePeriodsAtDeposit);
 
-    return _principal;
+    return _principal + calcInterest(_principal, TENOR);
   }
 
   /**
    * @notice Previews the number of assets that would be redeemed for a given number of shares.
-   * @param sharesInWei The number of shares to redeem.
-   * @return assetsInWei The number of assets that would be redeemed.
+   * @param shares The number of shares to redeem.
+   * @return assets The number of assets that would be redeemed.
    */
-  function previewRedeem(uint256 sharesInWei) public view override(ERC4626, IERC4626) returns (uint256 assetsInWei) {
-    return convertToAssets(sharesInWei);
+  function previewRedeem(uint256 shares) public view override(ERC4626, IERC4626) returns (uint256 assets) {
+    return convertToAssets(shares);
   }
 
   /**
    * @notice Converts a given amount of shares to assets using the current time periods elapsed.
-   * @param sharesInWei The amount of shares to convert.
-   * @return assetsInWei The number of assets corresponding to the shares.
+   * @param shares The amount of shares to convert.
+   * @return assets The number of assets corresponding to the shares.
    */
-  function convertToAssets(uint256 sharesInWei) public view override(ERC4626, IERC4626) returns (uint256 assetsInWei) {
-    return convertToAssetsAtPeriod(sharesInWei, currentTimePeriodsElapsed);
+  function convertToAssets(uint256 shares) public view override(ERC4626, IERC4626) returns (uint256 assets) {
+    return convertToAssetsAtPeriod(shares, currentTimePeriodsElapsed);
   }
 
   // =============== ERC4626 and ERC20 ===============

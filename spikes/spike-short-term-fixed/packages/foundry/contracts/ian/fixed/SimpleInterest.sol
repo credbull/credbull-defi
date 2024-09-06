@@ -101,7 +101,7 @@ contract SimpleInterest is ISimpleInterest {
    * @param numTimePeriodsElapsed The number of time periods that have elapsed.
    * @return priceScaled The price scaled by the internal scale factor.
    */
-  function calcPriceScaled(
+  function calcPriceWithScale(
     uint256 numTimePeriodsElapsed
   ) public view virtual returns (uint256 priceScaled) {
 
@@ -122,7 +122,7 @@ contract SimpleInterest is ISimpleInterest {
     if (principal < SCALE) {
       revert PrincipalLessThanScale(principal, SCALE);
     }
-    uint256 priceScaled = calcPriceScaled(numTimePeriodsElapsed);
+    uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed);
 
     uint256 discountedScaled = _scale(principal).mulDiv(SCALE, priceScaled, ROUNDING); // Discounted = Principal / Price
 
@@ -136,7 +136,7 @@ contract SimpleInterest is ISimpleInterest {
    * @return principal The recovered original principal amount.
    */
   function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed) public view virtual returns (uint256 principal) {
-    uint256 priceScaled = calcPriceScaled(numTimePeriodsElapsed);
+    uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed);
 
     uint256 principalScaled = _scale(discounted).mulDiv(priceScaled, SCALE, ROUNDING); // Principal = Discounted * Price
 
