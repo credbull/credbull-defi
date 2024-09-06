@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
 import { YieldSubscription } from "../contracts/kk/YieldSubscription.sol";
-import { SimpleUSDC } from "../contracts/kk/SimpleUSDC.sol";
+import { SimpleUSDC } from "../contracts/SimpleUSDC.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { console2 } from "forge-std/console2.sol";
 
@@ -22,7 +22,7 @@ contract YieldSubscriptionTest is Test {
         usdc = new SimpleUSDC(10e12); // 10 Million initial supply
         console2.log("start time at setup", block.timestamp);
         vm.warp(virtualStartTime);
-        subscription = new YieldSubscription(address(usdc), virtualStartTime);
+        subscription = new YieldSubscription(address(usdc), virtualStartTime, 30, 2);
         console2.log("start time after setup", subscription.startTime());
 
         usdc.mint(user, 10 * DEPOSIT_AMOUNT); // 10000 USDC
@@ -79,8 +79,25 @@ contract YieldSubscriptionTest is Test {
 
         subscription.setCurrentTimePeriodsElapsed(31);
         console2.log("Yield per window", subscription.yieldPerWindow());
-        console2.log("Interest earned", subscription.interestEarnedForWindow(user, 1));
-        console2.log("Eligible amount", subscription.calculateEligibleAmount(user));
-        subscription.redeemAtPeriod(1000, user, user, windows[0]);
+        uint256 interestEarned = subscription.interestEarnedForWindow(user, 1);
+        console2.log("Interest earned", interestEarned);
+        uint256 totalUserDeposit = subscription.totalUserDeposit(user);
+        console2.log("Total user deposit", totalUserDeposit);
+        usdc.mint(address(subscription), interestEarned);
+        uint256 transferredBalance = subscription.redeemAtPeriod(DEPOSIT_AMOUNT, user, user, windows[0]);
+        console2.log('transferred balance', transferredBalance);
+    }
+
+    function test__Subscription__Rollover() public {
+        uint256 deposit = 50_000e6;
+        vm.startPrank(user);
+        usdc.mint(user, deposit);
+        usdc.approve(address(subscription), deposit);
+        subscription.setCurrentTimePeriodsElapsed(1);
+        subscription.deposit(deposit, user);
+
+        subscription.setCurrentTimePeriodsElapsed(32);
+        uint256 interestEarned = subscription.interestEarnedForWindow(user, 1);
+        console2.log("Interest earned", interestEarned);
     }
 }

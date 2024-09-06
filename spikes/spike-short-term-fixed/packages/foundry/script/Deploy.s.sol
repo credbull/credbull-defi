@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import "../contracts/kk/YieldSubscription.sol";
 import "./DeployHelpers.s.sol";
-import "../contracts/kk/SimpleUSDC.sol";
+import "../contracts/SimpleUSDC.sol";
 
 import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
 
@@ -12,6 +12,8 @@ contract DeployScript is ScaffoldETHDeploy {
 
   function run() external {
     uint256 deployerPrivateKey = setupLocalhostEnv();
+    uint256 userPrivateKey = vm.envUint("USER_PRIVATE_KEY");
+  
     if (deployerPrivateKey == 0) {
       revert InvalidPrivateKey(
         "You don't have a deployer account. Make sure you have set DEPLOYER_PRIVATE_KEY in .env or use `yarn generate` to generate a new random account"
@@ -19,30 +21,53 @@ contract DeployScript is ScaffoldETHDeploy {
     }
     vm.startBroadcast(deployerPrivateKey);
     address owner = vm.addr(deployerPrivateKey);
+    address user = vm.addr(userPrivateKey);
 
-    SimpleUSDC simpleUSDC = new SimpleUSDC(10_000_000_000_000); //10 Million
+    uint256 MINT_AMOUNT = 10_000_000_000_000; //10 Million
+
+    SimpleUSDC simpleUSDC = new SimpleUSDC(MINT_AMOUNT); //10 Million
     console.logString(
       string.concat(
         "SimpleUSDC deployed at: ", vm.toString(address(simpleUSDC))
       )
     );
 
-    YieldSubscription shortTermYield = new YieldSubscription(address(simpleUSDC), 1724112000);
+    uint256 maturityPeriod = 30;
+    uint256 coolDownPeriod = 2;
+
+    YieldSubscription shortTermYield = new YieldSubscription(address(simpleUSDC), 1724112000, maturityPeriod, coolDownPeriod);
     console.logString(
       string.concat(
         "Short term yield deployed at: ", vm.toString(address(shortTermYield))
       )
     );
 
-    uint256 apy = 12; // APY in percentage
-    uint256 frequencyValue = 360;
-    uint256 tenor = 30;
-    TimelockInterestVault timelockVault = new TimelockInterestVault(owner, simpleUSDC, apy, frequencyValue, tenor);
+    YieldSubscription shortTermYieldRollover = new YieldSubscription(address(simpleUSDC), 1724112000, maturityPeriod, coolDownPeriod);
     console.logString(
       string.concat(
-        "TimelockInterestVault deployed at: ", vm.toString(address(timelockVault))
+        "Short term yield rollover deployed at: ", vm.toString(address(shortTermYieldRollover))
       )
     );
+    vm.stopBroadcast();
+
+    vm.startBroadcast(userPrivateKey);
+
+    simpleUSDC.mint(address(user), MINT_AMOUNT); //10 Million
+    simpleUSDC.approve(address(shortTermYield), MINT_AMOUNT); //10 Million
+    simpleUSDC.approve(address(shortTermYieldRollover), MINT_AMOUNT); //10 Million
+
+    shortTermYield.setCurrentTimePeriodsElapsed(1);
+    shortTermYieldRollover.setCurrentTimePeriodsElapsed(1);
+
+    // uint256 apy = 12; // APY in percentage
+    // uint256 frequencyValue = 360;
+    // uint256 tenor = 30;
+    // TimelockInterestVault timelockVault = new TimelockInterestVault(owner, simpleUSDC, apy, frequencyValue, tenor);
+    // console.logString(
+    //   string.concat(
+    //     "TimelockInterestVault deployed at: ", vm.toString(address(timelockVault))
+    //   )
+    // );
 
     vm.stopBroadcast();
 

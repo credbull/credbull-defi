@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { console2 } from "forge-std/console2.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { IProduct } from "./IProduct.sol";
+import { IProduct } from "../IProduct.sol";
 
 contract YieldSubscription is IProduct {
     using EnumerableSet for EnumerableSet.UintSet;
@@ -17,13 +17,17 @@ contract YieldSubscription is IProduct {
 
     uint256 public startTime;
     uint256 public timePeriodsElapsed;
+    uint256 public maturityPeriod;
+    uint256 public coolDownPeriod;
 
     mapping(address => mapping(uint256 => uint256)) public userReserve;
     mapping(address => EnumerableSet.UintSet) private userWindows;
 
-    constructor(address _asset, uint256 _startTime) {
+    constructor(address _asset, uint256 _startTime, uint256 _maturiyPeriod, uint256 _coolDownPeriod) {
         asset = _asset;
         startTime = _startTime;
+        maturityPeriod = _maturiyPeriod;
+        coolDownPeriod = _coolDownPeriod;
     }
 
     function deposit(uint256 assets, address receiver) public returns (uint256) {
@@ -41,7 +45,7 @@ contract YieldSubscription is IProduct {
         uint256 noOfWindowsPassed = currentWindow - redeemTimePeriod;
         require(balance > 0, "YieldSubscription: No balance to withdraw");
         require(shares <= balance, "YieldSubscription: Amount exceeds the balance");
-        require(noOfWindowsPassed >= 30, "YieldSubscription: Withdrawal not allowed before 30 days");
+        require(noOfWindowsPassed >= maturityPeriod, "YieldSubscription: Withdrawal not allowed before tenure maturity");
 
         uint256 interestEarned = interestEarnedForWindowForAmount(user, shares, redeemTimePeriod);
 
@@ -92,7 +96,7 @@ contract YieldSubscription is IProduct {
         for (uint256 i = 0; i < length; i++) {
             uint256 window = userWindows[user].at(i);
             uint256 noOfWindowsPassed = currentWindow - window;
-            if (noOfWindowsPassed <= 30) {
+            if (noOfWindowsPassed <= maturityPeriod) {
                 continue;
             }
             amountToTransfer += (userReserve[user][window] + interestEarnedForWindow(user, window));
@@ -131,12 +135,14 @@ contract YieldSubscription is IProduct {
         uint256 userDeposit = userReserve[user][window];
         uint256 noOfWindowsPassed = getCurrentTimePeriodsElapsed() - window;
 
-        if (noOfWindowsPassed > 30) {
-            uint256 interestEarnedBeofreRollOver = (userDeposit * yieldPerWindow() * 30) / 1e20;   
+        console2.log("No of windows passed: %s", noOfWindowsPassed);
+
+        if (noOfWindowsPassed > maturityPeriod) {
+            uint256 interestEarnedBeofreRollOver = (userDeposit * yieldPerWindow() * maturityPeriod) / 1e20;   
             return (
                 interestEarnedBeofreRollOver
-                    + ((userDeposit + interestEarnedBeofreRollOver) * yieldPerWindowRollOver() * (noOfWindowsPassed - 30))
-            ) / 1e20;
+                    + ((userDeposit + interestEarnedBeofreRollOver) * yieldPerWindowRollOver() * (noOfWindowsPassed - maturityPeriod)) / 1e20
+            );
         }
         return ((userDeposit) * (yieldPerWindow() * noOfWindowsPassed)) / 1e20;
     }
@@ -153,10 +159,10 @@ contract YieldSubscription is IProduct {
         userDeposit = amount;
         uint256 noOfWindowsPassed = getCurrentTimePeriodsElapsed() - window;
 
-        if (noOfWindowsPassed > 30) {
+        if (noOfWindowsPassed > maturityPeriod) {
             return (
-                (userDeposit * yieldPerWindow() * 30)
-                    + (userDeposit * yieldPerWindowRollOver() * (noOfWindowsPassed - 30))
+                (userDeposit * yieldPerWindow() * maturityPeriod)
+                    + (userDeposit * yieldPerWindowRollOver() * (noOfWindowsPassed - maturityPeriod))
             ) / 1e20;
         }
         return ((userDeposit) * (yieldPerWindow() * noOfWindowsPassed)) / 1e20;

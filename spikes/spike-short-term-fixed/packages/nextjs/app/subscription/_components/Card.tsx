@@ -18,6 +18,8 @@ const ViewSection = (props: any) => {
     const [timePeriodsElapsed, setTimePeriodsElapsed] = useState<BigInt>(0n);
     const [interestEarned, setInterestEarned] = useState<Number>(0);
 
+    const { refresh } = props;
+
     const { refetch: userReserveRefetch } = useReadContract({
         address: props.data.deployedContractData.address,
         functionName: 'totalUserDeposit',
@@ -39,9 +41,25 @@ const ViewSection = (props: any) => {
         args: [props.data.address],
     });
 
-    
+    if(!refresh) {
+      userReserveRefetch().then((data) => {
+        setUserData(Number(Number(data.data) / 10 ** 6));
+      });
+
+      getCurrentTimePeriodsElapsedRefetch().then((data) => {
+        setTimePeriodsElapsed(data.data as BigInt);
+      });
+
+      getInterestEarnedRefetch().then((data) => {
+        setInterestEarned((Number(data.data) * 1000 / 10 ** 6)/1000);
+      });
+    }
+
     useEffect(() => {   
         console.log('props', props);
+        console.log(
+          'refresh', props.refresh
+        )
 
         if(userData === 0)
           userReserveRefetch().then((data) => {
@@ -50,7 +68,6 @@ const ViewSection = (props: any) => {
 
         if(timePeriodsElapsed === 0n) {
           getCurrentTimePeriodsElapsedRefetch().then((data) => {
-            console.log('getCurrentTimePeriodsElapsed', data.data);
             setTimePeriodsElapsed(data.data as BigInt);
           });
         }
@@ -61,11 +78,6 @@ const ViewSection = (props: any) => {
           });
         }
     }, []);
-
-    useEffect(() => {
-      console.log('userData', userData);
-      console.log('timePeriodsElapsed', timePeriodsElapsed);
-    }, [timePeriodsElapsed, userData]);
 
     return <>
         <div className='view-section'>
@@ -80,17 +92,30 @@ const ViewSection = (props: any) => {
 
 const Card = () => {
     const [amount, setAmount] = useState('');
-    const [redeemPeriod, setRedeemPeriod] = useState('');
+    const tenureDuration = 30n;
+    const [ debugTimeElapsedValue, setDebugTimeElapsedValue ] = useState('');
     const { address } = useAccount();
+    const [refresh, setRefresh] = useState(false);
     const { targetNetwork } = useTargetNetwork();
     const writeTxn = useTransactor();
-    console.log(contractsData);
     const { data: deployedContractDataUSDC, isLoading: deployedContractLoadingUSDC } = useDeployedContractInfo(contractNames[0]);
     const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractNames[1]);
     const { data: result, writeContractAsync } = useWriteContract();
 
+    console.log(contractNames);
+
+    const { data: contractData, refetch } = useReadContract({
+      address: deployedContractData?.address,
+      functionName: 'getCurrentTimePeriodsElapsed',
+      abi: deployedContractData?.abi,
+      args: [],
+    });
+
+
   const handleDeposit = () => {
     if(deployedContractData) {
+
+      const amountWithDecimal = BigInt(Number(amount) * 10 ** 6);
 
       if(writeContractAsync) {
         try {
@@ -99,9 +124,9 @@ const Card = () => {
               address: deployedContractData.address,
               functionName: 'deposit',
               abi: deployedContractData.abi,
-              args: [BigInt(amount), address as string],
+              args: [amountWithDecimal, address as string],
             });
-          writeTxn(makeWriteWithParams);
+          writeTxn(makeWriteWithParams).then((data) => {console.log('setting refresh', data); setRefresh(!refresh) });
         } catch (e: any) {
           console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:deposit ~ error", e);
         }
@@ -110,8 +135,16 @@ const Card = () => {
     }
   };
 
-  const handleRedeem = () => {
+  const handleRedeem = async() => {
     if(deployedContractData) {
+
+      const amountWithDecimal = BigInt(Number(amount) * 10 ** 6);
+      const timePeriodsElapsedData = await refetch();
+     
+      const timePeriodsElapsed = BigInt(timePeriodsElapsedData.data as bigint);
+
+      const redeemAt = timePeriodsElapsed % tenureDuration;
+      console.log('redeemAt', redeemAt);
 
       if(writeContractAsync) {
         try {
@@ -120,9 +153,51 @@ const Card = () => {
               address: deployedContractData.address,
               functionName: 'redeemAtPeriod',
               abi: deployedContractData.abi,
-              args: [BigInt(amount), address as string, address as string, BigInt(redeemPeriod)],
+              args: [amountWithDecimal, address as string, address as string, redeemAt],
             });
-          writeTxn(makeWriteWithParams);
+          writeTxn(makeWriteWithParams).then((data) => {console.log('setting refresh', data); setRefresh(!refresh) });
+        } catch (e: any) {
+          console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:redeem  ~ error", e);
+        }
+      }
+      console.log('result', result);
+    }
+  }
+
+  const refill = () => {
+    if(deployedContractDataUSDC && deployedContractData) {
+
+      if(writeContractAsync) {
+        try {
+          const makeWriteWithParams = () =>
+            writeContractAsync({
+              address: deployedContractDataUSDC.address,
+              functionName: 'mint',
+              abi: deployedContractDataUSDC.abi,
+              args: [deployedContractData.address  as string, BigInt(100_000_000)],
+            });
+          writeTxn(makeWriteWithParams).then((data) => {console.log('setting refresh', data); setRefresh(!refresh) });
+        } catch (e: any) {
+          console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:redeem  ~ error", e);
+        }
+      }
+      console.log('result', result);
+    }
+  }
+
+  const handleSetTime = () => {
+    if(deployedContractData) {
+
+      if(writeContractAsync) {
+        try {
+          const makeWriteWithParams = () =>
+            writeContractAsync({
+              address: deployedContractData.address,
+              functionName: 'setCurrentTimePeriodsElapsed',
+              abi: deployedContractData.abi,
+              args: [BigInt(debugTimeElapsedValue)],
+            });
+          writeTxn(makeWriteWithParams).then((data) => {console.log('setting refresh', data); setRefresh(!refresh) });
         } catch (e: any) {
           console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:redeem  ~ error", e);
         }
@@ -148,35 +223,59 @@ const Card = () => {
   }
 
   return (
-    <div className='align-items-start border-2 rounded border-neutral-100 p-10'>
-      <h3>Enter Amount</h3>
-      <input
-        type="number"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        placeholder="Enter amount"
-        style={{ padding: '10px', width: '100%', marginBottom: '10px' }}
-      />
-      <div className='mt-5'>
-        <button onClick={handleDeposit} className='p-2 border rounded border-neutral-100 w-1/2'>
-            Deposit
-        </button>
+    <div className="container max-w-full border-2 rounded border-neutral-100 p-10">
+      <div className="columns-2 align-items-start mt-6">
+          <div className="input-section mr-12">
+            <div className='align-items-start'>
+              <h3>Enter Amount</h3>
+              <input
+                type="text"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Enter amount"
+                style={{ padding: '10px', width: '100%', marginBottom: '10px' }}
+                onFocus={(e) => e.target.addEventListener("wheel", function (e) { e.preventDefault() }, { passive: false })}
+              />
+              <div className='buttons-section mt-5'>
+                <button onClick={handleDeposit} className='p-2 border rounded border-neutral-100 min-w-32 mr-4'>
+                    Deposit
+                </button>
+                <button onClick={handleRedeem} className='p-2 border rounded border-neutral-100 min-w-32'>
+                    Redeem
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="view-section">
+            <ViewSection data={{deployedContractData: deployedContractData, address: address}} refresh={refresh} />
+          </div>
       </div>
+      <hr className='mt-8 mb-8' />
+      <div className="debug-section mt-6">
+        <h2 className='text-xl mb-10'> Debug Section</h2>
+        <h3>Set time elapsed</h3>
+        <input
+                type="text"
+                value={debugTimeElapsedValue}
+                onChange={(e) => setDebugTimeElapsedValue(e.target.value)}
+                placeholder="Set time elapsed"
+                style={{ padding: '10px', width: '40%' }}
+                onFocus={(e) => e.target.addEventListener("wheel", function (e) { e.preventDefault() }, { passive: false })}
+              />
 
-      <div className="mt-5">
-        <h3> Enter redeem period </h3>
-        <input 
-          type='number' 
-          value={redeemPeriod} 
-          onChange={(e) => setRedeemPeriod(e.target.value )}
-          style={{ padding: '10px', width: '50%' }}
-        />
-        <button onClick={handleRedeem} className='p-2 border rounded border-neutral-100 w-1/2'>
-            Redeem
-        </button>
+          <div className='buttons-section mt-5'>
+                <button onClick={handleSetTime} className='p-2 border rounded border-neutral-100 min-w-32 mr-4'>
+                    Set
+                </button>
+          </div>
+
+          <div className='buttons-section mt-5'>
+                <h3>Sending interest amount to the vault</h3>
+                <button onClick={refill} className='p-2 border rounded border-neutral-100 min-w-32 mr-4'>
+                    Refill
+                </button>
+          </div>
       </div>
-
-        <ViewSection data={{deployedContractData: deployedContractData, address: address}} />
     </div>
   );
 };
