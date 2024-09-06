@@ -121,7 +121,8 @@ abstract contract InterestTest is Test {
   ) internal virtual {
 
     uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
-    uint256 expectedYield = principal + vault.calcInterest(principal, vault.getTenor());
+    uint256 expectedInterest = vault.calcInterest(principal, vault.getTenor());
+    uint256 expectedPrincipalAndInterest = principal + expectedInterest;
 
     vault.setCurrentTimePeriodsElapsed(numTimePeriods); // set deposit period prior to deposit
     uint256 actualSharesDeposit = vault.previewDeposit(principal);
@@ -130,19 +131,16 @@ abstract contract InterestTest is Test {
 
     // check previewRedeem
     assertApproxEqAbs(
-      expectedYield,
+      expectedPrincipalAndInterest,
       vault.previewRedeem(actualSharesDeposit),
       TOLERANCE,
       assertMsg("previewDeposit/previewRedeem yield does not equal principal + interest", vault, numTimePeriods)
     );
 
-    // check previewWithdraw (uses assets as basis of assets returned)
-    // should be the same as convertToShares
-    uint256 actualSharesConvertToShares = vault.convertToSharesAtPeriod(expectedYield, numTimePeriods);
-    uint256 actualSharesPreviewWithdraw = vault.previewWithdraw(expectedYield);
-    assertEq(actualSharesPreviewWithdraw, actualSharesConvertToShares, assertMsg("previewWithdraw should equal convertToShares", vault, numTimePeriods));
-
-    vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed); // restore the vault to previous state
+    // check previewWithdraw (uses assets as basis of shares returned)
+    // as per definition - should be the same as convertToShares
+    assertEq(vault.previewWithdraw(principal), actualSharesDeposit, assertMsg("previewWithdraw incorrect - principal", vault, numTimePeriods));
+    assertEq(vault.previewWithdraw(expectedInterest), vault.convertToSharesAtPeriod(expectedInterest, numTimePeriods), assertMsg("previewWithdraw incorrect - interest", vault, numTimePeriods));
   }
 
   // verify deposit and redeem.  These update vault assets and shares.

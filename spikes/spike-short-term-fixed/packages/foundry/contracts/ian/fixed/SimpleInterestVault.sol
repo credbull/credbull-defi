@@ -144,10 +144,10 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
   ) public view returns (uint256 assets) {
     if (shares < SCALE) return 0; // no assets for fractional shares
 
-    // Trying to redeem before TENOR - just give back the Discounted Amount.
+    // redeeming before TENOR - give back the Discounted Amount.
     // This is a slash of Principal (and no Interest).
     // TODO - need to account for deposits after TENOR.  e.g. 30 day tenor, deposit on day 31 and redeem on day 32.
-    if (numTimePeriodsElapsed < TENOR) return shares;
+    if (numTimePeriodsElapsed < TENOR) return 0;
 
     uint256 impliedNumTimePeriodsAtDeposit = (numTimePeriodsElapsed - TENOR);
 
@@ -186,9 +186,8 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
   function previewWithdraw(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256 shares) {
     if (assets < SCALE) return 0; // no shares for fractional assets
 
-    // Trying to withdraw before TENOR - just give back the assets
-    // TODO - need to account for deposits after TENOR.  e.g. 30 day tenor, deposit on day 31 and redeem on day 32.
-    if (currentTimePeriodsElapsed < TENOR) return assets;
+    // withdraw before TENOR - not enough time periods to calculate Discounted properly
+    if (currentTimePeriodsElapsed < TENOR) return 0;
 
     return calcDiscounted(assets, currentTimePeriodsElapsed - TENOR);
   }
