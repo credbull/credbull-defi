@@ -2,6 +2,8 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.23;
 
+import { console2 as console } from "forge-std/console2.sol";
+
 import { ITimelock } from "@credbull/contracts/interfaces/ITimelock.sol";
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
@@ -95,11 +97,14 @@ contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
      * @param value The amount of tokens to be unlocked.
      */
     function _unlockInternal(address account, uint256 lockReleasePeriod, uint256 value) internal {
+        console.log("Current=", currentPeriod, "Release=", lockReleasePeriod);
+
         if (currentPeriod < lockReleasePeriod) {
             revert LockDurationNotExpired(currentPeriod, lockReleasePeriod);
         }
 
         uint256 unlockableAmount = previewUnlock(account, lockReleasePeriod);
+        console.log("Unlockable=", unlockableAmount, "Unlock=", value);
         if (unlockableAmount < value) {
             revert InsufficientLockedBalance(unlockableAmount, value);
         }
