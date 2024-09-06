@@ -31,36 +31,51 @@ function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) external
 
 [Workbook with further Examples](https://docs.google.com/spreadsheets/d/1Uc6-JW8fJx6PcD_GxczW6EkvacxXuxjZhSDRqB0ZLcY/edit?gid=1548301220#gid=1548301220)
 
+## Price
+
+**Price** shows the growth of interest over time for a Principal of 1.  Price at at day 1 is 1 and increases as interest is applied daily.
+
+### Price Formula
+Price is defined as Principal of "1" plus the interest that has accrued over time:
+`Price = P + Simple Interest`
+`Price = P + (IR * P * m) / f` //substituting formula for Simple Interest
+`Price = 1 + (IR * m) / f` // substituting Principal = 1
+
+### Price Example
+Let's look at Price for our Credbull 12% APY and 30 day maturity product over different days.
+- Price Day 0  ` 1 + (0.12 *  0) / 360 = 1`
+- Price Day 1  ` 1 + (0.12 *  1) / 360 ≈ 1.00033`
+- Price Day 30 ` 1 + (0.12 * 30) / 360 = 1.01`
+---
+
 ## Discounted Principal
 
-**Discounted Principal** refers to the principal amount excluding interest accrued prior to my investment. This concept ensures that new investors 
-do not receive credit for interest that was accrued before their investment was made.
+**Discounted Principal** refers to the principal amount, adjusted by the price to account for accrued interest. This concept ensures 
+that new investors do not receive credit for interest that accrued prior to their investment.
 
 ### Discounted Formula
-`Discounted Principal =  P - Interest[Prior]`
-- **P**: The original Principal (initial amount).
-- **Interest[Prior]**: interest that would have accrued if investing from the starting period
+`Discounted Principal = P / Price`
+- **P**: The original Principal (initial amount). 
+- **Price**: Represents the interest accrued over time for a Principal of 1.
 
 ### Discounted Example
-Now imagine Bob invests $1,000, in the Credbull 12% APY and 30 day maturity on **DAY 2**.  In this case, Discounted Principal would be $999.67.
+Now imagine Bob invests $1,000 in the Credbull 12% APY and 30 day maturity on **DAY 1**.  In this case, Bob's Discounted Principal would be $999.67.
 
 ```
-Discounted Principal = P - Interest[Prior] 
-= $,1000 - (0.12 * $1,000 * 1 / 360) 
-= $1,000 - $0.33 = $999.67
+Price(Day 1)  = 1 + (0.12 * 1 / 360) = 1.00033
+Discounted = P / Price = $1,000 / 1.00033 ≈ $999.67
 ```
 
 ### Discounted Implementation
-The SimpleInterest `calcDiscounted` function calculates the Discounted Principal after subtracting the interest accrued over a specified number 
-of time periods. 
+The SimpleInterest `calcDiscounted` function calculates the Discounted Principal by dividing the principal by the Price.
 ```Solidity
 /**
- * @notice Calculates the discounted principal by subtracting the accrued interest.
- * @param principal The initial principal amount.
- * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
- * @return discounted The discounted principal amount.
- */
-function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) external view returns (uint256 discounted);
+* @notice Calculates the discounted principal by dividing the principal by the price.
+* @param principal The initial principal amount.
+* @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
+* @return The discounted principal amount.
+*/
+function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256);
 ```
 
 In ERC4626 Vaults, `convertToShares` converts a given amount of assets into shares. In SimpleInterestVault, we have a similar `convertToSharesAtPeriod` 
@@ -83,19 +98,22 @@ function convertToSharesAtPeriod(uint256 assetsInWei, uint256 numTimePeriodsElap
 **Calculating the Principal from the Discounted Value** involves reversing the discounting process to recover the original principal amount. 
 
 ### Principal from Discounted Formula
-To calculate the original Principal (P) from the Discounted Value (D), you use the following formula:
+To calculate the original Principal from the Discounted Principal, you use the following formula:
 
-`Principal = D + Interest[Prior]`
+`P = D * Price`
 
 - **P**: The original Principal (initial amount).
-- **D**: The Discounted Principal (Principal minus the accrued interest).
-- **Interest[Prior]**: interest that would have accrued if investing from the starting period
+- **D**: The Discounted Principal (Principal divided by Price).
+- **Price**: Represents the interest accrued over time for a Principal of 1.
 
 ### Principal from Discounted Example
 
-Let's stick with Bob and our Credbull Product and the Discounted Principal of $999.67 from above.  In this case, Principal would be the expected $1,000.  
+Let's stick with Bob and our Credbull Product and the Discounted Principal of $999.67 from above.  Reversing give us the expected Principal of $1,000.  
 
-`P = Discounted Principal + Interest[Prior] = $999.67 + $0.33 = $1,000`
+```
+Price(Day 1) = 1 + (0.12 * 1 / 360) = 1.00033
+P = P * Price = $999.67 * 1.00033 ≈ $1,000
+```
 
 ### Relationship Between Principal and Discounted
 
@@ -107,31 +125,30 @@ The SimpleInterest `calcPrincipalFromDiscounted` allows you to recover the origi
 is required to calculate the correct assets (Principal) for the given shares (discounted Principal) for example at redemption.
 ```Solidity
 /**
-* @notice Recovers the original principal from a discounted value by adding back the interest.
-* @param discounted The discounted principal amount.
-* @param numTimePeriodsElapsed The number of time periods for which interest was calculated.
-* @return principal The recovered original principal amount.
-*/
+ * @notice Recovers the original principal from a discounted value by multiplying it with the Price.
+ * @param discounted The discounted principal amount.
+ * @param numTimePeriodsElapsed The number of time periods for which interest was calculated.
+ * @return principal The recovered original principal amount.
+ */
 function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed) external view returns (uint256 principal);
 ```
 
-In ERC4626 Vaults, `convertToAssetes` converts a given amount of shares into assets. In SimpleInterestVault, we have a similar 
-`convertToAssetsAtPeriod` function to determine the number of assets (Principal + Accrued Interest) for the given shares (Discounted Principal) 
-at the time period.
+In ERC4626 Vaults, `convertToAssetes` converts a given amount of shares into assets. In SimpleInterestVault, we have a similar `convertToAssetsAtPeriod` 
+function that uses the Price to calculate the number of assets (Principal + Accrued Interest) for the given shares (Discounted Principal) at the time period.
 ```Solidity
 /**
  * @notice Converts a given amount of shares to assets based on a specific time period.
  * @param sharesInWei The amount of shares to convert.
  * @param numTimePeriodsElapsed The number of time periods elapsed.
- * @return The number of assets corresponding to the shares at the specified time period.
+ * @return assetsInWei The number of assets corresponding to the shares at the specified time period.
  */
 function convertToAssetsAtPeriod(uint256 sharesInWei, uint256 numTimePeriodsElapsed) public view returns (uint256 assetsInWei)
 {
-    uint256 timePeriodsAtDeposit = (numTimePeriodsElapsed - TENOR);
+    uint256 impliedNumTimePeriodsAtDeposit = (numTimePeriodsElapsed - TENOR);
 
-    uint256 principal = calcPrincipalFromDiscounted(sharesInWei, timePeriodsAtDeposit);
+    uint256 _principal = calcPrincipalFromDiscounted(sharesInWei, impliedNumTimePeriodsAtDeposit);
 
-    return principal + calcInterest(principal, TENOR);
+    return _principal + calcInterest(_principal, TENOR);
 }
 ```
 
@@ -162,20 +179,13 @@ original Principal(P1) and the interest from period 1.
 
 `Principal (P2) = $1,000 + $10 = $1,010`
    
-2. To calculate the Discounted Principal for P2, we need the following calculations
+2. To calculate the Discounted Principal for P2 we just need the Price and Principal(P2) at rollover of 30 days.
 
-- Interest[Prior], which includes all accrued interest to date.  This is 30 days, or 1 tenor's worth. 
-
-`Interest[Prior] = 0.12 * $1,010 * 30 / 360 = $10.08` 
-
-- Discounted Principal (P2) given Principal (P2) of $1,010 and Interest[Prior] of $10.08 is: 
 ```
-Discounted Principal (P2) = P2 - Interest[Prior]`
-Discounted Principal (P2) = $1,010 - $10.08 ≈ $999.92
-```
+Price(Day 30) = 1 + 0.12 * 30 / 360 = $1.01 
+Discounted(P2) = P(P2) / Price = $1,010 / $1.01 = $1,000
+``` 
 
-_This calculation shows that the Discounted Principal for investment period 2 is less than Principal(P2) of $1,010 and 
-even the original Principal(P1) of $1,000!_
 
 ### Rollover Implementation
 The TimelockInterestVault `rolloverUnlocked` function reinvests unlocked tokens into a new period.  Rollover is implemented as follows:
@@ -184,8 +194,8 @@ The TimelockInterestVault `rolloverUnlocked` function reinvests unlocked tokens 
 The function `convertToAssets`, which is defined as Principal + Interest, is used to calculate this.
 - Next, we use `convertToShares` with Principal (P2) to calculate the new shares for period 2. These new shares represent the 
 Discounted Principal (P2) for the second period.
-- As illustrated in the Rollover Example with Alice, the 'Discounted Principal' (P2) might be less than the 'Discounted Principal' (P1) 
-due to interest accrual. In such cases, `rolloverUnlocked` calculates the difference and burns any "excess" amount of shares.
+- The 'Discounted Principal' (P2) might be less than the 'Discounted Principal' (P1) due to interest accrual. In such cases, `rolloverUnlocked` 
+calculates the difference and burns any "excess" amount of shares.
 - Finally, we call TimelockIERC1155's `rolloverUnlocked` function to remove the lock on the shares from period 1 and lock them for period 2.
 
 
@@ -215,43 +225,3 @@ function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 va
     TimelockIERC1155.rolloverUnlocked(account, lockReleasePeriod, sharesForNextPeriod);
 }
 ```
-
-----
-
-# Appendix
-### TimelockInterestVault
-
-The TimelockInterestVault contract combines functionality from both the TimelockIERC1155 and SimpleInterestVault contracts. This integration allows the vault to manage investments with both time-locking and interest accrual features. The contract:
-
-- TimelockIERC1155: Manages the locking and unlocking of tokens based on time periods (Tenor).
-- SimpleInterestVault: Manages interest accrual and calculations related to the principal and interest earned over time.
-
-### Inverse Relationship Between Discounted and Principal
-
-**The Inverse Relationship** between the Discounted Principal and the Original Principal is useful in verifying our logic whether mathematically or implemented in code.
-
-### Mathematical Proof
-We intend to prove that
-Original Principal (P) -> Discounted Principal (D) -> Recovered Principal (P')
-
-yields P' = P.
-
-#### Step 1: Calculate the Discounted Principal
-
-Discounted Principal (D) is calculated as:
-- `D = P - Interest[Prior]`  // from the Discounted Principal formula
-- `Interest[Prior] = (IR * P * m) / f` // from the Simple Interest formula
-- `D = P - (IR * P * m) / f` // substitute interest calculation
-
-#### Step 2: Recover the Original Principal from Discounted Principal
-
-To recover the original principal (P') from the Discounted Principal (D), we reverse the previous operation:
-
-- `P' = D + Interest[Prior]`
-- `P' = (P - (IR * P * m) / f) + (IR * P * m) / f` // Substituting D from Step 1:
-
-### Step 3: Simplify the Expression
-Simplifying the expression:
-
-- `P' = P - (IR * P * m) / f + (IR * P * m) / f`
-- `P' = P`  // terms involving the interest cancel out

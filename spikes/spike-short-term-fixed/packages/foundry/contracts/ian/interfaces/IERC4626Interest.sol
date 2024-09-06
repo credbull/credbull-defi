@@ -10,22 +10,22 @@ import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpl
  * @dev Extension to Interface Vault Standard
  */
 interface IERC4626Interest is IERC4626, ISimpleInterest {
-    function convertToSharesAtPeriod(uint256 assets, uint256 numTimePeriodsElapsed)
-        external
-        view
-        returns (uint256 shares);
+  function convertToSharesAtPeriod(
+    uint256 assets,
+    uint256 numTimePeriodsElapsed
+  ) external view returns (uint256 shares);
 
-    function convertToAssetsAtPeriod(uint256 shares, uint256 numTimePeriodsElapsed)
-        external
-        view
-        returns (uint256 assets);
+  function convertToAssetsAtPeriod(
+    uint256 shares,
+    uint256 numTimePeriodsElapsed
+  ) external view returns (uint256 assets);
 
-    // TODO - confirm if required on interface
-    function getCurrentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
+  // TODO - confirm if required on interface
+  function getCurrentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
 
-    // TODO - confirm if required on interface
-    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
+  // TODO - confirm if required on interface
+  function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
 
-    // TODO - confirm if required on interface
-    function getTenor() external view returns (uint256 tenor);
+  // TODO - confirm if required on interface
+  function getTenor() external view returns (uint256 tenor);
 }

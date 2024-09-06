@@ -2,3 +2,5 @@
 . "$(dirname "$0")/_/husky.sh"
 
 yarn lint-staged --verbose
+
+forge test --root spikes/spike-short-term-fixed/packages/foundry
