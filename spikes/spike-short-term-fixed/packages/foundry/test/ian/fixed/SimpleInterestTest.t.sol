@@ -62,4 +62,27 @@ contract SimpleInterestTest is InterestTest {
     uint256 day30 = 30;
     assertEq((101 * scale / 100), simpleInterest.calcPriceScaled(day30)); // 1 + (0.12 * 30) / 360 = 1.01
   }
+
+  function test_SimpleInterestTest_Rounding() public {
+    uint256 SCALE = 1e3; // Using a scale of 1000 (to represent 3 decimal places)
+
+    uint256 principal = 1000 * SCALE;
+    uint256 price = 1005 * SCALE;
+
+    // Floor rounding: Discounted = Principal / Price
+//    Discounted (Floor)  = floor(Principal / Price)
+//                        = floor(1000 / 1.005)
+//                        ≈ floor(995.02)
+//                        = 995
+    uint256 discountedFloor = principal.mulDiv(SCALE, price, Math.Rounding.Floor);
+    assertEq(discountedFloor, 995, "Floor rounding failed");
+
+//    Discounted (Ceil) = ceil(Principal / Price)
+//                      = ceil(1000 / 1.005)
+//                      ≈ ceil(995.02)
+//                      = 996
+    uint256 discountedCeil = principal.mulDiv(SCALE, price, Math.Rounding.Ceil);
+    assertEq(discountedCeil, 996, "Ceiling rounding failed");
+  }
+
 }

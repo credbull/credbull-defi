@@ -30,7 +30,7 @@ import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpl
 contract SimpleInterest is ISimpleInterest {
   using Math for uint256;
 
-  uint256 public immutable INTEREST_RATE_PERCENTAGE;
+  uint256 public immutable INTEREST_RATE; // IR as %, e.g. 15 for 15% (or 0.15)
   uint256 public immutable FREQUENCY;
 
   uint256 public immutable DECIMALS;
@@ -49,7 +49,7 @@ contract SimpleInterest is ISimpleInterest {
    * @param decimals The number of decimals for scaling calculations.
    */
   constructor(uint256 interestRatePercentage, uint256 frequency, uint256 decimals) {
-    INTEREST_RATE_PERCENTAGE = interestRatePercentage;
+    INTEREST_RATE = interestRatePercentage;
     FREQUENCY = frequency;
     DECIMALS = decimals;
     SCALE = 10 ** decimals;
@@ -69,29 +69,14 @@ contract SimpleInterest is ISimpleInterest {
       revert PrincipalLessThanScale(principal, SCALE);
     }
 
-    uint256 interestScaled = _calcInterestWithScale(principal, numTimePeriodsElapsed);
+    uint256 interestScaled = _calcInterestWithScale(principal, numTimePeriodsElapsed, INTEREST_RATE);
 
     return _unscale(interestScaled);
   }
 
   /**
-   * @notice Internal function to calculate the interest with scaling applied.
-   * @param principal The initial principal amount.
-   * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
-   * @return interestScaled The scaled interest amount.
-   */
-  function _calcInterestWithScale(
-    uint256 principal,
-    uint256 numTimePeriodsElapsed
-  ) internal view returns (uint256 interestScaled) {
-
-    uint256 _interestScaled = _calcInterestWithScale(principal, numTimePeriodsElapsed, INTEREST_RATE_PERCENTAGE);
-
-    return _interestScaled;
-  }
-
-  /**
    * @notice Internal function to calculate the interest with scaling applied using the interest rate percentage.
+    * @dev - return value is scaled as Interest * SCALE.  For example: Interest=1.01 and Scale=100 returns 101
    * @param principal The initial principal amount.
    * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
    * @param interestRatePercentage The interest rate as a percentage.
@@ -112,6 +97,7 @@ contract SimpleInterest is ISimpleInterest {
   /**
    * @notice Calculates the price for a given number of periods elapsed.
    * Price represents the accrued interest over time for a Principal of 1.
+   * @dev - return value is scaled as Price * SCALE.  For example: Price=1.01 and Scale=100 returns 101
    * @param numTimePeriodsElapsed The number of time periods that have elapsed.
    * @return priceScaled The price scaled by the internal scale factor.
    */
@@ -119,7 +105,7 @@ contract SimpleInterest is ISimpleInterest {
     uint256 numTimePeriodsElapsed
   ) public view virtual returns (uint256 priceScaled) {
 
-    uint256 interestScaled = _calcInterestWithScale(PAR, numTimePeriodsElapsed);
+    uint256 interestScaled = _calcInterestWithScale(PAR, numTimePeriodsElapsed, INTEREST_RATE);
 
     uint256 _priceScaled = _scale(PAR) + interestScaled;
 
@@ -188,7 +174,7 @@ contract SimpleInterest is ISimpleInterest {
    * @return interestRateInPercentage The interest rate as a percentage.
    */
   function getInterestInPercentage() public view virtual returns (uint256 interestRateInPercentage) {
-    return INTEREST_RATE_PERCENTAGE;
+    return INTEREST_RATE;
   }
 
   /**

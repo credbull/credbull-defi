@@ -6,7 +6,7 @@ import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.so
 import { TimelockTest } from "@credbull-spike-test/ian/timelock/TimelockTest.t.sol";
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SimpleUSDC } from "@credbull-spike/contracts/kk/SimpleUSDC.sol";
+import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
 
 contract TimelockVaultTest is TimelockTest {
   ERC20 private underlyingAsset;

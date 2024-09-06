@@ -23,6 +23,8 @@ contract DeployScript is ScaffoldETHDeploy {
     address owner = vm.addr(deployerPrivateKey);
     address user = vm.addr(userPrivateKey);
 
+    console.logString(string.concat("Owner / Deployer address = ", vm.toString(owner)));
+
     uint256 MINT_AMOUNT = 10_000_000_000_000; //10 Million
 
     SimpleUSDC simpleUSDC = new SimpleUSDC(MINT_AMOUNT); //10 Million
@@ -58,16 +60,6 @@ contract DeployScript is ScaffoldETHDeploy {
 
     shortTermYield.setCurrentTimePeriodsElapsed(1);
     shortTermYieldRollover.setCurrentTimePeriodsElapsed(1);
-
-    // uint256 apy = 12; // APY in percentage
-    // uint256 frequencyValue = 360;
-    // uint256 tenor = 30;
-    // TimelockInterestVault timelockVault = new TimelockInterestVault(owner, simpleUSDC, apy, frequencyValue, tenor);
-    // console.logString(
-    //   string.concat(
-    //     "TimelockInterestVault deployed at: ", vm.toString(address(timelockVault))
-    //   )
-    // );
 
     vm.stopBroadcast();
 

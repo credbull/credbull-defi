@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpleInterest.sol";
-import { SimpleUSDC } from "@credbull-spike/contracts/kk/SimpleUSDC.sol";
+import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
 
 import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
