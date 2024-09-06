@@ -174,6 +174,25 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     return convertToAssetsAtPeriod(shares, currentTimePeriodsElapsed);
   }
 
+
+
+  // =============== Withdraw ===============
+
+  /**
+   * @notice Previews the number of shares to be burned if withdrawing the given number of assets
+   * @param assets The number of assets to withdraw.
+   * @return shares The number of shares that would be burned
+   */
+  function previewWithdraw(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256 shares) {
+    if (assets < SCALE) return 0; // no shares for fractional assets
+
+    // Trying to withdraw before TENOR - just give back the assets
+    // TODO - need to account for deposits after TENOR.  e.g. 30 day tenor, deposit on day 31 and redeem on day 32.
+    if (currentTimePeriodsElapsed < TENOR) return assets;
+
+    return calcDiscounted(assets, currentTimePeriodsElapsed - TENOR);
+  }
+
   // =============== ERC4626 and ERC20 ===============
 
   /**

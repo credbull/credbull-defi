@@ -55,6 +55,21 @@ contract SimpleInterestVaultTest is InterestTest {
     assertEq(0, vault.convertToShares(scaleMinus1), "convert to shares not scaled");
   }
 
+  function test__SimpleInterestVaultTest__Daily360_Periods_0_1_30_31() public {
+    uint256 apy = 12; // APY in percentage
+    uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
+    uint256 tenor = 30;
+
+    IERC4626Interest vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
+
+    uint256 principal = 100 * SCALE;
+
+    testInterestAtPeriod(principal, vault, 0);
+    testInterestAtPeriod(principal, vault, 1);
+    testInterestAtPeriod(principal, vault, 30);
+    testInterestAtPeriod(principal, vault, 31);
+  }
+
   function test__SimpleInterestVaultTest__Monthly() public {
     uint256 apy = 12; // APY in percentage
     uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.MONTHLY);
@@ -134,6 +149,7 @@ contract SimpleInterestVaultTest is InterestTest {
     // test the vault related
     IERC4626Interest vault = (IERC4626Interest)(address(simpleInterest));
     super.testConvertToAssetAndSharesAtPeriod(principal, vault, numTimePeriods); // previews only
+    super.testPreviewDepositAndPreviewRedeem(principal, vault, numTimePeriods); // previews only
     super.testDepositAndRedeemAtPeriod(owner, alice, principal, vault, numTimePeriods); // actual deposits/redeems
   }
 }

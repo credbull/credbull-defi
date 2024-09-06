@@ -233,6 +233,7 @@ contract TimelockInterestVaultTest is InterestTest {
     // test the vault related
     IERC4626Interest vault = (IERC4626Interest)(address(simpleInterest));
     super.testConvertToAssetAndSharesAtPeriod(principal, vault, numTimePeriods); // previews only
+    super.testPreviewDepositAndPreviewRedeem(principal, vault, numTimePeriods); // previews only
     super.testDepositAndRedeemAtPeriod(owner, alice, principal, vault, numTimePeriods); // actual deposits/redeems
   }
 }
