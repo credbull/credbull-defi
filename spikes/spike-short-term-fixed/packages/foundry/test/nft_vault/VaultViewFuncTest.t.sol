@@ -10,13 +10,6 @@ contract VaultViewFuncTest is BaseTest, UserGenerator {
     _deployContracts();
   }
 
-  function openVault(
-    uint256 vaultOpenTime
-  ) public {
-    vm.prank(vaultOwner);
-    vault.openVault(vaultOpenTime);
-  }
-
   function test_RevertIf_VaultIsNotOpen() public {
     vm.prank(vaultOwner);
     vault.unpause();
@@ -197,5 +190,39 @@ contract VaultViewFuncTest is BaseTest, UserGenerator {
     y = ABDKMath64x64.log_2(y);
     r = ABDKMath64x64.toUInt(y);
     assertEq(r, 9);
+  }
+
+  function test_calculateCompoundingAmount() public view {
+    uint256 principal = 2000 * 10 ** 6;
+    uint256 apy = 10;
+    uint256 noOfTerms = 1;
+    uint256 termPeriods = 30;
+
+    uint256 compoundingAmount = vault.calculateCompoundingAmount(principal, apy, noOfTerms, termPeriods);
+
+    uint256 simulateAmount = principal * termPeriods * apy / 36500 + principal;
+
+    assertEq(compoundingAmount, simulateAmount);
+
+    // noOfTerms: 2
+    noOfTerms = 2;
+    simulateAmount = simulateAmount * termPeriods * apy / 36500 + simulateAmount;
+    compoundingAmount = vault.calculateCompoundingAmount(principal, apy, noOfTerms, termPeriods);
+
+    assertApproxEqAbs(compoundingAmount, simulateAmount, 1);
+
+    // noOfTerms: 3
+    noOfTerms = 3;
+
+    simulateAmount = simulateAmount * termPeriods * apy / 36500 + simulateAmount;
+    compoundingAmount = vault.calculateCompoundingAmount(principal, apy, noOfTerms, termPeriods);
+    assertApproxEqAbs(compoundingAmount, simulateAmount, 1);
+
+    // noOfTerms: 4
+    noOfTerms = 4;
+
+    simulateAmount = simulateAmount * termPeriods * apy / 36500 + simulateAmount;
+    compoundingAmount = vault.calculateCompoundingAmount(principal, apy, noOfTerms, termPeriods);
+    assertApproxEqAbs(compoundingAmount, simulateAmount, 1);
   }
 }

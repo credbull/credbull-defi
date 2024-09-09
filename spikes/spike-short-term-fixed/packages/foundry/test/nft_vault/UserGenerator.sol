@@ -14,7 +14,7 @@ contract UserGenerator is Test {
 
     address user = address(uint160(uint256(keccak256(abi.encodePacked(counter, block.timestamp, block.prevrandao)))));
 
-    usdc.mint(user, 10000 * 10 ** usdc.decimals());
+    usdc.mint(user, 100000 * 10 ** usdc.decimals());
 
     return user;
   }

@@ -168,7 +168,7 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
       revert NotOwnerOfNFT();
     }
 
-    uint256 withdrawalAmount = calculateAccumulatedAmount(tokenId);
+    uint256 withdrawalAmount = getWithdrawalAmount(tokenId);
 
     if (amount > withdrawalAmount) {
       revert AmountIsBiggerThanWithdrawalAmount(withdrawalAmount);
@@ -331,18 +331,18 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
 
   /**
    * @dev Returns detailed investment information for each tokenId.
-   * @return remainingLockPeriods The number of days remaining until the withdrawal can be made.
+   * @return periodsUntilTermEnd The number of days remaining until the withdrawal can be made.
    * @return currentYield The interest accrued up to the current date.
-   * @return withdrawalAmount The total amount accumulated to current date, including interest.
+   * @return accumulatedAmount The total amount accumulated to current date, including interest.
    */
   function getDepositInfo(
     uint256 tokenId
-  ) external view returns (uint256 remainingLockPeriods, uint256 currentYield, uint256 withdrawalAmount) {
+  ) external view returns (uint256 periodsUntilTermEnd, uint256 currentYield, uint256 accumulatedAmount) {
     DepositInfo memory depositInfo = depositInfos[tokenId];
 
-    remainingLockPeriods = LOCK_TIME_PERIODS - getTimePeriodsElapsedInCurrentTerm(depositInfo.timePeriodsFromOpen);
-    withdrawalAmount = calculateAccumulatedAmount(tokenId);
-    currentYield = withdrawalAmount - depositInfo.principal;
+    periodsUntilTermEnd = LOCK_TIME_PERIODS - getTimePeriodsElapsedInCurrentTerm(depositInfo.timePeriodsFromOpen);
+    accumulatedAmount = calculateAccumulatedAmount(tokenId);
+    currentYield = accumulatedAmount - depositInfo.principal;
   }
 
   function _calculateLastTermWithdrawal(

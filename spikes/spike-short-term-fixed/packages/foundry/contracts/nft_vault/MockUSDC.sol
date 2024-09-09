@@ -14,4 +14,8 @@ contract MockUSDC is ERC20Permit {
   function burn(address account, uint256 amount) external {
     _burn(account, amount);
   }
+
+  function decimals() public pure override returns (uint8) {
+    return 6;
+  }
 }
