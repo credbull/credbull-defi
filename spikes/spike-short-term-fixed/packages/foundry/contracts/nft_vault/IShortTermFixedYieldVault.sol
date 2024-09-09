@@ -6,9 +6,13 @@ interface IShortTermFixedYieldVault {
   event Deposited(address indexed user, uint256 amount, uint256 tokenId, uint256 time);
   event Withdrawn(address indexed user, uint256 amount, uint256 tokenId, uint256 time);
 
-  function openVault(uint256 _vaultOpenTime) external;
+  function openVault(
+    uint256 _vaultOpenTime
+  ) external;
 
-  function deposit(uint256 amount) external returns (uint256 tokenId);
+  function deposit(
+    uint256 amount
+  ) external returns (uint256 tokenId);
 
   function depositWithPermit(
     uint256 amount,
@@ -19,10 +23,14 @@ interface IShortTermFixedYieldVault {
   ) external returns (uint256 tokenId);
 
   function withdraw(uint256 tokenId, uint256 amount) external;
-  function withdrawMax(uint256 tokenId) external;
+  function withdrawMax(
+    uint256 tokenId
+  ) external;
 
   function getDepositInfo(
     uint256 tokenId
   ) external view returns (uint256 remainingLockPeriods, uint256 currentYield, uint256 withdrawalAmount);
-  function canWithdraw(uint256 tokenId) external view returns (bool);
+  function canWithdraw(
+    uint256 tokenId
+  ) external view returns (bool);
 }

@@ -10,7 +10,9 @@ contract VaultViewFuncTest is BaseTest, UserGenerator {
     _deployContracts();
   }
 
-  function openVault(uint256 vaultOpenTime) public {
+  function openVault(
+    uint256 vaultOpenTime
+  ) public {
     vm.prank(vaultOwner);
     vault.openVault(vaultOpenTime);
   }
@@ -37,70 +39,72 @@ contract VaultViewFuncTest is BaseTest, UserGenerator {
     assertEq(vaultOpenTime, vault.vaultOpenTime());
   }
 
-  function testFuzz_getCurrentTimePeriodsElapsed(uint64 secondsElapsed) public {
+  function testFuzz_getCurrentTimePeriodsElapsed(
+    uint64 secondsElapsed
+  ) public {
     uint256 vaultOpenTime = block.timestamp + 1000;
     openVault(vaultOpenTime);
 
     vm.warp(vaultOpenTime + secondsElapsed);
-    assertEq(vault.getCurrentTimePeriodsElapsed() , secondsElapsed / 86400);
+    assertEq(vault.getCurrentTimePeriodsElapsed(), secondsElapsed / 86400);
   }
 
   function testFuzz_getDepositLockTimePeriods(uint64 secondsElapsed, uint64 timePeriodsFromOpen) public {
-      vm.assume(timePeriodsFromOpen <= type(uint64).max / 86400 && secondsElapsed >= timePeriodsFromOpen * 86400);
+    vm.assume(timePeriodsFromOpen <= type(uint64).max / 86400 && secondsElapsed >= timePeriodsFromOpen * 86400);
 
-      uint256 vaultOpenTime = block.timestamp + 1000;
-      
-      openVault(vaultOpenTime);
+    uint256 vaultOpenTime = block.timestamp + 1000;
 
-      vm.warp(vaultOpenTime + secondsElapsed);
+    openVault(vaultOpenTime);
 
-      uint256 simul_result = (secondsElapsed / 86400 - timePeriodsFromOpen) <= 1 ? 0 : (secondsElapsed / 86400 - timePeriodsFromOpen - 1);
+    vm.warp(vaultOpenTime + secondsElapsed);
 
-      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , simul_result);
-    
+    uint256 simul_result =
+      (secondsElapsed / 86400 - timePeriodsFromOpen) <= 1 ? 0 : (secondsElapsed / 86400 - timePeriodsFromOpen - 1);
+
+    assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen), simul_result);
   }
 
   function test_getDepositLockTimePeriods() public {
-      uint256 vaultOpenTime = block.timestamp + 1000;
-      openVault(vaultOpenTime);
+    uint256 vaultOpenTime = block.timestamp + 1000;
+    openVault(vaultOpenTime);
 
-      uint256 secondsElapsed = 45000;
-      
-      // timePeriods when deposit
-      uint256 timePeriodsFromOpen = 0;
+    uint256 secondsElapsed = 45000;
 
-      vm.warp(vaultOpenTime + secondsElapsed);
-      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 0);
+    // timePeriods when deposit
+    uint256 timePeriodsFromOpen = 0;
 
-      secondsElapsed = 1 days + 4300;
-      vm.warp(vaultOpenTime + secondsElapsed);
-      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 0);
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen), 0);
 
-      secondsElapsed = 2 days + 1;
-      vm.warp(vaultOpenTime + secondsElapsed);
-      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 1);
+    secondsElapsed = 1 days + 4300;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen), 0);
 
-      secondsElapsed = 31 days + 2100;
-      vm.warp(vaultOpenTime + secondsElapsed);
-      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 30);
+    secondsElapsed = 2 days + 1;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen), 1);
 
-      secondsElapsed = 61 days + 10;
-      vm.warp(vaultOpenTime + secondsElapsed);
-      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 60);
+    secondsElapsed = 31 days + 2100;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen), 30);
 
-      timePeriodsFromOpen = 24;
+    secondsElapsed = 61 days + 10;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen), 60);
 
-      secondsElapsed = 49 days + 3420;
-      vm.warp(vaultOpenTime + secondsElapsed);
-      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 24);
+    timePeriodsFromOpen = 24;
 
-      secondsElapsed = 55 days + 12;
-      vm.warp(vaultOpenTime + secondsElapsed);
-      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 30);
+    secondsElapsed = 49 days + 3420;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen), 24);
 
-      secondsElapsed = 85 days;
-      vm.warp(vaultOpenTime + secondsElapsed);
-      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 60);
+    secondsElapsed = 55 days + 12;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen), 30);
+
+    secondsElapsed = 85 days;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen), 60);
   }
 
   function test_getTimePeriodsElapsedInCurrentTerm() public {
@@ -146,12 +150,13 @@ contract VaultViewFuncTest is BaseTest, UserGenerator {
     vm.warp(vaultOpenTime + secondsElapsed);
     assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 16);
     assertEq(vault.getNoOfTermsElapsed(timePeriodsFromOpen), 4);
+
     // ----------------------
     timePeriodsFromOpen = 27;
 
     secondsElapsed = timePeriodsFromOpen * 1 days + 1200;
     vm.warp(vaultOpenTime + secondsElapsed);
-    
+
     assertEq(vault.getCurrentTimePeriodsElapsed(), 27);
     assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen), 0);
 
@@ -159,6 +164,21 @@ contract VaultViewFuncTest is BaseTest, UserGenerator {
     vm.warp(vaultOpenTime + secondsElapsed);
     assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 1);
     assertEq(vault.getNoOfTermsElapsed(timePeriodsFromOpen), 0);
+  }
+
+  function test_getTimePeriodsInCurrentTermStart() public {
+    uint256 vaultOpenTime = block.timestamp + 1000;
+    openVault(vaultOpenTime);
+
+    uint256 secondsElapsed = 42 days + 1200;
+    uint256 timePeriodsFromOpen = 0;
+    vm.warp(vaultOpenTime + secondsElapsed);
+
+    uint256 newTimePeriodsFromOpen = vault.getTimePeriodsInCurrentTermStart(timePeriodsFromOpen);
+    assertEq(newTimePeriodsFromOpen, 30);
+
+    timePeriodsFromOpen = newTimePeriodsFromOpen;
+    assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 11);
   }
 
   function test_ABDKMath64x64Test() public pure {

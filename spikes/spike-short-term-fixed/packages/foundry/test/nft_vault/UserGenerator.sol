@@ -7,7 +7,9 @@ import { MockUSDC } from "../../contracts/nft_vault/MockUSDC.sol";
 contract UserGenerator is Test {
   uint256 private counter;
 
-  function generateUser(MockUSDC usdc) internal returns (address) {
+  function generateUser(
+    MockUSDC usdc
+  ) internal returns (address) {
     ++counter;
 
     address user = address(uint160(uint256(keccak256(abi.encodePacked(counter, block.timestamp, block.prevrandao)))));

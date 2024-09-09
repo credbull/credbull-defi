@@ -22,7 +22,6 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
   struct DepositInfo {
     uint256 principal;
     uint256 timePeriodsFromOpen;
-    uint256 lastWithdrawTermNo;
   }
 
   /**
@@ -35,8 +34,7 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
    */
   mapping(address => uint256) public lastTokenId;
 
-  uint256 public constant FIXED_APY = 6;
-  uint256 public constant ROLLOVER_BONUS = 1;
+  uint256 public constant FIXED_APY = 10;
 
   /// @dev This is the unit for all date calculation.
   uint256 public constant TIME_PERIOD = 1 days;
@@ -69,7 +67,9 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
     _;
   }
 
-  constructor(address _usdcToken) ERC721("ShortTermFixedYieldVault", "ST-FY-V") Ownable(msg.sender) {
+  constructor(
+    address _usdcToken
+  ) ERC721("ShortTermFixedYieldVault", "ST-FY-V") Ownable(msg.sender) {
     usdcToken = _usdcToken;
     _pause();
   }
@@ -78,7 +78,9 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
    * @dev Set the start time when users can begin depositing into the Vault.
    * @param _vaultOpenTime Deposits are allowed after this time
    */
-  function openVault(uint256 _vaultOpenTime) external onlyOwner {
+  function openVault(
+    uint256 _vaultOpenTime
+  ) external onlyOwner {
     if (_vaultOpenTime < block.timestamp) {
       revert InvalidOpenTime();
     }
@@ -103,7 +105,9 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
    * @param amount the amount of depositing USDC
    * @return tokenId The NFT token ID that a user receives after depositing USDC into the vault.
    */
-  function deposit(uint256 amount) public whenNotPaused isVaultOpen returns (uint256 tokenId) {
+  function deposit(
+    uint256 amount
+  ) public whenNotPaused isVaultOpen returns (uint256 tokenId) {
     if (amount == 0) {
       revert AmountMustBeGreaterThanZero();
     }
@@ -126,8 +130,7 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
 
       _mint(msg.sender, tokenId);
 
-      DepositInfo memory newDeposit =
-        DepositInfo({ principal: amount, timePeriodsFromOpen: currentTimePeriodsElapsed, lastWithdrawTermNo: 0 });
+      DepositInfo memory newDeposit = DepositInfo({ principal: amount, timePeriodsFromOpen: currentTimePeriodsElapsed });
 
       depositInfos[tokenId] = newDeposit;
 
@@ -165,12 +168,7 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
       revert NotOwnerOfNFT();
     }
 
-    // can withdraw
-    if (!canWithdraw(tokenId)) {
-      revert WithdrawalNotAllowed(tokenId);
-    }
-
-    uint256 withdrawalAmount = getWithdrawalAmount(tokenId);
+    uint256 withdrawalAmount = calculateAccumulatedAmount(tokenId);
 
     if (amount > withdrawalAmount) {
       revert AmountIsBiggerThanWithdrawalAmount(withdrawalAmount);
@@ -184,8 +182,7 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
 
       depositInfos[tokenId] = DepositInfo({
         principal: withdrawalAmount - amount,
-        lastWithdrawTermNo: getNoOfTermsElapsed(depositInfo.timePeriodsFromOpen),
-        timePeriodsFromOpen: depositInfo.timePeriodsFromOpen
+        timePeriodsFromOpen: getTimePeriodsInCurrentTermStart(depositInfo.timePeriodsFromOpen)
       });
     }
 
@@ -194,7 +191,9 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
     emit Withdrawn(msg.sender, amount, tokenId, block.timestamp);
   }
 
-  function withdrawMax(uint256 tokenId) public {
+  function withdrawMax(
+    uint256 tokenId
+  ) public {
     uint256 withdrawalAmount = getWithdrawalAmount(tokenId);
 
     withdraw(tokenId, withdrawalAmount);
@@ -204,7 +203,9 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
    * @dev Check whether the invest deposited under the given tokenId can be withdrawn at the current time.
    * @param tokenId The NFT ID you want to withdraw
    */
-  function canWithdraw(uint256 tokenId) public view returns (bool) {
+  function canWithdraw(
+    uint256 tokenId
+  ) public view returns (bool) {
     uint256 timePeriodsFromOpen = depositInfos[tokenId].timePeriodsFromOpen;
 
     return getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen) <= WITHDRAWAL_TIME_PERIODS
@@ -235,7 +236,9 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
    * @dev Calculates the elapsed time periods in the current Term.
    * For example, if the lock time periods is 73 days, it returns 13 days.
    */
-  function getTimePeriodsElapsedInCurrentTerm(uint256 depositTimePeriodsFromOpen) public view returns (uint256) {
+  function getTimePeriodsElapsedInCurrentTerm(
+    uint256 depositTimePeriodsFromOpen
+  ) public view returns (uint256) {
     unchecked {
       return getDepositLockTimePeriods(depositTimePeriodsFromOpen) % LOCK_TIME_PERIODS;
     }
@@ -245,15 +248,23 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
    * @dev Calculates the number of terms elapsed in locking
    * For example, if the lock time periods is 73 days, it returns 2
    */
-  function getNoOfTermsElapsed(uint256 depositTimePeriodsFromOpen) public view returns (uint256) {
+  function getNoOfTermsElapsed(
+    uint256 depositTimePeriodsFromOpen
+  ) public view returns (uint256) {
     return getDepositLockTimePeriods(depositTimePeriodsFromOpen) / LOCK_TIME_PERIODS;
+  }
+
+  function getTimePeriodsInCurrentTermStart(
+    uint256 depositTimePeriodsFromOpen
+  ) public view returns (uint256) {
+    return getNoOfTermsElapsed(depositTimePeriodsFromOpen) * LOCK_TIME_PERIODS + depositTimePeriodsFromOpen;
   }
 
   /**
    * @dev Calculates compounding amount
    * principal * (1 + r) ^ t = principal * POW(2, t * log2(1 + r))
    * @param principal the amount of [principal]
-   * @param apy will be used to calculate [r] (FIXED_APY + ROLLOVER_BONUS)
+   * @param apy will be used to calculate [r] (FIXED_APY)
    * @param noOfTerms [t]
    * @param termPeriods number of periods in one term (ex: 30 days)
    */
@@ -292,54 +303,30 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
     return scaledAmount / DECIMALS;
   }
 
+  function getWithdrawalAmount(
+    uint256 tokenId
+  ) public view returns (uint256) {
+    return _calculateLastTermWithdrawal(tokenId);
+  }
+
   /**
    * @dev Calculates amount (principal + interest)
    * @return withdrawal amount
    */
-  function getWithdrawalAmount(uint256 tokenId) public view returns (uint256) {
+  function calculateAccumulatedAmount(
+    uint256 tokenId
+  ) public view returns (uint256) {
+    uint256 accumulatedAmount = _calculateLastTermWithdrawal(tokenId);
+
     DepositInfo memory depositInfo = depositInfos[tokenId];
 
-    if (depositInfo.principal == 0) {
-      return 0;
-    }
-
-    uint256 noOfTermsElapsed = getNoOfTermsElapsed(depositInfo.timePeriodsFromOpen);
     uint256 timePeriodsElapsedInCT = getTimePeriodsElapsedInCurrentTerm(depositInfo.timePeriodsFromOpen);
 
-    uint256 withdrawalAmount = depositInfo.principal;
-
-    /**
-     * Calculate first term yield + principal
-     */
-    if (depositInfo.lastWithdrawTermNo == 0) {
-      withdrawalAmount = calculateAmountWithFixedInterest(
-        withdrawalAmount, FIXED_APY, noOfTermsElapsed > 0 ? LOCK_TIME_PERIODS : timePeriodsElapsedInCT
-      );
+    if (timePeriodsElapsedInCT > 0) {
+      accumulatedAmount = calculateAmountWithFixedInterest(accumulatedAmount, FIXED_APY, timePeriodsElapsedInCT);
     }
 
-    if (noOfTermsElapsed > 0) {
-      uint256 remainingTerms = depositInfo.lastWithdrawTermNo == 1
-        ? (noOfTermsElapsed - depositInfo.lastWithdrawTermNo)
-        : (noOfTermsElapsed - depositInfo.lastWithdrawTermNo - 1);
-
-      /**
-       * Calculate compounding Amount first
-       */
-      if (remainingTerms > 0) {
-        withdrawalAmount =
-          calculateCompoundingAmount(withdrawalAmount, FIXED_APY + ROLLOVER_BONUS, remainingTerms, LOCK_TIME_PERIODS);
-      }
-
-      /**
-       * Calculate current term interest
-       */
-      if (timePeriodsElapsedInCT > WITHDRAWAL_TIME_PERIODS) {
-        withdrawalAmount =
-          calculateAmountWithFixedInterest(withdrawalAmount, FIXED_APY + ROLLOVER_BONUS, timePeriodsElapsedInCT);
-      }
-    }
-
-    return withdrawalAmount;
+    return accumulatedAmount;
   }
 
   /**
@@ -354,7 +341,27 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
     DepositInfo memory depositInfo = depositInfos[tokenId];
 
     remainingLockPeriods = LOCK_TIME_PERIODS - getTimePeriodsElapsedInCurrentTerm(depositInfo.timePeriodsFromOpen);
-    withdrawalAmount = getWithdrawalAmount(tokenId);
+    withdrawalAmount = calculateAccumulatedAmount(tokenId);
     currentYield = withdrawalAmount - depositInfo.principal;
+  }
+
+  function _calculateLastTermWithdrawal(
+    uint256 tokenId
+  ) internal view returns (uint256) {
+    DepositInfo memory depositInfo = depositInfos[tokenId];
+
+    if (depositInfo.principal == 0) {
+      return 0;
+    }
+
+    uint256 noOfTermsElapsed = getNoOfTermsElapsed(depositInfo.timePeriodsFromOpen);
+
+    uint256 withdrawalAmount = depositInfo.principal;
+
+    if (noOfTermsElapsed > 0) {
+      withdrawalAmount = calculateCompoundingAmount(withdrawalAmount, FIXED_APY, noOfTermsElapsed, LOCK_TIME_PERIODS);
+    }
+
+    return withdrawalAmount;
   }
 }
