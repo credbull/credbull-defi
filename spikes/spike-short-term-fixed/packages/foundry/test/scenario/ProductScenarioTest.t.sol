@@ -131,11 +131,15 @@ contract ProductScenarioTest is Test {
         vm.startPrank(ALICE);
         asset.approve(address(_product), depositAmount);
         uint256 shares = _product.deposit(depositAmount, ALICE);
+        vm.stopPrank();
 
-        // NOTE (JL,2024-09-04): We advance Time and the Vault Period.
-        // vm.warp(vm.getBlockTimestamp() + 1 days);
-        _product.setCurrentTimePeriodsElapsed(1);
+        // Advance the periods elapsed, but to less than the Tenor, so lock period still in effect.
+        uint256 elapsedPeriods = TENOR / 2;
+        _product.setCurrentTimePeriodsElapsed(elapsedPeriods);
 
+        vm.startPrank(ALICE);
+        // NOTE (JL,2024-09-09): Currently this is not a possible test due to the way that Periods Elapsed is advanced.
+        // vm.expectRevert(abi.encodeWithSelector(ITimelock.LockDurationNotExpired.selector, 0, elapsedPeriods));
         vm.expectRevert(abi.encodeWithSelector(ITimelock.InsufficientLockedBalance.selector, 0, shares));
         _product.redeem(shares, ALICE, ALICE);
         vm.stopPrank();
@@ -156,20 +160,19 @@ contract ProductScenarioTest is Test {
         vm.startPrank(ALICE);
         asset.approve(address(_product), depositAmount);
         uint256 shares = _product.deposit(depositAmount, ALICE);
-        console.log("Deposit=", depositAmount, "Shares=", shares);
-
-        // NOTE (JL,2024-09-04): We advance Time and the Vault Period.
-        vm.warp(vm.getBlockTimestamp() + 1 days);
-        _product.setCurrentTimePeriodsElapsed(1);
-
-        uint256 redeemed = _product.redeem(shares, ALICE, ALICE);
-        console.log("Redeemed=", redeemed);
         vm.stopPrank();
 
+        _product.setCurrentTimePeriodsElapsed(TENOR);
+
+        vm.startPrank(ALICE);
+        uint256 redeemed = _product.redeem(shares, ALICE, ALICE);
+        vm.stopPrank();
+
+        // NOTE (JL,2024-09-09): Returns adjused for the 12% APY in effect.
+        uint256 expectedRedeemed = 15_150 ether;
         assertNotEq(0, redeemed, "No assets were redeemed");
         assertGt(redeemed, depositAmount, "Incorrect number of assets redeemed");
-
-        // assertEq(shares, share.balanceOf(ALICE), "Incorrect number of shares allocated to Alice");
+        assertEq(expectedRedeemed, redeemed, "Incorrect number of assets redeemed");
     }
 
     /**
@@ -198,7 +201,28 @@ contract ProductScenarioTest is Test {
      *
      * DEMO Flow B1
      */
-    function test_Scenario_Term30_RolloverInvestmentReturnsAreCorrect() public { }
+    function test_Scenario_Term30_RolloverInvestmentReturnsAreCorrect() public {
+        uint256 depositAmount = 40_000 ether;
+
+        vm.startPrank(ALICE);
+        asset.approve(address(_product), depositAmount);
+        uint256 shares = _product.deposit(depositAmount, ALICE);
+        vm.stopPrank();
+
+        // Advance the periods elapsed, but to less than the Tenor, so lock period still in effect.
+        uint256 elapsedPeriods = TENOR * 2;
+        _product.setCurrentTimePeriodsElapsed(elapsedPeriods);
+
+        vm.startPrank(ALICE);
+        uint256 redeemed = _product.redeem(shares, ALICE, ALICE);
+        vm.stopPrank();
+
+        // NOTE (JL,2024-09-09): Returns adjused for the 12% APY in effect.
+        uint256 expectedRedeemed = 41_200 ether;
+        assertNotEq(0, redeemed, "No assets were redeemed");
+        assertGt(redeemed, depositAmount, "Incorrect number of assets redeemed");
+        assertEq(expectedRedeemed, redeemed, "Incorrect number of assets redeemed");
+    }
 
     /**
      * Scenario: User partially rolls over their investment
@@ -248,8 +272,6 @@ contract ProductScenarioTest is Test {
      *     Invested amount: 150,000 USDC
      *     Current yield: 1,500 USDC (half of the 90-day yield)
      *     Remaining lock time: 45 days
-     *
-     * DEMO Flow A1
      */
     function SKIP_test_Scenario_Term90_UserViewsInvestment() public { }
 
