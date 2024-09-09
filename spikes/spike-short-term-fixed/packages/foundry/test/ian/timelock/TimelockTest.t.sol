@@ -46,6 +46,26 @@ abstract contract TimelockTest is Test {
     vm.stopPrank();
   }
 
+  function test__Timelock__GetAllLocks() public {
+    uint256 depositAmount1 = 1000;
+    uint256 depositAmount2 = 500;
+
+    vm.startPrank(owner);
+    timelock.lock(alice, lockReleasePeriod, depositAmount1);
+    timelock.lock(alice, rolloverPeriod, depositAmount2);
+    vm.stopPrank();
+
+    // Fetch all locks for Alice
+    uint256[] memory lockPeriods = timelock.getLockPeriods(alice);
+
+    // Assert the correct number of locks returned
+    assertEq(lockPeriods.length, 2, "incorrect number of lock periods");
+
+    // Assert the details of the first lock
+    assertEq(lockPeriods[0], lockReleasePeriod, "incorrect lock period for first lock");
+    assertEq(lockPeriods[1], rolloverPeriod, "incorrect lock period for second lock");
+  }
+
   function test__Timelock__UnlockFailsBeforeTime() public {
     uint256 depositAmount = 1000;
 

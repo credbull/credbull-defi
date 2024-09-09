@@ -7,6 +7,7 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IRollable } from "@credbull-spike/contracts/ian/interfaces/IRollable.sol";
+import { console2 } from "forge-std/console2.sol";
 
 /**
  * @title TimelockIERC1155
@@ -43,20 +44,20 @@ abstract contract TimelockIERC1155 is ITimelock, IRollable, ERC1155, ERC1155Supp
    * @notice Locks a specified amount of tokens for a particular account until a given release period.
    * @param account The address of the account whose tokens are to be locked.
    * @param lockReleasePeriod The period during which these tokens will be released.
-   * @param value The amount of tokens to be locked.
+   * @param amount The amount of tokens to be locked.
    */
-  function lock(address account, uint256 lockReleasePeriod, uint256 value) public override onlyOwner {
-    _lockInternal(account, lockReleasePeriod, value);
+  function lock(address account, uint256 lockReleasePeriod, uint256 amount) public override onlyOwner {
+    _lockInternal(account, lockReleasePeriod, amount);
   }
 
   /**
    * @dev Internal function to lock tokens for a specified period.
    * @param account The address of the account whose tokens are to be locked.
    * @param lockReleasePeriod The period during which these tokens will be released.
-   * @param value The amount of tokens to be locked.
+   * @param amount The amount of tokens to be locked.
    */
-  function _lockInternal(address account, uint256 lockReleasePeriod, uint256 value) internal {
-    _mint(account, lockReleasePeriod, value, "");
+  function _lockInternal(address account, uint256 lockReleasePeriod, uint256 amount) internal {
+    _mint(account, lockReleasePeriod, amount, "");
   }
 
   /**
@@ -77,19 +78,19 @@ abstract contract TimelockIERC1155 is ITimelock, IRollable, ERC1155, ERC1155Supp
    * @notice Unlocks a specified amount of tokens for a particular account once the lock release period has been reached.
    * @param account The address of the account whose tokens are to be unlocked.
    * @param lockReleasePeriod The period during which these tokens will be released.
-   * @param value The amount of tokens to be unlocked.
+   * @param amount The amount of tokens to be unlocked.
    */
-  function unlock(address account, uint256 lockReleasePeriod, uint256 value) public onlyOwner {
-    _unlockInternal(account, lockReleasePeriod, value);
+  function unlock(address account, uint256 lockReleasePeriod, uint256 amount) public onlyOwner {
+    _unlockInternal(account, lockReleasePeriod, amount);
   }
 
   /**
    * @dev Internal function to unlock tokens for a specific period.
    * @param account The address of the account whose tokens are to be unlocked.
    * @param lockReleasePeriod The period during which these tokens will be released.
-   * @param value The amount of tokens to be unlocked.
+   * @param amount The amount of tokens to be unlocked.
    */
-  function _unlockInternal(address account, uint256 lockReleasePeriod, uint256 value) internal {
+  function _unlockInternal(address account, uint256 lockReleasePeriod, uint256 amount) internal {
     uint256 currentPeriod = getCurrentPeriod();
 
     if (currentPeriod < lockReleasePeriod) {
@@ -97,36 +98,36 @@ abstract contract TimelockIERC1155 is ITimelock, IRollable, ERC1155, ERC1155Supp
     }
 
     uint256 unlockableAmount = previewUnlock(account, lockReleasePeriod);
-    if (unlockableAmount < value) {
-      revert InsufficientLockedBalanceAtPeriod(account, unlockableAmount, value, lockReleasePeriod);
+    if (unlockableAmount < amount) {
+      revert InsufficientLockedBalanceAtPeriod(account, unlockableAmount, amount, lockReleasePeriod);
     }
 
-    _burn(account, lockReleasePeriod, value);
+    _burn(account, lockReleasePeriod, amount);
   }
 
   /**
    * @notice Rolls over a specified amount of unlocked tokens for a new lock period.
    * @param account The address of the account whose tokens are to be rolled over.
    * @param lockReleasePeriod The period during which these tokens will be released.
-   * @param value The amount of tokens to be rolled over.
+   * @param amount The amount of tokens to be rolled over.
    */
   function rolloverUnlocked(
     address account,
     uint256 lockReleasePeriod,
-    uint256 value
+    uint256 amount
   ) public virtual override onlyOwner {
     uint256 unlockableAmount = this.previewUnlock(account, lockReleasePeriod);
     uint256 lockDuration = getLockDuration();
 
-    if (value > unlockableAmount) {
-      revert InsufficientLockedBalanceAtPeriod(account, unlockableAmount, value, lockReleasePeriod);
+    if (amount > unlockableAmount) {
+      revert InsufficientLockedBalanceAtPeriod(account, unlockableAmount, amount, lockReleasePeriod);
     }
 
-    _burn(account, lockReleasePeriod, value);
+    _burn(account, lockReleasePeriod, amount);
 
     uint256 rolloverLockReleasePeriod = lockReleasePeriod + lockDuration;
 
-    _mint(account, rolloverLockReleasePeriod, value, "");
+    _mint(account, rolloverLockReleasePeriod, amount, "");
   }
 
   /**
@@ -136,9 +137,9 @@ abstract contract TimelockIERC1155 is ITimelock, IRollable, ERC1155, ERC1155Supp
     address from,
     address to,
     uint256[] memory ids,
-    uint256[] memory values
+    uint256[] memory amount
   ) internal override(ERC1155, ERC1155Supply) {
-    ERC1155Supply._update(from, to, ids, values);
+    ERC1155Supply._update(from, to, ids, amount);
   }
 
   /**
@@ -161,4 +162,33 @@ abstract contract TimelockIERC1155 is ITimelock, IRollable, ERC1155, ERC1155Supp
    * @param _currentPeriod The new current period.
    */
   function setCurrentPeriod(uint256 _currentPeriod) public virtual;
+
+
+  /**
+   * @dev Returns lock periods for a given account where the account has a non-zero balance.
+   * @param account The address of the account whose lock periods are to be retrieved.
+   * @return lockPeriods An array of uint256 values representing the periods during which the account has locked tokens.
+   */
+  function getLockPeriods(address account) external view override returns (uint256[] memory) {
+    uint256 maxLockPeriod = getCurrentPeriod() + getLockDuration() + 1;
+
+    uint256[] memory tempLockPeriods = new uint256[](maxLockPeriod);
+
+    uint256 accountLockCount = 0;
+
+    // collect periods with non-zero balances
+    for (uint256 i = 0; i <= maxLockPeriod; i++) {
+      if (balanceOf(account, i) > 0) {
+        tempLockPeriods[accountLockCount] = i;
+        accountLockCount++;
+      }
+    }
+
+    uint256[] memory lockPeriods = new uint256[](accountLockCount); // right-sized array for return
+    for (uint256 i = 0; i < accountLockCount; i++) {
+      lockPeriods[i] = tempLockPeriods[i];
+    }
+
+    return lockPeriods;
+  }
 }
