@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { console2 } from "forge-std/console2.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { IProduct } from "../IProduct.sol";
+import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
 
 contract YieldSubscription is IProduct {
     using EnumerableSet for EnumerableSet.UintSet;
@@ -138,7 +138,8 @@ contract YieldSubscription is IProduct {
         console2.log("No of windows passed: %s", noOfWindowsPassed);
 
         if (noOfWindowsPassed > maturityPeriod) {
-            uint256 interestEarnedBeofreRollOver = (userDeposit * yieldPerWindow() * maturityPeriod) / 1e20;   
+            uint256 interestEarnedBeofreRollOver = (userDeposit * yieldPerWindow() * maturityPeriod) / 1e20;  
+
             return (
                 interestEarnedBeofreRollOver
                     + ((userDeposit + interestEarnedBeofreRollOver) * yieldPerWindowRollOver() * (noOfWindowsPassed - maturityPeriod)) / 1e20

@@ -14,11 +14,10 @@ const ShortTerm: NextPage = () => {
     contractNames[0],
   );
   contractNames.splice(0, 1);
-
   return (
     <>
       <div className="main-container mt-8 p-10">
-        <h1 className="text-2xl"> Short term fixed yield - 30 days </h1>
+        <h1 className="text-2xl"> Execution helpers </h1>
         {contractNames.map((contractName: ContractName, i: number) => {
           return (
             <Card

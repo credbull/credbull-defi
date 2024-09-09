@@ -89,14 +89,14 @@ contract YieldSubscriptionTest is Test {
     }
 
     function test__Subscription__Rollover() public {
-        uint256 deposit = 50_000e6;
+        uint256 deposit = 40_000e6;
         vm.startPrank(user);
         usdc.mint(user, deposit);
         usdc.approve(address(subscription), deposit);
         subscription.setCurrentTimePeriodsElapsed(1);
         subscription.deposit(deposit, user);
 
-        subscription.setCurrentTimePeriodsElapsed(32);
+        subscription.setCurrentTimePeriodsElapsed(62);
         uint256 interestEarned = subscription.interestEarnedForWindow(user, 1);
         console2.log("Interest earned", interestEarned);
     }

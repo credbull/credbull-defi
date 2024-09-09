@@ -264,4 +264,26 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
   {
     return SimpleInterest.getInterestInPercentage();
   }
+
+    /**
+     * @notice Returns the interest earned by a user for a specific window of time.
+     * @param user The address of the user.
+     * @param window The specific window of time for which to calculate the interest earned.
+     * @return The amount of interest earned by the user for the specified window.
+     */
+    function interestEarnedForWindow(address user, uint256 window) public  view returns (uint256) {}
+
+    /**
+     * @notice Returns the total interest earned by a user over all windows
+     * @param user The address of the user.
+     * @return The total amount of interest earned by the user.
+     */
+    function totalInterestEarned(address user) public view returns (uint256) {}
+
+    /**
+     * @notice Returns the total amount of assets deposited by a user.
+     * @param user The address of the user.
+     * @return The total amount of assets deposited by the user.
+     */
+    function totalUserDeposit(address user) public view returns (uint256) {}
 }

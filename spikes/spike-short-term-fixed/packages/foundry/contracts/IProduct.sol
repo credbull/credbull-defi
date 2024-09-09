@@ -67,4 +67,27 @@ interface IProduct {
      * @param currentTimePeriodsElapsed The number of time periods to set as elapsed.
      */
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
+
+
+    /**
+     * @notice Returns the interest earned by a user for a specific window of time.
+     * @param user The address of the user.
+     * @param window The specific window of time for which to calculate the interest earned.
+     * @return The amount of interest earned by the user for the specified window.
+     */
+    function interestEarnedForWindow(address user, uint256 window) external view returns (uint256);
+
+    /**
+     * @notice Returns the total interest earned by a user over all windows
+     * @param user The address of the user.
+     * @return The total amount of interest earned by the user.
+     */
+    function totalInterestEarned(address user) external view returns (uint256);
+
+    /**
+     * @notice Returns the total amount of assets deposited by a user.
+     * @param user The address of the user.
+     * @return The total amount of assets deposited by the user.
+     */
+    function totalUserDeposit(address user) external view returns (uint256);
 }
