@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useTheme } from "next-themes";
+import { useAccount, useWriteContract } from "wagmi";
 import { useReadContract } from "wagmi";
-import { useDeployedContractInfo, useNetworkColor } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 import { ContractName } from "~~/utils/scaffold-eth/contract";
@@ -55,9 +56,6 @@ const ViewSection = (props: any) => {
   }
 
   useEffect(() => {
-    console.log("props", props);
-    console.log("refresh", props.refresh);
-
     if (userData === 0)
       userReserveRefetch().then(data => {
         setUserData(Number(Number(data.data) / 10 ** 6));
@@ -91,7 +89,6 @@ const ViewSection = (props: any) => {
 const Card = () => {
   const [amount, setAmount] = useState("");
   const tenureDuration = 30n;
-  const [debugTimeElapsedValue, setDebugTimeElapsedValue] = useState("");
   const { address } = useAccount();
   const [refresh, setRefresh] = useState(false);
   const { targetNetwork } = useTargetNetwork();
@@ -100,11 +97,10 @@ const Card = () => {
     contractNames[0],
   );
   const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractNames[1]);
-  const { data: result, writeContractAsync } = useWriteContract();
+  const { writeContractAsync } = useWriteContract();
+  const { resolvedTheme } = useTheme();
 
-  console.log(contractNames);
-
-  const { data: contractData, refetch } = useReadContract({
+  const { refetch } = useReadContract({
     address: deployedContractData?.address,
     functionName: "getCurrentTimePeriodsElapsed",
     abi: deployedContractData?.abi,
@@ -132,7 +128,6 @@ const Card = () => {
           console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:deposit ~ error", e);
         }
       }
-      console.log("result", result);
     }
   };
 
@@ -144,7 +139,6 @@ const Card = () => {
       const timePeriodsElapsed = BigInt(timePeriodsElapsedData.data as bigint);
 
       const redeemAt = timePeriodsElapsed % tenureDuration;
-      console.log("redeemAt", redeemAt);
 
       if (writeContractAsync) {
         try {
@@ -163,53 +157,6 @@ const Card = () => {
           console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:redeem  ~ error", e);
         }
       }
-      console.log("result", result);
-    }
-  };
-
-  const refill = () => {
-    if (deployedContractDataUSDC && deployedContractData) {
-      if (writeContractAsync) {
-        try {
-          const makeWriteWithParams = () =>
-            writeContractAsync({
-              address: deployedContractDataUSDC.address,
-              functionName: "mint",
-              abi: deployedContractDataUSDC.abi,
-              args: [deployedContractData.address as string, BigInt(100_000_000)],
-            });
-          writeTxn(makeWriteWithParams).then(data => {
-            console.log("setting refresh", data);
-            setRefresh(!refresh);
-          });
-        } catch (e: any) {
-          console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:redeem  ~ error", e);
-        }
-      }
-      console.log("result", result);
-    }
-  };
-
-  const handleSetTime = () => {
-    if (deployedContractData) {
-      if (writeContractAsync) {
-        try {
-          const makeWriteWithParams = () =>
-            writeContractAsync({
-              address: deployedContractData.address,
-              functionName: "setCurrentTimePeriodsElapsed",
-              abi: deployedContractData.abi,
-              args: [BigInt(debugTimeElapsedValue)],
-            });
-          writeTxn(makeWriteWithParams).then(data => {
-            console.log("setting refresh", data);
-            setRefresh(!refresh);
-          });
-        } catch (e: any) {
-          console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:redeem  ~ error", e);
-        }
-      }
-      console.log("result", result);
     }
   };
 
@@ -230,7 +177,11 @@ const Card = () => {
   }
 
   return (
-    <div className="container max-w-full border-2 rounded border-neutral-100 p-10">
+    <div
+      className={`container max-w-full border-2 rounded ${
+        resolvedTheme === "dark" ? "border-neutral-100" : "border-black-100"
+      } p-10`}
+    >
       <div className="columns-2 align-items-start mt-6">
         <div className="input-section mr-12">
           <div className="align-items-start">
@@ -252,10 +203,20 @@ const Card = () => {
               }
             />
             <div className="buttons-section mt-5">
-              <button onClick={handleDeposit} className="p-2 border rounded border-neutral-100 min-w-32 mr-4">
+              <button
+                onClick={handleDeposit}
+                className={`p-2 border rounded ${
+                  resolvedTheme === "dark" ? "border-neutral-100" : "border-black-100"
+                } min-w-32 mr-4`}
+              >
                 Deposit
               </button>
-              <button onClick={handleRedeem} className="p-2 border rounded border-neutral-100 min-w-32">
+              <button
+                onClick={handleRedeem}
+                className={`p-2 border rounded ${
+                  resolvedTheme === "dark" ? "border-neutral-100" : "border-black-100"
+                } min-w-32`}
+              >
                 Redeem
               </button>
             </div>
