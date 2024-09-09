@@ -105,8 +105,7 @@ contract VaultViewFuncTest is BaseTest, UserGenerator {
 
   function test_getTimePeriodsElapsedInCurrentTerm() public {
     uint256 vaultOpenTime = block.timestamp + 1000;
-    vm.prank(vaultOwner);
-    vault.openVault(vaultOpenTime);
+    openVault(vaultOpenTime);
 
     uint256 secondsElapsed = 45000;
     uint256 timePeriodsFromOpen = 0;
@@ -128,17 +127,25 @@ contract VaultViewFuncTest is BaseTest, UserGenerator {
 
     secondsElapsed = 31 days;
     vm.warp(vaultOpenTime + secondsElapsed);
+
+    // 0 time periods in second term
     assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 0);
+    assertEq(vault.getNoOfTermsElapsed(timePeriodsFromOpen), 1);
 
     secondsElapsed = 33 days;
     vm.warp(vaultOpenTime + secondsElapsed);
     assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 2);
-
+    assertEq(vault.getNoOfTermsElapsed(timePeriodsFromOpen), 1);
 
     secondsElapsed = 67 days;
     vm.warp(vaultOpenTime + secondsElapsed);
     assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 6);
+    assertEq(vault.getNoOfTermsElapsed(timePeriodsFromOpen), 2);
 
+    secondsElapsed = 137 days + 3420;
+    vm.warp(vaultOpenTime + secondsElapsed);
+    assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 16);
+    assertEq(vault.getNoOfTermsElapsed(timePeriodsFromOpen), 4);
     // ----------------------
     timePeriodsFromOpen = 27;
 
@@ -146,10 +153,12 @@ contract VaultViewFuncTest is BaseTest, UserGenerator {
     vm.warp(vaultOpenTime + secondsElapsed);
     
     assertEq(vault.getCurrentTimePeriodsElapsed(), 27);
+    assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen), 0);
 
     secondsElapsed = 29 days;
     vm.warp(vaultOpenTime + secondsElapsed);
     assertEq(vault.getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen), 1);
+    assertEq(vault.getNoOfTermsElapsed(timePeriodsFromOpen), 0);
   }
 
   function test_ABDKMath64x64Test() public pure {
