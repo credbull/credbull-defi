@@ -1,10 +1,6 @@
 import { DebugContracts } from "./_components/DebugContracts";
 import type { NextPage } from "next";
-import { ContractName } from "~~/utils/scaffold-eth/contract";
-import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
 import { getMetadata } from "~~/utils/scaffold-eth/getMetadata";
-
-const allContractVersions = getAllContracts();
 
 export const metadata = getMetadata({
   title: "Debug Contracts",
@@ -14,12 +10,7 @@ export const metadata = getMetadata({
 const Debug: NextPage = () => {
   return (
     <>
-      {allContractVersions.map((contractsData, i: number) => {
-        const contractNames = Object.keys(contractsData) as ContractName[];
-
-        return <DebugContracts key={i} contractNames={contractNames} />;
-      })}
-      {/* <DebugContracts /> */}
+      <DebugContracts />
       <div className="text-center mt-8 bg-secondary p-10">
         <h1 className="text-4xl my-0">Debug Contracts</h1>
         <p className="text-neutral">

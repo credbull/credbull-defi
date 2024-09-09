@@ -138,7 +138,8 @@ contract YieldSubscription is IProduct {
         console2.log("No of windows passed: %s", noOfWindowsPassed);
 
         if (noOfWindowsPassed > maturityPeriod) {
-            uint256 interestEarnedBeofreRollOver = (userDeposit * yieldPerWindow() * maturityPeriod) / 1e20;   
+            uint256 interestEarnedBeofreRollOver = (userDeposit * yieldPerWindow() * maturityPeriod) / 1e20;  
+
             return (
                 interestEarnedBeofreRollOver
                     + ((userDeposit + interestEarnedBeofreRollOver) * yieldPerWindowRollOver() * (noOfWindowsPassed - maturityPeriod)) / 1e20

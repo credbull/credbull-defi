@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     "SimpleUSDC#0": {
-      address: "0x5322471a7e37ac2b8902cfcba84d266b37d811a0",
+      address: "0x103a3b128991781ee2c8db0454ca99d67b257923",
       abi: [
         {
           type: "constructor",
@@ -438,7 +438,7 @@ const deployedContracts = {
       },
     },
     "YieldSubscription#0": {
-      address: "0x90c84237fddf091b1e63f369af122eb46000bc70",
+      address: "0xbbc18b580256a82dc0f9a86152b8b22e7c1c8005",
       abi: [
         {
           type: "constructor",
@@ -971,7 +971,7 @@ const deployedContracts = {
       },
     },
     "YieldSubscription#1": {
-      address: "0x3d63c50ad04dd5ae394cab562b7691dd5de7cf6f",
+      address: "0xb9d9e972100a1dd01cd441774b45b5821e136043",
       abi: [
         {
           type: "constructor",

@@ -8,7 +8,7 @@ import { useReadContract } from "wagmi";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
-import { ContractName } from "~~/utils/scaffold-eth/contract";
+import { Contract, ContractName } from "~~/utils/scaffold-eth/contract";
 
 const ViewSection = (props: any) => {
   const [userData, setUserData] = useState<number>(0);
@@ -69,7 +69,14 @@ const ViewSection = (props: any) => {
         setInterestEarned((Number(data.data) * 1000) / 10 ** 6 / 1000);
       });
     }
-  }, []);
+  }, [
+    getCurrentTimePeriodsElapsedRefetch,
+    getInterestEarnedRefetch,
+    interestEarned,
+    timePeriodsElapsed,
+    userData,
+    userReserveRefetch,
+  ]);
 
   return (
     <>
@@ -83,7 +90,15 @@ const ViewSection = (props: any) => {
   );
 };
 
-const Card = ({ contractNames }: { contractNames: ContractName[] }) => {
+const Card = ({
+  contractName,
+  deployedContractDataUSDC,
+  deployedContractLoadingUSDC,
+}: {
+  contractName: ContractName;
+  deployedContractDataUSDC: Contract<ContractName> | undefined;
+  deployedContractLoadingUSDC: boolean;
+}) => {
   const [amount, setAmount] = useState("");
   const tenureDuration = 30n;
   const { address } = useAccount();
@@ -93,10 +108,7 @@ const Card = ({ contractNames }: { contractNames: ContractName[] }) => {
   const { writeContractAsync } = useWriteContract();
   const { resolvedTheme } = useTheme();
 
-  const { data: deployedContractDataUSDC, isLoading: deployedContractLoadingUSDC } = useDeployedContractInfo(
-    contractNames[0],
-  );
-  const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractNames[1]);
+  const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractName);
 
   const { refetch } = useReadContract({
     address: deployedContractData?.address,
@@ -175,7 +187,7 @@ const Card = ({ contractNames }: { contractNames: ContractName[] }) => {
   if (!deployedContractData || !deployedContractDataUSDC) {
     return (
       <p className="text-3xl mt-14">
-        {`No contract found by the name of "${contractNames[1]}" or "${contractNames[0]}" on chain "${targetNetwork.name}"!`}
+        {`No contract found by the name of "${contractName}" on chain "${targetNetwork.name}"!`}
       </p>
     );
   }

@@ -7,9 +7,17 @@ import { useWriteContract } from "wagmi";
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
-import { ContractName } from "~~/utils/scaffold-eth/contract";
+import { Contract, ContractName } from "~~/utils/scaffold-eth/contract";
 
-const Card = ({ contractNames }: { contractNames: ContractName[] }) => {
+const Card = ({
+  contractName,
+  deployedContractDataUSDC,
+  deployedContractLoadingUSDC,
+}: {
+  contractName: ContractName;
+  deployedContractDataUSDC: Contract<ContractName> | undefined;
+  deployedContractLoadingUSDC: boolean;
+}) => {
   const [debugTimeElapsedValue, setDebugTimeElapsedValue] = useState("");
   const [refresh, setRefresh] = useState(false);
   const { targetNetwork } = useTargetNetwork();
@@ -17,10 +25,7 @@ const Card = ({ contractNames }: { contractNames: ContractName[] }) => {
   const { writeContractAsync } = useWriteContract();
   const { resolvedTheme } = useTheme();
 
-  const { data: deployedContractDataUSDC, isLoading: deployedContractLoadingUSDC } = useDeployedContractInfo(
-    contractNames[0],
-  );
-  const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractNames[1]);
+  const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractName);
 
   const refill = () => {
     if (deployedContractDataUSDC && deployedContractData) {
@@ -83,7 +88,7 @@ const Card = ({ contractNames }: { contractNames: ContractName[] }) => {
   if (!deployedContractData || !deployedContractDataUSDC) {
     return (
       <p className="text-3xl mt-14">
-        {`No contract found by the name of "${contractNames[1]}" or "${contractNames[0]}" on chain "${targetNetwork.name}"!`}
+        {`No contract found by the name of "${contractName}" or "${contractName}" on chain "${targetNetwork.name}"!`}
       </p>
     );
   }
