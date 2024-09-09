@@ -109,7 +109,7 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
 
     // Ensure that the account has enough unlockable tokens to roll over
     if (value > unlockableAmount) {
-      revert InsufficientLockedBalance(unlockableAmount, value);
+      revert InsufficientLockedBalanceAtPeriod(account, unlockableAmount, value, lockReleasePeriod);
     }
 
     uint256 principalAndYieldFirstPeriod = convertToAssets(value); // principal + first period interest

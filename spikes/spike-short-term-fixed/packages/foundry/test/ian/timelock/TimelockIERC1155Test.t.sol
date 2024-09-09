@@ -29,8 +29,8 @@ contract SimpleTimelockIERC1155 is TimelockIERC1155 {
     currentPeriod = _currentPeriod;
   }
 
-  function calcRolloverBonus(address account, uint256 lockReleasePeriod, uint256 value)
-    public override returns (uint256 rolloverBonus) {
+  function calcRolloverBonus(address /* account */, uint256 /* lockReleasePeriod */, uint256 /* value */)
+    public override pure returns (uint256 rolloverBonus) {
     return 0;
   }
 }

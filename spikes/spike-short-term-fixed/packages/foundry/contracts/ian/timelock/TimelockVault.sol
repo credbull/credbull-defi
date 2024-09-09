@@ -51,12 +51,12 @@ contract TimelockVault is ERC4626, ITimelock, Ownable {
 
   function unlock(address account, uint256 lockReleasePeriod, uint256 value) public override onlyOwner {
     if (currentTimePeriodsElapsed < lockReleasePeriod) {
-      revert LockDurationNotExpired(currentTimePeriodsElapsed, lockReleasePeriod);
+      revert LockDurationNotExpired(account, currentTimePeriodsElapsed, lockReleasePeriod);
     }
 
     uint256 lockedBalance = getLockedAmount(account, lockReleasePeriod);
     if (lockedBalance < value) {
-      revert InsufficientLockedBalance(lockedBalance, value);
+      revert InsufficientLockedBalanceAtPeriod(account, lockedBalance, value, lockReleasePeriod);
     }
 
     _locks[account].amount -= value;

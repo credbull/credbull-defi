@@ -93,12 +93,12 @@ abstract contract TimelockIERC1155 is ITimelock, IRollable, ERC1155, ERC1155Supp
     uint256 currentPeriod = getCurrentPeriod();
 
     if (currentPeriod < lockReleasePeriod) {
-      revert LockDurationNotExpired(currentPeriod, lockReleasePeriod);
+      revert LockDurationNotExpired(account, currentPeriod, lockReleasePeriod);
     }
 
     uint256 unlockableAmount = previewUnlock(account, lockReleasePeriod);
     if (unlockableAmount < value) {
-      revert InsufficientLockedBalance(unlockableAmount, value);
+      revert InsufficientLockedBalanceAtPeriod(account, unlockableAmount, value, lockReleasePeriod);
     }
 
     _burn(account, lockReleasePeriod, value);
@@ -119,7 +119,7 @@ abstract contract TimelockIERC1155 is ITimelock, IRollable, ERC1155, ERC1155Supp
     uint256 lockDuration = getLockDuration();
 
     if (value > unlockableAmount) {
-      revert InsufficientLockedBalance(unlockableAmount, value);
+      revert InsufficientLockedBalanceAtPeriod(account, unlockableAmount, value, lockReleasePeriod);
     }
 
     _burn(account, lockReleasePeriod, value);

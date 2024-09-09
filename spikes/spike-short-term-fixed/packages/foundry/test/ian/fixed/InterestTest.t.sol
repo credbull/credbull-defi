@@ -141,6 +141,8 @@ abstract contract InterestTest is Test {
     // as per definition - should be the same as convertToShares
     assertEq(vault.previewWithdraw(principal), actualSharesDeposit, assertMsg("previewWithdraw incorrect - principal", vault, numTimePeriods));
     assertEq(vault.previewWithdraw(expectedInterest), vault.convertToSharesAtPeriod(expectedInterest, numTimePeriods), assertMsg("previewWithdraw incorrect - interest", vault, numTimePeriods));
+
+    vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed);
   }
 
   // verify deposit and redeem.  These update vault assets and shares.

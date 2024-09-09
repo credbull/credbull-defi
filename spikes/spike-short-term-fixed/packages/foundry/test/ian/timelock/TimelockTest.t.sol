@@ -59,7 +59,7 @@ abstract contract TimelockTest is Test {
 
     // Attempt to unlock before the release period should fail
     vm.startPrank(owner);
-    vm.expectRevert(abi.encodeWithSelector(ITimelock.LockDurationNotExpired.selector, 0, lockReleasePeriod));
+    vm.expectRevert(abi.encodeWithSelector(ITimelock.LockDurationNotExpired.selector, alice, 0, lockReleasePeriod));
     timelock.unlock(alice, lockReleasePeriod, depositAmount);
     vm.stopPrank();
   }

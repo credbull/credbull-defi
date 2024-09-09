@@ -80,7 +80,7 @@ contract TimelockInterestVaultTest is InterestTest {
 
     vm.prank(alice);
     // when we redeem at time 0, currentlTimePeriod = unlockPeriod, so throws a shares not unlocked (rather than time lock) error.
-    vm.expectRevert(abi.encodeWithSelector(ITimelock.InsufficientLockedBalance.selector, 0, depositAmount));
+    vm.expectRevert(abi.encodeWithSelector(ITimelock.InsufficientLockedBalanceAtPeriod.selector, alice, 0, shares, vault.getCurrentTimePeriodsElapsed()));
     vault.redeem(shares, alice, alice); // try to redeem before warping - should fail
 
     // ------------- redeem (at tenor / maturity time period) ---------------
@@ -220,6 +220,39 @@ contract TimelockInterestVaultTest is InterestTest {
 
     vm.prank(alice);
     vault.redeem(shares, alice, alice); // redeem when unpaused - succeed
+  }
+
+  // Scenario: User withdraws after the lock period
+  function test__TimelockInterestVault__Early_Redeem_Should_Fail() public {
+    uint256 tenor = TENOR_30;
+    TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, tenor);
+
+    uint256 depositAmount = 20_000 * SCALE;
+    uint256 depositPeriod = tenor + 10;
+
+    // ------------- deposit ---------------
+    vault.setCurrentTimePeriodsElapsed(depositPeriod);
+
+    vm.startPrank(alice);
+    asset.approve(address(vault), depositAmount);
+    uint256 shares = vault.deposit(depositAmount, alice);
+    vm.stopPrank();
+
+    // ------------- early redeem - before vault's first tenor  ---------------
+    uint256 tenorMinus1 = tenor-1;
+    vault.setCurrentTimePeriodsElapsed(tenorMinus1);
+
+    vm.prank(alice);
+    vm.expectRevert(abi.encodeWithSelector(ITimelock.InsufficientLockedBalanceAtPeriod.selector, alice, 0, shares, vault.getCurrentTimePeriodsElapsed()));
+    vault.redeem(shares, alice, alice); // try to redeem before warping - should fail
+
+//    // ------------- early redeem - before deposit + redeem  ---------------
+    uint256 redeemMinus1 = depositPeriod + tenor - 1;
+    vault.setCurrentTimePeriodsElapsed(redeemMinus1);
+
+    vm.prank(alice);
+    vm.expectRevert(abi.encodeWithSelector(ITimelock.InsufficientLockedBalanceAtPeriod.selector, alice, 0, shares, vault.getCurrentTimePeriodsElapsed()));
+    vault.redeem(shares, alice, alice);
   }
 
   function testInterestAtPeriod(
