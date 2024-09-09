@@ -99,16 +99,25 @@ function main() {
     const transactionsCreate = broadCastObject.transactions.filter(
       (transaction) => transaction.transactionType == "CREATE"
     );
+
+
+    const mapContractNames = {};
+    transactionsCreate.forEach((transaction) => { 
+      mapContractNames[transaction.contractName] = 0;
+    });
+  
     transactionsCreate.forEach((transaction) => {
       const artifact = getArtifactOfContract(transaction.contractName);
+
       allGeneratedContracts[chain][
-        deployments[chain][transaction.contractAddress] ||
-          transaction.contractName
+          `${transaction.contractName}#${mapContractNames[transaction.contractName]}`
       ] = {
         address: transaction.contractAddress,
         abi: artifact.abi,
         inheritedFunctions: getInheritedFunctions(artifact),
       };
+
+      mapContractNames[transaction.contractName] += 1
     });
   });
 
