@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { Test } from "forge-std/Test.sol";
-import { console2 } from "forge-std/console2.sol";
+
 
 abstract contract InterestTest is Test {
   uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000005
@@ -59,50 +59,53 @@ abstract contract InterestTest is Test {
     );
   }
 
-  // these are previews only - vault assets and shares are not updated.   however, it doesn't *actually* deposit or redeem anything!
+
+  // verify convertToAssets and convertToShares.  These are a "preview" and do NOT update vault assets or shares.
   function testConvertToAssetAndSharesAtPeriod(
     uint256 principal,
     IERC4626Interest vault,
     uint256 numTimePeriods
   ) internal virtual {
-    uint256 expectedYield = principal + vault.calcInterest(principal, vault.getTenor());
 
-    // check convertAtSharesAtPeriod and convertToAssetsAtPeriod
-    // yieldAt(Periods+Tenor) = principalAtDeposit + interestForTenor - similar to how we test the interest.
-    uint256 sharesInWeiAtPeriod = vault.convertToSharesAtPeriod(principal, numTimePeriods);
-    uint256 assetsInWeiAtPeriod = vault.convertToAssetsAtPeriod(sharesInWeiAtPeriod, numTimePeriods + vault.getTenor());
+    // ------------------- check toShares/toAssets - specified period -------------------
+    uint256 expectedYield = principal + vault.calcInterest(principal, vault.getTenor()); // yield = principal + interest
+
+    uint256 sharesAtPeriod = vault.convertToSharesAtPeriod(principal, numTimePeriods);
+    uint256 assetsAtPeriod = vault.convertToAssetsAtPeriod(sharesAtPeriod, numTimePeriods + vault.getTenor());
 
     assertApproxEqAbs(
       expectedYield,
-      assetsInWeiAtPeriod,
+      assetsAtPeriod,
       TOLERANCE,
       assertMsg("yield does not equal principal + interest", vault, numTimePeriods)
     );
 
-    // check convertAtShares and convertToAssets -- simulates the passage of time (e.g. block times)
-    uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
+    // ------------------- check toShares/toAssets - current period -------------------
+    uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed(); // save previous state for later
 
     vault.setCurrentTimePeriodsElapsed(numTimePeriods); // set deposit numTimePeriods
-    uint256 sharesInWei = vault.convertToShares(principal); // now deposit
+    uint256 actualShares = vault.convertToShares(principal);
 
     vault.setCurrentTimePeriodsElapsed(numTimePeriods + vault.getTenor()); // set redeem numTimePeriods
-    uint256 assetsInWei = vault.convertToAssets(sharesInWei); // now redeem
+    uint256 actualAssets = vault.convertToAssets(actualShares); // now redeem
 
     assertApproxEqAbs(
       principal + vault.calcInterest(principal, vault.getTenor()),
-      assetsInWei,
+      actualAssets,
       TOLERANCE,
-      assertMsg("yield does not equal principal + interest", vault, numTimePeriods)
+      assertMsg("toShares/toAssets yield does not equal principal + interest", vault, numTimePeriods)
     );
 
-    // Perform a partial conversion check (e.g., 33% of the principal)
+    // ------------------- check partials  -------------------
     uint256 expectedPartialYield =
       principal.mulDiv(33, 100) + vault.calcInterest(principal.mulDiv(33, 100), vault.getTenor());
-    uint256 partialAssetsInWeiAtPeriod =
-      vault.convertToAssetsAtPeriod(sharesInWei.mulDiv(33, 100), numTimePeriods + vault.getTenor());
+    
+    uint256 partialAssetsAtPeriod =
+      vault.convertToAssetsAtPeriod(actualShares.mulDiv(33, 100), numTimePeriods + vault.getTenor());
+    
     assertApproxEqAbs(
       expectedPartialYield,
-      partialAssetsInWeiAtPeriod,
+      partialAssetsAtPeriod,
       TOLERANCE,
       assertMsg("partial yield does not equal principal + interest", vault, numTimePeriods)
     );
@@ -110,7 +113,37 @@ abstract contract InterestTest is Test {
     vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed); // restore the vault to previous state
   }
 
-  // this modifies the assets and shares - it *actually* deposits and redeems
+  // verify previewDeposit and previewRedeem.  These are a "preview" and do NOT update vault assets or shares.
+  function testPreviewDepositAndPreviewRedeem(
+    uint256 principal,
+    IERC4626Interest vault,
+    uint256 numTimePeriods
+  ) internal virtual {
+
+    uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
+    uint256 expectedInterest = vault.calcInterest(principal, vault.getTenor());
+    uint256 expectedPrincipalAndInterest = principal + expectedInterest;
+
+    vault.setCurrentTimePeriodsElapsed(numTimePeriods); // set deposit period prior to deposit
+    uint256 actualSharesDeposit = vault.previewDeposit(principal);
+
+    vault.setCurrentTimePeriodsElapsed(numTimePeriods + vault.getTenor()); // warp to redeem / withdraw
+
+    // check previewRedeem
+    assertApproxEqAbs(
+      expectedPrincipalAndInterest,
+      vault.previewRedeem(actualSharesDeposit),
+      TOLERANCE,
+      assertMsg("previewDeposit/previewRedeem yield does not equal principal + interest", vault, numTimePeriods)
+    );
+
+    // check previewWithdraw (uses assets as basis of shares returned)
+    // as per definition - should be the same as convertToShares
+    assertEq(vault.previewWithdraw(principal), actualSharesDeposit, assertMsg("previewWithdraw incorrect - principal", vault, numTimePeriods));
+    assertEq(vault.previewWithdraw(expectedInterest), vault.convertToSharesAtPeriod(expectedInterest, numTimePeriods), assertMsg("previewWithdraw incorrect - interest", vault, numTimePeriods));
+  }
+
+  // verify deposit and redeem.  These update vault assets and shares.
   function testDepositAndRedeemAtPeriod(
     address owner,
     address receiver,
@@ -130,10 +163,10 @@ abstract contract InterestTest is Test {
     vm.startPrank(receiver);
     assertGe(asset.balanceOf(receiver), principal, assertMsg("not enough assets for deposit ", vault, numTimePeriods));
     asset.approve(address(vault), principal); // grant the vault allowance
-    uint256 sharesInWei = vault.deposit(principal, receiver); // now deposit
+    uint256 shares = vault.deposit(principal, receiver); // now deposit
     vm.stopPrank();
     assertEq(
-      prevReceiverVaultBalance + sharesInWei,
+      prevReceiverVaultBalance + shares,
       vault.balanceOf(receiver),
       assertMsg("receiver did not receive the correct vault shares ", vault, numTimePeriods)
     );
@@ -149,7 +182,7 @@ abstract contract InterestTest is Test {
     vault.setCurrentTimePeriodsElapsed(numTimePeriods + vault.getTenor()); // warp the vault to redeem period
 
     vm.startPrank(receiver);
-    uint256 assetsInWei = vault.redeem(sharesInWei, receiver, receiver);
+    uint256 assets = vault.redeem(shares, receiver, receiver);
     vm.stopPrank();
     assertApproxEqAbs(
       prevReceiverAssetBalance + interest,
@@ -160,7 +193,7 @@ abstract contract InterestTest is Test {
 
     assertApproxEqAbs(
       principal + interest,
-      assetsInWei,
+      assets,
       TOLERANCE,
       assertMsg("yield does not equal principal + interest", vault, numTimePeriods)
     );

@@ -54,12 +54,28 @@ contract SimpleInterestTest is InterestTest {
 
 
     uint256 day0 = 0;
-    assertEq(1 * scale, simpleInterest.calcPriceScaled(day0)); // 1 + (0.12 * 0) / 360 = 1
+    assertEq(1 * scale, simpleInterest.calcPriceWithScale(day0)); // 1 + (0.12 * 0) / 360 = 1
 
     uint256 day1 = 1;
-    assertEq((100_033_333_333 * scale / 100_000_000_000), simpleInterest.calcPriceScaled(day1)); // 1 + (0.12 * 1) / 360 ≈ 1.00033
+    assertEq((100_033_333_333 * scale / 100_000_000_000), simpleInterest.calcPriceWithScale(day1)); // 1 + (0.12 * 1) / 360 ≈ 1.00033
 
     uint256 day30 = 30;
-    assertEq((101 * scale / 100), simpleInterest.calcPriceScaled(day30)); // 1 + (0.12 * 30) / 360 = 1.01
+    assertEq((101 * scale / 100), simpleInterest.calcPriceWithScale(day30)); // 1 + (0.12 * 30) / 360 = 1.01
   }
+
+  function test_SimpleInterestTest_Rounding_Example() public {
+    uint256 SCALE = 1e3; // Using a scale of 1000 (to represent 3 decimal places)
+
+    uint256 principal = 1000 * SCALE;
+    uint256 price = 1005 * SCALE;
+
+//    Discounted (Floor)  = floor(Principal / Price) =  floor(1000 / 1.005) = floor(995.02) = 995
+    uint256 discountedFloor = principal.mulDiv(SCALE, price, Math.Rounding.Floor);
+    assertEq(discountedFloor, 995, "Floor rounding failed");
+
+//    Discounted (Floor)  = ceil(Principal / Price) =  ceil(1000 / 1.005) = ceil(995.02) = 996
+    uint256 discountedCeil = principal.mulDiv(SCALE, price, Math.Rounding.Ceil);
+    assertEq(discountedCeil, 996, "Ceiling rounding failed");
+  }
+
 }
