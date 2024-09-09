@@ -90,7 +90,7 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
 
   function calcRolloverBonus(address /* account */, uint256 /* lockReleasePeriod */, uint256 value)
   public view override returns (uint256 rolloverBonus) {
-    uint256 rolloverBonusScaled = _calcInterestWithScale(value, TENOR, 1);
+    uint256 rolloverBonusScaled = _calcInterestWithScale(value, TENOR, 1, FREQUENCY);
 
     return _unscale(rolloverBonusScaled);
   }

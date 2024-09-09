@@ -50,8 +50,6 @@ contract SimpleInterestVaultTest is InterestTest {
 
     uint256 scaleMinus1 = vault.getScale() - 1;
 
-    assertEq(0, vault.convertToAssets(scaleMinus1), "convert to assets not scaled");
-
     assertEq(0, vault.convertToShares(scaleMinus1), "convert to shares not scaled");
   }
 

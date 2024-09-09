@@ -69,7 +69,7 @@ contract SimpleInterest is ISimpleInterest {
       revert PrincipalLessThanScale(principal, SCALE);
     }
 
-    uint256 interestScaled = _calcInterestWithScale(principal, numTimePeriodsElapsed, INTEREST_RATE);
+    uint256 interestScaled = _calcInterestWithScale(principal, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
 
     return _unscale(interestScaled);
   }
@@ -85,11 +85,12 @@ contract SimpleInterest is ISimpleInterest {
   function _calcInterestWithScale(
     uint256 principal,
     uint256 numTimePeriodsElapsed,
-    uint256 interestRatePercentage
+    uint256 interestRatePercentage,
+    uint256 frequency
   ) internal view returns (uint256 interestScaled) {
 
     uint256 _interestScaled = _scale(principal).mulDiv(
-      interestRatePercentage * numTimePeriodsElapsed, FREQUENCY * 100, ROUNDING);
+      interestRatePercentage * numTimePeriodsElapsed, frequency * 100, ROUNDING);
 
     return _interestScaled;
   }
@@ -105,7 +106,7 @@ contract SimpleInterest is ISimpleInterest {
     uint256 numTimePeriodsElapsed
   ) public view virtual returns (uint256 priceScaled) {
 
-    uint256 interestScaled = _calcInterestWithScale(PAR, numTimePeriodsElapsed, INTEREST_RATE);
+    uint256 interestScaled = _calcInterestWithScale(PAR, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
 
     uint256 _priceScaled = _scale(PAR) + interestScaled;
 

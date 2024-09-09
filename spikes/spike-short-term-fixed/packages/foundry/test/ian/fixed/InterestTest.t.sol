@@ -46,6 +46,16 @@ abstract contract InterestTest is Test {
       assertMsg("principalFromDiscount not inverse of principal", simpleInterest, numTimePeriods)
     );
 
+    uint256 price = simpleInterest.calcPriceWithScale(numTimePeriods);
+    uint256 oneScaled = 1 * simpleInterest.getScale();
+    assertApproxEqAbs(
+      price,
+      oneScaled + simpleInterest.calcInterest(oneScaled, numTimePeriods),
+      TOLERANCE,
+      assertMsg("price is not equal to simpleInterest for principal of 1", simpleInterest, numTimePeriods)
+    );
+
+
     // verify for partial - does it hold that X% of principalFromDiscounted = X% principal
     uint256 discountedPartial = simpleInterest.calcDiscounted(principal.mulDiv(75, 100), numTimePeriods);
     uint256 principalFromDiscountedPartial =

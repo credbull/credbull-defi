@@ -37,6 +37,18 @@ interface ISimpleInterest {
    */
   function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) external view returns (uint256 discounted);
 
+
+  /**
+   * @notice Calculates the price for a given number of periods elapsed.
+   * Price represents the accrued interest over time for a Principal of 1.
+   * @dev - return value is scaled as Price * SCALE.  For example: Price=1.01 and Scale=100 returns 101
+   * @param numTimePeriodsElapsed The number of time periods that have elapsed.
+   * @return priceScaled The price scaled by the internal scale factor.
+   */
+  function calcPriceWithScale(
+    uint256 numTimePeriodsElapsed
+  ) external view returns (uint256 priceScaled);
+
   /**
    * @notice Recovers the original principal from a discounted value after the elapsed time periods.
    * @param discounted The discounted principal amount.
@@ -47,6 +59,7 @@ interface ISimpleInterest {
     uint256 discounted,
     uint256 numTimePeriodsElapsed
   ) external view returns (uint256 principal);
+
 
   /**
    * @notice Returns the frequency of interest application (number of periods in a year).
