@@ -40,5 +40,8 @@
   "packageManager": "yarn@3.2.3",
   "engines": {
     "node": ">=18.17.0"
+  },
+  "dependencies": {
+    "react-tooltip": "^5.28.0"
   }
 }

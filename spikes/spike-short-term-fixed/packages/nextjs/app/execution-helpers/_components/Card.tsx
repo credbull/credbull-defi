@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { Tooltip } from "react-tooltip";
+import { useAccount, useWriteContract } from "wagmi";
 import { useReadContract } from "wagmi";
-import { useDeployedContractInfo, useNetworkColor } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 import { ContractName } from "~~/utils/scaffold-eth/contract";
@@ -231,40 +232,41 @@ const Card = () => {
 
   return (
     <div className="container max-w-full border-2 rounded border-neutral-100 p-10">
-      <div className="columns-2 align-items-start mt-6">
-        <div className="input-section mr-12">
-          <div className="align-items-start">
-            <h3>Enter Amount</h3>
-            <input
-              type="text"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              placeholder="Enter amount"
-              style={{ padding: "10px", width: "100%", marginBottom: "10px" }}
-              onFocus={e =>
-                e.target.addEventListener(
-                  "wheel",
-                  function (e) {
-                    e.preventDefault();
-                  },
-                  { passive: false },
-                )
-              }
-            />
-            <div className="buttons-section mt-5">
-              <button onClick={handleDeposit} className="p-2 border rounded border-neutral-100 min-w-32 mr-4">
-                Deposit
-              </button>
-              <button onClick={handleRedeem} className="p-2 border rounded border-neutral-100 min-w-32">
-                Redeem
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className="view-section">
-          <ViewSection data={{ deployedContractData: deployedContractData, address: address }} refresh={refresh} />
+      <div className="debug-section mt-6">
+        <h3>Set time elapsed</h3>
+        <input
+          type="text"
+          value={debugTimeElapsedValue}
+          onChange={e => setDebugTimeElapsedValue(e.target.value)}
+          placeholder="Set time elapsed"
+          style={{ padding: "10px", width: "40%" }}
+          onFocus={e =>
+            e.target.addEventListener(
+              "wheel",
+              function (e) {
+                e.preventDefault();
+              },
+              { passive: false },
+            )
+          }
+        />
+
+        <div className="buttons-section mt-5">
+          <button onClick={handleSetTime} className="p-2 border rounded border-neutral-100 min-w-32 mr-4">
+            Set
+          </button>
+          <button
+            data-tooltip-id={"refill-tooltip"}
+            data-tooltip-content={"Sending interest amount to the vault"}
+            data-tooltip-place={"right"}
+            onClick={refill}
+            className="p-2 border rounded border-neutral-100 min-w-32 mr-4"
+          >
+            Refill
+          </button>
         </div>
       </div>
+      <Tooltip id="refill-tooltip" />
     </div>
   );
 };

@@ -56,7 +56,7 @@ const Home: NextPage = () => {
               <p>
                 Short term fixed yield
                 <Link href="/subscription" passHref className="link">
-                  Short term fixed yeild
+                  Short term fixed yield
                 </Link>{" "}
                 tab.
               </p>
