@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { Test } from "forge-std/Test.sol";
-
+import { console2 } from "forge-std/console2.sol";
 
 abstract contract InterestTest is Test {
   uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000005
@@ -55,6 +55,12 @@ abstract contract InterestTest is Test {
       assertMsg("price is not equal to simpleInterest for principal of 1", simpleInterest, numTimePeriods)
     );
 
+    assertApproxEqAbs(
+      discounted,
+      principal.mulDiv(oneScaled, price),
+      TOLERANCE,
+      assertMsg("discounted is not equal to Principal / Price", simpleInterest, numTimePeriods)
+    );
 
     // verify for partial - does it hold that X% of principalFromDiscounted = X% principal
     uint256 discountedPartial = simpleInterest.calcDiscounted(principal.mulDiv(75, 100), numTimePeriods);
