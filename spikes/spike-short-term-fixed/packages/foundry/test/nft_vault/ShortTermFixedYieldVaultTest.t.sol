@@ -136,6 +136,7 @@ contract ShortTermFixedYieldVaultTest is BaseTest, UserGenerator {
 
     principal = vault.getWithdrawalAmount(tokenId);
 
+    // change the time
     secondsElapsed = 171 days;
     vm.warp(vaultOpenTime + secondsElapsed);
 
@@ -145,6 +146,12 @@ contract ShortTermFixedYieldVaultTest is BaseTest, UserGenerator {
     simulateAmount = simulateAmountWithFixedInterest(simulateAmount, 20);
 
     assertApproxEqAbs(vault.calculateAccumulatedAmount(tokenId), simulateAmount, TOLERANCE);
+
+    (uint256 periodsUntilTermEnd, uint256 currentYield, uint256 accumulatedAmount) = vault.getDepositInfo(tokenId);
+
+    assertEq(accumulatedAmount, simulateAmount);
+    assertEq(periodsUntilTermEnd, 10);
+    assertApproxEqAbs(currentYield, simulateAmount - principal, TOLERANCE);
   }
 
   /**

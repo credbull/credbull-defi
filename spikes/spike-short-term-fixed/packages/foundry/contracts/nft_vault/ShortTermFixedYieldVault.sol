@@ -254,6 +254,10 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
     return getDepositLockTimePeriods(depositTimePeriodsFromOpen) / LOCK_TIME_PERIODS;
   }
 
+  /**
+   * @dev Returns the starting time periods of the current term.
+   * This is used when updating DepositInfo of tokenId when the user withdraws a partial amount.
+   */
   function getTimePeriodsInCurrentTermStart(
     uint256 depositTimePeriodsFromOpen
   ) public view returns (uint256) {
@@ -303,6 +307,11 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
     return scaledAmount / DECIMALS;
   }
 
+  /**
+   * @dev Calculates withdrawal amount based on current date, that user can withdraw from the vault
+   * This withdrawal amount is always less than accumulated amount
+   * @return accumulatedAmount amount
+   */
   function getWithdrawalAmount(
     uint256 tokenId
   ) public view returns (uint256) {
@@ -310,8 +319,8 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
   }
 
   /**
-   * @dev Calculates amount (principal + interest)
-   * @return withdrawal amount
+   * @dev Calculates accumlated amount based on current date
+   * @return accumulatedAmount amount
    */
   function calculateAccumulatedAmount(
     uint256 tokenId
