@@ -230,7 +230,7 @@ const Card = ({ contractNames }: { contractNames: ContractName[] }) => {
             <div className="buttons-section mt-5">
               <button
                 onClick={handleDeposit}
-                className={`p-2 border rounded ${
+                className={`btn btn-secondary p-2 border rounded ${
                   resolvedTheme === "dark" ? "border-neutral-100" : "border-primary"
                 } min-w-32 mr-4`}
               >
@@ -238,7 +238,7 @@ const Card = ({ contractNames }: { contractNames: ContractName[] }) => {
               </button>
               <button
                 onClick={handleRedeem}
-                className={`p-2 border rounded ${
+                className={`btn btn-secondary btn-md p-2 border rounded ${
                   resolvedTheme === "dark" ? "border-neutral-100" : "border-primary"
                 } min-w-32`}
               >
