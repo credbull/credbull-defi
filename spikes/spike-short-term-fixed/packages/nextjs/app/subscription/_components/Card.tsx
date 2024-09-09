@@ -69,7 +69,14 @@ const ViewSection = (props: any) => {
         setInterestEarned((Number(data.data) * 1000) / 10 ** 6 / 1000);
       });
     }
-  }, []);
+  }, [
+    getCurrentTimePeriodsElapsedRefetch,
+    getInterestEarnedRefetch,
+    interestEarned,
+    timePeriodsElapsed,
+    userData,
+    userReserveRefetch,
+  ]);
 
   return (
     <>
