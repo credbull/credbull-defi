@@ -5,9 +5,14 @@ import "./BaseTest.t.sol";
 import { UserGenerator } from "./UserGenerator.sol";
 import { ABDKMath64x64 } from "../../contracts/nft_vault/ABDKMath64x64.sol";
 
-contract ShortTermFixedYieldVaultTest is BaseTest, UserGenerator {
+contract VaultViewFuncTest is BaseTest, UserGenerator {
   function setUp() public {
     _deployContracts();
+  }
+
+  function openVault(uint256 vaultOpenTime) public {
+    vm.prank(vaultOwner);
+    vault.openVault(vaultOpenTime);
   }
 
   function test_RevertIf_VaultIsNotOpen() public {
@@ -34,32 +39,34 @@ contract ShortTermFixedYieldVaultTest is BaseTest, UserGenerator {
 
   function testFuzz_getCurrentTimePeriodsElapsed(uint64 secondsElapsed) public {
     uint256 vaultOpenTime = block.timestamp + 1000;
-    vm.prank(vaultOwner);
-    vault.openVault(vaultOpenTime);
+    openVault(vaultOpenTime);
 
     vm.warp(vaultOpenTime + secondsElapsed);
     assertEq(vault.getCurrentTimePeriodsElapsed() , secondsElapsed / 86400);
   }
-  
+
   function testFuzz_getDepositLockTimePeriods(uint64 secondsElapsed, uint64 timePeriodsFromOpen) public {
-    if(timePeriodsFromOpen <= type(uint64).max / 86400 && secondsElapsed >= timePeriodsFromOpen * 86400) {
+      vm.assume(timePeriodsFromOpen <= type(uint64).max / 86400 && secondsElapsed >= timePeriodsFromOpen * 86400);
+
       uint256 vaultOpenTime = block.timestamp + 1000;
-      vm.prank(vaultOwner);
-      vault.openVault(vaultOpenTime);
+      
+      openVault(vaultOpenTime);
+
       vm.warp(vaultOpenTime + secondsElapsed);
 
       uint256 simul_result = (secondsElapsed / 86400 - timePeriodsFromOpen) <= 1 ? 0 : (secondsElapsed / 86400 - timePeriodsFromOpen - 1);
 
       assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , simul_result);
-    }
+    
   }
 
   function test_getDepositLockTimePeriods() public {
       uint256 vaultOpenTime = block.timestamp + 1000;
-      vm.prank(vaultOwner);
-      vault.openVault(vaultOpenTime);
+      openVault(vaultOpenTime);
 
       uint256 secondsElapsed = 45000;
+      
+      // timePeriods when deposit
       uint256 timePeriodsFromOpen = 0;
 
       vm.warp(vaultOpenTime + secondsElapsed);
@@ -72,6 +79,28 @@ contract ShortTermFixedYieldVaultTest is BaseTest, UserGenerator {
       secondsElapsed = 2 days + 1;
       vm.warp(vaultOpenTime + secondsElapsed);
       assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 1);
+
+      secondsElapsed = 31 days + 2100;
+      vm.warp(vaultOpenTime + secondsElapsed);
+      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 30);
+
+      secondsElapsed = 61 days + 10;
+      vm.warp(vaultOpenTime + secondsElapsed);
+      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 60);
+
+      timePeriodsFromOpen = 24;
+
+      secondsElapsed = 49 days + 3420;
+      vm.warp(vaultOpenTime + secondsElapsed);
+      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 24);
+
+      secondsElapsed = 55 days + 12;
+      vm.warp(vaultOpenTime + secondsElapsed);
+      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 30);
+
+      secondsElapsed = 85 days;
+      vm.warp(vaultOpenTime + secondsElapsed);
+      assertEq(vault.getDepositLockTimePeriods(timePeriodsFromOpen) , 60);
   }
 
   function test_getTimePeriodsElapsedInCurrentTerm() public {
