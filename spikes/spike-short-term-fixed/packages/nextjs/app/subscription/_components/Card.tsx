@@ -2,16 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
+import { Tooltip } from "react-tooltip";
 import { useAccount, useWriteContract } from "wagmi";
 import { useReadContract } from "wagmi";
-import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { useTransactor } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 import { ContractName } from "~~/utils/scaffold-eth/contract";
-import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
-
-const contractsData = getAllContracts();
-const contractNames = Object.keys(contractsData) as ContractName[];
 
 const ViewSection = (props: any) => {
   const [userData, setUserData] = useState<number>(0);
@@ -86,19 +83,20 @@ const ViewSection = (props: any) => {
   );
 };
 
-const Card = () => {
+const Card = ({ contractNames }: { contractNames: ContractName[] }) => {
   const [amount, setAmount] = useState("");
   const tenureDuration = 30n;
   const { address } = useAccount();
   const [refresh, setRefresh] = useState(false);
   const { targetNetwork } = useTargetNetwork();
   const writeTxn = useTransactor();
+  const { writeContractAsync } = useWriteContract();
+  const { resolvedTheme } = useTheme();
+
   const { data: deployedContractDataUSDC, isLoading: deployedContractLoadingUSDC } = useDeployedContractInfo(
     contractNames[0],
   );
   const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractNames[1]);
-  const { writeContractAsync } = useWriteContract();
-  const { resolvedTheme } = useTheme();
 
   const { refetch } = useReadContract({
     address: deployedContractData?.address,
@@ -160,6 +158,12 @@ const Card = () => {
     }
   };
 
+  const multiplyBy18 = () => {
+    if (amount) {
+      setAmount(prev => (Number(prev) * 1e18).toString());
+    }
+  };
+
   if (deployedContractLoading || deployedContractLoadingUSDC) {
     return (
       <div className="mt-14">
@@ -185,23 +189,44 @@ const Card = () => {
       <div className="columns-2 align-items-start mt-6">
         <div className="input-section mr-12">
           <div className="align-items-start">
-            <h3>Enter Amount</h3>
-            <input
-              type="text"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              placeholder="Enter amount"
-              style={{ padding: "10px", width: "100%", marginBottom: "10px" }}
-              onFocus={e =>
-                e.target.addEventListener(
-                  "wheel",
-                  function (e) {
-                    e.preventDefault();
-                  },
-                  { passive: false },
-                )
-              }
-            />
+            <h3>
+              Amount <span className="text-xs font-extralight leading-none">number</span>
+            </h3>
+
+            <div className="relative" style={{ marginBottom: "10px" }}>
+              <input
+                type="text"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                placeholder="Enter amount"
+                className={`border ${
+                  resolvedTheme === "dark" ? "border-neutral-100" : "border-primary placeholder-primary"
+                } rounded-full outline-none focus:ring-0 pr-10`}
+                style={{ padding: "10px", width: "100%" }}
+                onFocus={e =>
+                  e.target.addEventListener(
+                    "wheel",
+                    function (e) {
+                      e.preventDefault();
+                    },
+                    { passive: false },
+                  )
+                }
+              />
+
+              <button
+                data-tooltip-id="multiply-tooltip"
+                data-tooltip-content="Multiply by 1e18 (wei)"
+                className={`absolute right-2 top-1/2 transform -translate-y-1/2 text-primary rounded-full p-1 focus:outline-none`}
+                style={{ height: "30px", width: "30px", backgroundColor: "transparent" }}
+                onClick={multiplyBy18}
+              >
+                <span className={`text-2xl ${resolvedTheme === "dark" ? "text-white" : "text-primary"}`}>*</span>
+              </button>
+
+              <Tooltip id="multiply-tooltip" />
+            </div>
+
             <div className="buttons-section mt-5">
               <button
                 onClick={handleDeposit}

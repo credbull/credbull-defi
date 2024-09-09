@@ -8,22 +8,19 @@ import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 import { ContractName } from "~~/utils/scaffold-eth/contract";
-import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
 
-const contractsData = getAllContracts();
-const contractNames = Object.keys(contractsData) as ContractName[];
-
-const Card = () => {
+const Card = ({ contractNames }: { contractNames: ContractName[] }) => {
   const [debugTimeElapsedValue, setDebugTimeElapsedValue] = useState("");
   const [refresh, setRefresh] = useState(false);
   const { targetNetwork } = useTargetNetwork();
   const writeTxn = useTransactor();
+  const { writeContractAsync } = useWriteContract();
+  const { resolvedTheme } = useTheme();
+
   const { data: deployedContractDataUSDC, isLoading: deployedContractLoadingUSDC } = useDeployedContractInfo(
     contractNames[0],
   );
   const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractNames[1]);
-  const { writeContractAsync } = useWriteContract();
-  const { resolvedTheme } = useTheme();
 
   const refill = () => {
     if (deployedContractDataUSDC && deployedContractData) {
@@ -69,6 +66,12 @@ const Card = () => {
     }
   };
 
+  const multiplyBy18 = () => {
+    if (debugTimeElapsedValue) {
+      setDebugTimeElapsedValue(prev => (Number(prev) * 1e18).toString());
+    }
+  };
+
   if (deployedContractLoading || deployedContractLoadingUSDC) {
     return (
       <div className="mt-14">
@@ -92,23 +95,43 @@ const Card = () => {
       } p-10`}
     >
       <div className="debug-section mt-6">
-        <h3>Set time elapsed</h3>
-        <input
-          type="text"
-          value={debugTimeElapsedValue}
-          onChange={e => setDebugTimeElapsedValue(e.target.value)}
-          placeholder="Set time elapsed"
-          style={{ padding: "10px", width: "40%" }}
-          onFocus={e =>
-            e.target.addEventListener(
-              "wheel",
-              function (e) {
-                e.preventDefault();
-              },
-              { passive: false },
-            )
-          }
-        />
+        <h3>
+          Time elapsed <span className="text-xs font-extralight leading-none">number</span>
+        </h3>
+
+        <div className="relative w-1/2">
+          <input
+            type="text"
+            value={debugTimeElapsedValue}
+            onChange={e => setDebugTimeElapsedValue(e.target.value)}
+            placeholder="Set time elapsed"
+            className={`border ${
+              resolvedTheme === "dark" ? "border-neutral-100" : "border-primary placeholder-primary"
+            } rounded-full outline-none focus:ring-0 pr-10`}
+            style={{ padding: "10px", width: "100%" }}
+            onFocus={e =>
+              e.target.addEventListener(
+                "wheel",
+                function (e) {
+                  e.preventDefault();
+                },
+                { passive: false },
+              )
+            }
+          />
+
+          <button
+            data-tooltip-id="multiply-tooltip"
+            data-tooltip-content="Multiply by 1e18 (wei)"
+            className={`absolute right-2 top-1/2 transform -translate-y-1/2 text-primary rounded-full p-1 focus:outline-none`}
+            style={{ height: "30px", width: "30px", backgroundColor: "transparent" }}
+            onClick={multiplyBy18}
+          >
+            <span className={`text-2xl ${resolvedTheme === "dark" ? "text-white" : "text-primary"}`}>*</span>
+          </button>
+
+          <Tooltip id="multiply-tooltip" />
+        </div>
 
         <div className="buttons-section mt-5">
           <button
