@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     SimpleUSDC: {
-      address: "0x5067457698fd6fa1c6964e416b3f42713513b3dd",
+      address: "0xa3307bf348acc4beddd67cca2f7f0c4349d347db",
       abi: [
         {
           type: "constructor",
@@ -438,7 +438,7 @@ const deployedContracts = {
       },
     },
     YieldSubscription: {
-      address: "0x4b6ab5f819a515382b0deb6935d793817bb4af28",
+      address: "0xc0bb1650a8ea5ddf81998f17b5319afd656f4c11",
       abi: [
         {
           type: "constructor",
@@ -960,15 +960,7 @@ const deployedContracts = {
           ],
         },
       ],
-      inheritedFunctions: {
-        deposit: "contracts/IProduct.sol",
-        getCurrentTimePeriodsElapsed: "contracts/IProduct.sol",
-        getFrequency: "contracts/IProduct.sol",
-        getInterestInPercentage: "contracts/IProduct.sol",
-        redeem: "contracts/IProduct.sol",
-        redeemAtPeriod: "contracts/IProduct.sol",
-        setCurrentTimePeriodsElapsed: "contracts/IProduct.sol",
-      },
+      inheritedFunctions: {},
     },
   },
 } as const;
