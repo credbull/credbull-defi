@@ -179,7 +179,7 @@ const Card = () => {
   return (
     <div
       className={`container max-w-full border-2 rounded ${
-        resolvedTheme === "dark" ? "border-neutral-100" : "border-black-100"
+        resolvedTheme === "dark" ? "border-neutral-100" : "border-black"
       } p-10`}
     >
       <div className="columns-2 align-items-start mt-6">
@@ -206,7 +206,7 @@ const Card = () => {
               <button
                 onClick={handleDeposit}
                 className={`p-2 border rounded ${
-                  resolvedTheme === "dark" ? "border-neutral-100" : "border-black-100"
+                  resolvedTheme === "dark" ? "border-neutral-100" : "border-black"
                 } min-w-32 mr-4`}
               >
                 Deposit
@@ -214,7 +214,7 @@ const Card = () => {
               <button
                 onClick={handleRedeem}
                 className={`p-2 border rounded ${
-                  resolvedTheme === "dark" ? "border-neutral-100" : "border-black-100"
+                  resolvedTheme === "dark" ? "border-neutral-100" : "border-black"
                 } min-w-32`}
               >
                 Redeem

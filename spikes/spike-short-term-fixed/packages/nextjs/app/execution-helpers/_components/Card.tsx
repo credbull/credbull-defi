@@ -88,7 +88,7 @@ const Card = () => {
   return (
     <div
       className={`container max-w-full border-2 rounded ${
-        resolvedTheme === "dark" ? "border-neutral-100" : "border-black-100"
+        resolvedTheme === "dark" ? "border-neutral-100" : "border-black"
       } p-10`}
     >
       <div className="debug-section mt-6">
@@ -114,7 +114,7 @@ const Card = () => {
           <button
             onClick={handleSetTime}
             className={`p-2 border rounded ${
-              resolvedTheme === "dark" ? "border-neutral-100" : "border-black-100"
+              resolvedTheme === "dark" ? "border-neutral-100" : "border-black"
             } min-w-32 mr-4`}
           >
             Set
@@ -125,7 +125,7 @@ const Card = () => {
             data-tooltip-place={"right"}
             onClick={refill}
             className={`p-2 border rounded ${
-              resolvedTheme === "dark" ? "border-neutral-100" : "border-black-100"
+              resolvedTheme === "dark" ? "border-neutral-100" : "border-black"
             } min-w-32 mr-4`}
           >
             Refill
