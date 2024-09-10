@@ -145,11 +145,17 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
   /**
    * @notice Returns the interest earned by a user for a specific window of time.
      * @param user The address of the user.
-     * @param window The specific window of time for which to calculate the interest earned.
+     * @param depositTimePeriod The deposit time period
      * @return The amount of interest earned by the user for the specified window.
      */
-  function interestEarnedForWindow(address user, uint256 window) public view override returns (uint256) {
+  function interestEarnedForWindow(address user, uint256 depositTimePeriod) public view override returns (uint256) {
+    Principal memory principal = _createPrincipal(user, depositTimePeriod);
 
+    uint256 principalAmount = principal.principalAmount;
+
+    uint256 interest = calcInterest(principalAmount, currentTimePeriodsElapsed);
+
+    return interest;
   }
 
   /**
@@ -159,18 +165,14 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
      */
   function totalInterestEarned(address user) public view override returns (uint256) {
     uint256[] memory userLockPeriods = getLockPeriods(user);
-    uint256[] memory principals = _getPrincipalsForLockPeriods(user, userLockPeriods);
+    Principal[] memory principals = _getPrincipalsForLockPeriods(user, userLockPeriods);
 
     uint256 totalInterest = 0;
 
-    for (uint256 i = 0; i < userLockPeriods.length; i++) {
-      uint256 redeemPeriod = userLockPeriods[i];
-      uint256 depositPeriod = redeemPeriod - TENOR;
-      uint256 timePeriodsElapsed = getCurrentTimePeriodsElapsed() - depositPeriod;
+    for (uint256 i = 0; i < principals.length; i++) {
+      uint256 interestPeriod = currentTimePeriodsElapsed - principals[i].depositTimePeriod;
 
-      uint256 principal = principals[i];
-
-      uint256 interest = calcInterest(principal, timePeriodsElapsed);
+      uint256 interest = calcInterest(principals[i].principalAmount, interestPeriod);
 
       totalInterest += interest;
     }
@@ -187,41 +189,54 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
     uint256[] memory userLockPeriods = getLockPeriods(user);
 
     // get the principal amounts for each lock period
-    uint256[] memory principals = _getPrincipalsForLockPeriods(user, userLockPeriods);
+    Principal[] memory principals = _getPrincipalsForLockPeriods(user, userLockPeriods);
 
     uint256 totalDeposit = 0;
 
     // Sum up all the principal amounts
     for (uint256 i = 0; i < principals.length; i++) {
-      totalDeposit += principals[i];
+      totalDeposit += principals[i].principalAmount;
     }
 
     return totalDeposit;
   }
 
-/**
- * @notice Helper function that takes an array of lock periods and returns an array of principal values.
- * @param user The address of the user.
- * @param lockPeriods An array of lock periods.
- * @return principals An array of uint256 representing the principal amount for each lock period.
- */
-  function _getPrincipalsForLockPeriods(address user, uint256[] memory lockPeriods) internal view returns (uint256[] memory) {
-    // Create an array to hold the principal amounts for each lock period
-    uint256[] memory principals = new uint256[](lockPeriods.length);
+
+
+  struct Principal {
+    address account;
+    uint256 principalAmount;
+    uint256 depositTimePeriod;
+  }
+
+  function _getPrincipalsForLockPeriods(address account, uint256[] memory lockPeriods) internal view returns (Principal[] memory) {
+    Principal[] memory principals = new Principal[](lockPeriods.length);
 
     // Iterate through the lock periods and calculate the principal for each
     for (uint256 i = 0; i < lockPeriods.length; i++) {
       uint256 redeemPeriod = lockPeriods[i];
 
-      uint256 shares = balanceOf(user, redeemPeriod);
-
-      // Convert shares to principal for the current lock period
-      uint256 principal = _convertToPrincipalAtPeriod(shares, redeemPeriod);
+      Principal memory principal = _createPrincipal(account, redeemPeriod - TENOR);
 
       // Store the principal in the array
       principals[i] = principal;
     }
 
     return principals;
+  }
+
+  function _createPrincipal(address account, uint256 depositTimePeriod) internal view returns (Principal memory) {
+    uint256 redeemTimePeriod = depositTimePeriod + TENOR;
+    uint256 shares = balanceOf(account, redeemTimePeriod);
+
+    uint256 principalAmount = _convertToPrincipalAtDepositPeriod(shares, depositTimePeriod);
+
+    Principal memory principal = Principal({
+      account: account,
+      principalAmount: principalAmount,
+      depositTimePeriod: depositTimePeriod
+    });
+
+    return principal;
   }
 }
