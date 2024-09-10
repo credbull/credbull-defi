@@ -255,6 +255,54 @@ contract TimelockInterestVaultTest is InterestTest {
     vault.redeem(shares, alice, alice);
   }
 
+  function test__TimelockInterestVault__InterestEarnedForWindow() public {
+    uint256 tenor = TENOR_30;
+    uint256 depositAmount1 = 10_000 * SCALE;
+    uint256 depositAmount2 = 15_000 * SCALE;
+
+    TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, tenor);
+
+    // Alice deposits 2 times at timePeriod=1
+    uint256 depositPeriod1 = 1;
+    vault.setCurrentTimePeriodsElapsed(depositPeriod1);
+    vm.startPrank(alice);
+    asset.approve(address(vault), depositAmount1);
+    vault.deposit(depositAmount1, alice);
+
+    asset.approve(address(vault), depositAmount1);
+    vault.deposit(depositAmount1, alice);
+
+    depositAmount1 += depositAmount1;
+    vm.stopPrank();
+
+    // Alice deposit at timePeriod=15
+    uint256 depositPeriod2 = 15;
+    vault.setCurrentTimePeriodsElapsed(depositPeriod2);
+    vm.startPrank(alice);
+    asset.approve(address(vault), depositAmount2);
+    vault.deposit(depositAmount2, alice);
+    vm.stopPrank();
+
+    // warp to a future period
+    uint256 verifyPeriod = tenor - 1;
+    vault.setCurrentTimePeriodsElapsed(verifyPeriod);
+
+    uint256 window = depositPeriod1 + 1;
+    uint256 interestForPeriod1 = vault.interestEarnedForWindow(alice, window);
+    uint256 expectedInterest = vault.calcInterest(depositAmount1, verifyPeriod - depositPeriod1);
+    assertApproxEqAbs(interestForPeriod1, expectedInterest, TOLERANCE, "incorrect interest earned for window");
+
+    window = depositPeriod2 + 1;
+    uint256 interestForPeriod2 = vault.interestEarnedForWindow(alice, window);
+    expectedInterest = vault.calcInterest(depositAmount2, verifyPeriod - depositPeriod2);
+    assertApproxEqAbs(interestForPeriod2, expectedInterest, TOLERANCE, "incorrect interest earned for window");
+
+    // if there isn't user's deposit fund at window, interest should be 0
+    window = 5;
+    uint256 interestForPeriod3 = vault.interestEarnedForWindow(alice, window);
+    assertApproxEqAbs(interestForPeriod3, 0, TOLERANCE, "incorrect interest earned for window");
+  }
+
   function test__TimelockInterestVault__MultipleDeposits() public {
     uint256 tenor = TENOR_30;
     uint256 depositAmount1 = 10_000 * SCALE;

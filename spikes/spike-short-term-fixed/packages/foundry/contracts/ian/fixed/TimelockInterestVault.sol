@@ -151,7 +151,24 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
      * @return The amount of interest earned by the user for the specified window.
      */
   function interestEarnedForWindow(address user, uint256 window) public view override returns (uint256) {
+    if(window < 1) {
+      return 0;
+    }
+    
+    // window starts from 1 so depositPeriod should be [window - 1]
+    uint256 depositPeriod = window - 1;
+    uint256 redeemPeriod = depositPeriod + TENOR;
+    uint256 shares = balanceOf(user, redeemPeriod);
 
+    if(shares == 0) {
+      return 0;
+    }
+
+    uint256 principal = _convertToPrincipalAtPeriod(shares, redeemPeriod);
+    uint256 timePeriodsElapsed = getCurrentTimePeriodsElapsed() - depositPeriod;
+    uint256 interest = calcInterest(principal, timePeriodsElapsed);
+
+    return interest;
   }
 
   /**
