@@ -143,4 +143,87 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
   function unpause() public onlyOwner {
     Pausable._unpause();
   }
+
+  /**
+   * @notice Returns the interest earned by a user for a specific window of time.
+     * @param user The address of the user.
+     * @param window The specific window of time for which to calculate the interest earned.
+     * @return The amount of interest earned by the user for the specified window.
+     */
+  function interestEarnedForWindow(address user, uint256 window) public view override returns (uint256) {
+
+  }
+
+  /**
+   * @notice Returns the total interest earned by a user over all windows
+     * @param user The address of the user.
+     * @return The total amount of interest earned by the user.
+     */
+  function totalInterestEarned(address user) public view override returns (uint256) {
+    uint256[] memory userLockPeriods = getLockPeriods(user);
+    uint256[] memory principals = _getPrincipalsForLockPeriods(user, userLockPeriods);
+
+    uint256 totalInterest = 0;
+
+    for (uint256 i = 0; i < userLockPeriods.length; i++) {
+      uint256 redeemPeriod = userLockPeriods[i];
+      uint256 depositPeriod = redeemPeriod - TENOR;
+      uint256 timePeriodsElapsed = getCurrentTimePeriodsElapsed() - depositPeriod;
+
+      uint256 principal = principals[i];
+
+      uint256 interest = calcInterest(principal, timePeriodsElapsed);
+
+      totalInterest += interest;
+    }
+
+    return totalInterest;
+  }
+
+  /**
+   * @notice Returns the total amount of assets deposited by a user.
+     * @param user The address of the user.
+     * @return The total amount of assets deposited by the user.
+     */
+  function totalUserDeposit(address user) public view override returns (uint256) {
+    uint256[] memory userLockPeriods = getLockPeriods(user);
+
+    // get the principal amounts for each lock period
+    uint256[] memory principals = _getPrincipalsForLockPeriods(user, userLockPeriods);
+
+    uint256 totalDeposit = 0;
+
+    // Sum up all the principal amounts
+    for (uint256 i = 0; i < principals.length; i++) {
+      totalDeposit += principals[i];
+    }
+
+    return totalDeposit;
+  }
+
+/**
+ * @notice Helper function that takes an array of lock periods and returns an array of principal values.
+ * @param user The address of the user.
+ * @param lockPeriods An array of lock periods.
+ * @return principals An array of uint256 representing the principal amount for each lock period.
+ */
+  function _getPrincipalsForLockPeriods(address user, uint256[] memory lockPeriods) internal view returns (uint256[] memory) {
+    // Create an array to hold the principal amounts for each lock period
+    uint256[] memory principals = new uint256[](lockPeriods.length);
+
+    // Iterate through the lock periods and calculate the principal for each
+    for (uint256 i = 0; i < lockPeriods.length; i++) {
+      uint256 redeemPeriod = lockPeriods[i];
+
+      uint256 shares = balanceOf(user, redeemPeriod);
+
+      // Convert shares to principal for the current lock period
+      uint256 principal = _convertToPrincipalAtPeriod(shares, redeemPeriod);
+
+      // Store the principal in the array
+      principals[i] = principal;
+    }
+
+    return principals;
+  }
 }

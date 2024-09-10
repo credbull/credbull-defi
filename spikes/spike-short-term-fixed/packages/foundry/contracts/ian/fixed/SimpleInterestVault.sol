@@ -142,6 +142,21 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     uint256 shares,
     uint256 numTimePeriodsElapsed
   ) public view returns (uint256 assets) {
+    uint256 _principal = _convertToPrincipalAtPeriod(shares, numTimePeriodsElapsed);
+
+    return _principal + calcInterest(_principal, TENOR);
+  }
+
+  /**
+   * @notice Converts a given amount of shares to assets based on a specific time period.
+   * @param shares The amount of shares to convert.
+   * @param numTimePeriodsElapsed The number of time periods elapsed.
+   * @return principal The principal corresponding to the shares at the specified time period.
+   */
+  function _convertToPrincipalAtPeriod (
+    uint256 shares,
+    uint256 numTimePeriodsElapsed
+  ) internal view returns (uint256 principal) {
     if (shares < SCALE) return 0; // no assets for fractional shares
 
     // redeeming before TENOR - give back the Discounted Amount.
@@ -153,7 +168,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
 
     uint256 _principal = calcPrincipalFromDiscounted(shares, impliedNumTimePeriodsAtDeposit);
 
-    return _principal + calcInterest(_principal, TENOR);
+    return _principal;
   }
 
   /**
@@ -271,19 +286,19 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
      * @param window The specific window of time for which to calculate the interest earned.
      * @return The amount of interest earned by the user for the specified window.
      */
-    function interestEarnedForWindow(address user, uint256 window) public  view returns (uint256) {}
+    function interestEarnedForWindow(address user, uint256 window) public view virtual returns (uint256) {}
 
     /**
      * @notice Returns the total interest earned by a user over all windows
      * @param user The address of the user.
      * @return The total amount of interest earned by the user.
      */
-    function totalInterestEarned(address user) public view returns (uint256) {}
+    function totalInterestEarned(address user) public view virtual returns (uint256) {}
 
     /**
      * @notice Returns the total amount of assets deposited by a user.
      * @param user The address of the user.
      * @return The total amount of assets deposited by the user.
      */
-    function totalUserDeposit(address user) public view returns (uint256) {}
+    function totalUserDeposit(address user) public view virtual returns (uint256) {}
 }

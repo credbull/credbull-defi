@@ -74,6 +74,8 @@ interface IProduct {
      * @param user The address of the user.
      * @param window The specific window of time for which to calculate the interest earned.
      * @return The amount of interest earned by the user for the specified window.
+     * // interest for a specific deposit day?  where "window" is the day of deposit?
+     * // interest  "as of" a specific day?  where "window" is the "as of" period, and includes all deposits for the user?
      */
     function interestEarnedForWindow(address user, uint256 window) external view returns (uint256);
 

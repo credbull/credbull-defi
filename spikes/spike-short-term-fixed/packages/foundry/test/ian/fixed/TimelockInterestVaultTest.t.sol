@@ -255,6 +255,46 @@ contract TimelockInterestVaultTest is InterestTest {
     vault.redeem(shares, alice, alice);
   }
 
+  function test__TimelockInterestVault__MultipleDeposits() public {
+    uint256 tenor = TENOR_30;
+    uint256 depositAmount1 = 10_000 * SCALE;
+    uint256 depositAmount2 = 15_000 * SCALE;
+
+    TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, tenor);
+
+
+    // deposit
+    uint256 depositPeriod1 = 5;
+    vault.setCurrentTimePeriodsElapsed(depositPeriod1);
+    vm.startPrank(alice);
+    asset.approve(address(vault), depositAmount1);
+    vault.deposit(depositAmount1, alice);
+    vm.stopPrank();
+
+    // another deposit
+    uint256 depositPeriod2 = 10;
+    vault.setCurrentTimePeriodsElapsed(depositPeriod2);
+    vm.startPrank(alice);
+    asset.approve(address(vault), depositAmount2);
+    vault.deposit(depositAmount2, alice);
+    vm.stopPrank();
+
+    // warp to a future period
+    uint256 verifyPeriod = tenor - 1;
+    vault.setCurrentTimePeriodsElapsed(verifyPeriod);
+
+    // check total deposits
+    uint256 totalDeposit = vault.totalUserDeposit(alice);
+    uint256 expectedTotalDeposit = depositAmount1 + depositAmount2;
+    assertApproxEqAbs(totalDeposit, expectedTotalDeposit, TOLERANCE, "incorrect total user deposit");
+
+    // check the total interest
+    uint256 totalInterest = vault.totalInterestEarned(alice);
+    uint256 expectedInterest = vault.calcInterest(depositAmount1, verifyPeriod - depositPeriod1) + vault.calcInterest(depositAmount2, verifyPeriod - depositPeriod2);
+    assertApproxEqAbs(totalInterest, expectedInterest, TOLERANCE, "incorrect total interest earned");
+  }
+
+
   function testInterestAtPeriod(
     uint256 principal,
     ISimpleInterest simpleInterest,

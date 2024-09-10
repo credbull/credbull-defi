@@ -169,7 +169,7 @@ abstract contract TimelockIERC1155 is ITimelock, IRollable, ERC1155, ERC1155Supp
    * @param account The address of the account whose lock periods are to be retrieved.
    * @return lockPeriods An array of uint256 values representing the periods during which the account has locked tokens.
    */
-  function getLockPeriods(address account) external view override returns (uint256[] memory) {
+  function getLockPeriods(address account) public view override returns (uint256[] memory) {
     uint256 maxLockPeriod = getCurrentPeriod() + getLockDuration() + 1;
 
     uint256[] memory tempLockPeriods = new uint256[](maxLockPeriod);
