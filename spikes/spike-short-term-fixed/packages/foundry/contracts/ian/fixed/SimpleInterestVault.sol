@@ -142,21 +142,6 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     uint256 shares,
     uint256 numTimePeriodsElapsed
   ) public view returns (uint256 assets) {
-    uint256 _principal = _convertToPrincipalAtPeriod(shares, numTimePeriodsElapsed);
-
-    return _principal + calcInterest(_principal, TENOR);
-  }
-
-  /**
-   * @notice Converts a given amount of shares to assets based on a specific time period.
-   * @param shares The amount of shares to convert.
-   * @param numTimePeriodsElapsed The number of time periods elapsed.
-   * @return principal The principal corresponding to the shares at the specified time period.
-   */
-  function _convertToPrincipalAtPeriod (
-    uint256 shares,
-    uint256 numTimePeriodsElapsed
-  ) internal view returns (uint256 principal) {
     if (shares < SCALE) return 0; // no assets for fractional shares
 
     // redeeming before TENOR - give back the Discounted Amount.
@@ -166,7 +151,24 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
 
     uint256 impliedNumTimePeriodsAtDeposit = (numTimePeriodsElapsed - TENOR);
 
-    uint256 _principal = calcPrincipalFromDiscounted(shares, impliedNumTimePeriodsAtDeposit);
+    uint256 _principal = _convertToPrincipalAtDepositPeriod(shares, impliedNumTimePeriodsAtDeposit);
+
+    return _principal + calcInterest(_principal, TENOR);
+  }
+
+  /**
+   * @notice Converts a given amount of shares to assets based on the given deposit time period
+   * @param shares The amount of shares to convert.
+   * @param depositTimePeriod The period at deposit
+   * @return principal The principal corresponding to the shares at the specified time period.
+   */
+  function _convertToPrincipalAtDepositPeriod (
+    uint256 shares,
+    uint256 depositTimePeriod
+  ) internal view returns (uint256 principal) {
+    if (shares < SCALE) return 0; // no assets for fractional shares
+
+    uint256 _principal = calcPrincipalFromDiscounted(shares, depositTimePeriod);
 
     return _principal;
   }
