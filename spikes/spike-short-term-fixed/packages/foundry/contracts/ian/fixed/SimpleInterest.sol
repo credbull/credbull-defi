@@ -76,7 +76,7 @@ contract SimpleInterest is ISimpleInterest {
 
   /**
    * @notice Internal function to calculate the interest with scaling applied using the interest rate percentage.
-    * @dev - return value is scaled as Interest * SCALE.  For example: Interest=1.01 and Scale=100 returns 101
+   * @dev - return value is scaled as Interest * SCALE.  For example: Interest=1.01 and Scale=100 returns 101
    * @param principal The initial principal amount.
    * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
    * @param interestRatePercentage The interest rate as a percentage.
@@ -88,9 +88,8 @@ contract SimpleInterest is ISimpleInterest {
     uint256 interestRatePercentage,
     uint256 frequency
   ) internal view returns (uint256 interestScaled) {
-
-    uint256 _interestScaled = _scale(principal).mulDiv(
-      interestRatePercentage * numTimePeriodsElapsed, frequency * 100, ROUNDING);
+    uint256 _interestScaled =
+      _scale(principal).mulDiv(interestRatePercentage * numTimePeriodsElapsed, frequency * 100, ROUNDING);
 
     return _interestScaled;
   }
@@ -102,10 +101,7 @@ contract SimpleInterest is ISimpleInterest {
    * @param numTimePeriodsElapsed The number of time periods that have elapsed.
    * @return priceScaled The price scaled by the internal scale factor.
    */
-  function calcPriceWithScale(
-    uint256 numTimePeriodsElapsed
-  ) public view virtual returns (uint256 priceScaled) {
-
+  function calcPriceWithScale(uint256 numTimePeriodsElapsed) public view virtual returns (uint256 priceScaled) {
     uint256 interestScaled = _calcInterestWithScale(PAR, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
 
     uint256 _priceScaled = _scale(PAR) + interestScaled;
@@ -136,7 +132,10 @@ contract SimpleInterest is ISimpleInterest {
    * @param numTimePeriodsElapsed The number of time periods for which interest was calculated.
    * @return principal The recovered original principal amount.
    */
-  function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed) public view virtual returns (uint256 principal) {
+  function calcPrincipalFromDiscounted(
+    uint256 discounted,
+    uint256 numTimePeriodsElapsed
+  ) public view virtual returns (uint256 principal) {
     uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed);
 
     uint256 principalScaled = _scale(discounted).mulDiv(priceScaled, SCALE, ROUNDING); // Principal = Discounted * Price

@@ -14,9 +14,7 @@ import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-
 contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausable, IPausable {
-
   constructor(
     address initialOwner,
     IERC20Metadata asset,
@@ -86,8 +84,11 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
     TimelockIERC1155.rolloverUnlocked(account, lockReleasePeriod, sharesForNextPeriod);
   }
 
-  function calcRolloverBonus(address /* account */, uint256 /* lockReleasePeriod */, uint256 value)
-  public view override returns (uint256 rolloverBonus) {
+  function calcRolloverBonus(
+    address, /* account */
+    uint256, /* lockReleasePeriod */
+    uint256 value
+  ) public view override returns (uint256 rolloverBonus) {
     uint256 rolloverBonusScaled = _calcInterestWithScale(value, TENOR, 1, FREQUENCY);
 
     return _unscale(rolloverBonusScaled);
@@ -143,13 +144,17 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
   }
 
   /**
-   * @notice Returns the interest earned by a user for a specific window of time.
-     * @param user The address of the user.
-     * @param depositTimePeriod The deposit time period
-     * @return The amount of interest earned by the user for the specified window.
-     */
-  function interestEarnedForWindow(address user, uint256 depositTimePeriod) public view override returns (uint256) {
-    Principal memory principal = _createPrincipal(user, depositTimePeriod);
+   * @notice Returns the interest accrued for this account for the given depositTimePeriod
+   * e.g. if Alice deposits on Day 1 and Day 2, this will ONLY return the interest for the Day 1 deposit
+   * @param account The address of the user.
+   * @param depositTimePeriod The time period to calculate for
+   * @return The amount of interest accrued by the user for the given depositTimePeriod
+   */
+  function calcInterestForDepositTimePeriod(
+    address account,
+    uint256 depositTimePeriod
+  ) public view override returns (uint256) {
+    Principal memory principal = _createPrincipal(account, depositTimePeriod);
 
     uint256 principalAmount = principal.principalAmount;
 
@@ -159,13 +164,13 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
   }
 
   /**
-   * @notice Returns the total interest earned by a user over all windows
-     * @param user The address of the user.
-     * @return The total amount of interest earned by the user.
-     */
-  function totalInterestEarned(address user) public view override returns (uint256) {
-    uint256[] memory userLockPeriods = getLockPeriods(user);
-    Principal[] memory principals = _getPrincipalsForLockPeriods(user, userLockPeriods);
+   * @notice Returns the total interest accrued by a user across ALL deposit time periods
+   * @param account The address of the user.
+   * @return The total amount of interest earned by the user.
+   */
+  function calcTotalInterest(address account) public view override returns (uint256) {
+    uint256[] memory userLockPeriods = getLockPeriods(account);
+    Principal[] memory principals = _getPrincipalsForLockPeriods(account, userLockPeriods);
 
     uint256 totalInterest = 0;
 
@@ -182,14 +187,14 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
 
   /**
    * @notice Returns the total amount of assets deposited by a user.
-     * @param user The address of the user.
-     * @return The total amount of assets deposited by the user.
-     */
-  function totalUserDeposit(address user) public view override returns (uint256) {
-    uint256[] memory userLockPeriods = getLockPeriods(user);
+   * @param account The address of the user.
+   * @return The total amount of assets deposited by the user.
+   */
+  function calcTotalDeposits(address account) public view override returns (uint256) {
+    uint256[] memory userLockPeriods = getLockPeriods(account);
 
     // get the principal amounts for each lock period
-    Principal[] memory principals = _getPrincipalsForLockPeriods(user, userLockPeriods);
+    Principal[] memory principals = _getPrincipalsForLockPeriods(account, userLockPeriods);
 
     uint256 totalDeposit = 0;
 
@@ -201,15 +206,16 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
     return totalDeposit;
   }
 
-
-
   struct Principal {
     address account;
     uint256 principalAmount;
     uint256 depositTimePeriod;
   }
 
-  function _getPrincipalsForLockPeriods(address account, uint256[] memory lockPeriods) internal view returns (Principal[] memory) {
+  function _getPrincipalsForLockPeriods(
+    address account,
+    uint256[] memory lockPeriods
+  ) internal view returns (Principal[] memory) {
     Principal[] memory principals = new Principal[](lockPeriods.length);
 
     // Iterate through the lock periods and calculate the principal for each
@@ -231,11 +237,8 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
 
     uint256 principalAmount = _convertToPrincipalAtDepositPeriod(shares, depositTimePeriod);
 
-    Principal memory principal = Principal({
-      account: account,
-      principalAmount: principalAmount,
-      depositTimePeriod: depositTimePeriod
-    });
+    Principal memory principal =
+      Principal({ account: account, principalAmount: principalAmount, depositTimePeriod: depositTimePeriod });
 
     return principal;
   }

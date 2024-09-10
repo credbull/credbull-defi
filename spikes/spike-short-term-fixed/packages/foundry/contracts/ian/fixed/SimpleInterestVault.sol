@@ -42,7 +42,11 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     uint256 interestRatePercentage,
     uint256 frequency,
     uint256 tenor
-  ) SimpleInterest(interestRatePercentage, frequency, asset.decimals()) ERC4626(asset) ERC20("Simple Interest Rate Claim", "cSIR") {
+  )
+    SimpleInterest(interestRatePercentage, frequency, asset.decimals())
+    ERC4626(asset)
+    ERC20("Simple Interest Rate Claim", "cSIR")
+  {
     TENOR = tenor;
   }
 
@@ -67,10 +71,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
    * @param numTimePeriodsElapsed The number of time periods elapsed.
    * @return shares The number of shares corresponding to the assets at the specified time period.
    */
-  function convertToSharesAtPeriod(
-    uint256 assets,
-    uint256 numTimePeriodsElapsed
-  ) public view returns (uint256 shares) {
+  function convertToSharesAtPeriod(uint256 assets, uint256 numTimePeriodsElapsed) public view returns (uint256 shares) {
     if (assets < SCALE) return 0; // no shares for fractional assets
 
     return calcDiscounted(assets, numTimePeriodsElapsed);
@@ -138,10 +139,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
    * @param numTimePeriodsElapsed The number of time periods elapsed.
    * @return assets The number of assets corresponding to the shares at the specified time period.
    */
-  function convertToAssetsAtPeriod(
-    uint256 shares,
-    uint256 numTimePeriodsElapsed
-  ) public view returns (uint256 assets) {
+  function convertToAssetsAtPeriod(uint256 shares, uint256 numTimePeriodsElapsed) public view returns (uint256 assets) {
     if (shares < SCALE) return 0; // no assets for fractional shares
 
     // redeeming before TENOR - give back the Discounted Amount.
@@ -162,7 +160,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
    * @param depositTimePeriod The period at deposit
    * @return principal The principal corresponding to the shares at the specified time period.
    */
-  function _convertToPrincipalAtDepositPeriod (
+  function _convertToPrincipalAtDepositPeriod(
     uint256 shares,
     uint256 depositTimePeriod
   ) internal view returns (uint256 principal) {
@@ -190,8 +188,6 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
   function convertToAssets(uint256 shares) public view override(ERC4626, IERC4626) returns (uint256 assets) {
     return convertToAssetsAtPeriod(shares, currentTimePeriodsElapsed);
   }
-
-
 
   // =============== Withdraw ===============
 
@@ -282,25 +278,29 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     return SimpleInterest.getInterestInPercentage();
   }
 
-    /**
-     * @notice Returns the interest earned by a user for a specific window of time.
-     * @param user The address of the user.
-     * @param window The specific window of time for which to calculate the interest earned.
-     * @return The amount of interest earned by the user for the specified window.
-     */
-    function interestEarnedForWindow(address user, uint256 window) public view virtual returns (uint256) {}
+  /**
+   * @notice Returns the interest accrued for this account for the given depositTimePeriod
+   * e.g. if Alice deposits on Day 1 and Day 2, this will ONLY return the interest for the Day 1 deposit
+   * @param account The address of the user.
+   * @param depositTimePeriod The time period to calculate for
+   * @return The amount of interest accrued by the user for the given depositTimePeriod
+   */
+  function calcInterestForDepositTimePeriod(
+    address account,
+    uint256 depositTimePeriod
+  ) public view virtual returns (uint256) { }
 
-    /**
-     * @notice Returns the total interest earned by a user over all windows
-     * @param user The address of the user.
-     * @return The total amount of interest earned by the user.
-     */
-    function totalInterestEarned(address user) public view virtual returns (uint256) {}
+  /**
+   * @notice Returns the total interest accrued by a user across ALL deposit time periods
+   * @param account The address of the user.
+   * @return The total amount of interest earned by the user.
+   */
+  function calcTotalInterest(address account) public view virtual returns (uint256) { }
 
-    /**
-     * @notice Returns the total amount of assets deposited by a user.
-     * @param user The address of the user.
-     * @return The total amount of assets deposited by the user.
-     */
-    function totalUserDeposit(address user) public view virtual returns (uint256) {}
+  /**
+   * @notice Returns the total amount of assets deposited by a user.
+   * @param account The address of the user.
+   * @return The total amount of assets deposited by the user.
+   */
+  function calcTotalDeposits(address account) public view virtual returns (uint256) { }
 }

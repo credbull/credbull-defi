@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 interface IRollable {
-
   /**
    * @dev Rolls over a specified amount of tokens for another lock period.
    * MUST revert if there aren't sufficient tokens eligible for rollover
@@ -21,6 +20,9 @@ interface IRollable {
    * @param value The amount of tokens to be rolled over and eligible for bonus
    * @return rolloverBonus The amount of tokens given as bonus for rolling over
    */
-  function calcRolloverBonus(address account, uint256 lockReleasePeriod, uint256 value) external returns (uint256 rolloverBonus);
-
+  function calcRolloverBonus(
+    address account,
+    uint256 lockReleasePeriod,
+    uint256 value
+  ) external returns (uint256 rolloverBonus);
 }

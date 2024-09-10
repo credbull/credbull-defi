@@ -2,8 +2,6 @@
 pragma solidity ^0.8.23;
 
 interface ITimelock {
-
-
   /**
    * @dev Error thrown when attempting to unlock tokens before the lock period has expired.
    * @param currentPeriod The current time or period.
@@ -11,7 +9,9 @@ interface ITimelock {
    */
   error LockDurationNotExpired(address account, uint256 currentPeriod, uint256 lockReleasePeriod);
 
-  error InsufficientLockedBalanceAtPeriod(address account, uint256 available, uint256 required, uint256 lockReleasePeriod);
+  error InsufficientLockedBalanceAtPeriod(
+    address account, uint256 available, uint256 required, uint256 lockReleasePeriod
+  );
 
   /**
    * @dev Locks a specified amount of tokens for a particular account until a given release period.
@@ -45,12 +45,10 @@ interface ITimelock {
    */
   function previewUnlock(address account, uint256 lockReleasePeriod) external view returns (uint256 amountUnlockable);
 
-
   /**
    * @dev Returns lock periods for a given account where the account has a non-zero balance.
    * @param account The address of the account whose lock periods are to be retrieved.
    * @return lockPeriods An array of uint256 values representing the periods during which the account has locked tokens.
    */
-  function getLockPeriods(address account) external view returns (uint256 [] memory lockPeriods);
-
+  function getLockPeriods(address account) external view returns (uint256[] memory lockPeriods);
 }
