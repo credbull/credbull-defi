@@ -4,6 +4,20 @@ pragma solidity ^0.8.20;
 interface IProduct {
     error RedeemTimePeriodNotSupported(uint256 currentPeriod, uint256 redeemPeriod);
 
+    // ===============  Administrative Behavior ===============
+
+    // NOTE (JL,2024-09-06): Use Pausable for the prototype?
+
+    /// @notice Occurs when an operation is attempted on a closed vault.
+    // error Closed();
+
+    /// @dev Returns [true] if this vault is currently open. [false] otherwise.
+    // function isOpen() external returns (bool);
+
+    /// @dev Sets the vault open state acording to `isOpen`;
+    /// @param isOpen Sets the vault to open, if [true], or closed if [false].
+    // function setOpen(bool isOpen) external;
+
     // ===============  Vault / Vault-like Behavior ===============
 
     /**
@@ -37,6 +51,26 @@ interface IProduct {
     function redeemAtPeriod(uint256 shares, address receiver, address owner, uint256 redeemTimePeriod)
         external
         returns (uint256 assets);
+
+    // =============== Metadata ===============
+
+    /**
+     * @notice Captures the current details for an investment.
+     */
+    // struct InvestmentDetail {
+    //     /// @notice The amount invested.
+    //     uint256 investedAmount;
+    //     /// @notice The yield to date.
+    //     uint256 currentYield;
+    //     /// @notice The remaining time this investment is locked.
+    //     uint256 remainingLockDuration;
+    // }
+
+    // /**
+    //  * @dev Retrieves the array of [InvestmentDetail] pertaining to the `investor` account.
+    //  * @param investor The [address] to get the Investment Details for.
+    //  */
+    // function investmentDetails(address investor) external returns (InvestmentDetail[] memory);
 
     // =============== Metadata ===============
 
