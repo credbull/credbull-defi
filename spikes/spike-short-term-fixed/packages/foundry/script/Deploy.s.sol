@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import "../contracts/kk/YieldSubscription.sol";
 import "./DeployHelpers.s.sol";
 import "../contracts/SimpleUSDC.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
 
@@ -34,32 +35,36 @@ contract DeployScript is ScaffoldETHDeploy {
       )
     );
 
-    uint256 maturityPeriod = 30;
-    uint256 coolDownPeriod = 2;
+    uint8 interestRate = 6;
+    uint8 frequency = 1;
+    uint8 tenor = 30;
 
-    YieldSubscription shortTermYield = new YieldSubscription(address(simpleUSDC), 1724112000, maturityPeriod, coolDownPeriod);
-    console.logString(
-      string.concat(
-        "Short term yield deployed at: ", vm.toString(address(shortTermYield))
-      )
+    TimelockInterestVault timeLockVaultScenario1 = new TimelockInterestVault(
+      owner,
+      IERC20Metadata(address(simpleUSDC)),
+      interestRate,
+      frequency,
+      tenor
     );
 
-    YieldSubscription shortTermYieldRollover = new YieldSubscription(address(simpleUSDC), 1724112000, maturityPeriod, coolDownPeriod);
-    console.logString(
-      string.concat(
-        "Short term yield rollover deployed at: ", vm.toString(address(shortTermYieldRollover))
-      )
+    TimelockInterestVault timeLockVaultScenario2 = new TimelockInterestVault(
+      owner,
+      IERC20Metadata(address(simpleUSDC)),
+      interestRate,
+      frequency,
+      tenor
     );
+
     vm.stopBroadcast();
 
     vm.startBroadcast(userPrivateKey);
 
     simpleUSDC.mint(address(user), MINT_AMOUNT); //10 Million
-    simpleUSDC.approve(address(shortTermYield), MINT_AMOUNT); //10 Million
-    simpleUSDC.approve(address(shortTermYieldRollover), MINT_AMOUNT); //10 Million
+    simpleUSDC.approve(address(timeLockVaultScenario1), MINT_AMOUNT); //10 Million
+    simpleUSDC.approve(address(timeLockVaultScenario2), MINT_AMOUNT); //10 Million
 
-    shortTermYield.setCurrentTimePeriodsElapsed(1);
-    shortTermYieldRollover.setCurrentTimePeriodsElapsed(1);
+    timeLockVaultScenario1.setCurrentTimePeriodsElapsed(1);
+    timeLockVaultScenario2.setCurrentTimePeriodsElapsed(1);
 
     vm.stopBroadcast();
 

@@ -148,7 +148,7 @@ const Card = ({
 
       const timePeriodsElapsed = BigInt(timePeriodsElapsedData.data as bigint);
 
-      const redeemAt = timePeriodsElapsed % tenureDuration;
+      const redeemAt = timePeriodsElapsed;
 
       if (writeContractAsync) {
         try {
