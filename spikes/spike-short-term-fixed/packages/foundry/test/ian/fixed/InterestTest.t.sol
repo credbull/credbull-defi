@@ -75,14 +75,12 @@ abstract contract InterestTest is Test {
     );
   }
 
-
   // verify convertToAssets and convertToShares.  These are a "preview" and do NOT update vault assets or shares.
   function testConvertToAssetAndSharesAtPeriod(
     uint256 principal,
     IERC4626Interest vault,
     uint256 numTimePeriods
   ) internal virtual {
-
     // ------------------- check toShares/toAssets - specified period -------------------
     uint256 expectedYield = principal + vault.calcInterest(principal, vault.getTenor()); // yield = principal + interest
 
@@ -115,10 +113,10 @@ abstract contract InterestTest is Test {
     // ------------------- check partials  -------------------
     uint256 expectedPartialYield =
       principal.mulDiv(33, 100) + vault.calcInterest(principal.mulDiv(33, 100), vault.getTenor());
-    
+
     uint256 partialAssetsAtPeriod =
       vault.convertToAssetsAtPeriod(actualShares.mulDiv(33, 100), numTimePeriods + vault.getTenor());
-    
+
     assertApproxEqAbs(
       expectedPartialYield,
       partialAssetsAtPeriod,

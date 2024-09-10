@@ -16,7 +16,8 @@ contract SimpleInterestTest is InterestTest {
   function test__SimpleInterestTest__CheckScale() public {
     uint256 apy = 10; // APY in percentage
 
-    ISimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360), DECIMALS);
+    ISimpleInterest simpleInterest =
+      new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360), DECIMALS);
 
     uint256 scaleMinus1 = simpleInterest.getScale() - 1;
 
@@ -31,7 +32,8 @@ contract SimpleInterestTest is InterestTest {
   function test__SimpleInterestTest__Monthly() public {
     uint256 apy = 12; // APY in percentage
 
-    ISimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.MONTHLY), DECIMALS);
+    ISimpleInterest simpleInterest =
+      new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.MONTHLY), DECIMALS);
     uint256 scale = simpleInterest.getScale();
 
     testInterestToMaxPeriods(200 * scale, simpleInterest);
@@ -40,7 +42,8 @@ contract SimpleInterestTest is InterestTest {
   function test__SimpleInterestTest__Daily360() public {
     uint256 apy = 12; // APY in percentage
 
-    ISimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360), DECIMALS);
+    ISimpleInterest simpleInterest =
+      new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360), DECIMALS);
     uint256 scale = simpleInterest.getScale();
 
     testInterestToMaxPeriods(200 * scale, simpleInterest);
@@ -49,9 +52,9 @@ contract SimpleInterestTest is InterestTest {
   function test_SimpleInterestTest_Price() public {
     uint256 apy = 12; // APY in percentage
 
-    SimpleInterest simpleInterest = new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360), DECIMALS);
+    SimpleInterest simpleInterest =
+      new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360), DECIMALS);
     uint256 scale = simpleInterest.getScale();
-
 
     uint256 day0 = 0;
     assertEq(1 * scale, simpleInterest.calcPriceWithScale(day0)); // 1 + (0.12 * 0) / 360 = 1
@@ -69,13 +72,12 @@ contract SimpleInterestTest is InterestTest {
     uint256 principal = 1000 * SCALE;
     uint256 price = 1005 * SCALE;
 
-//    Discounted (Floor)  = floor(Principal / Price) =  floor(1000 / 1.005) = floor(995.02) = 995
+    //    Discounted (Floor)  = floor(Principal / Price) =  floor(1000 / 1.005) = floor(995.02) = 995
     uint256 discountedFloor = principal.mulDiv(SCALE, price, Math.Rounding.Floor);
     assertEq(discountedFloor, 995, "Floor rounding failed");
 
-//    Discounted (Floor)  = ceil(Principal / Price) =  ceil(1000 / 1.005) = ceil(995.02) = 996
+    //    Discounted (Floor)  = ceil(Principal / Price) =  ceil(1000 / 1.005) = ceil(995.02) = 996
     uint256 discountedCeil = principal.mulDiv(SCALE, price, Math.Rounding.Ceil);
     assertEq(discountedCeil, 996, "Ceiling rounding failed");
   }
-
 }

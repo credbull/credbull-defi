@@ -163,7 +163,6 @@ abstract contract TimelockIERC1155 is ITimelock, IRollable, ERC1155, ERC1155Supp
    */
   function setCurrentPeriod(uint256 _currentPeriod) public virtual;
 
-
   /**
    * @dev Returns lock periods for a given account where the account has a non-zero balance.
    * @param account The address of the account whose lock periods are to be retrieved.

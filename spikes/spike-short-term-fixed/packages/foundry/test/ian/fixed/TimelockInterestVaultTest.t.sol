@@ -165,7 +165,7 @@ contract TimelockInterestVaultTest is InterestTest {
     vault.setCurrentTimePeriodsElapsed(endPeriodTwo); // warp to end of period 2
 
     // ------------- verify assets end of period 2---------------
-    uint256 expectedAssetsPeriodTwo =  40_434 * SCALE + (6675 * SCALE) / 10_000; // Principal(WithBonus)[P2] + Interest(WithBonus)[P2] = $40,233.50 + $201.1675 = $40,434.6675 // with bonus credited day 30
+    uint256 expectedAssetsPeriodTwo = 40_434 * SCALE + (6675 * SCALE) / 10_000; // Principal(WithBonus)[P2] + Interest(WithBonus)[P2] = $40,233.50 + $201.1675 = $40,434.6675 // with bonus credited day 30
     assertEq(actualSharesPeriodTwo, vault.previewUnlock(alice, endPeriodTwo), "full amount should be unlockable at end of period 2");
     assertApproxEqAbs(expectedAssetsPeriodTwo, vault.convertToAssets(actualSharesPeriodTwo), TOLERANCE, "assets end of Period 2 incorrect");
 
@@ -239,14 +239,14 @@ contract TimelockInterestVaultTest is InterestTest {
     vm.stopPrank();
 
     // ------------- early redeem - before vault's first tenor  ---------------
-    uint256 tenorMinus1 = tenor-1;
+    uint256 tenorMinus1 = tenor - 1;
     vault.setCurrentTimePeriodsElapsed(tenorMinus1);
 
     vm.prank(alice);
     vm.expectRevert(abi.encodeWithSelector(ITimelock.InsufficientLockedBalanceAtPeriod.selector, alice, 0, shares, vault.getCurrentTimePeriodsElapsed()));
     vault.redeem(shares, alice, alice); // try to redeem before warping - should fail
 
-//    // ------------- early redeem - before deposit + redeem  ---------------
+    //    // ------------- early redeem - before deposit + redeem  ---------------
     uint256 redeemMinus1 = depositPeriod + tenor - 1;
     vault.setCurrentTimePeriodsElapsed(redeemMinus1);
 
@@ -284,16 +284,16 @@ contract TimelockInterestVaultTest is InterestTest {
     vault.setCurrentTimePeriodsElapsed(verifyPeriod);
 
     // check total deposits
-    uint256 totalDeposit = vault.totalUserDeposit(alice);
+    uint256 totalDeposit = vault.calcTotalDeposits(alice);
     uint256 expectedTotalDeposit = depositAmount1 + depositAmount2;
     assertApproxEqAbs(totalDeposit, expectedTotalDeposit, TOLERANCE, "incorrect total user deposit");
 
     // check the total interest
-    uint256 totalInterest = vault.totalInterestEarned(alice);
-    uint256 expectedInterest = vault.calcInterest(depositAmount1, verifyPeriod - depositPeriod1) + vault.calcInterest(depositAmount2, verifyPeriod - depositPeriod2);
+    uint256 totalInterest = vault.calcTotalInterest(alice);
+    uint256 expectedInterest = vault.calcInterest(depositAmount1, verifyPeriod - depositPeriod1)
+      + vault.calcInterest(depositAmount2, verifyPeriod - depositPeriod2);
     assertApproxEqAbs(totalInterest, expectedInterest, TOLERANCE, "incorrect total interest earned");
   }
-
 
   function testInterestAtPeriod(
     uint256 principal,
