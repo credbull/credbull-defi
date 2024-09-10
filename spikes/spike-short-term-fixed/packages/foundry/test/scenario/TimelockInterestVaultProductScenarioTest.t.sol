@@ -27,6 +27,17 @@ import { ProductScenarioTest } from "@credbull-spike-test/scenario/ProductScenar
 contract TimelockInterestVaultProductScenarioTest is ProductScenarioTest {
     using Math for uint256;
 
+    /**
+     * @dev Creates a [TimelockInterestVault] using the `params` configuration.
+     *
+     * @param params The [ProductParams] of configuration for the [TimelockInterestVault].
+     */
+    function createProduct(ProductParams memory params) internal virtual override returns (IProduct) {
+        return new TimelockInterestVault(
+            params.owner, params.asset, params.interestRatePercentage, params.interestRateFrequency, params.tenor
+        );
+    }
+
     function setUp() public {
         scenarioSetup();
 
@@ -40,6 +51,4 @@ contract TimelockInterestVaultProductScenarioTest is ProductScenarioTest {
         _asset.transfer(address(_product), USER_ASSET_AMOUNT * 2);
         vm.stopPrank();
     }
-
-    // TODO (JL,2024-09-10): Factory function for customising the Product instance.
 }

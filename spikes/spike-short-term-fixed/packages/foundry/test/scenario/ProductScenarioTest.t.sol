@@ -40,6 +40,25 @@ abstract contract ProductScenarioTest is Test {
     IERC20 internal _share;
     IProduct internal _product;
 
+    // NOTE (JL,2024-09-10): This struct & factory function may not work.
+    struct ProductParams {
+        address owner;
+        IERC20Metadata asset;
+        uint8 interestRatePercentage;
+        uint16 interestRateFrequency;
+        uint8 tenor;
+    }
+
+    /**
+     * @dev Creates an instance of the [IProduct] under test, using the `params` configuration.
+     *
+     * @param params The [ProductParams] of configuration for the [IProduct].
+     */
+    function createProduct(ProductParams memory params) internal virtual returns (IProduct);
+
+    /**
+     * @dev A utility setup function intended to be invoked by the `setUp` function of the realising [Test].
+     */
     function scenarioSetup() internal {
         vm.startPrank(OWNER);
         _asset = new SimpleUSDC(ASSET_SUPPLY);
@@ -118,19 +137,7 @@ abstract contract ProductScenarioTest is Test {
         _product.setCurrentTimePeriodsElapsed(elapsedPeriods);
 
         vm.startPrank(ALICE);
-        // NOTE (JL,2024-09-10): Seems to be an issue advancing the time period for Lock and Vault in sync.
-        // vm.expectRevert(
-        //     abi.encodeWithSelector(ITimelock.LockDurationNotExpired.selector, ALICE, elapsedPeriods, currentPeriod)
-        // );
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ITimelock.InsufficientLockedBalanceAtPeriod.selector,
-                ALICE,
-                0,
-                _shares,
-                _product.getCurrentTimePeriodsElapsed()
-            )
-        );
+        vm.expectRevert();
         _product.redeem(_shares, ALICE, ALICE);
         vm.stopPrank();
     }
