@@ -266,4 +266,11 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
 
     return principal;
   }
+
+  // =============== Utility ===============
+
+  function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public virtual override (IProduct, SimpleInterestVault) {
+    SimpleInterestVault.setCurrentTimePeriodsElapsed(_currentTimePeriodsElapsed);
+  }
+
 }

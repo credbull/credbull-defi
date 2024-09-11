@@ -6,8 +6,6 @@ import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleI
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
 import { InterestVaultTestBase } from "@credbull-spike-test/ian/fixed/InterestVaultTestBase.t.sol";
-import { ICalcDiscounted } from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
-
 import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -44,7 +42,7 @@ contract SimpleInterestVaultTest is InterestVaultTestBase {
 
     IERC4626Interest vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
 
-    uint256 scaleMinus1 = vault.getScale() - 1;
+    uint256 scaleMinus1 = SCALE - 1;
 
     assertEq(0, vault.convertToShares(scaleMinus1), "convert to shares not scaled");
   }
