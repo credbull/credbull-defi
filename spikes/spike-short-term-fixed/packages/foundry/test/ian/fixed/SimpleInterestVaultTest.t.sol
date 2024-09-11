@@ -49,24 +49,6 @@ contract SimpleInterestVaultTest is InterestVaultTestBase {
     assertEq(0, vault.convertToShares(scaleMinus1), "convert to shares not scaled");
   }
 
-  function test__SimpleInterestVaultTest__Daily360_Periods_0_1_30_31() public {
-    uint256 apy = 12; // APY in percentage
-    uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-    uint256 tenor = 30;
-
-    IERC4626Interest vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
-
-    uint256 principal = 100 * SCALE;
-
-    uint256 actualInterestDay721 = vault.calcInterest(principal, 721, apy, frequencyValue);
-    assertEq(24_033_333, actualInterestDay721, "interest should be ~ 24.0333 at day 721");
-
-    testInterestAtPeriod(principal, vault, 0);
-    testInterestAtPeriod(principal, vault, 1);
-    testInterestAtPeriod(principal, vault, 30);
-    testInterestAtPeriod(principal, vault, 31);
-  }
-
   function test__SimpleInterestVaultTest__Monthly() public {
     uint256 apy = 12; // APY in percentage
     uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.MONTHLY);
@@ -74,25 +56,24 @@ contract SimpleInterestVaultTest is InterestVaultTestBase {
 
     IERC4626Interest vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
 
-    testInterestForTenor(200 * SCALE, vault);
+    testVaultAtTenorPeriods(200 * SCALE, vault);
   }
 
   function test__SimpleInterestVaultTest__Daily360() public {
-    uint256 apy = 10; // APY in percentage
+    uint256 apy = 12; // APY in percentage
     uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-    uint256 tenor = 90;
+    uint256 tenor = 30;
 
     IERC4626Interest vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
 
-    testInterestForTenor(200 * SCALE, vault);
+    uint256 principal = 100 * SCALE;
+    uint256 actualInterestDay721 = vault.calcInterest(principal, 721, apy, frequencyValue);
+    assertEq(24_033_333, actualInterestDay721, "interest should be ~ 24.0333 at day 721");
+
+    testVaultAtTenorPeriods(principal, vault);
   }
 
-  /*
-    Scenario: Calculating returns for a standard investment
-  Given a user has invested 50,000 USDC for exactly 30 days
-  When the returns are calculated
-  Then the user should receive 50,250 USDC (50,000 + 250 USDC interest, exactly 6.0% APY)
-    */
+   // Scenario: Calculating returns for a standard investment
   function test__SimpleInterestVaultTest__6APY_30day_50K() public {
     uint256 apy = 6; // APY in percentage
     uint256 tenor = 30;
@@ -111,12 +92,7 @@ contract SimpleInterestVaultTest is InterestVaultTestBase {
     assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
   }
 
-  /*
-    Scenario: Calculating returns for a rolled-over investment
-  Given a user has invested 40,000 USDC for 60 days (initial 30 days + 30 days rollover, 6% APY)
-  When the returns are calculated
-  Then the user should receive 40,600 USDC (40,000 + 401 USDC standard interest + 33.5 USDC rollover bonus)
-    */
+  // Scenario: Calculating returns for a rolled-over investment
   function test__SimpleInterestVaultTest__6APY_30day_40K_and_Rollover() public {
     uint256 apy = 6; // APY in percentage
     uint256 tenor = 30;

@@ -47,7 +47,7 @@ contract TimelockInterestVaultTest is InterestVaultTestBase {
     TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_12, FREQUENCY_360, TENOR_30);
 
     // check principal and interest calcs
-    testInterestForTenor(200 * SCALE, vault);
+    testVaultAtTenorPeriods(200 * SCALE, vault);
   }
 
   // Scenario: User withdraws after the lock period

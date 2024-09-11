@@ -11,14 +11,36 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-import { CalcInterestTestBase } from "@credbull-spike-test/ian/fixed/CalcInterestTestBase.t.sol";
-
-abstract contract InterestVaultTestBase is CalcInterestTestBase {
+abstract contract InterestVaultTestBase is Test {
   using Math for uint256;
+
+  uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000005
 
   address internal owner = makeAddr("owner");
   address internal alice = makeAddr("alice");
   address internal bob = makeAddr("bob");
+
+  function testVaultAtTenorPeriods(uint256 principal, IERC4626Interest vault) internal {
+    uint256 tenor = vault.getTenor();
+
+    // due to small fractional numbers, principal needs to be SCALED to calculate correctly
+    assertGe(principal, vault.getScale(), "principal not in SCALE");
+
+    uint256[5] memory numTimePeriodsElapsedArr = [0, 1, tenor - 1, tenor, tenor + 1];
+
+    // Iterate through the lock periods and calculate the principal for each
+    for (uint256 i = 0; i < numTimePeriodsElapsedArr.length; i++) {
+      uint256 numTimePeriodsElapsed = numTimePeriodsElapsedArr[i];
+
+      testVaultAtPeriod(principal, vault, numTimePeriodsElapsed);
+    }
+  }
+
+  function testVaultAtPeriod(uint256 principal, IERC4626Interest vault,uint256 numTimePeriods) internal {
+    testConvertToAssetAndSharesAtPeriod(principal, vault, numTimePeriods); // previews only
+    testPreviewDepositAndPreviewRedeem(principal, vault, numTimePeriods); // previews only
+    testDepositAndRedeemAtPeriod(owner, alice, principal, vault, numTimePeriods); // actual deposits/redeems
+  }
 
   // verify convertToAssets and convertToShares.  These are a "preview" and do NOT update vault assets or shares.
   function testConvertToAssetAndSharesAtPeriod(
@@ -170,24 +192,23 @@ abstract contract InterestVaultTestBase is CalcInterestTestBase {
     vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed); // restore the vault to previous state
   }
 
-  function testInterestAtPeriod(
-    uint256 principal,
-    ICalcInterestMetadata simpleInterest,
+  function assertMsg(
+    string memory prefix,
+    ICalcInterestMetadata calcInterest,
     uint256 numTimePeriods
-  ) internal override {
-    // test the vault related
-    IERC4626Interest vault = (IERC4626Interest)(address(simpleInterest));
-
-    // test against the simple interest harness
-    super.testInterestAtPeriod(principal, vault, numTimePeriods);
-
-    testConvertToAssetAndSharesAtPeriod(principal, vault, numTimePeriods); // previews only
-    testPreviewDepositAndPreviewRedeem(principal, vault, numTimePeriods); // previews only
-    testDepositAndRedeemAtPeriod(owner, alice, principal, vault, numTimePeriods); // actual deposits/redeems
+  ) internal view returns (string memory) {
+    return string.concat(prefix, toString(calcInterest), " timePeriod= ", vm.toString(numTimePeriods));
   }
 
-  function testInterestForTenor(uint256 principal, IERC4626Interest vault) internal {
-    testInterestAtPeriod(principal, vault, vault.getTenor());
+  function toString(ICalcInterestMetadata calcInterest) internal view returns (string memory) {
+    return string.concat(
+      " ISimpleInterest [ ",
+      " IR = ",
+      vm.toString(calcInterest.getInterestInPercentage()),
+      " Freq = ",
+      vm.toString(calcInterest.getFrequency()),
+      " ] "
+    );
   }
 
   function transferAndAssert(IERC20 _token, address fromAddress, address toAddress, uint256 amount) internal {
