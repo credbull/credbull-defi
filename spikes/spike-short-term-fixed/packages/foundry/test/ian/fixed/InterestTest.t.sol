@@ -12,20 +12,25 @@ import { console2 } from "forge-std/console2.sol";
 
 abstract contract InterestTest is Test {
   uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000005
-  uint256 public constant NUM_CYCLES_TO_TEST = 2; // number of cycles in test (e.g. 2 years, 24 months, 720 days)
 
   using Math for uint256;
 
-  function testInterestToMaxPeriods(uint256 principal, IDiscountedPrincipal simpleInterest) internal {
-    uint256 maxNumPeriods = simpleInterest.getFrequency() * NUM_CYCLES_TO_TEST; // e.g. 2 years, 24 months, 720 days
-
+  function testInterestForTenor(uint256 principal, IDiscountedPrincipal simpleInterest, uint256 tenorPeriod) internal {
     // due to small fractional numbers, principal needs to be SCALED to calculate correctly
     assertGe(principal, simpleInterest.getScale(), "principal not in SCALE");
 
-    // check all periods for 24 months
-    for (uint256 numTimePeriods = 0; numTimePeriods <= maxNumPeriods; numTimePeriods++) {
-      testInterestAtPeriod(principal, simpleInterest, numTimePeriods);
-    }
+    // check at 0, 1, tenor-1, tenor, tenor+1
+
+    testInterestAtPeriod(principal, simpleInterest, 0);
+    testInterestAtPeriod(principal, simpleInterest, 1);
+
+    testInterestAtPeriod(principal, simpleInterest, tenorPeriod - 1);
+    testInterestAtPeriod(principal, simpleInterest, tenorPeriod);
+    testInterestAtPeriod(principal, simpleInterest, tenorPeriod + 1);
+
+    testInterestAtPeriod(principal, simpleInterest, 2 * tenorPeriod - 1);
+    testInterestAtPeriod(principal, simpleInterest, 2 * tenorPeriod);
+    testInterestAtPeriod(principal, simpleInterest, 2 * tenorPeriod + 1);
   }
 
   function testInterestAtPeriod(

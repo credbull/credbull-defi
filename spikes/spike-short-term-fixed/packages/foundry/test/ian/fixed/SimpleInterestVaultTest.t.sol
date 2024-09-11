@@ -71,7 +71,7 @@ contract SimpleInterestVaultTest is InterestVaultTest {
 
     IERC4626Interest vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
 
-    testInterestToMaxPeriods(200 * SCALE, vault);
+    testInterestForTenor(200 * SCALE, vault);
   }
 
   function test__SimpleInterestVaultTest__Daily360() public {
@@ -81,7 +81,7 @@ contract SimpleInterestVaultTest is InterestVaultTest {
 
     IERC4626Interest vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
 
-    testInterestToMaxPeriods(200 * SCALE, vault);
+    testInterestForTenor(200 * SCALE, vault);
   }
 
   /*
@@ -131,5 +131,6 @@ contract SimpleInterestVaultTest is InterestVaultTest {
     uint256 actualReturns = vault.convertToAssetsAtPeriod(actualShares, tenor);
     assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
   }
+
 
 }

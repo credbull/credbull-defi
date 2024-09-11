@@ -177,4 +177,9 @@ abstract contract InterestVaultTest is InterestTest {
     testPreviewDepositAndPreviewRedeem(principal, vault, numTimePeriods); // previews only
     testDepositAndRedeemAtPeriod(owner, alice, principal, vault, numTimePeriods); // actual deposits/redeems
   }
+
+  function testInterestForTenor(uint256 principal, IERC4626Interest vault) internal {
+    testInterestAtPeriod(principal, vault, vault.getTenor());
+  }
+
 }
