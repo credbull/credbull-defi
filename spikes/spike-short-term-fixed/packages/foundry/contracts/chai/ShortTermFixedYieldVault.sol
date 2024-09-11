@@ -1,14 +1,14 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { ERC721, ERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Permit } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { ABDKMath64x64 } from "./ABDKMath64x64.sol";
 
-contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
+contract ShortTermFixedYieldVault is ERC721Enumerable, Ownable2Step, Pausable {
   using ABDKMath64x64 for int128;
   using ABDKMath64x64 for uint256;
 
@@ -333,12 +333,17 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
    */
   function getDepositInfo(
     uint256 tokenId
-  ) external view returns (uint256 periodsUntilTermEnd, uint256 currentYield, uint256 accumulatedAmount) {
+  ) public view returns (
+    uint256 periodsUntilTermEnd, 
+    uint256 currentYield,
+    uint256 accumulatedAmount,
+    uint256 principal
+  ) {
     DepositInfo memory depositInfo = depositInfos[tokenId];
-
     periodsUntilTermEnd = LOCK_TIME_PERIODS - getTimePeriodsElapsedInCurrentTerm(depositInfo.timePeriodsFromOpen);
     accumulatedAmount = calculateAccumulatedAmount(tokenId);
     currentYield = accumulatedAmount - depositInfo.principal;
+    principal = depositInfo.principal;
   }
 
   function _calculateLastTermWithdrawal(
@@ -359,5 +364,41 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
     }
 
     return withdrawalAmount;
+  }
+
+  /**
+   * @notice Returns the total interest accrued by a user across ALL deposit time periods
+   * @dev interface from IProduct
+   * @param account The address of the user.
+   * @return totalInterest total amount of interest earned by the user.
+   */
+  function calcTotalInterest(address account) external view returns (uint256 totalInterest) {
+    uint256 tokenIdsLength = balanceOf(account);
+    for (uint256 i = 0; i < tokenIdsLength;) {
+      uint256 tokenId = tokenOfOwnerByIndex(account, i);
+      (,uint256 yield,,) = getDepositInfo(tokenId);
+      totalInterest += yield;
+      unchecked {
+        ++i;
+      }       
+    }
+  }
+
+  /**
+   * @notice Returns the total amount of assets deposited by a user.
+   * @dev interface from IProduct
+   * @param account The address of the user.
+   * @return totalDeposits total amount of assets deposited by the user.
+   */
+  function calcTotalDeposits(address account) external view returns (uint256 totalDeposits) {
+    uint256 tokenIdsLength = balanceOf(account);
+    for (uint256 i = 0; i < tokenIdsLength;) {
+      uint256 tokenId = tokenOfOwnerByIndex(account, i);
+      (,,, uint256 principal) = getDepositInfo(tokenId);
+      totalDeposits += principal;
+      unchecked {
+        ++i;
+      }       
+    }
   }
 }

@@ -147,7 +147,7 @@ contract ShortTermFixedYieldVaultTest is BaseTest, UserGenerator {
 
     assertApproxEqAbs(vault.calculateAccumulatedAmount(tokenId), simulateAmount, TOLERANCE);
 
-    (uint256 periodsUntilTermEnd, uint256 currentYield, uint256 accumulatedAmount) = vault.getDepositInfo(tokenId);
+    (uint256 periodsUntilTermEnd, uint256 currentYield, uint256 accumulatedAmount, ) = vault.getDepositInfo(tokenId);
 
     assertEq(accumulatedAmount, simulateAmount);
     assertEq(periodsUntilTermEnd, 10);
