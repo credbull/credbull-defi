@@ -10,7 +10,7 @@ import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { InterestVaultTest } from "@credbull-spike-test/ian/fixed/InterestVaultTest.t.sol";
+import { InterestVaultTestBase } from "@credbull-spike-test/ian/fixed/InterestVaultTestBase.t.sol";
 import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
 import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.sol";
 
@@ -18,7 +18,7 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 import { console2 } from "forge-std/console2.sol";
 
-contract TimelockInterestVaultTest is InterestVaultTest {
+contract TimelockInterestVaultTest is InterestVaultTestBase {
   IERC20Metadata private asset;
 
   uint256 constant TENOR_30 = 30;

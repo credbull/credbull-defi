@@ -5,7 +5,7 @@ import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4
 import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleInterestVault.sol";
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
-import { InterestVaultTest } from "@credbull-spike-test/ian/fixed/InterestVaultTest.t.sol";
+import { InterestVaultTestBase } from "@credbull-spike-test/ian/fixed/InterestVaultTestBase.t.sol";
 import { ICalcDiscounted } from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
 
 import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
@@ -14,7 +14,9 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-contract SimpleInterestVaultTest is InterestVaultTest {
+import { console2 } from "forge-std/console2.sol";
+
+contract SimpleInterestVaultTest is InterestVaultTestBase {
   using Math for uint256;
 
   IERC20Metadata private asset;
@@ -57,6 +59,9 @@ contract SimpleInterestVaultTest is InterestVaultTest {
     IERC4626Interest vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
 
     uint256 principal = 100 * SCALE;
+
+    uint256 actualInterestDay721 = vault.calcInterest(principal, 721, apy, frequencyValue);
+    assertEq(24_033_333, actualInterestDay721, "interest should be ~ 24.0333 at day 721");
 
     testInterestAtPeriod(principal, vault, 0);
     testInterestAtPeriod(principal, vault, 1);

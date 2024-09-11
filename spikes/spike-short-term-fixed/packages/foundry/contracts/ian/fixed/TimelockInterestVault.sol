@@ -3,6 +3,9 @@ pragma solidity ^0.8.23;
 
 import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleInterestVault.sol";
 import { TimelockIERC1155 } from "@credbull-spike/contracts/ian/timelock/TimelockIERC1155.sol";
+import { CalcDiscounted } from "@credbull-spike/contracts/ian/fixed/CalcDiscounted.sol";
+import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
+
 import { IPausable } from "@credbull-spike/contracts/ian/interfaces/IPausable.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -89,9 +92,7 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
     uint256, /* lockReleasePeriod */
     uint256 value
   ) public view override returns (uint256 rolloverBonus) {
-    uint256 rolloverBonusScaled = _calcInterestWithScale(value, TENOR, 1, FREQUENCY);
-
-    return _unscale(rolloverBonusScaled);
+    return CalcSimpleInterest.calcInterest(value, TENOR, 1, FREQUENCY);
   }
 
   /**

@@ -3,6 +3,7 @@ pragma solidity ^0.8.23;
 
 import { ICalcInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
 import { CalcDiscounted } from "@credbull-spike/contracts/ian/fixed/CalcDiscounted.sol";
+import { CalcInterestMetadata } from "@credbull-spike/contracts/ian/fixed/CalcInterestMetadata.sol";
 import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
 import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
 import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
@@ -22,7 +23,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  * @dev A vault that uses SimpleInterest to calculate shares per asset.
  *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
  */
-contract SimpleInterestVault is IERC4626Interest, CalcDiscounted, ERC4626, IProduct, ERC20Burnable {
+contract SimpleInterestVault is IERC4626Interest, CalcInterestMetadata, ERC4626, IProduct, ERC20Burnable {
   using Math for uint256;
 
   uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapsed
@@ -44,11 +45,77 @@ contract SimpleInterestVault is IERC4626Interest, CalcDiscounted, ERC4626, IProd
     uint256 frequency,
     uint256 tenor
   )
-    CalcDiscounted(interestRatePercentage, frequency, asset.decimals())
+    CalcInterestMetadata(interestRatePercentage, frequency, asset.decimals())
     ERC4626(asset)
     ERC20("Simple Interest Rate Claim", "cSIR")
   {
     TENOR = tenor;
+  }
+
+  // =============== ICalcDiscounted ===============
+
+  /**
+   * @notice See {ICalcInterest-calcDiscounted}
+   */
+  function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256 discounted) {
+    return calcDiscounted(principal, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
+  }
+
+  /**
+   * @notice See {ICalcInterest-calcDiscounted}
+   */
+  function calcDiscounted(
+    uint256 principal,
+    uint256 numTimePeriodsElapsed,
+    uint256 interestRatePercentage,
+    uint256 frequency
+  ) public view returns (uint256 discounted) {
+    return CalcDiscounted.calcDiscounted(principal, numTimePeriodsElapsed, interestRatePercentage, frequency);
+  }
+
+
+  /**
+   * @notice See {ICalcInterest-calcPrincipalFromDiscounted}
+   */
+  function calcPrincipalFromDiscounted(
+    uint256 discounted,
+    uint256 numTimePeriodsElapsed
+  ) public view returns (uint256 principal) {
+    return calcPrincipalFromDiscounted(discounted, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
+  }
+
+  /**
+   * @notice See {ICalcInterest-calcPrincipalFromDiscounted}
+   */
+  function calcPrincipalFromDiscounted(
+    uint256 discounted,
+    uint256 numTimePeriodsElapsed,
+    uint256 interestRatePercentage,
+    uint256 frequency
+  ) public view returns (uint256 principal) {
+    return CalcDiscounted.calcPrincipalFromDiscounted(discounted, numTimePeriodsElapsed, interestRatePercentage, frequency);
+  }
+
+  /**
+ * @notice See {ICalcInterest-calcInterest}
+   */
+  function calcInterest(
+    uint256 principal,
+    uint256 numTimePeriodsElapsed,
+    uint256 interestRatePercentage,
+    uint256 frequency
+  ) public view returns (uint256 interest) {
+    return CalcSimpleInterest.calcInterest(principal, numTimePeriodsElapsed, interestRatePercentage, frequency);
+  }
+
+  /**
+* @notice See {ICalcInterest-calcInterest}
+   */
+  function calcInterest(
+    uint256 principal,
+    uint256 numTimePeriodsElapsed
+  ) public view returns (uint256 interest) {
+    return CalcSimpleInterest.calcInterest(principal, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
   }
 
   // =============== Deposit ===============
@@ -77,6 +144,8 @@ contract SimpleInterestVault is IERC4626Interest, CalcDiscounted, ERC4626, IProd
 
     return calcDiscounted(assets, numTimePeriodsElapsed);
   }
+
+
 
   /**
    * @notice Previews the number of shares that would be minted for a given deposit amount.
@@ -255,10 +324,10 @@ contract SimpleInterestVault is IERC4626Interest, CalcDiscounted, ERC4626, IProd
   function getFrequency()
     public
     view
-    override(ICalcInterestMetadata, CalcSimpleInterest, IProduct)
+    override(ICalcInterestMetadata, CalcInterestMetadata, IProduct)
     returns (uint256 frequency)
   {
-    return CalcSimpleInterest.getFrequency();
+    return CalcInterestMetadata.getFrequency();
   }
 
   /**
@@ -278,10 +347,10 @@ contract SimpleInterestVault is IERC4626Interest, CalcDiscounted, ERC4626, IProd
   function getInterestInPercentage()
     public
     view
-    override(ICalcInterestMetadata, CalcSimpleInterest, IProduct)
+    override(ICalcInterestMetadata, CalcInterestMetadata, IProduct)
     returns (uint256 interestRateInPercentage)
   {
-    return CalcSimpleInterest.getInterestInPercentage();
+    return CalcInterestMetadata.getInterestInPercentage();
   }
 
   /**

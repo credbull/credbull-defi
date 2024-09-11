@@ -12,9 +12,9 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
 
-import { CalcDiscountedTestBase } from "@credbull-spike-test/ian/fixed/CalcDiscountedTestBase.t.sol";
+import { CalcInterestTestBase } from "@credbull-spike-test/ian/fixed/CalcInterestTestBase.t.sol";
 
-abstract contract InterestVaultTest is CalcDiscountedTestBase {
+abstract contract InterestVaultTestBase is CalcInterestTestBase {
   using Math for uint256;
 
   address internal owner = makeAddr("owner");
@@ -133,6 +133,7 @@ abstract contract InterestVaultTest is CalcDiscountedTestBase {
     assertGe(asset.balanceOf(receiver), principal, assertMsg("not enough assets for deposit ", vault, numTimePeriods));
     asset.approve(address(vault), principal); // grant the vault allowance
     uint256 shares = vault.deposit(principal, receiver); // now deposit
+
     vm.stopPrank();
     assertEq(
       prevReceiverVaultBalance + shares,

@@ -31,6 +31,13 @@ interface ICalcDiscounted is ICalcInterestMetadata {
    */
   function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) external view returns (uint256 discounted);
 
+  function calcDiscounted(
+    uint256 principal,
+    uint256 numTimePeriodsElapsed,
+    uint256 interestRatePercentage,
+    uint256 frequency
+  ) external view returns (uint256 discounted);
+
   /**
    * @notice Recovers the original principal from a discounted value after the elapsed time periods.
    * @param discounted The discounted principal amount.
@@ -41,4 +48,13 @@ interface ICalcDiscounted is ICalcInterestMetadata {
     uint256 discounted,
     uint256 numTimePeriodsElapsed
   ) external view returns (uint256 principal);
+
+
+  function calcPrincipalFromDiscounted(
+    uint256 discounted,
+    uint256 numTimePeriodsElapsed,
+    uint256 interestRatePercentage,
+    uint256 frequency
+  ) external view returns (uint256 principal);
+
 }
