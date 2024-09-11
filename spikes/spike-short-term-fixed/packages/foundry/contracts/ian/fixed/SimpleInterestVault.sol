@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import {ICalcInterestMetadata} from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
-import { SimpleInterest } from "@credbull-spike/contracts/ian/fixed/SimpleInterest.sol";
+import { CalcDiscounted } from "@credbull-spike/contracts/ian/fixed/CalcDiscounted.sol";
 import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
 import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
 
@@ -21,7 +21,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  * @dev A vault that uses SimpleInterest to calculate shares per asset.
  *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
  */
-contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProduct, ERC20Burnable {
+contract SimpleInterestVault is IERC4626Interest, CalcDiscounted, ERC4626, IProduct, ERC20Burnable {
   using Math for uint256;
 
   uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapsed
@@ -43,7 +43,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     uint256 frequency,
     uint256 tenor
   )
-    SimpleInterest(interestRatePercentage, frequency, asset.decimals())
+    CalcDiscounted(interestRatePercentage, frequency, asset.decimals())
     ERC4626(asset)
     ERC20("Simple Interest Rate Claim", "cSIR")
   {
@@ -251,8 +251,8 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
    * @notice Returns the frequency of interest application (number of periods in a year).
    * @return frequency The frequency value.
    */
-  function getFrequency() public view override(ICalcInterestMetadata, SimpleInterest, IProduct) returns (uint256 frequency) {
-    return SimpleInterest.getFrequency();
+  function getFrequency() public view override(ICalcInterestMetadata, CalcDiscounted, IProduct) returns (uint256 frequency) {
+    return CalcDiscounted.getFrequency();
   }
 
   /**
@@ -272,10 +272,10 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
   function getInterestInPercentage()
     public
     view
-    override(ICalcInterestMetadata, SimpleInterest, IProduct)
+    override(ICalcInterestMetadata, CalcDiscounted, IProduct)
     returns (uint256 interestRateInPercentage)
   {
-    return SimpleInterest.getInterestInPercentage();
+    return CalcDiscounted.getInterestInPercentage();
   }
 
   /**

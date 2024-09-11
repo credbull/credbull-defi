@@ -27,7 +27,7 @@ import {ICalcDiscounted} from "@credbull-spike/contracts/ian/interfaces/ICalcDis
  * uint256 recoveredPrincipal = calcPrincipalFromDiscounted(discountedValue);
  * assert(recoveredPrincipal == originalPrincipal);
  */
-contract SimpleInterest is ICalcDiscounted {
+contract CalcDiscounted is ICalcDiscounted {
   using Math for uint256;
 
   uint256 public immutable INTEREST_RATE; // IR as %, e.g. 15 for 15% (or 0.15)
