@@ -4,12 +4,12 @@
 pragma solidity ^0.8.20;
 
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { IDiscountedPrincipal } from "@credbull-spike/contracts/ian/interfaces/IDiscountedPrincipal.sol";
+import {ICalcDiscounted} from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
 
 /**
  * @dev Extension to Interface Vault Standard
  */
-interface IERC4626Interest is IERC4626, IDiscountedPrincipal {
+interface IERC4626Interest is IERC4626, ICalcDiscounted {
   function convertToSharesAtPeriod(
     uint256 assets,
     uint256 numTimePeriodsElapsed
