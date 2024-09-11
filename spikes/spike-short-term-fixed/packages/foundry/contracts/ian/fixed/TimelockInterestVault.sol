@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleInterestVault.sol";
+import { DiscountVault } from "@credbull-spike/contracts/ian/fixed/DiscountVault.sol";
 import { TimelockIERC1155 } from "@credbull-spike/contracts/ian/timelock/TimelockIERC1155.sol";
 import { CalcDiscounted } from "@credbull-spike/contracts/ian/fixed/CalcDiscounted.sol";
 import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
@@ -21,14 +21,14 @@ import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausable, IPausable, IProduct {
+contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPausable, IProduct {
   constructor(
     address initialOwner,
     IERC20Metadata asset,
     uint256 interestRatePercentage,
     uint256 frequency,
     uint256 tenor
-  ) TimelockIERC1155(initialOwner) SimpleInterestVault(asset, interestRatePercentage, frequency, tenor) { }
+  ) TimelockIERC1155(initialOwner) DiscountVault(asset, interestRatePercentage, frequency, tenor) { }
 
   // we want the supply of the ERC20 token - not the locks
   function totalSupply() public view virtual override(ERC1155Supply, IERC20, ERC20) returns (uint256) {
@@ -65,8 +65,8 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
     address receiver,
     address owner,
     uint256 redeemTimePeriod
-  ) public override(SimpleInterestVault, IProduct) returns (uint256 assets) {
-    return SimpleInterestVault.redeemAtPeriod(shares, receiver, owner, redeemTimePeriod);
+  ) public override(DiscountVault, IProduct) returns (uint256 assets) {
+    return DiscountVault.redeemAtPeriod(shares, receiver, owner, redeemTimePeriod);
   }
 
 
@@ -269,8 +269,8 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
 
   // =============== Utility ===============
 
-  function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public virtual override (IProduct, SimpleInterestVault) {
-    SimpleInterestVault.setCurrentTimePeriodsElapsed(_currentTimePeriodsElapsed);
+  function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public virtual override (IProduct, DiscountVault) {
+    DiscountVault.setCurrentTimePeriodsElapsed(_currentTimePeriodsElapsed);
   }
 
 }

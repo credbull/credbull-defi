@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { IDiscountVault} from "@credbull-spike/contracts/ian/interfaces/IDiscountVault.sol";
-import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleInterestVault.sol";
+import { DiscountVault } from "@credbull-spike/contracts/ian/fixed/DiscountVault.sol";
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
 import { DiscountVaultTestBase } from "@credbull-spike-test/ian/fixed/DiscountVaultTestBase.t.sol";
@@ -12,7 +12,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-contract SimpleInterestVaultTest is DiscountVaultTestBase {
+contract DiscountVaultTest is DiscountVaultTestBase {
   using Math for uint256;
 
   IERC20Metadata private asset;
@@ -40,7 +40,7 @@ contract SimpleInterestVaultTest is DiscountVaultTestBase {
     uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
     uint256 tenor = 90;
 
-    IDiscountVault vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
+    IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
 
     uint256 scaleMinus1 = SCALE - 1;
 
@@ -52,7 +52,7 @@ contract SimpleInterestVaultTest is DiscountVaultTestBase {
     uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.MONTHLY);
     uint256 tenor = 3;
 
-    IDiscountVault vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
+    IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
 
     testVaultAtTenorPeriods(200 * SCALE, vault);
   }
@@ -62,7 +62,7 @@ contract SimpleInterestVaultTest is DiscountVaultTestBase {
     uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
     uint256 tenor = 30;
 
-    IDiscountVault vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
+    IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
 
     uint256 principal = 100 * SCALE;
     uint256 actualInterestDay721 = vault.calcInterest(principal, 721);
@@ -78,7 +78,7 @@ contract SimpleInterestVaultTest is DiscountVaultTestBase {
     uint256 deposit = 50_000 * SCALE; // APY in percentage
     uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
-    IDiscountVault vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
+    IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
 
     // verify interest
     uint256 actualInterest = vault.calcInterest(deposit, tenor);
@@ -97,7 +97,7 @@ contract SimpleInterestVaultTest is DiscountVaultTestBase {
     uint256 deposit = 50_000 * SCALE; // APY in percentage
     uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
-    IDiscountVault vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
+    IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
 
     // verify interest
     uint256 actualInterest = vault.calcInterest(deposit, tenor);
