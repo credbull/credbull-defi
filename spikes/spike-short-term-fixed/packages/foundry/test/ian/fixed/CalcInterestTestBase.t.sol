@@ -10,7 +10,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
 
-abstract contract CalcInterestTest is Test {
+abstract contract CalcInterestTestBase is Test {
   uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000005
 
   using Math for uint256;

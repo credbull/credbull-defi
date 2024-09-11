@@ -12,9 +12,9 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
 
-import {CalcDiscountedTest} from "@credbull-spike-test/ian/fixed/CalcDiscountedTest.t.sol";
+import {CalcDiscountedTestBase} from "@credbull-spike-test/ian/fixed/CalcDiscountedTestBase.t.sol";
 
-abstract contract InterestVaultTest is CalcDiscountedTest {
+abstract contract InterestVaultTest is CalcDiscountedTestBase {
   using Math for uint256;
 
   address internal owner = makeAddr("owner");
