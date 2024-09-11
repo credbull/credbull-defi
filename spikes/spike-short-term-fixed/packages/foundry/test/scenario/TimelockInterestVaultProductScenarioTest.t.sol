@@ -31,11 +31,14 @@ contract TimelockInterestVaultProductScenarioTest is ProductScenarioTest {
      * @dev Creates a [TimelockInterestVault] using the `params` configuration.
      *
      * @param params The [ProductParams] of configuration for the [TimelockInterestVault].
+     * @return The [IProduct] and [IERC20] Share instance, if any.
      */
-    function createProduct(ProductParams memory params) internal virtual override returns (IProduct) {
-        return new TimelockInterestVault(
+    function createProduct(ProductParams memory params) internal virtual override returns (IProduct, IERC20) {
+        TimelockInterestVault vault = new TimelockInterestVault(
             params.owner, params.asset, params.interestRatePercentage, params.interestRateFrequency, params.tenor
         );
+
+        return (vault, vault);
     }
 
     function setUp() public {

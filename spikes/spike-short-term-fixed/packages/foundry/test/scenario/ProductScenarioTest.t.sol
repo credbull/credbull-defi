@@ -53,8 +53,9 @@ abstract contract ProductScenarioTest is Test {
      * @dev Creates an instance of the [IProduct] under test, using the `params` configuration.
      *
      * @param params The [ProductParams] of configuration for the [IProduct].
+     * @return The [IProduct] instance and [IERC20] Share instance, if any.
      */
-    function createProduct(ProductParams memory params) internal virtual returns (IProduct);
+    function createProduct(ProductParams memory params) internal virtual returns (IProduct, IERC20);
 
     /**
      * @dev A utility setup function intended to be invoked by the `setUp` function of the realising [Test].
