@@ -2,8 +2,8 @@
 pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import {ICalcDiscounted} from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
-import {CalcSimpleInterest} from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
+import { ICalcDiscounted } from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
+import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
 
 /**
  * @title CalcDiscounted
@@ -30,13 +30,15 @@ contract CalcDiscounted is ICalcDiscounted, CalcSimpleInterest {
    * @param frequency The number of interest periods in a year.
    * @param decimals The number of decimals for scaling calculations.
    */
-  constructor(uint256 interestRatePercentage, uint256 frequency, uint256 decimals)
-  CalcSimpleInterest(
-    CalcInterestParams({
-      interestRatePercentage: interestRatePercentage,
-      frequency: frequency,
-      decimals: decimals
-  })) {}
+  constructor(
+    uint256 interestRatePercentage,
+    uint256 frequency,
+    uint256 decimals
+  )
+    CalcSimpleInterest(
+      CalcInterestParams({ interestRatePercentage: interestRatePercentage, frequency: frequency, decimals: decimals })
+    )
+  { }
 
   /**
    * @notice Calculates the price for a given number of periods elapsed.

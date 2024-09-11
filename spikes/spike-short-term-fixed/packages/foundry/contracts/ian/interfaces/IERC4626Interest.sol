@@ -4,7 +4,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import {ICalcDiscounted} from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
+import { ICalcDiscounted } from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
 
 /**
  * @dev Extension to Interface Vault Standard

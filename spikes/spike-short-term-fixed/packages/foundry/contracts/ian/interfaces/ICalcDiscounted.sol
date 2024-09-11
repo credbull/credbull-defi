@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {ICalcInterestMetadata} from "./ICalcInterestMetadata.sol";
+import { ICalcInterestMetadata } from "./ICalcInterestMetadata.sol";
 
 /**
  * @title IDiscountedPrincipal Interface
@@ -37,5 +37,8 @@ interface ICalcDiscounted is ICalcInterestMetadata {
    * @param numTimePeriodsElapsed The number of time periods for which the discount was calculated.
    * @return principal The recovered original principal amount.
    */
-  function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed) external view returns (uint256 principal);
+  function calcPrincipalFromDiscounted(
+    uint256 discounted,
+    uint256 numTimePeriodsElapsed
+  ) external view returns (uint256 principal);
 }

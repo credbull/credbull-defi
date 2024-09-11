@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {ICalcInterest} from "@credbull-spike/contracts/ian/interfaces/ICalcInterest.sol";
-import {ICalcDiscounted} from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
+import { ICalcInterest } from "@credbull-spike/contracts/ian/interfaces/ICalcInterest.sol";
+import { ICalcDiscounted } from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
 import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
-import {ICalcInterestMetadata} from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
+import { ICalcInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -12,7 +12,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
 
-import {CalcDiscountedTestBase} from "@credbull-spike-test/ian/fixed/CalcDiscountedTestBase.t.sol";
+import { CalcDiscountedTestBase } from "@credbull-spike-test/ian/fixed/CalcDiscountedTestBase.t.sol";
 
 abstract contract InterestVaultTest is CalcDiscountedTestBase {
   using Math for uint256;
@@ -79,7 +79,6 @@ abstract contract InterestVaultTest is CalcDiscountedTestBase {
     IERC4626Interest vault,
     uint256 numTimePeriods
   ) internal virtual {
-
     uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
     uint256 expectedInterest = vault.calcInterest(principal, vault.getTenor());
     uint256 expectedPrincipalAndInterest = principal + expectedInterest;
@@ -99,8 +98,16 @@ abstract contract InterestVaultTest is CalcDiscountedTestBase {
 
     // check previewWithdraw (uses assets as basis of shares returned)
     // as per definition - should be the same as convertToShares
-    assertEq(vault.previewWithdraw(principal), actualSharesDeposit, assertMsg("previewWithdraw incorrect - principal", vault, numTimePeriods));
-    assertEq(vault.previewWithdraw(expectedInterest), vault.convertToSharesAtPeriod(expectedInterest, numTimePeriods), assertMsg("previewWithdraw incorrect - interest", vault, numTimePeriods));
+    assertEq(
+      vault.previewWithdraw(principal),
+      actualSharesDeposit,
+      assertMsg("previewWithdraw incorrect - principal", vault, numTimePeriods)
+    );
+    assertEq(
+      vault.previewWithdraw(expectedInterest),
+      vault.convertToSharesAtPeriod(expectedInterest, numTimePeriods),
+      assertMsg("previewWithdraw incorrect - interest", vault, numTimePeriods)
+    );
 
     vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed);
   }
@@ -192,5 +199,4 @@ abstract contract InterestVaultTest is CalcDiscountedTestBase {
 
     assertEq(beforeBalance + amount, _token.balanceOf(toAddress));
   }
-
 }

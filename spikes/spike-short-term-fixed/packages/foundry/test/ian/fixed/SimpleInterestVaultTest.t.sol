@@ -6,7 +6,7 @@ import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleI
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
 import { InterestVaultTest } from "@credbull-spike-test/ian/fixed/InterestVaultTest.t.sol";
-import {ICalcDiscounted} from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
+import { ICalcDiscounted } from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
 
 import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
 
@@ -131,5 +131,4 @@ contract SimpleInterestVaultTest is InterestVaultTest {
     uint256 actualReturns = vault.convertToAssetsAtPeriod(actualShares, tenor);
     assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
   }
-
 }
