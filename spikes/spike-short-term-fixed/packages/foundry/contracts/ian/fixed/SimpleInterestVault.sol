@@ -5,7 +5,7 @@ import { ICalcInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/
 import { CalcDiscounted } from "@credbull-spike/contracts/ian/fixed/CalcDiscounted.sol";
 import { CalcInterestMetadata } from "@credbull-spike/contracts/ian/fixed/CalcInterestMetadata.sol";
 import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
-import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
+import { IDiscountVault } from "@credbull-spike/contracts/ian/interfaces/IDiscountVault.sol";
 
 import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
 
@@ -24,7 +24,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  * @dev A vault that uses SimpleInterest to calculate shares per asset.
  *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
  */
-contract SimpleInterestVault is IERC4626Interest, CalcInterestMetadata, ERC4626, ERC20Burnable {
+contract SimpleInterestVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Burnable {
   using Math for uint256;
 
   uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapsed
@@ -56,49 +56,24 @@ contract SimpleInterestVault is IERC4626Interest, CalcInterestMetadata, ERC4626,
   // =============== ICalcDiscounted ===============
 
   /**
-   * @notice See {ICalcInterest-calcDiscounted}
+   * @notice See {CalcDiscounted-calcDiscounted}
    */
   function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256 discounted) {
-    return calcDiscounted(principal, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
+    return CalcDiscounted.calcDiscounted(principal, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
   }
 
   /**
-   * @notice See {ICalcInterest-calcDiscounted}
-   */
-  function calcDiscounted(
-    uint256 principal,
-    uint256 numTimePeriodsElapsed,
-    uint256 interestRatePercentage,
-    uint256 frequency
-  ) public pure returns (uint256 discounted) {
-    return CalcDiscounted.calcDiscounted(principal, numTimePeriodsElapsed, interestRatePercentage, frequency);
-  }
-
-
-  /**
-   * @notice See {ICalcInterest-calcPrincipalFromDiscounted}
+   * @notice See {CalcDiscounted-calcPrincipalFromDiscounted}
    */
   function calcPrincipalFromDiscounted(
     uint256 discounted,
     uint256 numTimePeriodsElapsed
   ) public view returns (uint256 principal) {
-    return calcPrincipalFromDiscounted(discounted, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
+    return CalcDiscounted.calcPrincipalFromDiscounted(discounted, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
   }
 
   /**
-   * @notice See {ICalcInterest-calcPrincipalFromDiscounted}
-   */
-  function calcPrincipalFromDiscounted(
-    uint256 discounted,
-    uint256 numTimePeriodsElapsed,
-    uint256 interestRatePercentage,
-    uint256 frequency
-  ) public pure returns (uint256 principal) {
-    return CalcDiscounted.calcPrincipalFromDiscounted(discounted, numTimePeriodsElapsed, interestRatePercentage, frequency);
-  }
-
-  /**
-* @notice See {ICalcInterest-calcInterest}
+* @notice See {CalcSimpleInterest-calcInterest}
    */
   function calcInterest(
     uint256 principal,
