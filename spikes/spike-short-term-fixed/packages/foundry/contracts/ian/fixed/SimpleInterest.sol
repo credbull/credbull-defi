@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { IInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/IInterestMetadata.sol";
+import { IDiscountedPrincipal } from "@credbull-spike/contracts/ian/interfaces/IDiscountedPrincipal.sol";
 
 /**
  * @title SimpleInterest
@@ -27,7 +27,7 @@ import { IInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/IInt
  * uint256 recoveredPrincipal = calcPrincipalFromDiscounted(discountedValue);
  * assert(recoveredPrincipal == originalPrincipal);
  */
-contract SimpleInterest is IInterestMetadata {
+contract SimpleInterest is IDiscountedPrincipal {
   using Math for uint256;
 
   uint256 public immutable INTEREST_RATE; // IR as %, e.g. 15 for 15% (or 0.15)
@@ -65,13 +65,7 @@ contract SimpleInterest is IInterestMetadata {
     uint256 principal,
     uint256 numTimePeriodsElapsed
   ) public view virtual returns (uint256 interest) {
-    if (principal < SCALE) {
-      revert PrincipalLessThanScale(principal, SCALE);
-    }
-
-    uint256 interestScaled = _calcInterestWithScale(principal, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
-
-    return _unscale(interestScaled);
+    return calcInterest(principal, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
   }
 
   /**
@@ -80,6 +74,32 @@ contract SimpleInterest is IInterestMetadata {
    * @param principal The initial principal amount.
    * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
    * @param interestRatePercentage The interest rate as a percentage.
+   * @param frequency The frequency of interest application
+   * @return interestScaled The scaled interest amount.
+   */
+  function calcInterest(
+    uint256 principal,
+    uint256 numTimePeriodsElapsed,
+    uint256 interestRatePercentage,
+    uint256 frequency
+  ) public view returns (uint256 interestScaled) {
+    if (principal < SCALE) {
+      revert PrincipalLessThanScale(principal, SCALE);
+    }
+
+    uint256 _interestScaled =
+                _scale(principal).mulDiv(interestRatePercentage * numTimePeriodsElapsed, frequency * 100, ROUNDING);
+
+    return _unscale(_interestScaled);
+  }
+
+  /**
+   * @notice Internal function to calculate the interest with scaling applied using the interest rate percentage.
+   * @dev - return value is scaled as Interest * SCALE.  For example: Interest=1.01 and Scale=100 returns 101
+   * @param principal The initial principal amount.
+   * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
+   * @param interestRatePercentage The interest rate as a percentage.
+   * @param frequency The frequency of interest application
    * @return interestScaled The scaled interest amount.
    */
   function _calcInterestWithScale(
