@@ -18,6 +18,22 @@ contract CalcDiscountedTest is Test {
 
   uint256 public constant scale = 10**6;
 
+  function test__CalcDiscountedTest__Price() public {
+    uint256 apy = 12; // APY in percentage
+    uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
+
+    uint256 calcInterestScale = CalcSimpleInterest.getScale();
+
+    uint256 day0 = 0;
+    assertEq(1 * calcInterestScale, CalcDiscounted.calcPriceWithScale(day0, apy, frequency)); // 1 + (0.12 * 0) / 360 = 1
+
+    uint256 day1 = 1;
+    assertEq(1_000_333_333_333_333_333, CalcDiscounted.calcPriceWithScale(day1, apy, frequency)); // 1 + (0.12 * 1) / 360 ≈ 1.00033
+
+    uint256 day30 = 30;
+    assertEq((101 * calcInterestScale / 100), CalcDiscounted.calcPriceWithScale(day30, apy, frequency)); // 1 + (0.12 * 30) / 360 = 1.01
+  }
+
   function test__CalcDiscountedTest__Daily() public {
     uint256 apy = 12; // APY in percentage
     uint256 tenor = 30;
@@ -43,22 +59,6 @@ contract CalcDiscountedTest is Test {
 
     uint256[5] memory numTimePeriodsElapsedArr = [0, 1, tenor - 1, tenor, tenor + 1];
     testDiscountingAtPeriods(200 * scale, numTimePeriodsElapsedArr, apy, frequency);
-  }
-
-  function test__CalcDiscountedTest__Price() public {
-    uint256 apy = 12; // APY in percentage
-    uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-
-    uint256 calcInterestScale = CalcSimpleInterest.getScale();
-
-    uint256 day0 = 0;
-    assertEq(1 * calcInterestScale, CalcDiscounted.calcPriceWithScale(day0, apy, frequency)); // 1 + (0.12 * 0) / 360 = 1
-
-    uint256 day1 = 1;
-    assertEq(1_000_333_333_333_333_333, CalcDiscounted.calcPriceWithScale(day1, apy, frequency)); // 1 + (0.12 * 1) / 360 ≈ 1.00033
-
-    uint256 day30 = 30;
-    assertEq((101 * calcInterestScale / 100), CalcDiscounted.calcPriceWithScale(day30, apy, frequency)); // 1 + (0.12 * 30) / 360 = 1.01
   }
 
   function testDiscountingAtPeriods(
