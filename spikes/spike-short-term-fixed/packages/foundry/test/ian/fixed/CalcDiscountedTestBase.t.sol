@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {ICalcInterest} from "@credbull-spike/contracts/ian/interfaces/ICalcInterest.sol";
-import {ICalcDiscounted} from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
-import {ICalcInterestMetadata} from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
+import { ICalcInterest } from "@credbull-spike/contracts/ian/interfaces/ICalcInterest.sol";
+import { ICalcDiscounted } from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
+import { ICalcInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import {CalcInterestTestBase} from "@credbull-spike-test/ian/fixed/CalcInterestTestBase.t.sol";
+import { CalcInterestTestBase } from "@credbull-spike-test/ian/fixed/CalcInterestTestBase.t.sol";
 
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
@@ -15,13 +15,11 @@ import { console2 } from "forge-std/console2.sol";
 abstract contract CalcDiscountedTestBase is CalcInterestTestBase {
   using Math for uint256;
 
-
   function testInterestAtPeriod(
     uint256 principal,
     ICalcInterestMetadata calcInterest,
     uint256 numTimePeriods
-  ) internal override virtual {
-
+  ) internal virtual override {
     super.testInterestAtPeriod(principal, calcInterest, numTimePeriods);
 
     ICalcDiscounted calcDiscounted = ICalcDiscounted(address(calcInterest));

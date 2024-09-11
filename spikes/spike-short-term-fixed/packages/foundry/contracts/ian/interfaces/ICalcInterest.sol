@@ -24,5 +24,10 @@ interface ICalcInterest {
    * @param frequency The frequency of interest application
    * @return interest The scaled interest amount.
    */
-  function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed, uint256 interestRatePercentage, uint256 frequency) external view returns (uint256 interest);
+  function calcInterest(
+    uint256 principal,
+    uint256 numTimePeriodsElapsed,
+    uint256 interestRatePercentage,
+    uint256 frequency
+  ) external view returns (uint256 interest);
 }

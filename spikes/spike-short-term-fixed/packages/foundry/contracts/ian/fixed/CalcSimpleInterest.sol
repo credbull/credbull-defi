@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import {ICalcInterestMetadata} from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
+import { ICalcInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
 
 /**
  * @title SimpleInterest
@@ -87,7 +87,7 @@ contract CalcSimpleInterest is ICalcInterestMetadata {
     }
 
     uint256 _interestScaled =
-                _scale(principal).mulDiv(interestRatePercentage * numTimePeriodsElapsed, frequency * 100, ROUNDING);
+      _scale(principal).mulDiv(interestRatePercentage * numTimePeriodsElapsed, frequency * 100, ROUNDING);
 
     return _unscale(_interestScaled);
   }

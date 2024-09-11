@@ -2,11 +2,11 @@
 pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import {CalcDiscounted} from "@credbull-spike/contracts/ian/fixed/CalcDiscounted.sol";
+import { CalcDiscounted } from "@credbull-spike/contracts/ian/fixed/CalcDiscounted.sol";
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
-import {ICalcDiscounted} from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
-import {CalcDiscountedTestBase} from "@credbull-spike-test/ian/fixed/CalcDiscountedTestBase.t.sol";
+import { ICalcDiscounted } from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
+import { CalcDiscountedTestBase } from "@credbull-spike-test/ian/fixed/CalcDiscountedTestBase.t.sol";
 
 contract CalcDiscountedTest is CalcDiscountedTestBase {
   using Math for uint256;

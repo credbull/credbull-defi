@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {ICalcInterest} from "@credbull-spike/contracts/ian/interfaces/ICalcInterest.sol";
-import {ICalcInterestMetadata} from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
+import { ICalcInterest } from "@credbull-spike/contracts/ian/interfaces/ICalcInterest.sol";
+import { ICalcInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -38,16 +38,13 @@ abstract contract CalcInterestTestBase is Test {
     ICalcInterestMetadata simpleInterest,
     uint256 numTimePeriods
   ) internal virtual {
-
     // TODO: duplcating the calculation - is there another way to check ?!?
-    uint256 expectedInterest = (principal * simpleInterest.getInterestInPercentage() * numTimePeriods) / (simpleInterest.getFrequency() * 100);
+    uint256 expectedInterest =
+      (principal * simpleInterest.getInterestInPercentage() * numTimePeriods) / (simpleInterest.getFrequency() * 100);
     uint256 actualInterest = simpleInterest.calcInterest(principal, numTimePeriods);
 
     assertApproxEqAbs(
-      expectedInterest,
-      actualInterest,
-      TOLERANCE,
-      assertMsg("calcInterest not correct", simpleInterest, numTimePeriods)
+      expectedInterest, actualInterest, TOLERANCE, assertMsg("calcInterest not correct", simpleInterest, numTimePeriods)
     );
   }
 
@@ -69,5 +66,4 @@ abstract contract CalcInterestTestBase is Test {
       " ] "
     );
   }
-
 }

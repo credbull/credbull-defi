@@ -2,13 +2,12 @@
 
 pragma solidity ^0.8.20;
 
-import {ICalcInterest} from "@credbull-spike/contracts/ian/interfaces/ICalcInterest.sol";
+import { ICalcInterest } from "@credbull-spike/contracts/ian/interfaces/ICalcInterest.sol";
 
 /**
  * @dev extension to the Interest Interface to add metadata
  */
 interface ICalcInterestMetadata is ICalcInterest {
-
   /**
    * @notice Returns the frequency of interest application (number of periods in a year).
    * @return frequency The frequency value.
