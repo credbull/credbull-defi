@@ -112,8 +112,6 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
       revert AmountMustBeGreaterThanZero();
     }
 
-    IERC20(usdcToken).transferFrom(msg.sender, address(this), amount);
-
     uint256 currentTimePeriodsElapsed = getCurrentTimePeriodsElapsed();
 
     tokenId = lastTokenId[msg.sender];
@@ -139,6 +137,8 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
       tokenCounter = tokenId;
     }
 
+    IERC20(usdcToken).transferFrom(msg.sender, address(this), amount);
+    
     emit Deposited(msg.sender, amount, tokenId, block.timestamp);
     return tokenId;
   }
@@ -197,19 +197,6 @@ contract ShortTermFixedYieldVault is ERC721, Ownable2Step, Pausable {
     uint256 withdrawalAmount = getWithdrawalAmount(tokenId);
 
     withdraw(tokenId, withdrawalAmount);
-  }
-
-  /**
-   * @dev Check whether the invest deposited under the given tokenId can be withdrawn at the current time.
-   * @param tokenId The NFT ID you want to withdraw
-   */
-  function canWithdraw(
-    uint256 tokenId
-  ) public view returns (bool) {
-    uint256 timePeriodsFromOpen = depositInfos[tokenId].timePeriodsFromOpen;
-
-    return getTimePeriodsElapsedInCurrentTerm(timePeriodsFromOpen) <= WITHDRAWAL_TIME_PERIODS
-      && getNoOfTermsElapsed(timePeriodsFromOpen) > 0;
   }
 
   /**
