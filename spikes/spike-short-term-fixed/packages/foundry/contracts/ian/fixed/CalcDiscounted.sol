@@ -40,7 +40,7 @@ library CalcDiscounted {
 
     uint256 _priceScaled = CalcSimpleInterest._scale(parScaled) + interestScaled;
 
-    return _priceScaled;
+    return CalcSimpleInterest._unscale(_priceScaled);
   }
 
   /**
@@ -59,7 +59,7 @@ library CalcDiscounted {
 
     uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency);
 
-    uint256 discountedScaled = CalcSimpleInterest._scale(principal).mulDiv(scale * scale, priceScaled, Math.Rounding.Floor); // Discounted = Principal / Price
+    uint256 discountedScaled = CalcSimpleInterest._scale(principal).mulDiv(scale, priceScaled, Math.Rounding.Floor); // Discounted = Principal / Price
 
     return CalcSimpleInterest._unscale(discountedScaled);
   }
@@ -80,7 +80,7 @@ library CalcDiscounted {
 
     uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency);
 
-    uint256 principalScaled = CalcSimpleInterest._scale(discounted).mulDiv(priceScaled, scale * scale, Math.Rounding.Floor); // Principal = Discounted * Price
+    uint256 principalScaled = CalcSimpleInterest._scale(discounted).mulDiv(priceScaled, scale, Math.Rounding.Floor); // Principal = Discounted * Price
 
     return CalcSimpleInterest._unscale(principalScaled);
   }

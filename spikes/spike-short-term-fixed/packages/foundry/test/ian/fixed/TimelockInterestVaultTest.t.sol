@@ -16,8 +16,6 @@ import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.so
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-import { console2 } from "forge-std/console2.sol";
-
 contract TimelockInterestVaultTest is InterestVaultTestBase {
   IERC20Metadata private asset;
 
