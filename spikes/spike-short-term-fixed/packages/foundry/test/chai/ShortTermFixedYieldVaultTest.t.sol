@@ -186,4 +186,32 @@ contract ShortTermFixedYieldVaultTest is BaseTest, UserGenerator {
     vm.expectRevert();
     assertTrue(vault.ownerOf(tokenId) != alice);
   }
+
+  function test_depositWithPermit() public {
+    vm.warp(vaultOpenTime);
+
+    uint256 depositAmount = 1000 * 10 ** usdc.decimals();
+    uint256 bobPrivateKey = 0xA11CE;
+
+    address bob = vm.addr(bobPrivateKey);
+    usdc.mint(bob, 100000 * 10 ** usdc.decimals());
+
+    SigUtils.Permit memory permit = SigUtils.Permit({
+            owner: bob,
+            spender: address(vault),
+            value: depositAmount,
+            nonce: 0,
+            deadline: 1 days
+    });
+
+    bytes32 digest = sigUtils.getTypedDataHash(permit);
+
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(bobPrivateKey, digest);
+
+    vm.prank(bob);
+    uint256 tokenId = vault.depositWithPermit(depositAmount, permit.deadline, v, r, s);
+
+    assertEq(tokenId, 1);
+    assertEq(vault.ownerOf(tokenId), bob);
+  }  
 }

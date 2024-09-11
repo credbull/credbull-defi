@@ -4,10 +4,12 @@ pragma solidity ^0.8.24;
 import "forge-std/Test.sol";
 import { ShortTermFixedYieldVault } from "@credbull-spike/contracts/chai/ShortTermFixedYieldVault.sol";
 import { MockUSDC } from "@credbull-spike/contracts/chai/MockUSDC.sol";
+import { SigUtils } from "@credbull-spike-test/chai/SigUtils.sol";
 
 abstract contract BaseTest is Test {
   ShortTermFixedYieldVault public vault;
   MockUSDC public usdc;
+  SigUtils public sigUtils;
 
   address public vaultOwner = address(0x323323);
   uint256 public constant FIXED_APY = 10;
@@ -17,6 +19,8 @@ abstract contract BaseTest is Test {
 
     vm.prank(vaultOwner);
     vault = new ShortTermFixedYieldVault(address(usdc));
+
+    sigUtils = new SigUtils(usdc.DOMAIN_SEPARATOR());
   }
 
   function openVault(
