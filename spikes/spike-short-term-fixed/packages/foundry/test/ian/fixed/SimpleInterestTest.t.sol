@@ -5,10 +5,10 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SimpleInterest } from "@credbull-spike/contracts/ian/fixed/SimpleInterest.sol";
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
-import { IDiscountedPrincipal } from "@credbull-spike/contracts/ian/interfaces/IDiscountedPrincipal.sol";
-import { InterestTest } from "@credbull-spike-test/ian/fixed/InterestTest.t.sol";
+import {ICalcDiscounted} from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
+import {CalcDiscountedTest} from "@credbull-spike-test/ian/fixed/CalcDiscountedTest.t.sol";
 
-contract SimpleInterestTest is InterestTest {
+contract SimpleInterestTest is CalcDiscountedTest {
   using Math for uint256;
 
   uint256 constant DECIMALS = 10; // number of decimals for scaling

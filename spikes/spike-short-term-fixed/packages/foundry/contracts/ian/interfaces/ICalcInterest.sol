@@ -6,7 +6,7 @@ pragma solidity ^0.8.20;
  * @title Interest Interface
  * @dev calculate interest e.g. SimpleInterest
  */
-interface IInterest {
+interface ICalcInterest {
   /**
    * @notice Calculates the simple interest based on the principal and elapsed time periods.
    * @param principal The initial principal amount.

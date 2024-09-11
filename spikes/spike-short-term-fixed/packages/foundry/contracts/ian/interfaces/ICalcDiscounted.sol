@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {IInterestMetadata} from "./IInterestMetadata.sol";
+import {ICalcInterestMetadata} from "./ICalcInterestMetadata.sol";
 
 /**
  * @title IDiscountedPrincipal Interface
@@ -22,7 +22,7 @@ import {IInterestMetadata} from "./IInterestMetadata.sol";
  * This property ensures that no information is lost when discounting and then recovering the principal,
  * making the system consistent and predictable.
  */
-interface IDiscountedPrincipal is IInterestMetadata {
+interface ICalcDiscounted is ICalcInterestMetadata {
   /**
    * @notice Calculates the discounted principal after the elapsed time periods.
    * @param principal The initial principal amount.

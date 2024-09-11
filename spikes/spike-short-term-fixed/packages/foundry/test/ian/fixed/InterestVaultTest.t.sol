@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { IInterest } from "@credbull-spike/contracts/ian/interfaces/IInterest.sol";
-import { IDiscountedPrincipal } from "@credbull-spike/contracts/ian/interfaces/IDiscountedPrincipal.sol";
+import {ICalcInterest} from "@credbull-spike/contracts/ian/interfaces/ICalcInterest.sol";
+import {ICalcDiscounted} from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
 import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
+import {ICalcInterestMetadata} from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -11,9 +12,9 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
 
-import { InterestTest } from "@credbull-spike-test/ian/fixed/InterestTest.t.sol";
+import {CalcDiscountedTest} from "@credbull-spike-test/ian/fixed/CalcDiscountedTest.t.sol";
 
-abstract contract InterestVaultTest is InterestTest {
+abstract contract InterestVaultTest is CalcDiscountedTest {
   using Math for uint256;
 
   address internal owner = makeAddr("owner");
@@ -164,14 +165,14 @@ abstract contract InterestVaultTest is InterestTest {
 
   function testInterestAtPeriod(
     uint256 principal,
-    IDiscountedPrincipal simpleInterest,
+    ICalcInterestMetadata simpleInterest,
     uint256 numTimePeriods
   ) internal override {
-    // test against the simple interest harness
-    super.testInterestAtPeriod(principal, simpleInterest, numTimePeriods);
-
     // test the vault related
     IERC4626Interest vault = (IERC4626Interest)(address(simpleInterest));
+
+    // test against the simple interest harness
+    super.testInterestAtPeriod(principal, vault, numTimePeriods);
 
     testConvertToAssetAndSharesAtPeriod(principal, vault, numTimePeriods); // previews only
     testPreviewDepositAndPreviewRedeem(principal, vault, numTimePeriods); // previews only
@@ -180,6 +181,16 @@ abstract contract InterestVaultTest is InterestTest {
 
   function testInterestForTenor(uint256 principal, IERC4626Interest vault) internal {
     testInterestAtPeriod(principal, vault, vault.getTenor());
+  }
+
+  function transferAndAssert(IERC20 _token, address fromAddress, address toAddress, uint256 amount) internal {
+    uint256 beforeBalance = _token.balanceOf(toAddress);
+
+    vm.startPrank(fromAddress);
+    _token.transfer(toAddress, amount);
+    vm.stopPrank();
+
+    assertEq(beforeBalance + amount, _token.balanceOf(toAddress));
   }
 
 }

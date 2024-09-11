@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { IDiscountedPrincipal } from "@credbull-spike/contracts/ian/interfaces/IDiscountedPrincipal.sol";
+import {ICalcDiscounted} from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
 
 /**
  * @title SimpleInterest
@@ -27,7 +27,7 @@ import { IDiscountedPrincipal } from "@credbull-spike/contracts/ian/interfaces/I
  * uint256 recoveredPrincipal = calcPrincipalFromDiscounted(discountedValue);
  * assert(recoveredPrincipal == originalPrincipal);
  */
-contract SimpleInterest is IDiscountedPrincipal {
+contract SimpleInterest is ICalcDiscounted {
   using Math for uint256;
 
   uint256 public immutable INTEREST_RATE; // IR as %, e.g. 15 for 15% (or 0.15)
