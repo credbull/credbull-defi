@@ -5,7 +5,7 @@ import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4
 import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleInterestVault.sol";
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
-import { InterestTest } from "@credbull-spike-test/ian/fixed/InterestTest.t.sol";
+import { InterestVaultTest } from "@credbull-spike-test/ian/fixed/InterestVaultTest.t.sol";
 import { IDiscountedPrincipal } from "@credbull-spike/contracts/ian/interfaces/IDiscountedPrincipal.sol";
 
 import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
@@ -14,14 +14,10 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-contract SimpleInterestVaultTest is InterestTest {
+contract SimpleInterestVaultTest is InterestVaultTest {
   using Math for uint256;
 
   IERC20Metadata private asset;
-
-  address private owner = makeAddr("owner");
-  address private alice = makeAddr("alice");
-  address private bob = makeAddr("bob");
 
   uint256 internal SCALE;
 
@@ -136,18 +132,4 @@ contract SimpleInterestVaultTest is InterestTest {
     assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
   }
 
-  function testInterestAtPeriod(
-    uint256 principal,
-    IDiscountedPrincipal simpleInterest,
-    uint256 numTimePeriods
-  ) internal override {
-    // test against the simple interest harness
-    super.testInterestAtPeriod(principal, simpleInterest, numTimePeriods);
-
-    // test the vault related
-    IERC4626Interest vault = (IERC4626Interest)(address(simpleInterest));
-    super.testConvertToAssetAndSharesAtPeriod(principal, vault, numTimePeriods); // previews only
-    super.testPreviewDepositAndPreviewRedeem(principal, vault, numTimePeriods); // previews only
-    super.testDepositAndRedeemAtPeriod(owner, alice, principal, vault, numTimePeriods); // actual deposits/redeems
-  }
 }

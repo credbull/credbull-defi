@@ -10,7 +10,7 @@ import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { InterestTest } from "@credbull-spike-test/ian/fixed/InterestTest.t.sol";
+import { InterestVaultTest } from "@credbull-spike-test/ian/fixed/InterestVaultTest.t.sol";
 import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
 import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.sol";
 
@@ -18,12 +18,8 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 import { console2 } from "forge-std/console2.sol";
 
-contract TimelockInterestVaultTest is InterestTest {
+contract TimelockInterestVaultTest is InterestVaultTest {
   IERC20Metadata private asset;
-
-  address private owner = makeAddr("owner");
-  address private alice = makeAddr("alice");
-  address private bob = makeAddr("bob");
 
   uint256 constant TENOR_30 = 30;
 
@@ -295,18 +291,4 @@ contract TimelockInterestVaultTest is InterestTest {
     assertApproxEqAbs(totalInterest, expectedInterest, TOLERANCE, "incorrect total interest earned");
   }
 
-  function testInterestAtPeriod(
-    uint256 principal,
-    IDiscountedPrincipal simpleInterest,
-    uint256 numTimePeriods
-  ) internal override {
-    // test against the simple interest harness
-    super.testInterestAtPeriod(principal, simpleInterest, numTimePeriods);
-
-    // test the vault related
-    IERC4626Interest vault = (IERC4626Interest)(address(simpleInterest));
-    super.testConvertToAssetAndSharesAtPeriod(principal, vault, numTimePeriods); // previews only
-    super.testPreviewDepositAndPreviewRedeem(principal, vault, numTimePeriods); // previews only
-    super.testDepositAndRedeemAtPeriod(owner, alice, principal, vault, numTimePeriods); // actual deposits/redeems
-  }
 }
