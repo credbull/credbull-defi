@@ -14,22 +14,18 @@ abstract contract CalcInterestTestBase is Test {
 
   using Math for uint256;
 
-  function testInterestForTenor(uint256 principal, ICalcInterestMetadata calcInterest, uint256 tenorPeriod) internal {
+  function testInterestForTenor(uint256 principal, ICalcInterestMetadata calcInterest, uint256 tenor) internal {
     // due to small fractional numbers, principal needs to be SCALED to calculate correctly
     assertGe(principal, calcInterest.getScale(), "principal not in SCALE");
 
-    // check at 0, 1, tenor-1, tenor, tenor+1
+    uint256[5] memory numTimePeriodsElapsedArr = [0, 1, tenor - 1, tenor, tenor + 1];
 
-    testInterestAtPeriod(principal, calcInterest, 0);
-    testInterestAtPeriod(principal, calcInterest, 1);
+    // Iterate through the lock periods and calculate the principal for each
+    for (uint256 i = 0; i < numTimePeriodsElapsedArr.length; i++) {
+      uint256 numTimePeriodsElapsed = numTimePeriodsElapsedArr[i];
 
-    testInterestAtPeriod(principal, calcInterest, tenorPeriod - 1);
-    testInterestAtPeriod(principal, calcInterest, tenorPeriod);
-    testInterestAtPeriod(principal, calcInterest, tenorPeriod + 1);
-
-    testInterestAtPeriod(principal, calcInterest, 2 * tenorPeriod - 1);
-    testInterestAtPeriod(principal, calcInterest, 2 * tenorPeriod);
-    testInterestAtPeriod(principal, calcInterest, 2 * tenorPeriod + 1);
+      testInterestAtPeriod(principal, calcInterest, numTimePeriodsElapsed);
+    }
   }
 
   function testInterestAtPeriod(
