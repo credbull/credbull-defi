@@ -232,4 +232,22 @@ contract YieldSubscription is IProduct {
   function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) public {
     timePeriodsElapsed = currentTimePeriodsElapsed;
   }
+
+
+  function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256 interest) {
+
+  }
+
+  function calcInterest(
+    uint256 principal,
+    uint256 numTimePeriodsElapsed,
+    uint256 interestRatePercentage,
+    uint256 frequency
+  ) public view returns (uint256 interest) {
+
+  }
+
+  function getScale() public pure returns (uint256 scale) {
+    return 1e20;
+  }
 }

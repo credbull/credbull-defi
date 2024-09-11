@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import { ICalcInterestMetadata } from "./ICalcInterestMetadata.sol";
+import { ICalcInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
 
 /**
  * @title IDiscountedPrincipal Interface

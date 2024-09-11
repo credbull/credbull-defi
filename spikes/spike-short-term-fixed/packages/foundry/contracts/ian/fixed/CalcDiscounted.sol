@@ -33,7 +33,7 @@ library CalcDiscounted {
     uint256 numTimePeriodsElapsed,
     uint256 interestRatePercentage,
     uint256 frequency
-  ) public view returns (uint256 priceScaled) {
+  ) public pure returns (uint256 priceScaled) {
     uint256 parScaled = CalcSimpleInterest._scale(1);
 
     uint256 interestScaled = CalcSimpleInterest._calcInterestWithScale(parScaled, numTimePeriodsElapsed, interestRatePercentage, frequency);
@@ -54,7 +54,7 @@ library CalcDiscounted {
     uint256 numTimePeriodsElapsed,
     uint256 interestRatePercentage,
     uint256 frequency
-  ) public view returns (uint256 discounted) {
+  ) public pure returns (uint256 discounted) {
     uint256 scale = CalcSimpleInterest.getScale();
 
     uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency);
@@ -75,7 +75,7 @@ library CalcDiscounted {
     uint256 numTimePeriodsElapsed,
     uint256 interestRatePercentage,
     uint256 frequency
-  ) public view returns (uint256 principal) {
+  ) public pure returns (uint256 principal) {
     uint256 scale = CalcSimpleInterest.getScale();
 
     uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency);
