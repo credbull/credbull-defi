@@ -67,7 +67,7 @@ contract SimpleInterestVaultTest is InterestVaultTestBase {
     IERC4626Interest vault = new SimpleInterestVault(asset, apy, frequencyValue, tenor);
 
     uint256 principal = 100 * SCALE;
-    uint256 actualInterestDay721 = vault.calcInterest(principal, 721, apy, frequencyValue);
+    uint256 actualInterestDay721 = vault.calcInterest(principal, 721);
     assertEq(24_033_333, actualInterestDay721, "interest should be ~ 24.0333 at day 721");
 
     testVaultAtTenorPeriods(principal, vault);

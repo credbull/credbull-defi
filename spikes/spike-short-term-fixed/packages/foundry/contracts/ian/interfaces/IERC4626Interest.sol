@@ -11,6 +11,14 @@ import { IPeriodable } from "@credbull-spike/contracts/ian/interfaces/IPeriodabl
  * @dev Extension to Interface Vault Standard
  */
 interface IERC4626Interest is IERC4626, ICalcDiscounted, IPeriodable {
+  /**
+ * @notice Calculates the simple interest based on the principal and elapsed time periods.
+   * @param principal The initial principal amount.
+   * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
+   * @return interest The calculated interest amount.
+   */
+  function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) external view returns (uint256 interest);
+
   function convertToSharesAtPeriod(
     uint256 assets,
     uint256 numTimePeriodsElapsed
@@ -23,4 +31,5 @@ interface IERC4626Interest is IERC4626, ICalcDiscounted, IPeriodable {
 
   // TODO - confirm if required on interface
   function getTenor() external view returns (uint256 tenor);
+
 }
