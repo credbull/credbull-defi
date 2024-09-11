@@ -38,35 +38,50 @@ const ViewSection = (props: any) => {
     args: [props.data.address],
   });
 
-  if (!refresh) {
-    userReserveRefetch().then(data => {
-      setUserData(Number(Number(data.data) / 10 ** 6));
-    });
+  useEffect(() => {
+    if (!refresh) {
+      userReserveRefetch().then(data => {
+        if (data?.data) {
+          setUserData(Number(Number(data.data) / 10 ** 6));
+        }
+      });
 
-    getCurrentTimePeriodsElapsedRefetch().then(data => {
-      setTimePeriodsElapsed(data.data as bigint);
-    });
+      getCurrentTimePeriodsElapsedRefetch().then(data => {
+        if (data?.data) {
+          setTimePeriodsElapsed(data.data as bigint);
+        }
+      });
 
-    getInterestEarnedRefetch().then(data => {
-      setInterestEarned((Number(data.data) * 1000) / 10 ** 6 / 1000);
-    });
-  }
+      getInterestEarnedRefetch().then(data => {
+        if (data?.data) {
+          setInterestEarned((Number(data.data) * 1000) / 10 ** 6 / 1000);
+        }
+      });
+    }
+  }, [getCurrentTimePeriodsElapsedRefetch, getInterestEarnedRefetch, refresh, userReserveRefetch]);
 
   useEffect(() => {
     if (userData === 0)
       userReserveRefetch().then(data => {
-        setUserData(Number(Number(data.data) / 10 ** 6));
+        console.log(data);
+        if (data?.data) {
+          setUserData(Number(Number(data.data) / 10 ** 6));
+        }
       });
 
     if (timePeriodsElapsed === 0n) {
       getCurrentTimePeriodsElapsedRefetch().then(data => {
-        setTimePeriodsElapsed(data.data as bigint);
+        if (data?.data) {
+          setTimePeriodsElapsed(data.data as bigint);
+        }
       });
     }
 
     if (interestEarned === 0) {
       getInterestEarnedRefetch().then(data => {
-        setInterestEarned((Number(data.data) * 1000) / 10 ** 6 / 1000);
+        if (data?.data) {
+          setInterestEarned((Number(data.data) * 1000) / 10 ** 6 / 1000);
+        }
       });
     }
   }, [
@@ -119,7 +134,7 @@ const Card = ({
 
   const handleDeposit = () => {
     if (deployedContractData) {
-      const amountWithDecimal = BigInt(Number(amount) * 10 ** 6);
+      const amountWithDecimal = BigInt(Number(amount));
 
       if (writeContractAsync) {
         try {
@@ -172,7 +187,13 @@ const Card = ({
 
   const multiplyBy18 = () => {
     if (amount) {
-      setAmount(prev => (Number(prev) * 1e18).toString());
+      const bigAmount = BigInt(amount);
+      const multiplier = BigInt(1e18); // Use BigInt for 1e18
+      const result = bigAmount * multiplier;
+
+      console.log(result);
+      console.log(result.toString());
+      setAmount(result.toString());
     }
   };
 
