@@ -36,7 +36,7 @@ contract SimpleInterestTest is InterestTest {
       new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.MONTHLY), DECIMALS);
     uint256 scale = simpleInterest.getScale();
 
-    testInterestToMaxPeriods(200 * scale, simpleInterest);
+    testInterestForTenor(200 * scale, simpleInterest, 12);
   }
 
   function test__SimpleInterestTest__Daily360() public {
@@ -46,7 +46,7 @@ contract SimpleInterestTest is InterestTest {
       new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360), DECIMALS);
     uint256 scale = simpleInterest.getScale();
 
-    testInterestToMaxPeriods(200 * scale, simpleInterest);
+    testInterestForTenor(200 * scale, simpleInterest, 30);
   }
 
   function test_SimpleInterestTest_Price() public {
