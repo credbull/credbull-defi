@@ -19,7 +19,7 @@ const ViewSection = (props: any) => {
 
   const { refetch: userReserveRefetch } = useReadContract({
     address: props.data.deployedContractData.address,
-    functionName: "totalUserDeposit",
+    functionName: "calcTotalDeposits",
     abi: props.data.deployedContractData.abi,
     args: [props.data.address],
   });
@@ -33,7 +33,7 @@ const ViewSection = (props: any) => {
 
   const { refetch: getInterestEarnedRefetch } = useReadContract({
     address: props.data.deployedContractData.address,
-    functionName: "totalInterestEarned",
+    functionName: "calcTotalInterest",
     abi: props.data.deployedContractData.abi,
     args: [props.data.address],
   });
