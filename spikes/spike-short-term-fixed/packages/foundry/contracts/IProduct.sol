@@ -2,9 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {ICalcInterestMetadata} from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
-import {IPeriodable} from "@credbull-spike/contracts/ian/interfaces/IPeriodable.sol";
 
-interface IProduct is ICalcInterestMetadata, IPeriodable {
+interface IProduct is ICalcInterestMetadata {
 
   error RedeemTimePeriodNotSupported(uint256 currentPeriod, uint256 redeemPeriod);
 
@@ -67,4 +66,14 @@ interface IProduct is ICalcInterestMetadata, IPeriodable {
    * @return The total amount of assets deposited by the user.
    */
   function calcTotalDeposits(address account) external view returns (uint256);
+
+  // =============== Testing Purposes Only ===============
+
+  /**
+   * @notice Sets the current number of time periods elapsed.
+   * @dev This function is intended for testing purposes to simulate the passage of time.
+   * @param currentTimePeriodsElapsed The number of time periods to set as elapsed.
+   */
+  function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
+
 }

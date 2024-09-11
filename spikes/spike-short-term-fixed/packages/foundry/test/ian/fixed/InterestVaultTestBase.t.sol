@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { ICalcDiscounted } from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
 import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
 import { ICalcInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
 import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
@@ -24,7 +23,7 @@ abstract contract InterestVaultTestBase is Test {
     uint256 tenor = vault.getTenor();
 
     // due to small fractional numbers, principal needs to be SCALED to calculate correctly
-    assertGe(principal, vault.getScale(), "principal not in SCALE");
+    assertGe(principal, vault.decimals(), "principal not in SCALE");
 
     uint256[5] memory numTimePeriodsElapsedArr = [0, 1, tenor - 1, tenor, tenor + 1];
 
@@ -194,9 +193,11 @@ abstract contract InterestVaultTestBase is Test {
 
   function assertMsg(
     string memory prefix,
-    ICalcInterestMetadata calcInterest,
+    IERC4626Interest vault,
     uint256 numTimePeriods
   ) internal view returns (string memory) {
+    ICalcInterestMetadata calcInterest = ICalcInterestMetadata(address(vault));
+
     return string.concat(prefix, toString(calcInterest), " timePeriod= ", vm.toString(numTimePeriods));
   }
 

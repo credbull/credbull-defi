@@ -8,7 +8,6 @@ import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimp
 
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
-import { ICalcDiscounted } from "@credbull-spike/contracts/ian/interfaces/ICalcDiscounted.sol";
 import { Test } from "forge-std/Test.sol";
 
 contract CalcDiscountedTest is Test {

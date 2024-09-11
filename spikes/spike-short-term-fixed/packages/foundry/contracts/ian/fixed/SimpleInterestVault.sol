@@ -98,18 +98,6 @@ contract SimpleInterestVault is IERC4626Interest, CalcInterestMetadata, ERC4626,
   }
 
   /**
- * @notice See {ICalcInterest-calcInterest}
-   */
-  function calcInterest(
-    uint256 principal,
-    uint256 numTimePeriodsElapsed,
-    uint256 interestRatePercentage,
-    uint256 frequency
-  ) public pure returns (uint256 interest) {
-    return CalcSimpleInterest.calcInterest(principal, numTimePeriodsElapsed, interestRatePercentage, frequency);
-  }
-
-  /**
 * @notice See {ICalcInterest-calcInterest}
    */
   function calcInterest(
