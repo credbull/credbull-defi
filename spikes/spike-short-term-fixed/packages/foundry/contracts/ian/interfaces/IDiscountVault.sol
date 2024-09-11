@@ -6,9 +6,9 @@ pragma solidity ^0.8.20;
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
 /**
- * @dev Extension to Interface Vault Standard
+ * @dev A vault that using Principal and Discounting for asset and shares respectively
  */
-interface IERC4626Interest is IERC4626 {
+interface IDiscountVault is IERC4626 {
   /**
  * @notice Calculates the simple interest based on the principal and elapsed time periods.
    * @param principal The initial principal amount.
@@ -42,10 +42,12 @@ interface IERC4626Interest is IERC4626 {
     uint256 numTimePeriodsElapsed
   ) external view returns (uint256 shares);
 
+
   function convertToAssetsAtPeriod(
     uint256 shares,
     uint256 numTimePeriodsElapsed
   ) external view returns (uint256 assets);
+
 
   // TODO - confirm if required on interface
   function getTenor() external view returns (uint256 tenor);

@@ -3,19 +3,19 @@ pragma solidity ^0.8.23;
 
 import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
 
-import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
+import { IDiscountVault } from "@credbull-spike/contracts/ian/interfaces/IDiscountVault.sol";
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { InterestVaultTestBase } from "@credbull-spike-test/ian/fixed/InterestVaultTestBase.t.sol";
+import { DiscountVaultTestBase } from "@credbull-spike-test/ian/fixed/DiscountVaultTestBase.t.sol";
 import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
 import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.sol";
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract TimelockInterestVaultTest is InterestVaultTestBase {
+contract TimelockInterestVaultTest is DiscountVaultTestBase {
   IERC20Metadata private asset;
 
   uint256 constant TENOR_30 = 30;

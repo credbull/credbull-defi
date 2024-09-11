@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
+import { IDiscountVault } from "@credbull-spike/contracts/ian/interfaces/IDiscountVault.sol";
 import { ICalcInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
 import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
 
@@ -10,7 +10,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-abstract contract InterestVaultTestBase is Test {
+abstract contract DiscountVaultTestBase is Test {
   using Math for uint256;
 
   uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000005
@@ -19,11 +19,8 @@ abstract contract InterestVaultTestBase is Test {
   address internal alice = makeAddr("alice");
   address internal bob = makeAddr("bob");
 
-  function testVaultAtTenorPeriods(uint256 principal, IERC4626Interest vault) internal {
+  function testVaultAtTenorPeriods(uint256 principal, IDiscountVault vault) internal {
     uint256 tenor = vault.getTenor();
-
-    // due to small fractional numbers, principal needs to be SCALED to calculate correctly
-    assertGe(principal, vault.decimals(), "principal not in SCALE");
 
     uint256[5] memory numTimePeriodsElapsedArr = [0, 1, tenor - 1, tenor, tenor + 1];
 
@@ -35,7 +32,7 @@ abstract contract InterestVaultTestBase is Test {
     }
   }
 
-  function testVaultAtPeriod(uint256 principal, IERC4626Interest vault,uint256 numTimePeriods) internal {
+  function testVaultAtPeriod(uint256 principal, IDiscountVault vault,uint256 numTimePeriods) internal {
     testConvertToAssetAndSharesAtPeriod(principal, vault, numTimePeriods); // previews only
     testPreviewDepositAndPreviewRedeem(principal, vault, numTimePeriods); // previews only
     testDepositAndRedeemAtPeriod(owner, alice, principal, vault, numTimePeriods); // actual deposits/redeems
@@ -44,7 +41,7 @@ abstract contract InterestVaultTestBase is Test {
   // verify convertToAssets and convertToShares.  These are a "preview" and do NOT update vault assets or shares.
   function testConvertToAssetAndSharesAtPeriod(
     uint256 principal,
-    IERC4626Interest vault,
+    IDiscountVault vault,
     uint256 numTimePeriods
   ) internal virtual {
     // ------------------- check toShares/toAssets - specified period -------------------
@@ -96,7 +93,7 @@ abstract contract InterestVaultTestBase is Test {
   // verify previewDeposit and previewRedeem.  These are a "preview" and do NOT update vault assets or shares.
   function testPreviewDepositAndPreviewRedeem(
     uint256 principal,
-    IERC4626Interest vault,
+    IDiscountVault vault,
     uint256 numTimePeriods
   ) internal virtual {
     uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
@@ -137,7 +134,7 @@ abstract contract InterestVaultTestBase is Test {
     address _owner,
     address receiver,
     uint256 principal,
-    IERC4626Interest vault,
+    IDiscountVault vault,
     uint256 numTimePeriods
   ) internal virtual {
     IERC20 asset = IERC20(vault.asset());
@@ -193,7 +190,7 @@ abstract contract InterestVaultTestBase is Test {
 
   function assertMsg(
     string memory prefix,
-    IERC4626Interest vault,
+    IDiscountVault vault,
     uint256 numTimePeriods
   ) internal view returns (string memory) {
     ICalcInterestMetadata calcInterest = ICalcInterestMetadata(address(vault));
