@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpleInterest.sol";
+import { IInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/IInterestMetadata.sol";
 import { SimpleInterest } from "@credbull-spike/contracts/ian/fixed/SimpleInterest.sol";
 import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
 import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
@@ -251,7 +251,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
    * @notice Returns the frequency of interest application (number of periods in a year).
    * @return frequency The frequency value.
    */
-  function getFrequency() public view override(ISimpleInterest, SimpleInterest, IProduct) returns (uint256 frequency) {
+  function getFrequency() public view override(IInterestMetadata, SimpleInterest, IProduct) returns (uint256 frequency) {
     return SimpleInterest.getFrequency();
   }
 
@@ -272,7 +272,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
   function getInterestInPercentage()
     public
     view
-    override(ISimpleInterest, SimpleInterest, IProduct)
+    override(IInterestMetadata, SimpleInterest, IProduct)
     returns (uint256 interestRateInPercentage)
   {
     return SimpleInterest.getInterestInPercentage();

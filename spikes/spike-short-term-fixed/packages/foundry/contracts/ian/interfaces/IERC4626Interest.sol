@@ -4,12 +4,12 @@
 pragma solidity ^0.8.20;
 
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpleInterest.sol";
+import { IInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/IInterestMetadata.sol";
 
 /**
  * @dev Extension to Interface Vault Standard
  */
-interface IERC4626Interest is IERC4626, ISimpleInterest {
+interface IERC4626Interest is IERC4626, IInterestMetadata {
   function convertToSharesAtPeriod(
     uint256 assets,
     uint256 numTimePeriodsElapsed

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpleInterest.sol";
+import { IInterest } from "@credbull-spike/contracts/ian/interfaces/IInterest.sol";
+import { IInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/IInterestMetadata.sol";
 import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
@@ -16,7 +17,7 @@ abstract contract InterestTest is Test {
 
   using Math for uint256;
 
-  function testInterestToMaxPeriods(uint256 principal, ISimpleInterest simpleInterest) internal {
+  function testInterestToMaxPeriods(uint256 principal, IInterestMetadata simpleInterest) internal {
     uint256 maxNumPeriods = simpleInterest.getFrequency() * NUM_CYCLES_TO_TEST; // e.g. 2 years, 24 months, 720 days
 
     // due to small fractional numbers, principal needs to be SCALED to calculate correctly
@@ -30,7 +31,7 @@ abstract contract InterestTest is Test {
 
   function testInterestAtPeriod(
     uint256 principal,
-    ISimpleInterest simpleInterest,
+    IInterestMetadata simpleInterest,
     uint256 numTimePeriods
   ) internal virtual {
     // The `calcPrincipalFromDiscounted` and `calcDiscounted` functions are designed to be mathematical inverses of each other.
@@ -219,13 +220,13 @@ abstract contract InterestTest is Test {
 
   function assertMsg(
     string memory prefix,
-    ISimpleInterest simpleInterest,
+    IInterestMetadata simpleInterest,
     uint256 numTimePeriods
   ) internal view returns (string memory) {
     return string.concat(prefix, toString(simpleInterest), " timePeriod= ", vm.toString(numTimePeriods));
   }
 
-  function toString(ISimpleInterest simpleInterest) internal view returns (string memory) {
+  function toString(IInterestMetadata simpleInterest) internal view returns (string memory) {
     return string.concat(
       " ISimpleInterest [ ",
       " IR = ",
