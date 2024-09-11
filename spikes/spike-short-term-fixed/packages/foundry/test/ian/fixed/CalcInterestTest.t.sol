@@ -7,8 +7,6 @@ import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-import { console2 } from "forge-std/console2.sol";
-
 contract CalcInterestTest is Test {
   using Math for uint256;
 

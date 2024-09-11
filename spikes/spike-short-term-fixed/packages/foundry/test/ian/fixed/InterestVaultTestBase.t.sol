@@ -10,7 +10,6 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { Test } from "forge-std/Test.sol";
-import { console2 } from "forge-std/console2.sol";
 
 import { CalcInterestTestBase } from "@credbull-spike-test/ian/fixed/CalcInterestTestBase.t.sol";
 
