@@ -3,6 +3,7 @@ pragma solidity ^0.8.23;
 
 import {ICalcInterestMetadata} from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
 import { CalcDiscounted } from "@credbull-spike/contracts/ian/fixed/CalcDiscounted.sol";
+import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
 import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
 import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
 
@@ -29,6 +30,7 @@ contract SimpleInterestVault is IERC4626Interest, CalcDiscounted, ERC4626, IProd
   // The number of time periods for vault redemption.
   // Should use the same time unit (day/month/year) as the interest frequency.
   uint256 public immutable TENOR;
+
 
   /**
    * @notice Constructor to initialize the SimpleInterestVault with asset, interest rate, frequency, and tenor.
@@ -251,8 +253,8 @@ contract SimpleInterestVault is IERC4626Interest, CalcDiscounted, ERC4626, IProd
    * @notice Returns the frequency of interest application (number of periods in a year).
    * @return frequency The frequency value.
    */
-  function getFrequency() public view override(ICalcInterestMetadata, CalcDiscounted, IProduct) returns (uint256 frequency) {
-    return CalcDiscounted.getFrequency();
+  function getFrequency() public view override(ICalcInterestMetadata, CalcSimpleInterest, IProduct) returns (uint256 frequency) {
+    return CalcSimpleInterest.getFrequency();
   }
 
   /**
@@ -272,10 +274,10 @@ contract SimpleInterestVault is IERC4626Interest, CalcDiscounted, ERC4626, IProd
   function getInterestInPercentage()
     public
     view
-    override(ICalcInterestMetadata, CalcDiscounted, IProduct)
+    override(ICalcInterestMetadata, CalcSimpleInterest, IProduct)
     returns (uint256 interestRateInPercentage)
   {
-    return CalcDiscounted.getInterestInPercentage();
+    return CalcSimpleInterest.getInterestInPercentage();
   }
 
   /**

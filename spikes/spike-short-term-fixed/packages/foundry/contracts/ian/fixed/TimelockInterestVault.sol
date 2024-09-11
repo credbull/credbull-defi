@@ -15,6 +15,7 @@ import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausable, IPausable {
+
   constructor(
     address initialOwner,
     IERC20Metadata asset,
