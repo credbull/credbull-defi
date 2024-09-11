@@ -7,7 +7,7 @@ import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimp
 
 /**
  * @title CalcDiscounted
- * @dev This contract implements the calculation of discounted principal, and recovery of the original principal using the Price mechanism.
+ * @dev This library implements the calculation of discounted principal, and recovery of the original principal using the Price mechanism.
  *
  * @notice The `calcPrincipalFromDiscounted` and `calcDiscounted` functions are designed to be mathematical inverses of each other.
  * This means that applying `calcPrincipalFromDiscounted` to the output of `calcDiscounted` will return the original principal amount.
@@ -19,26 +19,8 @@ import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimp
  * uint256 recoveredPrincipal = calcPrincipalFromDiscounted(discountedValue);
  * assert(recoveredPrincipal == originalPrincipal);
  */
-contract CalcDiscounted is ICalcDiscounted, CalcSimpleInterest {
+library CalcDiscounted {
   using Math for uint256;
-
-  uint256 public constant PAR = 1;
-
-  /**
-   * @notice Constructor to initialize the SimpleInterest contract with interest rate, frequency, and scaling parameters.
-   * @param interestRatePercentage The annual interest rate as a percentage.
-   * @param frequency The number of interest periods in a year.
-   * @param decimals The number of decimals for scaling calculations.
-   */
-  constructor(
-    uint256 interestRatePercentage,
-    uint256 frequency,
-    uint256 decimals
-  )
-    CalcSimpleInterest(
-      CalcInterestParams({ interestRatePercentage: interestRatePercentage, frequency: frequency, decimals: decimals })
-    )
-  { }
 
   /**
    * @notice Calculates the price for a given number of periods elapsed.
@@ -47,10 +29,16 @@ contract CalcDiscounted is ICalcDiscounted, CalcSimpleInterest {
    * @param numTimePeriodsElapsed The number of time periods that have elapsed.
    * @return priceScaled The price scaled by the internal scale factor.
    */
-  function calcPriceWithScale(uint256 numTimePeriodsElapsed) public view virtual returns (uint256 priceScaled) {
-    uint256 interestScaled = _calcInterestWithScale(PAR, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
+  function calcPriceWithScale(
+    uint256 numTimePeriodsElapsed,
+    uint256 interestRatePercentage,
+    uint256 frequency
+  ) public view returns (uint256 priceScaled) {
+    uint256 parScaled = CalcSimpleInterest._scale(1);
 
-    uint256 _priceScaled = _scale(PAR) + interestScaled;
+    uint256 interestScaled = CalcSimpleInterest._calcInterestWithScale(parScaled, numTimePeriodsElapsed, interestRatePercentage, frequency);
+
+    uint256 _priceScaled = CalcSimpleInterest._scale(parScaled) + interestScaled;
 
     return _priceScaled;
   }
@@ -61,15 +49,19 @@ contract CalcDiscounted is ICalcDiscounted, CalcSimpleInterest {
    * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
    * @return discounted The discounted principal amount.
    */
-  function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256 discounted) {
-    if (principal < SCALE) {
-      revert PrincipalLessThanScale(principal, SCALE);
-    }
-    uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed);
+  function calcDiscounted(
+    uint256 principal,
+    uint256 numTimePeriodsElapsed,
+    uint256 interestRatePercentage,
+    uint256 frequency
+  ) public view returns (uint256 discounted) {
+    uint256 scale = CalcSimpleInterest.getScale();
 
-    uint256 discountedScaled = _scale(principal).mulDiv(SCALE, priceScaled, ROUNDING); // Discounted = Principal / Price
+    uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency);
 
-    return _unscale(discountedScaled);
+    uint256 discountedScaled = CalcSimpleInterest._scale(principal).mulDiv(scale * scale, priceScaled, Math.Rounding.Floor); // Discounted = Principal / Price
+
+    return CalcSimpleInterest._unscale(discountedScaled);
   }
 
   /**
@@ -80,12 +72,17 @@ contract CalcDiscounted is ICalcDiscounted, CalcSimpleInterest {
    */
   function calcPrincipalFromDiscounted(
     uint256 discounted,
-    uint256 numTimePeriodsElapsed
-  ) public view virtual returns (uint256 principal) {
-    uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed);
+    uint256 numTimePeriodsElapsed,
+    uint256 interestRatePercentage,
+    uint256 frequency
+  ) public view returns (uint256 principal) {
+    uint256 scale = CalcSimpleInterest.getScale();
 
-    uint256 principalScaled = _scale(discounted).mulDiv(priceScaled, SCALE, ROUNDING); // Principal = Discounted * Price
+    uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency);
 
-    return _unscale(principalScaled);
+    uint256 principalScaled = CalcSimpleInterest._scale(discounted).mulDiv(priceScaled, scale * scale, Math.Rounding.Floor); // Principal = Discounted * Price
+
+    return CalcSimpleInterest._unscale(principalScaled);
   }
+
 }
