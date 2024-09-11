@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     "SimpleUSDC#0": {
-      address: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
+      address: "0x7a28cf37763279f774916b85b5ef8b64ab421f79",
       abi: [
         {
           type: "constructor",
@@ -421,10 +421,24 @@ const deployedContracts = {
           ],
         },
       ],
-      inheritedFunctions: {},
+      inheritedFunctions: {
+        allowance: "contracts/OwnableToken.sol",
+        approve: "contracts/OwnableToken.sol",
+        balanceOf: "contracts/OwnableToken.sol",
+        decimals: "contracts/OwnableToken.sol",
+        mint: "contracts/OwnableToken.sol",
+        name: "contracts/OwnableToken.sol",
+        owner: "contracts/OwnableToken.sol",
+        renounceOwnership: "contracts/OwnableToken.sol",
+        symbol: "contracts/OwnableToken.sol",
+        totalSupply: "contracts/OwnableToken.sol",
+        transfer: "contracts/OwnableToken.sol",
+        transferFrom: "contracts/OwnableToken.sol",
+        transferOwnership: "contracts/OwnableToken.sol",
+      },
     },
     "TimelockInterestVault#0": {
-      address: "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+      address: "0x2bb8b93f585b43b06f3d523bf30c203d3b6d4bd4",
       abi: [
         {
           type: "constructor",
@@ -757,6 +771,30 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "calcInterestForDepositTimePeriod",
+          inputs: [
+            {
+              name: "account",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "depositTimePeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
           name: "calcPriceWithScale",
           inputs: [
             {
@@ -821,6 +859,44 @@ const deployedContracts = {
           outputs: [
             {
               name: "rolloverBonus",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "calcTotalDeposits",
+          inputs: [
+            {
+              name: "account",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "calcTotalInterest",
+          inputs: [
+            {
+              name: "account",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
               type: "uint256",
               internalType: "uint256",
             },
@@ -1110,30 +1186,6 @@ const deployedContracts = {
           outputs: [
             {
               name: "tenor",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "interestEarnedForWindow",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "depositTimePeriod",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
               type: "uint256",
               internalType: "uint256",
             },
@@ -1712,25 +1764,6 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "totalInterestEarned",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
           name: "totalSupply",
           inputs: [],
           outputs: [
@@ -1750,25 +1783,6 @@ const deployedContracts = {
               name: "id",
               type: "uint256",
               internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "totalUserDeposit",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
             },
           ],
           outputs: [
@@ -2635,7 +2649,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "TimelockInterestVault#1": {
-      address: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
+      address: "0xb7ca895f81f20e05a5eb11b05cbaab3dae5e23cd",
       abi: [
         {
           type: "constructor",
@@ -2968,6 +2982,30 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "calcInterestForDepositTimePeriod",
+          inputs: [
+            {
+              name: "account",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "depositTimePeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
           name: "calcPriceWithScale",
           inputs: [
             {
@@ -3032,6 +3070,44 @@ const deployedContracts = {
           outputs: [
             {
               name: "rolloverBonus",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "calcTotalDeposits",
+          inputs: [
+            {
+              name: "account",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "calcTotalInterest",
+          inputs: [
+            {
+              name: "account",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
               type: "uint256",
               internalType: "uint256",
             },
@@ -3321,30 +3397,6 @@ const deployedContracts = {
           outputs: [
             {
               name: "tenor",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "interestEarnedForWindow",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "depositTimePeriod",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
               type: "uint256",
               internalType: "uint256",
             },
@@ -3923,25 +3975,6 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "totalInterestEarned",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
           name: "totalSupply",
           inputs: [],
           outputs: [
@@ -3961,25 +3994,6 @@ const deployedContracts = {
               name: "id",
               type: "uint256",
               internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "totalUserDeposit",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
             },
           ],
           outputs: [
