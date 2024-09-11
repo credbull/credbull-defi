@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpleInterest.sol";
+import { IInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/IInterestMetadata.sol";
 
 /**
  * @title SimpleInterest
@@ -27,7 +27,7 @@ import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpl
  * uint256 recoveredPrincipal = calcPrincipalFromDiscounted(discountedValue);
  * assert(recoveredPrincipal == originalPrincipal);
  */
-contract SimpleInterest is ISimpleInterest {
+contract SimpleInterest is IInterestMetadata {
   using Math for uint256;
 
   uint256 public immutable INTEREST_RATE; // IR as %, e.g. 15 for 15% (or 0.15)

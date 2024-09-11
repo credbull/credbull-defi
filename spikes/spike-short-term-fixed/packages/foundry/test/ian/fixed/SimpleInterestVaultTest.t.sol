@@ -6,7 +6,7 @@ import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleI
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
 import { InterestTest } from "@credbull-spike-test/ian/fixed/InterestTest.t.sol";
-import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpleInterest.sol";
+import { IInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/IInterestMetadata.sol";
 
 import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
 
@@ -138,7 +138,7 @@ contract SimpleInterestVaultTest is InterestTest {
 
   function testInterestAtPeriod(
     uint256 principal,
-    ISimpleInterest simpleInterest,
+    IInterestMetadata simpleInterest,
     uint256 numTimePeriods
   ) internal override {
     // test against the simple interest harness

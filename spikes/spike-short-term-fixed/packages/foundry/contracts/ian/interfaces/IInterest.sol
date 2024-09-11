@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title Simple Interest Interface
+ * @title Interest Interface
  * @dev This interface provides functions to calculate interest and principal amounts over time.
  *
  * @notice The `calcPrincipalFromDiscounted` and `calcDiscounted` functions are designed to be mathematical inverses of each other.
@@ -20,7 +20,7 @@ pragma solidity ^0.8.20;
  * This property ensures that no information is lost when discounting and then recovering the principal,
  * making the system consistent and predictable.
  */
-interface ISimpleInterest {
+interface IInterest {
   /**
    * @notice Calculates the simple interest based on the principal and elapsed time periods.
    * @param principal The initial principal amount.
@@ -57,21 +57,4 @@ interface ISimpleInterest {
     uint256 numTimePeriodsElapsed
   ) external view returns (uint256 principal);
 
-  /**
-   * @notice Returns the frequency of interest application (number of periods in a year).
-   * @return frequency The frequency value.
-   */
-  function getFrequency() external view returns (uint256 frequency);
-
-  /**
-   * @notice Returns the annual interest rate as a percentage.
-   * @return interestRateInPercentage The interest rate as a percentage.
-   */
-  function getInterestInPercentage() external view returns (uint256 interestRateInPercentage);
-
-  /**
-   * @notice Returns the scale factor for internal calculations (e.g., 10^18 for 18 decimals).
-   * @return scale The scale factor.
-   */
-  function getScale() external view returns (uint256 scale);
 }

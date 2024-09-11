@@ -5,7 +5,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SimpleInterest } from "@credbull-spike/contracts/ian/fixed/SimpleInterest.sol";
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
-import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpleInterest.sol";
+import { IInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/IInterestMetadata.sol";
 import { InterestTest } from "@credbull-spike-test/ian/fixed/InterestTest.t.sol";
 
 contract SimpleInterestTest is InterestTest {
@@ -16,7 +16,7 @@ contract SimpleInterestTest is InterestTest {
   function test__SimpleInterestTest__CheckScale() public {
     uint256 apy = 10; // APY in percentage
 
-    ISimpleInterest simpleInterest =
+    IInterestMetadata simpleInterest =
       new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360), DECIMALS);
 
     uint256 scaleMinus1 = simpleInterest.getScale() - 1;
@@ -32,7 +32,7 @@ contract SimpleInterestTest is InterestTest {
   function test__SimpleInterestTest__Monthly() public {
     uint256 apy = 12; // APY in percentage
 
-    ISimpleInterest simpleInterest =
+    IInterestMetadata simpleInterest =
       new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.MONTHLY), DECIMALS);
     uint256 scale = simpleInterest.getScale();
 
@@ -42,7 +42,7 @@ contract SimpleInterestTest is InterestTest {
   function test__SimpleInterestTest__Daily360() public {
     uint256 apy = 12; // APY in percentage
 
-    ISimpleInterest simpleInterest =
+    IInterestMetadata simpleInterest =
       new SimpleInterest(apy, Frequencies.toValue(Frequencies.Frequency.DAYS_360), DECIMALS);
     uint256 scale = simpleInterest.getScale();
 
