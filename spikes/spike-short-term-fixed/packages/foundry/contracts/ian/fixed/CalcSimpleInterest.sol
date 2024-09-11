@@ -37,7 +37,7 @@ library CalcSimpleInterest {
     uint256 numTimePeriodsElapsed,
     uint256 interestRatePercentage,
     uint256 frequency
-  ) public view returns (uint256 interestScaled) {
+  ) public pure returns (uint256 interestScaled) {
     uint256 principalScaled = _scale(principal);
 
     uint256 _interestScaled = _calcInterestWithScale(principalScaled, numTimePeriodsElapsed, interestRatePercentage, frequency);
@@ -59,7 +59,7 @@ library CalcSimpleInterest {
     uint256 numTimePeriodsElapsed,
     uint256 interestRatePercentage,
     uint256 frequency
-  ) public view returns (uint256 interestScaled) {
+  ) public pure returns (uint256 interestScaled) {
     if (principal < getScale()) {
       revert PrincipalLessThanScale(principal, getScale());
     }
@@ -75,7 +75,7 @@ library CalcSimpleInterest {
    * @param amount The scaled amount to be unscaled.
    * @return unscaledAmount The unscaled amount.
    */
-  function _unscale(uint256 amount) internal view returns (uint256 unscaledAmount) {
+  function _unscale(uint256 amount) internal pure returns (uint256 unscaledAmount) {
     return amount / getScale();
   }
 
@@ -84,7 +84,7 @@ library CalcSimpleInterest {
    * @param amount The unscaled amount to be scaled.
    * @return scaledAmount The scaled amount.
    */
-  function _scale(uint256 amount) internal view returns (uint256 scaledAmount) {
+  function _scale(uint256 amount) internal pure returns (uint256 scaledAmount) {
     return amount * getScale();
   }
 
@@ -93,7 +93,7 @@ library CalcSimpleInterest {
    * @notice Returns the scale factor for internal calculations (e.g., 10^18 for 18 decimals).
    * @return scale The scale factor.
    */
-  function getScale() public view returns (uint256 scale) {
-    return 10**18;
+  function getScale() public pure returns (uint256 scale) {
+    return 1e18;
   }
 }
