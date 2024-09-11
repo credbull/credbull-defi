@@ -29,7 +29,7 @@ abstract contract ProductScenarioTest is Test {
     address internal immutable ALICE = makeAddr("alice");
     address internal immutable BOB = makeAddr("bob");
 
-    uint8 internal constant INTEREST_RATE_PERCENTAGE = 12;
+    uint8 internal constant INTEREST_RATE_PERCENTAGE = 6;
     uint16 internal constant FREQUENCY = 360;
     uint8 internal constant TENOR = 30;
 
@@ -58,15 +58,11 @@ abstract contract ProductScenarioTest is Test {
     function createProduct(ProductParams memory params) internal virtual returns (IProduct, IERC20);
 
     /**
-     * @dev A utility setup function intended to be invoked by the `setUp` function of the realising [Test].
+     * @dev A utility asset setup function intended to be invoked by the `setUp` function of the realising [Test].
      */
-    function scenarioSetup() internal {
+    function setupAsset() internal {
         vm.startPrank(OWNER);
         _asset = new SimpleUSDC(ASSET_SUPPLY);
-        vm.stopPrank();
-        assertEq(_asset.balanceOf(OWNER), ASSET_SUPPLY, "owner should start with total supply");
-
-        vm.startPrank(OWNER);
         _asset.transfer(ALICE, USER_ASSET_AMOUNT);
         _asset.transfer(BOB, USER_ASSET_AMOUNT);
         vm.stopPrank();
@@ -84,11 +80,11 @@ abstract contract ProductScenarioTest is Test {
 
         vm.startPrank(ALICE);
         _asset.approve(address(_product), depositAmount);
-        uint256 _shares = _product.deposit(depositAmount, ALICE);
+        uint256 shares = _product.deposit(depositAmount, ALICE);
         vm.stopPrank();
 
-        assertNotEq(0, _shares, "No _shares were allocated");
-        assertEq(_shares, _share.balanceOf(ALICE), "Incorrect number of _shares allocated to Alice");
+        assertNotEq(0, shares, "No _shares were allocated");
+        assertEq(shares, _share.balanceOf(ALICE), "Incorrect number of _shares allocated to Alice");
 
         // NOTE (JL,2024-09-04): Confirmation is deemed to be the succesful Shares allocation.
     }
@@ -129,7 +125,7 @@ abstract contract ProductScenarioTest is Test {
 
         vm.startPrank(ALICE);
         _asset.approve(address(_product), depositAmount);
-        uint256 _shares = _product.deposit(depositAmount, ALICE);
+        uint256 shares = _product.deposit(depositAmount, ALICE);
         vm.stopPrank();
 
         // Advance the periods elapsed, but to less than the Tenor, so lock period still in effect.
@@ -139,7 +135,7 @@ abstract contract ProductScenarioTest is Test {
 
         vm.startPrank(ALICE);
         vm.expectRevert();
-        _product.redeem(_shares, ALICE, ALICE);
+        _product.redeem(shares, ALICE, ALICE);
         vm.stopPrank();
     }
 
@@ -157,17 +153,16 @@ abstract contract ProductScenarioTest is Test {
 
         vm.startPrank(ALICE);
         _asset.approve(address(_product), depositAmount);
-        uint256 _shares = _product.deposit(depositAmount, ALICE);
+        uint256 shares = _product.deposit(depositAmount, ALICE);
         vm.stopPrank();
 
         _product.setCurrentTimePeriodsElapsed(TENOR);
 
         vm.startPrank(ALICE);
-        uint256 redeemed = _product.redeem(_shares, ALICE, ALICE);
+        uint256 redeemed = _product.redeem(shares, ALICE, ALICE);
         vm.stopPrank();
 
-        // NOTE (JL,2024-09-09): Returns adjused for the 12% APY in effect.
-        uint256 expectedRedeemed = 15_150 ether;
+        uint256 expectedRedeemed = 15_075 ether;
         assertNotEq(0, redeemed, "No _assets were redeemed");
         assertGt(redeemed, depositAmount, "Incorrect number of _assets redeemed");
         assertEq(expectedRedeemed, redeemed, "Incorrect number of _assets redeemed");
@@ -204,7 +199,7 @@ abstract contract ProductScenarioTest is Test {
 
         vm.startPrank(ALICE);
         _asset.approve(address(_product), depositAmount);
-        uint256 _shares = _product.deposit(depositAmount, ALICE);
+        uint256 shares = _product.deposit(depositAmount, ALICE);
         vm.stopPrank();
 
         // Advance the periods elapsed, but to less than the Tenor, so lock period still in effect.
@@ -212,14 +207,13 @@ abstract contract ProductScenarioTest is Test {
         _product.setCurrentTimePeriodsElapsed(elapsedPeriods);
 
         vm.startPrank(ALICE);
-        uint256 redeemed = _product.redeem(_shares, ALICE, ALICE);
+        uint256 redeemed = _product.redeem(shares, ALICE, ALICE);
         vm.stopPrank();
 
-        // NOTE (JL,2024-09-09): Returns adjused for the 12% APY in effect.
-        uint256 expectedRedeemed = 41_200 ether;
-        assertNotEq(0, redeemed, "No _assets were redeemed");
-        assertGt(redeemed, depositAmount, "Incorrect number of _assets redeemed");
-        assertEq(expectedRedeemed, redeemed, "Incorrect number of _assets redeemed");
+        uint256 expectedRedeemed = 40_600 ether;
+        assertNotEq(0, redeemed, "No assets were redeemed");
+        assertGt(redeemed, depositAmount, "Incorrect number of assets redeemed");
+        assertEq(expectedRedeemed, redeemed, "Incorrect number of assets redeemed");
     }
 
     /**
@@ -252,7 +246,27 @@ abstract contract ProductScenarioTest is Test {
      *
      * DEMO Flow A1
      */
-    function test_Scenario_Term30_UserViewsInvestment() public { }
+    function test_Scenario_Term30_UserViewsInvestment() public {
+        uint256 depositAmount = 35_000 ether;
+
+        vm.startPrank(ALICE);
+        _asset.approve(address(_product), depositAmount);
+        _product.deposit(depositAmount, ALICE);
+        vm.stopPrank();
+
+        uint8 elapsedTimePeriods = TENOR / 2;
+        _product.setCurrentTimePeriodsElapsed(elapsedTimePeriods);
+
+        uint256 totalDeposits = _product.calcTotalDeposits(ALICE);
+        assertEq(depositAmount, totalDeposits, "Incorrect investment total reported");
+
+        uint256 expectedTotalInterest = 875 ether / 10;
+        uint256 totalInterest = _product.calcTotalInterest(ALICE);
+        assertEq(expectedTotalInterest, totalInterest, "Incorrect interest total reported");
+
+        // NOTE (JL,2024-09-11): How to actually get time remaining?
+        assertEq(15, TENOR - _product.getCurrentTimePeriodsElapsed(), "Incorrect time remaining");
+    }
 
     /**
      * Scenario: Calculating returns for a standard 90-day investment

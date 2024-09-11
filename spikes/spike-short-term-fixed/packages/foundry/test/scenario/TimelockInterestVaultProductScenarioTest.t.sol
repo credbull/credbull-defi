@@ -42,13 +42,16 @@ contract TimelockInterestVaultProductScenarioTest is ProductScenarioTest {
     }
 
     function setUp() public {
-        scenarioSetup();
+        setupAsset();
 
-        TimelockInterestVault vault =
-            new TimelockInterestVault(OWNER, _asset, INTEREST_RATE_PERCENTAGE, FREQUENCY, TENOR);
-
-        _product = vault;
-        _share = vault;
+        ProductParams memory params = ProductParams({
+            owner: OWNER,
+            asset: _asset,
+            interestRatePercentage: INTEREST_RATE_PERCENTAGE,
+            interestRateFrequency: FREQUENCY,
+            tenor: TENOR
+        });
+        (_product, _share) = createProduct(params);
 
         vm.startPrank(OWNER);
         _asset.transfer(address(_product), USER_ASSET_AMOUNT * 2);
