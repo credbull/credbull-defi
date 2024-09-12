@@ -43,7 +43,7 @@ export const DisplayVariable = ({
     },
   });
 
-  const { showAnimation } = useAnimationConfig(result);
+  const { showAnimation } = useAnimationConfig(result || null);
 
   useEffect(() => {
     refetch();

@@ -8,6 +8,7 @@ import { useReadContract } from "wagmi";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
+import { fromDecimals, toDecimals } from "~~/utils/numbers";
 import { Contract, ContractName } from "~~/utils/scaffold-eth/contract";
 
 const ViewSection = (props: any) => {
@@ -38,35 +39,47 @@ const ViewSection = (props: any) => {
     args: [props.data.address],
   });
 
-  if (!refresh) {
+  useEffect(() => {
     userReserveRefetch().then(data => {
-      setUserData(Number(Number(data.data) / 10 ** 6));
+      if (data?.data) {
+        setUserData(fromDecimals(Number(data.data)));
+      }
     });
 
     getCurrentTimePeriodsElapsedRefetch().then(data => {
-      setTimePeriodsElapsed(data.data as bigint);
+      if (data?.data) {
+        setTimePeriodsElapsed(data.data as bigint);
+      }
     });
 
     getInterestEarnedRefetch().then(data => {
-      setInterestEarned((Number(data.data) * 1000) / 10 ** 6 / 1000);
+      if (data?.data) {
+        setInterestEarned(fromDecimals(Number(data.data)));
+      }
     });
-  }
+  }, [getCurrentTimePeriodsElapsedRefetch, getInterestEarnedRefetch, refresh, userReserveRefetch]);
 
   useEffect(() => {
     if (userData === 0)
       userReserveRefetch().then(data => {
-        setUserData(Number(Number(data.data) / 10 ** 6));
+        if (data?.data) {
+          setUserData(fromDecimals(Number(data.data)));
+        }
       });
 
     if (timePeriodsElapsed === 0n) {
       getCurrentTimePeriodsElapsedRefetch().then(data => {
-        setTimePeriodsElapsed(data.data as bigint);
+        if (data?.data) {
+          setTimePeriodsElapsed(data.data as bigint);
+        }
       });
     }
 
     if (interestEarned === 0) {
       getInterestEarnedRefetch().then(data => {
-        setInterestEarned((Number(data.data) * 1000) / 10 ** 6 / 1000);
+        if (data?.data) {
+          setInterestEarned(fromDecimals(Number(data.data)));
+        }
       });
     }
   }, [
@@ -119,7 +132,7 @@ const Card = ({
 
   const handleDeposit = () => {
     if (deployedContractData) {
-      const amountWithDecimal = BigInt(Number(amount) * 10 ** 6);
+      const amountWithDecimal = toDecimals(Number(amount));
 
       if (writeContractAsync) {
         try {
@@ -143,7 +156,7 @@ const Card = ({
 
   const handleRedeem = async () => {
     if (deployedContractData) {
-      const amountWithDecimal = BigInt(Number(amount) * 10 ** 6);
+      const amountWithDecimal = toDecimals(Number(amount));
       const timePeriodsElapsedData = await refetch();
 
       const timePeriodsElapsed = BigInt(timePeriodsElapsedData.data as bigint);
@@ -172,7 +185,11 @@ const Card = ({
 
   const multiplyBy18 = () => {
     if (amount) {
-      setAmount(prev => (Number(prev) * 1e18).toString());
+      const bigAmount = BigInt(amount);
+      const multiplier = BigInt(1e18);
+      const result = bigAmount * multiplier;
+
+      setAmount(result.toString());
     }
   };
 
