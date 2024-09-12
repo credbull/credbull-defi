@@ -6,15 +6,6 @@ import { ICalcInterestMetadata } from "@credbull/interest/ICalcInterestMetadata.
 interface IProduct is ICalcInterestMetadata {
     error RedeemTimePeriodNotSupported(uint256 currentPeriod, uint256 redeemPeriod);
 
-    // ===============  Properties  ===============
-
-    /**
-     * @notice Returns the effectve Term Period, after which redemption is permitted.
-     * @dev This should be in the same time unit that governs the `frequency`, e.g. 30 days.
-     * @return termPeriod The extent of the Term Period.
-     */
-    function getTermPeriod() external returns (uint256 termPeriod);
-
     // ===============  Vault / Vault-like Behavior ===============
 
     /**
