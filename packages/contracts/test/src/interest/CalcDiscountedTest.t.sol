@@ -22,7 +22,7 @@ contract CalcDiscountedTest is Test {
 
         uint256 principal = 200 * SCALE;
 
-        uint256 price = CalcDiscounted.calcPriceWithScale(tenor, apy, frequency, SCALE);
+        uint256 price = CalcDiscounted.calcPriceFromInterest(tenor, apy, frequency, SCALE);
 
         uint256 actualDiscounted = CalcDiscounted.calcDiscounted(principal, price, SCALE);
         uint256 expectedDiscounted = principal.mulDiv(100, 101); // price at period 30 = 1.01
@@ -79,7 +79,7 @@ contract CalcDiscountedTest is Test {
         //  This means that applying `calcPrincipalFromDiscounted` to the output of `calcDiscounted` will return the original principal amount.
 
         uint256 price =
-            CalcDiscounted.calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency, SCALE);
+            CalcDiscounted.calcPriceFromInterest(numTimePeriodsElapsed, interestRatePercentage, frequency, SCALE);
         uint256 discounted = CalcDiscounted.calcDiscounted(principal, price, SCALE);
         uint256 principalFromDiscounted = CalcDiscounted.calcPrincipalFromDiscounted(discounted, price, SCALE);
 

@@ -30,7 +30,7 @@ library CalcDiscounted {
      * @param numTimePeriodsElapsed The number of time periods that have elapsed.
      * @return priceScaled The price scaled by the internal scale factor.
      */
-    function calcPriceWithScale(
+    function calcPriceFromInterest(
         uint256 numTimePeriodsElapsed,
         uint256 interestRatePercentage,
         uint256 frequency,
