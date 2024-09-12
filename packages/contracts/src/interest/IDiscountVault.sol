@@ -10,34 +10,19 @@ import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
  */
 interface IDiscountVault is IERC4626 {
     /**
-     * @notice Calculates the simple interest based on the principal and elapsed time periods.
+     * @notice Calculates the yield based on the principal and elapsed time periods.
      * @param principal The initial principal amount.
      * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
-     * @return interest The calculated interest amount.
+     * @return yield The calculated yield amount.
      */
-    function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) external view returns (uint256 interest);
+    function calcYield(uint256 principal, uint256 numTimePeriodsElapsed) external view returns (uint256 yield);
 
     /**
-     * @notice Calculates the discounted principal after the elapsed time periods.
-     * @param principal The initial principal amount.
-     * @param numTimePeriodsElapsed The number of time periods for which the discount is calculated.
-     * @return discounted The discounted principal amount.
+     * @notice Calculates the price for a given number of periods elapsed.
+     * @param numTimePeriodsElapsed The number of time periods that have elapsed.
+     * @return price The price
      */
-    function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed)
-        external
-        view
-        returns (uint256 discounted);
-
-    /**
-     * @notice Recovers the original principal from a discounted value after the elapsed time periods.
-     * @param discounted The discounted principal amount.
-     * @param numTimePeriodsElapsed The number of time periods for which the discount was calculated.
-     * @return principal The recovered original principal amount.
-     */
-    function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed)
-        external
-        view
-        returns (uint256 principal);
+    function calcPrice(uint256 numTimePeriodsElapsed) external view returns (uint256 price);
 
     function convertToSharesAtPeriod(uint256 assets, uint256 numTimePeriodsElapsed)
         external

@@ -46,34 +46,20 @@ library CalcDiscounted {
     /**
      * @notice Calculates the discounted principal by dividing the principal by the price.
      * @param principal The initial principal amount.
-     * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
+     * @param price The ratio of Discounted to Principal
      * @return discounted The discounted principal amount.
      */
-    function calcDiscounted(
-        uint256 principal,
-        uint256 numTimePeriodsElapsed,
-        uint256 interestRatePercentage,
-        uint256 frequency
-    ) internal pure returns (uint256 discounted) {
-        uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency);
-
-        return principal.mulDiv(SCALE, priceScaled, Math.Rounding.Floor); // Discounted = Principal / Price
+    function calcDiscounted(uint256 principal, uint256 price) internal pure returns (uint256 discounted) {
+        return principal.mulDiv(SCALE, price, Math.Rounding.Floor); // Discounted = Principal / Price
     }
 
     /**
      * @notice Recovers the original principal from a discounted value by multiplying it with the price.
      * @param discounted The discounted principal amount.
-     * @param numTimePeriodsElapsed The number of time periods for which interest was calculated.
+     * @param price The ratio of Discounted to Principal
      * @return principal The recovered original principal amount.
      */
-    function calcPrincipalFromDiscounted(
-        uint256 discounted,
-        uint256 numTimePeriodsElapsed,
-        uint256 interestRatePercentage,
-        uint256 frequency
-    ) internal pure returns (uint256 principal) {
-        uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency);
-
-        return discounted.mulDiv(priceScaled, SCALE, Math.Rounding.Floor); // Principal = Discounted * Price
+    function calcPrincipalFromDiscounted(uint256 discounted, uint256 price) internal pure returns (uint256 principal) {
+        return discounted.mulDiv(price, SCALE, Math.Rounding.Floor); // Principal = Discounted * Price
     }
 }

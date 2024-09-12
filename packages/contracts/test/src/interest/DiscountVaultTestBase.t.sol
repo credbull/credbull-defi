@@ -43,7 +43,7 @@ abstract contract DiscountVaultTestBase is Test {
         virtual
     {
         // ------------------- check toShares/toAssets - specified period -------------------
-        uint256 expectedYield = principal + vault.calcInterest(principal, vault.getTenor()); // yield = principal + interest
+        uint256 expectedYield = principal + vault.calcYield(principal, vault.getTenor()); // yield = principal + interest
 
         uint256 sharesAtPeriod = vault.convertToSharesAtPeriod(principal, numTimePeriods);
         uint256 assetsAtPeriod = vault.convertToAssetsAtPeriod(sharesAtPeriod, numTimePeriods + vault.getTenor());
@@ -65,7 +65,7 @@ abstract contract DiscountVaultTestBase is Test {
         uint256 actualAssets = vault.convertToAssets(actualShares); // now redeem
 
         assertApproxEqAbs(
-            principal + vault.calcInterest(principal, vault.getTenor()),
+            principal + vault.calcYield(principal, vault.getTenor()),
             actualAssets,
             TOLERANCE,
             assertMsg("toShares/toAssets yield does not equal principal + interest", vault, numTimePeriods)
@@ -73,7 +73,7 @@ abstract contract DiscountVaultTestBase is Test {
 
         // ------------------- check partials  -------------------
         uint256 expectedPartialYield =
-            principal.mulDiv(33, 100) + vault.calcInterest(principal.mulDiv(33, 100), vault.getTenor());
+            principal.mulDiv(33, 100) + vault.calcYield(principal.mulDiv(33, 100), vault.getTenor());
 
         uint256 partialAssetsAtPeriod =
             vault.convertToAssetsAtPeriod(actualShares.mulDiv(33, 100), numTimePeriods + vault.getTenor());
@@ -94,7 +94,7 @@ abstract contract DiscountVaultTestBase is Test {
         virtual
     {
         uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
-        uint256 expectedInterest = vault.calcInterest(principal, vault.getTenor());
+        uint256 expectedInterest = vault.calcYield(principal, vault.getTenor());
         uint256 expectedPrincipalAndInterest = principal + expectedInterest;
 
         vault.setCurrentTimePeriodsElapsed(numTimePeriods); // set deposit period prior to deposit
@@ -159,7 +159,7 @@ abstract contract DiscountVaultTestBase is Test {
 
         // give the vault enough to cover the earned interest
 
-        uint256 interest = vault.calcInterest(principal, vault.getTenor());
+        uint256 interest = vault.calcYield(principal, vault.getTenor());
         vm.startPrank(_owner);
         transferAndAssert(asset, _owner, address(vault), interest);
         vm.stopPrank();

@@ -23,6 +23,13 @@ library CalcSimpleInterest {
 
     error PrincipalLessThanScale(uint256 principal, uint256 scale);
 
+    struct InterestParams {
+        uint256 principal;
+        uint256 numTimePeriodsElapsed;
+        uint256 interestRatePercentage;
+        uint256 frequency;
+    }
+
     /**
      * @notice Calculate SimpleInterest (without compounding)
      * @param principal The initial principal amount.
@@ -43,5 +50,21 @@ library CalcSimpleInterest {
             principal.mulDiv(interestRatePercentage * numTimePeriodsElapsed, frequency * 100, Math.Rounding.Floor);
 
         return _interest;
+    }
+
+    /**
+     * @notice Calculate SimpleInterest (without compounding)
+     * @param interestParams The parameters to the Simple Interest calculation
+     * @return interest The interest amount.
+     *
+     * @dev function is internal to be deployed in the same contract as caller (not a separate one)
+     */
+    function calcInterest(InterestParams memory interestParams) internal pure returns (uint256 interest) {
+        return calcInterest(
+            interestParams.principal,
+            interestParams.numTimePeriodsElapsed,
+            interestParams.interestRatePercentage,
+            interestParams.frequency
+        );
     }
 }
