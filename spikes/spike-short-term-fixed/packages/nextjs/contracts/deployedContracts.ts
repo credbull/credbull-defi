@@ -2572,7 +2572,124 @@ const deployedContracts = {
           ],
         },
       ],
-      inheritedFunctions: {},
+      inheritedFunctions: {
+        balanceOf:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        balanceOfBatch:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        exists:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getCurrentPeriod:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getLockDuration:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getLockPeriods:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getLockedAmount:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        isApprovedForAll:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        lock: "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        owner:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        previewUnlock:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        renounceOwnership:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        rolloverUnlocked:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        safeBatchTransferFrom:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        safeTransferFrom:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        setApprovalForAll:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        setCurrentPeriod:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        supportsInterface:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        totalSupply:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        transferOwnership:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        unlock:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        uri: "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        FREQUENCY:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        INTEREST_RATE:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        SCALE: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        TENOR: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        allowance:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        approve:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        asset: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        burn: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        burnFrom:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        calcDiscounted:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        calcInterest:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        calcPrincipalFromDiscounted:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToAssets:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToAssetsAtPeriod:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToShares:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToSharesAtPeriod:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        currentTimePeriodsElapsed:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        decimals:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        deposit: "contracts/IProduct.sol",
+        getCurrentTimePeriodsElapsed:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        getFrequency: "contracts/IProduct.sol",
+        getInterestInPercentage: "contracts/IProduct.sol",
+        getScale: "contracts/IProduct.sol",
+        getTenor:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxDeposit:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxMint:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxRedeem:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxWithdraw:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        mint: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        name: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewDeposit:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewMint:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewRedeem:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewWithdraw:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        redeem: "contracts/IProduct.sol",
+        redeemAtPeriod: "contracts/IProduct.sol",
+        setCurrentTimePeriodsElapsed: "contracts/IProduct.sol",
+        symbol: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        totalAssets:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        transfer:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        transferFrom:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        withdraw:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        paused: "lib/openzeppelin-contracts/contracts/utils/Pausable.sol",
+        calcInterestForDepositTimePeriod: "contracts/IProduct.sol",
+        calcTotalDeposits: "contracts/IProduct.sol",
+        calcTotalInterest: "contracts/IProduct.sol",
+      },
     },
     "TimelockInterestVault#1": {
       address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
@@ -4709,7 +4826,124 @@ const deployedContracts = {
           ],
         },
       ],
-      inheritedFunctions: {},
+      inheritedFunctions: {
+        balanceOf:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        balanceOfBatch:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        exists:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getCurrentPeriod:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getLockDuration:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getLockPeriods:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getLockedAmount:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        isApprovedForAll:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        lock: "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        owner:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        previewUnlock:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        renounceOwnership:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        rolloverUnlocked:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        safeBatchTransferFrom:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        safeTransferFrom:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        setApprovalForAll:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        setCurrentPeriod:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        supportsInterface:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        totalSupply:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        transferOwnership:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        unlock:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        uri: "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        FREQUENCY:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        INTEREST_RATE:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        SCALE: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        TENOR: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        allowance:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        approve:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        asset: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        burn: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        burnFrom:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        calcDiscounted:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        calcInterest:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        calcPrincipalFromDiscounted:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToAssets:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToAssetsAtPeriod:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToShares:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToSharesAtPeriod:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        currentTimePeriodsElapsed:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        decimals:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        deposit: "contracts/IProduct.sol",
+        getCurrentTimePeriodsElapsed:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        getFrequency: "contracts/IProduct.sol",
+        getInterestInPercentage: "contracts/IProduct.sol",
+        getScale: "contracts/IProduct.sol",
+        getTenor:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxDeposit:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxMint:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxRedeem:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxWithdraw:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        mint: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        name: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewDeposit:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewMint:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewRedeem:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewWithdraw:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        redeem: "contracts/IProduct.sol",
+        redeemAtPeriod: "contracts/IProduct.sol",
+        setCurrentTimePeriodsElapsed: "contracts/IProduct.sol",
+        symbol: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        totalAssets:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        transfer:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        transferFrom:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        withdraw:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        paused: "lib/openzeppelin-contracts/contracts/utils/Pausable.sol",
+        calcInterestForDepositTimePeriod: "contracts/IProduct.sol",
+        calcTotalDeposits: "contracts/IProduct.sol",
+        calcTotalInterest: "contracts/IProduct.sol",
+      },
     },
   },
 } as const;
