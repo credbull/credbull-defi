@@ -28,28 +28,36 @@ abstract contract ProductScenarioTest is Test {
     address internal immutable ALICE = makeAddr("alice");
     address internal immutable BOB = makeAddr("bob");
 
+    /// @dev This is the APY. Fractional Percentages are not supported.
     uint8 internal constant INTEREST_RATE_PERCENTAGE = 6;
+    /// @dev The frequency at which interest is aclculated. The Time Unit is Days.
     uint16 internal constant FREQUENCY = 360;
-    uint8 internal constant TENOR = 30;
+    /// @dev The time period, in the same Time Unit as Frequency, after which redemption is possible.
+    uint8 internal constant TERM_PERIOD = 30;
 
+    /// @dev The initial supply of the Asset Token.
     uint256 internal constant ASSET_SUPPLY = 10_000_000 ether;
+    /// @dev The amount of the Asset Token assigned to each User Account during setup.
     uint256 internal constant USER_ASSET_AMOUNT = 100_000 ether;
 
+    /// @dev The Asset Token.
     IERC20Metadata internal _asset;
+    /// @dev The Share Token, if any.
     IERC20Metadata internal _share;
+    /// @dev The [IProduct] realisation instance under test.
     IProduct internal _product;
 
-    // NOTE (JL,2024-09-10): This struct & factory function may not work.
     struct ProductParams {
         address owner;
         IERC20Metadata asset;
         uint8 interestRatePercentage;
         uint16 interestRateFrequency;
-        uint8 tenor;
+        uint8 termPeriod;
     }
 
     /**
-     * @dev Creates an instance of the [IProduct] under test, using the `params` configuration.
+     * @dev Creates an instance of the [IProduct] under test, using the `params` configuration. Thus allowing
+     *  customised instances for individual tests (e.g. 90 Day Term Period, or 12% APY).
      *
      * @param params The [ProductParams] of configuration for the [IProduct].
      * @return The [IProduct] instance and [IERC20Metadata] Share instance, if any.
@@ -127,10 +135,8 @@ abstract contract ProductScenarioTest is Test {
         uint256 shares = _product.deposit(depositAmount, ALICE);
         vm.stopPrank();
 
-        // Advance the periods elapsed, but to less than the Tenor, so lock period still in effect.
-        // uint256 currentPeriod = _product.getCurrentTimePeriodsElapsed();
-        uint256 currentPeriod = 0;
-        uint256 elapsedPeriods = currentPeriod + (TENOR / 2);
+        // Advance the periods elapsed, but to less than the Term Period, so lock period still in effect.
+        uint256 elapsedPeriods = _product.getTermPeriod() / 2;
         _product.setCurrentTimePeriodsElapsed(elapsedPeriods);
 
         vm.startPrank(ALICE);
@@ -156,7 +162,7 @@ abstract contract ProductScenarioTest is Test {
         uint256 shares = _product.deposit(depositAmount, ALICE);
         vm.stopPrank();
 
-        _product.setCurrentTimePeriodsElapsed(TENOR);
+        _product.setCurrentTimePeriodsElapsed(TERM_PERIOD);
 
         vm.startPrank(ALICE);
         uint256 redeemed = _product.redeem(shares, ALICE, ALICE);
@@ -203,7 +209,7 @@ abstract contract ProductScenarioTest is Test {
         vm.stopPrank();
 
         // Advance the periods elapsed, but to less than the Tenor, so lock period still in effect.
-        uint256 elapsedPeriods = TENOR * 2;
+        uint256 elapsedPeriods = _product.getTermPeriod() * 2;
         _product.setCurrentTimePeriodsElapsed(elapsedPeriods);
 
         vm.startPrank(ALICE);
@@ -254,7 +260,7 @@ abstract contract ProductScenarioTest is Test {
         _product.deposit(depositAmount, ALICE);
         vm.stopPrank();
 
-        uint8 elapsedTimePeriods = TENOR / 2;
+        uint256 elapsedTimePeriods = _product.getTermPeriod() / 2;
         _product.setCurrentTimePeriodsElapsed(elapsedTimePeriods);
 
         uint256 totalDeposits = _product.calcTotalDeposits(ALICE);
@@ -266,7 +272,7 @@ abstract contract ProductScenarioTest is Test {
 
         // NOTE (JL,2024-09-11): How to actually get time remaining?
         // assertEq(15, TENOR - _product.getCurrentTimePeriodsElapsed(), "Incorrect time remaining");
-        assertEq(15, TENOR - elapsedTimePeriods, "Incorrect time remaining");
+        assertEq(15, TERM_PERIOD - elapsedTimePeriods, "Incorrect time remaining");
     }
 
     /**

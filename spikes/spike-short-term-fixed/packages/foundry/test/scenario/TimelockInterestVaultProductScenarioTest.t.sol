@@ -8,7 +8,6 @@ import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadat
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
-
 import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
 
 import { ProductScenarioTest } from "@credbull-spike-test/scenario/ProductScenarioTest.t.sol";
@@ -29,7 +28,7 @@ contract TimelockInterestVaultProductScenarioTest is ProductScenarioTest {
      */
     function createProduct(ProductParams memory params) internal virtual override returns (IProduct, IERC20Metadata) {
         TimelockInterestVault vault = new TimelockInterestVault(
-            params.owner, params.asset, params.interestRatePercentage, params.interestRateFrequency, params.tenor
+            params.owner, params.asset, params.interestRatePercentage, params.interestRateFrequency, params.termPeriod
         );
 
         return (vault, vault);
@@ -43,7 +42,7 @@ contract TimelockInterestVaultProductScenarioTest is ProductScenarioTest {
             asset: _asset,
             interestRatePercentage: INTEREST_RATE_PERCENTAGE,
             interestRateFrequency: FREQUENCY,
-            tenor: TENOR
+            termPeriod: TERM_PERIOD
         });
         (_product, _share) = createProduct(params);
 
