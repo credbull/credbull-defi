@@ -17,9 +17,13 @@ import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
  * uint256 discountedValue = calcDiscounted(originalPrincipal);
  * uint256 recoveredPrincipal = calcPrincipalFromDiscounted(discountedValue);
  * assert(recoveredPrincipal == originalPrincipal);
+ *
+ * @dev all functions are internal to be deployed in the same contract as caller (not a separate one)
  */
 library CalcDiscounted {
     using Math for uint256;
+
+    uint256 public constant SCALE = 1e18;
 
     /**
      * @notice Calculates the price for a given number of periods elapsed.
@@ -29,19 +33,14 @@ library CalcDiscounted {
      * @return priceScaled The price scaled by the internal scale factor.
      */
     function calcPriceWithScale(uint256 numTimePeriodsElapsed, uint256 interestRatePercentage, uint256 frequency)
-        public
+        internal
         pure
         returns (uint256 priceScaled)
     {
-        uint256 parScaled = CalcSimpleInterest._scale(1);
+        uint256 interest =
+            CalcSimpleInterest.calcInterest(SCALE, numTimePeriodsElapsed, interestRatePercentage, frequency);
 
-        uint256 interestScaled = CalcSimpleInterest._calcInterestWithScale(
-            parScaled, numTimePeriodsElapsed, interestRatePercentage, frequency
-        );
-
-        uint256 _priceScaled = CalcSimpleInterest._scale(parScaled) + interestScaled;
-
-        return CalcSimpleInterest._unscale(_priceScaled);
+        return SCALE + interest;
     }
 
     /**
@@ -55,14 +54,10 @@ library CalcDiscounted {
         uint256 numTimePeriodsElapsed,
         uint256 interestRatePercentage,
         uint256 frequency
-    ) public pure returns (uint256 discounted) {
-        uint256 scale = CalcSimpleInterest.getScale();
-
+    ) internal pure returns (uint256 discounted) {
         uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency);
 
-        uint256 discountedScaled = CalcSimpleInterest._scale(principal).mulDiv(scale, priceScaled, Math.Rounding.Floor); // Discounted = Principal / Price
-
-        return CalcSimpleInterest._unscale(discountedScaled);
+        return principal.mulDiv(SCALE, priceScaled, Math.Rounding.Floor); // Discounted = Principal / Price
     }
 
     /**
@@ -76,13 +71,9 @@ library CalcDiscounted {
         uint256 numTimePeriodsElapsed,
         uint256 interestRatePercentage,
         uint256 frequency
-    ) public pure returns (uint256 principal) {
-        uint256 scale = CalcSimpleInterest.getScale();
-
+    ) internal pure returns (uint256 principal) {
         uint256 priceScaled = calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency);
 
-        uint256 principalScaled = CalcSimpleInterest._scale(discounted).mulDiv(priceScaled, scale, Math.Rounding.Floor); // Principal = Discounted * Price
-
-        return CalcSimpleInterest._unscale(principalScaled);
+        return discounted.mulDiv(priceScaled, SCALE, Math.Rounding.Floor); // Principal = Discounted * Price
     }
 }
