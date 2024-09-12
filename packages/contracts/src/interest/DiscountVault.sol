@@ -46,17 +46,20 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
         TENOR = tenor;
     }
 
-    // =============== ICalcDiscounted ===============
-
     /**
-     * @notice See {CalcDiscounted-calcDiscounted}
+     * @notice Calculates the price for a given number of periods elapsed.
+     * Price represents the accrued interest over time for a Principal of 1.
+     * @dev - return value is scaled as Price * SCALE.  For example: Price=1.01 and Scale=100 returns 101
+     * @param numTimePeriodsElapsed The number of time periods that have elapsed.
+     * @return priceScaled The price scaled by the internal scale factor.
      */
-    function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed)
-        public
-        view
-        returns (uint256 discounted)
-    {
-        return CalcDiscounted.calcDiscounted(principal, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
+    function calcPrice(uint256 numTimePeriodsElapsed) public view returns (uint256 priceScaled) {
+        uint256 interestScale = CalcDiscounted.SCALE;
+
+        uint256 interest =
+            CalcSimpleInterest.calcInterest(interestScale, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
+
+        return interestScale + interest;
     }
 
     /**
@@ -67,13 +70,15 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
         view
         returns (uint256 principal)
     {
-        return CalcDiscounted.calcPrincipalFromDiscounted(discounted, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
+        uint256 price = calcPrice(numTimePeriodsElapsed);
+
+        return CalcDiscounted.calcPrincipalFromDiscounted(discounted, price);
     }
 
     /**
      * @notice See {CalcSimpleInterest-calcInterest}
      */
-    function calcInterest(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256 interest) {
+    function calcYield(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256 interest) {
         return CalcSimpleInterest.calcInterest(principal, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
     }
 
@@ -92,7 +97,9 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
     {
         if (assets < SCALE) return 0; // no shares for fractional assets
 
-        return calcDiscounted(assets, numTimePeriodsElapsed);
+        uint256 price = calcPrice(numTimePeriodsElapsed);
+
+        return CalcDiscounted.calcDiscounted(assets, price);
     }
 
     /**
@@ -157,7 +164,7 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
 
         uint256 _principal = _convertToPrincipalAtDepositPeriod(shares, impliedNumTimePeriodsAtDeposit);
 
-        return _principal + calcInterest(_principal, TENOR);
+        return _principal + calcYield(_principal, TENOR);
     }
 
     /**
@@ -209,7 +216,9 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
         // withdraw before TENOR - not enough time periods to calculate Discounted properly
         if (currentTimePeriodsElapsed < TENOR) return 0;
 
-        return calcDiscounted(assets, currentTimePeriodsElapsed - TENOR);
+        uint256 price = calcPrice(currentTimePeriodsElapsed - TENOR);
+
+        return CalcDiscounted.calcDiscounted(assets, price);
     }
 
     // =============== ERC4626 and ERC20 ===============
