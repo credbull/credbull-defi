@@ -4,8 +4,6 @@ pragma solidity ^0.8.23;
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { CalcDiscounted } from "@credbull/interest/CalcDiscounted.sol";
-import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
-
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
 import { Test } from "forge-std/Test.sol";
@@ -21,7 +19,7 @@ contract CalcDiscountedTest is Test {
         uint256 apy = 12; // APY in percentage
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
-        uint256 calcInterestScale = CalcSimpleInterest.getScale();
+        uint256 calcInterestScale = CalcDiscounted.SCALE;
 
         uint256 day0 = 0;
         assertEq(1 * calcInterestScale, CalcDiscounted.calcPriceWithScale(day0, apy, frequency)); // 1 + (0.12 * 0) / 360 = 1

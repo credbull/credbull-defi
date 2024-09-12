@@ -16,6 +16,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  * - m: Number of periods elapsed
  * - f: Frequency of interest application
  *
+ * @dev all functions are internal to be deployed in the same contract as caller (not a separate one)
  */
 library CalcSimpleInterest {
     using Math for uint256;
@@ -23,77 +24,24 @@ library CalcSimpleInterest {
     error PrincipalLessThanScale(uint256 principal, uint256 scale);
 
     /**
-     * @notice calculate the interest with scaling applied using the interest rate percentage.
-     * @dev - return value is scaled as Interest * SCALE.  For example: Interest=1.01 and Scale=100 returns 101
+     * @notice Calculate SimpleInterest (without compounding)
      * @param principal The initial principal amount.
      * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
      * @param interestRatePercentage The interest rate as a percentage.
      * @param frequency The frequency of interest application
-     * @return interestScaled The scaled interest amount.
+     * @return interest The interest amount.
+     *
+     * @dev function is internal to be deployed in the same contract as caller (not a separate one)
      */
     function calcInterest(
         uint256 principal,
         uint256 numTimePeriodsElapsed,
         uint256 interestRatePercentage,
         uint256 frequency
-    ) public pure returns (uint256 interestScaled) {
-        uint256 principalScaled = _scale(principal);
+    ) internal pure returns (uint256 interest) {
+        uint256 _interest =
+            principal.mulDiv(interestRatePercentage * numTimePeriodsElapsed, frequency * 100, Math.Rounding.Floor);
 
-        uint256 _interestScaled =
-            _calcInterestWithScale(principalScaled, numTimePeriodsElapsed, interestRatePercentage, frequency);
-
-        return _unscale(_unscale(_interestScaled));
-    }
-
-    /**
-     * @notice Internal function to calculate the interest with scaling applied using the interest rate percentage.
-     * @dev - return value is scaled as Interest * SCALE.  For example: Interest=1.01 and Scale=100 returns 101
-     * @param principal The initial principal amount.
-     * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
-     * @param interestRatePercentage The interest rate as a percentage.
-     * @param frequency The frequency of interest application
-     * @return interestScaled The scaled interest amount.
-     */
-    function _calcInterestWithScale(
-        uint256 principal,
-        uint256 numTimePeriodsElapsed,
-        uint256 interestRatePercentage,
-        uint256 frequency
-    ) public pure returns (uint256 interestScaled) {
-        if (principal < getScale()) {
-            revert PrincipalLessThanScale(principal, getScale());
-        }
-
-        uint256 _interestScaled = _scale(principal).mulDiv(
-            interestRatePercentage * numTimePeriodsElapsed, frequency * 100, Math.Rounding.Floor
-        );
-
-        return _interestScaled;
-    }
-
-    /**
-     * @notice Internal utility function to unscale the amount.
-     * @param amount The scaled amount to be unscaled.
-     * @return unscaledAmount The unscaled amount.
-     */
-    function _unscale(uint256 amount) internal pure returns (uint256 unscaledAmount) {
-        return amount / getScale();
-    }
-
-    /**
-     * @notice Internal utility function to scale the amount.
-     * @param amount The unscaled amount to be scaled.
-     * @return scaledAmount The scaled amount.
-     */
-    function _scale(uint256 amount) internal pure returns (uint256 scaledAmount) {
-        return amount * getScale();
-    }
-
-    /**
-     * @notice Returns the scale factor for internal calculations (e.g., 10^18 for 18 decimals).
-     * @return scale The scale factor.
-     */
-    function getScale() public pure returns (uint256 scale) {
-        return 1e18;
+        return _interest;
     }
 }
