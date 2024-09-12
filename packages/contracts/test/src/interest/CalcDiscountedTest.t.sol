@@ -22,9 +22,9 @@ contract CalcDiscountedTest is Test {
 
         uint256 principal = 200 * SCALE;
 
-        uint256 price = CalcDiscounted.calcPriceWithScale(tenor, apy, frequency);
+        uint256 price = CalcDiscounted.calcPriceWithScale(tenor, apy, frequency, SCALE);
 
-        uint256 actualDiscounted = CalcDiscounted.calcDiscounted(principal, price);
+        uint256 actualDiscounted = CalcDiscounted.calcDiscounted(principal, price, SCALE);
         uint256 expectedDiscounted = principal.mulDiv(100, 101); // price at period 30 = 1.01
         assertApproxEqAbs(
             expectedDiscounted,
@@ -33,7 +33,8 @@ contract CalcDiscountedTest is Test {
             string.concat("discount incorrect at period = ", vm.toString(tenor))
         );
 
-        uint256 actualPrincipalFromDiscounted = CalcDiscounted.calcPrincipalFromDiscounted(actualDiscounted, price);
+        uint256 actualPrincipalFromDiscounted =
+            CalcDiscounted.calcPrincipalFromDiscounted(actualDiscounted, price, SCALE);
         assertApproxEqAbs(
             principal,
             actualPrincipalFromDiscounted,
@@ -77,9 +78,10 @@ contract CalcDiscountedTest is Test {
         // The `calcPrincipalFromDiscounted` and `calcDiscounted` functions are designed to be mathematical inverses of each other.
         //  This means that applying `calcPrincipalFromDiscounted` to the output of `calcDiscounted` will return the original principal amount.
 
-        uint256 price = CalcDiscounted.calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency);
-        uint256 discounted = CalcDiscounted.calcDiscounted(principal, price);
-        uint256 principalFromDiscounted = CalcDiscounted.calcPrincipalFromDiscounted(discounted, price);
+        uint256 price =
+            CalcDiscounted.calcPriceWithScale(numTimePeriodsElapsed, interestRatePercentage, frequency, SCALE);
+        uint256 discounted = CalcDiscounted.calcDiscounted(principal, price, SCALE);
+        uint256 principalFromDiscounted = CalcDiscounted.calcPrincipalFromDiscounted(discounted, price, SCALE);
 
         assertApproxEqAbs(
             principal,
@@ -91,8 +93,9 @@ contract CalcDiscountedTest is Test {
         );
 
         // verify for partial - does it hold that X% of principalFromDiscounted = X% principal
-        uint256 discountedPartial = CalcDiscounted.calcDiscounted(principal.mulDiv(75, 100), price);
-        uint256 principalFromDiscountedPartial = CalcDiscounted.calcPrincipalFromDiscounted(discountedPartial, price);
+        uint256 discountedPartial = CalcDiscounted.calcDiscounted(principal.mulDiv(75, 100), price, SCALE);
+        uint256 principalFromDiscountedPartial =
+            CalcDiscounted.calcPrincipalFromDiscounted(discountedPartial, price, SCALE);
 
         assertApproxEqAbs(
             principal.mulDiv(75, 100),

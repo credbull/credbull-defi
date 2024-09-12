@@ -54,12 +54,9 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
      * @return priceScaled The price scaled by the internal scale factor.
      */
     function calcPrice(uint256 numTimePeriodsElapsed) public view returns (uint256 priceScaled) {
-        uint256 interestScale = CalcDiscounted.SCALE;
+        uint256 interest = CalcSimpleInterest.calcInterest(SCALE, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
 
-        uint256 interest =
-            CalcSimpleInterest.calcInterest(interestScale, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
-
-        return interestScale + interest;
+        return SCALE + interest;
     }
 
     /**
@@ -72,7 +69,7 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
     {
         uint256 price = calcPrice(numTimePeriodsElapsed);
 
-        return CalcDiscounted.calcPrincipalFromDiscounted(discounted, price);
+        return CalcDiscounted.calcPrincipalFromDiscounted(discounted, price, SCALE);
     }
 
     /**
@@ -99,7 +96,7 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
 
         uint256 price = calcPrice(numTimePeriodsElapsed);
 
-        return CalcDiscounted.calcDiscounted(assets, price);
+        return CalcDiscounted.calcDiscounted(assets, price, SCALE);
     }
 
     /**
@@ -218,7 +215,7 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
 
         uint256 price = calcPrice(currentTimePeriodsElapsed - TENOR);
 
-        return CalcDiscounted.calcDiscounted(assets, price);
+        return CalcDiscounted.calcDiscounted(assets, price, SCALE);
     }
 
     // =============== ERC4626 and ERC20 ===============

@@ -23,8 +23,6 @@ import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 library CalcDiscounted {
     using Math for uint256;
 
-    uint256 public constant SCALE = 1e18;
-
     /**
      * @notice Calculates the price for a given number of periods elapsed.
      * Price represents the accrued interest over time for a Principal of 1.
@@ -32,15 +30,16 @@ library CalcDiscounted {
      * @param numTimePeriodsElapsed The number of time periods that have elapsed.
      * @return priceScaled The price scaled by the internal scale factor.
      */
-    function calcPriceWithScale(uint256 numTimePeriodsElapsed, uint256 interestRatePercentage, uint256 frequency)
-        internal
-        pure
-        returns (uint256 priceScaled)
-    {
+    function calcPriceWithScale(
+        uint256 numTimePeriodsElapsed,
+        uint256 interestRatePercentage,
+        uint256 frequency,
+        uint256 scale
+    ) internal pure returns (uint256 priceScaled) {
         uint256 interest =
-            CalcSimpleInterest.calcInterest(SCALE, numTimePeriodsElapsed, interestRatePercentage, frequency);
+            CalcSimpleInterest.calcInterest(scale, numTimePeriodsElapsed, interestRatePercentage, frequency);
 
-        return SCALE + interest;
+        return scale + interest;
     }
 
     /**
@@ -49,8 +48,12 @@ library CalcDiscounted {
      * @param price The ratio of Discounted to Principal
      * @return discounted The discounted principal amount.
      */
-    function calcDiscounted(uint256 principal, uint256 price) internal pure returns (uint256 discounted) {
-        return principal.mulDiv(SCALE, price, Math.Rounding.Floor); // Discounted = Principal / Price
+    function calcDiscounted(uint256 principal, uint256 price, uint256 scale)
+        internal
+        pure
+        returns (uint256 discounted)
+    {
+        return principal.mulDiv(scale, price, Math.Rounding.Floor); // Discounted = Principal / Price
     }
 
     /**
@@ -59,7 +62,11 @@ library CalcDiscounted {
      * @param price The ratio of Discounted to Principal
      * @return principal The recovered original principal amount.
      */
-    function calcPrincipalFromDiscounted(uint256 discounted, uint256 price) internal pure returns (uint256 principal) {
-        return discounted.mulDiv(price, SCALE, Math.Rounding.Floor); // Principal = Discounted * Price
+    function calcPrincipalFromDiscounted(uint256 discounted, uint256 price, uint256 scale)
+        internal
+        pure
+        returns (uint256 principal)
+    {
+        return discounted.mulDiv(price, scale, Math.Rounding.Floor); // Principal = Discounted * Price
     }
 }

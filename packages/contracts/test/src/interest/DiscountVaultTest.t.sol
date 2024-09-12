@@ -4,7 +4,6 @@ pragma solidity ^0.8.23;
 import { IDiscountVault } from "@credbull/interest/IDiscountVault.sol";
 import { DiscountVault } from "@credbull/interest/DiscountVault.sol";
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
-import { CalcDiscounted } from "@credbull/interest/CalcDiscounted.sol";
 
 import { DiscountVaultTestBase } from "./DiscountVaultTestBase.t.sol";
 
@@ -115,15 +114,13 @@ contract DiscountVaultTest is DiscountVaultTestBase {
 
         IDiscountVault vault = new DiscountVault(asset, apy, frequency, 30);
 
-        uint256 discountScale = CalcDiscounted.SCALE;
-
         uint256 day0 = 0;
-        assertEq(1 * discountScale, vault.calcPrice(day0)); // 1 + (0.12 * 0) / 360 = 1
+        assertEq(1 * SCALE, vault.calcPrice(day0)); // 1 + (0.12 * 0) / 360 = 1
 
         uint256 day1 = 1;
-        assertEq(1_000_333_333_333_333_333, vault.calcPrice(day1)); // 1 + (0.12 * 1) / 360 ≈ 1.00033
+        assertEq(1_000_333, vault.calcPrice(day1)); // 1 + (0.12 * 1) / 360 ≈ 1.00033
 
         uint256 day30 = 30;
-        assertEq((101 * discountScale / 100), vault.calcPrice(day30)); // 1 + (0.12 * 30) / 360 = 1.01
+        assertEq((101 * SCALE / 100), vault.calcPrice(day30)); // 1 + (0.12 * 30) / 360 = 1.01
     }
 }
