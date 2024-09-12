@@ -6,7 +6,7 @@ import "./DeployHelpers.s.sol";
 import "../contracts/SimpleUSDC.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { TimelockInterestVault } from "@credbull-contracts/contracts/interest/TimelockInterestVault.sol";
+import { TimelockInterestVault } from "@credbull/interest/TimelockInterestVault.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
   error InvalidPrivateKey(string);

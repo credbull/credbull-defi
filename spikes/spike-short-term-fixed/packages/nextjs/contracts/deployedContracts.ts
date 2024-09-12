@@ -6,8 +6,224 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 const deployedContracts = {
   31337: {
+    "CalcDiscounted#0": {
+      address: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
+      abi: [
+        {
+          type: "function",
+          name: "calcDiscounted",
+          inputs: [
+            {
+              name: "principal",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "numTimePeriodsElapsed",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "interestRatePercentage",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "frequency",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "discounted",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "pure",
+        },
+        {
+          type: "function",
+          name: "calcPriceWithScale",
+          inputs: [
+            {
+              name: "numTimePeriodsElapsed",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "interestRatePercentage",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "frequency",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "priceScaled",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "pure",
+        },
+        {
+          type: "function",
+          name: "calcPrincipalFromDiscounted",
+          inputs: [
+            {
+              name: "discounted",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "numTimePeriodsElapsed",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "interestRatePercentage",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "frequency",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "principal",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "pure",
+        },
+        {
+          type: "error",
+          name: "MathOverflowedMulDiv",
+          inputs: [],
+        },
+      ],
+      inheritedFunctions: {},
+    },
+    "CalcSimpleInterest#0": {
+      address: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
+      abi: [
+        {
+          type: "function",
+          name: "_calcInterestWithScale",
+          inputs: [
+            {
+              name: "principal",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "numTimePeriodsElapsed",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "interestRatePercentage",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "frequency",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "interestScaled",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "pure",
+        },
+        {
+          type: "function",
+          name: "calcInterest",
+          inputs: [
+            {
+              name: "principal",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "numTimePeriodsElapsed",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "interestRatePercentage",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "frequency",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "interestScaled",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "pure",
+        },
+        {
+          type: "function",
+          name: "getScale",
+          inputs: [],
+          outputs: [
+            {
+              name: "scale",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "pure",
+        },
+        {
+          type: "error",
+          name: "MathOverflowedMulDiv",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "PrincipalLessThanScale",
+          inputs: [
+            {
+              name: "principal",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "scale",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+      ],
+      inheritedFunctions: {},
+    },
     "SimpleUSDC#0": {
-      address: "0x7a28cf37763279f774916b85b5ef8b64ab421f79",
+      address: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
       abi: [
         {
           type: "constructor",
@@ -438,7 +654,7 @@ const deployedContracts = {
       },
     },
     "TimelockInterestVault#0": {
-      address: "0x2bb8b93f585b43b06f3d523bf30c203d3b6d4bd4",
+      address: "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0",
       abi: [
         {
           type: "constructor",
@@ -473,19 +689,6 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "DECIMALS",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
           name: "FREQUENCY",
           inputs: [],
           outputs: [
@@ -506,32 +709,6 @@ const deployedContracts = {
               name: "",
               type: "uint256",
               internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "PAR",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "ROUNDING",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "uint8",
-              internalType: "enum Math.Rounding",
             },
           ],
           stateMutability: "view",
@@ -787,25 +964,6 @@ const deployedContracts = {
           outputs: [
             {
               name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "calcPriceWithScale",
-          inputs: [
-            {
-              name: "numTimePeriodsElapsed",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "priceScaled",
               type: "uint256",
               internalType: "uint256",
             },
@@ -2604,22 +2762,6 @@ const deployedContracts = {
         },
         {
           type: "error",
-          name: "PrincipalLessThanScale",
-          inputs: [
-            {
-              name: "principal",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "scale",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
           name: "RedeemTimePeriodNotSupported",
           inputs: [
             {
@@ -2646,10 +2788,127 @@ const deployedContracts = {
           ],
         },
       ],
-      inheritedFunctions: {},
+      inheritedFunctions: {
+        balanceOf:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        balanceOfBatch:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        exists:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getCurrentPeriod:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getLockDuration:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getLockPeriods:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getLockedAmount:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        isApprovedForAll:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        lock: "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        owner:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        previewUnlock:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        renounceOwnership:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        rolloverUnlocked:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        safeBatchTransferFrom:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        safeTransferFrom:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        setApprovalForAll:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        setCurrentPeriod:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        supportsInterface:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        totalSupply:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        transferOwnership:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        unlock:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        uri: "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        FREQUENCY:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        INTEREST_RATE:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        SCALE: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        TENOR: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        allowance:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        approve:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        asset: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        burn: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        burnFrom:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        calcDiscounted:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        calcInterest:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        calcPrincipalFromDiscounted:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToAssets:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToAssetsAtPeriod:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToShares:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToSharesAtPeriod:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        currentTimePeriodsElapsed:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        decimals:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        deposit: "contracts/IProduct.sol",
+        getCurrentTimePeriodsElapsed:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        getFrequency: "contracts/IProduct.sol",
+        getInterestInPercentage: "contracts/IProduct.sol",
+        getScale: "contracts/IProduct.sol",
+        getTenor:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxDeposit:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxMint:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxRedeem:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxWithdraw:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        mint: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        name: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewDeposit:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewMint:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewRedeem:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewWithdraw:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        redeem: "contracts/IProduct.sol",
+        redeemAtPeriod: "contracts/IProduct.sol",
+        setCurrentTimePeriodsElapsed: "contracts/IProduct.sol",
+        symbol: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        totalAssets:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        transfer:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        transferFrom:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        withdraw:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        paused: "lib/openzeppelin-contracts/contracts/utils/Pausable.sol",
+        calcInterestForDepositTimePeriod: "contracts/IProduct.sol",
+        calcTotalDeposits: "contracts/IProduct.sol",
+        calcTotalInterest: "contracts/IProduct.sol",
+      },
     },
     "TimelockInterestVault#1": {
-      address: "0xb7ca895f81f20e05a5eb11b05cbaab3dae5e23cd",
+      address: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
       abi: [
         {
           type: "constructor",
@@ -2684,19 +2943,6 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "DECIMALS",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
           name: "FREQUENCY",
           inputs: [],
           outputs: [
@@ -2717,32 +2963,6 @@ const deployedContracts = {
               name: "",
               type: "uint256",
               internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "PAR",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "ROUNDING",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "uint8",
-              internalType: "enum Math.Rounding",
             },
           ],
           stateMutability: "view",
@@ -2998,25 +3218,6 @@ const deployedContracts = {
           outputs: [
             {
               name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "calcPriceWithScale",
-          inputs: [
-            {
-              name: "numTimePeriodsElapsed",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "priceScaled",
               type: "uint256",
               internalType: "uint256",
             },
@@ -4815,22 +5016,6 @@ const deployedContracts = {
         },
         {
           type: "error",
-          name: "PrincipalLessThanScale",
-          inputs: [
-            {
-              name: "principal",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "scale",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
           name: "RedeemTimePeriodNotSupported",
           inputs: [
             {
@@ -4857,7 +5042,124 @@ const deployedContracts = {
           ],
         },
       ],
-      inheritedFunctions: {},
+      inheritedFunctions: {
+        balanceOf:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        balanceOfBatch:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        exists:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getCurrentPeriod:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getLockDuration:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getLockPeriods:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        getLockedAmount:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        isApprovedForAll:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        lock: "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        owner:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        previewUnlock:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        renounceOwnership:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        rolloverUnlocked:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        safeBatchTransferFrom:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        safeTransferFrom:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        setApprovalForAll:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        setCurrentPeriod:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        supportsInterface:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        totalSupply:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        transferOwnership:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        unlock:
+          "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        uri: "../../../../packages/contracts/src/timelock/TimelockIERC1155.sol",
+        FREQUENCY:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        INTEREST_RATE:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        SCALE: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        TENOR: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        allowance:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        approve:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        asset: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        burn: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        burnFrom:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        calcDiscounted:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        calcInterest:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        calcPrincipalFromDiscounted:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToAssets:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToAssetsAtPeriod:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToShares:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        convertToSharesAtPeriod:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        currentTimePeriodsElapsed:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        decimals:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        deposit: "contracts/IProduct.sol",
+        getCurrentTimePeriodsElapsed:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        getFrequency: "contracts/IProduct.sol",
+        getInterestInPercentage: "contracts/IProduct.sol",
+        getScale: "contracts/IProduct.sol",
+        getTenor:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxDeposit:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxMint:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxRedeem:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        maxWithdraw:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        mint: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        name: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewDeposit:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewMint:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewRedeem:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        previewWithdraw:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        redeem: "contracts/IProduct.sol",
+        redeemAtPeriod: "contracts/IProduct.sol",
+        setCurrentTimePeriodsElapsed: "contracts/IProduct.sol",
+        symbol: "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        totalAssets:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        transfer:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        transferFrom:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        withdraw:
+          "../../../../packages/contracts/src/interest/DiscountVault.sol",
+        paused: "lib/openzeppelin-contracts/contracts/utils/Pausable.sol",
+        calcInterestForDepositTimePeriod: "contracts/IProduct.sol",
+        calcTotalDeposits: "contracts/IProduct.sol",
+        calcTotalInterest: "contracts/IProduct.sol",
+      },
     },
   },
 } as const;

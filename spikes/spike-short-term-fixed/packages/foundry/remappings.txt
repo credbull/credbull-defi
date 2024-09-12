@@ -10,3 +10,5 @@ solidity-bytes-utils/=lib/solidity-bytes-utils/contracts/
 
 @credbull-contracts/contracts/=contracts/
 @credbull-test/=test/
+
+@credbull/=../../../../packages/contracts/src/
