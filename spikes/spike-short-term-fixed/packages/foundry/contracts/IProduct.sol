@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {ICalcInterestMetadata} from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
+import { ICalcInterestMetadata } from "@credbull-contracts/contracts/interest/ICalcInterestMetadata.sol";
 
 interface IProduct is ICalcInterestMetadata {
 

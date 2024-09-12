@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { IDiscountVault} from "@credbull-spike/contracts/ian/interfaces/IDiscountVault.sol";
-import { DiscountVault } from "@credbull-spike/contracts/ian/fixed/DiscountVault.sol";
-import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
+import { IDiscountVault} from "@credbull-contracts/contracts/interest/IDiscountVault.sol";
+import { DiscountVault } from "@credbull-contracts/contracts/interest/DiscountVault.sol";
+import { Frequencies } from "@credbull-test/interest/Frequencies.t.sol";
 
-import { DiscountVaultTestBase } from "@credbull-spike-test/ian/fixed/DiscountVaultTestBase.t.sol";
+import { DiscountVaultTestBase } from "./DiscountVaultTestBase.t.sol";
 import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";

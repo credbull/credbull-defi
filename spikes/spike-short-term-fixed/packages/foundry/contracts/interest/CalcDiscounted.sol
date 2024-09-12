@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
+import { CalcSimpleInterest } from "@credbull-contracts/contracts/interest/CalcSimpleInterest.sol";
 
 /**
  * @title CalcDiscounted

@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { DiscountVault } from "@credbull-spike/contracts/ian/fixed/DiscountVault.sol";
-import { TimelockIERC1155 } from "@credbull-spike/contracts/ian/timelock/TimelockIERC1155.sol";
-import { CalcDiscounted } from "@credbull-spike/contracts/ian/fixed/CalcDiscounted.sol";
-import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
+import { DiscountVault } from "@credbull-contracts/contracts/interest/DiscountVault.sol";
+import { TimelockIERC1155 } from "@credbull-spike/contracts/timelock/TimelockIERC1155.sol";
+import { CalcDiscounted } from "@credbull-contracts/contracts/interest/CalcDiscounted.sol";
+import { CalcSimpleInterest } from "@credbull-contracts/contracts/interest/CalcSimpleInterest.sol";
 import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
-
-import { IPausable } from "@credbull-spike/contracts/ian/interfaces/IPausable.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
@@ -21,7 +19,7 @@ import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPausable, IProduct {
+contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IProduct {
   constructor(
     address initialOwner,
     IERC20Metadata asset,
@@ -106,7 +104,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPa
     address, /* account */
     uint256, /* lockReleasePeriod */
     uint256 value
-  ) public view override returns (uint256 rolloverBonus) {
+  ) public view returns (uint256 rolloverBonus) {
     return CalcSimpleInterest.calcInterest(value, TENOR, 1, FREQUENCY);
   }
 

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { IDiscountVault } from "@credbull-spike/contracts/ian/interfaces/IDiscountVault.sol";
-import { ICalcInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
-import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
+import { IDiscountVault } from "@credbull-contracts/contracts/interest/IDiscountVault.sol";
+import { ICalcInterestMetadata } from "@credbull-contracts/contracts/interest/ICalcInterestMetadata.sol";
+import { CalcSimpleInterest } from "@credbull-contracts/contracts/interest/CalcSimpleInterest.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";

@@ -4,9 +4,9 @@ pragma solidity ^0.8.19;
 import "../contracts/kk/YieldSubscription.sol";
 import "./DeployHelpers.s.sol";
 import "../contracts/SimpleUSDC.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { TimelockInterestVault } from "@credbull-contracts/contracts/interest/TimelockInterestVault.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
   error InvalidPrivateKey(string);
