@@ -8,6 +8,7 @@ import { useReadContract } from "wagmi";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
+import { fromDecimals, toDecimals } from "~~/utils/numbers";
 import { Contract, ContractName } from "~~/utils/scaffold-eth/contract";
 
 const ViewSection = (props: any) => {
@@ -19,7 +20,7 @@ const ViewSection = (props: any) => {
 
   const { refetch: userReserveRefetch } = useReadContract({
     address: props.data.deployedContractData.address,
-    functionName: "totalUserDeposit",
+    functionName: "calcTotalDeposits",
     abi: props.data.deployedContractData.abi,
     args: [props.data.address],
   });
@@ -33,39 +34,36 @@ const ViewSection = (props: any) => {
 
   const { refetch: getInterestEarnedRefetch } = useReadContract({
     address: props.data.deployedContractData.address,
-    functionName: "totalInterestEarned",
+    functionName: "calcTotalInterest",
     abi: props.data.deployedContractData.abi,
     args: [props.data.address],
   });
 
   useEffect(() => {
-    if (!refresh) {
-      userReserveRefetch().then(data => {
-        if (data?.data) {
-          setUserData(Number(Number(data.data) / 10 ** 6));
-        }
-      });
+    userReserveRefetch().then(data => {
+      if (data?.data) {
+        setUserData(fromDecimals(Number(data.data)));
+      }
+    });
 
-      getCurrentTimePeriodsElapsedRefetch().then(data => {
-        if (data?.data) {
-          setTimePeriodsElapsed(data.data as bigint);
-        }
-      });
+    getCurrentTimePeriodsElapsedRefetch().then(data => {
+      if (data?.data) {
+        setTimePeriodsElapsed(data.data as bigint);
+      }
+    });
 
-      getInterestEarnedRefetch().then(data => {
-        if (data?.data) {
-          setInterestEarned((Number(data.data) * 1000) / 10 ** 6 / 1000);
-        }
-      });
-    }
+    getInterestEarnedRefetch().then(data => {
+      if (data?.data) {
+        setInterestEarned(fromDecimals(Number(data.data)));
+      }
+    });
   }, [getCurrentTimePeriodsElapsedRefetch, getInterestEarnedRefetch, refresh, userReserveRefetch]);
 
   useEffect(() => {
     if (userData === 0)
       userReserveRefetch().then(data => {
-        console.log(data);
         if (data?.data) {
-          setUserData(Number(Number(data.data) / 10 ** 6));
+          setUserData(fromDecimals(Number(data.data)));
         }
       });
 
@@ -80,7 +78,7 @@ const ViewSection = (props: any) => {
     if (interestEarned === 0) {
       getInterestEarnedRefetch().then(data => {
         if (data?.data) {
-          setInterestEarned((Number(data.data) * 1000) / 10 ** 6 / 1000);
+          setInterestEarned(fromDecimals(Number(data.data)));
         }
       });
     }
@@ -134,7 +132,7 @@ const Card = ({
 
   const handleDeposit = () => {
     if (deployedContractData) {
-      const amountWithDecimal = BigInt(Number(amount));
+      const amountWithDecimal = toDecimals(Number(amount));
 
       if (writeContractAsync) {
         try {
@@ -158,7 +156,7 @@ const Card = ({
 
   const handleRedeem = async () => {
     if (deployedContractData) {
-      const amountWithDecimal = BigInt(Number(amount) * 10 ** 6);
+      const amountWithDecimal = toDecimals(Number(amount));
       const timePeriodsElapsedData = await refetch();
 
       const timePeriodsElapsed = BigInt(timePeriodsElapsedData.data as bigint);
@@ -188,11 +186,9 @@ const Card = ({
   const multiplyBy18 = () => {
     if (amount) {
       const bigAmount = BigInt(amount);
-      const multiplier = BigInt(1e18); // Use BigInt for 1e18
+      const multiplier = BigInt(1e18);
       const result = bigAmount * multiplier;
 
-      console.log(result);
-      console.log(result.toString());
       setAmount(result.toString());
     }
   };
