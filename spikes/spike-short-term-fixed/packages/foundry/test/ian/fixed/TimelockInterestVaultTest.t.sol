@@ -1,29 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpleInterest.sol";
 import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
 
-import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
+import { IDiscountVault } from "@credbull-spike/contracts/ian/interfaces/IDiscountVault.sol";
 import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { InterestTest } from "@credbull-spike-test/ian/fixed/InterestTest.t.sol";
+import { DiscountVaultTestBase } from "@credbull-spike-test/ian/fixed/DiscountVaultTestBase.t.sol";
 import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
 import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.sol";
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-import { console2 } from "forge-std/console2.sol";
-
-contract TimelockInterestVaultTest is InterestTest {
+contract TimelockInterestVaultTest is DiscountVaultTestBase {
   IERC20Metadata private asset;
-
-  address private owner = makeAddr("owner");
-  address private alice = makeAddr("alice");
-  address private bob = makeAddr("bob");
 
   uint256 constant TENOR_30 = 30;
 
@@ -50,11 +43,10 @@ contract TimelockInterestVaultTest is InterestTest {
   }
 
   function test__TimelockInterestVaultTest__Daily() public {
-
     TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_12, FREQUENCY_360, TENOR_30);
 
     // check principal and interest calcs
-    testInterestToMaxPeriods(200 * SCALE, vault);
+    testVaultAtTenorPeriods(200 * SCALE, vault);
   }
 
   // Scenario: User withdraws after the lock period
@@ -80,7 +72,11 @@ contract TimelockInterestVaultTest is InterestTest {
 
     vm.prank(alice);
     // when we redeem at time 0, currentlTimePeriod = unlockPeriod, so throws a shares not unlocked (rather than time lock) error.
-    vm.expectRevert(abi.encodeWithSelector(ITimelock.InsufficientLockedBalanceAtPeriod.selector, alice, 0, shares, vault.getCurrentTimePeriodsElapsed()));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        ITimelock.InsufficientLockedBalanceAtPeriod.selector, alice, 0, shares, vault.getCurrentTimePeriodsElapsed()
+      )
+    );
     vault.redeem(shares, alice, alice); // try to redeem before warping - should fail
 
     // ------------- redeem (at tenor / maturity time period) ---------------
@@ -112,7 +108,6 @@ contract TimelockInterestVaultTest is InterestTest {
     vm.prank(owner);
     transferAndAssert(asset, owner, address(vault), 3 * vault.calcInterest(depositAmount, tenor)); // give the vault enough to cover returns
 
-
     // ----------------------------------------------------------
     // ------------        Start Period 1          --------------
     // ----------------------------------------------------------
@@ -134,16 +129,28 @@ contract TimelockInterestVaultTest is InterestTest {
     vault.setCurrentTimePeriodsElapsed(endPeriodOne); // warp to end of period 1
 
     // ------------- verify assets end of period 1 ---------------
-    assertEq(actualSharesPeriodOne, vault.previewUnlock(alice, endPeriodOne), "full amount should be unlockable at end of period 1");
+    assertEq(
+      actualSharesPeriodOne,
+      vault.previewUnlock(alice, endPeriodOne),
+      "full amount should be unlockable at end of period 1"
+    );
     uint256 actualAssetsPeriodOne = vault.convertToAssets(actualSharesPeriodOne);
     assertEq(40_200 * SCALE, actualAssetsPeriodOne, "assets end of Period 1 incorrect"); // Principal[P1] + Interest[P1] = $40,000 + $200 = $40,200
-    assertEq(33 * SCALE + (50 * SCALE) / 100, vault.calcRolloverBonus(alice, tenor, actualAssetsPeriodOne), "rollover bonus end of Period 1 incorrect"); // Rollover Bonus =  ($40,200 * 0.1 * 30 / 360) = $33.50
+    assertEq(
+      33 * SCALE + (50 * SCALE) / 100,
+      vault.calcRolloverBonus(alice, tenor, actualAssetsPeriodOne),
+      "rollover bonus end of Period 1 incorrect"
+    ); // Rollover Bonus =  ($40,200 * 0.1 * 30 / 360) = $33.50
 
     // ------------- verify shares start of period 2 ---------------
     // RolloverBonus: Principal(WithBonus)[P2] = Principal[P1] + Interest[P1] + RolloverBonus[P1] = $40,000 + $200 + $33.50 = $40,233.50
     // RolloverBonus: Discounted[P2] = Principal(WithBonus)[P2] / Price[P2] = $40,233.50 / (1 * 0.6 * 30 / 360) = $40,233.50 / $1.005 = $40,033.33
     uint256 expectedSharesPeriodTwo = 40_033 * SCALE + (333_333 * SCALE) / 1_000_000;
-    assertEq(expectedSharesPeriodTwo, vault.previewConvertSharesForRollover(alice, endPeriodOne, actualSharesPeriodOne), "preview rollover shares start of Period 2 incorrect");
+    assertEq(
+      expectedSharesPeriodTwo,
+      vault.previewConvertSharesForRollover(alice, endPeriodOne, actualSharesPeriodOne),
+      "preview rollover shares start of Period 2 incorrect"
+    );
 
     // ------------- rollover from period 1 to period 2 ---------------
     vm.startPrank(owner);
@@ -152,10 +159,15 @@ contract TimelockInterestVaultTest is InterestTest {
 
     // ------------- verify rollover of shares and locks ---------------
     uint256 actualSharesPeriodTwo = vault.balanceOf(alice);
-    assertEq(expectedSharesPeriodTwo, actualSharesPeriodTwo, "alice should have Discounted[P2] worth of shares for Period 2");
-    assertEq(expectedSharesPeriodTwo, vault.getLockedAmount(alice, endPeriodOne + tenor), "all shares should be locked until end of Period 2");
+    assertEq(
+      expectedSharesPeriodTwo, actualSharesPeriodTwo, "alice should have Discounted[P2] worth of shares for Period 2"
+    );
+    assertEq(
+      expectedSharesPeriodTwo,
+      vault.getLockedAmount(alice, endPeriodOne + tenor),
+      "all shares should be locked until end of Period 2"
+    );
     assertEq(0, vault.getLockedAmount(alice, endPeriodOne), "no locks should remain on Period 1");
-
 
     // ----------------------------------------------------------
     // -------------         End Period 2         ---------------
@@ -166,19 +178,29 @@ contract TimelockInterestVaultTest is InterestTest {
 
     // ------------- verify assets end of period 2---------------
     uint256 expectedAssetsPeriodTwo = 40_434 * SCALE + (6675 * SCALE) / 10_000; // Principal(WithBonus)[P2] + Interest(WithBonus)[P2] = $40,233.50 + $201.1675 = $40,434.6675 // with bonus credited day 30
-    assertEq(actualSharesPeriodTwo, vault.previewUnlock(alice, endPeriodTwo), "full amount should be unlockable at end of period 2");
-    assertApproxEqAbs(expectedAssetsPeriodTwo, vault.convertToAssets(actualSharesPeriodTwo), TOLERANCE, "assets end of Period 2 incorrect");
+    assertEq(
+      actualSharesPeriodTwo,
+      vault.previewUnlock(alice, endPeriodTwo),
+      "full amount should be unlockable at end of period 2"
+    );
+    assertApproxEqAbs(
+      expectedAssetsPeriodTwo,
+      vault.convertToAssets(actualSharesPeriodTwo),
+      TOLERANCE,
+      "assets end of Period 2 incorrect"
+    );
 
     // ------------- redeem at end of period 2 ---------------
     vm.prank(alice);
     uint256 actualRedeemedAssets = vault.redeem(actualSharesPeriodTwo, alice, alice);
 
     // ------------- verify assets after redeeming ---------------
-    assertApproxEqAbs(expectedAssetsPeriodTwo, actualRedeemedAssets, TOLERANCE, "incorrect assets returned after after fully redeeming");
+    assertApproxEqAbs(
+      expectedAssetsPeriodTwo, actualRedeemedAssets, TOLERANCE, "incorrect assets returned after after fully redeeming"
+    );
     assertEq(0, vault.balanceOf(alice), "no shares should remain after fully redeeming");
     assertEq(0, vault.getLockedAmount(alice, endPeriodTwo), "no locks should remain after fully redeeming");
   }
-
 
   function test__TimelockInterestVault__PauseAndUnPause() public {
     uint256 apy = 12; // APY in percentage
@@ -243,7 +265,11 @@ contract TimelockInterestVaultTest is InterestTest {
     vault.setCurrentTimePeriodsElapsed(tenorMinus1);
 
     vm.prank(alice);
-    vm.expectRevert(abi.encodeWithSelector(ITimelock.InsufficientLockedBalanceAtPeriod.selector, alice, 0, shares, vault.getCurrentTimePeriodsElapsed()));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        ITimelock.InsufficientLockedBalanceAtPeriod.selector, alice, 0, shares, vault.getCurrentTimePeriodsElapsed()
+      )
+    );
     vault.redeem(shares, alice, alice); // try to redeem before warping - should fail
 
     //    // ------------- early redeem - before deposit + redeem  ---------------
@@ -251,7 +277,11 @@ contract TimelockInterestVaultTest is InterestTest {
     vault.setCurrentTimePeriodsElapsed(redeemMinus1);
 
     vm.prank(alice);
-    vm.expectRevert(abi.encodeWithSelector(ITimelock.InsufficientLockedBalanceAtPeriod.selector, alice, 0, shares, vault.getCurrentTimePeriodsElapsed()));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        ITimelock.InsufficientLockedBalanceAtPeriod.selector, alice, 0, shares, vault.getCurrentTimePeriodsElapsed()
+      )
+    );
     vault.redeem(shares, alice, alice);
   }
 
@@ -261,7 +291,6 @@ contract TimelockInterestVaultTest is InterestTest {
     uint256 depositAmount2 = 15_000 * SCALE;
 
     TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, tenor);
-
 
     // deposit
     uint256 depositPeriod1 = 5;
@@ -293,20 +322,5 @@ contract TimelockInterestVaultTest is InterestTest {
     uint256 expectedInterest = vault.calcInterest(depositAmount1, verifyPeriod - depositPeriod1)
       + vault.calcInterest(depositAmount2, verifyPeriod - depositPeriod2);
     assertApproxEqAbs(totalInterest, expectedInterest, TOLERANCE, "incorrect total interest earned");
-  }
-
-  function testInterestAtPeriod(
-    uint256 principal,
-    ISimpleInterest simpleInterest,
-    uint256 numTimePeriods
-  ) internal override {
-    // test against the simple interest harness
-    super.testInterestAtPeriod(principal, simpleInterest, numTimePeriods);
-
-    // test the vault related
-    IERC4626Interest vault = (IERC4626Interest)(address(simpleInterest));
-    super.testConvertToAssetAndSharesAtPeriod(principal, vault, numTimePeriods); // previews only
-    super.testPreviewDepositAndPreviewRedeem(principal, vault, numTimePeriods); // previews only
-    super.testDepositAndRedeemAtPeriod(owner, alice, principal, vault, numTimePeriods); // actual deposits/redeems
   }
 }

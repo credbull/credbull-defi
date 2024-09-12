@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpleInterest.sol";
-import { SimpleInterest } from "@credbull-spike/contracts/ian/fixed/SimpleInterest.sol";
-import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
+import { ICalcInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
+import { CalcDiscounted } from "@credbull-spike/contracts/ian/fixed/CalcDiscounted.sol";
+import { CalcInterestMetadata } from "@credbull-spike/contracts/ian/fixed/CalcInterestMetadata.sol";
+import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
+import { IDiscountVault } from "@credbull-spike/contracts/ian/interfaces/IDiscountVault.sol";
+
 import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
@@ -21,7 +24,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  * @dev A vault that uses SimpleInterest to calculate shares per asset.
  *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
  */
-contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProduct, ERC20Burnable {
+contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Burnable {
   using Math for uint256;
 
   uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapsed
@@ -43,27 +46,43 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     uint256 frequency,
     uint256 tenor
   )
-    SimpleInterest(interestRatePercentage, frequency, asset.decimals())
+    CalcInterestMetadata(interestRatePercentage, frequency, asset.decimals())
     ERC4626(asset)
     ERC20("Simple Interest Rate Claim", "cSIR")
   {
     TENOR = tenor;
   }
 
-  // =============== Deposit ===============
+  // =============== ICalcDiscounted ===============
 
   /**
-   * @notice Deposits assets into the vault and mints corresponding shares to the receiver.
-   * @param assets The amount of assets to deposit.
-   * @param receiver The address receiving the minted shares.
-   * @return shares The number of shares minted to the receiver.
+   * @notice See {CalcDiscounted-calcDiscounted}
    */
-  function deposit(
-    uint256 assets,
-    address receiver
-  ) public virtual override(IERC4626, ERC4626, IProduct) returns (uint256 shares) {
-    return ERC4626.deposit(assets, receiver);
+  function calcDiscounted(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256 discounted) {
+    return CalcDiscounted.calcDiscounted(principal, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
   }
+
+  /**
+   * @notice See {CalcDiscounted-calcPrincipalFromDiscounted}
+   */
+  function calcPrincipalFromDiscounted(
+    uint256 discounted,
+    uint256 numTimePeriodsElapsed
+  ) public view returns (uint256 principal) {
+    return CalcDiscounted.calcPrincipalFromDiscounted(discounted, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
+  }
+
+  /**
+* @notice See {CalcSimpleInterest-calcInterest}
+   */
+  function calcInterest(
+    uint256 principal,
+    uint256 numTimePeriodsElapsed
+  ) public view returns (uint256 interest) {
+    return CalcSimpleInterest.calcInterest(principal, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
+  }
+
+  // =============== Deposit ===============
 
   /**
    * @notice Converts a given amount of assets to shares based on a specific time period.
@@ -76,6 +95,8 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
 
     return calcDiscounted(assets, numTimePeriodsElapsed);
   }
+
+
 
   /**
    * @notice Previews the number of shares that would be minted for a given deposit amount.
@@ -98,21 +119,6 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
   // =============== Redeem ===============
 
   /**
-   * @notice Redeems shares for assets, transferring the assets to the receiver.
-   * @param shares The number of shares to redeem.
-   * @param receiver The address receiving the assets.
-   * @param owner The address that owns the shares.
-   * @return assets The number of assets transferred to the receiver.
-   */
-  function redeem(
-    uint256 shares,
-    address receiver,
-    address owner
-  ) public virtual override(IERC4626, ERC4626, IProduct) returns (uint256 assets) {
-    return ERC4626.redeem(shares, receiver, owner);
-  }
-
-  /**
    * @notice Redeems shares for assets at a specific time period, transferring the assets to the receiver.
    * @param shares The number of shares to redeem.
    * @param receiver The address receiving the assets.
@@ -125,9 +131,9 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     address receiver,
     address owner,
     uint256 redeemTimePeriod
-  ) external returns (uint256 assets) {
+  ) public virtual returns (uint256 assets) {
     if (currentTimePeriodsElapsed != redeemTimePeriod) {
-      revert RedeemTimePeriodNotSupported(currentTimePeriodsElapsed, redeemTimePeriod);
+      revert IProduct.RedeemTimePeriodNotSupported(currentTimePeriodsElapsed, redeemTimePeriod);
     }
 
     return redeem(shares, receiver, owner);
@@ -221,7 +227,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
    * @notice Returns the current number of time periods elapsed.
    * @return The current time periods elapsed.
    */
-  function getCurrentTimePeriodsElapsed() public view virtual override(IERC4626Interest, IProduct) returns (uint256) {
+  function getCurrentTimePeriodsElapsed() public view virtual returns (uint256) {
     return currentTimePeriodsElapsed;
   }
 
@@ -229,11 +235,7 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
    * @notice Sets the current number of time periods elapsed.
    * @param _currentTimePeriodsElapsed The new number of time periods elapsed.
    */
-  function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed)
-    public
-    virtual
-    override(IERC4626Interest, IProduct)
-  {
+  function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public virtual {
     currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
   }
 
@@ -245,15 +247,6 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     return TENOR;
   }
 
-  // =============== IProduct Interface ===============
-
-  /**
-   * @notice Returns the frequency of interest application (number of periods in a year).
-   * @return frequency The frequency value.
-   */
-  function getFrequency() public view override(ISimpleInterest, SimpleInterest, IProduct) returns (uint256 frequency) {
-    return SimpleInterest.getFrequency();
-  }
 
   /**
    * @notice Internal function to update token transfers.
@@ -265,42 +258,4 @@ contract SimpleInterestVault is IERC4626Interest, SimpleInterest, ERC4626, IProd
     ERC20._update(from, to, value);
   }
 
-  /**
-   * @notice Returns the annual interest rate as a percentage.
-   * @return interestRateInPercentage The interest rate as a percentage.
-   */
-  function getInterestInPercentage()
-    public
-    view
-    override(ISimpleInterest, SimpleInterest, IProduct)
-    returns (uint256 interestRateInPercentage)
-  {
-    return SimpleInterest.getInterestInPercentage();
-  }
-
-  /**
-   * @notice Returns the interest accrued for this account for the given depositTimePeriod
-   * e.g. if Alice deposits on Day 1 and Day 2, this will ONLY return the interest for the Day 1 deposit
-   * @param account The address of the user.
-   * @param depositTimePeriod The time period to calculate for
-   * @return The amount of interest accrued by the user for the given depositTimePeriod
-   */
-  function calcInterestForDepositTimePeriod(
-    address account,
-    uint256 depositTimePeriod
-  ) public view virtual returns (uint256) { }
-
-  /**
-   * @notice Returns the total interest accrued by a user across ALL deposit time periods
-   * @param account The address of the user.
-   * @return The total amount of interest earned by the user.
-   */
-  function calcTotalInterest(address account) public view virtual returns (uint256) { }
-
-  /**
-   * @notice Returns the total amount of assets deposited by a user.
-   * @param account The address of the user.
-   * @return The total amount of assets deposited by the user.
-   */
-  function calcTotalDeposits(address account) public view virtual returns (uint256) { }
 }

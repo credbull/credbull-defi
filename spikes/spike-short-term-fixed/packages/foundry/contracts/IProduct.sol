@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-interface IProduct {
+import {ICalcInterestMetadata} from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
+
+interface IProduct is ICalcInterestMetadata {
+
   error RedeemTimePeriodNotSupported(uint256 currentPeriod, uint256 redeemPeriod);
 
   // ===============  Vault / Vault-like Behavior ===============
@@ -41,36 +44,6 @@ interface IProduct {
     uint256 redeemTimePeriod
   ) external returns (uint256 assets);
 
-  // =============== Metadata ===============
-
-  /**
-   * @notice Returns the frequency of the interest accrual periods (e.g., Days, Months, or Years).
-   * @return frequency The frequency of the interest accrual periods.
-   */
-  function getFrequency() external view returns (uint256 frequency);
-
-  /**
-   * @notice Returns the interest rate in percentage applied over the specified frequency.
-   * @return interestRateInPercentage The interest rate in percentage (e.g., 6%, 12%).
-   */
-  function getInterestInPercentage() external view returns (uint256 interestRateInPercentage);
-
-  /**
-   * @notice Returns the number of time periods (e.g., days, months, years) that have elapsed since the contract start.
-   * @dev The time periods are used for calculating interest
-   * @return currentTimePeriodsElapsed The number of time periods that have elapsed since the start.
-   */
-  function getCurrentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
-
-  // =============== Testing Purposes Only ===============
-
-  /**
-   * @notice Sets the current number of time periods elapsed.
-   * @dev This function is intended for testing purposes to simulate the passage of time.
-   * @param currentTimePeriodsElapsed The number of time periods to set as elapsed.
-   */
-  function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
-
   /**
    * @notice Returns the interest accrued for this account for the given depositTimePeriod
    * e.g. if Alice deposits on Day 1 and Day 2, this will ONLY return the interest for the Day 1 deposit
@@ -93,4 +66,14 @@ interface IProduct {
    * @return The total amount of assets deposited by the user.
    */
   function calcTotalDeposits(address account) external view returns (uint256);
+
+  // =============== Testing Purposes Only ===============
+
+  /**
+   * @notice Sets the current number of time periods elapsed.
+   * @dev This function is intended for testing purposes to simulate the passage of time.
+   * @param currentTimePeriodsElapsed The number of time periods to set as elapsed.
+   */
+  function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
+
 }

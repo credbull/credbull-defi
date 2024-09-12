@@ -1,84 +1,47 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { ISimpleInterest } from "@credbull-spike/contracts/ian/interfaces/ISimpleInterest.sol";
-import { IERC4626Interest } from "@credbull-spike/contracts/ian/interfaces/IERC4626Interest.sol";
+import { IDiscountVault } from "@credbull-spike/contracts/ian/interfaces/IDiscountVault.sol";
+import { ICalcInterestMetadata } from "@credbull-spike/contracts/ian/interfaces/ICalcInterestMetadata.sol";
+import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { Test } from "forge-std/Test.sol";
-import { console2 } from "forge-std/console2.sol";
 
-abstract contract InterestTest is Test {
-  uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000005
-  uint256 public constant NUM_CYCLES_TO_TEST = 2; // number of cycles in test (e.g. 2 years, 24 months, 720 days)
-
+abstract contract DiscountVaultTestBase is Test {
   using Math for uint256;
 
-  function testInterestToMaxPeriods(uint256 principal, ISimpleInterest simpleInterest) internal {
-    uint256 maxNumPeriods = simpleInterest.getFrequency() * NUM_CYCLES_TO_TEST; // e.g. 2 years, 24 months, 720 days
+  uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000005
 
-    // due to small fractional numbers, principal needs to be SCALED to calculate correctly
-    assertGe(principal, simpleInterest.getScale(), "principal not in SCALE");
+  address internal owner = makeAddr("owner");
+  address internal alice = makeAddr("alice");
+  address internal bob = makeAddr("bob");
 
-    // check all periods for 24 months
-    for (uint256 numTimePeriods = 0; numTimePeriods <= maxNumPeriods; numTimePeriods++) {
-      testInterestAtPeriod(principal, simpleInterest, numTimePeriods);
+  function testVaultAtTenorPeriods(uint256 principal, IDiscountVault vault) internal {
+    uint256 tenor = vault.getTenor();
+
+    uint256[5] memory numTimePeriodsElapsedArr = [0, 1, tenor - 1, tenor, tenor + 1];
+
+    // Iterate through the lock periods and calculate the principal for each
+    for (uint256 i = 0; i < numTimePeriodsElapsedArr.length; i++) {
+      uint256 numTimePeriodsElapsed = numTimePeriodsElapsedArr[i];
+
+      testVaultAtPeriod(principal, vault, numTimePeriodsElapsed);
     }
   }
 
-  function testInterestAtPeriod(
-    uint256 principal,
-    ISimpleInterest simpleInterest,
-    uint256 numTimePeriods
-  ) internal virtual {
-    // The `calcPrincipalFromDiscounted` and `calcDiscounted` functions are designed to be mathematical inverses of each other.
-    //  This means that applying `calcPrincipalFromDiscounted` to the output of `calcDiscounted` will return the original principal amount.
-
-    uint256 discounted = simpleInterest.calcDiscounted(principal, numTimePeriods);
-    uint256 principalFromDiscounted = simpleInterest.calcPrincipalFromDiscounted(discounted, numTimePeriods);
-
-    assertApproxEqAbs(
-      principal,
-      principalFromDiscounted,
-      TOLERANCE,
-      assertMsg("principalFromDiscount not inverse of principal", simpleInterest, numTimePeriods)
-    );
-
-    uint256 price = simpleInterest.calcPriceWithScale(numTimePeriods);
-    uint256 oneScaled = 1 * simpleInterest.getScale();
-    assertApproxEqAbs(
-      price,
-      oneScaled + simpleInterest.calcInterest(oneScaled, numTimePeriods),
-      TOLERANCE,
-      assertMsg("price is not equal to simpleInterest for principal of 1", simpleInterest, numTimePeriods)
-    );
-
-    assertApproxEqAbs(
-      discounted,
-      principal.mulDiv(oneScaled, price),
-      TOLERANCE,
-      assertMsg("discounted is not equal to Principal / Price", simpleInterest, numTimePeriods)
-    );
-
-    // verify for partial - does it hold that X% of principalFromDiscounted = X% principal
-    uint256 discountedPartial = simpleInterest.calcDiscounted(principal.mulDiv(75, 100), numTimePeriods);
-    uint256 principalFromDiscountedPartial =
-      simpleInterest.calcPrincipalFromDiscounted(discountedPartial, numTimePeriods);
-
-    assertApproxEqAbs(
-      principal.mulDiv(75, 100),
-      principalFromDiscountedPartial,
-      TOLERANCE,
-      assertMsg("partial principalFromDiscount not inverse of principal", simpleInterest, numTimePeriods)
-    );
+  function testVaultAtPeriod(uint256 principal, IDiscountVault vault,uint256 numTimePeriods) internal {
+    testConvertToAssetAndSharesAtPeriod(principal, vault, numTimePeriods); // previews only
+    testPreviewDepositAndPreviewRedeem(principal, vault, numTimePeriods); // previews only
+    testDepositAndRedeemAtPeriod(owner, alice, principal, vault, numTimePeriods); // actual deposits/redeems
   }
 
   // verify convertToAssets and convertToShares.  These are a "preview" and do NOT update vault assets or shares.
   function testConvertToAssetAndSharesAtPeriod(
     uint256 principal,
-    IERC4626Interest vault,
+    IDiscountVault vault,
     uint256 numTimePeriods
   ) internal virtual {
     // ------------------- check toShares/toAssets - specified period -------------------
@@ -130,10 +93,9 @@ abstract contract InterestTest is Test {
   // verify previewDeposit and previewRedeem.  These are a "preview" and do NOT update vault assets or shares.
   function testPreviewDepositAndPreviewRedeem(
     uint256 principal,
-    IERC4626Interest vault,
+    IDiscountVault vault,
     uint256 numTimePeriods
   ) internal virtual {
-
     uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
     uint256 expectedInterest = vault.calcInterest(principal, vault.getTenor());
     uint256 expectedPrincipalAndInterest = principal + expectedInterest;
@@ -153,18 +115,26 @@ abstract contract InterestTest is Test {
 
     // check previewWithdraw (uses assets as basis of shares returned)
     // as per definition - should be the same as convertToShares
-    assertEq(vault.previewWithdraw(principal), actualSharesDeposit, assertMsg("previewWithdraw incorrect - principal", vault, numTimePeriods));
-    assertEq(vault.previewWithdraw(expectedInterest), vault.convertToSharesAtPeriod(expectedInterest, numTimePeriods), assertMsg("previewWithdraw incorrect - interest", vault, numTimePeriods));
+    assertEq(
+      vault.previewWithdraw(principal),
+      actualSharesDeposit,
+      assertMsg("previewWithdraw incorrect - principal", vault, numTimePeriods)
+    );
+    assertEq(
+      vault.previewWithdraw(expectedInterest),
+      vault.convertToSharesAtPeriod(expectedInterest, numTimePeriods),
+      assertMsg("previewWithdraw incorrect - interest", vault, numTimePeriods)
+    );
 
     vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed);
   }
 
   // verify deposit and redeem.  These update vault assets and shares.
   function testDepositAndRedeemAtPeriod(
-    address owner,
+    address _owner,
     address receiver,
     uint256 principal,
-    IERC4626Interest vault,
+    IDiscountVault vault,
     uint256 numTimePeriods
   ) internal virtual {
     IERC20 asset = IERC20(vault.asset());
@@ -180,6 +150,7 @@ abstract contract InterestTest is Test {
     assertGe(asset.balanceOf(receiver), principal, assertMsg("not enough assets for deposit ", vault, numTimePeriods));
     asset.approve(address(vault), principal); // grant the vault allowance
     uint256 shares = vault.deposit(principal, receiver); // now deposit
+
     vm.stopPrank();
     assertEq(
       prevReceiverVaultBalance + shares,
@@ -190,8 +161,8 @@ abstract contract InterestTest is Test {
     // give the vault enough to cover the earned interest
 
     uint256 interest = vault.calcInterest(principal, vault.getTenor());
-    vm.startPrank(owner);
-    transferAndAssert(asset, owner, address(vault), interest);
+    vm.startPrank(_owner);
+    transferAndAssert(asset, _owner, address(vault), interest);
     vm.stopPrank();
 
     // redeem
@@ -219,19 +190,21 @@ abstract contract InterestTest is Test {
 
   function assertMsg(
     string memory prefix,
-    ISimpleInterest simpleInterest,
+    IDiscountVault vault,
     uint256 numTimePeriods
   ) internal view returns (string memory) {
-    return string.concat(prefix, toString(simpleInterest), " timePeriod= ", vm.toString(numTimePeriods));
+    ICalcInterestMetadata calcInterest = ICalcInterestMetadata(address(vault));
+
+    return string.concat(prefix, toString(calcInterest), " timePeriod= ", vm.toString(numTimePeriods));
   }
 
-  function toString(ISimpleInterest simpleInterest) internal view returns (string memory) {
+  function toString(ICalcInterestMetadata calcInterest) internal view returns (string memory) {
     return string.concat(
       " ISimpleInterest [ ",
       " IR = ",
-      vm.toString(simpleInterest.getInterestInPercentage()),
+      vm.toString(calcInterest.getInterestInPercentage()),
       " Freq = ",
-      vm.toString(simpleInterest.getFrequency()),
+      vm.toString(calcInterest.getFrequency()),
       " ] "
     );
   }

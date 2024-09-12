@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleInterestVault.sol";
+import { DiscountVault } from "@credbull-spike/contracts/ian/fixed/DiscountVault.sol";
 import { TimelockIERC1155 } from "@credbull-spike/contracts/ian/timelock/TimelockIERC1155.sol";
+import { CalcDiscounted } from "@credbull-spike/contracts/ian/fixed/CalcDiscounted.sol";
+import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
+import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
+
 import { IPausable } from "@credbull-spike/contracts/ian/interfaces/IPausable.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -12,16 +16,19 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
+import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausable, IPausable {
+contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPausable, IProduct {
   constructor(
     address initialOwner,
     IERC20Metadata asset,
     uint256 interestRatePercentage,
     uint256 frequency,
     uint256 tenor
-  ) TimelockIERC1155(initialOwner) SimpleInterestVault(asset, interestRatePercentage, frequency, tenor) { }
+  ) TimelockIERC1155(initialOwner) DiscountVault(asset, interestRatePercentage, frequency, tenor) { }
 
   // we want the supply of the ERC20 token - not the locks
   function totalSupply() public view virtual override(ERC1155Supply, IERC20, ERC20) returns (uint256) {
@@ -31,8 +38,8 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
   function deposit(
     uint256 assets,
     address receiver
-  ) public override(SimpleInterestVault) whenNotPaused returns (uint256 shares) {
-    shares = SimpleInterestVault.deposit(assets, receiver);
+  ) public override(IERC4626, ERC4626, IProduct) whenNotPaused returns (uint256 shares) {
+    shares = ERC4626.deposit(assets, receiver);
 
     // Call the internal _lock function instead, which handles the locking logic
     _lockInternal(receiver, currentTimePeriodsElapsed + TENOR, shares);
@@ -44,13 +51,24 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
     uint256 shares,
     address receiver,
     address owner
-  ) public override(SimpleInterestVault) whenNotPaused returns (uint256 assets) {
+  ) public override(IERC4626, ERC4626, IProduct) whenNotPaused returns (uint256 assets) {
     // First, unlock the shares if possible
     _unlockInternal(owner, currentTimePeriodsElapsed, shares);
 
     // Then, redeem the shares for the corresponding amount of assets
-    return SimpleInterestVault.redeem(shares, receiver, owner);
+    return ERC4626.redeem(shares, receiver, owner);
   }
+
+
+  function redeemAtPeriod(
+    uint256 shares,
+    address receiver,
+    address owner,
+    uint256 redeemTimePeriod
+  ) public override(DiscountVault, IProduct) returns (uint256 assets) {
+    return DiscountVault.redeemAtPeriod(shares, receiver, owner, redeemTimePeriod);
+  }
+
 
   /**
    * @notice Rolls over a specified amount of unlocked tokens for a new lock period.
@@ -89,9 +107,7 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
     uint256, /* lockReleasePeriod */
     uint256 value
   ) public view override returns (uint256 rolloverBonus) {
-    uint256 rolloverBonusScaled = _calcInterestWithScale(value, TENOR, 1, FREQUENCY);
-
-    return _unscale(rolloverBonusScaled);
+    return CalcSimpleInterest.calcInterest(value, TENOR, 1, FREQUENCY);
   }
 
   /**
@@ -127,6 +143,11 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
     return TENOR;
   }
 
+  // ================= Period and Periodable =================
+
+
+
+
   function getCurrentPeriod() public view virtual override returns (uint256 currentPeriod) {
     return currentTimePeriodsElapsed;
   }
@@ -134,6 +155,9 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
   function setCurrentPeriod(uint256 _currentPeriod) public override {
     setCurrentTimePeriodsElapsed(_currentPeriod);
   }
+
+
+  // ================= Pause =================
 
   function pause() public onlyOwner {
     Pausable._pause();
@@ -242,4 +266,11 @@ contract TimelockInterestVault is TimelockIERC1155, SimpleInterestVault, Pausabl
 
     return principal;
   }
+
+  // =============== Utility ===============
+
+  function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public virtual override (IProduct, DiscountVault) {
+    DiscountVault.setCurrentTimePeriodsElapsed(_currentTimePeriodsElapsed);
+  }
+
 }
