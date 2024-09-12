@@ -2,8 +2,8 @@
 pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { CalcSimpleInterest } from "@credbull-spike/contracts/ian/fixed/CalcSimpleInterest.sol";
-import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
+import { CalcSimpleInterest } from "@credbull-contracts/contracts/interest/CalcSimpleInterest.sol";
+import { Frequencies } from "@credbull-test/interest/Frequencies.t.sol";
 
 import { Test } from "forge-std/Test.sol";
 

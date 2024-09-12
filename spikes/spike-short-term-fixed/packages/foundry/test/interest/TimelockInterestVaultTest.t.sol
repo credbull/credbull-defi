@@ -3,15 +3,15 @@ pragma solidity ^0.8.23;
 
 import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
 
-import { IDiscountVault } from "@credbull-spike/contracts/ian/interfaces/IDiscountVault.sol";
-import { Frequencies } from "@credbull-spike-test/ian/fixed/Frequencies.t.sol";
+import { IDiscountVault } from "@credbull-contracts/contracts/interest/IDiscountVault.sol";
+import { Frequencies } from "@credbull-test/interest/Frequencies.t.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { DiscountVaultTestBase } from "@credbull-spike-test/ian/fixed/DiscountVaultTestBase.t.sol";
-import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
-import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.sol";
+import { DiscountVaultTestBase } from "./DiscountVaultTestBase.t.sol";
+import { TimelockInterestVault } from "@credbull-contracts/contracts/interest/TimelockInterestVault.sol";
+import { ITimelock } from "@credbull-contracts/contracts/timelock/ITimelock.sol";
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
