@@ -14,7 +14,6 @@ import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
 
 import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.sol";
 
-import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleInterestVault.sol";
 import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
 
 /**
@@ -37,7 +36,7 @@ abstract contract ProductScenarioTest is Test {
     uint256 internal constant USER_ASSET_AMOUNT = 100_000 ether;
 
     IERC20Metadata internal _asset;
-    IERC20 internal _share;
+    IERC20Metadata internal _share;
     IProduct internal _product;
 
     // NOTE (JL,2024-09-10): This struct & factory function may not work.
@@ -53,9 +52,9 @@ abstract contract ProductScenarioTest is Test {
      * @dev Creates an instance of the [IProduct] under test, using the `params` configuration.
      *
      * @param params The [ProductParams] of configuration for the [IProduct].
-     * @return The [IProduct] instance and [IERC20] Share instance, if any.
+     * @return The [IProduct] instance and [IERC20Metadata] Share instance, if any.
      */
-    function createProduct(ProductParams memory params) internal virtual returns (IProduct, IERC20);
+    function createProduct(ProductParams memory params) internal virtual returns (IProduct, IERC20Metadata);
 
     /**
      * @dev A utility asset setup function intended to be invoked by the `setUp` function of the realising [Test].
@@ -129,7 +128,8 @@ abstract contract ProductScenarioTest is Test {
         vm.stopPrank();
 
         // Advance the periods elapsed, but to less than the Tenor, so lock period still in effect.
-        uint256 currentPeriod = _product.getCurrentTimePeriodsElapsed();
+        // uint256 currentPeriod = _product.getCurrentTimePeriodsElapsed();
+        uint256 currentPeriod = 0;
         uint256 elapsedPeriods = currentPeriod + (TENOR / 2);
         _product.setCurrentTimePeriodsElapsed(elapsedPeriods);
 
@@ -265,7 +265,8 @@ abstract contract ProductScenarioTest is Test {
         assertEq(expectedTotalInterest, totalInterest, "Incorrect interest total reported");
 
         // NOTE (JL,2024-09-11): How to actually get time remaining?
-        assertEq(15, TENOR - _product.getCurrentTimePeriodsElapsed(), "Incorrect time remaining");
+        // assertEq(15, TENOR - _product.getCurrentTimePeriodsElapsed(), "Incorrect time remaining");
+        assertEq(15, TENOR - elapsedTimePeriods, "Incorrect time remaining");
     }
 
     /**

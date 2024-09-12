@@ -4,17 +4,11 @@ pragma solidity ^0.8.23;
 import { console2 as console } from "forge-std/console2.sol";
 import { Test } from "forge-std/Test.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
-import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
 
-import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.sol";
-
-import { SimpleInterestVault } from "@credbull-spike/contracts/ian/fixed/SimpleInterestVault.sol";
 import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
 
 import { ProductScenarioTest } from "@credbull-spike-test/scenario/ProductScenarioTest.t.sol";
@@ -33,7 +27,7 @@ contract TimelockInterestVaultProductScenarioTest is ProductScenarioTest {
      * @param params The [ProductParams] of configuration for the [TimelockInterestVault].
      * @return The [IProduct] and [IERC20] Share instance, if any.
      */
-    function createProduct(ProductParams memory params) internal virtual override returns (IProduct, IERC20) {
+    function createProduct(ProductParams memory params) internal virtual override returns (IProduct, IERC20Metadata) {
         TimelockInterestVault vault = new TimelockInterestVault(
             params.owner, params.asset, params.interestRatePercentage, params.interestRateFrequency, params.tenor
         );
