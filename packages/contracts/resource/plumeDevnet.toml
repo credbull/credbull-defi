@@ -3,8 +3,8 @@
 ##
 
 [evm]
-# blockchain id, e.g. baseSepolia=84532, arbSepolia=421614, plumeTestnet=161221135
-chain_id = 161221135
+# blockchain id, e.g. baseSepolia=84532, arbSepolia=421614, plumeTestnet=161221135, plumeDevnet=18230
+chain_id = 18230
 deploy_mocks = true
 
 [evm.address]

@@ -32,6 +32,12 @@ deploy-plumeTestnet:
 resume-plumeTestnet:
 	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://testnet-explorer.plumenetwork.xyz/api\? --legacy --slow --resume"
 
+deploy-plumeDevnet:
+	$(MAKE) deploy RPC_URL=plumeDevnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://devnet-explorer.plumenetwork.xyz/api\? --legacy --slow"
+
+resume-plumeDevnet:
+	$(MAKE) deploy RPC_URL=plumeDevnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://devnet-explorer.plumenetwork.xyz/api\? --legacy --slow --resume"
+
 
 # NOTE (JL,2024-05-20): `forge` auto-includes any `.env` file in the invocation directory.
 deploy:
