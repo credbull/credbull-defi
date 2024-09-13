@@ -2,6 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { ICalcInterestMetadata } from "@credbull/interest/ICalcInterestMetadata.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title CalcInterestParams
@@ -41,5 +42,18 @@ abstract contract CalcInterestMetadata is ICalcInterestMetadata {
      */
     function getScale() public view virtual returns (uint256 scale) {
         return SCALE;
+    }
+
+    function toString() public view returns (string memory) {
+        return string.concat(
+            " CalcInterest [ ",
+            " IR = ",
+            Strings.toString(INTEREST_RATE),
+            " Frequency = ",
+            Strings.toString(FREQUENCY),
+            " Scale = ",
+            Strings.toString(SCALE),
+            " ] "
+        );
     }
 }
