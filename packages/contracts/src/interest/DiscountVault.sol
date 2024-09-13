@@ -54,9 +54,7 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
      * @return priceScaled The price scaled by the internal scale factor.
      */
     function calcPrice(uint256 numTimePeriodsElapsed) public view returns (uint256 priceScaled) {
-        uint256 interest = CalcSimpleInterest.calcInterest(SCALE, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
-
-        return SCALE + interest;
+        return CalcDiscounted.calcPriceFromInterest(numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY, SCALE);
     }
 
     /**
