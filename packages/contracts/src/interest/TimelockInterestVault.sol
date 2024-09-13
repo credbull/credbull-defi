@@ -32,6 +32,14 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
         return ERC20.totalSupply();
     }
 
+    /**
+     * @dev Should use the same time unit (day/month/year) as the interest frequency.
+     * @return termPeriod The number of time periods for before redemption is possible.
+     */
+    function getTermPeriod() public view returns (uint256 termPeriod) {
+        return TENOR;
+    }
+
     function deposit(uint256 assets, address receiver)
         public
         override(IERC4626, ERC4626, IProduct)

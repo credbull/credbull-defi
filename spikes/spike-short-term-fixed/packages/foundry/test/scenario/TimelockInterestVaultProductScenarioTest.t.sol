@@ -7,8 +7,8 @@ import { Test } from "forge-std/Test.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
-import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
+import { IProduct } from "@credbull/interest/IProduct.sol";
+import { TimelockInterestVault } from "@credbull/interest/TimelockInterestVault.sol";
 
 import { ProductScenarioTest } from "@credbull-spike-test/scenario/ProductScenarioTest.t.sol";
 

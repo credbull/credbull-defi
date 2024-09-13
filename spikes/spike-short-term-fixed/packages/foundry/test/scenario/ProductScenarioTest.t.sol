@@ -9,12 +9,11 @@ import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadat
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-import { IProduct } from "@credbull-spike/contracts/IProduct.sol";
 import { SimpleUSDC } from "@credbull-spike/contracts/SimpleUSDC.sol";
 
-import { ITimelock } from "@credbull-spike/contracts/ian/interfaces/ITimelock.sol";
-
-import { TimelockInterestVault } from "@credbull-spike/contracts/ian/fixed/TimelockInterestVault.sol";
+import { IProduct } from "@credbull/interest/IProduct.sol";
+import { TimelockInterestVault } from "@credbull/interest/TimelockInterestVault.sol";
+import { ITimelock } from "@credbull/timelock/ITimelock.sol";
 
 /**
  * @title Short Term Fixed Yield Vault Scenario Tests
@@ -90,8 +89,8 @@ abstract contract ProductScenarioTest is Test {
         uint256 shares = _product.deposit(depositAmount, ALICE);
         vm.stopPrank();
 
-        assertNotEq(0, shares, "No _shares were allocated");
-        assertEq(shares, _share.balanceOf(ALICE), "Incorrect number of _shares allocated to Alice");
+        assertNotEq(0, shares, "No shares were allocated");
+        assertEq(shares, _share.balanceOf(ALICE), "Incorrect number of shares allocated to Alice");
 
         // NOTE (JL,2024-09-04): Confirmation is deemed to be the succesful Shares allocation.
     }

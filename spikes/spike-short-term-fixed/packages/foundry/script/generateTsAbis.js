@@ -100,24 +100,25 @@ function main() {
       (transaction) => transaction.transactionType == "CREATE"
     );
 
-
     const mapContractNames = {};
-    transactionsCreate.forEach((transaction) => { 
+    transactionsCreate.forEach((transaction) => {
       mapContractNames[transaction.contractName] = 0;
     });
-  
+
     transactionsCreate.forEach((transaction) => {
       const artifact = getArtifactOfContract(transaction.contractName);
 
       allGeneratedContracts[chain][
-          `${transaction.contractName}#${mapContractNames[transaction.contractName]}`
+        `${transaction.contractName}#${
+          mapContractNames[transaction.contractName]
+        }`
       ] = {
         address: transaction.contractAddress,
         abi: artifact.abi,
         inheritedFunctions: getInheritedFunctions(artifact),
       };
 
-      mapContractNames[transaction.contractName] += 1
+      mapContractNames[transaction.contractName] += 1;
     });
   });
 
