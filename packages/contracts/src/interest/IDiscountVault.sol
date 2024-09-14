@@ -12,11 +12,14 @@ interface IDiscountVault is IERC4626 {
     /**
      * @notice Calculates the yield based on the principal and elapsed time periods.
      * @param principal The initial principal amount.
-     * @param fromPeriod The start period for calculating yield
-     * @param toPeriod The end period for calculating yield
+     * @param fromTimePeriod The start period for calculating yield
+     * @param toTimePeriod The end period for calculating yield
      * @return yield The calculated yield amount.
      */
-    function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod) external view returns (uint256 yield);
+    function calcYield(uint256 principal, uint256 fromTimePeriod, uint256 toTimePeriod)
+        external
+        view
+        returns (uint256 yield);
 
     /**
      * @notice Calculates the price for a given number of periods elapsed.
@@ -25,14 +28,12 @@ interface IDiscountVault is IERC4626 {
      */
     function calcPrice(uint256 numTimePeriodsElapsed) external view returns (uint256 price);
 
-    // TODO: refactor interface to be fromPeriod ... toPeriod to cater for continuous vaults without a defined maturity
-    function convertToSharesAtPeriod(uint256 assets, uint256 numTimePeriodsElapsed)
+    function convertToSharesAtPeriod(uint256 assets, uint256 depositTimePeriod)
         external
         view
         returns (uint256 shares);
 
-    // TODO: refactor interface to be fromPeriod ... toPeriod to cater for continuous vaults without a defined maturity
-    function convertToAssetsAtPeriod(uint256 shares, uint256 numTimePeriodsElapsed)
+    function convertToAssetsForPeriods(uint256 shares, uint256 depositTimePeriod, uint256 redeemTimePeriod)
         external
         view
         returns (uint256 assets);

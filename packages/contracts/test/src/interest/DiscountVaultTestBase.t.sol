@@ -33,35 +33,35 @@ abstract contract DiscountVaultTestBase is Test {
     }
 
     // verify convertToAssets and convertToShares.  These are a "preview" and do NOT update vault assets or shares.
-    function testConvertToAssetAndSharesAtPeriod(uint256 principal, IDiscountVault vault, uint256 numTimePeriods)
+    function testConvertToAssetAndSharesAtPeriod(uint256 principal, IDiscountVault vault, uint256 depositTimePeriod)
         internal
         virtual
     {
-        uint256 tenor = getTenor(vault);
+        uint256 redeemTimePeriod = depositTimePeriod + getTenor(vault);
 
         uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed(); // save previous state for later
-        uint256 expectedAssetsAtRedeem = principal + vault.calcYield(principal, 0, tenor);
+        uint256 expectedAssetsAtRedeem = principal + vault.calcYield(principal, depositTimePeriod, redeemTimePeriod);
 
         // ------------------- check toShares/toAssets - specified period -------------------
-        uint256 sharesAtPeriod = vault.convertToSharesAtPeriod(principal, numTimePeriods);
+        uint256 sharesAtPeriod = vault.convertToSharesAtPeriod(principal, depositTimePeriod);
 
         assertApproxEqAbs(
             expectedAssetsAtRedeem,
-            vault.convertToAssetsAtPeriod(sharesAtPeriod, numTimePeriods + tenor),
+            vault.convertToAssetsForPeriods(sharesAtPeriod, depositTimePeriod, redeemTimePeriod),
             TOLERANCE,
-            assertMsg("yield does not equal principal + interest", vault, numTimePeriods)
+            assertMsg("yield does not equal principal + interest", vault, depositTimePeriod)
         );
 
         // ------------------- check toShares/toAssets - current period -------------------
-        vault.setCurrentTimePeriodsElapsed(numTimePeriods); // set deposit numTimePeriods
+        vault.setCurrentTimePeriodsElapsed(depositTimePeriod); // set deposit numTimePeriods
         uint256 actualShares = vault.convertToShares(principal);
 
-        vault.setCurrentTimePeriodsElapsed(numTimePeriods + tenor); // set redeem numTimePeriods
+        vault.setCurrentTimePeriodsElapsed(redeemTimePeriod); // set redeem numTimePeriods
         assertApproxEqAbs(
             expectedAssetsAtRedeem,
             vault.convertToAssets(actualShares),
             TOLERANCE,
-            assertMsg("toShares/toAssets yield does not equal principal + interest", vault, numTimePeriods)
+            assertMsg("toShares/toAssets yield does not equal principal + interest", vault, depositTimePeriod)
         );
 
         vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed); // restore the vault to previous state
@@ -166,7 +166,7 @@ abstract contract DiscountVaultTestBase is Test {
     // represents the offset from depositPeriod to redeemPeriod, e.g.
     // returns 30, even if deposit on day 1 or day 2
     function getTenor(IDiscountVault vault) internal view returns (uint256 redeemTimePeriod) {
-        // TODO: change to use IERC165 - for now just assume supports ITenorable
+        // vault only works with a known-tenor.  so revert if not Tenorable.
         ITenorable tenorable = ITenorable(address(vault));
 
         return tenorable.getTenor();

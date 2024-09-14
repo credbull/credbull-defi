@@ -96,17 +96,13 @@ contract DiscountVault is IDiscountVault, ITenorable, CalcInterestMetadata, ERC4
     /**
      * @notice Converts a given amount of assets to shares based on a specific time period.
      * @param assets The amount of assets to convert.
-     * @param numTimePeriodsElapsed The number of time periods elapsed.
+     * @param depositTimePeriod The time period for deposit.
      * @return shares The number of shares corresponding to the assets at the specified time period.
      */
-    function convertToSharesAtPeriod(uint256 assets, uint256 numTimePeriodsElapsed)
-        public
-        view
-        returns (uint256 shares)
-    {
+    function convertToSharesAtPeriod(uint256 assets, uint256 depositTimePeriod) public view returns (uint256 shares) {
         if (assets < SCALE) return 0; // no shares for fractional assets
 
-        uint256 price = calcPrice(numTimePeriodsElapsed);
+        uint256 price = calcPrice(depositTimePeriod);
 
         return CalcDiscounted.calcDiscounted(assets, price, SCALE);
     }
@@ -154,26 +150,38 @@ contract DiscountVault is IDiscountVault, ITenorable, CalcInterestMetadata, ERC4
     /**
      * @notice Converts a given amount of shares to assets based on a specific time period.
      * @param shares The amount of shares to convert.
-     * @param numTimePeriodsElapsed The number of time periods elapsed.
+     * @param depositTimePeriod The time period of deposit
+     * @param redeemTimePeriod The time period of redeem
      * @return assets The number of assets corresponding to the shares at the specified time period.
      */
-    function convertToAssetsAtPeriod(uint256 shares, uint256 numTimePeriodsElapsed)
+    function convertToAssetsForPeriods(uint256 shares, uint256 depositTimePeriod, uint256 redeemTimePeriod)
         public
         view
         returns (uint256 assets)
     {
         if (shares < SCALE) return 0; // no assets for fractional shares
 
+        uint256 _principal = _convertToPrincipalAtDepositPeriod(shares, depositTimePeriod);
+
+        return _principal + calcYield(_principal, depositTimePeriod, redeemTimePeriod);
+    }
+
+    /**
+     * @notice Converts a given amount of shares to assets based on a specific time period.
+     * @param shares The amount of shares to convert.
+     * @param redeemTimePeriod The time period for redeem
+     * @return assets The number of assets corresponding to the shares at the specified time period.
+     * // TODO - this should move to a TENORABLE version of the Vault
+     */
+    function convertToAssetsAtPeriod(uint256 shares, uint256 redeemTimePeriod) public view returns (uint256 assets) {
         // redeeming before TENOR - give back the Discounted Amount.
         // This is a slash of Principal (and no Interest).
         // TODO - need to account for deposits after TENOR.  e.g. 30 day tenor, deposit on day 31 and redeem on day 32.
-        if (numTimePeriodsElapsed < TENOR) return 0;
+        if (redeemTimePeriod < TENOR) return 0;
 
-        uint256 impliedNumTimePeriodsAtDeposit = (numTimePeriodsElapsed - TENOR);
+        uint256 impliedDepositTimePeriod = (redeemTimePeriod - TENOR);
 
-        uint256 _principal = _convertToPrincipalAtDepositPeriod(shares, impliedNumTimePeriodsAtDeposit);
-
-        return _principal + calcYield(_principal, impliedNumTimePeriodsAtDeposit, numTimePeriodsElapsed);
+        return convertToAssetsForPeriods(shares, impliedDepositTimePeriod, redeemTimePeriod);
     }
 
     /**
@@ -207,6 +215,7 @@ contract DiscountVault is IDiscountVault, ITenorable, CalcInterestMetadata, ERC4
      * @notice Converts a given amount of shares to assets using the current time periods elapsed.
      * @param shares The amount of shares to convert.
      * @return assets The number of assets corresponding to the shares.
+     * // TODO - this function only make sense with a known TENOR to imply the deposit date
      */
     function convertToAssets(uint256 shares) public view override(ERC4626, IERC4626) returns (uint256 assets) {
         return convertToAssetsAtPeriod(shares, currentTimePeriodsElapsed);

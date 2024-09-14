@@ -40,7 +40,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
 
         // verify full returns
         uint256 actualShares = vault.convertToShares(deposit);
-        uint256 actualReturns = vault.convertToAssetsAtPeriod(actualShares, tenor);
+        uint256 actualReturns = vault.convertToAssetsForPeriods(actualShares, 0, tenor);
         assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
 
         testVaultAtPeriods(deposit, vault, tenor);
@@ -73,7 +73,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
 
         // verify full returns
         uint256 actualShares = vault.convertToShares(deposit);
-        uint256 actualReturns = vault.convertToAssetsAtPeriod(actualShares, tenor);
+        uint256 actualReturns = vault.convertToAssetsForPeriods(actualShares, 0, tenor);
         assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
     }
 }
