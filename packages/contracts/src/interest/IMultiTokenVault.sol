@@ -8,23 +8,53 @@ pragma solidity ^0.8.20;
  * e.g. Deposit 0 and Deposit 1 may have different returns
  */
 interface IMultiTokenVault {
-    // =============== Deposit ===============
+    /**
+     * @notice See {CalcSimpleInterest-calcInterest}
+     */
+    function calcYield(uint256 principal, uint256 depositPeriod, uint256 toPeriod)
+        external
+        view
+        returns (uint256 yield);
 
-    // MUST be independent of vault's getCurrentTimePeriod()
+    // =============== Deposit ===============
+    /**
+     * @notice Converts a given amount of assets to shares based on a specific time period.
+     * @param assets The amount of assets to convert.
+     * @param depositPeriod The time period for deposit.
+     * @return shares The number of shares corresponding to the assets at the specified time period.
+     * @dev MUST be independent of vault's getCurrentTimePeriod()
+     */
     function convertToSharesForDepositPeriod(uint256 assets, uint256 depositPeriod)
         external
         view
         returns (uint256 shares);
 
-    // MUST assume depositId = getCurrentTimePeriod()
+    /**
+     * @notice Converts a given amount of assets to shares at the current time period
+     * @param assets The amount of assets to convert.
+     * @return shares The number of shares corresponding to the assets at the specified time period.
+     * @dev MUST assume depositId = getCurrentTimePeriod()
+     */
     function convertToShares(uint256 assets) external view returns (uint256 shares);
 
-    // MUST assume depositId = getCurrentTimePeriod()
+    /**
+     * @notice Previews the deposit for a given amount of assets at the current time period
+     * @param assets The amount of assets to convert.
+     * @return shares The number of shares corresponding to the assets at the specified time period.
+     * @dev MUST assume depositId = getCurrentTimePeriod()
+     */
     function previewDeposit(uint256 assets) external view returns (uint256 shares);
 
     // =============== Redeem ===============
 
-    // MUST be independent of vault's getCurrentTimePeriod()
+    /**
+     * @notice Converts a given amount of shares to assets based on a specific time period.
+     * @param shares The amount of shares to convert.
+     * @param depositPeriod The time period of deposit
+     * @param redeemPeriod The time period of redeem
+     * @return assets The number of assets corresponding to the shares at the specified time period.
+     * @dev  MUST be independent of vault's getCurrentTimePeriod()
+     */
     function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
         external
         view
@@ -65,6 +95,11 @@ interface IMultiTokenVault {
     // TODO - add withdraw functions as well
     //    function previewWithdrawForPeriods(uint256 assets, uint256 depositTimePeriod, uint256 redeemTimePeriod) external view returns (uint256 shares);
     //    function withdrawForPeriods(uint256 assets, address receiver, address owner, uint256 depositTimePeriod, uint256 redeemTimePeriod) external returns (uint256 shares);
+
+    // =============== Utility ===============
+
+    // TODO - implement for test
+    // function getSharesAtPeriod(address account, uint256 depositPeriod)  external view returns (uint256 shares);
 
     /**
      * @notice Gets the current number of time periods elapsed.

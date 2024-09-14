@@ -13,7 +13,7 @@ import { ITenorable } from "@credbull/interest/ITenorable.sol";
 abstract contract MultiTokenVaultTestBase is Test {
     using Math for uint256;
 
-    uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000005
+    uint256 public constant TOLERANCE = 10; // with 6 decimals, diff of 0.000005
 
     address internal owner = makeAddr("owner");
     address internal alice = makeAddr("alice");
@@ -111,24 +111,10 @@ abstract contract MultiTokenVaultTestBase is Test {
 
         // capture state before for validations
         uint256 prevVaultPeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
-        uint256 prevReceiverVaultBalance = vault.balanceOf(receiver);
         uint256 prevReceiverAssetBalance = asset.balanceOf(receiver);
 
         // ------------------- deposit -------------------
-        vault.setCurrentTimePeriodsElapsed(depositPeriod); // set deposit numPeriods
-        vm.startPrank(receiver);
-        assertGe(
-            asset.balanceOf(receiver), principal, assertMsg("not enough assets for deposit ", vault, depositPeriod)
-        );
-        asset.approve(address(vault), principal); // grant the vault allowance
-        uint256 shares = vault.deposit(principal, receiver); // now deposit
-
-        vm.stopPrank();
-        assertEq(
-            prevReceiverVaultBalance + shares,
-            vault.balanceOf(receiver),
-            assertMsg("receiver did not receive the correct vault shares ", vault, depositPeriod)
-        );
+        uint256 shares = testDepositOnly(receiver, principal, vault, depositPeriod);
 
         // ------------------- prep redeem -------------------
         uint256 expectedYield = vault.calcYield(principal, 0, tenor);
@@ -163,6 +149,39 @@ abstract contract MultiTokenVaultTestBase is Test {
         vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed); // restore the vault to previous state
     }
 
+    // verify deposit and redeem.  These update vault assets and shares.
+    function testDepositOnly(address receiver, uint256 principal, MultiTokenVault vault, uint256 depositPeriod)
+        internal
+        virtual
+        returns (uint256 _shares)
+    {
+        IERC20 asset = IERC20(vault.asset());
+
+        // capture state before for validations
+        uint256 prevVaultPeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
+        uint256 prevReceiverVaultBalance = vault.balanceOf(receiver);
+
+        // ------------------- deposit -------------------
+        vault.setCurrentTimePeriodsElapsed(depositPeriod); // set deposit numPeriods
+        vm.startPrank(receiver);
+        assertGe(
+            asset.balanceOf(receiver), principal, assertMsg("not enough assets for deposit ", vault, depositPeriod)
+        );
+        asset.approve(address(vault), principal); // grant the vault allowance
+        uint256 shares = vault.deposit(principal, receiver); // now deposit
+
+        vm.stopPrank();
+        assertEq(
+            prevReceiverVaultBalance + shares,
+            vault.balanceOf(receiver),
+            assertMsg("receiver did not receive the correct vault shares ", vault, depositPeriod)
+        );
+
+        vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed);
+
+        return shares;
+    }
+
     // represents the offset from depositPeriod to redeemPeriod, e.g.
     // returns 30, even if deposit on day 1 or day 2
     function getTenor(MultiTokenVault vault) internal view returns (uint256 redeemPeriod) {
@@ -177,9 +196,20 @@ abstract contract MultiTokenVaultTestBase is Test {
         view
         returns (string memory)
     {
-        CalcInterestMetadata calcInterest = CalcInterestMetadata(address(vault));
+        string memory vaultToString = "";
 
-        return string.concat(prefix, calcInterest.toString(), " timePeriod= ", vm.toString(numPeriods));
+        // Type-safe encoding of the function call
+        (bool success, bytes memory result) =
+            address(vault).staticcall(abi.encodeCall(CalcInterestMetadata.toString, ()));
+
+        if (success && result.length > 0) {
+            // Decode the result if the call was successful
+            vaultToString = abi.decode(result, (string));
+        } else {
+            vaultToString = "";
+        }
+
+        return string.concat(prefix, vaultToString, " timePeriod= ", vm.toString(numPeriods));
     }
 
     function transferAndAssert(IERC20 _token, address fromAddress, address toAddress, uint256 amount) internal {

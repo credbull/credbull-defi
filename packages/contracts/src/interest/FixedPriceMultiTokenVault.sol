@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
+import { DiscountVault } from "@credbull/interest/DiscountVault.sol";
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -9,7 +9,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
  * @title IdentityDiscountVault
  * @dev DiscountVault where Assets (Principal) = Shares (Discount)
  */
-contract FixedPriceMultiTokenVault is MultiTokenVault {
+contract FixedPriceMultiTokenVault is DiscountVault {
     IERC1155MintAndBurnable public immutable DEPOSITS;
 
     /**
@@ -18,7 +18,7 @@ contract FixedPriceMultiTokenVault is MultiTokenVault {
      * @param interestRatePercentage The annual interest rate as a percentage.
      */
     constructor(IERC20Metadata asset, IERC1155MintAndBurnable depositLedger, uint256 interestRatePercentage)
-        MultiTokenVault(asset, interestRatePercentage, 1, 0)
+        DiscountVault(asset, interestRatePercentage, 1, 0)
     {
         DEPOSITS = depositLedger;
     }
