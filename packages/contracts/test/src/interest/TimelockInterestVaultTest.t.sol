@@ -6,13 +6,13 @@ import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { DiscountVaultTestBase } from "./DiscountVaultTestBase.t.sol";
+import { MultiTokenVaultTestBase } from "@test/src/interest/MultiTokenVaultTestBase.t.sol";
 import { TimelockInterestVault } from "@credbull/interest/TimelockInterestVault.sol";
 import { ITimelock } from "@credbull/timelock/ITimelock.sol";
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract TimelockInterestVaultTest is DiscountVaultTestBase {
+contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
     IERC20Metadata private asset;
 
     uint256 private constant TENOR_30 = 30;

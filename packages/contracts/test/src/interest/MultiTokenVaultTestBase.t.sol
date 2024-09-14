@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { DiscountVault } from "@credbull/interest/DiscountVault.sol";
+import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { Test } from "forge-std/Test.sol";
-import { ITenorable } from "../../../src/interest/ITenorable.sol";
+import { ITenorable } from "@credbull/interest/ITenorable.sol";
 
-abstract contract DiscountVaultTestBase is Test {
+abstract contract MultiTokenVaultTestBase is Test {
     using Math for uint256;
 
     uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000005
@@ -19,7 +19,7 @@ abstract contract DiscountVaultTestBase is Test {
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
-    function testVaultAtPeriods(uint256 principal, DiscountVault vault, uint256 redeemPeriod) internal {
+    function testVaultAtPeriods(uint256 principal, MultiTokenVault vault, uint256 redeemPeriod) internal {
         uint256[5] memory depositPeriodsArr = [0, 1, redeemPeriod - 1, redeemPeriod, redeemPeriod + 1];
 
         // Iterate through the lock periods and calculate the principal for each
@@ -33,7 +33,7 @@ abstract contract DiscountVaultTestBase is Test {
     }
 
     // verify convertToAssets and convertToShares.  These are a "preview" and do NOT update vault assets or shares.
-    function testConvertToAssetAndSharesAtPeriod(uint256 principal, DiscountVault vault, uint256 depositPeriod)
+    function testConvertToAssetAndSharesAtPeriod(uint256 principal, MultiTokenVault vault, uint256 depositPeriod)
         internal
         virtual
     {
@@ -68,7 +68,7 @@ abstract contract DiscountVaultTestBase is Test {
     }
 
     // verify previewDeposit and previewRedeem.  These are a "preview" and do NOT update vault assets or shares.
-    function testPreviewDepositAndPreviewRedeem(uint256 principal, DiscountVault vault, uint256 depositPeriod)
+    function testPreviewDepositAndPreviewRedeem(uint256 principal, MultiTokenVault vault, uint256 depositPeriod)
         internal
         virtual
     {
@@ -92,7 +92,7 @@ abstract contract DiscountVaultTestBase is Test {
         );
 
         // ------------------- check previewWithdraw - current period -------------------
-        vm.expectRevert(abi.encodeWithSelector(DiscountVault.UnsupportedFunction.selector, "previewWithdraw"));
+        vm.expectRevert(abi.encodeWithSelector(MultiTokenVault.UnsupportedFunction.selector, "previewWithdraw"));
         vault.previewWithdraw(principal); // previewWithdraw not currently implemented, expect revert
 
         vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed);
@@ -103,7 +103,7 @@ abstract contract DiscountVaultTestBase is Test {
         address _owner,
         address receiver,
         uint256 principal,
-        DiscountVault vault,
+        MultiTokenVault vault,
         uint256 depositPeriod
     ) internal virtual {
         IERC20 asset = IERC20(vault.asset());
@@ -157,7 +157,7 @@ abstract contract DiscountVaultTestBase is Test {
         );
 
         // ------------------- withdraw -------------------
-        vm.expectRevert(abi.encodeWithSelector(DiscountVault.UnsupportedFunction.selector, "withdraw"));
+        vm.expectRevert(abi.encodeWithSelector(MultiTokenVault.UnsupportedFunction.selector, "withdraw"));
         vault.withdraw(principal, receiver, receiver); // withdraw not currently implemented, expect revert
 
         vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed); // restore the vault to previous state
@@ -165,14 +165,14 @@ abstract contract DiscountVaultTestBase is Test {
 
     // represents the offset from depositPeriod to redeemPeriod, e.g.
     // returns 30, even if deposit on day 1 or day 2
-    function getTenor(DiscountVault vault) internal view returns (uint256 redeemPeriod) {
+    function getTenor(MultiTokenVault vault) internal view returns (uint256 redeemPeriod) {
         // vault only works with a known-tenor.  so revert if not Tenorable.
         ITenorable tenorable = ITenorable(address(vault));
 
         return tenorable.getTenor();
     }
 
-    function assertMsg(string memory prefix, DiscountVault vault, uint256 numPeriods)
+    function assertMsg(string memory prefix, MultiTokenVault vault, uint256 numPeriods)
         internal
         view
         returns (string memory)

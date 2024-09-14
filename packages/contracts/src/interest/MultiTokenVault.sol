@@ -23,7 +23,14 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  * @dev A vault that uses SimpleInterest and Discounting to calculate shares per asset.
  *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
  */
-contract DiscountVault is IDiscountVault, IMultiTokenVault, ITenorable, CalcInterestMetadata, ERC4626, ERC20Burnable {
+contract MultiTokenVault is
+    IDiscountVault,
+    IMultiTokenVault,
+    ITenorable,
+    CalcInterestMetadata,
+    ERC4626,
+    ERC20Burnable
+{
     using Math for uint256;
 
     uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapsed

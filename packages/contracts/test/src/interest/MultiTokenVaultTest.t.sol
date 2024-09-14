@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { DiscountVault } from "@credbull/interest/DiscountVault.sol";
+import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
-import { DiscountVaultTestBase } from "./DiscountVaultTestBase.t.sol";
+import { MultiTokenVaultTestBase } from "@test/src/interest/MultiTokenVaultTestBase.t.sol";
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-contract DiscountVaultTest is DiscountVaultTestBase {
+contract DiscountVaultTest is MultiTokenVaultTestBase {
     using Math for uint256;
 
     IERC20Metadata private asset;
@@ -31,7 +31,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         uint256 deposit = 50_000 * SCALE;
         uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
-        DiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
+        MultiTokenVault vault = new MultiTokenVault(asset, apy, frequencyValue, tenor);
 
         // verify interest
         uint256 actualInterest = vault.calcYield(deposit, 0, tenor);
@@ -50,7 +50,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.MONTHLY);
         uint256 tenor = 3;
 
-        DiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
+        MultiTokenVault vault = new MultiTokenVault(asset, apy, frequencyValue, tenor);
 
         assertEq(0, vault.convertToShares(SCALE - 1), "convert to shares not scaled");
 
@@ -64,7 +64,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         uint256 deposit = 50_000 * SCALE;
         uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
-        DiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
+        MultiTokenVault vault = new MultiTokenVault(asset, apy, frequencyValue, tenor);
 
         // verify interest
         uint256 actualInterest = vault.calcYield(deposit, 0, tenor);

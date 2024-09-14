@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { DiscountVault } from "@credbull/interest/DiscountVault.sol";
+import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
 import { TimelockIERC1155 } from "@credbull/timelock/TimelockIERC1155.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { IProduct } from "@credbull/interest/IProduct.sol";
@@ -17,14 +17,14 @@ import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IProduct {
+contract TimelockInterestVault is TimelockIERC1155, MultiTokenVault, Pausable, IProduct {
     constructor(
         address initialOwner,
         IERC20Metadata asset,
         uint256 interestRatePercentage,
         uint256 frequency,
         uint256 tenor
-    ) TimelockIERC1155(initialOwner) DiscountVault(asset, interestRatePercentage, frequency, tenor) { }
+    ) TimelockIERC1155(initialOwner) MultiTokenVault(asset, interestRatePercentage, frequency, tenor) { }
 
     // we want the supply of the ERC20 token - not the locks
     function totalSupply() public view virtual override(ERC1155Supply, IERC20, ERC20) returns (uint256) {
@@ -47,7 +47,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
 
     function redeem(uint256 shares, address receiver, address owner)
         public
-        override(IProduct, DiscountVault)
+        override(IProduct, MultiTokenVault)
         whenNotPaused
         returns (uint256 assets)
     {
@@ -63,7 +63,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
         override
         returns (uint256 assets)
     {
-        return DiscountVault.redeemForImpliedDepositPeriod(shares, receiver, owner, redeemTimePeriod);
+        return MultiTokenVault.redeemForImpliedDepositPeriod(shares, receiver, owner, redeemTimePeriod);
     }
 
     /**
@@ -266,8 +266,8 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
     function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed)
         public
         virtual
-        override(IProduct, DiscountVault)
+        override(IProduct, MultiTokenVault)
     {
-        DiscountVault.setCurrentTimePeriodsElapsed(_currentTimePeriodsElapsed);
+        MultiTokenVault.setCurrentTimePeriodsElapsed(_currentTimePeriodsElapsed);
     }
 }

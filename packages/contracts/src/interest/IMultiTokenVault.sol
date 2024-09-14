@@ -4,7 +4,8 @@
 pragma solidity ^0.8.20;
 
 /**
- * @dev A vault that using Principal and Discounting for asset and shares respectively
+ * @dev MultiToken vault able to support multiple independent deposit periods
+ * e.g. Deposit 0 and Deposit 1 may have different returns
  */
 interface IMultiTokenVault {
     // =============== Deposit ===============

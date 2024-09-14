@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { IdentityDiscountVault } from "@credbull/interest/IdentityDiscountVault.sol";
+import { FixedPriceMultiTokenVault } from "@credbull/interest/FixedPriceMultiTokenVault.sol";
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 
-import { DiscountVaultTestBase } from "./DiscountVaultTestBase.t.sol";
+import { MultiTokenVaultTestBase } from "@test/src/interest/MultiTokenVaultTestBase.t.sol";
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
@@ -24,7 +24,7 @@ contract SimpleIERC1155 is ERC1155, IERC1155MintAndBurnable {
     }
 }
 
-contract IdentityDiscountVaultTest is DiscountVaultTestBase {
+contract IdentityDiscountVaultTest is MultiTokenVaultTestBase {
     using Math for uint256;
 
     IERC20Metadata private asset;
@@ -47,7 +47,7 @@ contract IdentityDiscountVaultTest is DiscountVaultTestBase {
         uint256 apy = 6; // APY in percentage
         uint256 principal = 50_000 * SCALE;
 
-        IdentityDiscountVault vault = new IdentityDiscountVault(asset, depositLedger, apy);
+        FixedPriceMultiTokenVault vault = new FixedPriceMultiTokenVault(asset, depositLedger, apy);
 
         uint256 depositPeriod = 15;
         vault.setCurrentTimePeriodsElapsed(depositPeriod); // warp to deposit period
