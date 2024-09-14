@@ -5,6 +5,7 @@ import { CalcDiscounted } from "@credbull/interest/CalcDiscounted.sol";
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { IDiscountVault } from "@credbull/interest/IDiscountVault.sol";
+import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
@@ -25,18 +26,27 @@ contract DiscountVault is MultiTokenVault, IDiscountVault, ITenorable, CalcInter
     // Should use the same time unit (day/month/year) as the interest frequency.
     uint256 public immutable TENOR;
 
+    struct DiscountVaultParams {
+        IERC20Metadata asset;
+        IERC1155MintAndBurnable depositLedger;
+        uint256 interestRatePercentage;
+        uint256 frequency;
+        uint256 tenor;
+    }
+
     /**
-     * @notice Constructor to initialize the SimpleInterestVault with asset, interest rate, frequency, and tenor.
-     * @param asset The ERC20 token that represents the underlying asset.
-     * @param interestRatePercentage The annual interest rate as a percentage.
-     * @param frequency The number of interest periods in a year.
-     * @param tenor The duration of the lock period in the same unit as the interest frequency.
+     * @notice Constructor to initialize the DiscountVault
+     * @param discountVaultParams the constructor parameters
      */
-    constructor(IERC20Metadata asset, uint256 interestRatePercentage, uint256 frequency, uint256 tenor)
-        CalcInterestMetadata(interestRatePercentage, frequency, asset.decimals())
-        MultiTokenVault(asset)
+    constructor(DiscountVaultParams memory discountVaultParams)
+        MultiTokenVault(discountVaultParams.asset, discountVaultParams.depositLedger)
+        CalcInterestMetadata(
+            discountVaultParams.interestRatePercentage,
+            discountVaultParams.frequency,
+            discountVaultParams.asset.decimals()
+        )
     {
-        TENOR = tenor;
+        TENOR = discountVaultParams.tenor;
     }
 
     /**
@@ -79,8 +89,6 @@ contract DiscountVault is MultiTokenVault, IDiscountVault, ITenorable, CalcInter
     function calcYieldForTenorPeriods(uint256 principal) public view returns (uint256 interest) {
         return calcYield(principal, 0, TENOR);
     }
-
-    // =============== View ===============
 
     // =============== Deposit ===============
 
@@ -130,7 +138,6 @@ contract DiscountVault is MultiTokenVault, IDiscountVault, ITenorable, CalcInter
      * @param shares The amount of shares to convert.
      * @param redeemPeriod The time period for redeem
      * @return assets The number of assets corresponding to the shares at the specified time period.
-     * // TODO - this should move to a TENORABLE version of the Vault
      */
     function convertToAssetsForImpliedDepositPeriod(uint256 shares, uint256 redeemPeriod)
         public

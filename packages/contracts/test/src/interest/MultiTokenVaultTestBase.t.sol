@@ -92,7 +92,9 @@ abstract contract MultiTokenVaultTestBase is Test {
         );
 
         // ------------------- check previewWithdraw - current period -------------------
-        vm.expectRevert(abi.encodeWithSelector(MultiTokenVault.UnsupportedFunction.selector, "previewWithdraw"));
+        vm.expectRevert(
+            abi.encodeWithSelector(MultiTokenVault.MultiTokenVault__UnsupportedFunction.selector, "previewWithdraw")
+        );
         vault.previewWithdraw(principal); // previewWithdraw not currently implemented, expect revert
 
         vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed);
@@ -143,7 +145,9 @@ abstract contract MultiTokenVaultTestBase is Test {
         );
 
         // ------------------- withdraw -------------------
-        vm.expectRevert(abi.encodeWithSelector(MultiTokenVault.UnsupportedFunction.selector, "withdraw"));
+        vm.expectRevert(
+            abi.encodeWithSelector(MultiTokenVault.MultiTokenVault__UnsupportedFunction.selector, "withdraw")
+        );
         vault.withdraw(principal, receiver, receiver); // withdraw not currently implemented, expect revert
 
         vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed); // restore the vault to previous state

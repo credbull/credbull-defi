@@ -7,25 +7,19 @@ import { TimelockIERC1155 } from "@credbull/timelock/TimelockIERC1155.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { IProduct } from "@credbull/interest/IProduct.sol";
 
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
-import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IProduct {
-    constructor(
-        address initialOwner,
-        IERC20Metadata asset,
-        uint256 interestRatePercentage,
-        uint256 frequency,
-        uint256 tenor
-    ) TimelockIERC1155(initialOwner) DiscountVault(asset, interestRatePercentage, frequency, tenor) { }
+    constructor(DiscountVaultParams memory discountVaultParams, address initialOwner)
+        DiscountVault(discountVaultParams)
+        TimelockIERC1155(initialOwner)
+    { }
 
     // we want the supply of the ERC20 token - not the locks
     function totalSupply() public view virtual override(ERC1155Supply, IERC20, ERC20) returns (uint256) {
@@ -34,11 +28,11 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
 
     function deposit(uint256 assets, address receiver)
         public
-        override(ERC4626, IProduct)
+        override(IProduct, MultiTokenVault)
         whenNotPaused
         returns (uint256 shares)
     {
-        shares = ERC4626.deposit(assets, receiver);
+        shares = MultiTokenVault.deposit(assets, receiver);
 
         // Call the internal _lock function instead, which handles the locking logic
         _lockInternal(receiver, currentTimePeriodsElapsed + TENOR, shares);
@@ -56,7 +50,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
         _unlockInternal(owner, currentTimePeriodsElapsed, shares);
 
         // Then, redeem the shares for the corresponding amount of assets
-        return ERC4626.redeem(shares, receiver, owner);
+        return MultiTokenVault.redeem(shares, receiver, owner);
     }
 
     // TODO - rename in IProduct to remove this function
@@ -76,6 +70,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
      */
     function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value) public override onlyOwner {
         uint256 sharesForNextPeriod = previewConvertSharesForRollover(account, lockReleasePeriod, value);
+        uint256 impliedDepositPeriod = (currentTimePeriodsElapsed - TENOR);
 
         // TODO: this probably only makes sense if lockReleasePeriod == currentTimePeriodsElapsed.  assert as such.
 
@@ -84,8 +79,8 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
             uint256 deficientValue = sharesForNextPeriod - value;
 
             TimelockIERC1155._lockInternal(account, currentTimePeriodsElapsed, deficientValue); // mint from ERC1155 (Timelock)
-
             ERC20._mint(account, deficientValue); // mint from ER20/ERC4626 (Vault)
+            DEPOSITS.mint(account, impliedDepositPeriod, deficientValue, ""); // mint from ER20/ERC4626 (Deposit Ledger)
         }
 
         // case where the Shares[P1] for first period are GREATER than Shares[P2], e.g. due to Discounting
@@ -95,7 +90,12 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
             ERC1155._burn(account, lockReleasePeriod, excessValue); // burn from ERC1155 (Timelock)
 
             ERC20._burn(account, excessValue); // burn from ERC20/ERC4626 (Vault)
+            DEPOSITS.burn(account, impliedDepositPeriod, excessValue); // burn from ER20/ERC4626 (Deposit Ledger)
         }
+
+        // now move the shares to the new period
+        DEPOSITS.burn(account, impliedDepositPeriod, sharesForNextPeriod);
+        DEPOSITS.mint(account, currentTimePeriodsElapsed, sharesForNextPeriod, "");
 
         TimelockIERC1155.rolloverUnlocked(account, lockReleasePeriod, sharesForNextPeriod);
     }

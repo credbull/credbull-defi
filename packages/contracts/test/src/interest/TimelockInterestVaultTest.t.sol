@@ -1,24 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
+import { DiscountVault } from "@credbull/interest/DiscountVault.sol";
+import { TimelockInterestVault } from "@credbull/interest/TimelockInterestVault.sol";
+import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
+import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
+
+import { ITimelock } from "@credbull/timelock/ITimelock.sol";
+
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
+import { MultiTokenVaultTestBase } from "@test/src/interest/MultiTokenVaultTestBase.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
-import { MultiTokenVaultTestBase } from "@test/src/interest/MultiTokenVaultTestBase.t.sol";
-import { TimelockInterestVault } from "@credbull/interest/TimelockInterestVault.sol";
-import { ITimelock } from "@credbull/timelock/ITimelock.sol";
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
     IERC20Metadata private asset;
-
-    uint256 private constant TENOR_30 = 30;
-    uint256 private constant APY_6 = 6;
-    uint256 private constant APY_12 = 12;
-    uint256 private constant FREQUENCY_360 = 360;
+    IERC1155MintAndBurnable private depositLedger;
 
     uint256 internal SCALE;
 
@@ -27,6 +26,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
 
         vm.prank(owner);
         asset = new SimpleUSDC(tokenSupply);
+        depositLedger = new SimpleIERC1155Mintable();
 
         SCALE = 10 ** asset.decimals();
 
@@ -38,19 +38,31 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
     }
 
     function test__TimelockInterestVaultTest__Daily() public {
-        uint256 tenor = TENOR_30;
+        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+            asset: asset,
+            depositLedger: depositLedger,
+            interestRatePercentage: 12,
+            frequency: 360,
+            tenor: 30
+        });
 
-        TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_12, FREQUENCY_360, tenor);
+        TimelockInterestVault vault = new TimelockInterestVault(params, owner);
 
         // check principal and interest calcs
-        testVaultAtPeriods(200 * SCALE, vault, tenor);
+        testVaultAtPeriods(200 * SCALE, vault, params.tenor);
     }
 
     // Scenario: User withdraws after the lock period
     function test__TimelockInterestVault__Deposit_Redeem() public {
-        uint256 tenor = TENOR_30;
+        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+            asset: asset,
+            depositLedger: depositLedger,
+            interestRatePercentage: 6,
+            frequency: 360,
+            tenor: 30
+        });
 
-        TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, TENOR_30);
+        TimelockInterestVault vault = new TimelockInterestVault(params, owner);
 
         uint256 depositAmount = 15_000 * SCALE;
         uint256 depositPeriod = vault.getCurrentTimePeriodsElapsed();
@@ -63,7 +75,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         // Assert that the shares were correctly minted
         assertEq(shares, vault.balanceOf(alice), "Incorrect number of shares minted to Alice");
         // Assert that the shares are correctly locked
-        uint256 lockedAmount = vault.getLockedAmount(alice, vault.getCurrentTimePeriodsElapsed() + tenor);
+        uint256 lockedAmount = vault.getLockedAmount(alice, vault.getCurrentTimePeriodsElapsed() + params.tenor);
         assertEq(shares, lockedAmount, "Shares were not correctly locked after deposit");
 
         // ------------- redeem (before tenor / maturity time period) ---------------
@@ -82,18 +94,18 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod); // try to redeem before warping - should fail
 
         // ------------- redeem (at tenor / maturity time period) ---------------
-        vault.setCurrentTimePeriodsElapsed(tenor);
+        vault.setCurrentTimePeriodsElapsed(params.tenor);
 
         // give the vault enough to cover the earned interest
         vm.prank(owner);
-        transferAndAssert(asset, owner, address(vault), vault.calcYield(depositAmount, 0, tenor));
+        transferAndAssert(asset, owner, address(vault), vault.calcYield(depositAmount, 0, params.tenor));
 
         // Attempt to redeem after the lock period, should succeed
         vm.prank(alice);
         uint256 redeemedAssets = vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod);
 
         // Assert that Alice received the correct amount of assets, including interest
-        uint256 expectedAssets = depositAmount + vault.calcYield(depositAmount, 0, tenor);
+        uint256 expectedAssets = depositAmount + vault.calcYield(depositAmount, 0, params.tenor);
         assertApproxEqAbs(
             expectedAssets,
             redeemedAssets,
@@ -112,13 +124,19 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
     }
 
     function test__TimelockInterestVault__Rollover_1APY_Bonus() public {
-        uint256 tenor = TENOR_30;
+        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+            asset: asset,
+            depositLedger: depositLedger,
+            interestRatePercentage: 6,
+            frequency: 360,
+            tenor: 30
+        });
         uint256 depositAmount = 40_000 * SCALE;
 
         // setup
-        TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, TENOR_30);
+        TimelockInterestVault vault = new TimelockInterestVault(params, owner);
         vm.prank(owner);
-        transferAndAssert(asset, owner, address(vault), 3 * vault.calcYield(depositAmount, 0, tenor)); // give the vault enough to cover returns
+        transferAndAssert(asset, owner, address(vault), 3 * vault.calcYield(depositAmount, 0, params.tenor)); // give the vault enough to cover returns
 
         // ----------------------------------------------------------
         // ------------        Start Period 1          --------------
@@ -138,7 +156,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         // ------------ End Period 1  (Start Period 2) --------------
         // ----------------------------------------------------------
 
-        uint256 endPeriodOne = tenor;
+        uint256 endPeriodOne = params.tenor;
         vault.setCurrentTimePeriodsElapsed(endPeriodOne); // warp to end of period 1
 
         // ------------- verify assets end of period 1 ---------------
@@ -151,7 +169,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         assertEq(40_200 * SCALE, actualAssetsPeriodOne, "assets end of Period 1 incorrect"); // Principal[P1] + Interest[P1] = $40,000 + $200 = $40,200
         assertEq(
             33 * SCALE + (50 * SCALE) / 100,
-            vault.calcRolloverBonus(alice, tenor, actualAssetsPeriodOne),
+            vault.calcRolloverBonus(alice, params.tenor, actualAssetsPeriodOne),
             "rollover bonus end of Period 1 incorrect"
         ); // Rollover Bonus =  ($40,200 * 0.1 * 30 / 360) = $33.50
 
@@ -179,7 +197,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         );
         assertEq(
             expectedSharesPeriodTwo,
-            vault.getLockedAmount(alice, endPeriodOne + tenor),
+            vault.getLockedAmount(alice, endPeriodOne + params.tenor),
             "all shares should be locked until end of Period 2"
         );
         assertEq(0, vault.getLockedAmount(alice, endPeriodOne), "no locks should remain on Period 1");
@@ -188,7 +206,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         // -------------         End Period 2         ---------------
         // ----------------------------------------------------------
 
-        uint256 endPeriodTwo = endPeriodOne + tenor;
+        uint256 endPeriodTwo = endPeriodOne + params.tenor;
         vault.setCurrentTimePeriodsElapsed(endPeriodTwo); // warp to end of period 2
 
         // ------------- verify assets end of period 2---------------
@@ -218,11 +236,15 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
     }
 
     function test__TimelockInterestVault__PauseAndUnPause() public {
-        uint256 apy = 12; // APY in percentage
-        uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-        uint256 tenor = 30;
+        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+            asset: asset,
+            depositLedger: depositLedger,
+            interestRatePercentage: 12,
+            frequency: 360,
+            tenor: 30
+        });
 
-        TimelockInterestVault vault = new TimelockInterestVault(owner, asset, apy, frequencyValue, tenor);
+        TimelockInterestVault vault = new TimelockInterestVault(params, owner);
 
         uint256 depositAmount = 1000 * SCALE;
         uint256 depositPeriod = vault.getCurrentTimePeriodsElapsed();
@@ -238,7 +260,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
 
         vm.prank(alice);
         vm.expectRevert(Pausable.EnforcedPause.selector); // redeem when paused - fail
-        vault.redeemForDepositPeriod(depositAmount, alice, alice, depositPeriod);
+        vault.redeem(depositAmount, alice, alice);
 
         // ------------- unpause ---------------
         vm.prank(owner);
@@ -252,7 +274,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         vm.stopPrank();
 
         // unpaused redeem
-        vault.setCurrentTimePeriodsElapsed(tenor); // warp to redeem time
+        vault.setCurrentTimePeriodsElapsed(params.tenor); // warp to redeem time
         vm.prank(owner);
         transferAndAssert(asset, owner, address(vault), depositAmount); // cover the yield on the vault
 
@@ -262,11 +284,18 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
 
     // Scenario: User withdraws after the lock period
     function test__TimelockInterestVault__Early_Redeem_Should_Fail() public {
-        uint256 tenor = TENOR_30;
-        TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, tenor);
+        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+            asset: asset,
+            depositLedger: depositLedger,
+            interestRatePercentage: 6,
+            frequency: 360,
+            tenor: 30
+        });
+
+        TimelockInterestVault vault = new TimelockInterestVault(params, owner);
 
         uint256 depositAmount = 20_000 * SCALE;
-        uint256 depositPeriod = tenor + 10;
+        uint256 depositPeriod = params.tenor + 10;
 
         // ------------- deposit ---------------
         vault.setCurrentTimePeriodsElapsed(depositPeriod);
@@ -277,7 +306,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         vm.stopPrank();
 
         // ------------- early redeem - before vault's first tenor  ---------------
-        uint256 tenorMinus1 = tenor - 1;
+        uint256 tenorMinus1 = params.tenor - 1;
         vault.setCurrentTimePeriodsElapsed(tenorMinus1);
 
         vm.prank(alice);
@@ -293,7 +322,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod); // try to redeem before warping - should fail
 
         // ------------- early redeem - before deposit + redeem  ---------------
-        uint256 redeemMinus1 = depositPeriod + tenor - 1;
+        uint256 redeemMinus1 = depositPeriod + params.tenor - 1;
         vault.setCurrentTimePeriodsElapsed(redeemMinus1);
 
         vm.prank(alice);
@@ -310,11 +339,18 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
     }
 
     function test__TimelockInterestVault__MultipleDeposits() public {
-        uint256 tenor = TENOR_30;
+        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+            asset: asset,
+            depositLedger: depositLedger,
+            interestRatePercentage: 6,
+            frequency: 360,
+            tenor: 30
+        });
+
         uint256 depositAmount1 = 10_000 * SCALE;
         uint256 depositAmount2 = 15_000 * SCALE;
 
-        TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, tenor);
+        TimelockInterestVault vault = new TimelockInterestVault(params, owner);
 
         // deposit
         uint256 depositPeriod1 = 5;
@@ -333,7 +369,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         vm.stopPrank();
 
         // warp to a future period
-        uint256 verifyPeriod = tenor - 1;
+        uint256 verifyPeriod = params.tenor - 1;
         vault.setCurrentTimePeriodsElapsed(verifyPeriod);
 
         // check total deposits

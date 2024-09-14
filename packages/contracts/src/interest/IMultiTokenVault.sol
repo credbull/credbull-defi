@@ -98,8 +98,7 @@ interface IMultiTokenVault {
 
     // =============== Utility ===============
 
-    // TODO - implement for test
-    // function getSharesAtPeriod(address account, uint256 depositPeriod)  external view returns (uint256 shares);
+    function getSharesAtPeriod(address account, uint256 depositPeriod) external view returns (uint256 shares);
 
     /**
      * @notice Gets the current number of time periods elapsed.
