@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { IDiscountVault } from "@credbull/interest/IDiscountVault.sol";
 import { DiscountVault } from "@credbull/interest/DiscountVault.sol";
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
@@ -32,7 +31,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         uint256 deposit = 50_000 * SCALE;
         uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
-        IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
+        DiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
 
         // verify interest
         uint256 actualInterest = vault.calcYield(deposit, 0, tenor);
@@ -40,7 +39,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
 
         // verify full returns
         uint256 actualShares = vault.convertToShares(deposit);
-        uint256 actualReturns = vault.convertToAssetsForPeriods(actualShares, 0, tenor);
+        uint256 actualReturns = vault.convertToAssetsForDepositPeriod(actualShares, 0, tenor);
         assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
 
         testVaultAtPeriods(deposit, vault, tenor);
@@ -51,7 +50,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.MONTHLY);
         uint256 tenor = 3;
 
-        IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
+        DiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
 
         assertEq(0, vault.convertToShares(SCALE - 1), "convert to shares not scaled");
 
@@ -65,7 +64,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         uint256 deposit = 50_000 * SCALE;
         uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
-        IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
+        DiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
 
         // verify interest
         uint256 actualInterest = vault.calcYield(deposit, 0, tenor);
@@ -73,7 +72,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
 
         // verify full returns
         uint256 actualShares = vault.convertToShares(deposit);
-        uint256 actualReturns = vault.convertToAssetsForPeriods(actualShares, 0, tenor);
+        uint256 actualReturns = vault.convertToAssetsForDepositPeriod(actualShares, 0, tenor);
         assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
     }
 }

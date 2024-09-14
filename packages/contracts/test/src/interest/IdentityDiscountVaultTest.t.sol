@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { IDiscountVault } from "@credbull/interest/IDiscountVault.sol";
 import { IdentityDiscountVault } from "@credbull/interest/IdentityDiscountVault.sol";
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 
@@ -48,7 +47,7 @@ contract IdentityDiscountVaultTest is DiscountVaultTestBase {
         uint256 apy = 6; // APY in percentage
         uint256 principal = 50_000 * SCALE;
 
-        IDiscountVault vault = new IdentityDiscountVault(asset, depositLedger, apy);
+        IdentityDiscountVault vault = new IdentityDiscountVault(asset, depositLedger, apy);
 
         uint256 depositPeriod = 15;
         vault.setCurrentTimePeriodsElapsed(depositPeriod); // warp to deposit period
@@ -65,7 +64,7 @@ contract IdentityDiscountVaultTest is DiscountVaultTestBase {
 
         // ------------------- redeem -------------------
         vm.startPrank(alice);
-        uint256 assets = vault.redeem(shares, alice, alice);
+        uint256 assets = vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod);
 
         assertEq(principal, assets, "assets not calculated correctly");
         assertEq(0, depositLedger.balanceOf(alice, depositPeriod), "ledger not updated on redeem");

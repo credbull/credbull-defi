@@ -5,9 +5,6 @@ import { DiscountVault } from "@credbull/interest/DiscountVault.sol";
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-
 /**
  * @title IdentityDiscountVault
  * @dev DiscountVault where Assets (Principal) = Shares (Discount)
@@ -30,7 +27,7 @@ contract IdentityDiscountVault is DiscountVault {
         return SCALE;
     }
 
-    function deposit(uint256 assets, address receiver) public virtual override(ERC4626, IERC4626) returns (uint256) {
+    function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
         uint256 shares = super.deposit(assets, receiver);
 
         // update ledger as last step
@@ -39,41 +36,12 @@ contract IdentityDiscountVault is DiscountVault {
         return shares;
     }
 
-    function redeem(uint256 shares, address receiver, address owner)
-        public
-        virtual
-        override(ERC4626, IERC4626)
-        returns (uint256)
-    {
-        uint256 maxShares = maxRedeem(owner);
-        if (shares > maxShares) {
-            revert ERC4626ExceededMaxRedeem(owner, shares, maxShares);
-        }
-
-        // update ledger before redeem
-        DEPOSITS.burn(owner, getCurrentTimePeriodsElapsed(), shares);
-
+    function redeem(uint256 shares, address receiver, address owner) public virtual override returns (uint256) {
         uint256 assets = super.redeem(shares, receiver, owner);
 
+        // update ledger after redeem - make sure all checks pass
+        DEPOSITS.burn(owner, getCurrentTimePeriodsElapsed(), shares);
+
         return assets;
-    }
-
-    function withdraw(uint256 assets, address receiver, address owner)
-        public
-        virtual
-        override(ERC4626, IERC4626)
-        returns (uint256)
-    {
-        uint256 maxAssets = maxWithdraw(owner);
-        if (assets > maxAssets) {
-            revert ERC4626ExceededMaxWithdraw(owner, assets, maxAssets);
-        }
-
-        // update ledger before withdraw
-        DEPOSITS.burn(owner, getCurrentTimePeriodsElapsed(), assets);
-
-        uint256 shares = super.withdraw(assets, receiver, owner);
-
-        return shares;
     }
 }

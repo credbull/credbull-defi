@@ -13,7 +13,6 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -34,7 +33,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
 
     function deposit(uint256 assets, address receiver)
         public
-        override(IERC4626, ERC4626, IProduct)
+        override(ERC4626, IProduct)
         whenNotPaused
         returns (uint256 shares)
     {
@@ -48,7 +47,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
 
     function redeem(uint256 shares, address receiver, address owner)
         public
-        override(IERC4626, ERC4626, IProduct)
+        override(IProduct, DiscountVault)
         whenNotPaused
         returns (uint256 assets)
     {
@@ -61,10 +60,10 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
 
     function redeemAtPeriod(uint256 shares, address receiver, address owner, uint256 redeemTimePeriod)
         public
-        override(DiscountVault, IProduct)
+        override
         returns (uint256 assets)
     {
-        return DiscountVault.redeemAtPeriod(shares, receiver, owner, redeemTimePeriod);
+        return DiscountVault.redeemForImpliedDepositPeriod(shares, receiver, owner, redeemTimePeriod);
     }
 
     /**
@@ -124,7 +123,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
             revert InsufficientLockedBalanceAtPeriod(account, unlockableAmount, value, lockReleasePeriod);
         }
 
-        uint256 principalAndYieldFirstPeriod = convertToAssets(value); // principal + first period interest
+        uint256 principalAndYieldFirstPeriod = convertToAssetsForImpliedDepositPeriod(value, lockReleasePeriod); // principal + first period interest
 
         uint256 rolloverBonus = calcRolloverBonus(account, lockReleasePeriod, principalAndYieldFirstPeriod); // bonus for rolled over assets
 

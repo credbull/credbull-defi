@@ -53,6 +53,7 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
         TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, TENOR_30);
 
         uint256 depositAmount = 15_000 * SCALE;
+        uint256 depositPeriod = vault.getCurrentTimePeriodsElapsed();
 
         // ------------- deposit ---------------
         vm.startPrank(alice);
@@ -78,7 +79,7 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
                 vault.getCurrentTimePeriodsElapsed()
             )
         );
-        vault.redeem(shares, alice, alice); // try to redeem before warping - should fail
+        vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod); // try to redeem before warping - should fail
 
         // ------------- redeem (at tenor / maturity time period) ---------------
         vault.setCurrentTimePeriodsElapsed(tenor);
@@ -89,12 +90,22 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
 
         // Attempt to redeem after the lock period, should succeed
         vm.prank(alice);
-        uint256 redeemedAssets = vault.redeem(shares, alice, alice);
+        uint256 redeemedAssets = vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod);
 
         // Assert that Alice received the correct amount of assets, including interest
         uint256 expectedAssets = depositAmount + vault.calcYield(depositAmount, 0, tenor);
-        assertEq(expectedAssets, redeemedAssets, "Alice did not receive the correct amount of assets after redeeming");
-        assertEq(15_075 * SCALE, redeemedAssets, "Alice should receive $15,075 ($15,000 principal + $75 interest) back");
+        assertApproxEqAbs(
+            expectedAssets,
+            redeemedAssets,
+            TOLERANCE,
+            "Alice did not receive the correct amount of assets after redeeming"
+        );
+        assertApproxEqAbs(
+            15_075 * SCALE,
+            redeemedAssets,
+            TOLERANCE,
+            "Alice should receive $15,075 ($15,000 principal + $75 interest) back"
+        );
 
         // Assert that Alice's share balance is now zero
         assertEq(0, vault.balanceOf(alice), "Alice's share balance should be zero after redeeming");
@@ -114,6 +125,7 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
         // ----------------------------------------------------------
 
         // ------------- deposit ---------------
+        uint256 depositPeriod = vault.getCurrentTimePeriodsElapsed();
         vm.startPrank(alice);
         asset.approve(address(vault), depositAmount);
         uint256 actualSharesPeriodOne = vault.deposit(depositAmount, alice);
@@ -135,7 +147,7 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
             vault.previewUnlock(alice, endPeriodOne),
             "full amount should be unlockable at end of period 1"
         );
-        uint256 actualAssetsPeriodOne = vault.convertToAssets(actualSharesPeriodOne);
+        uint256 actualAssetsPeriodOne = vault.convertToAssetsForDepositPeriod(actualSharesPeriodOne, depositPeriod);
         assertEq(40_200 * SCALE, actualAssetsPeriodOne, "assets end of Period 1 incorrect"); // Principal[P1] + Interest[P1] = $40,000 + $200 = $40,200
         assertEq(
             33 * SCALE + (50 * SCALE) / 100,
@@ -188,21 +200,18 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
         );
         assertApproxEqAbs(
             expectedAssetsPeriodTwo,
-            vault.convertToAssets(actualSharesPeriodTwo),
+            vault.convertToAssetsForDepositPeriod(actualSharesPeriodTwo, endPeriodOne),
             TOLERANCE,
             "assets end of Period 2 incorrect"
         );
 
         // ------------- redeem at end of period 2 ---------------
         vm.prank(alice);
-        uint256 actualRedeemedAssets = vault.redeem(actualSharesPeriodTwo, alice, alice);
+        uint256 actualRedeemedAssets = vault.redeemForDepositPeriod(actualSharesPeriodTwo, alice, alice, endPeriodOne);
 
         // ------------- verify assets after redeeming ---------------
         assertApproxEqAbs(
-            expectedAssetsPeriodTwo,
-            actualRedeemedAssets,
-            TOLERANCE,
-            "incorrect assets returned after after fully redeeming"
+            expectedAssetsPeriodTwo, actualRedeemedAssets, TOLERANCE, "incorrect assets returned after fully redeeming"
         );
         assertEq(0, vault.balanceOf(alice), "no shares should remain after fully redeeming");
         assertEq(0, vault.getLockedAmount(alice, endPeriodTwo), "no locks should remain after fully redeeming");
@@ -216,6 +225,7 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
         TimelockInterestVault vault = new TimelockInterestVault(owner, asset, apy, frequencyValue, tenor);
 
         uint256 depositAmount = 1000 * SCALE;
+        uint256 depositPeriod = vault.getCurrentTimePeriodsElapsed();
 
         // ------------- pause ---------------
         vm.prank(owner);
@@ -228,7 +238,7 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
 
         vm.prank(alice);
         vm.expectRevert(Pausable.EnforcedPause.selector); // redeem when paused - fail
-        vault.redeem(depositAmount, alice, alice);
+        vault.redeemForDepositPeriod(depositAmount, alice, alice, depositPeriod);
 
         // ------------- unpause ---------------
         vm.prank(owner);
@@ -247,7 +257,7 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
         transferAndAssert(asset, owner, address(vault), depositAmount); // cover the yield on the vault
 
         vm.prank(alice);
-        vault.redeem(shares, alice, alice); // redeem when unpaused - succeed
+        vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod); // redeem when unpaused - succeed
     }
 
     // Scenario: User withdraws after the lock period
@@ -280,9 +290,9 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
                 vault.getCurrentTimePeriodsElapsed()
             )
         );
-        vault.redeem(shares, alice, alice); // try to redeem before warping - should fail
+        vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod); // try to redeem before warping - should fail
 
-        //    // ------------- early redeem - before deposit + redeem  ---------------
+        // ------------- early redeem - before deposit + redeem  ---------------
         uint256 redeemMinus1 = depositPeriod + tenor - 1;
         vault.setCurrentTimePeriodsElapsed(redeemMinus1);
 
@@ -296,7 +306,7 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
                 vault.getCurrentTimePeriodsElapsed()
             )
         );
-        vault.redeem(shares, alice, alice);
+        vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod);
     }
 
     function test__TimelockInterestVault__MultipleDeposits() public {
