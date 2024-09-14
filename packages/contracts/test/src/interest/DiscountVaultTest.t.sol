@@ -35,7 +35,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
 
         // verify interest
-        uint256 actualInterest = vault.calcYield(deposit, tenor);
+        uint256 actualInterest = vault.calcYield(deposit, 0, tenor);
         assertEq(250 * SCALE, actualInterest, "interest not correct for $50k deposit after 30 days");
 
         // verify full returns
@@ -43,7 +43,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         uint256 actualReturns = vault.convertToAssetsAtPeriod(actualShares, tenor);
         assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
 
-        testVaultAtPeriods(deposit, vault, vault.getTenor());
+        testVaultAtPeriods(deposit, vault, tenor);
     }
 
     function test__DiscountVaultTest__Monthly() public {
@@ -55,7 +55,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
 
         assertEq(0, vault.convertToShares(SCALE - 1), "convert to shares not scaled");
 
-        testVaultAtPeriods(200 * SCALE, vault, vault.getTenor());
+        testVaultAtPeriods(200 * SCALE, vault, tenor);
     }
 
     // Scenario: Calculating returns for a rolled-over investment
@@ -68,7 +68,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
 
         // verify interest
-        uint256 actualInterest = vault.calcYield(deposit, tenor);
+        uint256 actualInterest = vault.calcYield(deposit, 0, tenor);
         assertEq(250 * SCALE, actualInterest, "interest not correct for $50k deposit after 30 days");
 
         // verify full returns

@@ -5,6 +5,7 @@ import { CalcDiscounted } from "@credbull/interest/CalcDiscounted.sol";
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { IDiscountVault } from "@credbull/interest/IDiscountVault.sol";
+import { ITenorable } from "@credbull/interest/ITenorable.sol";
 
 import { IProduct } from "@credbull/interest/IProduct.sol";
 
@@ -22,7 +23,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  * @dev A vault that uses SimpleInterest and Discounting to calculate shares per asset.
  *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
  */
-contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Burnable {
+contract DiscountVault is IDiscountVault, ITenorable, CalcInterestMetadata, ERC4626, ERC20Burnable {
     using Math for uint256;
 
     uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapsed
@@ -73,8 +74,21 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
     /**
      * @notice See {CalcSimpleInterest-calcInterest}
      */
-    function calcYield(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256 interest) {
+    function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod)
+        public
+        view
+        returns (uint256 interest)
+    {
+        uint256 numTimePeriodsElapsed = toPeriod - fromPeriod;
+
         return CalcSimpleInterest.calcInterest(principal, numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY);
+    }
+
+    /**
+     * Yield for exactly tenor worth of periods
+     */
+    function calcYieldForTenorPeriods(uint256 principal) public view returns (uint256 interest) {
+        return calcYield(principal, 0, TENOR);
     }
 
     // =============== Deposit ===============
@@ -159,7 +173,7 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
 
         uint256 _principal = _convertToPrincipalAtDepositPeriod(shares, impliedNumTimePeriodsAtDeposit);
 
-        return _principal + calcYield(_principal, TENOR);
+        return _principal + calcYield(_principal, impliedNumTimePeriodsAtDeposit, numTimePeriodsElapsed);
     }
 
     /**

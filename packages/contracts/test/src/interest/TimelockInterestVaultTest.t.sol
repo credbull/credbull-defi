@@ -38,10 +38,12 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
     }
 
     function test__TimelockInterestVaultTest__Daily() public {
-        TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_12, FREQUENCY_360, TENOR_30);
+        uint256 tenor = TENOR_30;
+
+        TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_12, FREQUENCY_360, tenor);
 
         // check principal and interest calcs
-        testVaultAtPeriods(200 * SCALE, vault, vault.getTenor());
+        testVaultAtPeriods(200 * SCALE, vault, tenor);
     }
 
     // Scenario: User withdraws after the lock period
@@ -83,14 +85,14 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
 
         // give the vault enough to cover the earned interest
         vm.prank(owner);
-        transferAndAssert(asset, owner, address(vault), vault.calcYield(depositAmount, vault.getTenor()));
+        transferAndAssert(asset, owner, address(vault), vault.calcYield(depositAmount, 0, tenor));
 
         // Attempt to redeem after the lock period, should succeed
         vm.prank(alice);
         uint256 redeemedAssets = vault.redeem(shares, alice, alice);
 
         // Assert that Alice received the correct amount of assets, including interest
-        uint256 expectedAssets = depositAmount + vault.calcYield(depositAmount, tenor);
+        uint256 expectedAssets = depositAmount + vault.calcYield(depositAmount, 0, tenor);
         assertEq(expectedAssets, redeemedAssets, "Alice did not receive the correct amount of assets after redeeming");
         assertEq(15_075 * SCALE, redeemedAssets, "Alice should receive $15,075 ($15,000 principal + $75 interest) back");
 
@@ -105,7 +107,7 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
         // setup
         TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_6, FREQUENCY_360, TENOR_30);
         vm.prank(owner);
-        transferAndAssert(asset, owner, address(vault), 3 * vault.calcYield(depositAmount, tenor)); // give the vault enough to cover returns
+        transferAndAssert(asset, owner, address(vault), 3 * vault.calcYield(depositAmount, 0, tenor)); // give the vault enough to cover returns
 
         // ----------------------------------------------------------
         // ------------        Start Period 1          --------------
@@ -331,8 +333,8 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
 
         // check the total interest
         uint256 totalInterest = vault.calcTotalInterest(alice);
-        uint256 expectedInterest = vault.calcYield(depositAmount1, verifyPeriod - depositPeriod1)
-            + vault.calcYield(depositAmount2, verifyPeriod - depositPeriod2);
+        uint256 expectedInterest = vault.calcYield(depositAmount1, depositPeriod1, verifyPeriod)
+            + vault.calcYield(depositAmount2, depositPeriod2, verifyPeriod);
         assertApproxEqAbs(totalInterest, expectedInterest, TOLERANCE, "incorrect total interest earned");
     }
 }

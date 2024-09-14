@@ -177,7 +177,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
 
         uint256 principalAmount = principal.principalAmount;
 
-        uint256 interest = calcYield(principalAmount, currentTimePeriodsElapsed);
+        uint256 interest = calcYield(principalAmount, depositTimePeriod, currentTimePeriodsElapsed);
 
         return interest;
     }
@@ -194,9 +194,8 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
         uint256 totalInterest = 0;
 
         for (uint256 i = 0; i < principals.length; i++) {
-            uint256 interestPeriod = currentTimePeriodsElapsed - principals[i].depositTimePeriod;
-
-            uint256 interest = calcYield(principals[i].principalAmount, interestPeriod);
+            uint256 interest =
+                calcYield(principals[i].principalAmount, principals[i].depositTimePeriod, currentTimePeriodsElapsed);
 
             totalInterest += interest;
         }

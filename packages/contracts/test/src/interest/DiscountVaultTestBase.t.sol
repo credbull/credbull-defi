@@ -8,6 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { Test } from "forge-std/Test.sol";
+import { ITenorable } from "../../../src/interest/ITenorable.sol";
 
 abstract contract DiscountVaultTestBase is Test {
     using Math for uint256;
@@ -36,15 +37,17 @@ abstract contract DiscountVaultTestBase is Test {
         internal
         virtual
     {
+        uint256 tenor = getTenor(vault);
+
         uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed(); // save previous state for later
-        uint256 expectedAssetsAtRedeem = principal + vault.calcYield(principal, vault.getTenor());
+        uint256 expectedAssetsAtRedeem = principal + vault.calcYield(principal, 0, tenor);
 
         // ------------------- check toShares/toAssets - specified period -------------------
         uint256 sharesAtPeriod = vault.convertToSharesAtPeriod(principal, numTimePeriods);
 
         assertApproxEqAbs(
             expectedAssetsAtRedeem,
-            vault.convertToAssetsAtPeriod(sharesAtPeriod, numTimePeriods + vault.getTenor()),
+            vault.convertToAssetsAtPeriod(sharesAtPeriod, numTimePeriods + tenor),
             TOLERANCE,
             assertMsg("yield does not equal principal + interest", vault, numTimePeriods)
         );
@@ -53,7 +56,7 @@ abstract contract DiscountVaultTestBase is Test {
         vault.setCurrentTimePeriodsElapsed(numTimePeriods); // set deposit numTimePeriods
         uint256 actualShares = vault.convertToShares(principal);
 
-        vault.setCurrentTimePeriodsElapsed(numTimePeriods + vault.getTenor()); // set redeem numTimePeriods
+        vault.setCurrentTimePeriodsElapsed(numTimePeriods + tenor); // set redeem numTimePeriods
         assertApproxEqAbs(
             expectedAssetsAtRedeem,
             vault.convertToAssets(actualShares),
@@ -69,14 +72,16 @@ abstract contract DiscountVaultTestBase is Test {
         internal
         virtual
     {
+        uint256 tenor = getTenor(vault);
+
         uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
-        uint256 expectedAssetsAtRedeem = principal + vault.calcYield(principal, vault.getTenor());
+        uint256 expectedAssetsAtRedeem = principal + vault.calcYield(principal, 0, tenor);
 
         // ------------------- check previewDeposit/previewRedeem - current period -------------------
         vault.setCurrentTimePeriodsElapsed(numTimePeriods); // set deposit period prior to deposit
         uint256 actualSharesDeposit = vault.previewDeposit(principal);
 
-        vault.setCurrentTimePeriodsElapsed(numTimePeriods + vault.getTenor()); // warp to redeem / withdraw
+        vault.setCurrentTimePeriodsElapsed(numTimePeriods + tenor); // warp to redeem / withdraw
 
         // check previewRedeem
         assertApproxEqAbs(
@@ -106,6 +111,7 @@ abstract contract DiscountVaultTestBase is Test {
         uint256 numTimePeriods
     ) internal virtual {
         IERC20 asset = IERC20(vault.asset());
+        uint256 tenor = getTenor(vault);
 
         // capture state before for validations
         uint256 prevVaultTimePeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
@@ -129,32 +135,41 @@ abstract contract DiscountVaultTestBase is Test {
         );
 
         // ------------------- prep redeem -------------------
-        uint256 interest = vault.calcYield(principal, vault.getTenor());
+        uint256 expectedYield = vault.calcYield(principal, 0, tenor);
         vm.startPrank(_owner);
-        transferAndAssert(asset, _owner, address(vault), interest); // fund the vault to cover redeem
+        transferAndAssert(asset, _owner, address(vault), expectedYield); // fund the vault to cover redeem
         vm.stopPrank();
 
         // ------------------- redeem -------------------
-        vault.setCurrentTimePeriodsElapsed(numTimePeriods + vault.getTenor()); // warp the vault to redeem period
+        vault.setCurrentTimePeriodsElapsed(numTimePeriods + tenor); // warp the vault to redeem period
 
         vm.startPrank(receiver);
         uint256 assets = vault.redeem(shares, receiver, receiver);
         vm.stopPrank();
         assertApproxEqAbs(
-            prevReceiverAssetBalance + interest,
+            prevReceiverAssetBalance + expectedYield,
             asset.balanceOf(receiver),
             TOLERANCE,
             assertMsg("receiver did not receive the correct yield", vault, numTimePeriods)
         );
 
         assertApproxEqAbs(
-            principal + interest,
+            principal + expectedYield,
             assets,
             TOLERANCE,
             assertMsg("assets does not equal principal + interest", vault, numTimePeriods)
         );
 
         vault.setCurrentTimePeriodsElapsed(prevVaultTimePeriodsElapsed); // restore the vault to previous state
+    }
+
+    // represents the offset from depositPeriod to redeemPeriod, e.g.
+    // returns 30, even if deposit on day 1 or day 2
+    function getTenor(IDiscountVault vault) internal view returns (uint256 redeemTimePeriod) {
+        // TODO: change to use IERC165 - for now just assume supports ITenorable
+        ITenorable tenorable = ITenorable(address(vault));
+
+        return tenorable.getTenor();
     }
 
     function assertMsg(string memory prefix, IDiscountVault vault, uint256 numTimePeriods)
