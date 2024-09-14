@@ -24,7 +24,6 @@ library CalcSimpleInterest {
     error PrincipalLessThanScale(uint256 principal, uint256 scale);
 
     struct InterestParams {
-        uint256 principal;
         uint256 numTimePeriodsElapsed;
         uint256 interestRatePercentage;
         uint256 frequency;
@@ -59,9 +58,13 @@ library CalcSimpleInterest {
      *
      * @dev function is internal to be deployed in the same contract as caller (not a separate one)
      */
-    function calcInterest(InterestParams memory interestParams) internal pure returns (uint256 interest) {
+    function calcInterest(uint256 principal, InterestParams memory interestParams)
+        internal
+        pure
+        returns (uint256 interest)
+    {
         return calcInterest(
-            interestParams.principal,
+            principal,
             interestParams.numTimePeriodsElapsed,
             interestParams.interestRatePercentage,
             interestParams.frequency

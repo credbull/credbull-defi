@@ -41,7 +41,7 @@ contract TimelockInterestVaultTest is DiscountVaultTestBase {
         TimelockInterestVault vault = new TimelockInterestVault(owner, asset, APY_12, FREQUENCY_360, TENOR_30);
 
         // check principal and interest calcs
-        testVaultAtTenorPeriods(200 * SCALE, vault);
+        testVaultAtPeriods(200 * SCALE, vault, vault.getTenor());
     }
 
     // Scenario: User withdraws after the lock period

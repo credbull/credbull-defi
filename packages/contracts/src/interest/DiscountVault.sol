@@ -18,8 +18,8 @@ import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
- * @title SimpleInterestVault
- * @dev A vault that uses SimpleInterest to calculate shares per asset.
+ * @title DiscountVault
+ * @dev A vault that uses SimpleInterest and Discounting to calculate shares per asset.
  *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
  */
 contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Burnable {
@@ -51,9 +51,9 @@ contract DiscountVault is IDiscountVault, CalcInterestMetadata, ERC4626, ERC20Bu
      * Price represents the accrued interest over time for a Principal of 1.
      * @dev - return value is scaled as Price * SCALE.  For example: Price=1.01 and Scale=100 returns 101
      * @param numTimePeriodsElapsed The number of time periods that have elapsed.
-     * @return priceScaled The price scaled by the internal scale factor.
+     * @return price The price
      */
-    function calcPrice(uint256 numTimePeriodsElapsed) public view returns (uint256 priceScaled) {
+    function calcPrice(uint256 numTimePeriodsElapsed) public view virtual returns (uint256 price) {
         return CalcDiscounted.calcPriceFromInterest(numTimePeriodsElapsed, INTEREST_RATE, FREQUENCY, SCALE);
     }
 

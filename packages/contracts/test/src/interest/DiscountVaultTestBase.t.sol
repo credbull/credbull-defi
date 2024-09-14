@@ -18,10 +18,8 @@ abstract contract DiscountVaultTestBase is Test {
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
-    function testVaultAtTenorPeriods(uint256 principal, IDiscountVault vault) internal {
-        uint256 tenor = vault.getTenor();
-
-        uint256[5] memory numTimePeriodsElapsedArr = [0, 1, tenor - 1, tenor, tenor + 1];
+    function testVaultAtPeriods(uint256 principal, IDiscountVault vault, uint256 redeemPeriod) internal {
+        uint256[5] memory numTimePeriodsElapsedArr = [0, 1, redeemPeriod - 1, redeemPeriod, redeemPeriod + 1];
 
         // Iterate through the lock periods and calculate the principal for each
         for (uint256 i = 0; i < numTimePeriodsElapsedArr.length; i++) {

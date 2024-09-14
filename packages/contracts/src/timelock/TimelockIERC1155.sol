@@ -26,7 +26,7 @@ abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable
      * @dev Constructor to initialize the Timelock contract with an owner and lock duration.
      * @param _initialOwner The address of the contract owner.
      */
-    constructor(address _initialOwner) ERC1155("credbull.io/funds/1") Ownable(_initialOwner) { }
+    constructor(address _initialOwner) ERC1155("") Ownable(_initialOwner) { }
 
     /**
      * @notice Returns the amount of tokens currently locked for a specific account and release period.
