@@ -2,13 +2,9 @@
 pragma solidity ^0.8.23;
 
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
-import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
-
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-
 import { Test } from "forge-std/Test.sol";
-import { ITenorable } from "@credbull/interest/ITenorable.sol";
 
 abstract contract IMultiTokenVaultTestBase is Test {
     using Math for uint256;
