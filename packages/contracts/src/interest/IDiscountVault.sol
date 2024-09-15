@@ -6,7 +6,7 @@ pragma solidity ^0.8.20;
 /**
  * @dev A vault that using Principal and Discounting for asset and shares respectively
  */
-interface IDiscountVault {
+interface IYieldVault {
     /**
      * @notice Calculates the yield based on the principal and elapsed time periods.
      * @param principal The initial principal amount.

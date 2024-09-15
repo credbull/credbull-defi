@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
-import { MultiTokenVaultTestBase } from "@test/src/interest/MultiTokenVaultTestBase.t.sol";
+import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 
@@ -11,7 +11,7 @@ import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
-contract MultiTokenVaulTest is MultiTokenVaultTestBase {
+contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
     using Math for uint256;
 
     IERC20Metadata private asset;
@@ -24,7 +24,7 @@ contract MultiTokenVaulTest is MultiTokenVaultTestBase {
         asset = new SimpleUSDC(1_000_000 ether);
 
         SCALE = 10 ** asset.decimals();
-        transferAndAssert(asset, owner, alice, 100_000 * SCALE);
+        _transferAndAssert(asset, owner, alice, 100_000 * SCALE);
 
         depositLedger = new SimpleIERC1155Mintable();
     }

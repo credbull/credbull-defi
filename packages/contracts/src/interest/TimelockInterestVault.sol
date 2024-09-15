@@ -2,7 +2,7 @@
 pragma solidity ^0.8.23;
 
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
-import { DiscountVault } from "@credbull/interest/DiscountVault.sol";
+import { DiscountingVault } from "@credbull/interest/DiscountingVault.sol";
 import { TimelockIERC1155 } from "@credbull/timelock/TimelockIERC1155.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { IProduct } from "@credbull/interest/IProduct.sol";
@@ -15,9 +15,9 @@ import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IProduct {
-    constructor(DiscountVaultParams memory discountVaultParams, address initialOwner)
-        DiscountVault(discountVaultParams)
+contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, IProduct {
+    constructor(DiscountingVaultParams memory params, address initialOwner)
+        DiscountingVault(params)
         TimelockIERC1155(initialOwner)
     { }
 
@@ -59,7 +59,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
         override
         returns (uint256 assets)
     {
-        return DiscountVault.redeemForImpliedDepositPeriod(shares, receiver, owner, redeemTimePeriod);
+        return DiscountingVault._redeemForImpliedDepositPeriod(shares, receiver, owner, redeemTimePeriod);
     }
 
     /**
@@ -125,7 +125,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountVault, Pausable, IPr
             revert InsufficientLockedBalanceAtPeriod(account, unlockableAmount, value, lockReleasePeriod);
         }
 
-        uint256 principalAndYieldFirstPeriod = convertToAssetsForImpliedDepositPeriod(value, lockReleasePeriod); // principal + first period interest
+        uint256 principalAndYieldFirstPeriod = _convertToAssetsForImpliedDepositPeriod(value, lockReleasePeriod); // principal + first period interest
 
         uint256 rolloverBonus = calcRolloverBonus(account, lockReleasePeriod, principalAndYieldFirstPeriod); // bonus for rolled over assets
 

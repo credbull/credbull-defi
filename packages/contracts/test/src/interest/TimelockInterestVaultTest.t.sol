@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { DiscountVault } from "@credbull/interest/DiscountVault.sol";
+import { DiscountingVault } from "@credbull/interest/DiscountingVault.sol";
 import { TimelockInterestVault } from "@credbull/interest/TimelockInterestVault.sol";
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
@@ -9,13 +9,13 @@ import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintabl
 import { ITimelock } from "@credbull/timelock/ITimelock.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
-import { MultiTokenVaultTestBase } from "@test/src/interest/MultiTokenVaultTestBase.t.sol";
+import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
+contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
     IERC20Metadata private asset;
     IERC1155MintAndBurnable private depositLedger;
 
@@ -33,12 +33,12 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         uint256 userTokenAmount = 50_000 * SCALE;
 
         assertEq(asset.balanceOf(owner), tokenSupply, "owner should start with total supply");
-        transferAndAssert(asset, owner, alice, userTokenAmount);
-        transferAndAssert(asset, owner, bob, userTokenAmount);
+        _transferAndAssert(asset, owner, alice, userTokenAmount);
+        _transferAndAssert(asset, owner, bob, userTokenAmount);
     }
 
     function test__TimelockInterestVaultTest__Daily() public {
-        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+        DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
             depositLedger: depositLedger,
             interestRatePercentage: 12,
@@ -49,12 +49,12 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         TimelockInterestVault vault = new TimelockInterestVault(params, owner);
 
         // check principal and interest calcs
-        testVaultAtPeriods(200 * SCALE, vault, params.tenor);
+        testVaultAtPeriods(200 * SCALE, vault, 0, params.tenor);
     }
 
     // Scenario: User withdraws after the lock period
     function test__TimelockInterestVault__Deposit_Redeem() public {
-        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+        DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
             depositLedger: depositLedger,
             interestRatePercentage: 6,
@@ -98,7 +98,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
 
         // give the vault enough to cover the earned interest
         vm.prank(owner);
-        transferAndAssert(asset, owner, address(vault), vault.calcYield(depositAmount, 0, params.tenor));
+        _transferAndAssert(asset, owner, address(vault), vault.calcYield(depositAmount, 0, params.tenor));
 
         // Attempt to redeem after the lock period, should succeed
         vm.prank(alice);
@@ -124,7 +124,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
     }
 
     function test__TimelockInterestVault__Rollover_1APY_Bonus() public {
-        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+        DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
             depositLedger: depositLedger,
             interestRatePercentage: 6,
@@ -136,7 +136,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         // setup
         TimelockInterestVault vault = new TimelockInterestVault(params, owner);
         vm.prank(owner);
-        transferAndAssert(asset, owner, address(vault), 3 * vault.calcYield(depositAmount, 0, params.tenor)); // give the vault enough to cover returns
+        _transferAndAssert(asset, owner, address(vault), 3 * vault.calcYield(depositAmount, 0, params.tenor)); // give the vault enough to cover returns
 
         // ----------------------------------------------------------
         // ------------        Start Period 1          --------------
@@ -236,7 +236,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
     }
 
     function test__TimelockInterestVault__PauseAndUnPause() public {
-        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+        DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
             depositLedger: depositLedger,
             interestRatePercentage: 12,
@@ -276,7 +276,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
         // unpaused redeem
         vault.setCurrentTimePeriodsElapsed(params.tenor); // warp to redeem time
         vm.prank(owner);
-        transferAndAssert(asset, owner, address(vault), depositAmount); // cover the yield on the vault
+        _transferAndAssert(asset, owner, address(vault), depositAmount); // cover the yield on the vault
 
         vm.prank(alice);
         vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod); // redeem when unpaused - succeed
@@ -284,7 +284,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
 
     // Scenario: User withdraws after the lock period
     function test__TimelockInterestVault__Early_Redeem_Should_Fail() public {
-        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+        DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
             depositLedger: depositLedger,
             interestRatePercentage: 6,
@@ -339,7 +339,7 @@ contract TimelockInterestVaultTest is MultiTokenVaultTestBase {
     }
 
     function test__TimelockInterestVault__MultipleDeposits() public {
-        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+        DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
             depositLedger: depositLedger,
             interestRatePercentage: 6,
