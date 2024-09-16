@@ -32,21 +32,46 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
     // Scenario: Calculating returns for a standard investment
     function test__MultiTokenVaulTest__MultipleDeposits() public {
         uint256 assetToSharesRatio = 2;
-        uint256 yieldPercentage = 10;
 
-        MultiTokenVault vault = new SimpleMultiTokenVault(asset, depositLedger, assetToSharesRatio, yieldPercentage);
+        MultiTokenVault vault = new SimpleMultiTokenVault(asset, depositLedger, assetToSharesRatio, 10);
+        uint256 startingAssetBalance = asset.balanceOf(alice);
 
         uint256 deposit1Period = 10;
         uint256 deposit1Amount = 500 * SCALE;
-        uint256 deposit1Shares = testDepositOnly(alice, deposit1Amount, vault, deposit1Period);
-        assertEq(deposit1Amount / assetToSharesRatio, deposit1Shares, "deposit1 shares incorrect");
-        assertEq(deposit1Shares, vault.getSharesAtPeriod(alice, deposit1Period), "shares not at period 1");
 
+        // verify deposit - period 1
+        uint256 deposit1Shares = _testDepositOnly(alice, deposit1Amount, vault, deposit1Period);
+        assertEq(deposit1Amount / assetToSharesRatio, deposit1Shares, "deposit1 deposit shares incorrect");
+        assertEq(
+            deposit1Shares, vault.getSharesAtPeriod(alice, deposit1Period), "getSharesAtPeriod incorrect at period 1"
+        );
+
+        // verify redeem - period 1
+        uint256 deposit1Assets = _testRedeemOnly(
+            owner,
+            alice,
+            deposit1Amount,
+            vault,
+            deposit1Period,
+            deposit1Period + 100,
+            deposit1Shares,
+            startingAssetBalance
+        );
+        assertApproxEqAbs(
+            deposit1Amount + vault.calcYield(deposit1Amount, 0, 0),
+            deposit1Assets,
+            TOLERANCE,
+            "deposit1 deposit assets incorrect"
+        );
+
+        // verify deposit - period 2
         uint256 deposit2Period = 15;
         uint256 deposit2Amount = 300 * SCALE;
-        uint256 deposit2Shares = testDepositOnly(alice, deposit2Amount, vault, deposit2Period);
-        assertEq(deposit2Amount / assetToSharesRatio, deposit2Shares, "deposit2 shares incorrect");
-        assertEq(deposit2Shares, vault.getSharesAtPeriod(alice, deposit2Period), "shares not at period 2");
+        uint256 deposit2Shares = _testDepositOnly(alice, deposit2Amount, vault, deposit2Period);
+        assertEq(deposit2Amount / assetToSharesRatio, deposit2Shares, "deposit2 deposit shares incorrect");
+        assertEq(
+            deposit2Shares, vault.getSharesAtPeriod(alice, deposit2Period), "getSharesAtPeriod incorrect at period 2"
+        );
     }
 }
 
@@ -62,20 +87,22 @@ contract SimpleMultiTokenVault is MultiTokenVault {
     }
 
     function calcYield(uint256 principal, uint256, /* depositPeriod */ uint256 /* toPeriod */ )
-        external
+        public
         view
         returns (uint256 yield)
     {
         return principal * YIELD_PERCENTAGE / 100;
     }
 
-    function convertToAssetsForDepositPeriod(uint256 shares, uint256, /* depositPeriod */ uint256 /* redeemPeriod */ )
+    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
         public
         view
         override
         returns (uint256 assets)
     {
-        return shares * ASSET_TO_SHARES_RATIO;
+        uint256 principal = shares * ASSET_TO_SHARES_RATIO;
+
+        return principal + calcYield(principal, depositPeriod, redeemPeriod);
     }
 
     function convertToSharesForDepositPeriod(uint256 assets, uint256 /* depositPeriod */ )

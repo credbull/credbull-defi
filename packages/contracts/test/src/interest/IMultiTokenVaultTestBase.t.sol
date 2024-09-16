@@ -29,10 +29,11 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
     function _testVaultAtPeriod(uint256 principal, IMultiTokenVault vault, uint256 depositPeriod, uint256 redeemPeriod)
         internal
+        returns (uint256 actualSharesAtPeriod, uint256 actualAssetsAtPeriod)
     {
         testConvertToAssetAndSharesAtPeriod(principal, vault, depositPeriod, redeemPeriod); // previews only
         testPreviewDepositAndPreviewRedeem(principal, vault, depositPeriod, redeemPeriod); // previews only
-        testDepositAndRedeemAtPeriod(owner, alice, principal, vault, depositPeriod, redeemPeriod); // actual deposits/redeems
+        return testDepositAndRedeemAtPeriod(owner, alice, principal, vault, depositPeriod, redeemPeriod); // actual deposits/redeems
     }
 
     // verify convertToAssets and convertToShares.  These are a "preview" and do NOT update vault assets or shares.
@@ -41,16 +42,17 @@ abstract contract IMultiTokenVaultTestBase is Test {
         IMultiTokenVault vault,
         uint256 depositPeriod,
         uint256 redeemPeriod
-    ) internal virtual {
+    ) internal virtual returns (uint256 actualSharesAtPeriod, uint256 actualAssetsAtPeriod) {
         uint256 prevVaultPeriodsElapsed = vault.getCurrentTimePeriodsElapsed(); // save previous state for later
         uint256 expectedAssetsAtRedeem = principal + vault.calcYield(principal, depositPeriod, redeemPeriod);
 
         // ------------------- check toShares/toAssets - specified period -------------------
-        uint256 sharesAtPeriod = vault.convertToSharesForDepositPeriod(principal, depositPeriod);
+        actualAssetsAtPeriod = vault.convertToSharesForDepositPeriod(principal, depositPeriod);
+        actualAssetsAtPeriod = vault.convertToAssetsForDepositPeriod(actualAssetsAtPeriod, depositPeriod, redeemPeriod);
 
         assertApproxEqAbs(
             expectedAssetsAtRedeem,
-            vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, redeemPeriod),
+            actualAssetsAtPeriod,
             TOLERANCE,
             _assertMsg("yield does not equal principal + interest", vault, depositPeriod)
         );
@@ -68,6 +70,8 @@ abstract contract IMultiTokenVaultTestBase is Test {
         );
 
         vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed); // restore the vault to previous state
+
+        return (actualAssetsAtPeriod, actualAssetsAtPeriod);
     }
 
     // verify previewDeposit and previewRedeem.  These are a "preview" and do NOT update vault assets or shares.
@@ -76,25 +80,28 @@ abstract contract IMultiTokenVaultTestBase is Test {
         IMultiTokenVault vault,
         uint256 depositPeriod,
         uint256 redeemPeriod
-    ) internal virtual {
+    ) internal virtual returns (uint256 actualSharesAtPeriod, uint256 actualAssetsAtPeriod) {
         uint256 prevVaultPeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
         uint256 expectedAssetsAtRedeem = principal + vault.calcYield(principal, depositPeriod, redeemPeriod);
 
         // ------------------- check previewDeposit/previewRedeem - current period -------------------
         vault.setCurrentTimePeriodsElapsed(depositPeriod); // set deposit period prior to deposit
-        uint256 actualSharesDeposit = vault.previewDeposit(principal);
+        actualSharesAtPeriod = vault.previewDeposit(principal);
 
         vault.setCurrentTimePeriodsElapsed(redeemPeriod); // warp to redeem / withdrawd
+        actualAssetsAtPeriod = vault.previewRedeemForDepositPeriod(actualSharesAtPeriod, depositPeriod);
 
         // check previewRedeem
         assertApproxEqAbs(
             expectedAssetsAtRedeem,
-            vault.previewRedeemForDepositPeriod(actualSharesDeposit, depositPeriod),
+            vault.previewRedeemForDepositPeriod(actualSharesAtPeriod, depositPeriod),
             TOLERANCE,
             _assertMsg("previewDeposit/previewRedeem yield does not equal principal + interest", vault, depositPeriod)
         );
 
         vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed);
+
+        return (actualSharesAtPeriod, actualAssetsAtPeriod);
     }
 
     // verify deposit and redeem.  These update vault assets and shares.
@@ -105,7 +112,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         IMultiTokenVault vault,
         uint256 depositPeriod,
         uint256 redeemPeriod
-    ) internal virtual {
+    ) internal virtual returns (uint256 actualSharesAtPeriod, uint256 actualAssetsAtPeriod) {
         IERC20 asset = vault.getAsset();
 
         // capture state before for validations
@@ -113,42 +120,30 @@ abstract contract IMultiTokenVaultTestBase is Test {
         uint256 prevReceiverAssetBalance = asset.balanceOf(receiver);
 
         // ------------------- deposit -------------------
-        uint256 shares = testDepositOnly(receiver, principal, vault, depositPeriod);
-
-        // ------------------- prep redeem -------------------
-        uint256 expectedYield = vault.calcYield(principal, depositPeriod, redeemPeriod);
-        vm.startPrank(_owner);
-        _transferAndAssert(asset, _owner, address(vault), expectedYield); // fund the vault to cover redeem
-        vm.stopPrank();
+        uint256 _actualSharesAtPeriod = _testDepositOnly(receiver, principal, vault, depositPeriod);
 
         // ------------------- redeem -------------------
-        vault.setCurrentTimePeriodsElapsed(redeemPeriod); // warp the vault to redeem period
-
-        vm.startPrank(receiver);
-        uint256 assets = vault.redeemForDepositPeriod(shares, receiver, receiver, depositPeriod);
-        vm.stopPrank();
-        assertApproxEqAbs(
-            prevReceiverAssetBalance + expectedYield,
-            asset.balanceOf(receiver),
-            TOLERANCE,
-            _assertMsg("receiver did not receive the correct yield", vault, depositPeriod)
-        );
-
-        assertApproxEqAbs(
-            principal + expectedYield,
-            assets,
-            TOLERANCE,
-            _assertMsg("assets does not equal principal + interest", vault, depositPeriod)
+        uint256 _actualAssetsAtPeriod = _testRedeemOnly(
+            _owner,
+            receiver,
+            principal,
+            vault,
+            depositPeriod,
+            redeemPeriod,
+            _actualSharesAtPeriod,
+            prevReceiverAssetBalance
         );
 
         vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed); // restore the vault to previous state
+
+        return (_actualSharesAtPeriod, _actualAssetsAtPeriod);
     }
 
     // verify deposit and redeem.  These update vault assets and shares.
-    function testDepositOnly(address receiver, uint256 principal, IMultiTokenVault vault, uint256 depositPeriod)
+    function _testDepositOnly(address receiver, uint256 principal, IMultiTokenVault vault, uint256 depositPeriod)
         internal
         virtual
-        returns (uint256 _shares)
+        returns (uint256 actualSharesAtPeriod)
     {
         IERC20 asset = vault.getAsset();
 
@@ -163,18 +158,67 @@ abstract contract IMultiTokenVaultTestBase is Test {
             asset.balanceOf(receiver), principal, _assertMsg("not enough assets for deposit ", vault, depositPeriod)
         );
         asset.approve(address(vault), principal); // grant the vault allowance
-        uint256 shares = vault.deposit(principal, receiver); // now deposit
+        uint256 _actualSharesAtPeriod = vault.deposit(principal, receiver); // now deposit
 
         vm.stopPrank();
         assertEq(
-            prevReceiverVaultBalance + shares,
+            prevReceiverVaultBalance + _actualSharesAtPeriod,
             vault.getSharesAtPeriod(receiver, depositPeriod),
             _assertMsg("receiver did not receive the correct vault shares ", vault, depositPeriod)
         );
 
         vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed);
 
-        return shares;
+        return _actualSharesAtPeriod;
+    }
+
+    // verify deposit and redeem.  These update vault assets and shares.
+    function _testRedeemOnly(
+        address _owner,
+        address receiver,
+        uint256 principal,
+        IMultiTokenVault vault,
+        uint256 depositPeriod,
+        uint256 redeemPeriod,
+        uint256 sharesToRedeemAtPeriod,
+        uint256 prevReceiverAssetBalance // assetBalance before redeeming the latest deposit
+    ) internal virtual returns (uint256 actualAssetsAtPeriod) {
+        IERC20 asset = vault.getAsset();
+
+        uint256 prevVaultPeriodsElapsed = vault.getCurrentTimePeriodsElapsed();
+
+        // ------------------- prep redeem -------------------
+        uint256 expectedYield = vault.calcYield(principal, depositPeriod, redeemPeriod);
+        vm.startPrank(_owner);
+        _transferAndAssert(asset, _owner, address(vault), expectedYield); // fund the vault to cover redeem
+        vm.stopPrank();
+
+        // ------------------- redeem -------------------
+        vault.setCurrentTimePeriodsElapsed(redeemPeriod); // warp the vault to redeem period
+
+        vm.startPrank(receiver);
+        uint256 _actualAssetsAtPeriod =
+            vault.redeemForDepositPeriod(sharesToRedeemAtPeriod, receiver, receiver, depositPeriod);
+        vm.stopPrank();
+
+        assertApproxEqAbs(
+            principal + expectedYield,
+            _actualAssetsAtPeriod,
+            TOLERANCE,
+            _assertMsg("assets does not equal principal + yield", vault, depositPeriod)
+        );
+
+        // verify the receiver has the USDC back
+        assertApproxEqAbs(
+            prevReceiverAssetBalance + expectedYield,
+            asset.balanceOf(receiver),
+            TOLERANCE,
+            _assertMsg("receiver did not receive the correct yield", vault, depositPeriod)
+        );
+
+        vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed); // restore the vault to previous state
+
+        return _actualAssetsAtPeriod;
     }
 
     function _assertMsg(string memory prefix, IMultiTokenVault vault, uint256 numPeriods)
