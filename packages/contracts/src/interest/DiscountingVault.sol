@@ -157,13 +157,6 @@ contract DiscountingVault is MultiTokenVault, IYieldVault, ITenorable, CalcInter
         return redeemForDepositPeriod(shares, receiver, owner, impliedDepositPeriod, redeemPeriod);
     }
 
-    /**
-     * @dev See {IERC4626-previewRedeem}
-     */
-    function previewRedeem(uint256 shares) public view override returns (uint256 assets) {
-        return _convertToAssetsForImpliedDepositPeriod(shares, currentTimePeriodsElapsed);
-    }
-
     // =============== Utility===============
 
     // MUST hold that depositPeriod + TENOR = redeemPeriod

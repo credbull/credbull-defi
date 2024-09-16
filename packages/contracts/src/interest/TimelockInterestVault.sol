@@ -46,11 +46,24 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         whenNotPaused
         returns (uint256 assets)
     {
-        // First, unlock the shares if possible
+        return _redeemForImpliedDepositPeriod(shares, receiver, owner, currentTimePeriodsElapsed);
+    }
+
+    /**
+     * @dev See {IMultiTokenVault-redeemForDepositPeriod}
+     */
+    function redeemForDepositPeriod(
+        uint256 shares,
+        address receiver,
+        address owner,
+        uint256 depositPeriod,
+        uint256 redeemPeriod
+    ) public override returns (uint256 assets) {
         _unlockInternal(owner, currentTimePeriodsElapsed, shares);
 
-        // Then, redeem the shares for the corresponding amount of assets
-        return MultiTokenVault.redeem(shares, receiver, owner);
+        uint256 _assets = MultiTokenVault.redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemPeriod);
+
+        return _assets;
     }
 
     // TODO - rename in IProduct to remove this function
@@ -59,7 +72,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         override
         returns (uint256 assets)
     {
-        return DiscountingVault._redeemForImpliedDepositPeriod(shares, receiver, owner, redeemTimePeriod);
+        return _redeemForImpliedDepositPeriod(shares, receiver, owner, redeemTimePeriod);
     }
 
     /**

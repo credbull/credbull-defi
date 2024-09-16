@@ -119,10 +119,11 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
         address owner,
         uint256 depositPeriod,
         uint256 redeemPeriod
-    ) public returns (uint256 assets) {
+    ) public virtual returns (uint256 assets) {
         if (currentTimePeriodsElapsed != redeemPeriod) {
             revert IProduct.RedeemTimePeriodNotSupported(currentTimePeriodsElapsed, redeemPeriod);
         }
+
         uint256 maxShares = getSharesAtPeriod(owner, depositPeriod);
         if (shares > maxShares) {
             revert MultiTokenVault__ExceededMaxRedeem(owner, depositPeriod, shares, maxShares);
@@ -130,7 +131,11 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
 
         DEPOSITS.burn(owner, depositPeriod, shares); // deposit specific
 
-        return redeem(shares, receiver, owner); // fungible
+        // logic for fungible shares below
+        uint256 _assets = previewRedeemForDepositPeriod(shares, depositPeriod);
+        ERC4626._withdraw(_msgSender(), receiver, owner, _assets, shares);
+
+        return _assets;
     }
 
     /**
@@ -210,34 +215,47 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
     // ========================= IERC4626 =========================
 
     /**
-     * @dev Unsupported function for converting shares to assets.
+     * MUST override with logic to account for depositPeriod or revert
+     * @dev See {IERC4626-convertToAssets}
      */
-    function convertToAssets(uint256) public pure override returns (uint256) {
+    function convertToAssets(uint256) public pure override returns (uint256 /* assets */ ) {
         revert MultiTokenVault__UnsupportedFunction("convertToAssets");
     }
 
     /**
-     * @dev Unsupported function for previewing withdrawal.
+     * MUST override with logic to account for depositPeriod or revert
+     * @dev See {IERC4626-previewRedeem}
      */
-    function previewWithdraw(uint256) public pure override returns (uint256) {
+    function previewRedeem(uint256 /* shares */ ) public view virtual override returns (uint256 /* assets */ ) {
+        revert MultiTokenVault__UnsupportedFunction("previewRedeem");
+    }
+
+    /**
+     * MUST override with logic to account for depositPeriod or revert
+     * @dev See {IERC4626-redeem}
+     */
+    function redeem(uint256, /* shares */ address, /* receiver */ address /*owner*/ )
+        public
+        virtual
+        override
+        returns (uint256 /* assets */ )
+    {
+        revert MultiTokenVault__UnsupportedFunction("redeem");
+    }
+
+    /**
+     * MUST override with logic to account for depositPeriod or revert
+     * @dev See {IERC4626-previewWithdraw}
+     */
+    function previewWithdraw(uint256) public pure override returns (uint256 /* shares */ ) {
         revert MultiTokenVault__UnsupportedFunction("previewWithdraw");
     }
 
     /**
-     * @dev Unsupported function for withdrawing assets.
+     * MUST override with logic to account for depositPeriod or revert
+     * @dev See {IERC4626-withdraw}
      */
-    function withdraw(uint256, address, address) public virtual override returns (uint256) {
+    function withdraw(uint256, address, address) public pure override returns (uint256 /* shares */ ) {
         revert MultiTokenVault__UnsupportedFunction("withdraw");
-    }
-
-    /**
-     * @dev Redeems shares, using the current period as the deposit period.
-     * @param shares The number of shares to redeem.
-     * @param receiver The address to receive the redeemed assets.
-     * @param owner The address that owns the shares.
-     * @return assets The amount of assets redeemed.
-     */
-    function redeem(uint256 shares, address receiver, address owner) public virtual override returns (uint256 assets) {
-        return ERC4626.redeem(shares, receiver, owner);
     }
 }

@@ -210,8 +210,6 @@ abstract contract IMultiTokenVaultTestBase is Test {
         // ------------------- prep redeem -------------------
         uint256 expectedYield = vault.calcYield(testParams.principal, testParams.depositPeriod, testParams.redeemPeriod);
 
-        console2.log("-------------- expectedYield ------------", expectedYield);
-
         vm.startPrank(owner);
         _transferAndAssert(asset, owner, address(vault), expectedYield); // fund the vault to cover redeem
         vm.stopPrank();
@@ -223,6 +221,11 @@ abstract contract IMultiTokenVaultTestBase is Test {
         uint256 _actualAssetsAtPeriod =
             vault.redeemForDepositPeriod(sharesToRedeemAtPeriod, receiver, receiver, testParams.depositPeriod);
         vm.stopPrank();
+
+        console2.log("-- expectedYield ------------ ", expectedYield);
+        console2.log("-- principal     ------------", testParams.principal);
+        console2.log("-- sharestAtPeriod-----------", sharesToRedeemAtPeriod);
+        console2.log("-- assetsAtPeriod------------", _actualAssetsAtPeriod);
 
         assertApproxEqAbs(
             testParams.principal + expectedYield,

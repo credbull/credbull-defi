@@ -46,12 +46,15 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
 
         // verify deposit - period 1
         uint256 deposit1Shares = _testDepositOnly(alice, vault, deposit1TestParams);
-        assertEq(deposit1TestParams.principal / assetToSharesRatio, deposit1Shares, "deposit1 deposit shares incorrect");
+        assertEq(
+            deposit1TestParams.principal / assetToSharesRatio, deposit1Shares, "deposit shares incorrect at period 1"
+        );
         assertEq(
             deposit1Shares,
             vault.getSharesAtPeriod(alice, deposit1TestParams.depositPeriod),
             "getSharesAtPeriod incorrect at period 1"
         );
+        assertEq(deposit1Shares, vault.balanceOf(alice), "balance incorrect at period 1");
 
         // verify redeem - period 1
         uint256 deposit1Assets =
@@ -66,12 +69,15 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         // TODO - check this before redeeming the first period
         // verify deposit - period 2
         uint256 deposit2Shares = _testDepositOnly(alice, vault, deposit2TestParams);
-        assertEq(deposit2TestParams.principal / assetToSharesRatio, deposit2Shares, "deposit2 deposit shares incorrect");
+        assertEq(
+            deposit2TestParams.principal / assetToSharesRatio, deposit2Shares, "deposit shares incorrect at period 2"
+        );
         assertEq(
             deposit2Shares,
             vault.getSharesAtPeriod(alice, deposit2TestParams.depositPeriod),
             "getSharesAtPeriod incorrect at period 2"
         );
+        assertEq(deposit2Shares, vault.balanceOf(alice), "balance incorrect at period 2");
     }
 }
 
