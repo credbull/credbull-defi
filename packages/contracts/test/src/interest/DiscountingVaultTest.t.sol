@@ -53,7 +53,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         uint256 actualReturns = vault.convertToAssetsForDepositPeriod(actualShares, 0, params.tenor);
         assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
 
-        testVaultAtPeriods(deposit, vault, 0, params.tenor);
+        testVaultAtPeriods(vault, deposit, 0, params.tenor);
     }
 
     function test__DiscountingVaultTest__Monthly() public {
@@ -69,7 +69,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
 
         assertEq(0, vault.convertToShares(SCALE - 1), "convert to shares not scaled");
 
-        testVaultAtPeriods(200 * SCALE, vault, 0, params.tenor);
+        testVaultAtPeriods(vault, 200 * SCALE, 0, params.tenor);
     }
 
     // Scenario: Calculating returns for a rolled-over investment

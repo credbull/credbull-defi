@@ -49,7 +49,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
         TimelockInterestVault vault = new TimelockInterestVault(params, owner);
 
         // check principal and interest calcs
-        testVaultAtPeriods(200 * SCALE, vault, 0, params.tenor);
+        testVaultAtPeriods(vault, 200 * SCALE, 0, params.tenor);
     }
 
     // Scenario: User withdraws after the lock period

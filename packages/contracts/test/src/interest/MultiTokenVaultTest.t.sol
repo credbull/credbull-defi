@@ -17,6 +17,9 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
     IERC20Metadata private asset;
     IERC1155MintAndBurnable private depositLedger;
 
+    IMultiTokenVaultTestParams private deposit1TestParams;
+    IMultiTokenVaultTestParams private deposit2TestParams;
+
     uint256 internal SCALE;
 
     function setUp() public {
@@ -27,50 +30,47 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         _transferAndAssert(asset, owner, alice, 100_000 * SCALE);
 
         depositLedger = new SimpleIERC1155Mintable();
+
+        deposit1TestParams = IMultiTokenVaultTestParams({ principal: 500 * SCALE, depositPeriod: 10, redeemPeriod: 21 });
+
+        deposit2TestParams = IMultiTokenVaultTestParams({ principal: 300 * SCALE, depositPeriod: 15, redeemPeriod: 17 });
     }
 
     // Scenario: Calculating returns for a standard investment
     function test__MultiTokenVaulTest__MultipleDeposits() public {
         uint256 assetToSharesRatio = 2;
 
+        // setup
         MultiTokenVault vault = new SimpleMultiTokenVault(asset, depositLedger, assetToSharesRatio, 10);
-        uint256 startingAssetBalance = asset.balanceOf(alice);
-
-        uint256 deposit1Period = 10;
-        uint256 deposit1Amount = 500 * SCALE;
+        uint256 assetBalanceBeforeDeposits = asset.balanceOf(alice); // the asset balance from the start
 
         // verify deposit - period 1
-        uint256 deposit1Shares = _testDepositOnly(alice, deposit1Amount, vault, deposit1Period);
-        assertEq(deposit1Amount / assetToSharesRatio, deposit1Shares, "deposit1 deposit shares incorrect");
+        uint256 deposit1Shares = _testDepositOnly(alice, vault, deposit1TestParams);
+        assertEq(deposit1TestParams.principal / assetToSharesRatio, deposit1Shares, "deposit1 deposit shares incorrect");
         assertEq(
-            deposit1Shares, vault.getSharesAtPeriod(alice, deposit1Period), "getSharesAtPeriod incorrect at period 1"
+            deposit1Shares,
+            vault.getSharesAtPeriod(alice, deposit1TestParams.depositPeriod),
+            "getSharesAtPeriod incorrect at period 1"
         );
 
         // verify redeem - period 1
-        uint256 deposit1Assets = _testRedeemOnly(
-            owner,
-            alice,
-            deposit1Amount,
-            vault,
-            deposit1Period,
-            deposit1Period + 100,
-            deposit1Shares,
-            startingAssetBalance
-        );
+        uint256 deposit1Assets =
+            _testRedeemOnly(alice, vault, deposit1TestParams, deposit1Shares, assetBalanceBeforeDeposits);
         assertApproxEqAbs(
-            deposit1Amount + vault.calcYield(deposit1Amount, 0, 0),
+            deposit1TestParams.principal + vault.calcYield(deposit1TestParams.principal, 0, 0),
             deposit1Assets,
             TOLERANCE,
             "deposit1 deposit assets incorrect"
         );
 
+        // TODO - check this before redeeming the first period
         // verify deposit - period 2
-        uint256 deposit2Period = 15;
-        uint256 deposit2Amount = 300 * SCALE;
-        uint256 deposit2Shares = _testDepositOnly(alice, deposit2Amount, vault, deposit2Period);
-        assertEq(deposit2Amount / assetToSharesRatio, deposit2Shares, "deposit2 deposit shares incorrect");
+        uint256 deposit2Shares = _testDepositOnly(alice, vault, deposit2TestParams);
+        assertEq(deposit2TestParams.principal / assetToSharesRatio, deposit2Shares, "deposit2 deposit shares incorrect");
         assertEq(
-            deposit2Shares, vault.getSharesAtPeriod(alice, deposit2Period), "getSharesAtPeriod incorrect at period 2"
+            deposit2Shares,
+            vault.getSharesAtPeriod(alice, deposit2TestParams.depositPeriod),
+            "getSharesAtPeriod incorrect at period 2"
         );
     }
 }
