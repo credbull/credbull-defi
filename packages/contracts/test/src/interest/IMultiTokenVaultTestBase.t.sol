@@ -5,7 +5,6 @@ import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Test } from "forge-std/Test.sol";
-import { console2 } from "forge-std/console2.sol";
 
 abstract contract IMultiTokenVaultTestBase is Test {
     using Math for uint256;
@@ -221,11 +220,6 @@ abstract contract IMultiTokenVaultTestBase is Test {
         uint256 _actualAssetsAtPeriod =
             vault.redeemForDepositPeriod(sharesToRedeemAtPeriod, receiver, receiver, testParams.depositPeriod);
         vm.stopPrank();
-
-        console2.log("-- expectedYield ------------ ", expectedYield);
-        console2.log("-- principal     ------------", testParams.principal);
-        console2.log("-- sharestAtPeriod-----------", sharesToRedeemAtPeriod);
-        console2.log("-- assetsAtPeriod------------", _actualAssetsAtPeriod);
 
         assertApproxEqAbs(
             testParams.principal + expectedYield,

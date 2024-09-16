@@ -56,17 +56,6 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         );
         assertEq(deposit1Shares, vault.balanceOf(alice), "balance incorrect at period 1");
 
-        // verify redeem - period 1
-        uint256 deposit1Assets =
-            _testRedeemOnly(alice, vault, deposit1TestParams, deposit1Shares, assetBalanceBeforeDeposits);
-        assertApproxEqAbs(
-            deposit1TestParams.principal + vault.calcYield(deposit1TestParams.principal, 0, 0),
-            deposit1Assets,
-            TOLERANCE,
-            "deposit1 deposit assets incorrect"
-        );
-
-        // TODO - check this before redeeming the first period
         // verify deposit - period 2
         uint256 deposit2Shares = _testDepositOnly(alice, vault, deposit2TestParams);
         assertEq(
@@ -77,7 +66,30 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
             vault.getSharesAtPeriod(alice, deposit2TestParams.depositPeriod),
             "getSharesAtPeriod incorrect at period 2"
         );
-        assertEq(deposit2Shares, vault.balanceOf(alice), "balance incorrect at period 2");
+        assertEq(deposit1Shares + deposit2Shares, vault.balanceOf(alice), "balance incorrect at period 2");
+
+        // verify redeem - period 1
+        uint256 deposit1ExpectedYield = vault.calcYield(deposit1TestParams.principal, 0, 0);
+        uint256 deposit1Assets = _testRedeemOnly(
+            alice, vault, deposit1TestParams, deposit1Shares, assetBalanceBeforeDeposits - deposit2TestParams.principal
+        );
+        assertApproxEqAbs(
+            deposit1TestParams.principal + vault.calcYield(deposit1TestParams.principal, 0, 0),
+            deposit1Assets,
+            TOLERANCE,
+            "deposit1 deposit assets incorrect"
+        );
+
+        // verify redeem - period 2
+        uint256 deposit2Assets = _testRedeemOnly(
+            alice, vault, deposit2TestParams, deposit2Shares, assetBalanceBeforeDeposits + deposit1ExpectedYield
+        );
+        assertApproxEqAbs(
+            deposit2TestParams.principal + vault.calcYield(deposit2TestParams.principal, 0, 0),
+            deposit2Assets,
+            TOLERANCE,
+            "deposit2 deposit assets incorrect"
+        );
     }
 }
 
