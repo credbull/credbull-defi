@@ -44,4 +44,13 @@ contract CalcInterestTest is Test {
         uint256 actualInterestDay721 = CalcSimpleInterest.calcInterest(principal, 721, apy, frequency);
         assertEq(480_666_666, actualInterestDay721, "interest should be ~ 480.6666 at day 721");
     }
+
+    function test__CalcInterestTest_CalculatePrice() public pure {
+        uint256 apy = 12; // APY in percentage
+        uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
+
+        assertEq(1 * SCALE, CalcSimpleInterest.calcPriceFromInterest(0, apy, frequency, SCALE)); // 1 + (0.12 * 0) / 360 = 1
+        assertEq(1_000_333, CalcSimpleInterest.calcPriceFromInterest(1, apy, frequency, SCALE)); // 1 + (0.12 * 1) / 360 ≈ 1.00033
+        assertEq((101 * SCALE / 100), CalcSimpleInterest.calcPriceFromInterest(30, apy, frequency, SCALE)); // 1 + (0.12 * 30) / 360 = 1.01
+    }
 }

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.23;
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 
 /**
  * @title CalcDiscounted
@@ -22,25 +21,6 @@ import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
  */
 library CalcDiscounted {
     using Math for uint256;
-
-    /**
-     * @notice Calculates the price for a given number of periods elapsed.
-     * Price represents the accrued interest over time for a Principal of 1.
-     * @dev - return value is scaled as Price * SCALE.  For example: Price=1.01 and Scale=100 returns 101
-     * @param numTimePeriodsElapsed The number of time periods that have elapsed.
-     * @return priceScaled The price scaled by the internal scale factor.
-     */
-    function calcPriceFromInterest(
-        uint256 numTimePeriodsElapsed,
-        uint256 interestRatePercentage,
-        uint256 frequency,
-        uint256 scale
-    ) internal pure returns (uint256 priceScaled) {
-        uint256 interest =
-            CalcSimpleInterest.calcInterest(scale, numTimePeriodsElapsed, interestRatePercentage, frequency);
-
-        return scale + interest;
-    }
 
     /**
      * @notice Calculates the discounted principal by dividing the principal by the price.

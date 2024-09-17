@@ -4,12 +4,11 @@ pragma solidity ^0.8.23;
 import { CalcDiscounted } from "@credbull/interest/CalcDiscounted.sol";
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
-import { IYieldVault } from "@credbull/interest/IDiscountVault.sol";
+import { IYieldStrategy } from "@credbull/interest/IYieldStrategy.sol";
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
-import { ITenorable } from "@credbull/interest/ITenorable.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -19,7 +18,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  * @dev A vault that uses SimpleInterest and Discounting to calculate shares per asset.
  *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
  */
-contract DiscountingVault is MultiTokenVault, IYieldVault, ITenorable, CalcInterestMetadata {
+contract DiscountingVault is MultiTokenVault, IYieldStrategy, CalcInterestMetadata {
     using Math for uint256;
 
     // The number of time periods for vault redemption.
@@ -49,7 +48,7 @@ contract DiscountingVault is MultiTokenVault, IYieldVault, ITenorable, CalcInter
      * @dev See {CalcDiscounted-calcPriceFromInterest}
      */
     function calcPrice(uint256 numPeriodsElapsed) public view virtual returns (uint256 price) {
-        return CalcDiscounted.calcPriceFromInterest(numPeriodsElapsed, INTEREST_RATE, FREQUENCY, SCALE);
+        return CalcSimpleInterest.calcPriceFromInterest(numPeriodsElapsed, INTEREST_RATE, FREQUENCY, SCALE);
     }
 
     /**
@@ -58,7 +57,7 @@ contract DiscountingVault is MultiTokenVault, IYieldVault, ITenorable, CalcInter
     function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
-        override(IYieldVault, IMultiTokenVault)
+        override(IYieldStrategy, IMultiTokenVault)
         returns (uint256 yield)
     {
         uint256 numPeriodsElapsed = toPeriod - fromPeriod;

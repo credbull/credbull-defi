@@ -4,9 +4,11 @@
 pragma solidity ^0.8.20;
 
 /**
- * @dev A vault that using Principal and Discounting for asset and shares respectively
+ * @title IYieldStrategy Interface
+ * @dev Interface for calculating yield and price based on elapsed time periods.
+ * Used by Vault contracts (or similar) where returns are accrued over time.
  */
-interface IYieldVault {
+interface IYieldStrategy {
     /**
      * @notice Calculates the yield based on the principal and elapsed time periods.
      * @param principal The initial principal amount.

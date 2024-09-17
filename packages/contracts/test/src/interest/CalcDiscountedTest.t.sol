@@ -1,30 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-
 import { CalcDiscounted } from "@credbull/interest/CalcDiscounted.sol";
-import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
-
 import { Test } from "forge-std/Test.sol";
 
 contract CalcDiscountedTest is Test {
-    using Math for uint256;
-
     uint256 public constant TOLERANCE = 1; // with 6 decimals, diff of 0.000001
 
     uint256 public constant SCALE = 10 ** 6;
 
-    function test__CalcDiscounted__Calc_Price() public pure {
-        uint256 apy = 12; // APY in percentage
-        uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-
-        assertEq(1 * SCALE, CalcDiscounted.calcPriceFromInterest(0, apy, frequency, SCALE)); // 1 + (0.12 * 0) / 360 = 1
-        assertEq(1_000_333, CalcDiscounted.calcPriceFromInterest(1, apy, frequency, SCALE)); // 1 + (0.12 * 1) / 360 ≈ 1.00033
-        assertEq((101 * SCALE / 100), CalcDiscounted.calcPriceFromInterest(30, apy, frequency, SCALE)); // 1 + (0.12 * 30) / 360 = 1.01
-    }
-
-    function test__CalcDiscounted__CheckPriceZeroOneTwo() public {
+    function test__CalcDiscounted__ZeroOneTwo() public {
         uint256 principal = 1234 * SCALE;
 
         uint256 price0 = 0;

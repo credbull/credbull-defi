@@ -70,4 +70,24 @@ library CalcSimpleInterest {
             interestParams.frequency
         );
     }
+
+    /**
+     * @notice Calculates the price for a given number of periods elapsed.
+     * Price represents the accrued interest over time for a Principal of 1.
+     * @dev - return value is scaled as Price * SCALE.  For example: Price=1.01 and Scale=100 returns 101
+     * @param numTimePeriodsElapsed The number of time periods that have elapsed.
+     * @return priceScaled The price scaled by the internal scale factor.
+     */
+    function calcPriceFromInterest(
+        uint256 numTimePeriodsElapsed,
+        uint256 interestRatePercentage,
+        uint256 frequency,
+        uint256 scale
+    ) internal pure returns (uint256 priceScaled) {
+        uint256 parScaled = 1 * scale;
+
+        uint256 interest = calcInterest(parScaled, numTimePeriodsElapsed, interestRatePercentage, frequency);
+
+        return parScaled + interest;
+    }
 }
