@@ -6,7 +6,6 @@ import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.so
 import { IYieldStrategy } from "@credbull/interest/IYieldStrategy.sol";
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 
-import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
