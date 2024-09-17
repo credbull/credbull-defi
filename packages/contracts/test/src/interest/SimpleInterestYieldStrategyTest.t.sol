@@ -9,7 +9,7 @@ import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-contract FixedYielStrategyTest is Test {
+contract SimpleInterestYieldStrategyTest is Test {
     uint256 public constant TOLERANCE = 1; // with 6 decimals, diff of 0.000001
 
     uint256 public constant DECIMALS = 6;
