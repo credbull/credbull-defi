@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { ICalcInterestMetadata } from "@credbull/interest/ICalcInterestMetadata.sol";
+import { IDualRateContext } from "@credbull/interest/IDualRateContext.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 
 /**
- * @title SimpleInterestYieldStrategy
- * @dev Strategy that used SimpleInterest to calculate returns
+ * @title DualRateYieldStrategy
+ * @dev Calculates returns using different rates depending on the holding period
  */
-contract SimpleInterestYieldStrategy is IYieldStrategy {
+contract DualRateYieldStrategy is IYieldStrategy {
     /**
      * @dev See {CalcSimpleInterest-calcInterest}
      */
@@ -19,13 +19,14 @@ contract SimpleInterestYieldStrategy is IYieldStrategy {
         virtual
         returns (uint256 yield)
     {
-        ICalcInterestMetadata interestData = ICalcInterestMetadata(contextContract);
+        IDualRateContext context = IDualRateContext(contextContract);
 
         uint256 numPeriodsElapsed = toPeriod - fromPeriod;
 
-        return CalcSimpleInterest.calcInterest(
-            principal, interestData.interestRate(), numPeriodsElapsed, interestData.frequency()
-        );
+        uint256 interestRate =
+            numPeriodsElapsed == context.periodsForFullRate() ? context.fullRate() : context.reducedRate();
+
+        return CalcSimpleInterest.calcInterest(principal, interestRate, numPeriodsElapsed, context.frequency());
     }
 
     /**
@@ -37,10 +38,10 @@ contract SimpleInterestYieldStrategy is IYieldStrategy {
         virtual
         returns (uint256 price)
     {
-        ICalcInterestMetadata interestData = ICalcInterestMetadata(contextContract);
+        IDualRateContext context = IDualRateContext(contextContract);
 
         return CalcSimpleInterest.calcPriceFromInterest(
-            interestData.interestRate(), numPeriodsElapsed, interestData.frequency(), interestData.scale()
+            numPeriodsElapsed, context.fullRate(), context.frequency(), context.scale()
         );
     }
 }

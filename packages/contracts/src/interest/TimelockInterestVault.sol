@@ -125,7 +125,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         view
         returns (uint256 rolloverBonus)
     {
-        return CalcSimpleInterest.calcInterest(value, TENOR, 1, FREQUENCY);
+        return CalcSimpleInterest.calcInterest(value, 1, TENOR, FREQUENCY);
     }
 
     /**

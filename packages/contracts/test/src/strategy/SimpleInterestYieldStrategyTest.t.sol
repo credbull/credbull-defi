@@ -15,19 +15,7 @@ contract SimpleInterestYieldStrategyTest is Test {
     uint256 public constant DECIMALS = 6;
     uint256 public constant SCALE = 10 ** DECIMALS;
 
-    function test__FixedYielStrategyTest__CalculatePrice() public {
-        uint256 apy = 12; // APY in percentage
-        uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-
-        IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy();
-        address interestContractAddress = address(new CalcInterestMetadataMock(apy, frequency, DECIMALS));
-
-        assertEq(1 * SCALE, yieldStrategy.calcPrice(interestContractAddress, 0), "price wrong at period 0"); // 1 + (0.12 * 0) / 360 = 1
-        assertEq(1_000_333, yieldStrategy.calcPrice(interestContractAddress, 1), "price wrong at period 1"); // 1 + (0.12 * 1) / 360 ≈ 1.00033
-        assertEq((101 * SCALE / 100), yieldStrategy.calcPrice(interestContractAddress, 30), "price wrong at period 30"); // 1 + (0.12 * 30) / 360 = 1.01
-    }
-
-    function test__FixedYielStrategyTest__CalculatYield() public {
+    function test__SimpleInterestYieldStrategyTest__CalculatYield() public {
         uint256 apy = 6; // APY in percentage
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
@@ -62,6 +50,18 @@ contract SimpleInterestYieldStrategyTest is Test {
             TOLERANCE,
             "yield wrong at period 1 to 31 - double APY"
         );
+    }
+
+    function test__SimpleInterestYieldStrategyTestt__CalculatePrice() public {
+        uint256 apy = 12; // APY in percentage
+        uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
+
+        IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy();
+        address interestContractAddress = address(new CalcInterestMetadataMock(apy, frequency, DECIMALS));
+
+        assertEq(1 * SCALE, yieldStrategy.calcPrice(interestContractAddress, 0), "price wrong at period 0"); // 1 + (0.12 * 0) / 360 = 1
+        assertEq(1_000_333, yieldStrategy.calcPrice(interestContractAddress, 1), "price wrong at period 1"); // 1 + (0.12 * 1) / 360 ≈ 1.00033
+        assertEq((101 * SCALE / 100), yieldStrategy.calcPrice(interestContractAddress, 30), "price wrong at period 30"); // 1 + (0.12 * 30) / 360 = 1.01
     }
 }
 

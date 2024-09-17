@@ -24,8 +24,8 @@ library CalcSimpleInterest {
     error PrincipalLessThanScale(uint256 principal, uint256 scale);
 
     struct InterestParams {
-        uint256 numTimePeriodsElapsed;
         uint256 interestRatePercentage;
+        uint256 numTimePeriodsElapsed;
         uint256 frequency;
     }
 
@@ -41,8 +41,8 @@ library CalcSimpleInterest {
      */
     function calcInterest(
         uint256 principal,
-        uint256 numTimePeriodsElapsed,
         uint256 interestRatePercentage,
+        uint256 numTimePeriodsElapsed,
         uint256 frequency
     ) internal pure returns (uint256 interest) {
         uint256 _interest =
@@ -65,8 +65,8 @@ library CalcSimpleInterest {
     {
         return calcInterest(
             principal,
-            interestParams.numTimePeriodsElapsed,
             interestParams.interestRatePercentage,
+            interestParams.numTimePeriodsElapsed,
             interestParams.frequency
         );
     }
@@ -79,14 +79,14 @@ library CalcSimpleInterest {
      * @return priceScaled The price scaled by the internal scale factor.
      */
     function calcPriceFromInterest(
-        uint256 numTimePeriodsElapsed,
         uint256 interestRatePercentage,
+        uint256 numTimePeriodsElapsed,
         uint256 frequency,
         uint256 scale
     ) internal pure returns (uint256 priceScaled) {
         uint256 parScaled = 1 * scale;
 
-        uint256 interest = calcInterest(parScaled, numTimePeriodsElapsed, interestRatePercentage, frequency);
+        uint256 interest = calcInterest(parScaled, interestRatePercentage, numTimePeriodsElapsed, frequency);
 
         return parScaled + interest;
     }

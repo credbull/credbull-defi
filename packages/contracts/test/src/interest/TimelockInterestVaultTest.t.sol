@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import { DiscountingVault } from "@credbull/interest/DiscountingVault.sol";
-import { SimpleInterestYieldStrategy } from "../../../src/strategy/SimpleInterestYieldStrategy.sol";
-import { IYieldStrategy } from "../../../src/strategy/IYieldStrategy.sol";
+import { SimpleInterestYieldStrategy } from "@credbull/strategy/SimpleInterestYieldStrategy.sol";
+import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 import { TimelockInterestVault } from "@credbull/interest/TimelockInterestVault.sol";
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
