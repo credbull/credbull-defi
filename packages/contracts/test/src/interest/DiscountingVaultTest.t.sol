@@ -2,6 +2,9 @@
 pragma solidity ^0.8.23;
 
 import { DiscountingVault } from "@credbull/interest/DiscountingVault.sol";
+import { IYieldStrategy } from "@credbull/interest/IYieldStrategy.sol";
+import { SimpleInterestYieldStrategy } from "@credbull/interest/SimpleInterestYieldStrategy.sol";
+
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
 import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
@@ -16,6 +19,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
     using Math for uint256;
 
     IERC20Metadata private asset;
+    IYieldStrategy private yieldStrategy;
     IERC1155MintAndBurnable private depositLedger;
 
     uint256 internal SCALE;
@@ -27,6 +31,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         SCALE = 10 ** asset.decimals();
         _transferAndAssert(asset, owner, alice, 100_000 * SCALE);
 
+        yieldStrategy = new SimpleInterestYieldStrategy();
         depositLedger = new SimpleIERC1155Mintable();
     }
 
@@ -36,6 +41,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
 
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
+            yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
             interestRatePercentage: 6,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
@@ -59,6 +65,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
     function test__DiscountingVaultTest__Monthly() public {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
+            yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
             interestRatePercentage: 12,
             frequency: Frequencies.toValue(Frequencies.Frequency.MONTHLY),
@@ -76,6 +83,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
     function test__DiscountingVaultTest__6APY_30day_40K_and_Rollover() public {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
+            yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
             interestRatePercentage: 6,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),

@@ -18,7 +18,7 @@ contract FixedYielStrategyTest is Test {
         uint256 apy = 12; // APY in percentage
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
-        SimpleInterestYieldStrategy yieldStrategy = new SimpleInterestYieldStrategyMock(apy, frequency, DECIMALS);
+        SimpleInterestYieldStrategyMock yieldStrategy = new SimpleInterestYieldStrategyMock(apy, frequency, DECIMALS);
 
         assertEq(1 * SCALE, yieldStrategy.calcPrice(0), "price wrong at period 0"); // 1 + (0.12 * 0) / 360 = 1
         assertEq(1_000_333, yieldStrategy.calcPrice(1), "price wrong at period 1"); // 1 + (0.12 * 1) / 360 ≈ 1.00033
@@ -29,7 +29,7 @@ contract FixedYielStrategyTest is Test {
         uint256 apy = 6; // APY in percentage
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
-        SimpleInterestYieldStrategy yieldStrategy = new SimpleInterestYieldStrategyMock(apy, frequency, DECIMALS);
+        SimpleInterestYieldStrategyMock yieldStrategy = new SimpleInterestYieldStrategyMock(apy, frequency, DECIMALS);
 
         uint256 principal = 500 * SCALE;
 
@@ -46,30 +46,17 @@ contract SimpleInterestYieldStrategyMock is SimpleInterestYieldStrategy, CalcInt
         CalcInterestMetadata(interestRatePercentage, frequency, decimals)
     { }
 
-    function getFrequency()
-        public
-        view
-        override(SimpleInterestYieldStrategy, CalcInterestMetadata)
-        returns (uint256 frequency)
-    {
-        return CalcInterestMetadata.getFrequency();
+    /**
+     * @dev See {CalcDiscounted-calcPriceFromInterest}
+     */
+    function calcPrice(uint256 numPeriodsElapsed) public view virtual returns (uint256 price) {
+        return calcPrice(address(this), numPeriodsElapsed);
     }
 
-    function getInterestInPercentage()
-        public
-        view
-        override(SimpleInterestYieldStrategy, CalcInterestMetadata)
-        returns (uint256 interestRateInPercentage)
-    {
-        return CalcInterestMetadata.getInterestInPercentage();
-    }
-
-    function getScale()
-        public
-        view
-        override(SimpleInterestYieldStrategy, CalcInterestMetadata)
-        returns (uint256 scale)
-    {
-        return CalcInterestMetadata.getScale();
+    /**
+     * @dev See {CalcSimpleInterest-calcInterest}
+     */
+    function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod) public view returns (uint256 yield) {
+        return calcYield(address(this), principal, fromPeriod, toPeriod);
     }
 }

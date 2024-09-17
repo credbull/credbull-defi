@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import { CalcDiscounted } from "@credbull/interest/CalcDiscounted.sol";
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
-import { SimpleInterestYieldStrategy } from "@credbull/interest/SimpleInterestYieldStrategy.sol";
+import { IYieldStrategy } from "@credbull/interest/IYieldStrategy.sol";
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
@@ -17,15 +17,16 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  * @dev A vault that uses SimpleInterest and Discounting to calculate shares per asset.
  *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
  */
-contract DiscountingVault is MultiTokenVault, SimpleInterestYieldStrategy, CalcInterestMetadata {
+contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
     using Math for uint256;
 
-    // The number of time periods for vault redemption.
+    IYieldStrategy public immutable YIELD_STRATEGY;
     uint256 public immutable TENOR;
 
     struct DiscountingVaultParams {
         IERC20Metadata asset;
         IERC1155MintAndBurnable depositLedger;
+        IYieldStrategy yieldStrategy;
         uint256 interestRatePercentage;
         uint256 frequency;
         uint256 tenor;
@@ -38,6 +39,7 @@ contract DiscountingVault is MultiTokenVault, SimpleInterestYieldStrategy, CalcI
         MultiTokenVault(params.asset, params.depositLedger)
         CalcInterestMetadata(params.interestRatePercentage, params.frequency, params.asset.decimals())
     {
+        YIELD_STRATEGY = params.yieldStrategy;
         TENOR = params.tenor;
     }
 
@@ -49,10 +51,17 @@ contract DiscountingVault is MultiTokenVault, SimpleInterestYieldStrategy, CalcI
     function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
-        override(SimpleInterestYieldStrategy, IMultiTokenVault)
+        override
         returns (uint256 yield)
     {
-        return SimpleInterestYieldStrategy.calcYield(principal, fromPeriod, toPeriod);
+        return YIELD_STRATEGY.calcYield(address(this), principal, fromPeriod, toPeriod);
+    }
+
+    /**
+     * @dev See {CalcDiscounted-calcPriceFromInterest}
+     */
+    function calcPrice(uint256 numPeriodsElapsed) public view virtual returns (uint256 price) {
+        return YIELD_STRATEGY.calcPrice(address(this), numPeriodsElapsed);
     }
 
     /**
@@ -87,6 +96,7 @@ contract DiscountingVault is MultiTokenVault, SimpleInterestYieldStrategy, CalcI
         if (assets < SCALE) return 0; // no shares for fractional assets
 
         uint256 price = calcPrice(depositPeriod);
+
         return CalcDiscounted.calcDiscounted(assets, price, SCALE);
     }
 
@@ -152,34 +162,5 @@ contract DiscountingVault is MultiTokenVault, SimpleInterestYieldStrategy, CalcI
     // MUST hold that depositPeriod + TENOR = redeemPeriod
     function _getDepositPeriodFromRedeemPeriod(uint256 redeemPeriod) internal view returns (uint256 depositPeriod) {
         return redeemPeriod - TENOR; // TODO lucasia - should revert with type error in case TENOR > redeemPeriod
-    }
-
-    // =============== ICalcInterestMetadata ===============
-
-    function getFrequency()
-        public
-        view
-        override(SimpleInterestYieldStrategy, CalcInterestMetadata)
-        returns (uint256 frequency)
-    {
-        return CalcInterestMetadata.getFrequency();
-    }
-
-    function getInterestInPercentage()
-        public
-        view
-        override(SimpleInterestYieldStrategy, CalcInterestMetadata)
-        returns (uint256 interestRateInPercentage)
-    {
-        return CalcInterestMetadata.getInterestInPercentage();
-    }
-
-    function getScale()
-        public
-        view
-        override(SimpleInterestYieldStrategy, CalcInterestMetadata)
-        returns (uint256 scale)
-    {
-        return CalcInterestMetadata.getScale();
     }
 }

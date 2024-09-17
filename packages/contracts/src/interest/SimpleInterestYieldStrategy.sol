@@ -9,33 +9,36 @@ import { IYieldStrategy } from "@credbull/interest/IYieldStrategy.sol";
  * @title SimpleInterestYieldStrategy
  * @dev Strategy that used SimpleInterest to calculate returns
  */
-abstract contract SimpleInterestYieldStrategy is IYieldStrategy, ICalcInterestMetadata {
+contract SimpleInterestYieldStrategy is IYieldStrategy {
     /**
      * @dev See {CalcDiscounted-calcPriceFromInterest}
      */
-    function calcPrice(uint256 numPeriodsElapsed) public view virtual returns (uint256 price) {
+    function calcPrice(address dataContract, uint256 numPeriodsElapsed) public view virtual returns (uint256 price) {
+        ICalcInterestMetadata interestData = ICalcInterestMetadata(dataContract);
+
         return CalcSimpleInterest.calcPriceFromInterest(
-            numPeriodsElapsed, getInterestInPercentage(), getFrequency(), getScale()
+            numPeriodsElapsed,
+            interestData.getInterestInPercentage(),
+            interestData.getFrequency(),
+            interestData.getScale()
         );
     }
 
     /**
      * @dev See {CalcSimpleInterest-calcInterest}
      */
-    function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod)
+    function calcYield(address dataContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
         virtual
         returns (uint256 yield)
     {
+        ICalcInterestMetadata interestData = ICalcInterestMetadata(dataContract);
+
         uint256 numPeriodsElapsed = toPeriod - fromPeriod;
 
-        return CalcSimpleInterest.calcInterest(principal, numPeriodsElapsed, getInterestInPercentage(), getFrequency());
+        return CalcSimpleInterest.calcInterest(
+            principal, numPeriodsElapsed, interestData.getInterestInPercentage(), interestData.getFrequency()
+        );
     }
-
-    function getFrequency() public view virtual returns (uint256 frequency);
-
-    function getInterestInPercentage() public view virtual returns (uint256 interestRateInPercentage);
-
-    function getScale() public view virtual returns (uint256 scale);
 }

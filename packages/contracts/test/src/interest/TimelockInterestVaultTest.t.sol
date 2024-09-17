@@ -2,6 +2,8 @@
 pragma solidity ^0.8.23;
 
 import { DiscountingVault } from "@credbull/interest/DiscountingVault.sol";
+import { SimpleInterestYieldStrategy } from "@credbull/interest/SimpleInterestYieldStrategy.sol";
+import { IYieldStrategy } from "@credbull/interest/IYieldStrategy.sol";
 import { TimelockInterestVault } from "@credbull/interest/TimelockInterestVault.sol";
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
@@ -18,6 +20,7 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
     IERC20Metadata private asset;
     IERC1155MintAndBurnable private depositLedger;
+    IYieldStrategy private yieldStrategy;
 
     uint256 internal SCALE;
 
@@ -29,6 +32,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
         depositLedger = new SimpleIERC1155Mintable();
 
         SCALE = 10 ** asset.decimals();
+        yieldStrategy = new SimpleInterestYieldStrategy();
 
         uint256 userTokenAmount = 50_000 * SCALE;
 
@@ -40,6 +44,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
     function test__TimelockInterestVaultTest__Daily() public {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
+            yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
             interestRatePercentage: 12,
             frequency: 360,
@@ -56,6 +61,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
     function test__TimelockInterestVault__Deposit_Redeem() public {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
+            yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
             interestRatePercentage: 6,
             frequency: 360,
@@ -126,6 +132,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
     function test__TimelockInterestVault__Rollover_1APY_Bonus() public {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
+            yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
             interestRatePercentage: 6,
             frequency: 360,
@@ -238,6 +245,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
     function test__TimelockInterestVault__PauseAndUnPause() public {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
+            yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
             interestRatePercentage: 12,
             frequency: 360,
@@ -286,6 +294,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
     function test__TimelockInterestVault__Early_Redeem_Should_Fail() public {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
+            yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
             interestRatePercentage: 6,
             frequency: 360,
@@ -341,6 +350,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
     function test__TimelockInterestVault__MultipleDeposits() public {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
+            yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
             interestRatePercentage: 6,
             frequency: 360,
