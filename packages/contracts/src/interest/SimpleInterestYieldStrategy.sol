@@ -25,7 +25,7 @@ abstract contract SimpleInterestYieldStrategy is IYieldStrategy, ICalcInterestMe
     function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
-        override
+        virtual
         returns (uint256 yield)
     {
         uint256 numPeriodsElapsed = toPeriod - fromPeriod;
