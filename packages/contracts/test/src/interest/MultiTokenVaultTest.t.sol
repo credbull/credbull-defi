@@ -97,11 +97,14 @@ contract SimpleMultiTokenVault is MultiTokenVault {
     uint256 internal immutable ASSET_TO_SHARES_RATIO;
     uint256 internal immutable YIELD_PERCENTAGE;
 
-    constructor(IERC20Metadata asset, IERC1155MintAndBurnable depositLedger, uint256 assetToSharesRatio, uint256 yield)
-        MultiTokenVault(asset, depositLedger)
-    {
+    constructor(
+        IERC20Metadata asset,
+        IERC1155MintAndBurnable depositLedger,
+        uint256 assetToSharesRatio,
+        uint256 yieldPercentage
+    ) MultiTokenVault(asset, depositLedger) {
         ASSET_TO_SHARES_RATIO = assetToSharesRatio;
-        YIELD_PERCENTAGE = yield;
+        YIELD_PERCENTAGE = yieldPercentage;
     }
 
     function calcYield(uint256 principal, uint256, /* depositPeriod */ uint256 /* toPeriod */ )
