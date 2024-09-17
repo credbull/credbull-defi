@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.20;
 
 import { CalcDiscounted } from "@credbull/interest/CalcDiscounted.sol";
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
-import { IYieldStrategy } from "@credbull/interest/IYieldStrategy.sol";
+import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";

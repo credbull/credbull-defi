@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.20;
 
 import { DiscountingVault } from "@credbull/interest/DiscountingVault.sol";
-import { IYieldStrategy } from "@credbull/interest/IYieldStrategy.sol";
-import { SimpleInterestYieldStrategy } from "@credbull/interest/SimpleInterestYieldStrategy.sol";
+import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
+import { SimpleInterestYieldStrategy } from "@credbull/strategy/SimpleInterestYieldStrategy.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
@@ -11,13 +11,10 @@ import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTes
 import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract DiscountingVaultTest is IMultiTokenVaultTestBase {
-    using Math for uint256;
-
     IERC20Metadata private asset;
     IYieldStrategy private yieldStrategy;
     IERC1155MintAndBurnable private depositLedger;

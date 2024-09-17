@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.20;
 
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
 import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
@@ -9,11 +9,8 @@ import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintabl
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
-    using Math for uint256;
-
     IERC20Metadata private asset;
     IERC1155MintAndBurnable private depositLedger;
 

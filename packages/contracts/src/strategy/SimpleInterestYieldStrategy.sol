@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.20;
 
 import { ICalcInterestMetadata } from "@credbull/interest/ICalcInterestMetadata.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
-import { IYieldStrategy } from "@credbull/interest/IYieldStrategy.sol";
+import { IYieldStrategy } from "../strategy/IYieldStrategy.sol";
 
 /**
  * @title SimpleInterestYieldStrategy

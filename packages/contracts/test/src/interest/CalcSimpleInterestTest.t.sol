@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.20;
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
 import { Test } from "forge-std/Test.sol";
 
 contract CalcSimpleInterestTest is Test {
-    using Math for uint256;
-
     uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000005
 
     uint256 public constant SCALE = 10 ** 6;

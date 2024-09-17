@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Test } from "forge-std/Test.sol";
 
 abstract contract IMultiTokenVaultTestBase is Test {
-    using Math for uint256;
-
     uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000010
 
     address internal owner = makeAddr("owner");
