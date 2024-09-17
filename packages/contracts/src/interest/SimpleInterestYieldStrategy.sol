@@ -13,8 +13,13 @@ contract SimpleInterestYieldStrategy is IYieldStrategy {
     /**
      * @dev See {CalcDiscounted-calcPriceFromInterest}
      */
-    function calcPrice(address dataContract, uint256 numPeriodsElapsed) public view virtual returns (uint256 price) {
-        ICalcInterestMetadata interestData = ICalcInterestMetadata(dataContract);
+    function calcPrice(address contextContract, uint256 numPeriodsElapsed)
+        public
+        view
+        virtual
+        returns (uint256 price)
+    {
+        ICalcInterestMetadata interestData = ICalcInterestMetadata(contextContract);
 
         return CalcSimpleInterest.calcPriceFromInterest(
             numPeriodsElapsed,
@@ -27,13 +32,13 @@ contract SimpleInterestYieldStrategy is IYieldStrategy {
     /**
      * @dev See {CalcSimpleInterest-calcInterest}
      */
-    function calcYield(address dataContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
+    function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
         virtual
         returns (uint256 yield)
     {
-        ICalcInterestMetadata interestData = ICalcInterestMetadata(dataContract);
+        ICalcInterestMetadata interestData = ICalcInterestMetadata(contextContract);
 
         uint256 numPeriodsElapsed = toPeriod - fromPeriod;
 
