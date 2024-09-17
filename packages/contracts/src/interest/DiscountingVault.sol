@@ -22,6 +22,8 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
     IYieldStrategy public immutable YIELD_STRATEGY;
     uint256 public immutable TENOR;
 
+    error DiscountingVault__DepositPeriodNotDerivable(uint256 redeemPeriod, uint256 tenor);
+
     struct DiscountingVaultParams {
         IERC20Metadata asset;
         IERC1155MintAndBurnable depositLedger;
@@ -112,6 +114,8 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
     {
         if (shares < SCALE) return 0; // no assets for fractional shares
 
+        if (redeemPeriod < depositPeriod) return 0; // trying to redeem before depositPeriod
+
         uint256 _principal = _convertToPrincipalAtDepositPeriod(shares, depositPeriod);
 
         return _principal + calcYield(_principal, depositPeriod, redeemPeriod);
@@ -136,30 +140,14 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
         return convertToAssetsForDepositPeriod(shares, impliedDepositPeriod, redeemPeriod);
     }
 
-    /**
-     * @notice Redeems shares for assets at an implied deposit period.
-     * @param shares The number of shares to redeem.
-     * @param receiver The address receiving the assets.
-     * @param owner The address that owns the shares.
-     * @param redeemPeriod The time period at which the shares are redeemed.
-     * @return assets The number of assets transferred to the receiver.
-     */
-    function _redeemForImpliedDepositPeriod(uint256 shares, address receiver, address owner, uint256 redeemPeriod)
-        internal
-        virtual
-        returns (uint256 assets)
-    {
-        if (redeemPeriod < TENOR) return 0;
-
-        uint256 impliedDepositPeriod = _getDepositPeriodFromRedeemPeriod(redeemPeriod);
-
-        return redeemForDepositPeriod(shares, receiver, owner, impliedDepositPeriod, redeemPeriod);
-    }
-
     // =============== Utility ===============
 
     // MUST hold that depositPeriod + TENOR = redeemPeriod
     function _getDepositPeriodFromRedeemPeriod(uint256 redeemPeriod) internal view returns (uint256 depositPeriod) {
-        return redeemPeriod - TENOR; // TODO lucasia - should revert with type error in case TENOR > redeemPeriod
+        if (redeemPeriod < TENOR) {
+            revert DiscountingVault__DepositPeriodNotDerivable(redeemPeriod, TENOR); // unable to derive deposit period
+        }
+
+        return redeemPeriod - TENOR;
     }
 }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { ICalcInterestMetadata } from "@credbull/interest/ICalcInterestMetadata.sol";
 
 interface IProduct is ICalcInterestMetadata {
-    error RedeemTimePeriodNotSupported(uint256 currentPeriod, uint256 redeemPeriod);
+    error RedeemTimePeriodNotSupported(address owner, uint256 period, uint256 redeemPeriod);
 
     // ===============  Vault / Vault-like Behavior ===============
 

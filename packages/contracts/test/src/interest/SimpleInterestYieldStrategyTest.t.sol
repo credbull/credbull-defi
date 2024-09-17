@@ -3,7 +3,6 @@ pragma solidity ^0.8.23;
 
 import { IYieldStrategy } from "@credbull/interest/IYieldStrategy.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/interest/SimpleInterestYieldStrategy.sol";
-import { ICalcInterestMetadata } from "@credbull/interest/ICalcInterestMetadata.sol";
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
@@ -21,8 +20,7 @@ contract FixedYielStrategyTest is Test {
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
         IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy();
-        ICalcInterestMetadata interestMetadata = new CalcInterestMetadataMock(apy, frequency, DECIMALS);
-        address interestMetadataAddr = address(interestMetadata);
+        address interestMetadataAddr = address(new CalcInterestMetadataMock(apy, frequency, DECIMALS));
 
         assertEq(1 * SCALE, yieldStrategy.calcPrice(interestMetadataAddr, 0), "price wrong at period 0"); // 1 + (0.12 * 0) / 360 = 1
         assertEq(1_000_333, yieldStrategy.calcPrice(interestMetadataAddr, 1), "price wrong at period 1"); // 1 + (0.12 * 1) / 360 ≈ 1.00033
@@ -34,28 +32,29 @@ contract FixedYielStrategyTest is Test {
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
         IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy();
-        ICalcInterestMetadata interestMetadata = new CalcInterestMetadataMock(apy, frequency, DECIMALS);
-        address interestMetadataAddr = address(interestMetadata);
+        address interestAddr = address(new CalcInterestMetadataMock(apy, frequency, DECIMALS));
 
         uint256 principal = 500 * SCALE;
 
         assertApproxEqAbs(
-            83_333,
-            yieldStrategy.calcYield(interestMetadataAddr, principal, 0, 1),
-            TOLERANCE,
-            "yield wrong at period 0 to 1"
+            83_333, yieldStrategy.calcYield(interestAddr, principal, 0, 1), TOLERANCE, "yield wrong at period 0 to 1"
         );
         assertApproxEqAbs(
-            166_666,
-            yieldStrategy.calcYield(interestMetadataAddr, principal, 1, 3),
-            TOLERANCE,
-            "yield wrong at period 1 to 3"
+            166_666, yieldStrategy.calcYield(interestAddr, principal, 1, 3), TOLERANCE, "yield wrong at period 1 to 3"
         );
         assertApproxEqAbs(
             2_500_000,
-            yieldStrategy.calcYield(interestMetadataAddr, principal, 1, 31),
+            yieldStrategy.calcYield(interestAddr, principal, 1, 31),
             TOLERANCE,
             "yield wrong at period 1 to 31"
+        );
+
+        address interest2Addr = address(new CalcInterestMetadataMock(apy * 2, frequency, DECIMALS)); // double the interest rate
+        assertApproxEqAbs(
+            5_000_000, // yield should also double
+            yieldStrategy.calcYield(interest2Addr, principal, 1, 31),
+            TOLERANCE,
+            "yield wrong at period 1 to 31 - double APY"
         );
     }
 }

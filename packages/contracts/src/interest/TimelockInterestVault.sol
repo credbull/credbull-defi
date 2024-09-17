@@ -40,13 +40,17 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         return shares;
     }
 
+    // TODO: this is unsafe, only holds when "depositPeriod = currentPeriod - TENOR"
+    // TODO: deprecated, use redeemForDepositPeriod(...depositPeriod, redeemPeriod) instead
     function redeem(uint256 shares, address receiver, address owner)
         public
         override(IProduct, MultiTokenVault)
         whenNotPaused
         returns (uint256 assets)
     {
-        return _redeemForImpliedDepositPeriod(shares, receiver, owner, currentTimePeriodsElapsed);
+        uint256 depositPeriod = _getDepositPeriodFromRedeemPeriod(currentTimePeriodsElapsed);
+
+        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentTimePeriodsElapsed);
     }
 
     /**
@@ -66,13 +70,16 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         return _assets;
     }
 
-    // TODO - rename in IProduct to remove this function
+    // TODO: this is unsafe, only holds when "depositPeriod = currentPeriod - TENOR"
+    // TODO: deprecated, use redeemForDepositPeriod(...depositPeriod, redeemPeriod) instead
     function redeemAtPeriod(uint256 shares, address receiver, address owner, uint256 redeemTimePeriod)
         public
         override
         returns (uint256 assets)
     {
-        return _redeemForImpliedDepositPeriod(shares, receiver, owner, redeemTimePeriod);
+        uint256 depositPeriod = _getDepositPeriodFromRedeemPeriod(currentTimePeriodsElapsed);
+
+        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemTimePeriod);
     }
 
     /**

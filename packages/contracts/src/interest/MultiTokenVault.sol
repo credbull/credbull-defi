@@ -120,8 +120,13 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
         uint256 depositPeriod,
         uint256 redeemPeriod
     ) public virtual returns (uint256 assets) {
+        if (depositPeriod > redeemPeriod) {
+            revert IProduct.RedeemTimePeriodNotSupported(owner, depositPeriod, redeemPeriod);
+        }
+
+        // TODO confirm rules around which day (or days) we allow redeems
         if (currentTimePeriodsElapsed != redeemPeriod) {
-            revert IProduct.RedeemTimePeriodNotSupported(currentTimePeriodsElapsed, redeemPeriod);
+            revert IProduct.RedeemTimePeriodNotSupported(owner, currentTimePeriodsElapsed, redeemPeriod);
         }
 
         uint256 maxShares = getSharesAtPeriod(owner, depositPeriod);

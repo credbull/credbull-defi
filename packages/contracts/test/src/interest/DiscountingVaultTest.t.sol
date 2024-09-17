@@ -103,4 +103,52 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         uint256 actualReturns = vault.convertToAssetsForDepositPeriod(actualShares, 0, params.tenor);
         assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
     }
+
+    // Scenario: Calculating returns for a rolled-over investment
+    function test__DiscountingVaultTest__ShouldRevertIfRedeemBeforeTenor() public {
+        DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
+            asset: asset,
+            yieldStrategy: yieldStrategy,
+            depositLedger: depositLedger,
+            interestRatePercentage: 6,
+            frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            tenor: 30
+        });
+
+        uint256 deposit = 100 * SCALE;
+        DiscountingVaultForTest vault = new DiscountingVaultForTest(params);
+
+        // check redeemPeriod > depositPeriod
+        uint256 invalidRedeemPeriod = params.tenor - 1;
+        assertEq(
+            0,
+            vault.convertToAssetsForImpliedDepositPeriod(deposit, invalidRedeemPeriod),
+            "no assets if redeemPeriod < tenor"
+        );
+
+        // redeem before tenor - unable to derive deposit
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DiscountingVault.DiscountingVault__DepositPeriodNotDerivable.selector, invalidRedeemPeriod, params.tenor
+            )
+        );
+        vault.getDepositPeriodFromRedeemPeriod(invalidRedeemPeriod);
+    }
+}
+
+contract DiscountingVaultForTest is DiscountingVault {
+    constructor(DiscountingVaultParams memory params) DiscountingVault(params) { }
+
+    function convertToAssetsForImpliedDepositPeriod(uint256 shares, uint256 redeemPeriod)
+        public
+        view
+        returns (uint256 assets)
+    {
+        return super._convertToAssetsForImpliedDepositPeriod(shares, redeemPeriod);
+    }
+
+    // MUST hold that depositPeriod + TENOR = redeemPeriod
+    function getDepositPeriodFromRedeemPeriod(uint256 redeemPeriod) public view returns (uint256 depositPeriod) {
+        return super._getDepositPeriodFromRedeemPeriod(redeemPeriod);
+    }
 }
