@@ -108,29 +108,33 @@ contract DualRateYieldStrategyTest is Test {
 }
 
 contract DualRateContextMock is CalcInterestMetadata, IDualRateContext {
-    uint256 public reducedRatePercentage; // IR as %, e.g. 15 for 15% (or 0.15)
+    uint256 public reducedRateInPercentageScaled;
     uint256 public immutable TENOR;
 
-    constructor(uint256 _fullRate, uint256 _reducedRatePercentage, uint256 _frequency, uint256 _tenor, uint256 decimals)
-        CalcInterestMetadata(_fullRate, _frequency, decimals)
-    {
+    constructor(
+        uint256 _fullRateInPercentageScaled,
+        uint256 _reducedRateInPercentageScaled,
+        uint256 _frequency,
+        uint256 _tenor,
+        uint256 decimals
+    ) CalcInterestMetadata(_fullRateInPercentageScaled, _frequency, decimals) {
         TENOR = _tenor;
-        reducedRatePercentage = _reducedRatePercentage;
+        reducedRateInPercentageScaled = _reducedRateInPercentageScaled;
     }
 
-    function fullRate() public view returns (uint256 rateInPercentage) {
-        return INTEREST_RATE;
+    function fullRateScaled() public view returns (uint256 _fullRateInPercentageScaled) {
+        return RATE_PERCENT_SCALED;
     }
 
-    function reducedRate() public view returns (uint256 rateInPercentage) {
-        return reducedRatePercentage;
+    function reducedRateScaled() public view returns (uint256 _reducedRateInPercentageScaled) {
+        return reducedRateInPercentageScaled;
     }
 
-    function setReducedRate(uint256 _reducedRatePercentage) public {
-        reducedRatePercentage = _reducedRatePercentage;
+    function setReducedRate(uint256 _reducedRateInPercentageScaled) public {
+        reducedRateInPercentageScaled = _reducedRateInPercentageScaled;
     }
 
-    function periodsForFullRate() public view returns (uint256 numPeriods) {
+    function numPeriodsForFullRate() public view returns (uint256 numPeriods) {
         return TENOR;
     }
 }

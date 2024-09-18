@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 /**
- * @dev extension to the Interest Interface to add metadata
+ * @dev Metadata required for Interest calculations
  */
 interface ICalcInterestMetadata {
     /**
@@ -12,13 +12,13 @@ interface ICalcInterestMetadata {
     function frequency() external view returns (uint256 frequency);
 
     /**
-     * @notice Returns the annual interest rate as a percentage.
-     * @return interestRateInPercentage The interest rate as a percentage.
+     * @notice Returns the annual interest rate as a percentage * scale
+     * @return rateInPercentageScaled The interest rate as a percentage * SCALE (e.g. "15_000" for 15% * scale[1e3])
      */
-    function interestRate() external view returns (uint256 interestRateInPercentage);
+    function rateScaled() external view returns (uint256 rateInPercentageScaled);
 
     /**
-     * @notice Returns the scale factor for internal calculations (e.g., 10^18 for 18 decimals).
+     * @notice Returns the scale factor for internal calculations (e.g., 1e18 for 18 decimals).
      * @return scale The scale factor.
      */
     function scale() external view returns (uint256 scale);

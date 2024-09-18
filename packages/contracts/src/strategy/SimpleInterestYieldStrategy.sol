@@ -7,7 +7,7 @@ import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 
 /**
  * @title SimpleInterestYieldStrategy
- * @dev Strategy that used SimpleInterest to calculate returns
+ * @dev Strategy where returns are calculated using SimpleInterest
  */
 contract SimpleInterestYieldStrategy is IYieldStrategy {
     /**
@@ -24,12 +24,12 @@ contract SimpleInterestYieldStrategy is IYieldStrategy {
         uint256 numPeriodsElapsed = toPeriod - fromPeriod;
 
         return CalcSimpleInterest.calcInterest(
-            principal, interestData.interestRate(), numPeriodsElapsed, interestData.frequency(), interestData.scale()
+            principal, interestData.rateScaled(), numPeriodsElapsed, interestData.frequency(), interestData.scale()
         );
     }
 
     /**
-     * @dev See {CalcDiscounted-calcPriceFromInterest}
+     * @dev See {CalcSimpleInterest-calcPriceFromInterest}
      */
     function calcPrice(address contextContract, uint256 numPeriodsElapsed)
         public
@@ -40,7 +40,7 @@ contract SimpleInterestYieldStrategy is IYieldStrategy {
         ICalcInterestMetadata interestData = ICalcInterestMetadata(contextContract);
 
         return CalcSimpleInterest.calcPriceFromInterest(
-            interestData.interestRate(), numPeriodsElapsed, interestData.frequency(), interestData.scale()
+            interestData.rateScaled(), numPeriodsElapsed, interestData.frequency(), interestData.scale()
         );
     }
 }

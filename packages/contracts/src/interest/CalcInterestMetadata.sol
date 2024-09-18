@@ -6,16 +6,16 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title CalcInterestParams
- * @dev This contract contains the state to implement ICalcInterestMetadata
+ * @dev Sate to implement ICalcInterestMetadata
  */
 abstract contract CalcInterestMetadata is ICalcInterestMetadata {
-    uint256 public immutable INTEREST_RATE; // IR as %, e.g. 15 for 15% (or 0.15)
+    uint256 public immutable RATE_PERCENT_SCALED; // IR as % * SCALE, e.g. "15_000" for 15% * scale[1e3]
     uint256 public immutable FREQUENCY;
 
     uint256 public immutable SCALE;
 
-    constructor(uint256 _interestRatePercentage, uint256 _frequency, uint256 _decimals) {
-        INTEREST_RATE = _interestRatePercentage;
+    constructor(uint256 _ratePercentageScaled, uint256 _frequency, uint256 _decimals) {
+        RATE_PERCENT_SCALED = _ratePercentageScaled;
         FREQUENCY = _frequency;
         SCALE = 10 ** _decimals;
     }
@@ -30,10 +30,10 @@ abstract contract CalcInterestMetadata is ICalcInterestMetadata {
 
     /**
      * @notice Returns the annual interest rate as a percentage.
-     * @return _interestRatePercentage The interest rate as a percentage.
+     * @return _ratePercentageScaled The interest rate as a percentage * scale
      */
-    function interestRate() public view virtual returns (uint256 _interestRatePercentage) {
-        return INTEREST_RATE;
+    function rateScaled() public view virtual returns (uint256 _ratePercentageScaled) {
+        return RATE_PERCENT_SCALED;
     }
 
     /**
@@ -47,11 +47,11 @@ abstract contract CalcInterestMetadata is ICalcInterestMetadata {
     function toString() public view returns (string memory) {
         return string.concat(
             " CalcInterest [ ",
-            " IR = ",
-            Strings.toString(INTEREST_RATE),
-            " Frequency = ",
+            " rate: ",
+            Strings.toString(RATE_PERCENT_SCALED),
+            " frequency: ",
             Strings.toString(FREQUENCY),
-            " Scale = ",
+            " scale: ",
             Strings.toString(SCALE),
             " ] "
         );
