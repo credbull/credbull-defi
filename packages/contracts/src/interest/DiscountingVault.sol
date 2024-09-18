@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { CalcDiscounted } from "@credbull/interest/CalcDiscounted.sol";
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
-import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
+import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
 
@@ -26,7 +26,7 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
 
     struct DiscountingVaultParams {
         IERC20Metadata asset;
-        IERC1155MintAndBurnable depositLedger;
+        IERC5679Ext1155 depositLedger;
         IYieldStrategy yieldStrategy;
         uint256 interestRatePercentageScaled;
         uint256 frequency;

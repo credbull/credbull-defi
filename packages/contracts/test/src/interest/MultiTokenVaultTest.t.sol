@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
 import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
-import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
+import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
@@ -12,7 +12,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 
 contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
     IERC20Metadata private asset;
-    IERC1155MintAndBurnable private depositLedger;
+    IERC5679Ext1155 private depositLedger;
 
     IMultiTokenVaultTestParams private deposit1TestParams;
     IMultiTokenVaultTestParams private deposit2TestParams;
@@ -96,7 +96,7 @@ contract SimpleMultiTokenVault is MultiTokenVault {
 
     constructor(
         IERC20Metadata asset,
-        IERC1155MintAndBurnable depositLedger,
+        IERC5679Ext1155 depositLedger,
         uint256 assetToSharesRatio,
         uint256 yieldPercentage
     ) MultiTokenVault(asset, depositLedger) {

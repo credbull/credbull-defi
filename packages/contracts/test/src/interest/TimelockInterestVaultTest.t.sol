@@ -5,7 +5,7 @@ import { DiscountingVault } from "@credbull/interest/DiscountingVault.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/strategy/SimpleInterestYieldStrategy.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 import { TimelockInterestVault } from "@credbull/interest/TimelockInterestVault.sol";
-import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
+import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 
 import { ITimelock } from "@credbull/timelock/ITimelock.sol";
@@ -19,7 +19,7 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
     IERC20Metadata private asset;
-    IERC1155MintAndBurnable private depositLedger;
+    IERC5679Ext1155 private depositLedger;
     IYieldStrategy private yieldStrategy;
 
     uint256 internal SCALE;

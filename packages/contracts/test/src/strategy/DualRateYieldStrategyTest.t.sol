@@ -88,7 +88,7 @@ contract DualRateYieldStrategyTest is Test {
             "fullyAPY yield wrong at deposit + TENOR days"
         );
 
-        // TODO MultiToken Scenario S4: User deposits 1000 USDC and redeems the Principal after maturity (covers 2 scenarios)
+        // TODO MultiToken Scenario S4: User deposits 1000 USDC and redeems the Principal after maturity
         // TODO TimeLock: Scenario S5: User tries to redeem the APY the same day they request redemption
         // TODO TimeLock: Scenario S6: User tries to redeem the Principal the same day they request redemption
 

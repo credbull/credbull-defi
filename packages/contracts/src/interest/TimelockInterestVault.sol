@@ -100,7 +100,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
 
             TimelockIERC1155._lockInternal(account, currentTimePeriodsElapsed, deficientValue); // mint from ERC1155 (Timelock)
             ERC20._mint(account, deficientValue); // mint from ER20/ERC4626 (Vault)
-            DEPOSITS.mint(account, impliedDepositPeriod, deficientValue, ""); // mint from ER20/ERC4626 (Deposit Ledger)
+            DEPOSITS.safeMint(account, impliedDepositPeriod, deficientValue, ""); // mint from ER20/ERC4626 (Deposit Ledger)
         }
 
         // case where the Shares[P1] for first period are GREATER than Shares[P2], e.g. due to Discounting
@@ -110,12 +110,12 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
             ERC1155._burn(account, lockReleasePeriod, excessValue); // burn from ERC1155 (Timelock)
 
             ERC20._burn(account, excessValue); // burn from ERC20/ERC4626 (Vault)
-            DEPOSITS.burn(account, impliedDepositPeriod, excessValue); // burn from ER20/ERC4626 (Deposit Ledger)
+            DEPOSITS.burn(account, impliedDepositPeriod, excessValue, _emptyBytesArray()); // burn from ER20/ERC4626 (Deposit Ledger)
         }
 
         // now move the shares to the new period
-        DEPOSITS.burn(account, impliedDepositPeriod, sharesForNextPeriod);
-        DEPOSITS.mint(account, currentTimePeriodsElapsed, sharesForNextPeriod, "");
+        DEPOSITS.burn(account, impliedDepositPeriod, sharesForNextPeriod, _emptyBytesArray());
+        DEPOSITS.safeMint(account, currentTimePeriodsElapsed, sharesForNextPeriod, "");
 
         TimelockIERC1155.rolloverUnlocked(account, lockReleasePeriod, sharesForNextPeriod);
     }

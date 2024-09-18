@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
-import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
+import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 import { IProduct } from "@credbull/interest/IProduct.sol";
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -22,7 +22,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
     using Math for uint256;
 
-    IERC1155MintAndBurnable public immutable DEPOSITS;
+    IERC5679Ext1155 public immutable DEPOSITS;
     uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapsed
 
     error MultiTokenVault__UnsupportedFunction(string functionName);
@@ -33,7 +33,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
      * @param asset The ERC20 token that represents the underlying asset.
      * @param depositLedger The ledger contract managing deposits.
      */
-    constructor(IERC20Metadata asset, IERC1155MintAndBurnable depositLedger)
+    constructor(IERC20Metadata asset, IERC5679Ext1155 depositLedger)
         ERC4626(asset)
         ERC20("Multi Token Vault", "cMTV")
     {
@@ -84,7 +84,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
         returns (uint256)
     {
         uint256 shares = super.deposit(assets, receiver);
-        DEPOSITS.mint(receiver, getCurrentTimePeriodsElapsed(), shares, "");
+        DEPOSITS.safeMint(receiver, getCurrentTimePeriodsElapsed(), shares, "");
         return shares;
     }
 
@@ -134,7 +134,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
             revert MultiTokenVault__ExceededMaxRedeem(owner, depositPeriod, shares, maxShares);
         }
 
-        DEPOSITS.burn(owner, depositPeriod, shares); // deposit specific
+        DEPOSITS.burn(owner, depositPeriod, shares, _emptyBytesArray()); // deposit specific
 
         // logic for fungible shares below
         uint256 _assets = previewRedeemForDepositPeriod(shares, depositPeriod);
@@ -215,6 +215,10 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
      */
     function _update(address from, address to, uint256 value) internal virtual override {
         ERC20._update(from, to, value);
+    }
+
+    function _emptyBytesArray() internal pure returns (bytes[] memory) {
+        return new bytes[](0);
     }
 
     // ========================= IERC4626 =========================

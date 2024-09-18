@@ -8,7 +8,7 @@ import { SimpleInterestYieldStrategy } from "@credbull/strategy/SimpleInterestYi
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
 import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
-import { IERC1155MintAndBurnable } from "@credbull/interest/IERC1155MintAndBurnable.sol";
+import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
@@ -17,7 +17,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 contract DiscountingVaultTest is IMultiTokenVaultTestBase {
     IERC20Metadata private asset;
     IYieldStrategy private yieldStrategy;
-    IERC1155MintAndBurnable private depositLedger;
+    IERC5679Ext1155 private depositLedger;
 
     uint256 internal SCALE;
 
