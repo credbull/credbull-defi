@@ -24,7 +24,7 @@ contract SimpleInterestYieldStrategy is IYieldStrategy {
         uint256 numPeriodsElapsed = toPeriod - fromPeriod;
 
         return CalcSimpleInterest.calcInterest(
-            principal, interestData.interestRate(), numPeriodsElapsed, interestData.frequency()
+            principal, interestData.interestRate(), numPeriodsElapsed, interestData.frequency(), interestData.scale()
         );
     }
 

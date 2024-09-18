@@ -24,16 +24,17 @@ library CalcSimpleInterest {
     error PrincipalLessThanScale(uint256 principal, uint256 scale);
 
     struct InterestParams {
-        uint256 interestRatePercentage;
+        uint256 interestRatePercentScaled;
         uint256 numTimePeriodsElapsed;
         uint256 frequency;
+        uint256 scale;
     }
 
     /**
      * @notice Calculate SimpleInterest (without compounding)
      * @param principal The initial principal amount.
      * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
-     * @param interestRatePercentage The interest rate as a percentage.
+     * @param interestRatePercentScaled The interest rate percent * scale, e.g. 5% * 1e3 = 5000
      * @param frequency The frequency of interest application
      * @return interest The interest amount.
      *
@@ -41,12 +42,14 @@ library CalcSimpleInterest {
      */
     function calcInterest(
         uint256 principal,
-        uint256 interestRatePercentage,
+        uint256 interestRatePercentScaled,
         uint256 numTimePeriodsElapsed,
-        uint256 frequency
+        uint256 frequency,
+        uint256 scale
     ) internal pure returns (uint256 interest) {
-        uint256 _interest =
-            principal.mulDiv(interestRatePercentage * numTimePeriodsElapsed, frequency * 100, Math.Rounding.Floor);
+        uint256 _interest = principal.mulDiv(
+            interestRatePercentScaled * numTimePeriodsElapsed, frequency * scale * 100, Math.Rounding.Floor
+        );
 
         return _interest;
     }
@@ -65,9 +68,10 @@ library CalcSimpleInterest {
     {
         return calcInterest(
             principal,
-            interestParams.interestRatePercentage,
+            interestParams.interestRatePercentScaled,
             interestParams.numTimePeriodsElapsed,
-            interestParams.frequency
+            interestParams.frequency,
+            interestParams.scale
         );
     }
 
@@ -79,14 +83,14 @@ library CalcSimpleInterest {
      * @return priceScaled The price scaled by the internal scale factor.
      */
     function calcPriceFromInterest(
-        uint256 interestRatePercentage,
+        uint256 interestRatePercentScaled,
         uint256 numTimePeriodsElapsed,
         uint256 frequency,
         uint256 scale
     ) internal pure returns (uint256 priceScaled) {
         uint256 parScaled = 1 * scale;
 
-        uint256 interest = calcInterest(parScaled, interestRatePercentage, numTimePeriodsElapsed, frequency);
+        uint256 interest = calcInterest(parScaled, interestRatePercentScaled, numTimePeriodsElapsed, frequency, scale);
 
         return parScaled + interest;
     }

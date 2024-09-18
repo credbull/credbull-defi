@@ -19,8 +19,8 @@ contract DualRateYieldStrategyTest is Test {
     uint256 public constant SCALE = 10 ** DECIMALS;
 
     function test__MultiRateYieldStrategy__CalculatYield() public {
-        uint256 fullAPY = 10;
-        uint256 reducedAPY = 5;
+        uint256 fullAPY = 10 * SCALE;
+        uint256 reducedAPY = 5 * SCALE;
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
         uint256 tenor = 30;
 
@@ -33,7 +33,7 @@ contract DualRateYieldStrategyTest is Test {
 
         // check tenor period
         assertApproxEqAbs(
-            CalcSimpleInterest.calcInterest(principal, fullAPY, tenor, frequency),
+            CalcSimpleInterest.calcInterest(principal, fullAPY, tenor, frequency, SCALE),
             yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod + tenor),
             TOLERANCE,
             "yield wrong at fullTenor period"
@@ -42,7 +42,7 @@ contract DualRateYieldStrategyTest is Test {
         // check outside tenor period
         uint256 partialPeriodDays = 20;
         assertApproxEqAbs(
-            CalcSimpleInterest.calcInterest(principal, reducedAPY, partialPeriodDays, frequency),
+            CalcSimpleInterest.calcInterest(principal, reducedAPY, partialPeriodDays, frequency, SCALE),
             yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod + partialPeriodDays),
             TOLERANCE,
             "yield wrong at partialTenor period"
@@ -50,8 +50,8 @@ contract DualRateYieldStrategyTest is Test {
     }
 
     function test__MultiRateYieldStrategy__SuccessCriteria() public {
-        uint256 fullAPY = 10;
-        uint256 reducedAPY = 5;
+        uint256 fullAPY = 10 * SCALE;
+        uint256 reducedAPY = 5 * SCALE;
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
         uint256 tenor = 30;
 
@@ -97,10 +97,9 @@ contract DualRateYieldStrategyTest is Test {
         // And the T-Bill Rate for the second cycle is 5.5%
         // TODO lucasia - need to scale interest in code base
         // TODO lucasia - confirm with Pedro/Jehan fullRate rule.  is it > tenorPeriod or >= tenorPeriod
-        dualRateContext.setReducedRate(6); // temp rule - with 6% before scaling interest rate
+        dualRateContext.setReducedRate(55 * SCALE / 10);
         assertApproxEqAbs(
-            10_684_931, // Full[30]+Reduced[15] = 8.2191781 + ($1,000 * 0.6 * 15/365) = 8.2191781 + 2.4657534 = 10.6849315 // 6% reducedRate
-            //          10_479_452, // Full[30]+Reduced[15] = 8.2191781 + ($1,000 * 0.55 * 15/365) = 8.2191781 + 2.2602740 = 10.4794521 // 5.5% reducedRate
+            10_479_452, // Full[30]+Reduced[15] = 8.2191781 + ($1,000 * 0.55 * 15/365) = 8.2191781 + 2.2602740 = 10.4794521 // 5.5% reducedRate
             yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod + 45),
             TOLERANCE,
             "yield wrong at deposit + 45 days"

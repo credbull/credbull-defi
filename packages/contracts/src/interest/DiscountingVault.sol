@@ -28,7 +28,7 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
         IERC20Metadata asset;
         IERC1155MintAndBurnable depositLedger;
         IYieldStrategy yieldStrategy;
-        uint256 interestRatePercentage;
+        uint256 interestRatePercentageScaled;
         uint256 frequency;
         uint256 tenor;
     }
@@ -38,7 +38,7 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
      */
     constructor(DiscountingVaultParams memory params)
         MultiTokenVault(params.asset, params.depositLedger)
-        CalcInterestMetadata(params.interestRatePercentage, params.frequency, params.asset.decimals())
+        CalcInterestMetadata(params.interestRatePercentageScaled, params.frequency, params.asset.decimals())
     {
         YIELD_STRATEGY = params.yieldStrategy;
         TENOR = params.tenor;

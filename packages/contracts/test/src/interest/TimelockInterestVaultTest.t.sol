@@ -46,7 +46,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
             asset: asset,
             yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
-            interestRatePercentage: 12,
+            interestRatePercentageScaled: 12 * SCALE,
             frequency: 360,
             tenor: 30
         });
@@ -63,7 +63,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
             asset: asset,
             yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
-            interestRatePercentage: 6,
+            interestRatePercentageScaled: 6 * SCALE,
             frequency: 360,
             tenor: 30
         });
@@ -134,7 +134,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
             asset: asset,
             yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
-            interestRatePercentage: 6,
+            interestRatePercentageScaled: 6 * SCALE,
             frequency: 360,
             tenor: 30
         });
@@ -247,7 +247,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
             asset: asset,
             yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
-            interestRatePercentage: 12,
+            interestRatePercentageScaled: 12 * SCALE,
             frequency: 360,
             tenor: 30
         });
@@ -296,7 +296,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
             asset: asset,
             yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
-            interestRatePercentage: 6,
+            interestRatePercentageScaled: 6 * SCALE,
             frequency: 360,
             tenor: 30
         });
@@ -352,7 +352,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
             asset: asset,
             yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
-            interestRatePercentage: 6,
+            interestRatePercentageScaled: 6 * SCALE,
             frequency: 360,
             tenor: 30
         });

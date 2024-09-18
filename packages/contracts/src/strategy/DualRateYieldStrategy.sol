@@ -23,14 +23,16 @@ contract DualRateYieldStrategy is IYieldStrategy {
 
         uint256 numPeriodsElapsed = toPeriod - fromPeriod;
 
-        uint256 fullRatePeriodsElapsed = _fullRatePeriodsElapsed(context.periodsForFullRate(), numPeriodsElapsed);
+        uint256 numFullRatePeriodsElapsed = _numFullRatePeriodsElapsed(context.periodsForFullRate(), numPeriodsElapsed);
 
-        uint256 fullRateInterest =
-            CalcSimpleInterest.calcInterest(principal, context.fullRate(), fullRatePeriodsElapsed, context.frequency());
+        uint256 fullRateInterest = CalcSimpleInterest.calcInterest(
+            principal, context.fullRate(), numFullRatePeriodsElapsed, context.frequency(), context.scale()
+        );
 
-        uint256 reducedRatePeriodsElapsed = numPeriodsElapsed - fullRatePeriodsElapsed;
+        uint256 numReducedRatePeriodsElapsed = numPeriodsElapsed - numFullRatePeriodsElapsed;
+
         uint256 reducedRateInterest = CalcSimpleInterest.calcInterest(
-            principal, context.reducedRate(), reducedRatePeriodsElapsed, context.frequency()
+            principal, context.reducedRate(), numReducedRatePeriodsElapsed, context.frequency(), context.scale()
         );
 
         return fullRateInterest + reducedRateInterest;
@@ -55,13 +57,13 @@ contract DualRateYieldStrategy is IYieldStrategy {
     /**
      * @dev See {CalcDiscounted-calcPriceFromInterest}
      */
-    function _fullRatePeriodsElapsed(uint256 periodsForFullRate, uint256 numPeriodsElapsed)
+    function _numFullRatePeriodsElapsed(uint256 periodsForFullRate, uint256 numPeriodsElapsed)
         internal
-        view
-        returns (uint256 _fullRatePeriodsElapsed)
+        pure
+        returns (uint256 numFullRatePeriodsElapsed)
     {
-        uint256 fullRatePeriods = numPeriodsElapsed / periodsForFullRate; // integer division - will only get "whole" fullPeriods
+        uint256 numFullRatePeriods = numPeriodsElapsed / periodsForFullRate; // integer division - will only get "whole" fullPeriods
 
-        return fullRatePeriods * periodsForFullRate;
+        return numFullRatePeriods * periodsForFullRate;
     }
 }

@@ -40,7 +40,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             asset: asset,
             yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
-            interestRatePercentage: 6,
+            interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
             tenor: 30
         });
@@ -64,7 +64,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             asset: asset,
             yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
-            interestRatePercentage: 12,
+            interestRatePercentageScaled: 12 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.MONTHLY),
             tenor: 3
         });
@@ -82,7 +82,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             asset: asset,
             yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
-            interestRatePercentage: 6,
+            interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
             tenor: 30
         });
@@ -107,7 +107,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             asset: asset,
             yieldStrategy: yieldStrategy,
             depositLedger: depositLedger,
-            interestRatePercentage: 6,
+            interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
             tenor: 30
         });

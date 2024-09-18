@@ -12,7 +12,7 @@ contract CalcSimpleInterestTest is Test {
     uint256 public constant SCALE = 10 ** 6;
 
     function test__CalcInterestTest__Daily() public pure {
-        uint256 apy = 12; // APY in percentage
+        uint256 apy = 12 * SCALE;
         uint256 tenor = 30;
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
@@ -20,8 +20,9 @@ contract CalcSimpleInterestTest is Test {
 
         CalcSimpleInterest.InterestParams memory paramsDay0 = CalcSimpleInterest.InterestParams({
             numTimePeriodsElapsed: 0,
-            interestRatePercentage: 12,
-            frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360)
+            interestRatePercentScaled: apy,
+            frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            scale: SCALE
         });
 
         // interest should be equal for these assertions
@@ -52,13 +53,13 @@ contract CalcSimpleInterestTest is Test {
         );
         assertEq(
             480_666_666,
-            CalcSimpleInterest.calcInterest(principal, apy, 721, frequency),
+            CalcSimpleInterest.calcInterest(principal, apy, 721, frequency, SCALE),
             "interest should be ~ 480.6666 at day 721"
         );
     }
 
     function test__CalcInterestTest_CalculatePrice() public pure {
-        uint256 apy = 12; // APY in percentage
+        uint256 apy = 12 * SCALE;
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
         assertEq(1 * SCALE, CalcSimpleInterest.calcPriceFromInterest(apy, 0, frequency, SCALE)); // 1 + (0.12 * 0) / 360 = 1
@@ -74,9 +75,10 @@ library InterestParamsBuilder {
         returns (CalcSimpleInterest.InterestParams memory newParams)
     {
         return CalcSimpleInterest.InterestParams({
-            interestRatePercentage: baseParams.interestRatePercentage,
+            interestRatePercentScaled: baseParams.interestRatePercentScaled,
             numTimePeriodsElapsed: numTimePeriodsElapsed,
-            frequency: baseParams.frequency
+            frequency: baseParams.frequency,
+            scale: baseParams.scale
         });
     }
 }
