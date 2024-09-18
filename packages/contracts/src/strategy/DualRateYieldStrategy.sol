@@ -11,7 +11,7 @@ import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
  */
 contract DualRateYieldStrategy is IYieldStrategy {
     /**
-     * @dev See {CalcSimpleInterest-calcInterest}
+     *
      */
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
@@ -23,10 +23,17 @@ contract DualRateYieldStrategy is IYieldStrategy {
 
         uint256 numPeriodsElapsed = toPeriod - fromPeriod;
 
-        uint256 interestRate =
-            numPeriodsElapsed == context.periodsForFullRate() ? context.fullRate() : context.reducedRate();
+        uint256 fullRatePeriodsElapsed = _fullRatePeriodsElapsed(context.periodsForFullRate(), numPeriodsElapsed);
 
-        return CalcSimpleInterest.calcInterest(principal, interestRate, numPeriodsElapsed, context.frequency());
+        uint256 fullRateInterest =
+            CalcSimpleInterest.calcInterest(principal, context.fullRate(), fullRatePeriodsElapsed, context.frequency());
+
+        uint256 reducedRatePeriodsElapsed = numPeriodsElapsed - fullRatePeriodsElapsed;
+        uint256 reducedRateInterest = CalcSimpleInterest.calcInterest(
+            principal, context.reducedRate(), reducedRatePeriodsElapsed, context.frequency()
+        );
+
+        return fullRateInterest + reducedRateInterest;
     }
 
     /**
@@ -43,5 +50,18 @@ contract DualRateYieldStrategy is IYieldStrategy {
         return CalcSimpleInterest.calcPriceFromInterest(
             numPeriodsElapsed, context.fullRate(), context.frequency(), context.scale()
         );
+    }
+
+    /**
+     * @dev See {CalcDiscounted-calcPriceFromInterest}
+     */
+    function _fullRatePeriodsElapsed(uint256 periodsForFullRate, uint256 numPeriodsElapsed)
+        internal
+        view
+        returns (uint256 _fullRatePeriodsElapsed)
+    {
+        uint256 fullRatePeriods = numPeriodsElapsed / periodsForFullRate; // integer division - will only get "whole" fullPeriods
+
+        return fullRatePeriods * periodsForFullRate;
     }
 }
