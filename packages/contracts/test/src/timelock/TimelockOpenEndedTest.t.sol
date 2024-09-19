@@ -14,18 +14,20 @@ struct Deposit {
 
 contract TimelockOpenEndedTest is Test {
     TimelockOpenEnded internal timelock; //
-    IERC5679Ext1155 private depositLedger;
+    IERC5679Ext1155 private deposits;
+    IERC5679Ext1155 private unlockedDeposits;
 
     address internal owner = makeAddr("owner");
     address internal alice = makeAddr("alice");
 
-    Deposit private depositDay1 = Deposit({ depositPeriod: 1, amount: 100 });
-    Deposit private depositDay2 = Deposit({ depositPeriod: 2, amount: 222 });
-    Deposit private depositDay5 = Deposit({ depositPeriod: 5, amount: 550 });
+    Deposit private depositDay1 = Deposit({ depositPeriod: 1, amount: 101 });
+    Deposit private depositDay2 = Deposit({ depositPeriod: 2, amount: 202 });
+    Deposit private depositDay3 = Deposit({ depositPeriod: 3, amount: 303 });
 
     function setUp() public {
-        depositLedger = new SimpleIERC1155Mintable();
-        timelock = new TimelockOpenEnded(depositLedger);
+        deposits = new SimpleIERC1155Mintable();
+        unlockedDeposits = new SimpleIERC1155Mintable();
+        timelock = new TimelockOpenEnded(deposits, unlockedDeposits);
     }
 
     function test__TimelockOpenEnded__NothingLocked() public view {
@@ -33,21 +35,30 @@ contract TimelockOpenEndedTest is Test {
     }
 
     function test__TimelockOpenEnded__Lock() public {
-        vm.startPrank(owner);
+        vm.prank(owner);
         timelock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
-        vm.stopPrank();
 
         assertEq(depositDay1.amount, timelock.lockedAmount(alice, depositDay1.depositPeriod), "deposit not locked");
     }
 
-    function test__TimelockOpenEnded__GetAllUnlocks() public {
+    function test__TimelockOpenEnded__Unlock() public {
         vm.startPrank(owner);
         timelock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
         timelock.lock(alice, depositDay2.depositPeriod, depositDay2.amount);
-        timelock.lock(alice, depositDay5.depositPeriod, depositDay5.amount);
+        timelock.lock(alice, depositDay3.depositPeriod, depositDay3.amount);
         vm.stopPrank();
 
         // nothing unlocked yet
         assertEq(0, timelock.unlockedPeriods(alice).length, "nothing should be unlocked");
+
+        // unlock deposit 2
+        vm.prank(owner);
+        timelock.unlock(alice, depositDay2.depositPeriod, depositDay2.amount);
+
+        assertEq(
+            depositDay2.amount,
+            timelock.unlockedAmount(alice, depositDay2.depositPeriod),
+            "deposit 2 should be unlocked"
+        );
     }
 }

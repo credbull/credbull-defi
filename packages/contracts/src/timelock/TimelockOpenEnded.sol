@@ -11,20 +11,39 @@ import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
  */
 contract TimelockOpenEnded is ITimelockOpenEnded {
     IERC5679Ext1155 public immutable DEPOSITS;
+    IERC5679Ext1155 public immutable UNLOCKED_DEPOSITS;
 
-    constructor(IERC5679Ext1155 depositLedger) {
-        DEPOSITS = depositLedger;
+    /// @dev Error for insufficient locked balance for `account`.
+    error TimelockOpenEnded__InsufficientLockedBalance(address account, uint256 available, uint256 required);
+
+    constructor(IERC5679Ext1155 deposits, IERC5679Ext1155 unlockedDeposits) {
+        DEPOSITS = deposits;
+        UNLOCKED_DEPOSITS = unlockedDeposits;
     }
 
     /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
-    function unlock(address account, uint256 depositPeriod, uint256 /* amount */ ) external view {
-        DEPOSITS.balanceOf(account, depositPeriod); // TODO - to implement
+    function unlock(address account, uint256 depositPeriod, uint256 amount) public {
+        uint256 maxUnlockableAmount = _maxUnlockableAmount(account, depositPeriod);
+        if (amount > maxUnlockableAmount) {
+            revert TimelockOpenEnded__InsufficientLockedBalance(account, maxUnlockableAmount, amount);
+        }
+
+        UNLOCKED_DEPOSITS.safeMint(account, depositPeriod, amount, "");
+    }
+
+    /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
+    function _maxUnlockableAmount(address account, uint256 depositPeriod)
+        public
+        view
+        returns (uint256 maxUnlockableAmount)
+    {
+        return lockedAmount(account, depositPeriod) - unlockedAmount(account, depositPeriod);
     }
 
     /// @notice Returns the amount of tokens unlocked for `account` from the given `depositPeriod`.
-    function unlockedAmount(address, uint256) external pure returns (uint256) {
+    function unlockedAmount(address account, uint256 depositPeriod) public view returns (uint256 unlockedAmount_) {
         // address account, uint256 depositPeriod) external view returns (uint256 unlockedAmount_) {
-        return 0; // TODO - to implement
+        return UNLOCKED_DEPOSITS.balanceOf(account, depositPeriod);
     }
 
     /// @notice Returns the deposit periods with non-zero unlocked tokens for `account`.
@@ -41,7 +60,7 @@ contract TimelockOpenEnded is ITimelockOpenEnded {
     }
 
     /// @notice Returns the amount of tokens locked for `account` at the given `depositPeriod`.
-    function lockedAmount(address account, uint256 depositPeriod) public view returns (uint256 amountLocked) {
+    function lockedAmount(address account, uint256 depositPeriod) public view returns (uint256 lockedAmount_) {
         return DEPOSITS.balanceOf(account, depositPeriod);
     }
 }
