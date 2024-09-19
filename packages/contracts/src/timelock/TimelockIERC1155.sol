@@ -14,7 +14,7 @@ abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable
     constructor(address initialOwner) ERC1155("") Ownable(initialOwner) { }
 
     /// @notice Returns the amount of tokens locked for `account` at `lockReleasePeriod`.
-    function getLockedAmount(address account, uint256 lockReleasePeriod)
+    function lockedAmount(address account, uint256 lockReleasePeriod)
         public
         view
         override
@@ -35,7 +35,7 @@ abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable
 
     /// @notice Returns the amount of tokens unlockable for `account` at `lockReleasePeriod`.
     function previewUnlock(address account, uint256 lockReleasePeriod) public view override returns (uint256) {
-        return getCurrentPeriod() >= lockReleasePeriod ? getLockedAmount(account, lockReleasePeriod) : 0;
+        return currentPeriod() >= lockReleasePeriod ? lockedAmount(account, lockReleasePeriod) : 0;
     }
 
     /// @notice Unlocks `amount` of tokens for `account` at `lockReleasePeriod`.
@@ -45,9 +45,9 @@ abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable
 
     /// @dev Internal function to unlock `amount` of tokens for `account` at `lockReleasePeriod`.
     function _unlockInternal(address account, uint256 lockReleasePeriod, uint256 amount) internal {
-        uint256 currentPeriod = getCurrentPeriod();
-        if (currentPeriod < lockReleasePeriod) {
-            revert LockDurationNotExpired(account, currentPeriod, lockReleasePeriod);
+        uint256 currentPeriod_ = currentPeriod();
+        if (currentPeriod_ < lockReleasePeriod) {
+            revert LockDurationNotExpired(account, currentPeriod_, lockReleasePeriod);
         }
 
         uint256 unlockableAmount = previewUnlock(account, lockReleasePeriod);
@@ -61,14 +61,13 @@ abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable
     /// @notice Rolls over unlocked `amount` of tokens for `account` to a new lock period.
     function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 amount) public virtual onlyOwner {
         uint256 unlockableAmount = this.previewUnlock(account, lockReleasePeriod);
-        uint256 lockDuration = getLockDuration();
 
         if (amount > unlockableAmount) {
             revert InsufficientLockedBalanceAtPeriod(account, unlockableAmount, amount, lockReleasePeriod);
         }
 
         _burn(account, lockReleasePeriod, amount);
-        _mint(account, lockReleasePeriod + lockDuration, amount, "");
+        _mint(account, lockReleasePeriod + lockDuration(), amount, "");
     }
 
     /// @dev Internal hook to update balances after token transfers.
@@ -80,17 +79,17 @@ abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable
     }
 
     /// @notice Returns the lock duration.
-    function getLockDuration() public view virtual returns (uint256 lockDuration);
+    function lockDuration() public view virtual returns (uint256 lockDuration_);
 
     /// @notice Returns the current period.
-    function getCurrentPeriod() public view virtual returns (uint256 currentPeriod);
+    function currentPeriod() public view virtual returns (uint256 currentPeriod_);
 
     /// @notice Sets the current period.
     function setCurrentPeriod(uint256 currentPeriod) public virtual;
 
     /// @notice Returns the lock periods for `account` where the balance is non-zero.
-    function getLockPeriods(address account) public view override returns (uint256[] memory lockPeriods) {
-        uint256 maxLockPeriod = getCurrentPeriod() + getLockDuration() + 1;
+    function lockPeriods(address account) public view override returns (uint256[] memory lockPeriods_) {
+        uint256 maxLockPeriod = currentPeriod() + lockDuration() + 1;
         uint256[] memory tempLockPeriods = new uint256[](maxLockPeriod);
 
         uint256 accountLockCount = 0;

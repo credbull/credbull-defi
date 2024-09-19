@@ -22,7 +22,7 @@ interface ITimelock {
     function unlock(address account, uint256 lockReleasePeriod, uint256 amount) external;
 
     /// @notice Returns the amount of tokens locked for `account` at `lockReleasePeriod`.
-    function getLockedAmount(address account, uint256 lockReleasePeriod) external view returns (uint256 amountLocked);
+    function lockedAmount(address account, uint256 lockReleasePeriod) external view returns (uint256 amountLocked);
 
     /// @notice Returns the amount of tokens unlockable for `account` at `lockReleasePeriod`.
     function previewUnlock(address account, uint256 lockReleasePeriod)
@@ -31,5 +31,5 @@ interface ITimelock {
         returns (uint256 amountUnlockable);
 
     /// @notice Returns the lock periods where `account` has a non-zero balance.
-    function getLockPeriods(address account) external view returns (uint256[] memory lockPeriods);
+    function lockPeriods(address account) external view returns (uint256[] memory lockPeriods);
 }

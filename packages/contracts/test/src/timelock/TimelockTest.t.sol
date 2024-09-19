@@ -24,7 +24,7 @@ abstract contract TimelockTest is Test {
         timelock.lock(alice, lockReleasePeriod, depositAmount);
         vm.stopPrank();
 
-        assertEq(depositAmount, timelock.getLockedAmount(alice, lockReleasePeriod), "Incorrect locked amount");
+        assertEq(depositAmount, timelock.lockedAmount(alice, lockReleasePeriod), "Incorrect locked amount");
 
         // Ensure that the unlocked amount is initially zero before any unlock operation
         assertEq(
@@ -58,7 +58,7 @@ abstract contract TimelockTest is Test {
         vm.stopPrank();
 
         // Fetch all locks for Alice
-        uint256[] memory lockPeriods = timelock.getLockPeriods(alice);
+        uint256[] memory lockPeriods = timelock.lockPeriods(alice);
 
         // Assert the correct number of locks returned
         assertEq(lockPeriods.length, 2, "incorrect number of lock periods");
@@ -76,7 +76,7 @@ abstract contract TimelockTest is Test {
         timelock.lock(alice, lockReleasePeriod, depositAmount);
         vm.stopPrank();
 
-        uint256 lockedAmount = timelock.getLockedAmount(alice, lockReleasePeriod);
+        uint256 lockedAmount = timelock.lockedAmount(alice, lockReleasePeriod);
         assertEq(lockedAmount, depositAmount, "Incorrect locked amount");
 
         // Attempt to unlock before the release period should fail
@@ -106,7 +106,7 @@ abstract contract TimelockTest is Test {
         timelock.unlock(alice, lockReleasePeriod, partialUnlockAmount);
         vm.stopPrank();
 
-        uint256 remainingLockedAmount = timelock.getLockedAmount(alice, lockReleasePeriod);
+        uint256 remainingLockedAmount = timelock.lockedAmount(alice, lockReleasePeriod);
         assertEq(
             remainingLockedAmount,
             depositAmount - partialUnlockAmount,
@@ -124,7 +124,7 @@ abstract contract TimelockTest is Test {
         timelock.unlock(alice, lockReleasePeriod, remainingLockedAmount);
         vm.stopPrank();
 
-        uint256 finalLockedAmount = timelock.getLockedAmount(alice, lockReleasePeriod);
+        uint256 finalLockedAmount = timelock.lockedAmount(alice, lockReleasePeriod);
         assertEq(finalLockedAmount, 0, "All tokens should be unlocked");
     }
 

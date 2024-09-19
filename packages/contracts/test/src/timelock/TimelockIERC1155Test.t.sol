@@ -6,31 +6,23 @@ import { ITimelock } from "@credbull/timelock/ITimelock.sol";
 import { TimelockTest } from "@test/src/timelock/TimelockTest.t.sol";
 
 contract SimpleTimelockIERC1155 is TimelockIERC1155 {
-    uint256 public lockDuration;
-    uint256 public currentPeriod = 0;
+    uint256 public myLockDuration;
+    uint256 public currentPeriodElapsed = 0;
 
     constructor(address _initialOwner, uint256 _lockDuration) TimelockIERC1155(_initialOwner) {
-        lockDuration = _lockDuration;
+        myLockDuration = _lockDuration;
     }
 
-    function getLockDuration() public view override returns (uint256 _lockDuration) {
-        return lockDuration;
+    function lockDuration() public view override returns (uint256 lockDuration_) {
+        return myLockDuration;
     }
 
-    function getCurrentPeriod() public view override returns (uint256 _currentPeriod) {
-        return currentPeriod;
+    function currentPeriod() public view override returns (uint256 currentPeriod_) {
+        return currentPeriodElapsed;
     }
 
-    function setCurrentPeriod(uint256 _currentPeriod) public override {
-        currentPeriod = _currentPeriod;
-    }
-
-    function calcRolloverBonus(address, /* account */ uint256, /* lockReleasePeriod */ uint256 /* value */ )
-        public
-        pure
-        returns (uint256 rolloverBonus)
-    {
-        return 0;
+    function setCurrentPeriod(uint256 currentPeriod_) public override {
+        currentPeriodElapsed = currentPeriod_;
     }
 }
 
@@ -74,7 +66,7 @@ contract TimelockIERC1155Test is TimelockTest {
         vm.stopPrank();
 
         // Check that the rolled-over tokens are locked under the new period
-        uint256 lockedAmountAfterRollover = timelock.getLockedAmount(alice, rolloverPeriod);
+        uint256 lockedAmountAfterRollover = timelock.lockedAmount(alice, rolloverPeriod);
         assertEq(lockedAmountAfterRollover, rolloverAmount, "Incorrect locked amount after rollover");
 
         // Check that the remaining tokens in the original period are reduced

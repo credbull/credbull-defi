@@ -81,7 +81,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
         // Assert that the shares were correctly minted
         assertEq(shares, vault.balanceOf(alice), "Incorrect number of shares minted to Alice");
         // Assert that the shares are correctly locked
-        uint256 lockedAmount = vault.getLockedAmount(alice, vault.getCurrentTimePeriodsElapsed() + params.tenor);
+        uint256 lockedAmount = vault.lockedAmount(alice, vault.getCurrentTimePeriodsElapsed() + params.tenor);
         assertEq(shares, lockedAmount, "Shares were not correctly locked after deposit");
 
         // ------------- redeem (before tenor / maturity time period) ---------------
@@ -204,10 +204,10 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
         );
         assertEq(
             expectedSharesPeriodTwo,
-            vault.getLockedAmount(alice, endPeriodOne + params.tenor),
+            vault.lockedAmount(alice, endPeriodOne + params.tenor),
             "all shares should be locked until end of Period 2"
         );
-        assertEq(0, vault.getLockedAmount(alice, endPeriodOne), "no locks should remain on Period 1");
+        assertEq(0, vault.lockedAmount(alice, endPeriodOne), "no locks should remain on Period 1");
 
         // ----------------------------------------------------------
         // -------------         End Period 2         ---------------
@@ -239,7 +239,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
             expectedAssetsPeriodTwo, actualRedeemedAssets, TOLERANCE, "incorrect assets returned after fully redeeming"
         );
         assertEq(0, vault.balanceOf(alice), "no shares should remain after fully redeeming");
-        assertEq(0, vault.getLockedAmount(alice, endPeriodTwo), "no locks should remain after fully redeeming");
+        assertEq(0, vault.lockedAmount(alice, endPeriodTwo), "no locks should remain after fully redeeming");
     }
 
     function test__TimelockInterestVault__PauseAndUnPause() public {
