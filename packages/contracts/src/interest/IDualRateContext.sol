@@ -5,26 +5,16 @@ import { ICalcInterestMetadata } from "@credbull/interest/ICalcInterestMetadata.
 
 /**
  * @title IDualRateContext
- * @dev Context for Yield calculations with two rates:
- * 1. A rate that applies when the holder holds the asset for the full period (full rate).
- * 2. A reduced rate that applies when the holder does not meet the full period (reduced rate).
+ * @dev Context for yield calculations with full and reduced rates, expressed in percentage terms and scaled.
+ * For example, at scale 1e3, 5% is represented as 5000.
  */
 interface IDualRateContext is ICalcInterestMetadata {
-    /**
-     * @notice Returns the interest rate when the holder holds for the full period.
-     * @return fullRateInPercentageScaled The full interest rate expressed as a percentage * scale
-     */
+    /// @notice Returns the full interest rate, scaled.
     function fullRateScaled() external view returns (uint256 fullRateInPercentageScaled);
 
-    /**
-     * @notice Returns the reduced interest rate when the holder does not hold for the full period.
-     * @return reducedRateInPercentageScaled The reduced interest rate expressed as a percentage * scale
-     */
+    /// @notice Returns the reduced interest rate, scaled.
     function reducedRateScaled() external view returns (uint256 reducedRateInPercentageScaled);
 
-    /**
-     * @notice Returns the number of periods required to qualify for the full interest rate.
-     * @return numPeriods The number of periods required to earn the full interest rate.
-     */
+    /// @notice Returns the number of periods required to earn the full rate.
     function numPeriodsForFullRate() external view returns (uint256 numPeriods);
 }

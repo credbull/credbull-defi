@@ -12,9 +12,8 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
- * @title DiscountVault
- * @dev A vault that uses SimpleInterest and Discounting to calculate shares per asset.
- *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
+ * @title DiscountingVault
+ * @dev A vault that uses simple interest and discounting to manage shares and assets.
  */
 contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
     using Math for uint256;
@@ -33,9 +32,7 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
         uint256 tenor;
     }
 
-    /**
-     * @notice Constructor to initialize the DiscountVault
-     */
+    /// @notice Initializes the DiscountingVault.
     constructor(DiscountingVaultParams memory params)
         MultiTokenVault(params.asset, params.depositLedger)
         CalcInterestMetadata(params.interestRatePercentageScaled, params.frequency, params.asset.decimals())
@@ -44,11 +41,7 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
         TENOR = params.tenor;
     }
 
-    // =============== IDiscountVault ===============
-
-    /**
-     * @dev See {CalcSimpleInterest-calcInterest}
-     */
+    /// @notice Calculates the yield for `principal` from `fromPeriod` to `toPeriod`.
     function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
@@ -58,19 +51,12 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
         return YIELD_STRATEGY.calcYield(address(this), principal, fromPeriod, toPeriod);
     }
 
-    /**
-     * @dev See {CalcDiscounted-calcPriceFromInterest}
-     */
+    /// @notice Calculates the price for a given number of periods elapsed.
     function calcPrice(uint256 numPeriodsElapsed) public view virtual returns (uint256 price) {
         return YIELD_STRATEGY.calcPrice(address(this), numPeriodsElapsed);
     }
 
-    /**
-     * @notice Converts a given amount of shares to principal based on the given deposit time period.
-     * @param shares The amount of shares to convert.
-     * @param depositPeriod The period at which the shares were deposited.
-     * @return principal The principal corresponding to the shares at the specified time period.
-     */
+    /// @notice Converts `shares` to principal based on `depositPeriod`.
     function _convertToPrincipalAtDepositPeriod(uint256 shares, uint256 depositPeriod)
         internal
         view
@@ -79,15 +65,10 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
         if (shares < SCALE) return 0; // no principal for fractional shares
 
         uint256 price = calcPrice(depositPeriod);
-
         return CalcDiscounted.calcPrincipalFromDiscounted(shares, price, SCALE);
     }
 
-    // =============== Deposit ===============
-
-    /**
-     * @dev See {IMultiTokenVault-convertToSharesForDepositPeriod}
-     */
+    /// @notice Converts `assets` to shares for `depositPeriod`.
     function convertToSharesForDepositPeriod(uint256 assets, uint256 depositPeriod)
         public
         view
@@ -97,15 +78,10 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
         if (assets < SCALE) return 0; // no shares for fractional assets
 
         uint256 price = calcPrice(depositPeriod);
-
         return CalcDiscounted.calcDiscounted(assets, price, SCALE);
     }
 
-    // =============== Redeem ===============
-
-    /**
-     * @dev See {IMultiTokenVault-convertToAssetsForDepositPeriod}
-     */
+    /// @notice Converts `shares` to assets for `depositPeriod` and `redeemPeriod`.
     function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
         public
         view
@@ -116,17 +92,11 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
 
         if (redeemPeriod < depositPeriod) return 0; // trying to redeem before depositPeriod
 
-        uint256 _principal = _convertToPrincipalAtDepositPeriod(shares, depositPeriod);
-
-        return _principal + calcYield(_principal, depositPeriod, redeemPeriod);
+        uint256 principal = _convertToPrincipalAtDepositPeriod(shares, depositPeriod);
+        return principal + calcYield(principal, depositPeriod, redeemPeriod);
     }
 
-    /**
-     * @notice Converts a given amount of shares to assets based on an implied deposit period.
-     * @param shares The amount of shares to convert.
-     * @param redeemPeriod The time period for redeem.
-     * @return assets The number of assets corresponding to the shares at the specified redeem period.
-     */
+    /// @notice Converts `shares` to assets for an implied deposit period.
     function _convertToAssetsForImpliedDepositPeriod(uint256 shares, uint256 redeemPeriod)
         internal
         view
@@ -136,13 +106,13 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
         if (redeemPeriod < TENOR) return 0;
 
         uint256 impliedDepositPeriod = _getDepositPeriodFromRedeemPeriod(redeemPeriod);
-
         return convertToAssetsForDepositPeriod(shares, impliedDepositPeriod, redeemPeriod);
     }
 
     // =============== Utility ===============
 
-    // MUST hold that depositPeriod + TENOR = redeemPeriod
+    /// @notice Derives `depositPeriod` from `redeemPeriod`.
+    /// @dev MUST hold that depositPeriod + TENOR = redeemPeriod
     function _getDepositPeriodFromRedeemPeriod(uint256 redeemPeriod) internal view returns (uint256 depositPeriod) {
         if (redeemPeriod < TENOR) {
             revert DiscountingVault__DepositPeriodNotDerivable(redeemPeriod, TENOR); // unable to derive deposit period

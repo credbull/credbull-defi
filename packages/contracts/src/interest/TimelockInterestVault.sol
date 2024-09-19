@@ -6,26 +6,28 @@ import { DiscountingVault } from "@credbull/interest/DiscountingVault.sol";
 import { TimelockIERC1155 } from "@credbull/timelock/TimelockIERC1155.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { IProduct } from "@credbull/interest/IProduct.sol";
-
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
-
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
+/**
+ * @title TimelockInterestVault
+ * @dev A vault that locks tokens with interest calculations and supports token rollover.
+ */
 contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, IProduct {
     constructor(DiscountingVaultParams memory params, address initialOwner)
         DiscountingVault(params)
         TimelockIERC1155(initialOwner)
     { }
 
-    // we want the supply of the ERC20 token - not the locks
+    /// @notice Returns the total supply of ERC20 tokens.
     function totalSupply() public view virtual override(ERC1155Supply, IERC20, ERC20) returns (uint256) {
         return ERC20.totalSupply();
     }
 
+    /// @notice Deposits `assets` and locks shares for `receiver` for the current period + tenor.
     function deposit(uint256 assets, address receiver)
         public
         override(IProduct, MultiTokenVault)
@@ -33,12 +35,11 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         returns (uint256 shares)
     {
         shares = MultiTokenVault.deposit(assets, receiver);
-
         _lockInternal(receiver, currentTimePeriodsElapsed + TENOR, shares);
-
         return shares;
     }
 
+    /// @notice Redeems `shares` for assets at the current period, using the calculated deposit period.
     // TODO: this is unsafe, only holds when "depositPeriod = currentPeriod - TENOR"
     // TODO: deprecated, use redeemForDepositPeriod(...depositPeriod, redeemPeriod) instead
     function redeem(uint256 shares, address receiver, address owner)
@@ -48,13 +49,10 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         returns (uint256 assets)
     {
         uint256 depositPeriod = _getDepositPeriodFromRedeemPeriod(currentTimePeriodsElapsed);
-
         return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentTimePeriodsElapsed);
     }
 
-    /**
-     * @dev See {IMultiTokenVault-redeemForDepositPeriod}
-     */
+    /// @notice Redeems `shares` for `receiver` and `owner` for `depositPeriod` and `redeemPeriod`.
     function redeemForDepositPeriod(
         uint256 shares,
         address receiver,
@@ -63,10 +61,10 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         uint256 redeemPeriod
     ) public override returns (uint256 assets) {
         _unlockInternal(owner, currentTimePeriodsElapsed, shares);
-
         return MultiTokenVault.redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemPeriod);
     }
 
+    /// @notice Redeems `shares` for `receiver` and `owner` for `redeemPeriod`.
     // TODO: this is unsafe, only holds when "depositPeriod = currentPeriod - TENOR"
     // TODO: deprecated, use redeemForDepositPeriod(...depositPeriod, redeemPeriod) instead
     function redeemAtPeriod(uint256 shares, address receiver, address owner, uint256 redeemTimePeriod)
@@ -79,12 +77,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemTimePeriod);
     }
 
-    /**
-     * @notice Rolls over a specified amount of unlocked tokens for a new lock period.
-     * @param account The address of the account whose tokens are to be rolled over.
-     * @param lockReleasePeriod The period during which these tokens will be released.
-     * @param value The amount of tokens to be rolled over.
-     */
+    /// @notice Rolls over unlocked tokens for a new lock period.
     function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value) public override onlyOwner {
         uint256 sharesForNextPeriod = previewConvertSharesForRollover(account, lockReleasePeriod, value);
         uint256 impliedDepositPeriod = (currentTimePeriodsElapsed - TENOR);
@@ -117,21 +110,17 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         TimelockIERC1155.rolloverUnlocked(account, lockReleasePeriod, sharesForNextPeriod);
     }
 
+    /// @notice Returns the rollover bonus for `value` at `lockReleasePeriod`.
     function calcRolloverBonus(address, /* account */ uint256, /* lockReleasePeriod */ uint256 value)
         public
         view
         returns (uint256 rolloverBonus)
     {
         uint256 rolloverBonusAPY = 1 * SCALE;
-
         return CalcSimpleInterest.calcInterest(value, rolloverBonusAPY, TENOR, FREQUENCY, SCALE);
     }
 
-    /**
-     *  When rolloing over, we need to re-calculate the shares to account for the passage of time
-     *  Any difference will need to be credited or debited from the current balance
-     * NB - this does revert unlike ERC4626 preview meethods.
-     */
+    /// @notice Previews the converted shares for rolling over tokens.
     function previewConvertSharesForRollover(address account, uint256 lockReleasePeriod, uint256 value)
         public
         view
@@ -151,37 +140,36 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         return convertToShares(principalAndYieldFirstPeriod + rolloverBonus); // discounted principal for rollover period
     }
 
+    /// @notice Returns the lock duration.
     function getLockDuration() public view override returns (uint256 lockDuration) {
         return TENOR;
     }
 
-    // ================= Period and Periodable =================
+    // ================= Period =================
 
+    /// @notice Returns the current period.
     function getCurrentPeriod() public view virtual override returns (uint256 currentPeriod) {
         return currentTimePeriodsElapsed;
     }
 
+    /// @notice Sets the current period.
     function setCurrentPeriod(uint256 currentPeriod_) public override {
         setCurrentTimePeriodsElapsed(currentPeriod_);
     }
 
     // ================= Pause =================
 
+    /// @notice Pauses the contract.
     function pause() public onlyOwner {
         Pausable._pause();
     }
 
+    /// @notice Unpauses the contract.
     function unpause() public onlyOwner {
         Pausable._unpause();
     }
 
-    /**
-     * @notice Returns the interest accrued for this account for the given depositTimePeriod
-     * e.g. if Alice deposits on Day 1 and Day 2, this will ONLY return the interest for the Day 1 deposit
-     * @param account The address of the user.
-     * @param depositTimePeriod The time period to calculate for
-     * @return The amount of interest accrued by the user for the given depositTimePeriod
-     */
+    /// @notice Returns the interest accrued for `account` during `depositTimePeriod`.
     function calcInterestForDepositTimePeriod(address account, uint256 depositTimePeriod)
         public
         view
@@ -189,53 +177,34 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         returns (uint256)
     {
         Principal memory principal = _createPrincipal(account, depositTimePeriod);
-
-        uint256 principalAmount = principal.principalAmount;
-
-        uint256 interest = calcYield(principalAmount, depositTimePeriod, currentTimePeriodsElapsed);
-
+        uint256 interest = calcYield(principal.principalAmount, depositTimePeriod, currentTimePeriodsElapsed);
         return interest;
     }
 
-    /**
-     * @notice Returns the total interest accrued by a user across ALL deposit time periods
-     * @param account The address of the user.
-     * @return The total amount of interest earned by the user.
-     */
+    /// @notice Returns the total interest accrued by `account` across all deposit periods.
     function calcTotalInterest(address account) public view override returns (uint256) {
         uint256[] memory userLockPeriods = getLockPeriods(account);
         Principal[] memory principals = _getPrincipalsForLockPeriods(account, userLockPeriods);
-
         uint256 totalInterest = 0;
-
         for (uint256 i = 0; i < principals.length; i++) {
-            uint256 interest =
+            totalInterest +=
                 calcYield(principals[i].principalAmount, principals[i].depositTimePeriod, currentTimePeriodsElapsed);
-
-            totalInterest += interest;
         }
-
         return totalInterest;
     }
 
-    /**
-     * @notice Returns the total amount of assets deposited by a user.
-     * @param account The address of the user.
-     * @return The total amount of assets deposited by the user.
-     */
+    /// @notice Returns the total deposits by `account`.
     function calcTotalDeposits(address account) public view override returns (uint256) {
         uint256[] memory userLockPeriods = getLockPeriods(account);
 
         // get the principal amounts for each lock period
         Principal[] memory principals = _getPrincipalsForLockPeriods(account, userLockPeriods);
-
         uint256 totalDeposit = 0;
 
         // Sum up all the principal amounts
         for (uint256 i = 0; i < principals.length; i++) {
             totalDeposit += principals[i].principalAmount;
         }
-
         return totalDeposit;
     }
 
@@ -245,6 +214,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         uint256 depositTimePeriod;
     }
 
+    /// @notice Returns the principals for `account` based on lock periods.
     function _getPrincipalsForLockPeriods(address account, uint256[] memory lockPeriods)
         internal
         view
@@ -261,10 +231,10 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
             // Store the principal in the array
             principals[i] = principal;
         }
-
         return principals;
     }
 
+    /// @dev Creates and returns a Principal object for `account` and `depositTimePeriod`.
     function _createPrincipal(address account, uint256 depositTimePeriod) internal view returns (Principal memory) {
         uint256 redeemTimePeriod = depositTimePeriod + TENOR;
         uint256 shares = balanceOf(account, redeemTimePeriod);
@@ -279,6 +249,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
 
     // =============== Utility ===============
 
+    /// @notice Sets the current number of periods elapsed.
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed)
         public
         virtual

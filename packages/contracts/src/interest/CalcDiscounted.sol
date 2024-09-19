@@ -5,48 +5,38 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  * @title CalcDiscounted
- * @dev This library implements the calculation of discounted principal, and recovery of the original principal using the Price mechanism.
+ * @dev Implements the calculation of discounted principal and recovery of original principal using price.
+ * The `calcPrincipalFromDiscounted` and `calcDiscounted` functions are mathematical inverses.
  *
- * @notice The `calcPrincipalFromDiscounted` and `calcDiscounted` functions are designed to be mathematical inverses of each other.
- * This means that applying `calcPrincipalFromDiscounted` to the output of `calcDiscounted` will return the original principal amount.
- *
- * For example:
+ * Example:
  * ```
- * uint256 originalPrincipal = 1000;
- * uint256 discountedValue = calcDiscounted(originalPrincipal);
- * uint256 recoveredPrincipal = calcPrincipalFromDiscounted(discountedValue);
- * assert(recoveredPrincipal == originalPrincipal);
+ * uint256 originalPrincipal = 200;
+ * uint256 price = 2;
  *
- * @dev all functions are internal to be deployed in the same contract as caller (not a separate one)
+ * uint256 discountedValue = calcDiscounted(originalPrincipal, price); // 200 / 2 = 100
+ * uint256 recoveredPrincipal = calcPrincipalFromDiscounted(discountedValue, price); // 100 * 2 = 200
+ *
+ * assert(recoveredPrincipal == originalPrincipal);
+ * ```
  */
 library CalcDiscounted {
     using Math for uint256;
 
-    /**
-     * @notice Calculates the discounted principal by dividing the principal by the price.
-     * @param principal The initial principal amount.
-     * @param price The ratio of Discounted to Principal
-     * @return discounted The discounted principal amount.
-     */
+    /// @notice Returns the discounted principal by dividing `principal` by `price`.
     function calcDiscounted(uint256 principal, uint256 price, uint256 scale)
         internal
         pure
         returns (uint256 discounted)
     {
-        return principal.mulDiv(scale, price, Math.Rounding.Floor); // Discounted = Principal / Price
+        return principal.mulDiv(scale, price, Math.Rounding.Floor);
     }
 
-    /**
-     * @notice Recovers the original principal from a discounted value by multiplying it with the price.
-     * @param discounted The discounted principal amount.
-     * @param price The ratio of Discounted to Principal
-     * @return principal The recovered original principal amount.
-     */
+    /// @notice Recovers the original principal by multiplying `discounted` with `price`.
     function calcPrincipalFromDiscounted(uint256 discounted, uint256 price, uint256 scale)
         internal
         pure
         returns (uint256 principal)
     {
-        return discounted.mulDiv(price, scale, Math.Rounding.Floor); // Principal = Discounted * Price
+        return discounted.mulDiv(price, scale, Math.Rounding.Floor);
     }
 }

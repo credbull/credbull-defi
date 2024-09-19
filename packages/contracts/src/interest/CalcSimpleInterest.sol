@@ -5,7 +5,6 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  * @title SimpleInterest
- * @dev This library implements the calculation of simple interest
  *
  * Simple interest is calculated on the principal amount, excluding compounding.
  * The Price reflects the interest accrued over time for a Principal of 1.
@@ -30,16 +29,8 @@ library CalcSimpleInterest {
         uint256 scale;
     }
 
-    /**
-     * @notice Calculate SimpleInterest (without compounding)
-     * @param principal The initial principal amount.
-     * @param numTimePeriodsElapsed The number of time periods for which interest is calculated.
-     * @param interestRatePercentScaled The interest rate percent * scale, e.g. 5% * 1e3 = 5000
-     * @param frequency The frequency of interest application
-     * @return interest The interest amount.
-     *
-     * @dev function is internal to be deployed in the same contract as caller (not a separate one)
-     */
+    /// @notice Calculates simple interest using `principal` ...
+    /// @dev function is internal to be deployed in the same contract as caller (not a separate one)
     function calcInterest(
         uint256 principal,
         uint256 interestRatePercentScaled,
@@ -52,13 +43,8 @@ library CalcSimpleInterest {
         );
     }
 
-    /**
-     * @notice Calculate SimpleInterest (without compounding)
-     * @param interestParams The parameters to the Simple Interest calculation
-     * @return interest The interest amount.
-     *
-     * @dev function is internal to be deployed in the same contract as caller (not a separate one)
-     */
+    /// @notice Calculates simple interest using `interestParams`
+    /// @dev function is internal to be deployed in the same contract as caller (not a separate one)
     function calcInterest(uint256 principal, InterestParams memory interestParams)
         internal
         pure
@@ -73,13 +59,8 @@ library CalcSimpleInterest {
         );
     }
 
-    /**
-     * @notice Calculates the price for a given number of periods elapsed.
-     * Price represents the accrued interest over time for a Principal of 1.
-     * @dev - return value is scaled as Price * SCALE.  For example: Price=1.01 and Scale=100 returns 101
-     * @param numTimePeriodsElapsed The number of time periods that have elapsed.
-     * @return priceScaled The price scaled by the internal scale factor.
-     */
+    /// @notice Calculates the price after `numTimePeriodsElapsed`, scaled.
+    /// @notice Price represents the accrued interest over time for a Principal of 1.
     function calcPriceFromInterest(
         uint256 interestRatePercentScaled,
         uint256 numTimePeriodsElapsed,

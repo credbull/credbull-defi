@@ -10,9 +10,7 @@ import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
  * @dev Strategy where returns are calculated using SimpleInterest
  */
 contract SimpleInterestYieldStrategy is IYieldStrategy {
-    /**
-     * @dev See {CalcSimpleInterest-calcInterest}
-     */
+    /// @dev See {CalcSimpleInterest-calcInterest}
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
@@ -28,9 +26,7 @@ contract SimpleInterestYieldStrategy is IYieldStrategy {
         );
     }
 
-    /**
-     * @dev See {CalcSimpleInterest-calcPriceFromInterest}
-     */
+    /// @dev See {CalcSimpleInterest-calcPriceFromInterest}
     function calcPrice(address contextContract, uint256 numPeriodsElapsed)
         public
         view
