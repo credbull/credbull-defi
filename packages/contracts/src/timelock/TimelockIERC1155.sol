@@ -23,9 +23,8 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable {
     /**
      * @dev Constructor to initialize the Timelock contract with an owner and lock duration.
-     * @param _initialOwner The address of the contract owner.
      */
-    constructor(address _initialOwner) ERC1155("") Ownable(_initialOwner) { }
+    constructor(address initialOwner) ERC1155("") Ownable(initialOwner) { }
 
     /**
      * @notice Returns the amount of tokens currently locked for a specific account and release period.
@@ -150,9 +149,9 @@ abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable
     /**
      * @notice Sets the current period.
      * @dev Current period is the internal "clock" to see when a lock is unlockable.
-     * @param _currentPeriod The new current period.
+     * @param currentPeriod The new current period.
      */
-    function setCurrentPeriod(uint256 _currentPeriod) public virtual;
+    function setCurrentPeriod(uint256 currentPeriod) public virtual;
 
     /**
      * @dev Returns lock periods for a given account where the account has a non-zero balance.

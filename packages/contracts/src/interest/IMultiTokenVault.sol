@@ -2,11 +2,11 @@
 pragma solidity ^0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-
 /**
  * @dev MultiToken vault supporting multiple independent deposit periods.
  * For example, Deposit 0 and Deposit 1 may have different returns or redemption rules.
  */
+
 interface IMultiTokenVault {
     /**
      * @notice Calculates the yield for a given principal between deposit and redeem periods.
@@ -53,6 +53,7 @@ interface IMultiTokenVault {
      * @param receiver The address to receive the shares.
      * @return shares The number of shares corresponding to the assets at the current time period.
      * @dev MUST assume depositPeriod = getCurrentTimePeriodsElapsed().
+     * TODO lucasia - ensure implementation uses https://docs.openzeppelin.com/contracts/5.x/api/utils#ReentrancyGuard
      */
     function deposit(uint256 assets, address receiver) external returns (uint256 shares);
 
@@ -93,6 +94,7 @@ interface IMultiTokenVault {
      * @param redeemPeriod The redeem period for the assets.
      * @return assets The number of assets redeemed for the shares at the specified periods.
      * @dev MUST be independent of vault's getCurrentTimePeriodsElapsed().
+     * TODO lucasia - ensure implementation uses https://docs.openzeppelin.com/contracts/5.x/api/utils#ReentrancyGuard
      */
     function redeemForDepositPeriod(
         uint256 shares,
@@ -165,6 +167,7 @@ interface IMultiTokenVault {
      * @notice Sets the current number of time periods elapsed.
      * @dev This function is intended for testing purposes to simulate the passage of time.
      * @param currentTimePeriodsElapsed The number of time periods to set as elapsed.
+     * TODO lucasia - change this to internal or similar
      */
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
 }

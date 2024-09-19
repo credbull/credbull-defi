@@ -119,7 +119,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
         address owner,
         uint256 depositPeriod,
         uint256 redeemPeriod
-    ) public virtual returns (uint256 assets) {
+    ) public virtual returns (uint256 assets_) {
         if (depositPeriod > redeemPeriod) {
             revert IProduct.RedeemTimePeriodNotSupported(owner, depositPeriod, redeemPeriod);
         }
@@ -137,10 +137,10 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
         DEPOSITS.burn(owner, depositPeriod, shares, _emptyBytesArray()); // deposit specific
 
         // logic for fungible shares below
-        uint256 _assets = previewRedeemForDepositPeriod(shares, depositPeriod);
-        ERC4626._withdraw(_msgSender(), receiver, owner, _assets, shares);
+        uint256 assets = previewRedeemForDepositPeriod(shares, depositPeriod);
+        ERC4626._withdraw(_msgSender(), receiver, owner, assets, shares);
 
-        return _assets;
+        return assets;
     }
 
     /**
@@ -203,8 +203,8 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
     /**
      * @dev See {IMultiTokenVault-setCurrentTimePeriodsElapsed}
      */
-    function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public virtual {
-        currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
+    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public virtual {
+        currentTimePeriodsElapsed = currentTimePeriodsElapsed_;
     }
 
     /**

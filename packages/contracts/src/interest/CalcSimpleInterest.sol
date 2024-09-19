@@ -47,11 +47,9 @@ library CalcSimpleInterest {
         uint256 frequency,
         uint256 scale
     ) internal pure returns (uint256 interest) {
-        uint256 _interest = principal.mulDiv(
+        return principal.mulDiv(
             interestRatePercentScaled * numTimePeriodsElapsed, frequency * scale * 100, Math.Rounding.Floor
         );
-
-        return _interest;
     }
 
     /**

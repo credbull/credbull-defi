@@ -14,33 +14,33 @@ abstract contract CalcInterestMetadata is ICalcInterestMetadata {
 
     uint256 public immutable SCALE;
 
-    constructor(uint256 _ratePercentageScaled, uint256 _frequency, uint256 _decimals) {
-        RATE_PERCENT_SCALED = _ratePercentageScaled;
-        FREQUENCY = _frequency;
-        SCALE = 10 ** _decimals;
+    constructor(uint256 ratePercentageScaled_, uint256 frequency_, uint256 decimals_) {
+        RATE_PERCENT_SCALED = ratePercentageScaled_;
+        FREQUENCY = frequency_;
+        SCALE = 10 ** decimals_;
     }
 
     /**
      * @notice Returns the frequency of interest application (number of periods in a year).
-     * @return _frequency The frequency value.
+     * @return frequency_ The frequency value.
      */
-    function frequency() public view virtual returns (uint256 _frequency) {
+    function frequency() public view virtual returns (uint256 frequency_) {
         return FREQUENCY;
     }
 
     /**
      * @notice Returns the annual interest rate as a percentage.
-     * @return _ratePercentageScaled The interest rate as a percentage * scale
+     * @return ratePercentageScaled_ The interest rate as a percentage * scale
      */
-    function rateScaled() public view virtual returns (uint256 _ratePercentageScaled) {
+    function rateScaled() public view virtual returns (uint256 ratePercentageScaled_) {
         return RATE_PERCENT_SCALED;
     }
 
     /**
      * @notice Returns the scale factor for internal calculations (e.g., 10^18 for 18 decimals).
-     * @return _scale The scale factor.
+     * @return scale_ The scale factor.
      */
-    function scale() public view virtual returns (uint256 _scale) {
+    function scale() public view virtual returns (uint256 scale_) {
         return SCALE;
     }
 

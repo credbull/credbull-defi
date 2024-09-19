@@ -34,7 +34,6 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
     {
         shares = MultiTokenVault.deposit(assets, receiver);
 
-        // Call the internal _lock function instead, which handles the locking logic
         _lockInternal(receiver, currentTimePeriodsElapsed + TENOR, shares);
 
         return shares;
@@ -65,9 +64,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
     ) public override returns (uint256 assets) {
         _unlockInternal(owner, currentTimePeriodsElapsed, shares);
 
-        uint256 _assets = MultiTokenVault.redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemPeriod);
-
-        return _assets;
+        return MultiTokenVault.redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemPeriod);
     }
 
     // TODO: this is unsafe, only holds when "depositPeriod = currentPeriod - TENOR"
@@ -151,12 +148,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
 
         uint256 rolloverBonus = calcRolloverBonus(account, lockReleasePeriod, principalAndYieldFirstPeriod); // bonus for rolled over assets
 
-        uint256 assetsForNextPeriod = principalAndYieldFirstPeriod + rolloverBonus;
-
-        // shares for the next period is the Discounted PrincipalAndYield for the first Period + Rollover bonus
-        uint256 _sharesForNextPeriod = convertToShares(assetsForNextPeriod); // discounted principal for rollover period
-
-        return _sharesForNextPeriod;
+        return convertToShares(principalAndYieldFirstPeriod + rolloverBonus); // discounted principal for rollover period
     }
 
     function getLockDuration() public view override returns (uint256 lockDuration) {
@@ -169,8 +161,8 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         return currentTimePeriodsElapsed;
     }
 
-    function setCurrentPeriod(uint256 _currentPeriod) public override {
-        setCurrentTimePeriodsElapsed(_currentPeriod);
+    function setCurrentPeriod(uint256 currentPeriod_) public override {
+        setCurrentTimePeriodsElapsed(currentPeriod_);
     }
 
     // ================= Pause =================
@@ -287,11 +279,11 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
 
     // =============== Utility ===============
 
-    function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed)
+    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed)
         public
         virtual
         override(IProduct, MultiTokenVault)
     {
-        MultiTokenVault.setCurrentTimePeriodsElapsed(_currentTimePeriodsElapsed);
+        MultiTokenVault.setCurrentTimePeriodsElapsed(currentTimePeriodsElapsed);
     }
 }
