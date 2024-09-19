@@ -105,7 +105,7 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
         // Redeeming before TENOR - return the discounted amount (no interest).
         if (redeemPeriod < TENOR) return 0;
 
-        uint256 impliedDepositPeriod = _getDepositPeriodFromRedeemPeriod(redeemPeriod);
+        uint256 impliedDepositPeriod = _depositPeriodFromRedeemPeriod(redeemPeriod);
         return convertToAssetsForDepositPeriod(shares, impliedDepositPeriod, redeemPeriod);
     }
 
@@ -113,7 +113,7 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
 
     /// @notice Derives `depositPeriod` from `redeemPeriod`.
     /// @dev MUST hold that depositPeriod + TENOR = redeemPeriod
-    function _getDepositPeriodFromRedeemPeriod(uint256 redeemPeriod) internal view returns (uint256 depositPeriod) {
+    function _depositPeriodFromRedeemPeriod(uint256 redeemPeriod) internal view returns (uint256 depositPeriod) {
         if (redeemPeriod < TENOR) {
             revert DiscountingVault__DepositPeriodNotDerivable(redeemPeriod, TENOR); // unable to derive deposit period
         }

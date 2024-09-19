@@ -146,6 +146,6 @@ contract DiscountingVaultForTest is DiscountingVault {
 
     // MUST hold that depositPeriod + TENOR = redeemPeriod
     function getDepositPeriodFromRedeemPeriod(uint256 redeemPeriod) public view returns (uint256 depositPeriod) {
-        return super._getDepositPeriodFromRedeemPeriod(redeemPeriod);
+        return super._depositPeriodFromRedeemPeriod(redeemPeriod);
     }
 }

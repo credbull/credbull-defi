@@ -48,7 +48,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         whenNotPaused
         returns (uint256 assets)
     {
-        uint256 depositPeriod = _getDepositPeriodFromRedeemPeriod(currentTimePeriodsElapsed);
+        uint256 depositPeriod = _depositPeriodFromRedeemPeriod(currentTimePeriodsElapsed);
         return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentTimePeriodsElapsed);
     }
 
@@ -72,7 +72,7 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
         override
         returns (uint256 assets)
     {
-        uint256 depositPeriod = _getDepositPeriodFromRedeemPeriod(currentTimePeriodsElapsed);
+        uint256 depositPeriod = _depositPeriodFromRedeemPeriod(currentTimePeriodsElapsed);
 
         return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemTimePeriod);
     }

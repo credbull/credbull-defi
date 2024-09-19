@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { ITimelockOpenEnded } from "@credbull/timelock/ITimelockOpenEnded.sol";
 import { TimelockOpenEnded } from "@credbull/timelock/TimelockOpenEnded.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
-
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 import { Test } from "forge-std/Test.sol";
 

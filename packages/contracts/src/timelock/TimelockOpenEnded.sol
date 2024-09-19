@@ -17,8 +17,8 @@ contract TimelockOpenEnded is ITimelockOpenEnded {
     }
 
     /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
-    function unlock(address, /* account */ uint256, /* depositPeriod */ uint256 /* amount */ ) external {
-        // TODO - to implement
+    function unlock(address account, uint256 depositPeriod, uint256 /* amount */ ) external view {
+        DEPOSITS.balanceOf(account, depositPeriod); // TODO - to implement
     }
 
     /// @notice Returns the amount of tokens unlocked for `account` from the given `depositPeriod`.
