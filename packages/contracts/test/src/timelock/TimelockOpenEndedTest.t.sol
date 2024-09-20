@@ -5,12 +5,8 @@ import { TimelockOpenEnded } from "@credbull/timelock/TimelockOpenEnded.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 
+import { Deposit } from "@test/src/timelock/TimelockTest.t.sol";
 import { Test } from "forge-std/Test.sol";
-
-struct Deposit {
-    uint256 depositPeriod;
-    uint256 amount;
-}
 
 contract TimelockOpenEndedTest is Test {
     TimelockOpenEnded internal timelock; //

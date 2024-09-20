@@ -28,7 +28,7 @@ contract SimpleTimelockIERC1155 is TimelockIERC1155 {
 
 contract TimelockIERC1155Test is TimelockTest {
     function setUp() public {
-        timelock = new SimpleTimelockIERC1155(owner, lockReleasePeriod);
+        timelock = new SimpleTimelockIERC1155(owner, lockUntilDay1.releasePeriod);
     }
 
     function toImpl(ITimelock _timelock) internal pure returns (TimelockIERC1155) {
@@ -44,37 +44,31 @@ contract TimelockIERC1155Test is TimelockTest {
     }
 
     function test__TimelockIERC1155__RolloverUnlockedPartial() public virtual {
-        uint256 depositAmount = 1000;
-        uint256 rolloverAmount = 500;
+        vm.prank(owner);
+        timelock.lock(alice, lockUntilDay1.releasePeriod, lockUntilDay1.amount);
 
-        // Alice locks the tokens using the Timelock contract
-        vm.startPrank(owner);
-        timelock.lock(alice, lockReleasePeriod, depositAmount);
-        vm.stopPrank();
+        // warp to releasePeriod
+        warpToPeriod(timelock, lockUntilDay1.releasePeriod);
 
-        // Advance the period to make the tokens unlockable
-        warpToPeriod(timelock, lockReleasePeriod);
-
-        uint256 unlockableAmount = timelock.previewUnlock(alice, lockReleasePeriod);
-        assertEq(unlockableAmount, depositAmount, "All tokens should be unlockable after the lock period");
+        uint256 unlockableAmount = timelock.previewUnlock(alice, lockUntilDay1.releasePeriod);
+        assertEq(unlockableAmount, lockUntilDay1.amount, "all tokens should be unlockable after the lock period");
 
         TimelockIERC1155 rollable = toImpl(timelock);
 
-        // Perform a rollover of the unlocked tokens
-        vm.startPrank(owner);
-        rollable.rolloverUnlocked(alice, lockReleasePeriod, rolloverAmount);
-        vm.stopPrank();
+        // rollover the unlocked tokens
+        vm.prank(owner);
+        rollable.rolloverUnlocked(alice, lockUntilDay1.releasePeriod, lockUntilDay2.amount);
 
-        // Check that the rolled-over tokens are locked under the new period
-        uint256 lockedAmountAfterRollover = timelock.lockedAmount(alice, rolloverPeriod);
-        assertEq(lockedAmountAfterRollover, rolloverAmount, "Incorrect locked amount after rollover");
+        // check rolled-over tokens are locked under the new period
+        uint256 lockedAmountAfterRollover = timelock.lockedAmount(alice, lockUntilDay2.releasePeriod);
+        assertEq(lockedAmountAfterRollover, lockUntilDay2.amount, "incorrect locked amount after rollover");
 
-        // Check that the remaining tokens in the original period are reduced
-        uint256 remainingUnlockableAmount = timelock.previewUnlock(alice, lockReleasePeriod);
+        // check remaining tokens in the original period are reduced
+        uint256 remainingUnlockableAmount = timelock.previewUnlock(alice, lockUntilDay1.releasePeriod);
         assertEq(
             remainingUnlockableAmount,
-            depositAmount - rolloverAmount,
-            "Incorrect remaining unlockable amount after rollover"
+            lockUntilDay1.amount - lockUntilDay2.amount,
+            "incorrect remaining unlockable amount after rollover"
         );
     }
 }

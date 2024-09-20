@@ -6,126 +6,123 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 import { Test } from "forge-std/Test.sol";
 
+struct Deposit {
+    uint256 depositPeriod;
+    uint256 amount;
+}
+
+struct LockUntil {
+    uint256 releasePeriod;
+    uint256 amount;
+}
+
 abstract contract TimelockTest is Test {
     ITimelock internal timelock; // Use the ITimelock interface
 
     address internal owner = makeAddr("owner");
     address internal alice = makeAddr("alice");
-    uint256 internal lockReleasePeriod = 1; // The period until which the tokens are locked
-    uint256 internal rolloverPeriod = 2; // The new period for the rollover
+
+    LockUntil internal lockUntilDay1 = LockUntil({ releasePeriod: 1, amount: 101 });
+    LockUntil internal lockUntilDay2 = LockUntil({ releasePeriod: 2, amount: 22 });
 
     uint256 internal initialSupply = 1000000;
 
     function test__Timelock__Lock() public {
-        uint256 depositAmount = 1000;
+        vm.prank(owner);
+        timelock.lock(alice, lockUntilDay1.releasePeriod, lockUntilDay1.amount);
 
-        // Alice locks the tokens using the Timelock contract
-        vm.startPrank(owner);
-        timelock.lock(alice, lockReleasePeriod, depositAmount);
-        vm.stopPrank();
-
-        assertEq(depositAmount, timelock.lockedAmount(alice, lockReleasePeriod), "Incorrect locked amount");
+        assertEq(
+            lockUntilDay1.amount, timelock.lockedAmount(alice, lockUntilDay1.releasePeriod), "incorrect locked amount"
+        );
 
         // Ensure that the unlocked amount is initially zero before any unlock operation
         assertEq(
             0,
-            timelock.previewUnlock(alice, lockReleasePeriod - 1),
+            timelock.previewUnlock(alice, lockUntilDay1.releasePeriod - 1),
             "preview unlock should be zero before lockRelease period"
         );
     }
 
     function test__Timelock__OnlyOwnerCanLockAndUnlock() public {
-        uint256 depositAmount = 1000;
-
-        vm.startPrank(alice);
+        vm.prank(alice);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
-        timelock.lock(alice, lockReleasePeriod, depositAmount);
-        vm.stopPrank();
+        timelock.lock(alice, lockUntilDay1.releasePeriod, lockUntilDay1.amount);
 
-        vm.startPrank(alice);
+        vm.prank(alice);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
-        timelock.unlock(alice, lockReleasePeriod, depositAmount);
-        vm.stopPrank();
+        timelock.unlock(alice, lockUntilDay1.releasePeriod, lockUntilDay1.amount);
     }
 
     function test__Timelock__GetAllLocks() public {
-        uint256 depositAmount1 = 1000;
-        uint256 depositAmount2 = 500;
-
         vm.startPrank(owner);
-        timelock.lock(alice, lockReleasePeriod, depositAmount1);
-        timelock.lock(alice, rolloverPeriod, depositAmount2);
+        timelock.lock(alice, lockUntilDay1.releasePeriod, lockUntilDay1.amount);
+        timelock.lock(alice, lockUntilDay2.releasePeriod, lockUntilDay2.amount);
         vm.stopPrank();
 
         // Fetch all locks for Alice
-        uint256[] memory lockPeriods = timelock.lockPeriods(alice, 0, rolloverPeriod);
+        uint256[] memory lockPeriods = timelock.lockPeriods(alice, 0, lockUntilDay2.releasePeriod);
 
         // Assert the correct number of locks returned
         assertEq(lockPeriods.length, 2, "incorrect number of lock periods");
 
         // Assert the details of the first lock
-        assertEq(lockPeriods[0], lockReleasePeriod, "incorrect lock period for first lock");
-        assertEq(lockPeriods[1], rolloverPeriod, "incorrect lock period for second lock");
+        assertEq(lockPeriods[0], lockUntilDay1.releasePeriod, "incorrect lock period for first lock");
+        assertEq(lockPeriods[1], lockUntilDay2.releasePeriod, "incorrect lock period for second lock");
     }
 
     function test__Timelock__UnlockFailsBeforeTime() public {
-        uint256 depositAmount = 1000;
+        vm.prank(owner);
+        timelock.lock(alice, lockUntilDay1.releasePeriod, lockUntilDay1.amount);
 
-        // Alice locks the tokens using the Timelock contract
-        vm.startPrank(owner);
-        timelock.lock(alice, lockReleasePeriod, depositAmount);
-        vm.stopPrank();
+        uint256 lockedAmount = timelock.lockedAmount(alice, lockUntilDay1.releasePeriod);
+        assertEq(lockedAmount, lockUntilDay1.amount, "incorrect locked amount");
 
-        uint256 lockedAmount = timelock.lockedAmount(alice, lockReleasePeriod);
-        assertEq(lockedAmount, depositAmount, "Incorrect locked amount");
+        // attempt to unlock before the release period should fail
+        warpToPeriod(timelock, lockUntilDay1.releasePeriod - 1); // warp forward - but to the release period
 
-        // Attempt to unlock before the release period should fail
-        vm.startPrank(owner);
-        vm.expectRevert(abi.encodeWithSelector(ITimelock.LockDurationNotExpired.selector, alice, 0, lockReleasePeriod));
-        timelock.unlock(alice, lockReleasePeriod, depositAmount);
-        vm.stopPrank();
+        vm.prank(owner);
+        vm.expectRevert(
+            abi.encodeWithSelector(ITimelock.LockDurationNotExpired.selector, alice, 0, lockUntilDay1.releasePeriod)
+        );
+        timelock.unlock(alice, lockUntilDay1.releasePeriod, lockUntilDay1.amount);
     }
 
     function test__Timelock__PartialAndFullUnlockAfterTime() public {
-        uint256 depositAmount = 1000;
-        uint256 partialUnlockAmount = 400;
+        vm.prank(owner);
+        timelock.lock(alice, lockUntilDay1.releasePeriod, lockUntilDay1.amount);
 
-        // Alice locks the tokens using the Timelock contract
-        vm.startPrank(owner);
-        timelock.lock(alice, lockReleasePeriod, depositAmount);
-        vm.stopPrank();
-
-        warpToPeriod(timelock, lockReleasePeriod);
+        // warp to releasePeriod
+        warpToPeriod(timelock, lockUntilDay1.releasePeriod);
 
         assertEq(
-            depositAmount, timelock.previewUnlock(alice, lockReleasePeriod), "preview unlock should be the full amount"
+            lockUntilDay1.amount,
+            timelock.previewUnlock(alice, lockUntilDay1.releasePeriod),
+            "preview unlock should be the full amount"
         );
 
-        // Partial unlock
-        vm.startPrank(owner);
-        timelock.unlock(alice, lockReleasePeriod, partialUnlockAmount);
-        vm.stopPrank();
+        // partial unlock
+        uint256 partialUnlockAmount = 5;
+        vm.prank(owner);
+        timelock.unlock(alice, lockUntilDay1.releasePeriod, partialUnlockAmount);
 
-        uint256 remainingLockedAmount = timelock.lockedAmount(alice, lockReleasePeriod);
+        uint256 remainingLockedAmount = timelock.lockedAmount(alice, lockUntilDay1.releasePeriod);
         assertEq(
             remainingLockedAmount,
-            depositAmount - partialUnlockAmount,
-            "Incorrect remaining locked amount after partial unlock"
+            lockUntilDay1.amount - partialUnlockAmount,
+            "incorrect remaining locked amount after partial unlock"
         );
 
         assertEq(
             remainingLockedAmount,
-            timelock.previewUnlock(alice, lockReleasePeriod),
+            timelock.previewUnlock(alice, lockUntilDay1.releasePeriod),
             "preview unlock should be the residual amount"
         );
 
-        // Full unlock of the remaining amount
-        vm.startPrank(owner);
-        timelock.unlock(alice, lockReleasePeriod, remainingLockedAmount);
-        vm.stopPrank();
+        // full unlock of the remaining amount
+        vm.prank(owner);
+        timelock.unlock(alice, lockUntilDay1.releasePeriod, remainingLockedAmount);
 
-        uint256 finalLockedAmount = timelock.lockedAmount(alice, lockReleasePeriod);
-        assertEq(finalLockedAmount, 0, "All tokens should be unlocked");
+        assertEq(0, timelock.lockedAmount(alice, lockUntilDay1.releasePeriod), "all tokens should be unlocked");
     }
 
     function warpToPeriod(ITimelock _timelock, uint256 timePeriod) internal virtual;
