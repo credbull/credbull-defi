@@ -30,35 +30,46 @@ contract TimelockOpenEndedTest is Test {
         timelock = new TimelockOpenEnded(deposits, unlockedDeposits);
     }
 
-    function test__TimelockOpenEnded__NothingLocked() public view {
-        assertEq(0, timelock.lockedAmount(alice, 1), "nothing should be locked");
+    function test__TimelockOpenEnded__NoDeposits() public view {
+        assertEq(0, timelock.lockedAmount(alice, 1), "no deposit - nothing should be locked");
+        assertEq(0, timelock.unlockedPeriods(alice, 0, 10).length, "no deposit - no period should be unlocked");
+        assertEq(0, timelock.unlockedAmount(alice, 1), "no deposit - no amount should be unlocked");
     }
 
-    function test__TimelockOpenEnded__Lock() public {
-        vm.prank(owner);
+    function test__TimelockOpenEnded__Deposit() public {
+        vm.prank(alice);
         timelock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
 
         assertEq(depositDay1.amount, timelock.lockedAmount(alice, depositDay1.depositPeriod), "deposit not locked");
     }
 
-    function test__TimelockOpenEnded__Unlock() public {
-        vm.startPrank(owner);
+    function test__TimelockOpenEnded__DepositAndUnlock() public {
+        vm.startPrank(alice);
         timelock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
         timelock.lock(alice, depositDay2.depositPeriod, depositDay2.amount);
         timelock.lock(alice, depositDay3.depositPeriod, depositDay3.amount);
         vm.stopPrank();
 
         // nothing unlocked yet
-        assertEq(0, timelock.unlockedPeriods(alice).length, "nothing should be unlocked");
+        assertEq(0, timelock.unlockedPeriods(alice, 0, depositDay3.depositPeriod).length, "nothing should be unlocked");
+        assertEq(
+            depositDay2.amount,
+            timelock.maxUnlockAmount(alice, depositDay2.depositPeriod),
+            "entire deposit should be unlockable"
+        );
 
         // unlock deposit 2
-        vm.prank(owner);
+        vm.prank(alice);
         timelock.unlock(alice, depositDay2.depositPeriod, depositDay2.amount);
+
+        uint256[] memory unlockPeriods = timelock.unlockedPeriods(alice, 0, depositDay3.depositPeriod);
+        assertEq(1, unlockPeriods.length, "exactly one period should be unlocked");
+        assertEq(depositDay2.depositPeriod, unlockPeriods[0], "deposit2 period should be unlocked");
 
         assertEq(
             depositDay2.amount,
             timelock.unlockedAmount(alice, depositDay2.depositPeriod),
-            "deposit 2 should be unlocked"
+            "deposit2 amount should be unlocked"
         );
     }
 }

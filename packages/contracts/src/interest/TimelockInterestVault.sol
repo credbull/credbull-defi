@@ -183,7 +183,8 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
 
     /// @notice Returns the total interest accrued by `account` across all deposit periods.
     function calcTotalInterest(address account) public view override returns (uint256) {
-        uint256[] memory userLockPeriods = lockPeriods(account);
+        uint256 maxLockPeriod = currentTimePeriodsElapsed + TENOR;
+        uint256[] memory userLockPeriods = lockPeriods(account, 0, maxLockPeriod);
         Principal[] memory principals = _getPrincipalsForLockPeriods(account, userLockPeriods);
         uint256 totalInterest = 0;
         for (uint256 i = 0; i < principals.length; i++) {
@@ -195,7 +196,8 @@ contract TimelockInterestVault is TimelockIERC1155, DiscountingVault, Pausable, 
 
     /// @notice Returns the total deposits by `account`.
     function calcTotalDeposits(address account) public view override returns (uint256) {
-        uint256[] memory userLockPeriods = lockPeriods(account);
+        uint256 maxLockPeriod = currentTimePeriodsElapsed + TENOR;
+        uint256[] memory userLockPeriods = lockPeriods(account, 0, maxLockPeriod);
 
         // get the principal amounts for each lock period
         Principal[] memory principals = _getPrincipalsForLockPeriods(account, userLockPeriods);

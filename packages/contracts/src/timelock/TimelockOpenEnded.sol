@@ -21,40 +21,9 @@ contract TimelockOpenEnded is ITimelockOpenEnded {
         UNLOCKED_DEPOSITS = unlockedDeposits;
     }
 
-    /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
-    function unlock(address account, uint256 depositPeriod, uint256 amount) public {
-        uint256 maxUnlockableAmount = _maxUnlockableAmount(account, depositPeriod);
-        if (amount > maxUnlockableAmount) {
-            revert TimelockOpenEnded__InsufficientLockedBalance(account, maxUnlockableAmount, amount);
-        }
-
-        UNLOCKED_DEPOSITS.safeMint(account, depositPeriod, amount, "");
-    }
-
-    /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
-    function _maxUnlockableAmount(address account, uint256 depositPeriod)
-        public
-        view
-        returns (uint256 maxUnlockableAmount)
-    {
-        return lockedAmount(account, depositPeriod) - unlockedAmount(account, depositPeriod);
-    }
-
-    /// @notice Returns the amount of tokens unlocked for `account` from the given `depositPeriod`.
-    function unlockedAmount(address account, uint256 depositPeriod) public view returns (uint256 unlockedAmount_) {
-        // address account, uint256 depositPeriod) external view returns (uint256 unlockedAmount_) {
-        return UNLOCKED_DEPOSITS.balanceOf(account, depositPeriod);
-    }
-
-    /// @notice Returns the deposit periods with non-zero unlocked tokens for `account`.
-    function unlockedPeriods(address /* account */ ) external pure returns (uint256[] memory depositPeriods) {
-        return new uint256[](0); // TODO - to implement
-    }
-
-    // ======================== helpers - but not required ========================
+    // ======================== lock ========================
 
     /// @notice Locks `amount` of tokens for `account` at the given `depositPeriod`.
-    // TODO - we don't need a lock here.  all entries in the DEPOSITS are locked unless unlocked.
     function lock(address account, uint256 depositPeriod, uint256 amount) public {
         DEPOSITS.safeMint(account, depositPeriod, amount, "");
     }
@@ -62,5 +31,52 @@ contract TimelockOpenEnded is ITimelockOpenEnded {
     /// @notice Returns the amount of tokens locked for `account` at the given `depositPeriod`.
     function lockedAmount(address account, uint256 depositPeriod) public view returns (uint256 lockedAmount_) {
         return DEPOSITS.balanceOf(account, depositPeriod);
+    }
+
+    // ======================== unlock ========================
+
+    /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
+    function unlock(address account, uint256 depositPeriod, uint256 amount) public {
+        uint256 maxUnlockableAmount_ = maxUnlockAmount(account, depositPeriod);
+        if (amount > maxUnlockableAmount_) {
+            revert TimelockOpenEnded__InsufficientLockedBalance(account, maxUnlockableAmount_, amount);
+        }
+
+        UNLOCKED_DEPOSITS.safeMint(account, depositPeriod, amount, "");
+    }
+
+    /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
+    function maxUnlockAmount(address account, uint256 depositPeriod) public view returns (uint256 maxUnlockAmount_) {
+        return lockedAmount(account, depositPeriod) - unlockedAmount(account, depositPeriod);
+    }
+
+    /// @notice Returns the amount of tokens unlocked for `account` from the given `depositPeriod`.
+    function unlockedAmount(address account, uint256 depositPeriod) public view returns (uint256 unlockedAmount_) {
+        return UNLOCKED_DEPOSITS.balanceOf(account, depositPeriod);
+    }
+
+    /// @notice Returns the periods with unlocked tokens for `account` between `fromPeriod` and `toPeriod`.
+    function unlockedPeriods(address account, uint256 fromPeriod, uint256 toPeriod)
+        external
+        view
+        returns (uint256[] memory unlockedPeriods_)
+    {
+        uint256 numPeriodsFromToInclusive = toPeriod - fromPeriod + 1;
+        uint256[] memory tempUnlockPeriods = new uint256[](numPeriodsFromToInclusive);
+
+        uint256 accountUnlockPeriodCount = 0;
+        for (uint256 i = fromPeriod; i <= toPeriod; i++) {
+            if (unlockedAmount(account, i) > 0) {
+                tempUnlockPeriods[accountUnlockPeriodCount] = i;
+                accountUnlockPeriodCount++;
+            }
+        }
+
+        uint256[] memory resUnlockedPeriods = new uint256[](accountUnlockPeriodCount);
+        for (uint256 i = 0; i < accountUnlockPeriodCount; i++) {
+            resUnlockedPeriods[i] = tempUnlockPeriods[i];
+        }
+
+        return resUnlockedPeriods;
     }
 }

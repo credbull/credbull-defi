@@ -58,7 +58,7 @@ abstract contract TimelockTest is Test {
         vm.stopPrank();
 
         // Fetch all locks for Alice
-        uint256[] memory lockPeriods = timelock.lockPeriods(alice);
+        uint256[] memory lockPeriods = timelock.lockPeriods(alice, 0, rolloverPeriod);
 
         // Assert the correct number of locks returned
         assertEq(lockPeriods.length, 2, "incorrect number of lock periods");

@@ -10,12 +10,24 @@ interface ITimelockOpenEnded {
     /// @notice Locks `amount` of tokens for `account` at the given `depositPeriod`.
     function lock(address account, uint256 depositPeriod, uint256 amount) external;
 
+    /// @notice Returns the amount of tokens locked for `account` at the given `depositPeriod`.
+    /// MUST always be the total amount locked, even if some locks are unlocked
+    function lockedAmount(address account, uint256 depositPeriod) external view returns (uint256 lockedAmount_);
+
     /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
     function unlock(address account, uint256 depositPeriod, uint256 amount) external;
 
     /// @notice Returns the amount of tokens locked for `account` at the given `depositPeriod`.
-    function unlockedAmount(address account, uint256 depositPeriod) external view returns (uint256 amountLocked);
+    function unlockedAmount(address account, uint256 depositPeriod) external view returns (uint256 unlockedAmount_);
 
-    /// @notice Returns the deposit periods with non-zero unlocked tokens for `account`.
-    function unlockedPeriods(address account) external view returns (uint256[] memory depositPeriods);
+    /// @notice Maximum amount of tokens that can be unlocked for `account` at the`depositPeriod`.
+    /// MUST return lockedAmount if no unlocks
+    /// MUST return reduced amount if unlocks, e.g. maxLockedAmount = lockedAmount - unlockedAmount
+    function maxUnlockAmount(address account, uint256 depositPeriod) external view returns (uint256 maxUnlockAmount_);
+
+    /// @notice Returns the periods with unlocked tokens for `account` between `fromPeriod` and `toPeriod`.
+    function unlockedPeriods(address account, uint256 fromPeriod, uint256 toPeriod)
+        external
+        view
+        returns (uint256[] memory unlockedPeriods_);
 }
