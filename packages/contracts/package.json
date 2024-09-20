@@ -17,8 +17,7 @@
     "deploy": "make deploy-local",
     "deploy:ci": "yarn db-export && make deploy-baseSepolia",
     "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
-    "postinstall": "yarn build && yarn gen-types",
-    "solhint": "solhint 'contracts/**/*.sol'"
+    "postinstall": "yarn build && yarn gen-types"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
