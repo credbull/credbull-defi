@@ -7,6 +7,9 @@ pragma solidity ^0.8.20;
  * Tokens are locked indefinitely, but associated with specific deposit periods for tracking.
  */
 interface ITimelockOpenEnded {
+    error ITimelockOpenEnded__InsufficientLockedBalance(address account, uint256 available, uint256 required);
+    error ITimelockOpenEnded__InsufficientUnlockedBalance(address account, uint256 available, uint256 required);
+
     /// @notice Locks `amount` of tokens for `account` at the given `depositPeriod`.
     function lock(address account, uint256 depositPeriod, uint256 amount) external;
 

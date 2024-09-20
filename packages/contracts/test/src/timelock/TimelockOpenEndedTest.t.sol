@@ -36,7 +36,10 @@ contract TimelockOpenEndedTest is Test {
         vm.prank(alice);
         timelock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
 
-        assertEq(depositDay1.amount, timelock.lockedAmount(alice, depositDay1.depositPeriod), "deposit not locked");
+        assertEq(
+            depositDay1.amount, timelock.lockedAmount(alice, depositDay1.depositPeriod), "deposit should be locked"
+        );
+        assertEq(0, timelock.unlockedAmount(alice, depositDay1.depositPeriod), "nothing should be unlocked");
     }
 
     function test__TimelockOpenEnded__DepositAndUnlock() public {

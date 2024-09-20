@@ -13,9 +13,6 @@ contract TimelockOpenEnded is ITimelockOpenEnded {
     IERC5679Ext1155 public immutable DEPOSITS;
     IERC5679Ext1155 public immutable UNLOCKED_DEPOSITS;
 
-    /// @dev Error for insufficient locked balance for `account`.
-    error TimelockOpenEnded__InsufficientLockedBalance(address account, uint256 available, uint256 required);
-
     constructor(IERC5679Ext1155 deposits, IERC5679Ext1155 unlockedDeposits) {
         DEPOSITS = deposits;
         UNLOCKED_DEPOSITS = unlockedDeposits;
@@ -39,7 +36,7 @@ contract TimelockOpenEnded is ITimelockOpenEnded {
     function unlock(address account, uint256 depositPeriod, uint256 amount) public {
         uint256 maxUnlockableAmount_ = maxUnlockAmount(account, depositPeriod);
         if (amount > maxUnlockableAmount_) {
-            revert TimelockOpenEnded__InsufficientLockedBalance(account, maxUnlockableAmount_, amount);
+            revert ITimelockOpenEnded__InsufficientLockedBalance(account, maxUnlockableAmount_, amount);
         }
 
         UNLOCKED_DEPOSITS.safeMint(account, depositPeriod, amount, "");
