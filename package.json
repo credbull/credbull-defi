@@ -14,7 +14,8 @@
     "int-test": "turbo run int-test",
     "format": "turbo run format",
     "lint": "turbo run lint",
-    "postinstall": "husky install"
+    "postinstall": "husky install",
+    "solhint": "solhint 'contracts/**/*.sol'"
   },
   "devDependencies": {
     "husky": "^9.0.11",

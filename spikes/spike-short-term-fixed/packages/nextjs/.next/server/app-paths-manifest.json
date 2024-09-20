@@ -1,0 +1,5 @@
+{
+  "/debug/page": "app/debug/page.js",
+  "/subscription/page": "app/subscription/page.js",
+  "/execution-helpers/page": "app/execution-helpers/page.js"
+}
