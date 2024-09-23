@@ -14,6 +14,8 @@ interface IMultiTokenVault is IERC1155 {
      */
     function getAsset() external view returns (IERC20 asset);
 
+    // =============== General utility view function ===============
+
     /**
      * @dev Returns the current number of time periods elapsed
      */
@@ -35,6 +37,18 @@ interface IMultiTokenVault is IERC1155 {
         view
         returns (uint256 shares);
 
+    // =============== View functions related to the depositor ===============
+
+    /**
+     * @dev Returns the yield accumulated by the user since the deposit made at the `depositPeriod`.
+     */
+    function yieldEarnedForDepositPeriod(address user, uint256 depositPeriod) external view returns (uint256 yield);
+
+    /**
+     * @dev Returns the total yield accumulated so far for the assets the user has deposited into the vault.
+     */
+    function yieldEarnedForUser(address user) external view returns (uint256 yield);
+
     /**
      * @dev Returns the total amount of assets the user can withdraw from the vault at the moment.
      */
@@ -51,8 +65,7 @@ interface IMultiTokenVault is IERC1155 {
      */
     function deposit(uint256 assets, address receiver) external returns (uint256 depositPeriod, uint256 shares);
 
-    // =============== Redeem ===============
-
+    // =============== Redeem/Withdraw ===============
     /**
      * @dev Returns the shares minted at the time of `depositPeriod` to the vault,
      * allowing the corresponding assets to be redeemed.
