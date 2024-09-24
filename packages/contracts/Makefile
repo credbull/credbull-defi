@@ -25,7 +25,7 @@ deploy:
 	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	@rm -rf out && \
 	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) --non-interactive -vvvv && \
 	yarn gen-types && \
 	yarn db-export
 
@@ -38,6 +38,6 @@ verify:
 	@echo "Running verify '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	rm -rf out && \
 	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume -vvvv && \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume --non-interactive -vvvv && \
 	yarn gen-types && \
 	yarn db-export
