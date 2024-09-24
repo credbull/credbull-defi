@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { ITimelockOpenEnded } from "@credbull/timelock/ITimelockOpenEnded.sol";
 import { RedeemAfterNotice } from "@credbull/timelock/RedeemAfterNotice.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
@@ -10,7 +9,7 @@ import { Deposit } from "@test/src/timelock/TimelockTest.t.sol";
 import { Test } from "forge-std/Test.sol";
 
 contract SimpleRedeemAfterNotice is RedeemAfterNotice {
-    uint256 private period = 1;
+    uint256 private period = 0;
 
     constructor(uint256 noticePeriod_, IERC5679Ext1155 deposits) RedeemAfterNotice(noticePeriod_, deposits) { }
 
@@ -33,6 +32,7 @@ contract RedeemAfterNoticeTest is Test {
 
     address internal owner = makeAddr("owner");
     address internal alice = makeAddr("alice");
+    address internal bob = makeAddr("bob");
 
     Deposit private depositDay1 = Deposit({ depositPeriod: 1, amount: 101 });
     Deposit private depositDay2 = Deposit({ depositPeriod: 2, amount: 202 });
@@ -43,25 +43,38 @@ contract RedeemAfterNoticeTest is Test {
         asyncRedeem = new SimpleRedeemAfterNotice(NOTICE_PERIOD, deposits);
     }
 
+    function test__RedeemAfterNotice__RequestAndRedeemSucceeds() public {
+        vm.prank(alice);
+        asyncRedeem.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
+        assertEq(depositDay1.amount, asyncRedeem.lockedAmount(alice, depositDay1.depositPeriod), "deposit not locked");
+
+        uint256 redeemPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
+
+        // request redeem
+        vm.prank(alice);
+        asyncRedeem.requestRedeem(depositDay1.amount, alice, depositDay1.depositPeriod, redeemPeriod);
+
+        // warp to redeem period
+        asyncRedeem.setCurrentPeriod(redeemPeriod);
+
+        // now redeem
+        vm.prank(alice);
+        asyncRedeem.redeem(depositDay1.amount, alice, alice, depositDay1.depositPeriod, redeemPeriod);
+
+        assertEq(0, asyncRedeem.lockedAmount(alice, depositDay1.depositPeriod), "deposit lock not released");
+        assertEq(0, asyncRedeem.DEPOSITS().balanceOf(alice, depositDay1.depositPeriod), "deposits should be redeemed");
+    }
+
     // Scenario S6: User tries to redeem the Principal the same day they request redemption - revert
     // TODO TimeLock: Scenario S5: User tries to redeem the APY the same day they request redemption - revert (// TODO - add check for yield - revert if same day)
-    function test__AsyncRedeemTest__RedeemSameDayFails() public {
+    function test__RedeemAfterNotice_RequestRedeemSameDayFails() public {
         vm.prank(alice);
         asyncRedeem.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
 
+        vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ITimelockOpenEnded.ITimelockOpenEnded__RequestedUnlockedBalanceInsufficient.selector,
-                alice,
-                0,
-                depositDay1.amount
-            )
-        );
-        asyncRedeem.redeem(depositDay1.amount, alice, alice, depositDay1.depositPeriod, depositDay1.depositPeriod);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ITimelockOpenEnded.ITimelockOpenEnded__NoticePeriodInsufficient.selector,
+                RedeemAfterNotice.RedeemAfterNotice__NoticePeriodInsufficient.selector,
                 alice,
                 depositDay1.depositPeriod,
                 depositDay1.depositPeriod + NOTICE_PERIOD
@@ -70,23 +83,61 @@ contract RedeemAfterNoticeTest is Test {
         asyncRedeem.requestRedeem(depositDay1.amount, alice, depositDay1.depositPeriod, depositDay1.depositPeriod);
     }
 
-    // Scenario S6: User tries to redeem the Principal the same day they request redemption - revert
-    // TODO TimeLock: Scenario S5: User tries to redeem the APY the same day they request redemption - revert (// TODO - add check for yield - revert if same day)
-    function test__AsyncRedeemTest__RedeemSucceedsWithNotice() public {
+    function test__RedeemAfterNotice__RedeemPriorToRedeemPeriodFails() public {
+        uint256 timeLockCurrentPeriod = asyncRedeem.currentPeriod();
+        uint256 redeemPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
+
+        // fail - not yet at the redeemPeriod
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RedeemAfterNotice.RedeemAfterNotice__RedeemPeriodNotReached.selector,
+                alice,
+                timeLockCurrentPeriod,
+                redeemPeriod
+            )
+        );
+        asyncRedeem.redeem(depositDay1.amount, alice, alice, depositDay1.depositPeriod, redeemPeriod);
+    }
+
+    function test__RedeemAfterNotice__RedeemWithoutRequestFails() public {
+        uint256 redeemPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
+
+        // warp to redeem period
+        asyncRedeem.setCurrentPeriod(redeemPeriod);
+
+        // fail - no redeemRequest
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RedeemAfterNotice.RedeemAfterNotice__RequestedRedeemAmountInsufficient.selector,
+                alice,
+                0,
+                depositDay1.amount
+            )
+        );
+        asyncRedeem.redeem(depositDay1.amount, alice, alice, depositDay1.depositPeriod, redeemPeriod);
+    }
+
+    function test__AsyncRedeemTest__OnlyDepositorCanRequestOrRedeem() public {
         vm.prank(alice);
         asyncRedeem.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
-        assertEq(depositDay1.amount, asyncRedeem.lockedAmount(alice, depositDay1.depositPeriod), "deposit not locked");
 
         uint256 redeemPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
 
+        vm.prank(bob);
+        vm.expectRevert(
+            abi.encodeWithSelector(RedeemAfterNotice.RedeemAfterNotice__RequesterNotOwner.selector, bob, alice)
+        );
         asyncRedeem.requestRedeem(depositDay1.amount, alice, depositDay1.depositPeriod, redeemPeriod);
 
-        asyncRedeem.setCurrentPeriod(redeemPeriod); // warp to redeemPeriod
-        asyncRedeem.redeem(depositDay1.amount, alice, alice, depositDay1.depositPeriod, redeemPeriod); // should succeed
+        // warp to redeem period
+        asyncRedeem.setCurrentPeriod(redeemPeriod);
 
-        assertEq(0, asyncRedeem.lockedAmount(alice, depositDay1.depositPeriod), "deposit lock not released");
-
-        uint256 depositAtDepositPeriod = asyncRedeem.DEPOSITS().balanceOf(alice, depositDay1.depositPeriod);
-        assertEq(0, depositAtDepositPeriod, "deposits should be redeemed");
+        vm.prank(bob);
+        vm.expectRevert(
+            abi.encodeWithSelector(RedeemAfterNotice.RedeemAfterNotice__RequesterNotOwner.selector, bob, alice)
+        );
+        asyncRedeem.redeem(depositDay1.amount, bob, alice, depositDay1.depositPeriod, redeemPeriod);
     }
 }
