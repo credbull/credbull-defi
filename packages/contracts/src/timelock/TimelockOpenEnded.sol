@@ -9,13 +9,11 @@ import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
  * @dev Interface for managing open-ended token locks with multiple deposit periods.
  * Tokens are locked indefinitely, but associated with specific deposit periods for tracking.
  */
-contract TimelockOpenEnded is ITimelockOpenEnded {
+abstract contract TimelockOpenEnded is ITimelockOpenEnded {
     IERC5679Ext1155 public immutable DEPOSITS;
-    IERC5679Ext1155 public immutable UNLOCKED_DEPOSITS;
 
-    constructor(IERC5679Ext1155 deposits, IERC5679Ext1155 unlockedDeposits) {
+    constructor(IERC5679Ext1155 deposits) {
         DEPOSITS = deposits;
-        UNLOCKED_DEPOSITS = unlockedDeposits;
     }
 
     // ======================== lock ========================
@@ -33,14 +31,7 @@ contract TimelockOpenEnded is ITimelockOpenEnded {
     // ======================== unlock ========================
 
     /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
-    function unlock(address account, uint256 depositPeriod, uint256 amount) public {
-        uint256 maxUnlockableAmount_ = maxUnlockAmount(account, depositPeriod);
-        if (amount > maxUnlockableAmount_) {
-            revert ITimelockOpenEnded__InsufficientLockedBalance(account, maxUnlockableAmount_, amount);
-        }
-
-        UNLOCKED_DEPOSITS.safeMint(account, depositPeriod, amount, "");
-    }
+    function unlock(address account, uint256 depositPeriod, uint256 amount) external virtual;
 
     /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
     function maxUnlockAmount(address account, uint256 depositPeriod) public view returns (uint256 maxUnlockAmount_) {
@@ -48,9 +39,11 @@ contract TimelockOpenEnded is ITimelockOpenEnded {
     }
 
     /// @notice Returns the amount of tokens unlocked for `account` from the given `depositPeriod`.
-    function unlockedAmount(address account, uint256 depositPeriod) public view returns (uint256 unlockedAmount_) {
-        return UNLOCKED_DEPOSITS.balanceOf(account, depositPeriod);
-    }
+    function unlockedAmount(address account, uint256 depositPeriod)
+        public
+        view
+        virtual
+        returns (uint256 unlockedAmount_);
 
     /// @notice Returns the periods with unlocked tokens for `account` between `fromPeriod` and `toPeriod`.
     function unlockedPeriods(address account, uint256 fromPeriod, uint256 toPeriod)
@@ -76,4 +69,7 @@ contract TimelockOpenEnded is ITimelockOpenEnded {
 
         return resUnlockedPeriods;
     }
+
+    /// @notice Returns the current period.
+    function currentPeriod() public view virtual returns (uint256 currentPeriod_);
 }

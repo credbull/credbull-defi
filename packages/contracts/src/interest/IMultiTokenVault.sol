@@ -6,6 +6,7 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 /**
  * @title IMultiTokenVault
  * @dev Vault supporting multiple deposit periods with independent returns and redemption rules.
+ * Follows the IERC4626 convention - adding in support for multiple Tokens at given depositPeriods
  */
 interface IMultiTokenVault {
     /// @notice Returns the yield for `principal` between `depositPeriod` and `redeemPeriod`.

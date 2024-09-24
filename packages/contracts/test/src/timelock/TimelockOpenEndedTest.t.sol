@@ -23,7 +23,7 @@ contract TimelockOpenEndedTest is Test {
     function setUp() public {
         deposits = new SimpleIERC1155Mintable();
         unlockedDeposits = new SimpleIERC1155Mintable();
-        timelock = new TimelockOpenEnded(deposits, unlockedDeposits);
+        timelock = new TimelockOpenEndedMock(deposits, unlockedDeposits);
     }
 
     function test__TimelockOpenEnded__NoDeposits() public view {
@@ -70,5 +70,37 @@ contract TimelockOpenEndedTest is Test {
             timelock.unlockedAmount(alice, depositDay2.depositPeriod),
             "deposit2 amount should be unlocked"
         );
+    }
+}
+
+contract TimelockOpenEndedMock is TimelockOpenEnded {
+    IERC5679Ext1155 public immutable UNLOCKED_DEPOSITS;
+
+    constructor(IERC5679Ext1155 deposits, IERC5679Ext1155 unlockedDeposits) TimelockOpenEnded(deposits) {
+        UNLOCKED_DEPOSITS = unlockedDeposits;
+    }
+
+    /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
+    function unlock(address account, uint256 depositPeriod, uint256 amount) public override {
+        uint256 maxUnlockableAmount_ = maxUnlockAmount(account, depositPeriod);
+        if (amount > maxUnlockableAmount_) {
+            revert ITimelockOpenEnded__LockedBalanceInsufficient(account, maxUnlockableAmount_, amount);
+        }
+
+        UNLOCKED_DEPOSITS.safeMint(account, depositPeriod, amount, "");
+    }
+
+    /// @notice Returns the amount of tokens unlocked for `account` from the given `depositPeriod`.
+    function unlockedAmount(address account, uint256 depositPeriod)
+        public
+        view
+        override
+        returns (uint256 unlockedAmount_)
+    {
+        return UNLOCKED_DEPOSITS.balanceOf(account, depositPeriod);
+    }
+
+    function currentPeriod() public pure override returns (uint256 currentPeriod_) {
+        return 0;
     }
 }

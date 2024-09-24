@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import { ITimelockOpenEnded } from "@credbull/timelock/ITimelockOpenEnded.sol";
-import { TimelockOpenEnded } from "@credbull/timelock/TimelockOpenEnded.sol";
 import { IAsyncRedeem } from "@credbull/timelock/IAsyncRedeem.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
@@ -10,46 +9,27 @@ import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 import { Deposit } from "@test/src/timelock/TimelockTest.t.sol";
 import { Test } from "forge-std/Test.sol";
 
-contract SimpleAsyncRedeem is TimelockOpenEnded, IAsyncRedeem {
-    constructor(IERC5679Ext1155 deposits, IERC5679Ext1155 unlockedDeposits)
-        TimelockOpenEnded(deposits, unlockedDeposits)
-    { }
+contract SimpleAsyncRedeem is IAsyncRedeem {
+    uint256 private period = 1;
 
-    /// @notice Requests redemption of `shares` for assets, which will be transferred to `receiver` after the `redeemPeriod`.
-    // TODO - confirm if we want the concept of shares here, or are these just assets?
-    function requestRedeem(
-        uint256 shares,
-        address, /* receiver */
-        address owner,
-        uint256 depositPeriod,
-        uint256 /* redeemPeriod */
-    ) external returns (uint256 assets) {
-        unlock(owner, depositPeriod, shares); // TODO - maybe we want the redeem period in unlock
+    constructor(uint256 noticePeriod_, IERC5679Ext1155 deposits) IAsyncRedeem(noticePeriod_, deposits) { }
 
-        return shares;
+    /// @notice Returns the current period.
+    function currentPeriod() public view override returns (uint256 currentPeriod_) {
+        return period;
     }
 
-    /// @notice Processes the redemption of `shares` for assets after the `redeemPeriod`, transferring to `receiver`.
-    // TODO - confirm if we want the concept of shares here, or are these just assets?
-    function redeem(
-        uint256 shares,
-        address, /* receiver */
-        address owner,
-        uint256 depositPeriod,
-        uint256 /* redeemPeriod */
-    ) external view returns (uint256 assets) {
-        uint256 unlockedAmount_ = unlockedAmount(owner, depositPeriod);
-        if (shares > unlockedAmount_) {
-            revert ITimelockOpenEnded__InsufficientUnlockedBalance(owner, unlockedAmount_, shares);
-        }
-        return 0;
+    /// @notice Returns the current period.
+    function setCurrentPeriod(uint256 currentPeriod_) public {
+        period = currentPeriod_;
     }
 }
 
 contract AsyncRedeemTest is Test {
-    IAsyncRedeem internal asyncRedeem; //
+    SimpleAsyncRedeem internal asyncRedeem;
     IERC5679Ext1155 private deposits;
-    IERC5679Ext1155 private unlockedDeposits;
+
+    uint256 private constant NOTICE_PERIOD = 1;
 
     address internal owner = makeAddr("owner");
     address internal alice = makeAddr("alice");
@@ -60,19 +40,18 @@ contract AsyncRedeemTest is Test {
 
     function setUp() public {
         deposits = new SimpleIERC1155Mintable();
-        unlockedDeposits = new SimpleIERC1155Mintable();
-        asyncRedeem = new SimpleAsyncRedeem(deposits, unlockedDeposits);
+        asyncRedeem = new SimpleAsyncRedeem(NOTICE_PERIOD, deposits);
     }
 
     // Scenario S6: User tries to redeem the Principal the same day they request redemption - revert
-    // TODO TimeLock: Scenario S5: User tries to redeem the APY the same day they request redemption - revert
-    function test__AsyncRedeemTest__RedeemSameDay() public {
+    // TODO TimeLock: Scenario S5: User tries to redeem the APY the same day they request redemption - revert (// TODO - add check for yield - revert if same day)
+    function test__AsyncRedeemTest__RedeemSameDayFails() public {
         vm.prank(alice);
         asyncRedeem.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ITimelockOpenEnded.ITimelockOpenEnded__InsufficientUnlockedBalance.selector,
+                ITimelockOpenEnded.ITimelockOpenEnded__RequestedUnlockedBalanceInsufficient.selector,
                 alice,
                 0,
                 depositDay1.amount
@@ -80,8 +59,34 @@ contract AsyncRedeemTest is Test {
         );
         asyncRedeem.redeem(depositDay1.amount, alice, alice, depositDay1.depositPeriod, depositDay1.depositPeriod);
 
-        // TODO - add check for requestRedeem - revert if same day
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ITimelockOpenEnded.ITimelockOpenEnded__NoticePeriodInsufficient.selector,
+                alice,
+                depositDay1.depositPeriod,
+                depositDay1.depositPeriod + NOTICE_PERIOD
+            )
+        );
+        asyncRedeem.requestRedeem(depositDay1.amount, alice, depositDay1.depositPeriod, depositDay1.depositPeriod);
+    }
 
-        // TODO - add check for yield - revert if same day
+    // Scenario S6: User tries to redeem the Principal the same day they request redemption - revert
+    // TODO TimeLock: Scenario S5: User tries to redeem the APY the same day they request redemption - revert (// TODO - add check for yield - revert if same day)
+    function test__AsyncRedeemTest__RedeemSucceedsWithNotice() public {
+        vm.prank(alice);
+        asyncRedeem.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
+        assertEq(depositDay1.amount, asyncRedeem.lockedAmount(alice, depositDay1.depositPeriod), "deposit not locked");
+
+        uint256 redeemPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
+
+        asyncRedeem.requestRedeem(depositDay1.amount, alice, depositDay1.depositPeriod, redeemPeriod);
+
+        asyncRedeem.setCurrentPeriod(redeemPeriod); // warp to redeemPeriod
+        asyncRedeem.redeem(depositDay1.amount, alice, alice, depositDay1.depositPeriod, redeemPeriod); // should succeed
+
+        assertEq(0, asyncRedeem.lockedAmount(alice, depositDay1.depositPeriod), "deposit lock not released");
+
+        uint256 depositAtDepositPeriod = asyncRedeem.DEPOSITS().balanceOf(alice, depositDay1.depositPeriod);
+        assertEq(0, depositAtDepositPeriod, "deposits should be redeemed");
     }
 }
