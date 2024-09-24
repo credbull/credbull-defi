@@ -8,11 +8,15 @@ import { Context } from "@openzeppelin/contracts/utils/Context.sol";
 /**
  * @title RedeemAfterNotice
  */
-abstract contract RedeemAfterNotice is TimelockOpenEnded, Context {
-    error RedeemAfterNotice__NoticePeriodInsufficient(address account, uint256 requestedPeriod, uint256 requiredPeriod);
-    error RedeemAfterNotice__RequestedRedeemAmountInsufficient(address account, uint256 amountUnlocked, uint256 amount);
-    error RedeemAfterNotice__RedeemPeriodNotReached(address account, uint256 currentPeriod, uint256 redeemPeriod);
-    error RedeemAfterNotice__RequesterNotOwner(address requester, address owner);
+abstract contract TimelockAsyncUnlock is TimelockOpenEnded, Context {
+    error TimelockAsyncUnlock__NoticePeriodInsufficient(
+        address account, uint256 requestedPeriod, uint256 requiredPeriod
+    );
+    error TimelockAsyncUnlock__RequestedUnlockAmountInsufficient(
+        address account, uint256 amountUnlocked, uint256 amount
+    );
+    error TimelockAsyncUnlock__UnlockPeriodNotReached(address account, uint256 currentPeriod, uint256 redeemPeriod);
+    error TimelockAsyncUnlock__RequesterNotOwner(address requester, address owner);
 
     uint256 public immutable NOTICE_PERIOD = 1;
 
@@ -22,7 +26,6 @@ abstract contract RedeemAfterNotice is TimelockOpenEnded, Context {
         uint256 redeemPeriod;
         uint256 amount;
     }
-    // Mapping to store unlock requests
 
     mapping(uint256 depositPeriod => mapping(address account => UnlockItem)) private _unlockRequests;
 
@@ -32,63 +35,64 @@ abstract contract RedeemAfterNotice is TimelockOpenEnded, Context {
 
     /// @notice Requests redemption of `amount`, which will be transferred to `receiver` after the `redeemPeriod`.
     // TODO - confirm if we want the concept of shares here, or are these just assets?
-    function requestRedeem(uint256 amount, address owner, uint256 depositPeriod, uint256 redeemPeriod) public {
+    function requestUnlock(uint256 amount, address owner, uint256 depositPeriod, uint256 unlockPeriod) public {
         address requester = _msgSender();
         if (requester != owner) {
-            revert RedeemAfterNotice__RequesterNotOwner(requester, owner); // TODO - should we check allowances too?
+            revert TimelockAsyncUnlock__RequesterNotOwner(requester, owner); // TODO - should we check allowances too?
         }
 
         uint256 depositWithNoticePeriod = depositPeriod + NOTICE_PERIOD;
-        if (redeemPeriod < depositWithNoticePeriod) {
-            revert RedeemAfterNotice__NoticePeriodInsufficient(owner, redeemPeriod, depositWithNoticePeriod);
+        if (unlockPeriod < depositWithNoticePeriod) {
+            revert TimelockAsyncUnlock__NoticePeriodInsufficient(owner, unlockPeriod, depositWithNoticePeriod);
         }
 
         uint256 currentWithNoticePeriod = currentPeriod() + NOTICE_PERIOD;
-        if (redeemPeriod < currentWithNoticePeriod) {
-            revert RedeemAfterNotice__NoticePeriodInsufficient(owner, redeemPeriod, currentWithNoticePeriod);
+        if (unlockPeriod < currentWithNoticePeriod) {
+            revert TimelockAsyncUnlock__NoticePeriodInsufficient(owner, unlockPeriod, currentWithNoticePeriod);
         }
 
         // TODO - what happens if multiple redeem requests for same user / deposit / redeem tuple?
         _unlockRequests[depositPeriod][owner] =
-            UnlockItem({ account: owner, depositPeriod: depositPeriod, redeemPeriod: redeemPeriod, amount: amount });
+            UnlockItem({ account: owner, depositPeriod: depositPeriod, redeemPeriod: unlockPeriod, amount: amount });
     }
 
-    /// @notice Processes the redemption of `amount` after the `redeemPeriod`, transferring to `receiver`.
-    function redeem(uint256 amount, address, /* receiver */ address owner, uint256 depositPeriod, uint256 redeemPeriod)
-        public
-    {
+    /// @notice Unlocks `amount` after the `redeemPeriod`, transferring to `receiver`.
+    function unlock(uint256 amount, address owner, uint256 depositPeriod, uint256 unlockPeriod) public {
         address requester = _msgSender();
         if (requester != owner) {
-            revert RedeemAfterNotice__RequesterNotOwner(requester, owner); // TODO - should we check allowances too?
+            revert TimelockAsyncUnlock__RequesterNotOwner(requester, owner);
         }
 
         uint256 currentPeriod_ = currentPeriod();
 
         // check the redeemPeriod
-        if (redeemPeriod > currentPeriod_) {
-            revert RedeemAfterNotice__RedeemPeriodNotReached(owner, currentPeriod_, redeemPeriod);
+        if (unlockPeriod > currentPeriod_) {
+            revert TimelockAsyncUnlock__UnlockPeriodNotReached(owner, currentPeriod_, unlockPeriod);
         }
 
         UnlockItem memory unlockRequest = _unlockRequests[depositPeriod][owner];
 
         // check the redeemPeriod in the unlocks
         if (unlockRequest.redeemPeriod > currentPeriod_) {
-            revert RedeemAfterNotice__RedeemPeriodNotReached(owner, currentPeriod_, unlockRequest.redeemPeriod);
+            revert TimelockAsyncUnlock__UnlockPeriodNotReached(owner, currentPeriod_, unlockRequest.redeemPeriod);
         }
 
         // check the redeemPeriod in the unlocks
         if (amount > unlockRequest.amount) {
-            revert RedeemAfterNotice__RequestedRedeemAmountInsufficient(owner, unlockRequest.amount, amount);
+            revert TimelockAsyncUnlock__RequestedUnlockAmountInsufficient(owner, unlockRequest.amount, amount);
         }
 
-        // TODO - do we want this contract to do redeem or not?  maybe better just to create unlockRequests and unlocks
-        DEPOSITS.burn(owner, depositPeriod, amount, _emptyBytesArray()); // deposit specific
+        // TODO - change contract to just "unlock" this amount.  leave it to someone else to burn or redeem.
+        _updateLockAfterUnlock(owner, depositPeriod, amount);
     }
 
     /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
     function unlock(address account, uint256 depositPeriod, uint256 amount) public virtual override {
-        redeem(amount, account, account, depositPeriod, currentPeriod());
+        unlock(amount, account, depositPeriod, currentPeriod());
     }
+
+    /// @notice Process the lock after successful unlocking
+    function _updateLockAfterUnlock(address account, uint256 depositPeriod, uint256 amount) internal virtual;
 
     /// @dev there's no intermediate "unlocked" state - deposits are locked and then burnt on redeem
     function unlockedAmount(address, /* account */ uint256 /* depositPeriod */ )
