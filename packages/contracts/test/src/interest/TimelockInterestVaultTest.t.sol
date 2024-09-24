@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { DiscountingVault } from "@credbull/interest/DiscountingVault.sol";
+import { DiscountingVault } from "@test/src/interest/DiscountingVault.t.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/strategy/SimpleInterestYieldStrategy.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
-import { TimelockInterestVault } from "@credbull/interest/TimelockInterestVault.sol";
+import { TimelockInterestVault } from "@test/src/interest/TimelockInterestVault.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 

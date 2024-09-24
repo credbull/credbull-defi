@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { DiscountingVault } from "@credbull/interest/DiscountingVault.sol";
+import { DiscountingVault } from "@test/src/interest/DiscountingVault.t.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/strategy/SimpleInterestYieldStrategy.sol";
 

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
-import { DiscountingVault } from "@credbull/interest/DiscountingVault.sol";
-import { TimelockIERC1155 } from "@credbull/timelock/TimelockIERC1155.sol";
+import { DiscountingVault } from "@test/src/interest/DiscountingVault.t.sol";
+import { TimelockIERC1155 } from "@test/src/timelock/TimelockIERC1155.t.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { IProduct } from "@credbull/interest/IProduct.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
