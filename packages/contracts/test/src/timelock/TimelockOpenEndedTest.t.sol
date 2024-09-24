@@ -5,12 +5,8 @@ import { TimelockOpenEnded } from "@credbull/timelock/TimelockOpenEnded.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 
+import { Deposit } from "@test/src/timelock/TimelockTest.t.sol";
 import { Test } from "forge-std/Test.sol";
-
-struct Deposit {
-    uint256 depositPeriod;
-    uint256 amount;
-}
 
 contract TimelockOpenEndedTest is Test {
     TimelockOpenEnded internal timelock; //
@@ -27,38 +23,84 @@ contract TimelockOpenEndedTest is Test {
     function setUp() public {
         deposits = new SimpleIERC1155Mintable();
         unlockedDeposits = new SimpleIERC1155Mintable();
-        timelock = new TimelockOpenEnded(deposits, unlockedDeposits);
+        timelock = new TimelockOpenEndedMock(deposits, unlockedDeposits);
     }
 
-    function test__TimelockOpenEnded__NothingLocked() public view {
-        assertEq(0, timelock.lockedAmount(alice, 1), "nothing should be locked");
+    function test__TimelockOpenEnded__NoDeposits() public view {
+        assertEq(0, timelock.lockedAmount(alice, 1), "no deposit - nothing should be locked");
+        assertEq(0, timelock.unlockedPeriods(alice, 0, 10).length, "no deposit - no period should be unlocked");
+        assertEq(0, timelock.unlockedAmount(alice, 1), "no deposit - no amount should be unlocked");
     }
 
-    function test__TimelockOpenEnded__Lock() public {
-        vm.prank(owner);
+    function test__TimelockOpenEnded__Deposit() public {
+        vm.prank(alice);
         timelock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
 
-        assertEq(depositDay1.amount, timelock.lockedAmount(alice, depositDay1.depositPeriod), "deposit not locked");
+        assertEq(
+            depositDay1.amount, timelock.lockedAmount(alice, depositDay1.depositPeriod), "deposit should be locked"
+        );
+        assertEq(0, timelock.unlockedAmount(alice, depositDay1.depositPeriod), "nothing should be unlocked");
     }
 
-    function test__TimelockOpenEnded__Unlock() public {
-        vm.startPrank(owner);
+    function test__TimelockOpenEnded__DepositAndUnlock() public {
+        vm.startPrank(alice);
         timelock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
         timelock.lock(alice, depositDay2.depositPeriod, depositDay2.amount);
         timelock.lock(alice, depositDay3.depositPeriod, depositDay3.amount);
         vm.stopPrank();
 
         // nothing unlocked yet
-        assertEq(0, timelock.unlockedPeriods(alice).length, "nothing should be unlocked");
+        assertEq(0, timelock.unlockedPeriods(alice, 0, depositDay3.depositPeriod).length, "nothing should be unlocked");
+        assertEq(
+            depositDay2.amount,
+            timelock.maxUnlockAmount(alice, depositDay2.depositPeriod),
+            "entire deposit should be unlockable"
+        );
 
         // unlock deposit 2
-        vm.prank(owner);
+        vm.prank(alice);
         timelock.unlock(alice, depositDay2.depositPeriod, depositDay2.amount);
+
+        uint256[] memory unlockPeriods = timelock.unlockedPeriods(alice, 0, depositDay3.depositPeriod);
+        assertEq(1, unlockPeriods.length, "exactly one period should be unlocked");
+        assertEq(depositDay2.depositPeriod, unlockPeriods[0], "deposit2 period should be unlocked");
 
         assertEq(
             depositDay2.amount,
             timelock.unlockedAmount(alice, depositDay2.depositPeriod),
-            "deposit 2 should be unlocked"
+            "deposit2 amount should be unlocked"
         );
+    }
+}
+
+contract TimelockOpenEndedMock is TimelockOpenEnded {
+    IERC5679Ext1155 public immutable UNLOCKED_DEPOSITS;
+
+    constructor(IERC5679Ext1155 deposits, IERC5679Ext1155 unlockedDeposits) TimelockOpenEnded(deposits) {
+        UNLOCKED_DEPOSITS = unlockedDeposits;
+    }
+
+    /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
+    function unlock(address account, uint256 depositPeriod, uint256 amount) public override {
+        uint256 maxUnlockableAmount_ = maxUnlockAmount(account, depositPeriod);
+        if (amount > maxUnlockableAmount_) {
+            revert ITimelockOpenEnded__LockedBalanceInsufficient(account, maxUnlockableAmount_, amount);
+        }
+
+        UNLOCKED_DEPOSITS.safeMint(account, depositPeriod, amount, "");
+    }
+
+    /// @notice Returns the amount of tokens unlocked for `account` from the given `depositPeriod`.
+    function unlockedAmount(address account, uint256 depositPeriod)
+        public
+        view
+        override
+        returns (uint256 unlockedAmount_)
+    {
+        return UNLOCKED_DEPOSITS.balanceOf(account, depositPeriod);
+    }
+
+    function currentPeriod() public pure override returns (uint256 currentPeriod_) {
+        return 0;
     }
 }

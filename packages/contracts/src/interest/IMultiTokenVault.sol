@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-
 /**
  * @title IMultiTokenVault
  * @dev Vault supporting multiple deposit periods with independent returns and redemption rules.
+ * Follows the IERC4626 convention - adding in support for multiple Tokens at given depositPeriods
  */
 interface IMultiTokenVault {
-    /// @notice Returns the yield for `principal` between `depositPeriod` and `redeemPeriod`.
-    function calcYield(uint256 principal, uint256 depositPeriod, uint256 redeemPeriod)
-        external
-        view
-        returns (uint256 yield);
+    error IMultiTokenVault__RedeemBeforeDeposit(address owner, uint256 depositPeriod, uint256 redeemPeriod);
+    error IMultiTokenVault__RedeemPeriodNotSupported(address owner, uint256 currentPeriod, uint256 redeemPeriod);
 
     // =============== Deposit ===============
 
@@ -74,13 +70,13 @@ interface IMultiTokenVault {
     // =============== Utility ===============
 
     /// @notice Returns the address of the underlying token.
-    function getAsset() external view returns (IERC20 asset);
+    function asset() external view returns (address asset_);
 
     /// @notice Returns the shares held by `account` for `depositPeriod`.
-    function getSharesAtPeriod(address account, uint256 depositPeriod) external view returns (uint256 shares);
+    function sharesAtPeriod(address account, uint256 depositPeriod) external view returns (uint256 shares);
 
     /// @notice Returns the current number of time periods elapsed.
-    function getCurrentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
+    function currentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed_);
 
     // =============== Operational ===============
 

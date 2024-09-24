@@ -3,10 +3,8 @@ pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
-import { IProduct } from "@credbull/interest/IProduct.sol";
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { ERC20Burnable } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
@@ -23,18 +21,18 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
     using Math for uint256;
 
     IERC5679Ext1155 public immutable DEPOSITS;
-    uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapsed
+    uint256 public currentPeriodElapsed = 0; // the current number of time periods elapsed
 
     error MultiTokenVault__UnsupportedFunction(string functionName);
     error MultiTokenVault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 max);
 
     /**
      * @notice Constructor to initialize the vault with asset and deposit ledger.
-     * @param asset The ERC20 token that represents the underlying asset.
+     * @param asset_ The ERC20 token that represents the underlying asset.
      * @param depositLedger The ledger contract managing deposits.
      */
-    constructor(IERC20Metadata asset, IERC5679Ext1155 depositLedger)
-        ERC4626(asset)
+    constructor(IERC20Metadata asset_, IERC5679Ext1155 depositLedger)
+        ERC4626(asset_)
         ERC20("Multi Token Vault", "cMTV")
     {
         DEPOSITS = depositLedger;
@@ -45,7 +43,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
     /**
      * @dev See {IMultiTokenVault-getSharesAtPeriod}
      */
-    function getSharesAtPeriod(address account, uint256 depositPeriod) public view returns (uint256 shares) {
+    function sharesAtPeriod(address account, uint256 depositPeriod) public view returns (uint256 shares) {
         return DEPOSITS.balanceOf(account, depositPeriod);
     }
 
@@ -64,7 +62,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
      * @dev See {IMultiTokenVault-convertToShares}
      */
     function convertToShares(uint256 assets) public view override(ERC4626, IMultiTokenVault) returns (uint256 shares) {
-        return convertToSharesForDepositPeriod(assets, currentTimePeriodsElapsed);
+        return convertToSharesForDepositPeriod(assets, currentPeriodElapsed);
     }
 
     /**
@@ -84,7 +82,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
         returns (uint256)
     {
         uint256 shares = super.deposit(assets, receiver);
-        DEPOSITS.safeMint(receiver, getCurrentTimePeriodsElapsed(), shares, "");
+        DEPOSITS.safeMint(receiver, currentPeriodElapsed, shares, "");
         return shares;
     }
 
@@ -121,15 +119,15 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
         uint256 redeemPeriod
     ) public virtual returns (uint256 assets_) {
         if (depositPeriod > redeemPeriod) {
-            revert IProduct.RedeemTimePeriodNotSupported(owner, depositPeriod, redeemPeriod);
+            revert IMultiTokenVault__RedeemBeforeDeposit(owner, depositPeriod, redeemPeriod);
         }
 
         // TODO confirm rules around which day (or days) we allow redeems
-        if (currentTimePeriodsElapsed != redeemPeriod) {
-            revert IProduct.RedeemTimePeriodNotSupported(owner, currentTimePeriodsElapsed, redeemPeriod);
+        if (currentPeriodElapsed != redeemPeriod) {
+            revert IMultiTokenVault__RedeemPeriodNotSupported(owner, currentPeriodElapsed, redeemPeriod);
         }
 
-        uint256 maxShares = getSharesAtPeriod(owner, depositPeriod);
+        uint256 maxShares = sharesAtPeriod(owner, depositPeriod);
         if (shares > maxShares) {
             revert MultiTokenVault__ExceededMaxRedeem(owner, depositPeriod, shares, maxShares);
         }
@@ -151,7 +149,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
         view
         returns (uint256 assets)
     {
-        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed);
+        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentPeriodElapsed);
     }
 
     /**
@@ -162,7 +160,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
         view
         returns (uint256 assets)
     {
-        return previewRedeemForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed);
+        return previewRedeemForDepositPeriod(shares, depositPeriod, currentPeriodElapsed);
     }
 
     /**
@@ -172,16 +170,16 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
         public
         returns (uint256 assets)
     {
-        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentTimePeriodsElapsed);
+        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentPeriodElapsed);
     }
 
     // =============== ERC4626 and ERC20 ===============
 
     /**
-     * @dev See {IMultiTokenVault-getAsset}
+     * @dev See {IMultiTokenVault-asset}
      */
-    function getAsset() public view virtual returns (IERC20 asset) {
-        return IERC20(ERC4626.asset());
+    function asset() public view virtual override(ERC4626, IMultiTokenVault) returns (address asset_) {
+        return ERC4626.asset();
     }
 
     /**
@@ -196,15 +194,15 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
     /**
      * @dev See {IMultiTokenVault-getCurrentTimePeriodsElapsed}
      */
-    function getCurrentTimePeriodsElapsed() public view virtual returns (uint256) {
-        return currentTimePeriodsElapsed;
+    function currentTimePeriodsElapsed() public view virtual returns (uint256 currentTimePeriodsElapsed_) {
+        return currentPeriodElapsed;
     }
 
     /**
      * @dev See {IMultiTokenVault-setCurrentTimePeriodsElapsed}
      */
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public virtual {
-        currentTimePeriodsElapsed = currentTimePeriodsElapsed_;
+        currentPeriodElapsed = currentTimePeriodsElapsed_;
     }
 
     /**
