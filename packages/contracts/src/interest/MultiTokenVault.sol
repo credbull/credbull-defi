@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
-import { IProduct } from "@credbull/interest/IProduct.sol";
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -120,12 +119,12 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
         uint256 redeemPeriod
     ) public virtual returns (uint256 assets_) {
         if (depositPeriod > redeemPeriod) {
-            revert IProduct.RedeemTimePeriodNotSupported(owner, depositPeriod, redeemPeriod);
+            revert IMultiTokenVault__RedeemBeforeDeposit(owner, depositPeriod, redeemPeriod);
         }
 
         // TODO confirm rules around which day (or days) we allow redeems
         if (currentPeriodElapsed != redeemPeriod) {
-            revert IProduct.RedeemTimePeriodNotSupported(owner, currentPeriodElapsed, redeemPeriod);
+            revert IMultiTokenVault__RedeemPeriodNotSupported(owner, currentPeriodElapsed, redeemPeriod);
         }
 
         uint256 maxShares = sharesAtPeriod(owner, depositPeriod);

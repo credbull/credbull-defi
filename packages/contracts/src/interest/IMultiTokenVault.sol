@@ -7,6 +7,9 @@ pragma solidity ^0.8.20;
  * Follows the IERC4626 convention - adding in support for multiple Tokens at given depositPeriods
  */
 interface IMultiTokenVault {
+    error IMultiTokenVault__RedeemBeforeDeposit(address owner, uint256 depositPeriod, uint256 redeemPeriod);
+    error IMultiTokenVault__RedeemPeriodNotSupported(address owner, uint256 currentPeriod, uint256 redeemPeriod);
+
     // =============== Deposit ===============
 
     /// @notice Converts `assets` to shares for `depositPeriod`.
