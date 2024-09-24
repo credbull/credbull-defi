@@ -7,7 +7,7 @@ import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 /**
  * @title IAsyncRedeem
  */
-abstract contract IAsyncRedeem is TimelockOpenEnded {
+abstract contract RedeemAfterNotice is TimelockOpenEnded {
     uint256 public immutable NOTICE_PERIOD = 1;
 
     struct UnlockItem {

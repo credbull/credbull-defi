@@ -2,17 +2,17 @@
 pragma solidity ^0.8.20;
 
 import { ITimelockOpenEnded } from "@credbull/timelock/ITimelockOpenEnded.sol";
-import { IAsyncRedeem } from "@credbull/timelock/IAsyncRedeem.sol";
+import { RedeemAfterNotice } from "@credbull/timelock/RedeemAfterNotice.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 
 import { Deposit } from "@test/src/timelock/TimelockTest.t.sol";
 import { Test } from "forge-std/Test.sol";
 
-contract SimpleAsyncRedeem is IAsyncRedeem {
+contract SimpleRedeemAfterNotice is RedeemAfterNotice {
     uint256 private period = 1;
 
-    constructor(uint256 noticePeriod_, IERC5679Ext1155 deposits) IAsyncRedeem(noticePeriod_, deposits) { }
+    constructor(uint256 noticePeriod_, IERC5679Ext1155 deposits) RedeemAfterNotice(noticePeriod_, deposits) { }
 
     /// @notice Returns the current period.
     function currentPeriod() public view override returns (uint256 currentPeriod_) {
@@ -25,8 +25,8 @@ contract SimpleAsyncRedeem is IAsyncRedeem {
     }
 }
 
-contract AsyncRedeemTest is Test {
-    SimpleAsyncRedeem internal asyncRedeem;
+contract RedeemAfterNoticeTest is Test {
+    SimpleRedeemAfterNotice internal asyncRedeem;
     IERC5679Ext1155 private deposits;
 
     uint256 private constant NOTICE_PERIOD = 1;
@@ -40,7 +40,7 @@ contract AsyncRedeemTest is Test {
 
     function setUp() public {
         deposits = new SimpleIERC1155Mintable();
-        asyncRedeem = new SimpleAsyncRedeem(NOTICE_PERIOD, deposits);
+        asyncRedeem = new SimpleRedeemAfterNotice(NOTICE_PERIOD, deposits);
     }
 
     // Scenario S6: User tries to redeem the Principal the same day they request redemption - revert
