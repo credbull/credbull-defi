@@ -48,7 +48,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         );
         assertEq(
             deposit1Shares,
-            vault.getSharesAtPeriod(alice, deposit1TestParams.depositPeriod),
+            vault.sharesAtPeriod(alice, deposit1TestParams.depositPeriod),
             "getSharesAtPeriod incorrect at period 1"
         );
         assertEq(deposit1Shares, vault.balanceOf(alice), "balance incorrect at period 1");
@@ -60,7 +60,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         );
         assertEq(
             deposit2Shares,
-            vault.getSharesAtPeriod(alice, deposit2TestParams.depositPeriod),
+            vault.sharesAtPeriod(alice, deposit2TestParams.depositPeriod),
             "getSharesAtPeriod incorrect at period 2"
         );
         assertEq(deposit1Shares + deposit2Shares, vault.balanceOf(alice), "balance incorrect at period 2");

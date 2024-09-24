@@ -71,7 +71,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
         TimelockInterestVault vault = new TimelockInterestVault(params, owner);
 
         uint256 depositAmount = 15_000 * SCALE;
-        uint256 depositPeriod = vault.getCurrentTimePeriodsElapsed();
+        uint256 depositPeriod = vault.currentTimePeriodsElapsed();
 
         // ------------- deposit ---------------
         vm.startPrank(alice);
@@ -81,7 +81,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
         // Assert that the shares were correctly minted
         assertEq(shares, vault.balanceOf(alice), "Incorrect number of shares minted to Alice");
         // Assert that the shares are correctly locked
-        uint256 lockedAmount = vault.lockedAmount(alice, vault.getCurrentTimePeriodsElapsed() + params.tenor);
+        uint256 lockedAmount = vault.lockedAmount(alice, vault.currentTimePeriodsElapsed() + params.tenor);
         assertEq(shares, lockedAmount, "Shares were not correctly locked after deposit");
 
         // ------------- redeem (before tenor / maturity time period) ---------------
@@ -94,7 +94,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
                 alice,
                 0,
                 shares,
-                vault.getCurrentTimePeriodsElapsed()
+                vault.currentTimePeriodsElapsed()
             )
         );
         vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod); // try to redeem before warping - should fail
@@ -150,7 +150,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
         // ----------------------------------------------------------
 
         // ------------- deposit ---------------
-        uint256 depositPeriod = vault.getCurrentTimePeriodsElapsed();
+        uint256 depositPeriod = vault.currentTimePeriodsElapsed();
         vm.startPrank(alice);
         asset.approve(address(vault), depositAmount);
         uint256 actualSharesPeriodOne = vault.deposit(depositAmount, alice);
@@ -192,7 +192,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
 
         // ------------- rollover from period 1 to period 2 ---------------
         vm.startPrank(owner);
-        vault.rolloverUnlocked(alice, vault.getCurrentTimePeriodsElapsed(), actualSharesPeriodOne);
+        vault.rolloverUnlocked(alice, vault.currentTimePeriodsElapsed(), actualSharesPeriodOne);
         vm.stopPrank();
 
         // ------------- verify rollover of shares and locks ---------------
@@ -255,7 +255,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
         TimelockInterestVault vault = new TimelockInterestVault(params, owner);
 
         uint256 depositAmount = 1000 * SCALE;
-        uint256 depositPeriod = vault.getCurrentTimePeriodsElapsed();
+        uint256 depositPeriod = vault.currentTimePeriodsElapsed();
 
         // ------------- pause ---------------
         vm.prank(owner);
@@ -325,7 +325,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
                 alice,
                 0,
                 shares,
-                vault.getCurrentTimePeriodsElapsed()
+                vault.currentTimePeriodsElapsed()
             )
         );
         vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod); // try to redeem before warping - should fail
@@ -341,7 +341,7 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
                 alice,
                 0,
                 shares,
-                vault.getCurrentTimePeriodsElapsed()
+                vault.currentTimePeriodsElapsed()
             )
         );
         vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod);
