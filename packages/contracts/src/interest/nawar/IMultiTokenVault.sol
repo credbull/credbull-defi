@@ -8,23 +8,24 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
  */
 
 interface IMultiTokenVault is IERC1155 {
-    /**
-     * @dev Returns the ERC20 underlying asset used in the vault
-     * @return asset The ERC20 underlying asset
-     */
-    function getAsset() external view returns (IERC20 asset);
+    /// @notice Returns the yield for `principal` between `depositPeriod` and `redeemPeriod`.
+    function calcYield(uint256 principal, uint256 depositPeriod, uint256 redeemPeriod)
+        external
+        view
+        returns (uint256 yield);
 
     // =============== General utility view function ===============
-
-    /**
-     * @dev Returns the current number of time periods elapsed
-     */
-    function getCurrentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
 
     /**
      * @dev Calculates the amount of assets that can be withdrawn at the current time based on the shares minted at the time of `depositPeriod`.
      */
     function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
+        external
+        view
+        returns (uint256 assets);
+
+    /// @notice Converts `shares` to assets for `depositPeriod` and `redeemPeriod`.
+    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
         external
         view
         returns (uint256 assets);
@@ -36,6 +37,9 @@ interface IMultiTokenVault is IERC1155 {
         external
         view
         returns (uint256 shares);
+
+    /// @notice Converts `assets` to shares at the current period.
+    function convertToShares(uint256 assets) external view returns (uint256 shares);
 
     // =============== View functions related to the depositor ===============
 
@@ -49,11 +53,6 @@ interface IMultiTokenVault is IERC1155 {
      */
     function yieldEarnedForUser(address user) external view returns (uint256 yield);
 
-    /**
-     * @dev Returns the total amount of assets the user can withdraw from the vault at the moment.
-     */
-    function previewWithdraw(address user) external view returns (uint256 assets);
-
     // =============== Deposit ===============
     /**
      * @dev Deposits assets into the vault and mints shares for the current time period.
@@ -66,6 +65,16 @@ interface IMultiTokenVault is IERC1155 {
     function deposit(uint256 assets, address receiver) external returns (uint256 depositPeriod, uint256 shares);
 
     // =============== Redeem/Withdraw ===============
+
+    /// @notice Redeems `shares` for assets, transferring to `receiver`, for `depositPeriod` and `redeemPeriod`.
+    function redeemForDepositPeriod(
+        uint256 shares,
+        address receiver,
+        address owner,
+        uint256 depositPeriod,
+        uint256 redeemPeriod
+    ) external returns (uint256 assets);
+
     /**
      * @dev Returns the shares minted at the time of `depositPeriod` to the vault,
      * allowing the corresponding assets to be redeemed.
@@ -73,6 +82,11 @@ interface IMultiTokenVault is IERC1155 {
     function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
         external
         returns (uint256 assets);
+
+    /**
+     * @dev Returns the total amount of assets the user can withdraw from the vault at the moment.
+     */
+    function previewWithdraw(address user) external view returns (uint256 assets);
 
     /**
      * @dev The owner withdraws the assets deposited at the time of `depositPeriod`.
@@ -87,8 +101,23 @@ interface IMultiTokenVault is IERC1155 {
     function withdraw(uint256 assets, address receiver, address owner) external;
 
     // =============== Operational ===============
+
+    /**
+     * @dev Returns the ERC20 underlying asset used in the vault
+     * @return asset The ERC20 underlying asset
+     */
+    function getAsset() external view returns (IERC20 asset);
+
+    /**
+     * @dev Returns the current number of time periods elapsed
+     */
+    function getCurrentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
+
     /**
      * @dev This function is for only testing purposes
      */
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
+
+    /// @notice Returns the shares held by `account` for `depositPeriod`.
+    function getSharesAtPeriod(address account, uint256 depositPeriod) external view returns (uint256 shares);
 }

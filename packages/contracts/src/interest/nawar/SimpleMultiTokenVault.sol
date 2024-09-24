@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { MultiTokenERC1155Vault } from "./MultiTokenERC1155Vault.sol";
+import { MultiTokenVault } from "./MultiTokenVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ICalcInterestMetadata } from "@credbull/interest/ICalcInterestMetadata.sol";
@@ -9,11 +9,11 @@ import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 
 /**
  * @title SimpleMultiTokenVault
- * @dev A concrete implementation of the MultiTokenERC1155Vault contract.
+ * @dev A concrete implementation of the MultiTokenVault contract.
  *      This vault uses a simple yield calculation strategy with a fixed asset-to-shares ratio and yield percentage.
  *      It includes access control for managing deposit periods.
  */
-contract SimpleMultiTokenVault is MultiTokenERC1155Vault {
+contract SimpleMultiTokenVault is MultiTokenVault {
     using SafeERC20 for IERC20;
 
     /// @notice The yield strategy contract used to calculate yield.
@@ -40,7 +40,7 @@ contract SimpleMultiTokenVault is MultiTokenERC1155Vault {
         ICalcInterestMetadata context,
         uint256 assetToSharesRatio,
         address initialOwner
-    ) MultiTokenERC1155Vault(_treasury, _asset, _uri, initialOwner) {
+    ) MultiTokenVault(_treasury, _asset, _uri, initialOwner) {
         require(assetToSharesRatio > 0, "Asset to shares ratio must be greater than 0");
 
         YIELD_STRATEGY = yieldStrategy;
@@ -65,13 +65,11 @@ contract SimpleMultiTokenVault is MultiTokenERC1155Vault {
         returns (uint256 yieldAmount)
     {
         if (depositPeriod > redeemPeriod) {
-            revert MultiTokenERC1155Vault__RedeemTimePeriodNotSupported(owner(), depositPeriod, redeemPeriod);
+            revert MultiTokenVault__RedeemTimePeriodNotSupported(owner(), depositPeriod, redeemPeriod);
         }
 
         if (currentTimePeriodsElapsed != redeemPeriod) {
-            revert MultiTokenERC1155Vault__RedeemTimePeriodNotSupported(
-                owner(), currentTimePeriodsElapsed, redeemPeriod
-            );
+            revert MultiTokenVault__RedeemTimePeriodNotSupported(owner(), currentTimePeriodsElapsed, redeemPeriod);
         }
 
         return YIELD_STRATEGY.calcYield(address(CONTEXT), principal, depositPeriod, redeemPeriod);

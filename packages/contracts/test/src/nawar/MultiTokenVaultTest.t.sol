@@ -5,7 +5,7 @@ import { IDualRateContext } from "@credbull/interest/IDualRateContext.sol";
 import { DualRateContext } from "./DualRateContext.sol";
 import { DualRateYieldStrategy } from "./DualRateYieldStrategy.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
-import { MultiTokenERC1155Vault } from "@credbull/interest/nawar/MultiTokenERC1155Vault.sol";
+import { MultiTokenVault } from "@credbull/interest/nawar/MultiTokenVault.sol";
 import { SimpleMultiTokenVault } from "@credbull/interest/nawar/SimpleMultiTokenVault.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Test } from "forge-std/Test.sol";
@@ -18,11 +18,11 @@ import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { console2 as console } from "forge-std/console2.sol";
 
 /**
- * @title MultiTokenERC1155VaultTest
- * @notice This contract tests various scenarios for the MultiTokenERC1155Vault and yield strategy implementations.
+ * @title MultiTokenVaultTest
+ * @notice This contract tests various scenarios for the MultiTokenVault and yield strategy implementations.
  * @dev The contract uses the Foundry testing framework and simulates different user actions and redemption events.
  */
-contract MultiTokenERC1155VaultTest is Test {
+contract MultiTokenVaultTest is Test {
     // Declare the ERC20 token used for the vault's operations.
     ERC20 private asset;
 
@@ -137,7 +137,7 @@ contract MultiTokenERC1155VaultTest is Test {
         address contextAddress = address(multiRateContext);
 
         // Initialize the vault contract
-        MultiTokenERC1155Vault vault = new SimpleMultiTokenVault(
+        MultiTokenVault vault = new SimpleMultiTokenVault(
             treasury, asset, URI, yieldStrategy, multiRateContext, ASSERT_TO_SHARE_RATIO, owner
         );
 
@@ -234,7 +234,7 @@ contract MultiTokenERC1155VaultTest is Test {
         address contextAddress = address(multiRateContext);
 
         // Initialize the vault contract
-        MultiTokenERC1155Vault vault = new SimpleMultiTokenVault(
+        MultiTokenVault vault = new SimpleMultiTokenVault(
             treasury, asset, URI, yieldStrategy, multiRateContext, ASSERT_TO_SHARE_RATIO, owner
         );
 
@@ -331,7 +331,7 @@ contract MultiTokenERC1155VaultTest is Test {
         address contextAddress = address(multiRateContext);
 
         // Initialize the vault contract
-        MultiTokenERC1155Vault vault = new SimpleMultiTokenVault(
+        MultiTokenVault vault = new SimpleMultiTokenVault(
             treasury, asset, URI, yieldStrategy, multiRateContext, ASSERT_TO_SHARE_RATIO, owner
         );
 
@@ -429,7 +429,7 @@ contract MultiTokenERC1155VaultTest is Test {
         address contextAddress = address(multiRateContext);
 
         // Initialize the vault contract
-        MultiTokenERC1155Vault vault = new SimpleMultiTokenVault(
+        MultiTokenVault vault = new SimpleMultiTokenVault(
             treasury, asset, URI, yieldStrategy, multiRateContext, ASSERT_TO_SHARE_RATIO, owner
         );
 
@@ -586,7 +586,7 @@ contract MultiTokenERC1155VaultTest is Test {
         address contextAddress = address(multiRateContext);
 
         // Initialize the vault contract
-        MultiTokenERC1155Vault vault = new SimpleMultiTokenVault(
+        MultiTokenVault vault = new SimpleMultiTokenVault(
             treasury, asset, URI, yieldStrategy, multiRateContext, ASSERT_TO_SHARE_RATIO, owner
         );
 
@@ -686,7 +686,7 @@ contract MultiTokenERC1155VaultTest is Test {
         address contextAddress = address(multiRateContext);
 
         // Initialize the vault contract
-        MultiTokenERC1155Vault vault = new SimpleMultiTokenVault(
+        MultiTokenVault vault = new SimpleMultiTokenVault(
             treasury, asset, URI, yieldStrategy, multiRateContext, ASSERT_TO_SHARE_RATIO, owner
         );
 
@@ -786,7 +786,7 @@ contract MultiTokenERC1155VaultTest is Test {
         address contextAddress = address(multiRateContext);
 
         // Initialize the vault contract
-        MultiTokenERC1155Vault vault = new SimpleMultiTokenVault(
+        MultiTokenVault vault = new SimpleMultiTokenVault(
             treasury, asset, URI, yieldStrategy, multiRateContext, ASSERT_TO_SHARE_RATIO, owner
         );
 
@@ -886,7 +886,7 @@ contract MultiTokenERC1155VaultTest is Test {
         address contextAddress = address(multiRateContext);
 
         // Initialize the vault contract
-        MultiTokenERC1155Vault vault = new SimpleMultiTokenVault(
+        MultiTokenVault vault = new SimpleMultiTokenVault(
             treasury, asset, URI, yieldStrategy, multiRateContext, ASSERT_TO_SHARE_RATIO, owner
         );
 
@@ -994,7 +994,7 @@ contract MultiTokenERC1155VaultTest is Test {
         address contextAddress = address(multiRateContext);
 
         // Initialize the vault contract
-        MultiTokenERC1155Vault vault = new SimpleMultiTokenVault(
+        MultiTokenVault vault = new SimpleMultiTokenVault(
             treasury, asset, URI, yieldStrategy, multiRateContext, ASSERT_TO_SHARE_RATIO, owner
         );
 
@@ -1129,7 +1129,7 @@ contract MultiTokenERC1155VaultTest is Test {
         address contextAddress = address(multiRateContext);
 
         // Initialize the vault contract
-        MultiTokenERC1155Vault vault = new SimpleMultiTokenVault(
+        MultiTokenVault vault = new SimpleMultiTokenVault(
             treasury, asset, URI, yieldStrategy, multiRateContext, ASSERT_TO_SHARE_RATIO, owner
         );
 
@@ -1273,7 +1273,7 @@ contract MultiTokenERC1155VaultTest is Test {
         address contextAddress = address(multiRateContext);
 
         // Initialize the vault contract
-        MultiTokenERC1155Vault vault = new SimpleMultiTokenVault(
+        MultiTokenVault vault = new SimpleMultiTokenVault(
             treasury, asset, URI, yieldStrategy, multiRateContext, ASSERT_TO_SHARE_RATIO, owner
         );
 

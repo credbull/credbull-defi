@@ -2,21 +2,37 @@
 pragma solidity ^0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-
+import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 /**
  * @title IMultiTokenVault
- * @dev Vault supporting multiple deposit periods with independent returns and redemption rules.
  */
-interface IMultiTokenVault {
+
+interface IMultiTokenVault is IERC1155 {
     /// @notice Returns the yield for `principal` between `depositPeriod` and `redeemPeriod`.
     function calcYield(uint256 principal, uint256 depositPeriod, uint256 redeemPeriod)
         external
         view
         returns (uint256 yield);
 
-    // =============== Deposit ===============
+    // =============== General utility view function ===============
 
-    /// @notice Converts `assets` to shares for `depositPeriod`.
+    /**
+     * @dev Calculates the amount of assets that can be withdrawn at the current time based on the shares minted at the time of `depositPeriod`.
+     */
+    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
+        external
+        view
+        returns (uint256 assets);
+
+    /// @notice Converts `shares` to assets for `depositPeriod` and `redeemPeriod`.
+    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
+        external
+        view
+        returns (uint256 assets);
+
+    /**
+     * @dev Converts `assets` to shares for `depositPeriod`.
+     */
     function convertToSharesForDepositPeriod(uint256 assets, uint256 depositPeriod)
         external
         view
@@ -25,25 +41,31 @@ interface IMultiTokenVault {
     /// @notice Converts `assets` to shares at the current period.
     function convertToShares(uint256 assets) external view returns (uint256 shares);
 
-    /// @notice Previews the deposit of `assets` at the current period.
-    function previewDeposit(uint256 assets) external view returns (uint256 shares);
+    // =============== View functions related to the depositor ===============
 
-    /// @notice Deposits `assets` and mints shares to `receiver`.
-    function deposit(uint256 assets, address receiver) external returns (uint256 shares);
+    /**
+     * @dev Returns the yield accumulated by the user since the deposit made at the `depositPeriod`.
+     */
+    function yieldEarnedForDepositPeriod(address user, uint256 depositPeriod) external view returns (uint256 yield);
 
-    // =============== Redeem ===============
+    /**
+     * @dev Returns the total yield accumulated so far for the assets the user has deposited into the vault.
+     */
+    function yieldEarnedForUser(address user) external view returns (uint256 yield);
 
-    /// @notice Converts `shares` to assets for `depositPeriod` and `redeemPeriod`.
-    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
-        external
-        view
-        returns (uint256 assets);
+    // =============== Deposit ===============
 
-    /// @notice Previews the redeem of `shares` for `depositPeriod` and `redeemPeriod`.
-    function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
-        external
-        view
-        returns (uint256 assets);
+    /**
+     * @dev Deposits assets into the vault and mints shares for the current time period.
+     * Initially, assets and shares are equivalent.
+     * @param assets The amount of asset to be deposited into the vault.
+     * @param receiver The address that will receive the minted shares.
+     * @return depositPeriod The current time period for the deposit, corresponding to the token ID in ERC1155.
+     * @return shares The amount of ERC1155 tokens minted, where the `depositPeriod` acts as the token ID.
+     */
+    function deposit(uint256 assets, address receiver) external returns (uint256 depositPeriod, uint256 shares);
+
+    // =============== Redeem/Withdraw ===============
 
     /// @notice Redeems `shares` for assets, transferring to `receiver`, for `depositPeriod` and `redeemPeriod`.
     function redeemForDepositPeriod(
@@ -54,37 +76,49 @@ interface IMultiTokenVault {
         uint256 redeemPeriod
     ) external returns (uint256 assets);
 
-    /// @notice Converts `shares` to assets for `depositPeriod` and the current redeem period.
-    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
-        external
-        view
-        returns (uint256 assets);
-
-    /// @notice Previews the redeem of `shares` for `depositPeriod` and the current redeem period.
-    function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod)
-        external
-        view
-        returns (uint256 assets);
-
-    /// @notice Redeems `shares` for assets, transferring to `receiver`, for `depositPeriod` and the current redeem period.
+    /**
+     * @dev Returns the shares minted at the time of `depositPeriod` to the vault,
+     * allowing the corresponding assets to be redeemed.
+     */
     function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
         external
         returns (uint256 assets);
 
-    // =============== Utility ===============
+    /**
+     * @dev Returns the total amount of assets the user can withdraw from the vault at the moment.
+     */
+    function previewWithdraw(address user) external view returns (uint256 assets);
 
-    /// @notice Returns the address of the underlying token.
-    function getAsset() external view returns (IERC20 asset);
+    /**
+     * @dev The owner withdraws the assets deposited at the time of `depositPeriod`.
+     */
+    function withdrawForDepositPeriod(uint256 assets, address receiver, address owner, uint256 depositPeriod)
+        external
+        returns (uint256 shares);
 
-    /// @notice Returns the shares held by `account` for `depositPeriod`.
-    function getSharesAtPeriod(address account, uint256 depositPeriod) external view returns (uint256 shares);
-
-    /// @notice Returns the current number of time periods elapsed.
-    function getCurrentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
+    /**
+     * @dev This function allows the owner to withdraw assets from the vault regardless of the depositPeriods.
+     */
+    function withdraw(uint256 assets, address receiver, address owner) external;
 
     // =============== Operational ===============
 
-    /// @notice Sets the current number of time periods elapsed (for testing purposes).
-    // TODO lucasia - protect this with Access Control
+    /**
+     * @dev Returns the ERC20 underlying asset used in the vault
+     * @return asset The ERC20 underlying asset
+     */
+    function getAsset() external view returns (IERC20 asset);
+
+    /**
+     * @dev Returns the current number of time periods elapsed
+     */
+    function getCurrentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
+
+    /**
+     * @dev This function is for only testing purposes
+     */
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
+
+    /// @notice Returns the shares held by `account` for `depositPeriod`.
+    function getSharesAtPeriod(address account, uint256 depositPeriod) external view returns (uint256 shares);
 }

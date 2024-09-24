@@ -10,13 +10,13 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.s
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title MultiTokenERC1155Vault
+ * @title MultiTokenVault
  * @dev A vault that uses deposit-period-specific ERC1155 tokens to represent deposits.
  *      This contract manages deposits and redemptions using ERC1155 tokens. It tracks the number
  *      of time periods that have elapsed and allows users to deposit and redeem assets based on these periods.
  *      Designed to be secure and production-ready for Hacken audit.
  */
-abstract contract MultiTokenERC1155Vault is IMultiTokenVault, ERC1155, ReentrancyGuard, Ownable {
+abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard, Ownable {
     using Math for uint256;
     using SafeERC20 for IERC20;
 
@@ -35,9 +35,9 @@ abstract contract MultiTokenERC1155Vault is IMultiTokenVault, ERC1155, Reentranc
     /// @notice The ratio of assets to shares (e.g., 1:1 ratio).
     uint256 internal immutable ASSET_TO_SHARES_RATIO;
 
-    error MultiTokenERC1155Vault__UnsupportedFunction(string functionName);
-    error MultiTokenERC1155Vault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 max);
-    error MultiTokenERC1155Vault__RedeemTimePeriodNotSupported(address owner, uint256 period, uint256 redeemPeriod);
+    error MultiTokenVault__UnsupportedFunction(string functionName);
+    error MultiTokenVault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 max);
+    error MultiTokenVault__RedeemTimePeriodNotSupported(address owner, uint256 period, uint256 redeemPeriod);
 
     /**
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
@@ -95,26 +95,36 @@ abstract contract MultiTokenERC1155Vault is IMultiTokenVault, ERC1155, Reentranc
      * @param assets The amount of assets to deposit.
      * @return shares The number of shares that will be minted for the given deposit.
      */
-    function previewDeposit(uint256 assets) public view override returns (uint256 shares) {
-        return convertToShares(assets);
-    }
+    // function previewDeposit(uint256 assets) public view override returns (uint256 shares) {
+    //     return convertToShares(assets);
+    // }
 
     /**
-     * @notice Deposit assets into the vault and mint ERC1155 tokens for the current deposit period.
-     * @param assets The amount of assets to deposit.
-     * @param receiver The address receiving the minted ERC1155 tokens.
-     * @return shares The number of shares minted.
+     * @dev Deposits assets into the vault and mints shares for the current time period.
+     * Initially, assets and shares are equivalent.
+     * @param assets The amount of asset to be deposited into the vault.
+     * @param receiver The address that will receive the minted shares.
+     * @return depositPeriod The current time period for the deposit, corresponding to the token ID in ERC1155.
+     * @return shares The amount of ERC1155 tokens minted, where the `depositPeriod` acts as the token ID.
      */
-    function deposit(uint256 assets, address receiver) public virtual override nonReentrant returns (uint256 shares) {
+    function deposit(uint256 assets, address receiver)
+        public
+        virtual
+        override
+        nonReentrant
+        returns (uint256 depositPeriod, uint256 shares)
+    {
         totalDepositedAssets += assets;
 
         shares = convertToShares(assets);
+
+        depositPeriod = currentTimePeriodsElapsed;
 
         asset.safeTransferFrom(msg.sender, treasury, assets);
 
         _mint(receiver, currentTimePeriodsElapsed, shares, ""); // Mint ERC1155 tokens for the current period
 
-        return shares;
+        // return shares;
     }
 
     // =============== Redeem ===============
@@ -166,7 +176,7 @@ abstract contract MultiTokenERC1155Vault is IMultiTokenVault, ERC1155, Reentranc
 
         uint256 maxShares = getSharesAtPeriod(owner, depositPeriod);
         if (shares > maxShares) {
-            revert MultiTokenERC1155Vault__ExceededMaxRedeem(owner, depositPeriod, shares, maxShares);
+            revert MultiTokenVault__ExceededMaxRedeem(owner, depositPeriod, shares, maxShares);
         }
 
         uint256 assets = convertToAssetsForDepositPeriod(shares, depositPeriod, redeemPeriod); // Convert shares to assets
