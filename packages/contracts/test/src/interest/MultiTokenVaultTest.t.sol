@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
+import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
@@ -66,12 +67,12 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         assertEq(deposit1Shares + deposit2Shares, vault.balanceOf(alice), "balance incorrect at period 2");
 
         // verify redeem - period 1
-        uint256 deposit1ExpectedYield = vault.calcYield(deposit1TestParams.principal, 0, 0);
+        uint256 deposit1ExpectedYield = _expectedReturns(deposit1Shares, vault, deposit1TestParams);
         uint256 deposit1Assets = _testRedeemOnly(
             alice, vault, deposit1TestParams, deposit1Shares, assetBalanceBeforeDeposits - deposit2TestParams.principal
         );
         assertApproxEqAbs(
-            deposit1TestParams.principal + vault.calcYield(deposit1TestParams.principal, 0, 0),
+            deposit1TestParams.principal + deposit1ExpectedYield,
             deposit1Assets,
             TOLERANCE,
             "deposit1 deposit assets incorrect"
@@ -82,11 +83,21 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
             alice, vault, deposit2TestParams, deposit2Shares, assetBalanceBeforeDeposits + deposit1ExpectedYield
         );
         assertApproxEqAbs(
-            deposit2TestParams.principal + vault.calcYield(deposit2TestParams.principal, 0, 0),
+            deposit2TestParams.principal + _expectedReturns(deposit1Shares, vault, deposit2TestParams),
             deposit2Assets,
             TOLERANCE,
             "deposit2 deposit assets incorrect"
         );
+    }
+
+    function _expectedReturns(
+        uint256, /* shares */
+        IMultiTokenVault vault,
+        IMultiTokenVaultTestParams memory testParams
+    ) internal view override returns (uint256 expectedReturns_) {
+        SimpleMultiTokenVault simpleMultitokenVault = SimpleMultiTokenVault(address(vault));
+
+        return simpleMultitokenVault.calcYield(testParams.principal, testParams.depositPeriod, testParams.redeemPeriod);
     }
 }
 

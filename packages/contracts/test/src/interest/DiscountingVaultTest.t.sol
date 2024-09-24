@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { DiscountingVault } from "@test/src/interest/DiscountingVault.t.sol";
+import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/strategy/SimpleInterestYieldStrategy.sol";
 
@@ -130,6 +131,16 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             )
         );
         vault.getDepositPeriodFromRedeemPeriod(invalidRedeemPeriod);
+    }
+
+    function _expectedReturns(
+        uint256, /* shares */
+        IMultiTokenVault vault,
+        IMultiTokenVaultTestParams memory testParams
+    ) internal view override returns (uint256 expectedReturns_) {
+        return yieldStrategy.calcYield(
+            address(vault), testParams.principal, testParams.depositPeriod, testParams.redeemPeriod
+        );
     }
 }
 

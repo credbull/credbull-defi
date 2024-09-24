@@ -7,12 +7,6 @@ pragma solidity ^0.8.20;
  * Follows the IERC4626 convention - adding in support for multiple Tokens at given depositPeriods
  */
 interface IMultiTokenVault {
-    /// @notice Returns the yield for `principal` between `depositPeriod` and `redeemPeriod`.
-    function calcYield(uint256 principal, uint256 depositPeriod, uint256 redeemPeriod)
-        external
-        view
-        returns (uint256 yield);
-
     // =============== Deposit ===============
 
     /// @notice Converts `assets` to shares for `depositPeriod`.

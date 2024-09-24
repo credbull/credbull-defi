@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import { DiscountingVault } from "@test/src/interest/DiscountingVault.t.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/strategy/SimpleInterestYieldStrategy.sol";
+import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 import { TimelockInterestVault } from "@test/src/interest/TimelockInterestVault.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
@@ -392,5 +393,15 @@ contract TimelockInterestVaultTest is IMultiTokenVaultTestBase {
         uint256 expectedInterest = vault.calcYield(depositAmount1, depositPeriod1, verifyPeriod)
             + vault.calcYield(depositAmount2, depositPeriod2, verifyPeriod);
         assertApproxEqAbs(totalInterest, expectedInterest, TOLERANCE, "incorrect total interest earned");
+    }
+
+    function _expectedReturns(
+        uint256, /* shares */
+        IMultiTokenVault vault,
+        IMultiTokenVaultTestParams memory testParams
+    ) internal view override returns (uint256 expectedReturns_) {
+        return yieldStrategy.calcYield(
+            address(vault), testParams.principal, testParams.depositPeriod, testParams.redeemPeriod
+        );
     }
 }
