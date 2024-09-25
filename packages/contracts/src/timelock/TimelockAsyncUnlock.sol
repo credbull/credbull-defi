@@ -8,13 +8,8 @@ import { Context } from "@openzeppelin/contracts/utils/Context.sol";
  * @title RedeemAfterNotice
  */
 abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
-    error TimelockAsyncUnlock__NoticePeriodInsufficient(
-        address account, uint256 requestedPeriod, uint256 requiredPeriod
-    );
-    error TimelockAsyncUnlock__RequestedUnlockAmountInsufficient(
-        address account, uint256 amountUnlocked, uint256 amount
-    );
-    error TimelockAsyncUnlock__UnlockPeriodNotReached(address account, uint256 currentPeriod, uint256 redeemPeriod);
+    error TimelockAsyncUnlock__InvalidRequestPeriod(address account, uint256 period, uint256 requiredPeriod);
+    error TimelockAsyncUnlock__InvalidUnlockPeriod(address account, uint256 period, uint256 requiredPeriod);
     error TimelockAsyncUnlock__RequesterNotOwner(address requester, address owner);
 
     uint256 public immutable NOTICE_PERIOD;
@@ -22,7 +17,7 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
     struct UnlockItem {
         address account;
         uint256 depositPeriod;
-        uint256 redeemPeriod;
+        uint256 unlockPeriod;
         uint256 amount;
     }
 
@@ -42,17 +37,17 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
 
         uint256 depositWithNoticePeriod = depositPeriod + NOTICE_PERIOD;
         if (unlockPeriod < depositWithNoticePeriod) {
-            revert TimelockAsyncUnlock__NoticePeriodInsufficient(owner, unlockPeriod, depositWithNoticePeriod);
+            revert TimelockAsyncUnlock__InvalidRequestPeriod(owner, unlockPeriod, depositWithNoticePeriod);
         }
 
         uint256 currentWithNoticePeriod = currentPeriod() + NOTICE_PERIOD;
         if (unlockPeriod < currentWithNoticePeriod) {
-            revert TimelockAsyncUnlock__NoticePeriodInsufficient(owner, unlockPeriod, currentWithNoticePeriod);
+            revert TimelockAsyncUnlock__InvalidRequestPeriod(owner, unlockPeriod, currentWithNoticePeriod);
         }
 
         // TODO - what happens if multiple redeem requests for same user / deposit / redeem tuple?
         _unlockRequests[depositPeriod][owner] =
-            UnlockItem({ account: owner, depositPeriod: depositPeriod, redeemPeriod: unlockPeriod, amount: amount });
+            UnlockItem({ account: owner, depositPeriod: depositPeriod, unlockPeriod: unlockPeriod, amount: amount });
     }
 
     /// @notice Unlocks `amount` after the `redeemPeriod`, transferring to `receiver`.
@@ -66,19 +61,19 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
 
         // check the redeemPeriod
         if (unlockPeriod > currentPeriod_) {
-            revert TimelockAsyncUnlock__UnlockPeriodNotReached(owner, currentPeriod_, unlockPeriod);
+            revert TimelockAsyncUnlock__InvalidUnlockPeriod(owner, currentPeriod_, unlockPeriod);
         }
 
         UnlockItem memory unlockRequest = _unlockRequests[depositPeriod][owner];
 
         // check the redeemPeriod in the unlocks
-        if (unlockRequest.redeemPeriod > currentPeriod_) {
-            revert TimelockAsyncUnlock__UnlockPeriodNotReached(owner, currentPeriod_, unlockRequest.redeemPeriod);
+        if (unlockRequest.unlockPeriod > currentPeriod_) {
+            revert TimelockAsyncUnlock__InvalidUnlockPeriod(owner, currentPeriod_, unlockRequest.unlockPeriod);
         }
 
         // check the redeemPeriod in the unlocks
         if (amount > unlockRequest.amount) {
-            revert TimelockAsyncUnlock__RequestedUnlockAmountInsufficient(owner, unlockRequest.amount, amount);
+            revert ITimelockOpenEnded__ExceededMaxUnlock(owner, amount, unlockRequest.amount);
         }
 
         // TODO - change contract to just "unlock" this amount.  leave it to someone else to burn or redeem.

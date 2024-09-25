@@ -29,7 +29,7 @@ contract TimelockIERC1155Test is TimelockTest {
         // warp to releasePeriod
         warpToPeriod(timelock, lockUntilDay1.releasePeriod);
 
-        uint256 unlockableAmount = timelock.previewUnlock(alice, lockUntilDay1.releasePeriod);
+        uint256 unlockableAmount = timelock.maxUnlock(alice, lockUntilDay1.releasePeriod);
         assertEq(unlockableAmount, lockUntilDay1.amount, "all tokens should be unlockable after the lock period");
 
         TimelockIERC1155 rollable = toImpl(timelock);
@@ -43,7 +43,7 @@ contract TimelockIERC1155Test is TimelockTest {
         assertEq(lockedAmountAfterRollover, lockUntilDay2.amount, "incorrect locked amount after rollover");
 
         // check remaining tokens in the original period are reduced
-        uint256 remainingUnlockableAmount = timelock.previewUnlock(alice, lockUntilDay1.releasePeriod);
+        uint256 remainingUnlockableAmount = timelock.maxUnlock(alice, lockUntilDay1.releasePeriod);
         assertEq(
             remainingUnlockableAmount,
             lockUntilDay1.amount - lockUntilDay2.amount,

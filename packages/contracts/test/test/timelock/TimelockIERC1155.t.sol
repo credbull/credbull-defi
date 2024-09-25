@@ -34,7 +34,7 @@ abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable
     }
 
     /// @notice Returns the amount of tokens unlockable for `account` at `lockReleasePeriod`.
-    function previewUnlock(address account, uint256 lockReleasePeriod) public view override returns (uint256) {
+    function maxUnlock(address account, uint256 lockReleasePeriod) public view override returns (uint256) {
         return currentPeriod() >= lockReleasePeriod ? lockedAmount(account, lockReleasePeriod) : 0;
     }
 
@@ -47,12 +47,12 @@ abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable
     function _unlockInternal(address account, uint256 lockReleasePeriod, uint256 amount) internal {
         uint256 currentPeriod_ = currentPeriod();
         if (currentPeriod_ < lockReleasePeriod) {
-            revert LockDurationNotExpired(account, currentPeriod_, lockReleasePeriod);
+            revert ITimelock__LockDurationNotExpired(account, currentPeriod_, lockReleasePeriod);
         }
 
-        uint256 unlockableAmount = previewUnlock(account, lockReleasePeriod);
-        if (unlockableAmount < amount) {
-            revert InsufficientLockedBalanceAtPeriod(account, unlockableAmount, amount, lockReleasePeriod);
+        uint256 maxUnlock_ = maxUnlock(account, lockReleasePeriod);
+        if (maxUnlock_ < amount) {
+            revert ITimelock_ExceededMaxUnlock(account, lockReleasePeriod, amount, maxUnlock_);
         }
 
         _burn(account, lockReleasePeriod, amount);
@@ -60,10 +60,10 @@ abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable
 
     /// @notice Rolls over unlocked `amount` of tokens for `account` to a new lock period.
     function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 amount) public virtual onlyOwner {
-        uint256 unlockableAmount = this.previewUnlock(account, lockReleasePeriod);
+        uint256 maxUnlock_ = this.maxUnlock(account, lockReleasePeriod);
 
-        if (amount > unlockableAmount) {
-            revert InsufficientLockedBalanceAtPeriod(account, unlockableAmount, amount, lockReleasePeriod);
+        if (amount > maxUnlock_) {
+            revert ITimelock_ExceededMaxUnlock(account, lockReleasePeriod, amount, maxUnlock_);
         }
 
         _burn(account, lockReleasePeriod, amount);

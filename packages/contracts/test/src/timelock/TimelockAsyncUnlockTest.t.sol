@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import { ITimelockOpenEnded } from "@credbull/timelock/ITimelockOpenEnded.sol";
 import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
@@ -92,7 +93,7 @@ contract TimelockAsyncUnlockTest is Test {
         vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__NoticePeriodInsufficient.selector,
+                TimelockAsyncUnlock.TimelockAsyncUnlock__InvalidRequestPeriod.selector,
                 alice,
                 depositDay1.depositPeriod,
                 depositDay1.depositPeriod + NOTICE_PERIOD
@@ -109,7 +110,7 @@ contract TimelockAsyncUnlockTest is Test {
         vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockPeriodNotReached.selector,
+                TimelockAsyncUnlock.TimelockAsyncUnlock__InvalidUnlockPeriod.selector,
                 alice,
                 timeLockCurrentPeriod,
                 unlockPeriod
@@ -128,10 +129,7 @@ contract TimelockAsyncUnlockTest is Test {
         vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__RequestedUnlockAmountInsufficient.selector,
-                alice,
-                0,
-                depositDay1.amount
+                ITimelockOpenEnded.ITimelockOpenEnded__ExceededMaxUnlock.selector, alice, depositDay1.amount, 0
             )
         );
         asyncUnlock.unlock(depositDay1.amount, alice, depositDay1.depositPeriod, unlockPeriod);
