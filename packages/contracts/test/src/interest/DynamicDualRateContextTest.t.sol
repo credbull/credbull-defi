@@ -51,20 +51,85 @@ contract DynamicDualRateContextTest is Test {
         initialiseRates();
     }
 
+    function test_DynamicDualRateContext_SetRateWorks() public {
+        toTest = new DynamicDualRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
+
+        // Periods: 1 -> 5
+        uint256 rate = scaled(175) / 10;
+        uint256[][] memory expectedRates = DEFAULT_REDUCED_RATES;
+        uint256[][] memory actualRates = toTest.reducedRatesFor(1, 5);
+        assertRates(expectedRates, actualRates, "Incorrect default Rates for Range 1->5, Rate Setting");
+
+        // Checked event emission.
+        vm.expectEmit();
+        emit DynamicDualRateContext.DynamicDualRateContext_ReducedRateAdded(4, rate, SCALE);
+        toTest.setReducedRate(4, rate); // 17.5%
+
+        vm.expectEmit();
+        emit DynamicDualRateContext.DynamicDualRateContext_ReducedRateRemoved(4, rate, SCALE);
+        vm.expectEmit();
+        emit DynamicDualRateContext.DynamicDualRateContext_ReducedRateAdded(4, rate, SCALE);
+        toTest.setReducedRate(4, rate); // 17.5%
+
+        // Periods: 1 -> 5
+        uint256[] memory tuple = new uint256[](2);
+        tuple[0] = 4;
+        tuple[1] = rate;
+        expectedRates = new uint256[][](2);
+        expectedRates[0] = DEFAULT_REDUCED_RATES[0];
+        expectedRates[1] = tuple;
+
+        actualRates = toTest.reducedRatesFor(1, 5);
+        assertRates(expectedRates, actualRates, "Set Rate Missing for Range 1->5, Rate Setting");
+    }
+
+    function test_DynamicDualRateContext_RevertSetReducedRates_WhenPeriodIsZero() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(DynamicDualRateContext.DynamicDualRateContext_InvalidReducedRatePeriod.selector, 0)
+        );
+        toTest.setReducedRate(0, PERCENT_10_SCALED);
+    }
+
+    function test_DynamicDualRateContext_RemoveRateWorks() public {
+        toTest = new DynamicDualRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
+        toTest.setReducedRate(3, PERCENT_10_SCALED); // 10%
+
+        vm.expectEmit();
+        emit DynamicDualRateContext.DynamicDualRateContext_ReducedRateRemoved(3, PERCENT_10_SCALED, SCALE);
+        bool wasRemoved = toTest.removeReducedRate(3);
+        assertTrue(wasRemoved, "Reduced Rate was not removed.");
+
+        // Periods: 1 -> 5
+        uint256[][] memory expectedRates = DEFAULT_REDUCED_RATES;
+        uint256[][] memory actualRates = toTest.reducedRatesFor(1, 5);
+        assertRates(expectedRates, actualRates, "Incorrect default Rates for Range 1->5, Rate Remove");
+
+        // Removal of non-existent Rate does nothing.abi
+        wasRemoved = toTest.removeReducedRate(3);
+        assertFalse(wasRemoved, "Reduced Rate was removed.");
+    }
+
+    function test_DynamicDualRateContext_RevertRemoveReducedRates_WhenPeriodIsZero() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(DynamicDualRateContext.DynamicDualRateContext_InvalidReducedRatePeriod.selector, 0)
+        );
+        toTest.removeReducedRate(0);
+    }
+
     function test_DynamicDualRateContext_AttributesAsExpected() public view {
         assertEq(PERCENT_5_5_SCALED, toTest.DEFAULT_REDUCED_RATE(), "Incorrect Reduced Rate");
         assertEq(PERCENT_5_SCALED, toTest.fullRateScaled(), "Incorrect Full Rate");
         assertEq(TENOR, toTest.numPeriodsForFullRate(), "Incorrect No Of Period For Full Rate");
     }
 
-    function test_DynamicDualRateContext_RevertWhenFromAndToSame() public {
+    function test_DynamicDualRateContext_RevertGetReducedRates_WhenFromAndToSame() public {
         vm.expectRevert(
             abi.encodeWithSelector(DynamicDualRateContext.DynamicDualRateContext_InvalidPeriodRange.selector, 3, 3)
         );
         toTest.reducedRatesFor(3, 3);
     }
 
-    function test_DynamicDualRateContext_RevertWhenToBeforeFrom() public {
+    function test_DynamicDualRateContext_RevertGetReducedRates_WhenToBeforeFrom() public {
         vm.expectRevert(
             abi.encodeWithSelector(DynamicDualRateContext.DynamicDualRateContext_InvalidPeriodRange.selector, 4, 1)
         );
