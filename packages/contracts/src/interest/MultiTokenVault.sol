@@ -17,7 +17,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  * @dev A vault that uses SimpleInterest and Discounting to calculate shares per asset.
  *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
  */
-abstract contract MultiTokenVault is ERC4626, ERC20Burnable {
+abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
     using Math for uint256;
 
     IERC5679Ext1155 public immutable DEPOSITS;
@@ -61,21 +61,26 @@ abstract contract MultiTokenVault is ERC4626, ERC20Burnable {
     /**
      * @dev See {IMultiTokenVault-convertToShares}
      */
-    function convertToShares(uint256 assets) public view override returns (uint256 shares) {
+    function convertToShares(uint256 assets) public view override(ERC4626, IMultiTokenVault) returns (uint256 shares) {
         return convertToSharesForDepositPeriod(assets, currentPeriodElapsed);
     }
 
     /**
      * @dev See {IMultiTokenVault-previewDeposit}
      */
-    function previewDeposit(uint256 assets) public view override returns (uint256 shares) {
+    function previewDeposit(uint256 assets) public view override(ERC4626, IMultiTokenVault) returns (uint256 shares) {
         return convertToShares(assets);
     }
 
     /**
      * @dev See {IMultiTokenVault-deposit}
      */
-    function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
+    function deposit(uint256 assets, address receiver)
+        public
+        virtual
+        override(ERC4626, IMultiTokenVault)
+        returns (uint256)
+    {
         uint256 shares = super.deposit(assets, receiver);
         DEPOSITS.safeMint(receiver, currentPeriodElapsed, shares, "");
         return shares;
@@ -114,12 +119,12 @@ abstract contract MultiTokenVault is ERC4626, ERC20Burnable {
         uint256 redeemPeriod
     ) public virtual returns (uint256 assets_) {
         if (depositPeriod > redeemPeriod) {
-            // TODO: revert IMultiTokenVault__RedeemBeforeDeposit(owner, depositPeriod, redeemPeriod);
+            revert IMultiTokenVault__RedeemBeforeDeposit(owner, depositPeriod, redeemPeriod);
         }
 
         // TODO confirm rules around which day (or days) we allow redeems
         if (currentPeriodElapsed != redeemPeriod) {
-            // TODO: revert IMultiTokenVault__RedeemPeriodNotSupported(owner, currentPeriodElapsed, redeemPeriod);
+            revert IMultiTokenVault__RedeemPeriodNotSupported(owner, currentPeriodElapsed, redeemPeriod);
         }
 
         uint256 maxShares = sharesAtPeriod(owner, depositPeriod);
@@ -173,7 +178,7 @@ abstract contract MultiTokenVault is ERC4626, ERC20Burnable {
     /**
      * @dev See {IMultiTokenVault-asset}
      */
-    function asset() public view virtual override returns (address asset_) {
+    function asset() public view virtual override(ERC4626, IMultiTokenVault) returns (address asset_) {
         return ERC4626.asset();
     }
 
