@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { TimelockOpenEnded } from "@credbull/timelock/TimelockOpenEnded.sol";
+import { TimelockOpenEnded } from "@test/test/timelock/TimelockOpenEnded.t.sol";
 import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 
@@ -23,7 +23,7 @@ contract TimelockOpenEndedTest is Test {
     function setUp() public {
         deposits = new SimpleIERC1155Mintable();
         unlockedDeposits = new SimpleIERC1155Mintable();
-        timelock = new TimelockOpenEndedMock(deposits, unlockedDeposits);
+        timelock = new SimpleTimelockOpenEnded(deposits, unlockedDeposits);
     }
 
     function test__TimelockOpenEnded__NoDeposits() public view {
@@ -73,7 +73,7 @@ contract TimelockOpenEndedTest is Test {
     }
 }
 
-contract TimelockOpenEndedMock is TimelockOpenEnded {
+contract SimpleTimelockOpenEnded is TimelockOpenEnded {
     IERC5679Ext1155 public immutable UNLOCKED_DEPOSITS;
 
     constructor(IERC5679Ext1155 deposits, IERC5679Ext1155 unlockedDeposits) TimelockOpenEnded(deposits) {

@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { TimelockOpenEnded } from "@credbull/timelock/TimelockOpenEnded.sol";
-import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
+import { ITimelockOpenEnded } from "@credbull/timelock/ITimelockOpenEnded.sol";
 import { Context } from "@openzeppelin/contracts/utils/Context.sol";
 
 /**
  * @title RedeemAfterNotice
  */
-abstract contract TimelockAsyncUnlock is TimelockOpenEnded, Context {
+abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
     error TimelockAsyncUnlock__NoticePeriodInsufficient(
         address account, uint256 requestedPeriod, uint256 requiredPeriod
     );
@@ -18,7 +17,7 @@ abstract contract TimelockAsyncUnlock is TimelockOpenEnded, Context {
     error TimelockAsyncUnlock__UnlockPeriodNotReached(address account, uint256 currentPeriod, uint256 redeemPeriod);
     error TimelockAsyncUnlock__RequesterNotOwner(address requester, address owner);
 
-    uint256 public immutable NOTICE_PERIOD = 1;
+    uint256 public immutable NOTICE_PERIOD;
 
     struct UnlockItem {
         address account;
@@ -29,7 +28,7 @@ abstract contract TimelockAsyncUnlock is TimelockOpenEnded, Context {
 
     mapping(uint256 depositPeriod => mapping(address account => UnlockItem)) private _unlockRequests;
 
-    constructor(uint256 noticePeriod_, IERC5679Ext1155 deposits) TimelockOpenEnded(deposits) {
+    constructor(uint256 noticePeriod_) {
         NOTICE_PERIOD = noticePeriod_;
     }
 
@@ -108,4 +107,7 @@ abstract contract TimelockAsyncUnlock is TimelockOpenEnded, Context {
     function _emptyBytesArray() internal pure returns (bytes[] memory) {
         return new bytes[](0);
     }
+
+    /// @notice Returns the current period.
+    function currentPeriod() public view virtual returns (uint256 currentPeriod_);
 }

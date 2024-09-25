@@ -22,15 +22,4 @@ interface ITimelockOpenEnded {
 
     /// @notice Returns the amount of tokens locked for `account` at the given `depositPeriod`.
     function unlockedAmount(address account, uint256 depositPeriod) external view returns (uint256 unlockedAmount_);
-
-    /// @notice Maximum amount of tokens that can be unlocked for `account` at the`depositPeriod`.
-    /// MUST return lockedAmount if no unlocks
-    /// MUST return reduced amount if unlocks, e.g. maxLockedAmount = lockedAmount - unlockedAmount
-    function maxUnlockAmount(address account, uint256 depositPeriod) external view returns (uint256 maxUnlockAmount_);
-
-    /// @notice Returns the periods with unlocked tokens for `account` between `fromPeriod` and `toPeriod`.
-    function unlockedPeriods(address account, uint256 fromPeriod, uint256 toPeriod)
-        external
-        view
-        returns (uint256[] memory unlockedPeriods_);
 }
