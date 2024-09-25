@@ -20,14 +20,14 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 library CalcSimpleInterest {
     using Math for uint256;
 
-    error PrincipalLessThanScale(uint256 principal, uint256 scale);
-
     struct InterestParams {
         uint256 interestRatePercentScaled;
         uint256 numTimePeriodsElapsed;
         uint256 frequency;
         uint256 scale;
     }
+
+    error PrincipalLessThanScale(uint256 principal, uint256 scale);
 
     /// @notice Calculates simple interest using `principal` ...
     /// @dev function is internal to be deployed in the same contract as caller (not a separate one)

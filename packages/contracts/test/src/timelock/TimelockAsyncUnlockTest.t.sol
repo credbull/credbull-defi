@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import { ITimelockOpenEnded } from "@credbull/timelock/ITimelockOpenEnded.sol";
 import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
-import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
+import { SimpleIERC1155Mintable } from "@test/test/interest/SimpleIERC1155Mintable.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 
 import { Deposit } from "@test/src/timelock/TimelockTest.t.sol";

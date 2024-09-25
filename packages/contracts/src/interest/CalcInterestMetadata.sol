@@ -37,8 +37,7 @@ abstract contract CalcInterestMetadata is ICalcInterestMetadata {
     /// @notice Returns a string representation of the interest calculation metadata.
     function toString() public view returns (string memory) {
         return string.concat(
-            " CalcInterest [ ",
-            " rate: ",
+            " CalcInterest [ rate: ",
             Strings.toString(RATE_PERCENT_SCALED),
             " frequency: ",
             Strings.toString(FREQUENCY),

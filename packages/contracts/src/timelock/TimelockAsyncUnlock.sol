@@ -8,6 +8,17 @@ import { Context } from "@openzeppelin/contracts/utils/Context.sol";
  * @title TimelockAsyncUnlock
  */
 abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
+    struct UnlockItem {
+        address account;
+        uint256 depositPeriod;
+        uint256 unlockPeriod;
+        uint256 amount;
+    }
+
+    uint256 public immutable NOTICE_PERIOD;
+
+    mapping(uint256 depositPeriod => mapping(address account => UnlockItem)) private _unlockRequests;
+
     error TimelockAsyncUnlock__UnlockBeforeDepositPeriod(address account, uint256 period, uint256 depositPeriod);
     error TimelockAsyncUnlock__UnlockBeforeCurrentPeriod(address account, uint256 period, uint256 currentPeriod);
     error TimelockAsyncUnlock__RequestBeforeDepositWithNoticePeriod(
@@ -16,23 +27,7 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
     error TimelockAsyncUnlock__RequestBeforeCurrentWithNoticePeriod(
         address account, uint256 period, uint256 currentWithNoticePeriod
     );
-
     error TimelockAsyncUnlock__RequesterNotOwner(address requester, address tokenOwner);
-
-    uint256 public immutable NOTICE_PERIOD;
-
-    struct UnlockItem {
-        address account;
-        uint256 depositPeriod;
-        uint256 unlockPeriod;
-        uint256 amount;
-    }
-
-    mapping(uint256 depositPeriod => mapping(address account => UnlockItem)) private _unlockRequests;
-
-    constructor(uint256 noticePeriod_) {
-        NOTICE_PERIOD = noticePeriod_;
-    }
 
     /// @notice Modifier to ensure only the token owner can call the function
     modifier onlyTokenOwner(address tokenOwner) {
@@ -73,6 +68,10 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
         _;
     }
 
+    constructor(uint256 noticePeriod_) {
+        NOTICE_PERIOD = noticePeriod_;
+    }
+
     /// @notice Requests unlocking of `amount`, which will be available after the `unlockPeriod`.
     function requestUnlock(uint256 amount, address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod)
         public
@@ -109,9 +108,6 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
         unlock(amount, account, depositPeriod, currentPeriod());
     }
 
-    /// @notice Process the lock after successful unlocking
-    function _updateLockAfterUnlock(address account, uint256 depositPeriod, uint256 amount) internal virtual;
-
     /// @dev there's no "unlocked" state.  deposits are locked => requested to be unlocked => redeemed
     function unlockedAmount(address, /* account */ uint256 /* depositPeriod */ )
         public
@@ -125,6 +121,9 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
 
     /// @notice Returns the current period.
     function currentPeriod() public view virtual returns (uint256 currentPeriod_);
+
+    /// @notice Process the lock after successful unlocking
+    function _updateLockAfterUnlock(address account, uint256 depositPeriod, uint256 amount) internal virtual;
 
     function _emptyBytesArray() internal pure returns (bytes[] memory) {
         return new bytes[](0);
