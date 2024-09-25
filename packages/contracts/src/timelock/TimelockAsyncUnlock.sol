@@ -29,55 +29,59 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
 
     /// @notice Requests redemption of `amount`, which will be transferred to `receiver` after the `redeemPeriod`.
     // TODO - confirm if we want the concept of shares here, or are these just assets?
-    function requestUnlock(uint256 amount, address owner, uint256 depositPeriod, uint256 unlockPeriod) public {
+    function requestUnlock(uint256 amount, address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod) public {
         address requester = _msgSender();
-        if (requester != owner) {
-            revert TimelockAsyncUnlock__RequesterNotOwner(requester, owner); // TODO - should we check allowances too?
+        if (requester != tokenOwner) {
+            revert TimelockAsyncUnlock__RequesterNotOwner(requester, tokenOwner); // TODO - should we check allowances too?
         }
 
         uint256 depositWithNoticePeriod = depositPeriod + NOTICE_PERIOD;
         if (unlockPeriod < depositWithNoticePeriod) {
-            revert TimelockAsyncUnlock__InvalidRequestPeriod(owner, unlockPeriod, depositWithNoticePeriod);
+            revert TimelockAsyncUnlock__InvalidRequestPeriod(tokenOwner, unlockPeriod, depositWithNoticePeriod);
         }
 
         uint256 currentWithNoticePeriod = currentPeriod() + NOTICE_PERIOD;
         if (unlockPeriod < currentWithNoticePeriod) {
-            revert TimelockAsyncUnlock__InvalidRequestPeriod(owner, unlockPeriod, currentWithNoticePeriod);
+            revert TimelockAsyncUnlock__InvalidRequestPeriod(tokenOwner, unlockPeriod, currentWithNoticePeriod);
         }
 
         // TODO - what happens if multiple redeem requests for same user / deposit / redeem tuple?
-        _unlockRequests[depositPeriod][owner] =
-            UnlockItem({ account: owner, depositPeriod: depositPeriod, unlockPeriod: unlockPeriod, amount: amount });
+        _unlockRequests[depositPeriod][tokenOwner] = UnlockItem({
+            account: tokenOwner,
+            depositPeriod: depositPeriod,
+            unlockPeriod: unlockPeriod,
+            amount: amount
+        });
     }
 
     /// @notice Unlocks `amount` after the `redeemPeriod`, transferring to `receiver`.
-    function unlock(uint256 amount, address owner, uint256 depositPeriod, uint256 unlockPeriod) public {
+    function unlock(uint256 amount, address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod) public {
         address requester = _msgSender();
-        if (requester != owner) {
-            revert TimelockAsyncUnlock__RequesterNotOwner(requester, owner);
+        if (requester != tokenOwner) {
+            revert TimelockAsyncUnlock__RequesterNotOwner(requester, tokenOwner);
         }
 
         uint256 currentPeriod_ = currentPeriod();
 
         // check the redeemPeriod
         if (unlockPeriod > currentPeriod_) {
-            revert TimelockAsyncUnlock__InvalidUnlockPeriod(owner, currentPeriod_, unlockPeriod);
+            revert TimelockAsyncUnlock__InvalidUnlockPeriod(tokenOwner, currentPeriod_, unlockPeriod);
         }
 
-        UnlockItem memory unlockRequest = _unlockRequests[depositPeriod][owner];
+        UnlockItem memory unlockRequest = _unlockRequests[depositPeriod][tokenOwner];
 
         // check the redeemPeriod in the unlocks
         if (unlockRequest.unlockPeriod > currentPeriod_) {
-            revert TimelockAsyncUnlock__InvalidUnlockPeriod(owner, currentPeriod_, unlockRequest.unlockPeriod);
+            revert TimelockAsyncUnlock__InvalidUnlockPeriod(tokenOwner, currentPeriod_, unlockRequest.unlockPeriod);
         }
 
         // check the redeemPeriod in the unlocks
         if (amount > unlockRequest.amount) {
-            revert ITimelockOpenEnded__ExceededMaxUnlock(owner, amount, unlockRequest.amount);
+            revert ITimelockOpenEnded__ExceededMaxUnlock(tokenOwner, amount, unlockRequest.amount);
         }
 
         // TODO - change contract to just "unlock" this amount.  leave it to someone else to burn or redeem.
-        _updateLockAfterUnlock(owner, depositPeriod, amount);
+        _updateLockAfterUnlock(tokenOwner, depositPeriod, amount);
     }
 
     /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
