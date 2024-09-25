@@ -26,9 +26,6 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
     /// @notice The ERC20 token used as the underlying asset in the vault.
     IERC20 private immutable _asset;
 
-    /// @notice The address of the treasury where deposited assets are transferred.
-    address treasury;
-
     /// @notice Tracks the total amount of assets deposited in the vault.
     uint256 internal totalDepositedAssets;
 
@@ -37,13 +34,11 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
 
     /**
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
-     * @param treasury_ The address where deposited assets are transferred.
      * @param asset_ The ERC20 token representing the underlying asset.
      * @param initialOwner The owner of the contract.
      */
-    constructor(address treasury_, IERC20 asset_, address initialOwner) ERC1155("") Ownable(initialOwner) {
+    constructor(IERC20 asset_, address initialOwner) ERC1155("") Ownable(initialOwner) {
         _asset = asset_;
-        treasury = treasury_;
     }
 
     // =============== View ===============
@@ -113,7 +108,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
     {
         totalDepositedAssets += assets;
 
-        _asset.safeTransferFrom(caller, treasury, assets);
+        _asset.safeTransferFrom(caller, address(this), assets);
         _mint(receiver, depositPeriod, shares, "");
         emit Deposit(msg.sender, receiver, depositPeriod, assets, shares);
     }
@@ -215,8 +210,8 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         totalDepositedAssets -= assets;
 
         _burn(owner, depositPeriod, shares);
-
-        _asset.safeTransferFrom(treasury, receiver, assets);
+        
+        _asset.safeTransfer(receiver, assets);
 
         emit Withdraw(msg.sender, receiver, owner, depositPeriod, assets, shares);
     }
