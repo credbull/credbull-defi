@@ -6,7 +6,6 @@ import { DynamicDualRateContext } from "@credbull/interest/DynamicDualRateContex
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
 import { Test } from "forge-std/Test.sol";
-import { console2 as console } from "forge-std/console2.sol";
 
 contract DynamicDualRateContextTest is Test {
     uint256 public constant TOLERANCE = 1; // with 6 decimals, diff of 0.000001
@@ -17,12 +16,11 @@ contract DynamicDualRateContextTest is Test {
     uint256 public constant PERCENT_5_5_SCALED = 55 * SCALE / 10; // 5.5%
     uint256 public constant PERCENT_10_SCALED = 10 * SCALE; // 10%
 
-    uint256 public constant FULL_RATE = PERCENT_10_SCALED;
-    uint256 public constant REDUCED_RATE = PERCENT_5_SCALED;
-
     uint256 public constant TENOR = 30;
 
     uint256 public immutable FREQUENCY = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
+
+    uint256[][] public DEFAULT_REDUCED_RATES = [[1, PERCENT_5_5_SCALED]];
 
     uint256[][] public REDUCED_RATES = [
         [2, scaled(25) / 10], // 2.5%
@@ -48,36 +46,59 @@ contract DynamicDualRateContextTest is Test {
         }
     }
 
-    function test_DynamicDualRateContext_ExpectedReducedRatesAreReturned() public {
+    function setUp() public {
         toTest = new DynamicDualRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
         initialiseRates();
+    }
 
-        // Term: 30, Periods: 4 -> 10
+    function test_DynamicDualRateContext_AttributesAsExpected() public view {
+        assertEq(PERCENT_5_5_SCALED, toTest.DEFAULT_REDUCED_RATE(), "Incorrect Reduced Rate");
+        assertEq(PERCENT_5_SCALED, toTest.fullRateScaled(), "Incorrect Full Rate");
+        assertEq(TENOR, toTest.numPeriodsForFullRate(), "Incorrect No Of Period For Full Rate");
+    }
+
+    function test_DynamicDualRateContext_RevertWhenFromAndToSame() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(DynamicDualRateContext.DynamicDualRateContext_InvalidPeriodRange.selector, 3, 3)
+        );
+        toTest.reducedRatesFor(3, 3);
+    }
+
+    function test_DynamicDualRateContext_RevertWhenToBeforeFrom() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(DynamicDualRateContext.DynamicDualRateContext_InvalidPeriodRange.selector, 4, 1)
+        );
+        toTest.reducedRatesFor(4, 1);
+    }
+
+    function test_DynamicDualRateContext_DefaultRateWhenUnconfigured() public {
+        toTest = new DynamicDualRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
+
+        // Periods: 1 -> 12
+        uint256[][] memory expectedRates = DEFAULT_REDUCED_RATES;
+        uint256[][] memory actualRates = toTest.reducedRatesFor(1, 12);
+        assertRates(expectedRates, actualRates, "Incorrect Rates for Range 1->12, Unconfigured");
+    }
+
+    function test_DynamicDualRateContext_CorrectRatesReturned() public view {
+        // Periods: 4 -> 10
         uint256[][] memory expectedRates = new uint256[][](2);
         expectedRates[0] = REDUCED_RATES[0];
         expectedRates[1] = REDUCED_RATES[1];
 
-        uint256[][] memory rates = toTest.reducedRatesFor(4, 10);
-        assertEq(expectedRates.length, rates.length, "incorrect number of rates returned");
-        for (uint256 i = 0; i < rates.length; i++) {
-            assertEq(expectedRates[i], rates[i], "non-matching rates");
-            console.log("Index= %d, Period= %d, Rate= %d", i, rates[i][0], rates[i][1]);
-        }
+        uint256[][] memory actualRates = toTest.reducedRatesFor(4, 10);
+        assertRates(expectedRates, actualRates, "Incorrect Rates for Range 4->10, Correct");
 
-        // Term: 30, Periods: 9 -> 32
+        // Periods: 9 -> 32
         expectedRates = new uint256[][](3);
         expectedRates[0] = REDUCED_RATES[1];
         expectedRates[1] = REDUCED_RATES[2];
         expectedRates[2] = REDUCED_RATES[3];
 
-        rates = toTest.reducedRatesFor(9, 32);
-        assertEq(expectedRates.length, rates.length, "incorrect number of rates returned");
-        for (uint256 i = 0; i < rates.length; i++) {
-            assertEq(expectedRates[i], rates[i], "non-matching rates");
-            console.log("Index= %d, Period= %d, Rate= %d", i, rates[i][0], rates[i][1]);
-        }
+        actualRates = toTest.reducedRatesFor(9, 32);
+        assertRates(expectedRates, actualRates, "Incorrect Rates for Range 9->32, Correct");
 
-        // Term: 30, Periods: 20 -> 61
+        // Periods: 20 -> 61
         expectedRates = new uint256[][](6);
         expectedRates[0] = REDUCED_RATES[2];
         expectedRates[1] = REDUCED_RATES[3];
@@ -86,11 +107,14 @@ contract DynamicDualRateContextTest is Test {
         expectedRates[4] = REDUCED_RATES[6];
         expectedRates[5] = REDUCED_RATES[7];
 
-        rates = toTest.reducedRatesFor(20, 61);
-        assertEq(expectedRates.length, rates.length, "incorrect number of rates returned");
-        for (uint256 i = 0; i < rates.length; i++) {
-            assertEq(expectedRates[i], rates[i], "non-matching rates");
-            console.log("Index= %d, Period= %d, Rate= %d", i, rates[i][0], rates[i][1]);
+        actualRates = toTest.reducedRatesFor(20, 61);
+        assertRates(expectedRates, actualRates, "Incorrect Rates for Range 20->61, Correct");
+    }
+
+    function assertRates(uint256[][] memory expected, uint256[][] memory actual, string memory error) public pure {
+        assertEq(expected.length, actual.length, "incorrect number of rates returned");
+        for (uint256 i = 0; i < actual.length; i++) {
+            assertEq(expected[i], actual[i], error);
         }
     }
 }
