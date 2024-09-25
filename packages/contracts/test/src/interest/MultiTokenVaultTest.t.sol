@@ -5,7 +5,7 @@ import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
-import { SimpleIERC1155Mintable } from "@test/test/interest/SimpleIERC1155Mintable.t.sol";
+import { ERC1155MintableBurnable } from "@test/test/interest/ERC1155MintableBurnable.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
@@ -27,7 +27,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         SCALE = 10 ** asset.decimals();
         _transferAndAssert(asset, owner, alice, 100_000 * SCALE);
 
-        depositLedger = new SimpleIERC1155Mintable();
+        depositLedger = new ERC1155MintableBurnable();
 
         deposit1TestParams = IMultiTokenVaultTestParams({ principal: 500 * SCALE, depositPeriod: 10, redeemPeriod: 21 });
 

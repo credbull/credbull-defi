@@ -5,7 +5,7 @@ import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-contract SimpleIERC1155Mintable is ERC1155, IERC5679Ext1155 {
+contract ERC1155MintableBurnable is ERC1155, IERC5679Ext1155 {
     constructor() ERC1155("") { }
 
     function safeMint(address _to, uint256 _id, uint256 _amount, bytes calldata _data) public override {

@@ -10,7 +10,7 @@ import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
 import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
-import { SimpleIERC1155Mintable } from "@test/test/interest/SimpleIERC1155Mintable.t.sol";
+import { ERC1155MintableBurnable } from "@test/test/interest/ERC1155MintableBurnable.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -30,7 +30,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         _transferAndAssert(asset, owner, alice, 100_000 * SCALE);
 
         yieldStrategy = new SimpleInterestYieldStrategy();
-        depositLedger = new SimpleIERC1155Mintable();
+        depositLedger = new ERC1155MintableBurnable();
     }
 
     // Scenario: Calculating returns for a standard investment
