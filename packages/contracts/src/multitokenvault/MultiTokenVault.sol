@@ -12,6 +12,8 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155 {
     IERC20 private immutable _asset;
     uint256 private _currentTimePeriodsElapsed;
 
+    error MultiTokenVault__ExceededMaxRedeem();
+
     constructor(IERC20 asset_) ERC1155("") {
         _asset = asset_;
     }
@@ -41,23 +43,51 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155 {
     }
 
     function deposit(uint256 assets, address receiver) public virtual returns (uint256 depositPeriod, uint256 shares) {
-        depositPeriod = currentTimePeriodsElapsed();        
+        depositPeriod = currentTimePeriodsElapsed();
         shares = previewDeposit(assets);
-        
+
         _deposit(msg.sender, receiver, depositPeriod, assets, shares);
     }
 
-    function _deposit(address caller, address receiver, uint256 depositPeriod, uint256 assets, uint256 shares) internal virtual {
+    function _deposit(address caller, address receiver, uint256 depositPeriod, uint256 assets, uint256 shares)
+        internal
+        virtual
+    {
         _asset.safeTransferFrom(caller, address(this), assets);
         _mint(receiver, depositPeriod, shares, "");
         emit Deposit(msg.sender, receiver, depositPeriod, assets, shares);
     }
 
-    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
+    // =============== Redeem ===============
+    function maxRedeem(address owner, uint256 depositPeriod, uint256 redeemPeriod)
+        public
+        view
+        virtual
+        returns (uint256);
+
+    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
         public
         view
         virtual
         returns (uint256 assets);
+
+    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
+        public
+        view
+        virtual
+        returns (uint256)
+    {
+        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed());
+    }
+
+    function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
+        public
+        view
+        virtual
+        returns (uint256 assets)
+    {
+        return convertToAssetsForDepositPeriod(shares, depositPeriod, redeemPeriod);
+    }
 
     function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod)
         public
@@ -65,18 +95,27 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155 {
         virtual
         returns (uint256 assets)
     {
-        return convertToAssetsForDepositPeriod(shares, depositPeriod);
+        return previewRedeemForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed());
     }
 
-    function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
-        public
-        virtual
-        returns (uint256 assets)
-    {
-        // Need to fix
-        assets = convertToAssetsForDepositPeriod(shares, depositPeriod);
+    function redeemForDepositPeriod(
+        uint256 shares,
+        address receiver,
+        address owner,
+        uint256 depositPeriod,
+        uint256 redeemPeriod
+    ) public virtual returns (uint256 assets) {
+        if (depositPeriod >= redeemPeriod) {
+            revert MultiTokenVault__ExceededMaxRedeem();
+        }
 
-        //function _withdraw(address caller,address receiver,address owner,uint256 assets,uint256 shares)
+        uint256 maxShares = maxRedeem(owner, depositPeriod, redeemPeriod);
+
+        if (shares > maxShares) {
+            revert MultiTokenVault__ExceededMaxRedeem();
+        }
+
+        assets = previewRedeemForDepositPeriod(shares, depositPeriod, redeemPeriod);
 
         _burn(owner, depositPeriod, shares);
 
