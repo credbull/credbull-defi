@@ -90,10 +90,11 @@ contract TimelockAsyncUnlockTest is Test {
         vm.prank(alice);
         asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
 
+        // check for the depositPeriod validation
         vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__InvalidRequestPeriod.selector,
+                TimelockAsyncUnlock.TimelockAsyncUnlock__RequestBeforeDepositPeriod.selector,
                 alice,
                 depositDay1.depositPeriod,
                 depositDay1.depositPeriod + NOTICE_PERIOD
@@ -102,18 +103,55 @@ contract TimelockAsyncUnlockTest is Test {
         asyncUnlock.requestUnlock(depositDay1.amount, alice, depositDay1.depositPeriod, depositDay1.depositPeriod);
     }
 
-    function test__TimelockAsyncUnlock__UnlockPriorToUnlockPeriodFails() public {
-        uint256 timeLockCurrentPeriod = asyncUnlock.currentPeriod();
-        uint256 unlockPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
+    function test__TimelockAsyncUnlock__UnlockPriorToDepositPeriodFails() public {
+        uint256 requestedUnlockPeriod = depositDay1.depositPeriod - 1;
 
-        // fail - not yet at the unlockPeriod
+        // fail - unlocking before depositing !
         vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__InvalidUnlockPeriod.selector,
+                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeDepositPeriod.selector,
                 alice,
-                timeLockCurrentPeriod,
-                unlockPeriod
+                requestedUnlockPeriod,
+                depositDay1.depositPeriod
+            )
+        );
+        asyncUnlock.unlock(depositDay1.amount, alice, depositDay1.depositPeriod, requestedUnlockPeriod);
+    }
+
+    function test__TimelockAsyncUnlock__RequestUnlockPriorToCurrentPlusNoticePeriodFails() public {
+        uint256 currentPeriod = 10;
+        uint256 unlockPeriod = currentPeriod - 1;
+
+        asyncUnlock.setCurrentPeriod(currentPeriod);
+
+        // fail - requestUnlock is less than the currentPeriod + NOTICE_PERIOD
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__RequestBeforeCurrentPeriod.selector,
+                alice,
+                unlockPeriod,
+                currentPeriod + NOTICE_PERIOD
+            )
+        );
+        asyncUnlock.requestUnlock(depositDay1.amount, alice, depositDay2.depositPeriod, unlockPeriod);
+    }
+
+    function test__TimelockAsyncUnlock__UnlockPriorToCurrentPeriodFails() public {
+        uint256 currentPeriod = 5;
+        uint256 unlockPeriod = currentPeriod - 1;
+
+        asyncUnlock.setCurrentPeriod(currentPeriod);
+
+        // fail - unlock is less than the currentPeriod
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeCurrentPeriod.selector,
+                alice,
+                unlockPeriod,
+                currentPeriod
             )
         );
         asyncUnlock.unlock(depositDay1.amount, alice, depositDay1.depositPeriod, unlockPeriod);
