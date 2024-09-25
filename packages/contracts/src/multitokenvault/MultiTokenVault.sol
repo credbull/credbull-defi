@@ -16,18 +16,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155 {
         _asset = asset_;
     }
 
-    function convertToSharesForDepositPeriod(uint256 assets, uint256 depositPeriod)
-        public
-        view
-        virtual
-        returns (uint256 shares);
-
-    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
-        public
-        view
-        virtual
-        returns (uint256 assets);
-
+    // =============== Utility ===============
     function asset() public view virtual returns (address) {
         return address(_asset);
     }
@@ -36,19 +25,47 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155 {
         return _currentTimePeriodsElapsed;
     }
 
+    // =============== Deposit ===============
+    function convertToSharesForDepositPeriod(uint256 assets, uint256 depositPeriod)
+        public
+        view
+        virtual
+        returns (uint256 shares);
+
+    function convertToShares(uint256 assets) public view virtual returns (uint256) {
+        return convertToSharesForDepositPeriod(assets, currentTimePeriodsElapsed());
+    }
+
+    function previewDeposit(uint256 assets) public view virtual returns (uint256) {
+        return convertToShares(assets);
+    }
+
     function deposit(uint256 assets, address receiver) public virtual returns (uint256 depositPeriod, uint256 shares) {
-        depositPeriod = currentTimePeriodsElapsed();
+        depositPeriod = currentTimePeriodsElapsed();        
+        shares = previewDeposit(assets);
+        
+        _deposit(msg.sender, receiver, depositPeriod, assets, shares);
+    }
 
-        // Need to fix
-        shares = convertToSharesForDepositPeriod(assets, depositPeriod);
-
-        //_deposit(_msgSender(), receiver, assets, shares);
-        // SafeERC20.safeTransferFrom(_asset, caller, address(this), assets);
-
-        _asset.safeTransferFrom(msg.sender, address(this), assets);
+    function _deposit(address caller, address receiver, uint256 depositPeriod, uint256 assets, uint256 shares) internal virtual {
+        _asset.safeTransferFrom(caller, address(this), assets);
         _mint(receiver, depositPeriod, shares, "");
-
         emit Deposit(msg.sender, receiver, depositPeriod, assets, shares);
+    }
+
+    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
+        public
+        view
+        virtual
+        returns (uint256 assets);
+
+    function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod)
+        public
+        view
+        virtual
+        returns (uint256 assets)
+    {
+        return convertToAssetsForDepositPeriod(shares, depositPeriod);
     }
 
     function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
