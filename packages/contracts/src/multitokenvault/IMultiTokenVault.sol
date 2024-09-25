@@ -44,7 +44,7 @@ interface IMultiTokenVault is IERC1155 {
     function deposit(uint256 assets, address receiver) external returns (uint256 depositPeriod, uint256 shares);
 
     // =============== Redeem ===============
-    function maxRedeem(address owner, uint256 depositPeriod, uint256 redeemPeriod)
+    function maxRedeem(address owner, uint256 depositPeriod)
         external
         view
         returns (uint256 maxShares);

@@ -13,6 +13,8 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155 {
     uint256 private _currentTimePeriodsElapsed;
 
     error MultiTokenVault__ExceededMaxRedeem();
+    error MultiTokenVault__RedeemBeforeDeposit();
+    error MultiTokenVault__CallerMissingApprovalForAll();
 
     constructor(IERC20 asset_) ERC1155("") {
         _asset = asset_;
@@ -59,11 +61,9 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155 {
     }
 
     // =============== Redeem ===============
-    function maxRedeem(address owner, uint256 depositPeriod, uint256 redeemPeriod)
-        public
-        view
-        virtual
-        returns (uint256);
+    function maxRedeem(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
+        return balanceOf(owner, depositPeriod);
+    }
 
     function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
         public
@@ -106,16 +106,37 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155 {
         uint256 redeemPeriod
     ) public virtual returns (uint256 assets) {
         if (depositPeriod >= redeemPeriod) {
-            revert MultiTokenVault__ExceededMaxRedeem();
+            revert MultiTokenVault__RedeemBeforeDeposit();
         }
 
-        uint256 maxShares = maxRedeem(owner, depositPeriod, redeemPeriod);
+        uint256 maxShares = maxRedeem(owner, depositPeriod);
 
         if (shares > maxShares) {
             revert MultiTokenVault__ExceededMaxRedeem();
         }
 
         assets = previewRedeemForDepositPeriod(shares, depositPeriod, redeemPeriod);
+
+        _withdraw(msg.sender, receiver, owner, depositPeriod, assets, shares);
+    }
+
+    function redeemForDepositPeriod(
+        uint256 shares, address receiver, address owner, uint256 depositPeriod
+    ) public virtual returns (uint256 assets) {
+        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentTimePeriodsElapsed());
+    }
+
+    function _withdraw(
+        address caller,
+        address receiver,
+        address owner,
+        uint256 depositPeriod,
+        uint256 assets,
+        uint256 shares
+    ) internal virtual {
+        if(caller != owner && isApprovedForAll(owner, caller)) {
+            revert MultiTokenVault__CallerMissingApprovalForAll();
+        }
 
         _burn(owner, depositPeriod, shares);
 
