@@ -32,7 +32,7 @@ interface IMultiTokenVault is IERC1155 {
      *
      * @return asset The ERC-20 underlying asset address.
      */
-    function asset() external view returns (address asset);
+    function asset() external view returns (address);
 
     /**
      * @dev Returns the total amount of the underlying asset that is held by vault.
@@ -226,7 +226,7 @@ interface IMultiTokenVault is IERC1155 {
      *
      * @return currentTimePeriodsElapsed The current number of time periods elapsed.
      */
-    function currentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
+    function currentTimePeriodsElapsed() external view returns (uint256);
 
     /**
      * @notice This function is for only testing purposes.
@@ -235,16 +235,6 @@ interface IMultiTokenVault is IERC1155 {
      * @param currentTimePeriodsElapsed The current number of time periods elapsed.
      */
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
-
-    /**
-     * @dev Returns the shares held by account for a specific deposit period.
-     *
-     * @param account The address that owns the minted shares.
-     * @param depositPeriod The current number of time periods elapsed.
-     *
-     * @return shares The amount of shares held by the account for the specific deposit period.
-     */
-    function sharesAtPeriod(address account, uint256 depositPeriod) external view returns (uint256 shares);
 
     /**
      * @dev Get the total balance of assets currently deposited in the vault.
