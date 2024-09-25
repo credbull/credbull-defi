@@ -86,18 +86,14 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @param assets The amount of assets to convert.
      * @return shares The number of shares for the current deposit period.
      */
-    function convertToShares(uint256 assets) public view override returns (uint256 shares) {
+    function convertToShares(uint256 assets) public view virtual returns (uint256 shares) {
         return convertToSharesForDepositPeriod(assets, currentTimePeriodsElapsed());
     }
 
-    /**
-     * @notice Preview the number of shares that will be minted for a given deposit of assets.
-     * @param assets The amount of assets to deposit.
-     * @return shares The number of shares that will be minted for the given deposit.
-     */
-    // function previewDeposit(uint256 assets) public view override returns (uint256 shares) {
-    //     return convertToShares(assets);
-    // }
+    function previewDeposit(uint256 assets) public view override returns (uint256 depositPeriod, uint256 shares) {
+        depositPeriod = currentTimePeriodsElapsed();
+        shares = convertToShares(assets);
+    }
 
     /**
      * @dev Deposits assets into the vault and mints shares for the current time period.
@@ -116,15 +112,18 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
     {
         totalDepositedAssets += assets;
 
-        shares = convertToShares(assets);
+        (depositPeriod, shares) = previewDeposit(assets);
 
-        depositPeriod = currentTimePeriodsElapsed();
+        _deposit(_msgSender(), receiver, depositPeriod, assets, shares);
+    }
 
-        _asset.safeTransferFrom(msg.sender, treasury, assets);
-
-        _mint(receiver, currentTimePeriodsElapsed(), shares, ""); // Mint ERC1155 tokens for the current period
-
-        // return shares;
+    function _deposit(address caller, address receiver, uint256 depositPeriod, uint256 assets, uint256 shares)
+        internal
+        virtual
+    {
+        _asset.safeTransferFrom(caller, treasury, assets);
+        _mint(receiver, depositPeriod, shares, "");
+        emit Deposit(msg.sender, receiver, depositPeriod, assets, shares);
     }
 
     // =============== Redeem ===============
