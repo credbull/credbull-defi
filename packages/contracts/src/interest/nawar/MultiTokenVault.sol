@@ -24,7 +24,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
     uint256 public currentTimePeriodsElapsed = 0;
 
     /// @notice The ERC20 token used as the underlying asset in the vault.
-    IERC20 public immutable asset;
+    address public immutable asset;
 
     /// @notice The address of the treasury where deposited assets are transferred.
     address treasury;
@@ -46,7 +46,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @param _uri The metadata URI for the ERC1155 tokens.
      * @param initialOwner The owner of the contract.
      */
-    constructor(address _treasury, IERC20 _asset, string memory _uri, address initialOwner)
+    constructor(address _treasury, address _asset, string memory _uri, address initialOwner)
         ERC1155(_uri)
         Ownable(initialOwner)
     {
@@ -120,7 +120,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
 
         depositPeriod = currentTimePeriodsElapsed;
 
-        asset.safeTransferFrom(msg.sender, treasury, assets);
+        IERC20(asset).safeTransferFrom(msg.sender, treasury, assets);
 
         _mint(receiver, currentTimePeriodsElapsed, shares, ""); // Mint ERC1155 tokens for the current period
 
@@ -183,7 +183,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
 
         _burn(owner, depositPeriod, shares); // Burn ERC1155 tokens
 
-        asset.safeTransferFrom(treasury, receiver, assets); // Transfer the corresponding assets
+        IERC20(asset).safeTransferFrom(treasury, receiver, assets); // Transfer the corresponding assets
 
         return assets;
     }
@@ -227,9 +227,9 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @notice Get the underlying ERC20 asset used in the vault.
      * @return The ERC20 asset token.
      */
-    function getAsset() external view override returns (IERC20) {
-        return asset;
-    }
+    // function asset() external view override returns (address) {
+    //     return asset;
+    // }
 
     // =============== ERC1155 Overrides ===============
 
