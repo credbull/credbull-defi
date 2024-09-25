@@ -10,10 +10,10 @@ import { Context } from "@openzeppelin/contracts/utils/Context.sol";
 abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
     error TimelockAsyncUnlock__UnlockBeforeDepositPeriod(address account, uint256 period, uint256 depositPeriod);
     error TimelockAsyncUnlock__UnlockBeforeCurrentPeriod(address account, uint256 period, uint256 currentPeriod);
-    error TimelockAsyncUnlock__RequestBeforeDepositPeriod(
+    error TimelockAsyncUnlock__RequestBeforeDepositWithNoticePeriod(
         address account, uint256 period, uint256 depositWithNoticePeriod
     );
-    error TimelockAsyncUnlock__RequestBeforeCurrentPeriod(
+    error TimelockAsyncUnlock__RequestBeforeCurrentWithNoticePeriod(
         address account, uint256 period, uint256 currentWithNoticePeriod
     );
 
@@ -47,12 +47,16 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
         uint256 depositWithNoticePeriod = depositPeriod + NOTICE_PERIOD;
         if (unlockPeriod < depositWithNoticePeriod) {
             // unlocking before depositing!
-            revert TimelockAsyncUnlock__RequestBeforeDepositPeriod(_msgSender(), unlockPeriod, depositWithNoticePeriod);
+            revert TimelockAsyncUnlock__RequestBeforeDepositWithNoticePeriod(
+                _msgSender(), unlockPeriod, depositWithNoticePeriod
+            );
         }
 
         uint256 currentWithNoticePeriod = currentPeriod() + NOTICE_PERIOD;
         if (unlockPeriod < currentWithNoticePeriod) {
-            revert TimelockAsyncUnlock__RequestBeforeCurrentPeriod(_msgSender(), unlockPeriod, currentWithNoticePeriod);
+            revert TimelockAsyncUnlock__RequestBeforeCurrentWithNoticePeriod(
+                _msgSender(), unlockPeriod, currentWithNoticePeriod
+            );
         }
         _;
     }

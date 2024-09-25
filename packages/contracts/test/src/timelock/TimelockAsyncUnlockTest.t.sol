@@ -94,7 +94,7 @@ contract TimelockAsyncUnlockTest is Test {
         vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__RequestBeforeDepositPeriod.selector,
+                TimelockAsyncUnlock.TimelockAsyncUnlock__RequestBeforeDepositWithNoticePeriod.selector,
                 alice,
                 depositDay1.depositPeriod,
                 depositDay1.depositPeriod + NOTICE_PERIOD
@@ -129,7 +129,7 @@ contract TimelockAsyncUnlockTest is Test {
         vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__RequestBeforeCurrentPeriod.selector,
+                TimelockAsyncUnlock.TimelockAsyncUnlock__RequestBeforeCurrentWithNoticePeriod.selector,
                 alice,
                 unlockPeriod,
                 currentPeriod + NOTICE_PERIOD
