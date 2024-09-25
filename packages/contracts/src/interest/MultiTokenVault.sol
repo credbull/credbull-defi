@@ -31,9 +31,6 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
 
     /// @notice Tracks the total amount of assets deposited in the vault.
     uint256 internal totalDepositedAssets;
-
-    /// @notice The ratio of assets to shares (e.g., 1:1 ratio).
-    uint256 internal immutable ASSET_TO_SHARES_RATIO;
     
     error MultiTokenVault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 maxShares);
     error MultiTokenVault__CallerMissingApprovalForAll();
@@ -42,11 +39,10 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
      * @param treasury_ The address where deposited assets are transferred.
      * @param asset_ The ERC20 token representing the underlying asset.
-     * @param uri_ The metadata URI for the ERC1155 tokens.
      * @param initialOwner The owner of the contract.
      */
-    constructor(address treasury_, IERC20 asset_, string memory uri_, address initialOwner)
-        ERC1155(uri_)
+    constructor(address treasury_, IERC20 asset_, address initialOwner)
+        ERC1155("")
         Ownable(initialOwner)
     {
         _asset = asset_;
@@ -258,17 +254,6 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      */
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public virtual onlyOwner {
         _currentTimePeriodsElapsed = currentTimePeriodsElapsed_;
-    }
-
-    // =============== ERC1155 Overrides ===============
-
-    /**
-     * @notice Get the URI for the ERC1155 token metadata.
-     * @param tokenId The specific ERC1155 token ID.
-     * @return The metadata URI for the given token ID.
-     */
-    function uri(uint256 tokenId) public view virtual override returns (string memory) {
-        return "https://example.com/token/metadata/{tokenId}.json"; // Example URI, should be updated
     }
 
     /**
