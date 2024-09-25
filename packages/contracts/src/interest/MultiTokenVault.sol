@@ -31,7 +31,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
 
     /// @notice Tracks the total amount of assets deposited in the vault.
     uint256 internal totalDepositedAssets;
-    
+
     error MultiTokenVault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 maxShares);
     error MultiTokenVault__CallerMissingApprovalForAll();
 
@@ -41,10 +41,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @param asset_ The ERC20 token representing the underlying asset.
      * @param initialOwner The owner of the contract.
      */
-    constructor(address treasury_, IERC20 asset_, address initialOwner)
-        ERC1155("")
-        Ownable(initialOwner)
-    {
+    constructor(address treasury_, IERC20 asset_, address initialOwner) ERC1155("") Ownable(initialOwner) {
         _asset = asset_;
         treasury = treasury_;
     }
@@ -211,14 +208,14 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         uint256 assets,
         uint256 shares
     ) internal virtual {
-        if(caller != owner && isApprovedForAll(owner, caller)) {
+        if (caller != owner && isApprovedForAll(owner, caller)) {
             revert MultiTokenVault__CallerMissingApprovalForAll();
         }
 
         totalDepositedAssets -= assets;
 
         _burn(owner, depositPeriod, shares);
-        
+
         _asset.safeTransferFrom(treasury, receiver, assets);
 
         emit Withdraw(msg.sender, receiver, owner, depositPeriod, assets, shares);
@@ -232,9 +229,11 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @param depositPeriod The deposit period in which the shares were issued.
      * @return assets The amount of assets redeemed.
      */
-    function redeemForDepositPeriod(
-        uint256 shares, address receiver, address owner, uint256 depositPeriod
-    ) public virtual returns (uint256) {
+    function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
+        public
+        virtual
+        returns (uint256)
+    {
         return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentTimePeriodsElapsed());
     }
 

@@ -102,11 +102,8 @@ interface IMultiTokenVault is IERC1155 {
 
     // =============== Redeem/Withdraw ===============
 
-    function maxRedeem(address owner, uint256 depositPeriod)
-        external
-        view
-        returns (uint256 maxShares);
-        
+    function maxRedeem(address owner, uint256 depositPeriod) external view returns (uint256 maxShares);
+
     /**
      * @dev Converts shares to assets for deposit period and redeem period.
      *
