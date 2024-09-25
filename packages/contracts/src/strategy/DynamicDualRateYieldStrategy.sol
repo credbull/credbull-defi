@@ -5,8 +5,6 @@ import { IDynamicDualRateContext } from "@credbull/interest/IDynamicDualRateCont
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 
-import { console2 as console } from "forge-std/console2.sol";
-
 /**
  * @title DynamicDualRateYieldStrategy
  * @dev Calculates returns using different rates depending on the holding period.
@@ -62,14 +60,24 @@ contract DynamicDualRateYieldStrategy is IYieldStrategy {
         }
     }
 
-    /// @notice Returns the price after `numPeriodsElapsed` using the full rate.
-    /// @param contextContract The contract with the data calculating the price
+    /**
+     * @notice Returns the price after `numPeriodsElapsed` using the full rate.
+     * @dev Reverts with [DynamicDualRateYieldStrategy_InvalidContextAddress] if `contextContract` is invalid.
+     *
+     * @param contextContract The contract with the data calculating the price
+     * @param numPeriodsElapsed  The number of periods that have elapsed.
+     * @return price The calculated price.
+     */
     function calcPrice(address contextContract, uint256 numPeriodsElapsed)
         public
         view
         virtual
         returns (uint256 price)
     {
+        if (address(0) == contextContract) {
+            revert DynamicDualRateYieldStrategy_InvalidContextAddress();
+        }
+
         // NOTE (JL,2024-09-25): Seeing as this only uses Full Rate, I left it alone.
         IDynamicDualRateContext context = IDynamicDualRateContext(contextContract);
 

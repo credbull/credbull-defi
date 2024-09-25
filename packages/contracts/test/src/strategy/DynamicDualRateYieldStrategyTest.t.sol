@@ -1,19 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
-
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 import { DynamicDualRateYieldStrategy } from "@credbull/strategy/DynamicDualRateYieldStrategy.sol";
-import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
-import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
-import { IDynamicDualRateContext } from "@credbull/interest/IDynamicDualRateContext.sol";
+import { DynamicDualRateContext } from "@credbull/interest/DynamicDualRateContext.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
 import { Test } from "forge-std/Test.sol";
-import { console2 as console } from "forge-std/console2.sol";
 
 contract DynamicDualRateYieldStrategyTest is Test {
     uint256 public constant TOLERANCE = 1; // with 6 decimals, diff of 0.000001
@@ -32,14 +26,14 @@ contract DynamicDualRateYieldStrategyTest is Test {
     uint256 public immutable DEFAULT_FREQUENCY = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
 
     IYieldStrategy internal yieldStrategy;
-    TestDynamicDualRateContext internal context;
+    DynamicDualRateContext internal context;
     address internal contextAddress;
     uint256 internal principal;
     uint256 internal depositPeriod;
 
     function setUp() public {
         yieldStrategy = new DynamicDualRateYieldStrategy();
-        context = new TestDynamicDualRateContext(
+        context = new DynamicDualRateContext(
             DEFAULT_FULL_RATE,
             DEFAULT_REDUCED_RATE,
             Frequencies.toValue(Frequencies.Frequency.DAYS_365),
@@ -348,255 +342,5 @@ contract DynamicDualRateYieldStrategyTest is Test {
             TOLERANCE,
             "reduced rate yield wrong at deposit + 29"
         );
-    }
-}
-
-contract TestDynamicDualRateContext is CalcInterestMetadata, IDynamicDualRateContext {
-    using EnumerableMap for EnumerableMap.UintToUintMap;
-    using Math for uint256;
-
-    error TestDynamicDualRateContext_InvalidPeriodRange(uint256 from, uint256 to);
-    error TestDynamicDualRateContext_InvalidReducedRatePeriod(uint256 from);
-
-    event TestDynamicDualRateContext_ReducedRateAdded(uint256 period, uint256 rateScaled, uint256 scale);
-    event TestDynamicDualRateContext_ReducedRateRemoved(uint256 period, uint256 rateScaled, uint256 scale);
-
-    uint256 public immutable DEFAULT_REDUCED_RATE;
-    uint256 public immutable TENOR;
-
-    /**
-     * @notice A map of Period to the Reduced Rate effective from that period onwards.
-     * @dev Only 1 Reduced Rate per Period is supported, thus a map.
-     */
-    EnumerableMap.UintToUintMap internal reducedRatesMap;
-
-    constructor(
-        uint256 fullRateInPercentageScaled_,
-        uint256 reducedRateInPercentageScaled_,
-        uint256 frequency_,
-        uint256 tenor_,
-        uint256 decimals
-    ) CalcInterestMetadata(fullRateInPercentageScaled_, frequency_, decimals) {
-        DEFAULT_REDUCED_RATE = reducedRateInPercentageScaled_;
-        TENOR = tenor_;
-    }
-
-    function fullRateScaled() public view returns (uint256 fullRateInPercentageScaled_) {
-        return RATE_PERCENT_SCALED;
-    }
-
-    function numPeriodsForFullRate() public view returns (uint256 numPeriods) {
-        return TENOR;
-    }
-
-    function tupleOf(uint256 left, uint256 right) private pure returns (uint256[] memory tuple) {
-        tuple = new uint256[](2);
-        tuple[0] = left;
-        tuple[1] = right;
-    }
-
-    function matrixOf(uint256 left, uint256 right) private pure returns (uint256[][] memory matrix) {
-        matrix = new uint256[][](1);
-        matrix[0] = tupleOf(left, right);
-    }
-
-    /**
-     * @notice Determines the set of Reduced Rates for the period span of `fromPeriod` to `toPeriod`.
-     * @dev Encapsulates a somewhat complex (loop-heavy) algorithm for determining the set of Reduced Rates applicable
-     *  over a period span.
-     *
-     * @param fromPeriod The [uint256] period from which to determine the effective Reduced Rates.
-     * @param toPeriod The [uint256] period to which to determine the effective Reduced Rates. Must be after
-     *  `fromPeriod`.
-     * @return reducedRatesScaled An array of pairs of `period` to `reducedRateScaled` of the Reduced Rates.
-     */
-    function reducedRatesFor(uint256 fromPeriod, uint256 toPeriod)
-        public
-        view
-        override
-        returns (uint256[][] memory reducedRatesScaled)
-    {
-        if (toPeriod <= fromPeriod) {
-            revert TestDynamicDualRateContext_InvalidPeriodRange(fromPeriod, toPeriod);
-        }
-
-        // If there are no custom Reduced Rates, use the default Reduced Rate.
-        if (reducedRatesMap.length() == 0) {
-            reducedRatesScaled = matrixOf(1, DEFAULT_REDUCED_RATE);
-        } else {
-            // Determine the set of Periods to Reduced Rates from the configuration.
-            uint256[][] memory cache = new uint256[][](toPeriod - fromPeriod + 1);
-            uint256 cacheIndex = 0;
-
-            // If 'fromPeriod' has no custom Reduced Rate, then we decrement from then until we find one.
-            if (!reducedRatesMap.contains(fromPeriod)) {
-                // We iterate down to 1, decrementing i. No 0-day rate is allowed.
-                for (uint256 i = fromPeriod - 1; i > 0; i--) {
-                    (bool isFound, uint256 rate) = reducedRatesMap.tryGet(i);
-                    if (isFound) {
-                        cache[cacheIndex++] = tupleOf(i, rate);
-                        break;
-                    }
-                }
-
-                // If still none found, then the default rate applies.
-                if (cacheIndex == 0) {
-                    cache[cacheIndex++] = tupleOf(1, DEFAULT_REDUCED_RATE);
-                }
-            } else {
-                // If 'fromPeriod_' has a custom Reduced Rate, then that is the one that applies.
-                cache[cacheIndex++] = tupleOf(fromPeriod, reducedRatesMap.get(fromPeriod));
-            }
-
-            // Enumerate over the period between 'from' + 1 and 'to', to determine if there are any custom Reduced Rates
-            for (uint256 i = fromPeriod + 1; i <= toPeriod; i++) {
-                (bool isFound, uint256 rate) = reducedRatesMap.tryGet(i);
-                if (isFound) {
-                    cache[cacheIndex++] = tupleOf(i, rate);
-                }
-            }
-
-            // Now trim the cached results
-            uint256[][] memory trimmed = new uint256[][](cacheIndex);
-            for (uint256 i = 0; i < cacheIndex; i++) {
-                trimmed[i] = tupleOf(cache[i][0], cache[i][1]);
-            }
-
-            reducedRatesScaled = trimmed;
-        }
-    }
-
-    /**
-     * @notice Sets a Reduced Rate to be effective from the specified Period, replacing any existing rate.
-     * @dev Emits [TestDynamicDualRateContext_ReducedRateRemoved] first, when an existing rate is present. Emits
-     *  [TestDynamicDualRateContext_ReducedRateAdded] when a rate is set. Expected to be Access Controlled.
-     *
-     * @param fromPeriod_ The [uint256] period from which the custom Reduced Rate applies.
-     * @param reducedRate_ The [uint256] scaled Reduced Rate.
-     */
-    function setReducedRate(uint256 fromPeriod_, uint256 reducedRate_) public {
-        if (fromPeriod_ == 0) {
-            revert TestDynamicDualRateContext_InvalidReducedRatePeriod(fromPeriod_);
-        }
-
-        (bool isPresent, uint256 toReplace) = reducedRatesMap.tryGet(fromPeriod_);
-        reducedRatesMap.set(fromPeriod_, reducedRate_);
-
-        if (isPresent) {
-            emit TestDynamicDualRateContext_ReducedRateRemoved(fromPeriod_, toReplace, SCALE);
-        }
-        emit TestDynamicDualRateContext_ReducedRateAdded(fromPeriod_, reducedRate_, SCALE);
-    }
-
-    /**
-     * @notice Removes any existing Reduced Rate associated with `fromPeriod_`.
-     * @dev Emits [TestDynamicDualRateContext_ReducedRateRemoved] when a rate is removed.
-     *  Expected to be Access Controlled.
-     *
-     * @param fromPeriod_ The [uint256] period from which to remove any associated Reduced Rate.
-     * @return wasRemoved [true] if a rate was removed, [false] otherwise.
-     */
-    function removeReducedRate(uint256 fromPeriod_) public returns (bool wasRemoved) {
-        if (fromPeriod_ == 0) {
-            revert TestDynamicDualRateContext_InvalidReducedRatePeriod(fromPeriod_);
-        }
-
-        (bool isPresent, uint256 toRemove) = reducedRatesMap.tryGet(fromPeriod_);
-        if (isPresent) {
-            if (reducedRatesMap.remove(fromPeriod_)) {
-                emit TestDynamicDualRateContext_ReducedRateRemoved(fromPeriod_, toRemove, SCALE);
-                return true;
-            }
-        }
-        return false;
-    }
-}
-
-contract TestDynamicDualRateContextTest is Test {
-    uint256 public constant TOLERANCE = 1; // with 6 decimals, diff of 0.000001
-    uint256 public constant DECIMALS = 6;
-    uint256 public constant SCALE = 10 ** DECIMALS;
-
-    uint256 public constant PERCENT_5_SCALED = 5 * SCALE; // 5%
-    uint256 public constant PERCENT_5_5_SCALED = 55 * SCALE / 10; // 5.5%
-    uint256 public constant PERCENT_10_SCALED = 10 * SCALE; // 10%
-
-    uint256 public constant DEFAULT_FULL_RATE = PERCENT_10_SCALED;
-    uint256 public constant DEFAULT_REDUCED_RATE = PERCENT_5_SCALED;
-
-    uint256 public constant MATURITY_PERIOD = 30;
-
-    uint256 public immutable DEFAULT_FREQUENCY = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
-
-    uint256[][] public REDUCED_RATES = [
-        [2, scaled(25) / 10], // 2.5%
-        [9, scaled(58) / 10], // 5.8%
-        [17, scaled(61) / 10], // 6.1%
-        [22, PERCENT_5_SCALED], // 5%
-        [34, scaled(52) / 10], // 34%
-        [41, scaled(41) / 10], // 4.1%
-        [49, scaled(5)], // 5%
-        [55, PERCENT_5_5_SCALED], // 5.5%
-        [63, scaled(59) / 10] // 5.9%
-    ];
-
-    TestDynamicDualRateContext toTest;
-
-    function scaled(uint256 toScale) private pure returns (uint256) {
-        return toScale * SCALE;
-    }
-
-    function initialiseRates() private {
-        for (uint256 i = 0; i < REDUCED_RATES.length; i++) {
-            toTest.setReducedRate(REDUCED_RATES[i][0], REDUCED_RATES[i][1]);
-        }
-    }
-
-    function test_TestDynamicDualRateContextTest_ExpectedReducedRatesAreReturned() public {
-        toTest = new TestDynamicDualRateContext(
-            PERCENT_5_SCALED, PERCENT_5_5_SCALED, DEFAULT_FREQUENCY, MATURITY_PERIOD, DECIMALS
-        );
-        initialiseRates();
-
-        // Term: 30, Periods: 4 -> 10
-        uint256[][] memory expectedRates = new uint256[][](2);
-        expectedRates[0] = REDUCED_RATES[0];
-        expectedRates[1] = REDUCED_RATES[1];
-
-        uint256[][] memory rates = toTest.reducedRatesFor(4, 10);
-        assertEq(expectedRates.length, rates.length, "incorrect number of rates returned");
-        for (uint256 i = 0; i < rates.length; i++) {
-            assertEq(expectedRates[i], rates[i], "non-matching rates");
-            console.log("Index= %d, Period= %d, Rate= %d", i, rates[i][0], rates[i][1]);
-        }
-
-        // Term: 30, Periods: 9 -> 32
-        expectedRates = new uint256[][](3);
-        expectedRates[0] = REDUCED_RATES[1];
-        expectedRates[1] = REDUCED_RATES[2];
-        expectedRates[2] = REDUCED_RATES[3];
-
-        rates = toTest.reducedRatesFor(9, 32);
-        assertEq(expectedRates.length, rates.length, "incorrect number of rates returned");
-        for (uint256 i = 0; i < rates.length; i++) {
-            assertEq(expectedRates[i], rates[i], "non-matching rates");
-            console.log("Index= %d, Period= %d, Rate= %d", i, rates[i][0], rates[i][1]);
-        }
-
-        // Term: 30, Periods: 20 -> 61
-        expectedRates = new uint256[][](6);
-        expectedRates[0] = REDUCED_RATES[2];
-        expectedRates[1] = REDUCED_RATES[3];
-        expectedRates[2] = REDUCED_RATES[4];
-        expectedRates[3] = REDUCED_RATES[5];
-        expectedRates[4] = REDUCED_RATES[6];
-        expectedRates[5] = REDUCED_RATES[7];
-
-        rates = toTest.reducedRatesFor(20, 61);
-        assertEq(expectedRates.length, rates.length, "incorrect number of rates returned");
-        for (uint256 i = 0; i < rates.length; i++) {
-            assertEq(expectedRates[i], rates[i], "non-matching rates");
-            console.log("Index= %d, Period= %d, Rate= %d", i, rates[i][0], rates[i][1]);
-        }
     }
 }
