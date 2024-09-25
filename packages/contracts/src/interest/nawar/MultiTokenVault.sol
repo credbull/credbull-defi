@@ -151,6 +151,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
     function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod)
         public
         view
+        virtual
         returns (uint256 assets)
     {
         return convertToAssetsForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed);

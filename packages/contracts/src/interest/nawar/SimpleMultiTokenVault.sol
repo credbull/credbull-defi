@@ -13,7 +13,7 @@ import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
  *      This vault uses a simple yield calculation strategy with a fixed asset-to-shares ratio and yield percentage.
  *      It includes access control for managing deposit periods.
  */
-contract SimpleMultiTokenVault is MultiTokenVault {
+abstract contract SimpleMultiTokenVault is MultiTokenVault {
     using SafeERC20 for IERC20;
 
     /// @notice The yield strategy contract used to calculate yield.
@@ -34,7 +34,7 @@ contract SimpleMultiTokenVault is MultiTokenVault {
      */
     constructor(
         address _treasury,
-        IERC20 _asset,
+        address _asset,
         string memory _uri,
         IYieldStrategy yieldStrategy,
         ICalcInterestMetadata context,
@@ -61,7 +61,6 @@ contract SimpleMultiTokenVault is MultiTokenVault {
     function calcYield(uint256 principal, uint256 depositPeriod, uint256 redeemPeriod)
         public
         view
-        override
         returns (uint256 yieldAmount)
     {
         if (depositPeriod > redeemPeriod) {
@@ -151,16 +150,15 @@ contract SimpleMultiTokenVault is MultiTokenVault {
      * @notice Preview the number of assets that will be redeemed for a given number of shares.
      * @param shares The number of shares to redeem.
      * @param depositPeriod The specific deposit period during which the shares were issued.
-     * @param redeemPeriod The period in which redemption occurs.
      * @return assets The amount of assets that will be redeemed.
      */
-    function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
+    function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod)
         public
         view
         override
         returns (uint256 assets)
     {
-        return convertToAssetsForDepositPeriod(shares, depositPeriod, redeemPeriod);
+        return convertToAssetsForDepositPeriod(shares, depositPeriod);
     }
 
     /**
