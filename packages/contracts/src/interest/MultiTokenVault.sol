@@ -21,10 +21,10 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
     using SafeERC20 for IERC20;
 
     /// @notice Tracks the number of time periods that have elapsed.
-    uint256 public currentTimePeriodsElapsed = 0;
+    uint256 private _currentTimePeriodsElapsed;
 
     /// @notice The ERC20 token used as the underlying asset in the vault.
-    address public immutable asset;
+    IERC20 private immutable _asset;
 
     /// @notice The address of the treasury where deposited assets are transferred.
     address treasury;
@@ -41,17 +41,17 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
 
     /**
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
-     * @param _treasury The address where deposited assets are transferred.
-     * @param _asset The ERC20 token representing the underlying asset.
-     * @param _uri The metadata URI for the ERC1155 tokens.
+     * @param treasury_ The address where deposited assets are transferred.
+     * @param asset_ The ERC20 token representing the underlying asset.
+     * @param uri_ The metadata URI for the ERC1155 tokens.
      * @param initialOwner The owner of the contract.
      */
-    constructor(address _treasury, address _asset, string memory _uri, address initialOwner)
-        ERC1155(_uri)
+    constructor(address treasury_, IERC20 asset_, string memory uri_, address initialOwner)
+        ERC1155(uri_)
         Ownable(initialOwner)
     {
-        asset = _asset;
-        treasury = _treasury;
+        _asset = asset_;
+        treasury = treasury_;
     }
 
     // =============== View ===============
@@ -87,7 +87,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @return shares The number of shares for the current deposit period.
      */
     function convertToShares(uint256 assets) public view override returns (uint256 shares) {
-        return convertToSharesForDepositPeriod(assets, currentTimePeriodsElapsed);
+        return convertToSharesForDepositPeriod(assets, currentTimePeriodsElapsed());
     }
 
     /**
@@ -118,11 +118,11 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
 
         shares = convertToShares(assets);
 
-        depositPeriod = currentTimePeriodsElapsed;
+        depositPeriod = currentTimePeriodsElapsed();
 
-        IERC20(asset).safeTransferFrom(msg.sender, treasury, assets);
+        _asset.safeTransferFrom(msg.sender, treasury, assets);
 
-        _mint(receiver, currentTimePeriodsElapsed, shares, ""); // Mint ERC1155 tokens for the current period
+        _mint(receiver, currentTimePeriodsElapsed(), shares, ""); // Mint ERC1155 tokens for the current period
 
         // return shares;
     }
@@ -154,7 +154,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         virtual
         returns (uint256 assets)
     {
-        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed);
+        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed());
     }
 
     /**
@@ -184,7 +184,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
 
         _burn(owner, depositPeriod, shares); // Burn ERC1155 tokens
 
-        IERC20(asset).safeTransferFrom(treasury, receiver, assets); // Transfer the corresponding assets
+        _asset.safeTransferFrom(treasury, receiver, assets); // Transfer the corresponding assets
 
         return assets;
     }
@@ -202,26 +202,25 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         virtual
         returns (uint256)
     {
-        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentTimePeriodsElapsed);
+        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentTimePeriodsElapsed());
     }
 
     // =============== Utility ===============
+    function asset() public view virtual returns (address) {
+        return address(_asset);
+    }
 
-    /**
-     * @notice Get the current number of time periods that have elapsed.
-     * @return The current number of time periods elapsed.
-     */
-    function getCurrentTimePeriodsElapsed() public view virtual returns (uint256) {
-        return currentTimePeriodsElapsed;
+    function currentTimePeriodsElapsed() public view virtual returns (uint256) {
+        return _currentTimePeriodsElapsed;
     }
 
     /**
      * @notice Set the current time periods elapsed.
      * @dev Only callable by the contract owner.
-     * @param _currentTimePeriodsElapsed The new value for the number of time periods elapsed.
+     * @param currentTimePeriodsElapsed_ The new value for the number of time periods elapsed.
      */
-    function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public virtual onlyOwner {
-        currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
+    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public virtual onlyOwner {
+        _currentTimePeriodsElapsed = currentTimePeriodsElapsed_;
     }
 
     /**

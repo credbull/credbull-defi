@@ -232,9 +232,9 @@ interface IMultiTokenVault is IERC1155 {
      * @notice This function is for only testing purposes.
      * @dev This function is made to set the current number of time periods elapsed.
      *
-     * @param currentTimePeriodsElapsed The current number of time periods elapsed.
+     * @param currentTimePeriodsElapsed_ The current number of time periods elapsed.
      */
-    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
+    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) external;
 
     /**
      * @dev Get the total balance of assets currently deposited in the vault.
