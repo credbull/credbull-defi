@@ -3,16 +3,15 @@ pragma solidity ^0.8.20;
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+
 /**
  * @title IMultiTokenVault
+ * @dev Vault supporting multiple deposit periods with independent returns and redemption rules.
+ * Follows the IERC4626 convention - adding in support for multiple Tokens at given depositPeriods
  */
-
 interface IMultiTokenVault is IERC1155 {
-    /// @notice Returns the yield for `principal` between `depositPeriod` and `redeemPeriod`.
-    function calcYield(uint256 principal, uint256 depositPeriod, uint256 redeemPeriod)
-        external
-        view
-        returns (uint256 yield);
+    error IMultiTokenVault__RedeemBeforeDeposit(address owner, uint256 depositPeriod, uint256 redeemPeriod);
+    error IMultiTokenVault__RedeemPeriodNotSupported(address owner, uint256 currentPeriod, uint256 redeemPeriod);
 
     // =============== General utility view function ===============
 
@@ -103,16 +102,14 @@ interface IMultiTokenVault is IERC1155 {
 
     // =============== Operational ===============
 
-    /**
-     * @dev Returns the ERC20 underlying asset used in the vault
-     * @return asset The ERC20 underlying asset
-     */
-    function getAsset() external view returns (IERC20 asset);
+    /// @notice Returns the address of the underlying token.
+    function asset() external view returns (address asset_);
 
-    /**
-     * @dev Returns the current number of time periods elapsed
-     */
-    function getCurrentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
+    /// @notice Returns the shares held by `account` for `depositPeriod`.
+    function sharesAtPeriod(address account, uint256 depositPeriod) external view returns (uint256 shares);
+
+    /// @notice Returns the current number of time periods elapsed.
+    function currentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed_);
 
     /**
      * @dev This function is for only testing purposes

@@ -42,12 +42,7 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
     }
 
     /// @notice Calculates the yield for `principal` from `fromPeriod` to `toPeriod`.
-    function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod)
-        public
-        view
-        override
-        returns (uint256 yield)
-    {
+    function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod) public view returns (uint256 yield) {
         return YIELD_STRATEGY.calcYield(address(this), principal, fromPeriod, toPeriod);
     }
 

@@ -88,20 +88,25 @@ abstract contract TimelockIERC1155 is ITimelock, ERC1155, ERC1155Supply, Ownable
     function setCurrentPeriod(uint256 currentPeriod) public virtual;
 
     /// @notice Returns the lock periods for `account` where the balance is non-zero.
-    function lockPeriods(address account) public view override returns (uint256[] memory lockPeriods_) {
-        uint256 maxLockPeriod = currentPeriod() + lockDuration() + 1;
-        uint256[] memory tempLockPeriods = new uint256[](maxLockPeriod);
+    function lockPeriods(address account, uint256 fromPeriod, uint256 toPeriod)
+        public
+        view
+        override
+        returns (uint256[] memory lockPeriods_)
+    {
+        uint256 maxLockPeriods = (toPeriod - fromPeriod) + 1;
+        uint256[] memory tempLockPeriods = new uint256[](maxLockPeriods);
 
-        uint256 accountLockCount = 0;
-        for (uint256 i = 0; i <= maxLockPeriod; i++) {
-            if (balanceOf(account, i) > 0) {
-                tempLockPeriods[accountLockCount] = i;
-                accountLockCount++;
+        uint256 accountLockPeriodCount = 0;
+        for (uint256 i = fromPeriod; i <= toPeriod; i++) {
+            if (lockedAmount(account, i) > 0) {
+                tempLockPeriods[accountLockPeriodCount] = i;
+                accountLockPeriodCount++;
             }
         }
 
-        uint256[] memory finalLockPeriods = new uint256[](accountLockCount);
-        for (uint256 i = 0; i < accountLockCount; i++) {
+        uint256[] memory finalLockPeriods = new uint256[](accountLockPeriodCount);
+        for (uint256 i = 0; i < accountLockPeriodCount; i++) {
             finalLockPeriods[i] = tempLockPeriods[i];
         }
 

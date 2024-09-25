@@ -30,6 +30,9 @@ interface ITimelock {
         view
         returns (uint256 amountUnlockable);
 
-    /// @notice Returns the lock periods where `account` has a non-zero balance.
-    function lockPeriods(address account) external view returns (uint256[] memory lockPeriods);
+    /// @notice Returns the periods with locked tokens for `account` between `fromPeriod` and `toPeriod`.
+    function lockPeriods(address account, uint256 fromPeriod, uint256 toPeriod)
+        external
+        view
+        returns (uint256[] memory lockPeriods_);
 }
