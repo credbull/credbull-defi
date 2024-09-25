@@ -34,10 +34,9 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
 
     /// @notice The ratio of assets to shares (e.g., 1:1 ratio).
     uint256 internal immutable ASSET_TO_SHARES_RATIO;
-
-    error MultiTokenVault__UnsupportedFunction(string functionName);
-    error MultiTokenVault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 max);
-    error MultiTokenVault__RedeemTimePeriodNotSupported(address owner, uint256 period, uint256 redeemPeriod);
+    
+    error MultiTokenVault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 maxShares);
+    error MultiTokenVault__CallerMissingApprovalForAll();
 
     /**
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
@@ -110,8 +109,6 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         nonReentrant
         returns (uint256 depositPeriod, uint256 shares)
     {
-        totalDepositedAssets += assets;
-
         (depositPeriod, shares) = previewDeposit(assets);
 
         _deposit(_msgSender(), receiver, depositPeriod, assets, shares);
@@ -121,12 +118,17 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         internal
         virtual
     {
+        totalDepositedAssets += assets;
+
         _asset.safeTransferFrom(caller, treasury, assets);
         _mint(receiver, depositPeriod, shares, "");
         emit Deposit(msg.sender, receiver, depositPeriod, assets, shares);
     }
 
     // =============== Redeem ===============
+    function maxRedeem(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
+        return balanceOf(owner, depositPeriod);
+    }
 
     /**
      * @notice Convert a given number of shares to assets for a specific deposit period and redeem period.
@@ -141,6 +143,24 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         virtual
         returns (uint256 assets);
 
+    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
+        public
+        view
+        virtual
+        returns (uint256)
+    {
+        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed());
+    }
+
+    function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
+        public
+        view
+        virtual
+        returns (uint256 assets)
+    {
+        return convertToAssetsForDepositPeriod(shares, depositPeriod, redeemPeriod);
+    }
+
     /**
      * @notice Preview the number of assets that will be redeemed for a given number of shares.
      * @param shares The number of shares to redeem.
@@ -153,7 +173,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         virtual
         returns (uint256 assets)
     {
-        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed());
+        return previewRedeemForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed());
     }
 
     /**
@@ -171,21 +191,41 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         address owner,
         uint256 depositPeriod,
         uint256 redeemPeriod
-    ) public virtual nonReentrant returns (uint256) {
-        totalDepositedAssets -= (shares * ASSET_TO_SHARES_RATIO);
+    ) public virtual nonReentrant returns (uint256 assets) {
+        if (depositPeriod >= redeemPeriod) {
+            revert IMultiTokenVault__RedeemBeforeDeposit(owner, depositPeriod, redeemPeriod);
+        }
 
-        uint256 maxShares = getSharesAtPeriod(owner, depositPeriod);
+        uint256 maxShares = maxRedeem(owner, depositPeriod);
+
         if (shares > maxShares) {
             revert MultiTokenVault__ExceededMaxRedeem(owner, depositPeriod, shares, maxShares);
         }
 
-        uint256 assets = convertToAssetsForDepositPeriod(shares, depositPeriod, redeemPeriod); // Convert shares to assets
+        assets = previewRedeemForDepositPeriod(shares, depositPeriod, redeemPeriod);
 
-        _burn(owner, depositPeriod, shares); // Burn ERC1155 tokens
+        _withdraw(msg.sender, receiver, owner, depositPeriod, assets, shares);
+    }
 
-        _asset.safeTransferFrom(treasury, receiver, assets); // Transfer the corresponding assets
+    function _withdraw(
+        address caller,
+        address receiver,
+        address owner,
+        uint256 depositPeriod,
+        uint256 assets,
+        uint256 shares
+    ) internal virtual {
+        if(caller != owner && isApprovedForAll(owner, caller)) {
+            revert MultiTokenVault__CallerMissingApprovalForAll();
+        }
 
-        return assets;
+        totalDepositedAssets -= assets;
+
+        _burn(owner, depositPeriod, shares);
+        
+        _asset.safeTransferFrom(treasury, receiver, assets);
+
+        emit Withdraw(msg.sender, receiver, owner, depositPeriod, assets, shares);
     }
 
     /**
@@ -196,11 +236,9 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @param depositPeriod The deposit period in which the shares were issued.
      * @return assets The amount of assets redeemed.
      */
-    function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
-        public
-        virtual
-        returns (uint256)
-    {
+    function redeemForDepositPeriod(
+        uint256 shares, address receiver, address owner, uint256 depositPeriod
+    ) public virtual returns (uint256) {
         return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentTimePeriodsElapsed());
     }
 
@@ -221,14 +259,6 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public virtual onlyOwner {
         _currentTimePeriodsElapsed = currentTimePeriodsElapsed_;
     }
-
-    /**
-     * @notice Get the underlying ERC20 asset used in the vault.
-     * @return The ERC20 asset token.
-     */
-    // function asset() external view override returns (address) {
-    //     return asset;
-    // }
 
     // =============== ERC1155 Overrides ===============
 
