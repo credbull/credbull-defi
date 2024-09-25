@@ -5,7 +5,7 @@ import { IERC6372 } from "@openzeppelin/contracts/interfaces/IERC6372.sol";
 import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 
 contract Timer is IERC6372 {
-    uint48 public START_TiME;
+    uint48 public startTime;
 
     error ERC6372InconsistentClock();
 
@@ -13,7 +13,7 @@ contract Timer is IERC6372 {
 
     /// @dev sets the start time
     constructor(uint48 startTime_) {
-        START_TiME = startTime_;
+        startTime = startTime_;
     }
 
     /// @dev returns the current timepoint (timestamp mode)
@@ -29,18 +29,22 @@ contract Timer is IERC6372 {
         return "mode=timestamp";
     }
 
-    /// @dev returns the elapsed time in seconds since START_TiME
+    /// @dev returns the elapsed time in seconds since starTime
     function elapsedSeconds() public view returns (uint48) {
-        return clock() - START_TiME;
+        return clock() - startTime;
     }
 
-    /// @dev returns the elapsed time in minutes since START_TiME
+    /// @dev returns the elapsed time in minutes since starTime
     function elapsedMinutes() public view returns (uint48) {
         return elapsedSeconds() / 1 minutes;
     }
 
-    /// @dev returns the elapsed 24-hour periods since START_TiME
+    /// @dev returns the elapsed 24-hour periods since starTime
     function elapsed24Hours() public view returns (uint48) {
         return elapsedSeconds() / 24 hours;
+    }
+
+    function _setStartTime(uint48 startTime_) internal {
+        startTime = startTime_;
     }
 }

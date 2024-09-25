@@ -4,6 +4,8 @@ pragma solidity ^0.8.20;
 import { TimelockIERC1155 } from "@test/test/timelock/TimelockIERC1155.t.sol";
 import { ITimelock } from "@credbull/timelock/ITimelock.sol";
 import { TimelockTest } from "@test/src/timelock/TimelockTest.t.sol";
+import { TimerCheats } from "@test/test/timelock/TimerCheats.t.sol";
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 contract TimelockIERC1155Test is TimelockTest {
     function setUp() public {
@@ -52,11 +54,13 @@ contract TimelockIERC1155Test is TimelockTest {
     }
 }
 
-contract SimpleTimelockIERC1155 is TimelockIERC1155 {
+contract SimpleTimelockIERC1155 is TimelockIERC1155, TimerCheats {
     uint256 public myLockDuration;
-    uint256 public currentPeriodElapsed = 0;
 
-    constructor(address _initialOwner, uint256 _lockDuration) TimelockIERC1155(_initialOwner) {
+    constructor(address _initialOwner, uint256 _lockDuration)
+        TimelockIERC1155(_initialOwner)
+        TimerCheats(SafeCast.toUint48(block.timestamp))
+    {
         myLockDuration = _lockDuration;
     }
 
@@ -65,10 +69,10 @@ contract SimpleTimelockIERC1155 is TimelockIERC1155 {
     }
 
     function currentPeriod() public view override returns (uint256 currentPeriod_) {
-        return currentPeriodElapsed;
+        return elapsed24Hours();
     }
 
     function setCurrentPeriod(uint256 currentPeriod_) public override {
-        currentPeriodElapsed = currentPeriod_;
+        warp24HourPeriods(SafeCast.toUint48(currentPeriod_));
     }
 }
