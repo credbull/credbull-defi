@@ -3,13 +3,16 @@ pragma solidity ^0.8.20;
 
 import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
+import { TimerCheats } from "@test/test/timelock/TimerCheats.t.sol";
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-contract SimpleTimelockAsyncUnlock is TimelockAsyncUnlock {
+contract SimpleTimelockAsyncUnlock is TimelockAsyncUnlock, TimerCheats {
     IERC5679Ext1155 public immutable DEPOSITS;
 
-    uint256 private period = 0;
-
-    constructor(uint256 noticePeriod_, IERC5679Ext1155 deposits) TimelockAsyncUnlock(noticePeriod_) {
+    constructor(uint256 noticePeriod_, IERC5679Ext1155 deposits)
+        TimelockAsyncUnlock(noticePeriod_)
+        TimerCheats(SafeCast.toUint48(block.timestamp))
+    {
         DEPOSITS = deposits;
     }
 
@@ -23,14 +26,12 @@ contract SimpleTimelockAsyncUnlock is TimelockAsyncUnlock {
         return DEPOSITS.balanceOf(account, depositPeriod);
     }
 
-    /// @notice Returns the current period.
     function currentPeriod() public view override returns (uint256 currentPeriod_) {
-        return period;
+        return elapsed24Hours();
     }
 
-    /// @notice Returns the current period.
     function setCurrentPeriod(uint256 currentPeriod_) public {
-        period = currentPeriod_;
+        warp24HourPeriods(SafeCast.toUint48(currentPeriod_));
     }
 
     function _updateLockAfterUnlock(address account, uint256 depositPeriod, uint256 amount) internal virtual override {

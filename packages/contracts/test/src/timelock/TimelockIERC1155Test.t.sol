@@ -12,15 +12,13 @@ contract TimelockIERC1155Test is TimelockTest {
         timelock = new SimpleTimelockIERC1155(owner, lockUntilDay1.releasePeriod);
     }
 
-    function toImpl(ITimelock _timelock) internal pure returns (TimelockIERC1155) {
+    function toImpl(ITimelock _timelock) internal pure returns (SimpleTimelockIERC1155) {
         // Simulate time passing by setting the current time periods elapsed
-        TimelockIERC1155 timelockImpl = SimpleTimelockIERC1155(address(_timelock));
-        return timelockImpl;
+        return SimpleTimelockIERC1155(address(_timelock));
     }
 
     function warpToPeriod(ITimelock _timelock, uint256 timePeriod) internal override {
-        // Simulate time passing by setting the current time periods elapsed
-        TimelockIERC1155 timelockImpl = toImpl(_timelock);
+        SimpleTimelockIERC1155 timelockImpl = toImpl(_timelock);
         timelockImpl.setCurrentPeriod(timePeriod);
     }
 
@@ -72,7 +70,7 @@ contract SimpleTimelockIERC1155 is TimelockIERC1155, TimerCheats {
         return elapsed24Hours();
     }
 
-    function setCurrentPeriod(uint256 currentPeriod_) public override {
+    function setCurrentPeriod(uint256 currentPeriod_) public {
         warp24HourPeriods(SafeCast.toUint48(currentPeriod_));
     }
 }

@@ -9,9 +9,6 @@ contract Timer is IERC6372 {
 
     error ERC6372InconsistentClock();
 
-    /// @dev the clock was incorrectly modified.
-
-    /// @dev sets the start time
     constructor(uint48 startTime_) {
         startTime = startTime_;
     }

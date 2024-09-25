@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import { ICalcInterestMetadata } from "@credbull/interest/ICalcInterestMetadata.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title CalcInterestMetadata
@@ -32,18 +31,5 @@ abstract contract CalcInterestMetadata is ICalcInterestMetadata {
     /// @notice Returns the scale factor for calculations (e.g., 10^18 for 18 decimals).
     function scale() public view virtual returns (uint256 scale_) {
         return SCALE;
-    }
-
-    /// @notice Returns a string representation of the interest calculation metadata.
-    function toString() public view returns (string memory) {
-        return string.concat(
-            " CalcInterest [ rate: ",
-            Strings.toString(RATE_PERCENT_SCALED),
-            " frequency: ",
-            Strings.toString(FREQUENCY),
-            " scale: ",
-            Strings.toString(SCALE),
-            " ] "
-        );
     }
 }
