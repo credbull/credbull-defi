@@ -552,7 +552,7 @@ contract TestDynamicDualRateContextTest is Test {
         }
     }
 
-    function test_TestDynamicDualRateContextTest_Term30_ExpectedReducedRatesAreReturned() public {
+    function test_TestDynamicDualRateContextTest_ExpectedReducedRatesAreReturned() public {
         toTest = new TestDynamicDualRateContext(
             PERCENT_5_SCALED, PERCENT_5_5_SCALED, DEFAULT_FREQUENCY, MATURITY_PERIOD, DECIMALS
         );
