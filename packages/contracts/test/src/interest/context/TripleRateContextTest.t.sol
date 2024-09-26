@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { ITripleRateContext } from "@credbull/interest/context/ITripleRateContext.sol";
 import { TripleRateContext } from "@credbull/interest/context/TripleRateContext.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
