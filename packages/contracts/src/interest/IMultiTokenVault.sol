@@ -32,7 +32,7 @@ interface IMultiTokenVault is IERC1155 {
      *
      * @return asset The ERC-20 underlying asset address.
      */
-    function asset() external view returns (address asset);
+    function asset() external view returns (address);
 
     /**
      * @dev Returns the total amount of the underlying asset that is held by vault.
@@ -41,47 +41,9 @@ interface IMultiTokenVault is IERC1155 {
      */
     function totalAssets() external view returns (uint256 totalAssets);
 
-    // =============== General utility view function ===============
-
-    /**
-     * @dev Converts shares to assets for deposit period at the current redeem period.
-     *
-     * @return assets The equivalent amount of the underlying asset.
-     */
-    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
-        external
-        view
-        returns (uint256 assets);
-
-    /**
-     * @dev Converts shares to assets for deposit period and redeem period.
-     *
-     * @return assets The equivalent amount of the underlying asset.
-     */
-    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
-        external
-        view
-        returns (uint256 assets);
-
-    /**
-     * @dev Converts assets to shares for the deposit period.
-     *
-     * @return shares The equivalent amount of shares.
-     */
-    function convertToSharesForDepositPeriod(uint256 assets, uint256 depositPeriod)
-        external
-        view
-        returns (uint256 shares);
-
-    /**
-     * @dev Converts assets to shares at the current period.
-     *
-     * @return shares The equivalent amount of shares.
-     */
-    function convertToShares(uint256 assets) external view returns (uint256 shares);
+    function sharesAtPeriod(address account, uint256 depositPeriod) external view returns (uint256 shares);
 
     // =============== Deposit ===============
-
     /**
      * @dev Returns the maximum amount of the underlying asset that can be deposited into the vault for the receiver at the deposit period.
      *
@@ -100,6 +62,23 @@ interface IMultiTokenVault is IERC1155 {
      * @return maxAssets The maximum amount of the underlying asset can be deposited.
      */
     function maxDeposit(address receiver) external view returns (uint256 maxAssets);
+
+    /**
+     * @dev Converts assets to shares for the deposit period.
+     *
+     * @return shares The equivalent amount of shares.
+     */
+    function convertToSharesForDepositPeriod(uint256 assets, uint256 depositPeriod)
+        external
+        view
+        returns (uint256 shares);
+
+    /**
+     * @dev Converts assets to shares at the current period.
+     *
+     * @return shares The equivalent amount of shares.
+     */
+    function convertToShares(uint256 assets) external view returns (uint256 shares);
 
     /**
      * @dev Simulate the deposit of the underlying assets into the vault and return the equivalent amount of shares for the current time period.
@@ -125,6 +104,32 @@ interface IMultiTokenVault is IERC1155 {
 
     // =============== Redeem/Withdraw ===============
 
+    function maxRedeemAtPeriod(address owner, uint256 depositPeriod) external view returns (uint256 maxShares);
+
+    /**
+     * @dev Converts shares to assets for deposit period and redeem period.
+     *
+     * @return assets The equivalent amount of the underlying asset.
+     */
+    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
+        external
+        view
+        returns (uint256 assets);
+
+    /**
+     * @dev Converts shares to assets for deposit period at the current redeem period.
+     *
+     * @return assets The equivalent amount of the underlying asset.
+     */
+    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
+        external
+        view
+        returns (uint256 assets);
+
+    function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
+        external
+        view
+        returns (uint256 assets);
     /**
      * @dev Returns the amount of assets that will be redeemed for a given amount of shares at a specific period of time.
      *
@@ -226,25 +231,15 @@ interface IMultiTokenVault is IERC1155 {
      *
      * @return currentTimePeriodsElapsed The current number of time periods elapsed.
      */
-    function currentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed);
+    function currentTimePeriodsElapsed() external view returns (uint256);
 
     /**
      * @notice This function is for only testing purposes.
      * @dev This function is made to set the current number of time periods elapsed.
      *
-     * @param currentTimePeriodsElapsed The current number of time periods elapsed.
+     * @param currentTimePeriodsElapsed_ The current number of time periods elapsed.
      */
-    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed) external;
-
-    /**
-     * @dev Returns the shares held by account for a specific deposit period.
-     *
-     * @param account The address that owns the minted shares.
-     * @param depositPeriod The current number of time periods elapsed.
-     *
-     * @return shares The amount of shares held by the account for the specific deposit period.
-     */
-    function sharesAtPeriod(address account, uint256 depositPeriod) external view returns (uint256 shares);
+    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) external;
 
     /**
      * @dev Get the total balance of assets currently deposited in the vault.
