@@ -9,8 +9,6 @@ import { SimpleInterestYieldStrategy } from "@credbull/strategy/SimpleInterestYi
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
 import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
-import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
-import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -18,7 +16,6 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 contract DiscountingVaultTest is IMultiTokenVaultTestBase {
     IERC20Metadata private asset;
     IYieldStrategy private yieldStrategy;
-    IERC5679Ext1155 private depositLedger;
 
     uint256 internal SCALE;
 
@@ -30,7 +27,6 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         _transferAndAssert(asset, owner, alice, 100_000 * SCALE);
 
         yieldStrategy = new SimpleInterestYieldStrategy();
-        depositLedger = new SimpleIERC1155Mintable();
     }
 
     // Scenario: Calculating returns for a standard investment
@@ -40,10 +36,10 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
             yieldStrategy: yieldStrategy,
-            depositLedger: depositLedger,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
-            tenor: 30
+            tenor: 30,
+            initialOwner: owner
         });
 
         DiscountingVault vault = new DiscountingVault(params);
@@ -64,10 +60,10 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
             yieldStrategy: yieldStrategy,
-            depositLedger: depositLedger,
             interestRatePercentageScaled: 12 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.MONTHLY),
-            tenor: 3
+            tenor: 3,
+            initialOwner: owner
         });
 
         DiscountingVault vault = new DiscountingVault(params);
@@ -82,10 +78,10 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
             yieldStrategy: yieldStrategy,
-            depositLedger: depositLedger,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
-            tenor: 30
+            tenor: 30,
+            initialOwner: owner
         });
 
         uint256 deposit = 50_000 * SCALE;
@@ -107,10 +103,10 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
             yieldStrategy: yieldStrategy,
-            depositLedger: depositLedger,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
-            tenor: 30
+            tenor: 30,
+            initialOwner: owner
         });
 
         uint256 deposit = 100 * SCALE;

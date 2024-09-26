@@ -4,8 +4,6 @@ pragma solidity ^0.8.20;
 import { CalcDiscounted } from "@credbull/interest/CalcDiscounted.sol";
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
-import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
-
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -25,16 +23,16 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
 
     struct DiscountingVaultParams {
         IERC20Metadata asset;
-        IERC5679Ext1155 depositLedger;
         IYieldStrategy yieldStrategy;
         uint256 interestRatePercentageScaled;
         uint256 frequency;
         uint256 tenor;
+        address initialOwner;
     }
 
     /// @notice Initializes the DiscountingVault.
     constructor(DiscountingVaultParams memory params)
-        MultiTokenVault(params.asset, params.depositLedger)
+        MultiTokenVault(params.asset, params.initialOwner)
         CalcInterestMetadata(params.interestRatePercentageScaled, params.frequency, params.asset.decimals())
     {
         YIELD_STRATEGY = params.yieldStrategy;
