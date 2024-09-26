@@ -31,7 +31,6 @@ contract TripleRateContext is CalcInterestMetadata, ITripleRateContext {
      */
     event CurrentTenorPeriodAndRateChanged(uint256 tenorPeriod, uint256 reducedRate);
 
-    uint256 public immutable DEFAULT_REDUCED_RATE;
     uint256 public immutable TENOR;
 
     uint256 internal _currentTenorPeriod;
@@ -47,7 +46,6 @@ contract TripleRateContext is CalcInterestMetadata, ITripleRateContext {
         uint256 tenor_,
         uint256 decimals
     ) CalcInterestMetadata(fullRateInPercentageScaled_, frequency_, decimals) {
-        DEFAULT_REDUCED_RATE = reducedRateInPercentageScaled_;
         TENOR = tenor_;
 
         setReducedRateAt(1, reducedRateInPercentageScaled_);
@@ -89,7 +87,8 @@ contract TripleRateContext is CalcInterestMetadata, ITripleRateContext {
     /**
      * @notice Mutator function to set the current Tenor Period and its associated Reduced Rate.
      * @dev Reverts with [TripleRateContext_PeriodRegressionNotAllowed] if `tenorPeriod_` is before the
-     *  current Tenor Period.
+     *  current Tenor Period. Expected to be Access Controlled.
+     *  Emits [CurrentTenorPeriodAndRateChanged] upont mutation.
      *
      * @param tenorPeriod_ The [uint256] Tenor Period at which to set the associated Rate.
      * @param reducedRateScaled_ The [uint256] Reduced Rate scaled percentage value.
@@ -104,5 +103,7 @@ contract TripleRateContext is CalcInterestMetadata, ITripleRateContext {
 
         _currentTenorPeriod = tenorPeriod_;
         _currentReducedRate = reducedRateScaled_;
+
+        emit CurrentTenorPeriodAndRateChanged(tenorPeriod_, reducedRateScaled_);
     }
 }
