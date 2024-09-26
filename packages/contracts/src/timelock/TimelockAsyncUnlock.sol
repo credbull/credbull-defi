@@ -21,6 +21,9 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
 
     error TimelockAsyncUnlock__UnlockBeforeDepositPeriod(address account, uint256 period, uint256 depositPeriod);
     error TimelockAsyncUnlock__UnlockBeforeCurrentPeriod(address account, uint256 period, uint256 currentPeriod);
+    error TimelockAsyncUnlock__UnlockPeriodMismatch(
+        address account, uint256 unlockPeriod, uint256 requestedUnlockPeriod
+    );
     error TimelockAsyncUnlock__RequestBeforeDepositWithNoticePeriod(
         address account, uint256 period, uint256 depositWithNoticePeriod
     );
@@ -78,13 +81,20 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
         onlyTokenOwner(tokenOwner)
         validateRequestPeriod(depositPeriod, unlockPeriod)
     {
-        // Store unlock request
-        _unlockRequests[depositPeriod][tokenOwner] = UnlockItem({
-            account: tokenOwner,
-            depositPeriod: depositPeriod,
-            unlockPeriod: unlockPeriod,
-            amount: amount
-        });
+        UnlockItem storage unlockRequest = _unlockRequests[depositPeriod][tokenOwner];
+
+        if (unlockRequest.amount > 0 && unlockRequest.unlockPeriod == unlockPeriod) {
+            // Add to the existing unlock request if the unlockPeriod is the same
+            unlockRequest.amount += amount;
+        } else {
+            // Overwrite the unlock request if it's a different unlockPeriod
+            _unlockRequests[depositPeriod][tokenOwner] = UnlockItem({
+                account: tokenOwner,
+                depositPeriod: depositPeriod,
+                unlockPeriod: unlockPeriod,
+                amount: amount
+            });
+        }
     }
 
     /// @notice Unlocks `amount` after the `redeemPeriod`, transferring to `tokenOwner`.
@@ -93,11 +103,18 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
         onlyTokenOwner(tokenOwner)
         validateUnlockPeriod(depositPeriod, unlockPeriod)
     {
-        UnlockItem memory unlockRequest = _unlockRequests[depositPeriod][tokenOwner];
+        UnlockItem storage unlockRequest = _unlockRequests[depositPeriod][tokenOwner];
 
         if (amount > unlockRequest.amount) {
             revert ITimelockOpenEnded__ExceededMaxUnlock(tokenOwner, amount, unlockRequest.amount);
         }
+
+        // maybe being too strict?  user can just call this again with the "right" unlockPeriod
+        if (unlockPeriod != unlockRequest.unlockPeriod) {
+            revert TimelockAsyncUnlock__UnlockPeriodMismatch(tokenOwner, unlockPeriod, unlockRequest.unlockPeriod);
+        }
+
+        unlockRequest.amount -= amount;
 
         // Process the unlock
         _updateLockAfterUnlock(tokenOwner, depositPeriod, amount);
@@ -117,6 +134,16 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
         returns (uint256 unlockedAmount_)
     {
         return 0;
+    }
+
+    /// @dev there's no "unlocked" state.  deposits are locked => requested to be unlocked => redeemed
+    function unlockRequested(address account, uint256 depositPeriod)
+        public
+        view
+        virtual
+        returns (UnlockItem memory requestUnlockItem_)
+    {
+        return _unlockRequests[depositPeriod][account];
     }
 
     /// @notice Returns the current period.

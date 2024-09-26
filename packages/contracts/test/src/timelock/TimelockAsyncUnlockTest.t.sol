@@ -39,6 +39,11 @@ contract TimelockAsyncUnlockTest is Test {
         // request unlock
         vm.prank(alice);
         asyncUnlock.requestUnlock(depositDay1.amount, alice, depositDay1.depositPeriod, unlockPeriod);
+        assertEq(
+            depositDay1.amount,
+            asyncUnlock.unlockRequested(alice, depositDay1.depositPeriod).amount,
+            "unlockRequest should be created"
+        );
 
         // warp to unlock period
         asyncUnlock.setCurrentPeriod(unlockPeriod);
@@ -47,6 +52,9 @@ contract TimelockAsyncUnlockTest is Test {
         vm.prank(alice);
         asyncUnlock.unlock(depositDay1.amount, alice, depositDay1.depositPeriod, unlockPeriod);
 
+        assertEq(
+            0, asyncUnlock.unlockRequested(alice, depositDay1.depositPeriod).amount, "unlockRequest should be released"
+        );
         assertEq(0, asyncUnlock.lockedAmount(alice, depositDay1.depositPeriod), "deposit lock not released");
         assertEq(0, asyncUnlock.DEPOSITS().balanceOf(alice, depositDay1.depositPeriod), "deposits should be redeemed");
     }
@@ -140,6 +148,39 @@ contract TimelockAsyncUnlockTest is Test {
         asyncUnlock.unlock(depositDay1.amount, alice, depositDay1.depositPeriod, unlockPeriod);
     }
 
+    function test__TimelockAsyncUnlock__MismatchOnUnlockPeriodFails() public {
+        vm.prank(alice);
+        asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
+        assertEq(depositDay1.amount, asyncUnlock.lockedAmount(alice, depositDay1.depositPeriod), "deposit not locked");
+
+        uint256 unlockPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
+
+        // request unlock
+        vm.prank(alice);
+        asyncUnlock.requestUnlock(depositDay1.amount, alice, depositDay1.depositPeriod, unlockPeriod);
+        assertEq(
+            depositDay1.amount,
+            asyncUnlock.unlockRequested(alice, depositDay1.depositPeriod).amount,
+            "unlockRequest should be created"
+        );
+
+        // warp to unlock period
+        asyncUnlock.setCurrentPeriod(unlockPeriod);
+
+        uint256 wrongUnlockPeriod = unlockPeriod + 1;
+
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockPeriodMismatch.selector,
+                alice,
+                wrongUnlockPeriod,
+                unlockPeriod
+            )
+        );
+        asyncUnlock.unlock(depositDay1.amount, alice, depositDay1.depositPeriod, wrongUnlockPeriod);
+    }
+
     function test__TimelockAsyncUnlock__OnlyDepositorCanRequestOrUnlock() public {
         vm.prank(alice);
         asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
@@ -160,5 +201,71 @@ contract TimelockAsyncUnlockTest is Test {
             abi.encodeWithSelector(TimelockAsyncUnlock.TimelockAsyncUnlock__RequesterNotOwner.selector, bob, alice)
         );
         asyncUnlock.unlock(depositDay1.amount, alice, depositDay1.depositPeriod, unlockPeriod);
+    }
+
+    function test__TimelockAsyncUnlock__MultipleRequestsAndUnlocks() public {
+        uint256 depositPeriod = 11;
+        uint256 depositAmount1 = 34;
+        uint256 depositAmount2 = 56;
+
+        vm.startPrank(alice);
+        asyncUnlock.lock(alice, depositPeriod, depositAmount1);
+        asyncUnlock.lock(alice, depositPeriod, depositAmount2);
+        vm.stopPrank();
+
+        uint256 totalDeposits = depositAmount1 + depositAmount2;
+        assertEq(totalDeposits, asyncUnlock.lockedAmount(alice, depositPeriod), "deposit not locked");
+
+        // request unlock at exactly depositPeriod + noticePeriod
+        uint256 unlockPeriod1 = depositPeriod + NOTICE_PERIOD;
+        uint256 partialUnlockAmount1 = 10;
+        vm.prank(alice);
+        asyncUnlock.requestUnlock(partialUnlockAmount1, alice, depositPeriod, unlockPeriod1);
+        assertEq(
+            unlockPeriod1,
+            asyncUnlock.unlockRequested(alice, depositPeriod).unlockPeriod,
+            "unlockRequest should have unlock request period 1"
+        );
+        assertEq(
+            partialUnlockAmount1,
+            asyncUnlock.unlockRequested(alice, depositPeriod).amount,
+            "unlockRequest should have partial amount 1"
+        );
+
+        // request to unlock the remainder
+        vm.prank(alice);
+        asyncUnlock.requestUnlock(totalDeposits - partialUnlockAmount1, alice, depositPeriod, unlockPeriod1);
+        assertEq(
+            totalDeposits,
+            asyncUnlock.unlockRequested(alice, depositPeriod).amount,
+            "unlockRequest should have total amount"
+        );
+
+        // now create a request for a different unlockPeriod - "resets" the unlock request to this amount
+        uint256 unlockPeriod2 = depositPeriod + NOTICE_PERIOD + 1;
+        uint256 partialUnlockAmount2 = 20;
+        vm.prank(alice);
+        asyncUnlock.requestUnlock(partialUnlockAmount2, alice, depositPeriod, unlockPeriod2);
+        assertEq(
+            unlockPeriod2,
+            asyncUnlock.unlockRequested(alice, depositPeriod).unlockPeriod,
+            "unlockRequest should have unlock request period 2"
+        );
+        assertEq(
+            partialUnlockAmount2,
+            asyncUnlock.unlockRequested(alice, depositPeriod).amount,
+            "unlockRequest should have partial amount 2"
+        );
+
+        // now unlock
+        vm.prank(alice);
+        asyncUnlock.unlock(partialUnlockAmount2, alice, depositPeriod, unlockPeriod2);
+
+        assertEq(0, asyncUnlock.unlockRequested(alice, depositPeriod).amount, "unlockRequest should be released");
+        assertEq(
+            totalDeposits - partialUnlockAmount2,
+            asyncUnlock.lockedAmount(alice, depositPeriod),
+            "deposit lock not released"
+        );
     }
 }
