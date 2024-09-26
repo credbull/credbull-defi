@@ -99,7 +99,6 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @return shares The amount of ERC1155 tokens minted, where the `depositPeriod` acts as the token ID.
      */
     function deposit(uint256 assets, address receiver) public virtual override nonReentrant returns (uint256 shares) {
-        //error MultiTokenVault__ExceededMaxDeposit(address receiver, uint256 depositPeriod, uint256 assets, uint256 maxAssets);
         uint256 maxAssets = maxDeposit(receiver);
         uint256 depositPeriod = currentTimePeriodsElapsed();
 
