@@ -10,17 +10,6 @@ import { AbstractYieldStrategy } from "@credbull/strategy/AbstractYieldStrategy.
  * @dev Calculates returns using different rates depending on the holding period.
  */
 contract MultipleRateYieldStrategy is AbstractYieldStrategy {
-    /**
-     * @notice Returns the yield for `principal` from `fromPeriod` to `toPeriod` using full and reduced rates.
-     * @dev Reverts with [IYieldStrategy_InvalidContextAddress] if `contextContract` is invalid.
-     *  Reverts with [IYieldStrategy_InvalidPeriodRange] if `fromPeriod` and `toPeriod` do not form a valid range.
-     *
-     * @param contextContract The [address] of the contract providing additional data required for the calculation.
-     * @param principal The principal amount to calculate the yield for.
-     * @param fromPeriod The starting period to calculate the yeild from.
-     * @param toPeriod The terminating period to calculate the yield with.
-     * @return yield The calculated yield.
-     */
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
@@ -55,14 +44,6 @@ contract MultipleRateYieldStrategy is AbstractYieldStrategy {
         }
     }
 
-    /**
-     * @notice Returns the price after `numPeriodsElapsed` using the full rate.
-     * @dev Reverts with [DynamicDualRateYieldStrategy_InvalidContextAddress] if `contextContract` is invalid.
-     *
-     * @param contextContract The contract with the data calculating the price
-     * @param numPeriodsElapsed  The number of periods that have elapsed.
-     * @return price The calculated price.
-     */
     function calcPrice(address contextContract, uint256 numPeriodsElapsed)
         public
         view

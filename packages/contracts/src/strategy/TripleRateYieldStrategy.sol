@@ -3,17 +3,13 @@ pragma solidity ^0.8.20;
 
 import { ITripleRateContext } from "@credbull/interest/context/ITripleRateContext.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
-import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 import { AbstractYieldStrategy } from "@credbull/strategy/AbstractYieldStrategy.sol";
 
 /**
  * @title DualRateYieldStrategy
  * @dev Calculates returns using different rates depending on the holding period.
  */
-contract TripleRateYieldStrategy is IYieldStrategy, AbstractYieldStrategy {
-    /**
-     * @inheritdoc IYieldStrategy
-     */
+contract TripleRateYieldStrategy is AbstractYieldStrategy {
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
@@ -44,6 +40,7 @@ contract TripleRateYieldStrategy is IYieldStrategy, AbstractYieldStrategy {
             // If the 1st RR Period is on or after the current Tenor Period, then RR Interest is:
             //  1st RR Period -> To Period @ Current Rate.
             if (firstReducedRatePeriod >= currentTenorPeriod) {
+                //  1st RR Period -> To Period @ Current Rate.
                 yield += CalcSimpleInterest.calcInterest(
                     principal,
                     currentReducedRate,
@@ -76,9 +73,6 @@ contract TripleRateYieldStrategy is IYieldStrategy, AbstractYieldStrategy {
         }
     }
 
-    /**
-     * @inheritdoc IYieldStrategy
-     */
     function calcPrice(address contextContract, uint256 numPeriodsElapsed)
         public
         view
