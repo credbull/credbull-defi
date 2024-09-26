@@ -85,8 +85,9 @@ abstract contract IMultiTokenVaultTestBase is Test {
         // ------------------- check toShares/toAssets - current period -------------------
         vm.startPrank(owner);
         vault.setCurrentTimePeriodsElapsed(testParams.depositPeriod); // set deposit numPeriods
-        uint256 actualShares = vault.convertToShares(testParams.principal);
         vm.stopPrank();
+
+        uint256 actualShares = vault.convertToShares(testParams.principal);
 
         vm.startPrank(owner);
         vault.setCurrentTimePeriodsElapsed(testParams.redeemPeriod); // set redeem numPeriods
@@ -118,11 +119,13 @@ abstract contract IMultiTokenVaultTestBase is Test {
         vm.startPrank(owner);
         vault.setCurrentTimePeriodsElapsed(testParams.depositPeriod); // set deposit period prior to deposit
         vm.stopPrank();
+
         actualSharesAtPeriod = vault.previewDeposit(testParams.principal);
 
         vm.startPrank(owner);
         vault.setCurrentTimePeriodsElapsed(testParams.redeemPeriod); // warp to redeem / withdraw
         vm.stopPrank();
+
         actualAssetsAtPeriod = vault.previewRedeemForDepositPeriod(actualSharesAtPeriod, testParams.depositPeriod);
 
         uint256 expectedAssetsAtRedeem =
