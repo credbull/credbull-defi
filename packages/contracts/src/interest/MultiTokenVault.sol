@@ -185,7 +185,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
             revert IMultiTokenVault__RedeemBeforeDeposit(owner, depositPeriod, redeemPeriod);
         }
 
-        if(currentTimePeriodsElapsed() < redeemPeriod) {
+        if (currentTimePeriodsElapsed() < redeemPeriod) {
             revert MultiTokenVault__RedeemTimePeriodNotSupported(owner, currentTimePeriodsElapsed(), redeemPeriod);
         }
 
@@ -215,7 +215,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         totalDepositedAssets -= assets;
 
         _burn(owner, depositPeriod, shares);
-        
+
         _asset.safeTransfer(receiver, assets);
 
         emit Withdraw(msg.sender, receiver, owner, depositPeriod, assets, shares);
