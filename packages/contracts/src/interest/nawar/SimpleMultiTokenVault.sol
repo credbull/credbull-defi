@@ -13,7 +13,7 @@ import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
  *      This vault uses a simple yield calculation strategy with a fixed asset-to-shares ratio and yield percentage.
  *      It includes access control for managing deposit periods.
  */
-abstract contract SimpleMultiTokenVault is MultiTokenVault {
+contract SimpleMultiTokenVault is MultiTokenVault {
     using SafeERC20 for IERC20;
 
     /// @notice The yield strategy contract used to calculate yield.
@@ -24,29 +24,16 @@ abstract contract SimpleMultiTokenVault is MultiTokenVault {
 
     /**
      * @notice Constructor to initialize the vault with the asset, URI, asset-to-shares ratio, and yield strategy.
-     * @param _treasury The address of the treasury where assets will be transferred.
-     * @param _asset The ERC20 token that represents the underlying asset.
-     * @param _uri The URI for ERC1155 token metadata.
+     * @param _asset The IERC20 token that represents the underlying asset.
      * @param yieldStrategy The yield strategy contract to calculate yield.
      * @param context The contract implementation to calculate interest.
-     * @param assetToSharesRatio The ratio of assets to shares (e.g., 1:1).
      * @param initialOwner The initial owner of the contract (passed to Ownable).
      */
-    constructor(
-        address _treasury,
-        address _asset,
-        string memory _uri,
-        IYieldStrategy yieldStrategy,
-        ICalcInterestMetadata context,
-        uint256 assetToSharesRatio,
-        address initialOwner
-    ) MultiTokenVault(_treasury, _asset, _uri, initialOwner) {
-        require(assetToSharesRatio > 0, "Asset to shares ratio must be greater than 0");
-
+    constructor(IERC20 _asset, IYieldStrategy yieldStrategy, ICalcInterestMetadata context, address initialOwner)
+        MultiTokenVault(_asset, initialOwner)
+    {
         YIELD_STRATEGY = yieldStrategy;
         CONTEXT = context;
-
-        ASSET_TO_SHARES_RATIO = assetToSharesRatio;
     }
 
     // =============== Yield Calculation ===============
@@ -67,8 +54,8 @@ abstract contract SimpleMultiTokenVault is MultiTokenVault {
             revert MultiTokenVault__RedeemTimePeriodNotSupported(owner(), depositPeriod, redeemPeriod);
         }
 
-        if (currentTimePeriodsElapsed != redeemPeriod) {
-            revert MultiTokenVault__RedeemTimePeriodNotSupported(owner(), currentTimePeriodsElapsed, redeemPeriod);
+        if (_currentTimePeriodsElapsed != redeemPeriod) {
+            revert MultiTokenVault__RedeemTimePeriodNotSupported(owner(), _currentTimePeriodsElapsed, redeemPeriod);
         }
 
         return YIELD_STRATEGY.calcYield(address(CONTEXT), principal, depositPeriod, redeemPeriod);
@@ -85,11 +72,11 @@ abstract contract SimpleMultiTokenVault is MultiTokenVault {
      */
     function convertToSharesForDepositPeriod(uint256 assets, uint256 depositPeriod)
         public
-        view
+        pure
         override
         returns (uint256 shares)
     {
-        return assets / ASSET_TO_SHARES_RATIO;
+        return assets;
     }
 
     /**
@@ -106,7 +93,7 @@ abstract contract SimpleMultiTokenVault is MultiTokenVault {
         override
         returns (uint256 assets)
     {
-        uint256 principal = shares * ASSET_TO_SHARES_RATIO;
+        uint256 principal = shares;
         uint256 yieldAmount = calcYield(principal, depositPeriod, redeemPeriod);
         return principal + yieldAmount;
     }
@@ -123,7 +110,7 @@ abstract contract SimpleMultiTokenVault is MultiTokenVault {
         override
         returns (uint256 assets)
     {
-        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed);
+        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed());
     }
 
     // =============== Redeem Functions ===============
@@ -159,13 +146,5 @@ abstract contract SimpleMultiTokenVault is MultiTokenVault {
         returns (uint256 assets)
     {
         return convertToAssetsForDepositPeriod(shares, depositPeriod);
-    }
-
-    /**
-     * @notice Get the total balance of assets currently deposited in the vault.
-     * @return The total deposited assets converted to shares.
-     */
-    function getTotalBalance() public view override returns (uint256) {
-        return convertToShares(totalDepositedAssets);
     }
 }
