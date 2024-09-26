@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IDualRateContext } from "@credbull/interest/IDualRateContext.sol";
+import { IDualRateContext } from "@credbull/interest/context/IDualRateContext.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 
@@ -18,6 +18,13 @@ contract DualRateYieldStrategy is IYieldStrategy {
         virtual
         returns (uint256 yield)
     {
+        if (address(0) == contextContract) {
+            revert IYieldStrategy_InvalidContextAddress();
+        }
+        if (fromPeriod >= toPeriod) {
+            revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod);
+        }
+
         IDualRateContext context = IDualRateContext(contextContract);
 
         uint256 numPeriodsElapsed = toPeriod - fromPeriod;
@@ -26,7 +33,7 @@ contract DualRateYieldStrategy is IYieldStrategy {
         uint256 numFullRatePeriodsElapsed =
             _numFullRatePeriodsElapsed(context.numPeriodsForFullRate(), numPeriodsElapsed);
         uint256 fullRateInterest = CalcSimpleInterest.calcInterest(
-            principal, context.fullRateScaled(), numFullRatePeriodsElapsed, context.frequency(), context.scale()
+            principal, context.rateScaled(), numFullRatePeriodsElapsed, context.frequency(), context.scale()
         );
 
         // Calculate interest for reduced-rate periods
@@ -46,10 +53,13 @@ contract DualRateYieldStrategy is IYieldStrategy {
         virtual
         returns (uint256 price)
     {
+        if (address(0) == contextContract) {
+            revert IYieldStrategy_InvalidContextAddress();
+        }
         IDualRateContext context = IDualRateContext(contextContract);
 
         return CalcSimpleInterest.calcPriceFromInterest(
-            numPeriodsElapsed, context.fullRateScaled(), context.frequency(), context.scale()
+            numPeriodsElapsed, context.rateScaled(), context.frequency(), context.scale()
         );
     }
 

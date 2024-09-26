@@ -73,6 +73,9 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         assertEq(
             deposit1Shares, vault.balanceOf(alice, deposit1TestParams.depositPeriod), "balance incorrect at period 1"
         );
+        assertEq(
+            deposit1Shares, vault.balanceOf(alice, deposit1TestParams.depositPeriod), "balance incorrect at period 1"
+        );
 
         // verify deposit - period 2
         uint256 deposit2Shares = _testDepositOnly(alice, vault, deposit2TestParams);

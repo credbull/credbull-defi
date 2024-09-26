@@ -15,7 +15,7 @@ contract SimpleInterestYieldStrategyTest is Test {
     uint256 public constant DECIMALS = 6;
     uint256 public constant SCALE = 10 ** DECIMALS;
 
-    function test__SimpleInterestYieldStrategyTest__CalculatYield() public {
+    function test__SimpleInterestYieldStrategy__CalculateYield() public {
         uint256 apy = 6 * SCALE; // APY in percentage
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
@@ -52,7 +52,7 @@ contract SimpleInterestYieldStrategyTest is Test {
         );
     }
 
-    function test__SimpleInterestYieldStrategyTestt__CalculatePrice() public {
+    function test__SimpleInterestYieldStrategy__CalculatePrice() public {
         uint256 apy = 12 * SCALE;
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 

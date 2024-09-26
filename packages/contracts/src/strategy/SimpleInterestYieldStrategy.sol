@@ -17,6 +17,12 @@ contract SimpleInterestYieldStrategy is IYieldStrategy {
         virtual
         returns (uint256 yield)
     {
+        if (address(0) == contextContract) {
+            revert IYieldStrategy_InvalidContextAddress();
+        }
+        if (fromPeriod >= toPeriod) {
+            revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod);
+        }
         ICalcInterestMetadata interestData = ICalcInterestMetadata(contextContract);
 
         uint256 numPeriodsElapsed = toPeriod - fromPeriod;
@@ -33,6 +39,9 @@ contract SimpleInterestYieldStrategy is IYieldStrategy {
         virtual
         returns (uint256 price)
     {
+        if (address(0) == contextContract) {
+            revert IYieldStrategy_InvalidContextAddress();
+        }
         ICalcInterestMetadata interestData = ICalcInterestMetadata(contextContract);
 
         return CalcSimpleInterest.calcPriceFromInterest(
