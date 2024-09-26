@@ -76,7 +76,7 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
     }
 
     /// @notice Requests unlocking of `amount`, which will be available after the `unlockPeriod`.
-    function requestUnlock(uint256 amount, address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod)
+    function requestUnlock(address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount)
         public
         onlyTokenOwner(tokenOwner)
         validateRequestPeriod(depositPeriod, unlockPeriod)
@@ -98,7 +98,7 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
     }
 
     /// @notice Unlocks `amount` after the `redeemPeriod`, transferring to `tokenOwner`.
-    function unlock(uint256 amount, address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod)
+    function unlock(address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount)
         public
         onlyTokenOwner(tokenOwner)
         validateUnlockPeriod(depositPeriod, unlockPeriod)
@@ -122,7 +122,7 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
 
     /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
     function unlock(address account, uint256 depositPeriod, uint256 amount) public virtual override {
-        unlock(amount, account, depositPeriod, currentPeriod());
+        unlock(account, depositPeriod, currentPeriod(), amount);
     }
 
     /// @dev there's no "unlocked" state.  deposits are locked => requested to be unlocked => redeemed
