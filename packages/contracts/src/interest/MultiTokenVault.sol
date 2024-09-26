@@ -32,12 +32,13 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
     error MultiTokenVault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 maxShares);
     error MultiTokenVault__RedeemTimePeriodNotSupported(address owner, uint256 period, uint256 redeemPeriod);
     error MultiTokenVault__CallerMissingApprovalForAll(address operator, address owner);
-
+    error MultiTokenVault__RedeemBeforeDeposit(address owner, uint256 depositPeriod, uint256 redeemPeriod);
     /**
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
      * @param asset_ The ERC20 token representing the underlying asset.
      * @param initialOwner The owner of the contract.
      */
+
     constructor(IERC20 asset_, address initialOwner) ERC1155("") Ownable(initialOwner) {
         _asset = asset_;
     }
@@ -182,7 +183,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         uint256 redeemPeriod
     ) public virtual nonReentrant returns (uint256 assets) {
         if (depositPeriod > redeemPeriod) {
-            revert IMultiTokenVault__RedeemBeforeDeposit(owner, depositPeriod, redeemPeriod);
+            revert MultiTokenVault__RedeemBeforeDeposit(owner, depositPeriod, redeemPeriod);
         }
 
         if (currentTimePeriodsElapsed() < redeemPeriod) {
