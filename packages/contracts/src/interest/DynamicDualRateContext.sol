@@ -16,11 +16,32 @@ contract DynamicDualRateContext is CalcInterestMetadata, IDynamicDualRateContext
     using EnumerableMap for EnumerableMap.UintToUintMap;
     using Math for uint256;
 
+    /**
+     * @notice Reverts when the `from` and `to` periods do not represent a valid period range.
+     * @param from the start/earlier period
+     * @param to the end/later period.
+     */
     error DynamicDualRateContext_InvalidPeriodRange(uint256 from, uint256 to);
+    /**
+     * @notice Reverts when the `from` period is invalid.
+     * @param from the period from which the Reduced Rate was to apply.
+     */
     error DynamicDualRateContext_InvalidReducedRatePeriod(uint256 from);
 
-    event DynamicDualRateContext_ReducedRateAdded(uint256 period, uint256 rateScaled, uint256 scale);
-    event DynamicDualRateContext_ReducedRateRemoved(uint256 period, uint256 rateScaled, uint256 scale);
+    /**
+     * @notice Emitted when a Reduced Rate is set.
+     * @param period The period to which the Reduced Rate applies.
+     * @param rateScaled The scaled Reduced Rate.
+     * @param scale The Scale that is applicable.
+     */
+    event ReducedRateAdded(uint256 period, uint256 rateScaled, uint256 scale);
+    /**
+     * @notice Emitted when a Reduced Rate is set.
+     * @param period The period to which the Reduced Rate applies.
+     * @param rateScaled The scaled Reduced Rate.
+     * @param scale The Scale that is applicable.
+     */
+    event ReducedRateRemoved(uint256 period, uint256 rateScaled, uint256 scale);
 
     uint256 public immutable DEFAULT_REDUCED_RATE;
     uint256 public immutable TENOR;
@@ -133,9 +154,9 @@ contract DynamicDualRateContext is CalcInterestMetadata, IDynamicDualRateContext
         reducedRatesMap.set(fromPeriod_, reducedRate_);
 
         if (isPresent) {
-            emit DynamicDualRateContext_ReducedRateRemoved(fromPeriod_, toReplace, SCALE);
+            emit ReducedRateRemoved(fromPeriod_, toReplace, SCALE);
         }
-        emit DynamicDualRateContext_ReducedRateAdded(fromPeriod_, reducedRate_, SCALE);
+        emit ReducedRateAdded(fromPeriod_, reducedRate_, SCALE);
     }
 
     /**
@@ -154,7 +175,7 @@ contract DynamicDualRateContext is CalcInterestMetadata, IDynamicDualRateContext
         (bool isPresent, uint256 toRemove) = reducedRatesMap.tryGet(fromPeriod_);
         if (isPresent) {
             if (reducedRatesMap.remove(fromPeriod_)) {
-                emit DynamicDualRateContext_ReducedRateRemoved(fromPeriod_, toRemove, SCALE);
+                emit ReducedRateRemoved(fromPeriod_, toRemove, SCALE);
                 return true;
             }
         }

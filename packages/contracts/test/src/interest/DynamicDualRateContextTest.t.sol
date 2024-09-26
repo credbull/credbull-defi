@@ -62,13 +62,13 @@ contract DynamicDualRateContextTest is Test {
 
         // Checked event emission.
         vm.expectEmit();
-        emit DynamicDualRateContext.DynamicDualRateContext_ReducedRateAdded(4, rate, SCALE);
+        emit DynamicDualRateContext.ReducedRateAdded(4, rate, SCALE);
         toTest.setReducedRate(4, rate); // 17.5%
 
         vm.expectEmit();
-        emit DynamicDualRateContext.DynamicDualRateContext_ReducedRateRemoved(4, rate, SCALE);
+        emit DynamicDualRateContext.ReducedRateRemoved(4, rate, SCALE);
         vm.expectEmit();
-        emit DynamicDualRateContext.DynamicDualRateContext_ReducedRateAdded(4, rate, SCALE);
+        emit DynamicDualRateContext.ReducedRateAdded(4, rate, SCALE);
         toTest.setReducedRate(4, rate); // 17.5%
 
         // Periods: 1 -> 5
@@ -95,7 +95,7 @@ contract DynamicDualRateContextTest is Test {
         toTest.setReducedRate(3, PERCENT_10_SCALED); // 10%
 
         vm.expectEmit();
-        emit DynamicDualRateContext.DynamicDualRateContext_ReducedRateRemoved(3, PERCENT_10_SCALED, SCALE);
+        emit DynamicDualRateContext.ReducedRateRemoved(3, PERCENT_10_SCALED, SCALE);
         bool wasRemoved = toTest.removeReducedRate(3);
         assertTrue(wasRemoved, "Reduced Rate was not removed.");
 
