@@ -7,12 +7,9 @@ pragma solidity ^0.8.20;
  * Tokens are locked until a given release period, after which they can be unlocked.
  */
 interface ITimelock {
-    /// @dev Error thrown when trying to unlock tokens before the release period.
-    error LockDurationNotExpired(address account, uint256 currentPeriod, uint256 lockReleasePeriod);
-
-    /// @dev Error for insufficient locked balance at a specific release period.
-    error InsufficientLockedBalanceAtPeriod(
-        address account, uint256 available, uint256 required, uint256 lockReleasePeriod
+    error ITimelock__LockDurationNotExpired(address account, uint256 currentPeriod, uint256 lockReleasePeriod);
+    error ITimelock_ExceededMaxUnlock(
+        address account, uint256 lockReleasePeriod, uint256 unlockAmount, uint256 maxUnlockAmount
     );
 
     /// @notice Locks `amount` of tokens for `account` until `lockReleasePeriod`.
@@ -24,11 +21,8 @@ interface ITimelock {
     /// @notice Returns the amount of tokens locked for `account` at `lockReleasePeriod`.
     function lockedAmount(address account, uint256 lockReleasePeriod) external view returns (uint256 amountLocked);
 
-    /// @notice Returns the amount of tokens unlockable for `account` at `lockReleasePeriod`.
-    function previewUnlock(address account, uint256 lockReleasePeriod)
-        external
-        view
-        returns (uint256 amountUnlockable);
+    /// @notice Returns the max amount of tokens unlockable for `account` at `lockReleasePeriod`.
+    function maxUnlock(address account, uint256 lockReleasePeriod) external view returns (uint256 amountUnlockable);
 
     /// @notice Returns the periods with locked tokens for `account` between `fromPeriod` and `toPeriod`.
     function lockPeriods(address account, uint256 fromPeriod, uint256 toPeriod)

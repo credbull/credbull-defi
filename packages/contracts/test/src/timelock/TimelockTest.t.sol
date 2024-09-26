@@ -38,7 +38,7 @@ abstract contract TimelockTest is Test {
         // Ensure that the unlocked amount is initially zero before any unlock operation
         assertEq(
             0,
-            timelock.previewUnlock(alice, lockUntilDay1.releasePeriod - 1),
+            timelock.maxUnlock(alice, lockUntilDay1.releasePeriod - 1),
             "preview unlock should be zero before lockRelease period"
         );
     }
@@ -82,7 +82,9 @@ abstract contract TimelockTest is Test {
 
         vm.prank(owner);
         vm.expectRevert(
-            abi.encodeWithSelector(ITimelock.LockDurationNotExpired.selector, alice, 0, lockUntilDay1.releasePeriod)
+            abi.encodeWithSelector(
+                ITimelock.ITimelock__LockDurationNotExpired.selector, alice, 0, lockUntilDay1.releasePeriod
+            )
         );
         timelock.unlock(alice, lockUntilDay1.releasePeriod, lockUntilDay1.amount);
     }
@@ -96,7 +98,7 @@ abstract contract TimelockTest is Test {
 
         assertEq(
             lockUntilDay1.amount,
-            timelock.previewUnlock(alice, lockUntilDay1.releasePeriod),
+            timelock.maxUnlock(alice, lockUntilDay1.releasePeriod),
             "preview unlock should be the full amount"
         );
 
@@ -114,7 +116,7 @@ abstract contract TimelockTest is Test {
 
         assertEq(
             remainingLockedAmount,
-            timelock.previewUnlock(alice, lockUntilDay1.releasePeriod),
+            timelock.maxUnlock(alice, lockUntilDay1.releasePeriod),
             "preview unlock should be the residual amount"
         );
 

@@ -1,32 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import { ITimelockOpenEnded } from "@credbull/timelock/ITimelockOpenEnded.sol";
 import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
-import { SimpleIERC1155Mintable } from "@test/src/interest/SimpleIERC1155Mintable.t.sol";
+import { ERC1155MintableBurnable } from "@test/test/interest/ERC1155MintableBurnable.t.sol";
+import { SimpleTimelockAsyncUnlock } from "@test/test/timelock/SimpleTimelockAsyncUnlock.t.sol";
 import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
 
 import { Deposit } from "@test/src/timelock/TimelockTest.t.sol";
 import { Test } from "forge-std/Test.sol";
-
-contract SimpleTimelockAsyncUnlock is TimelockAsyncUnlock {
-    uint256 private period = 0;
-
-    constructor(uint256 noticePeriod_, IERC5679Ext1155 deposits) TimelockAsyncUnlock(noticePeriod_, deposits) { }
-
-    /// @notice Returns the current period.
-    function currentPeriod() public view override returns (uint256 currentPeriod_) {
-        return period;
-    }
-
-    /// @notice Returns the current period.
-    function setCurrentPeriod(uint256 currentPeriod_) public {
-        period = currentPeriod_;
-    }
-
-    function _updateLockAfterUnlock(address account, uint256 depositPeriod, uint256 amount) internal virtual override {
-        DEPOSITS.burn(account, depositPeriod, amount, _emptyBytesArray());
-    }
-}
 
 contract TimelockAsyncUnlockTest is Test {
     SimpleTimelockAsyncUnlock internal asyncUnlock;
@@ -43,7 +25,7 @@ contract TimelockAsyncUnlockTest is Test {
     Deposit private depositDay3 = Deposit({ depositPeriod: 3, amount: 303 });
 
     function setUp() public {
-        deposits = new SimpleIERC1155Mintable();
+        deposits = new ERC1155MintableBurnable();
         asyncUnlock = new SimpleTimelockAsyncUnlock(NOTICE_PERIOD, deposits);
     }
 
@@ -75,10 +57,11 @@ contract TimelockAsyncUnlockTest is Test {
         vm.prank(alice);
         asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
 
+        // check for the depositPeriod validation
         vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__NoticePeriodInsufficient.selector,
+                TimelockAsyncUnlock.TimelockAsyncUnlock__RequestBeforeDepositWithNoticePeriod.selector,
                 alice,
                 depositDay1.depositPeriod,
                 depositDay1.depositPeriod + NOTICE_PERIOD
@@ -87,18 +70,55 @@ contract TimelockAsyncUnlockTest is Test {
         asyncUnlock.requestUnlock(depositDay1.amount, alice, depositDay1.depositPeriod, depositDay1.depositPeriod);
     }
 
-    function test__TimelockAsyncUnlock__UnlockPriorToUnlockPeriodFails() public {
-        uint256 timeLockCurrentPeriod = asyncUnlock.currentPeriod();
-        uint256 unlockPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
+    function test__TimelockAsyncUnlock__UnlockPriorToDepositPeriodFails() public {
+        uint256 requestedUnlockPeriod = depositDay1.depositPeriod - 1;
 
-        // fail - not yet at the unlockPeriod
+        // fail - unlocking before depositing !
         vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockPeriodNotReached.selector,
+                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeDepositPeriod.selector,
                 alice,
-                timeLockCurrentPeriod,
-                unlockPeriod
+                requestedUnlockPeriod,
+                depositDay1.depositPeriod
+            )
+        );
+        asyncUnlock.unlock(depositDay1.amount, alice, depositDay1.depositPeriod, requestedUnlockPeriod);
+    }
+
+    function test__TimelockAsyncUnlock__RequestUnlockPriorToCurrentPlusNoticePeriodFails() public {
+        uint256 currentPeriod = 10;
+        uint256 unlockPeriod = currentPeriod - 1;
+
+        asyncUnlock.setCurrentPeriod(currentPeriod);
+
+        // fail - requestUnlock is less than the currentPeriod + NOTICE_PERIOD
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__RequestBeforeCurrentWithNoticePeriod.selector,
+                alice,
+                unlockPeriod,
+                currentPeriod + NOTICE_PERIOD
+            )
+        );
+        asyncUnlock.requestUnlock(depositDay1.amount, alice, depositDay2.depositPeriod, unlockPeriod);
+    }
+
+    function test__TimelockAsyncUnlock__UnlockPriorToCurrentPeriodFails() public {
+        uint256 currentPeriod = 5;
+        uint256 unlockPeriod = currentPeriod - 1;
+
+        asyncUnlock.setCurrentPeriod(currentPeriod);
+
+        // fail - unlock is less than the currentPeriod
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeCurrentPeriod.selector,
+                alice,
+                unlockPeriod,
+                currentPeriod
             )
         );
         asyncUnlock.unlock(depositDay1.amount, alice, depositDay1.depositPeriod, unlockPeriod);
@@ -114,10 +134,7 @@ contract TimelockAsyncUnlockTest is Test {
         vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__RequestedUnlockAmountInsufficient.selector,
-                alice,
-                0,
-                depositDay1.amount
+                ITimelockOpenEnded.ITimelockOpenEnded__ExceededMaxUnlock.selector, alice, depositDay1.amount, 0
             )
         );
         asyncUnlock.unlock(depositDay1.amount, alice, depositDay1.depositPeriod, unlockPeriod);

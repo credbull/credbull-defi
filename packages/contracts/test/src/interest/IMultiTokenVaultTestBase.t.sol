@@ -180,7 +180,6 @@ abstract contract IMultiTokenVaultTestBase is Test {
         );
         asset.approve(address(vault), testParams.principal); // grant the vault allowance
         uint256 actualSharesAtPeriod = vault.deposit(testParams.principal, receiver); // now deposit
-
         vm.stopPrank();
         assertEq(
             prevReceiverVaultBalance + actualSharesAtPeriod,

@@ -1,33 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IDynamicDualRateContext } from "@credbull/interest/IDynamicDualRateContext.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
-import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
+import { AbstractYieldStrategy } from "@credbull/strategy/AbstractYieldStrategy.sol";
 
-import { console2 as console } from "forge-std/console2.sol";
+import { IMultipleRateContext } from "@test/test/interest/context/IMultipleRateContext.t.sol";
 
 /**
- * @title DynamicDualRateYieldStrategy
+ * @title MultipleRateYieldStrategy
  * @dev Calculates returns using different rates depending on the holding period.
  */
-contract DynamicDualRateYieldStrategy is IYieldStrategy {
-    /// @notice When the `contextContract` parameter is invalid.
-    error DynamicDualRateYieldStrategy_InvalidContextAddress();
-    /// @notice When the `fromPeriod` and `toPeriod` parameters do not form a valid range.
-    error DynamicDualRateYieldStrategy_InvalidPeriodRange(uint256 from, uint256 to);
-
-    /**
-     * @notice Returns the yield for `principal` from `fromPeriod` to `toPeriod` using full and reduced rates.
-     * @dev Reverts with [DynamicDualRateYieldStrategy_InvalidContextAddress] if `contextContract` is invalid. Reverts
-     *  with [DynamicDualRateYieldStrategy_InvalidPeriodRange] if `fromPeriod` and `toPeriod` do not form a valid range.
-     *
-     * @param contextContract The contract with the data calculating the yield.
-     * @param principal The principal amount to calculate the yield for.
-     * @param fromPeriod The starting period to calculate the yeild from.
-     * @param toPeriod The terminating period to calculate the yield with.
-     * @return yield The calculated yield.
-     */
+contract MultipleRateYieldStrategy is AbstractYieldStrategy {
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
@@ -35,18 +18,18 @@ contract DynamicDualRateYieldStrategy is IYieldStrategy {
         returns (uint256 yield)
     {
         if (address(0) == contextContract) {
-            revert DynamicDualRateYieldStrategy_InvalidContextAddress();
+            revert IYieldStrategy_InvalidContextAddress();
         }
         if (fromPeriod >= toPeriod) {
-            revert DynamicDualRateYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod);
+            revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod);
         }
 
-        IDynamicDualRateContext context = IDynamicDualRateContext(contextContract);
+        IMultipleRateContext context = IMultipleRateContext(contextContract);
 
         // Calculate interest for full-rate periods
         uint256 noOfFullRatePeriods = _noOfFullRatePeriods(context.numPeriodsForFullRate(), fromPeriod, toPeriod);
         yield = CalcSimpleInterest.calcInterest(
-            principal, context.fullRateScaled(), noOfFullRatePeriods, context.frequency(), context.scale()
+            principal, context.rateScaled(), noOfFullRatePeriods, context.frequency(), context.scale()
         );
 
         // Calculate interest for reduced-rate periods
@@ -62,59 +45,22 @@ contract DynamicDualRateYieldStrategy is IYieldStrategy {
         }
     }
 
-    /// @notice Returns the price after `numPeriodsElapsed` using the full rate.
-    /// @param contextContract The contract with the data calculating the price
     function calcPrice(address contextContract, uint256 numPeriodsElapsed)
         public
         view
         virtual
         returns (uint256 price)
     {
+        if (address(0) == contextContract) {
+            revert IYieldStrategy_InvalidContextAddress();
+        }
+
         // NOTE (JL,2024-09-25): Seeing as this only uses Full Rate, I left it alone.
-        IDynamicDualRateContext context = IDynamicDualRateContext(contextContract);
+        IMultipleRateContext context = IMultipleRateContext(contextContract);
 
         return CalcSimpleInterest.calcPriceFromInterest(
-            numPeriodsElapsed, context.fullRateScaled(), context.frequency(), context.scale()
+            numPeriodsElapsed, context.rateScaled(), context.frequency(), context.scale()
         );
-    }
-
-    /**
-     * @dev Utility function to calculate the Number Of Periods between `from_` and `to_`. Also reduces Stack Depth in
-     *  invoking functions.
-     *
-     * @param from_ The from period
-     * @param to_ The to period
-     */
-    function _noOfPeriods(uint256 from_, uint256 to_) internal pure returns (uint256) {
-        return to_ - from_;
-    }
-
-    /**
-     * @dev Calculates the number of Full Rate Periods.
-     *
-     * @param _noOfPeriodsForFullRate  The number of periods that apply for Full Rate.
-     * @param _from The from period
-     * @param _to The to period
-     * @return The calculated number of Full Rate Periods.
-     */
-    function _noOfFullRatePeriods(uint256 _noOfPeriodsForFullRate, uint256 _from, uint256 _to)
-        internal
-        pure
-        returns (uint256)
-    {
-        uint256 _periods = _noOfPeriods(_from, _to);
-        return _periods - (_periods % _noOfPeriodsForFullRate);
-    }
-
-    /**
-     * @dev Calculates the first Reduced Rate Period.
-     *
-     * @param noOfFullRatePeriods_  The number of Full Rate Periods
-     * @param _from  The from period.
-     * @return The calculated first Reduced Rate Period.
-     */
-    function _firstReducedRatePeriod(uint256 noOfFullRatePeriods_, uint256 _from) internal pure returns (uint256) {
-        return noOfFullRatePeriods_ != 0 ? _from + noOfFullRatePeriods_ : _from;
     }
 
     /**
