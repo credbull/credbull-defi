@@ -30,7 +30,8 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
     uint256 internal totalDepositedAssets;
 
     error MultiTokenVault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 maxShares);
-    error MultiTokenVault__CallerMissingApprovalForAll();
+    error MultiTokenVault__RedeemTimePeriodNotSupported(address owner, uint256 period, uint256 redeemPeriod);
+    error MultiTokenVault__CallerMissingApprovalForAll(address operator, address owner);
 
     /**
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
@@ -49,7 +50,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @param depositPeriod The deposit period to check.
      * @return shares The number of shares (ERC1155 token balance) held by the account for the given period.
      */
-    function getSharesAtPeriod(address account, uint256 depositPeriod) public view returns (uint256 shares) {
+    function sharesAtPeriod(address account, uint256 depositPeriod) public view returns (uint256 shares) {
         return balanceOf(account, depositPeriod);
     }
 
@@ -114,7 +115,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
     }
 
     // =============== Redeem ===============
-    function maxRedeem(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
+    function maxRedeemAtPeriod(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
         return balanceOf(owner, depositPeriod);
     }
 
@@ -180,11 +181,15 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         uint256 depositPeriod,
         uint256 redeemPeriod
     ) public virtual nonReentrant returns (uint256 assets) {
-        if (depositPeriod >= redeemPeriod) {
+        if (depositPeriod > redeemPeriod) {
             revert IMultiTokenVault__RedeemBeforeDeposit(owner, depositPeriod, redeemPeriod);
         }
 
-        uint256 maxShares = maxRedeem(owner, depositPeriod);
+        if(currentTimePeriodsElapsed() < redeemPeriod) {
+            revert MultiTokenVault__RedeemTimePeriodNotSupported(owner, currentTimePeriodsElapsed(), redeemPeriod);
+        }
+
+        uint256 maxShares = maxRedeemAtPeriod(owner, depositPeriod);
 
         if (shares > maxShares) {
             revert MultiTokenVault__ExceededMaxRedeem(owner, depositPeriod, shares, maxShares);
@@ -204,7 +209,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         uint256 shares
     ) internal virtual {
         if (caller != owner && isApprovedForAll(owner, caller)) {
-            revert MultiTokenVault__CallerMissingApprovalForAll();
+            revert MultiTokenVault__CallerMissingApprovalForAll(caller, owner);
         }
 
         totalDepositedAssets -= assets;
