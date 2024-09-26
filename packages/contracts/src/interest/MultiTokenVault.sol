@@ -3,6 +3,7 @@ pragma solidity ^0.8.23;
 
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -16,7 +17,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  *      of time periods that have elapsed and allows users to deposit and redeem assets based on these periods.
  *      Designed to be secure and production-ready for Hacken audit.
  */
-abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard, Ownable {
+abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ERC1155Supply, ReentrancyGuard, Ownable {
     using Math for uint256;
     using SafeERC20 for IERC20;
 
@@ -24,10 +25,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
     uint256 internal _currentTimePeriodsElapsed;
 
     /// @notice The ERC20 token used as the underlying asset in the vault.
-    IERC20 private immutable _asset;
-
-    /// @notice Tracks the total amount of assets deposited in the vault.
-    uint256 internal totalManagedAssets;
+    IERC20 private immutable ASSET;
 
     error MultiTokenVault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 maxShares);
     error MultiTokenVault__ExceededMaxDeposit(
@@ -44,7 +42,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @param initialOwner The owner of the contract.
      */
     constructor(IERC20 asset_, address initialOwner) ERC1155("") Ownable(initialOwner) {
-        _asset = asset_;
+        ASSET = asset_;
     }
 
     /**
@@ -53,7 +51,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @return asset The ERC-20 underlying asset address.
      */
     function asset() public view virtual returns (address) {
-        return address(_asset);
+        return address(ASSET);
     }
 
     /**
@@ -62,7 +60,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * @return totalManagedAssets The total amount of the underlying asset that is managed by vault.
      */
     function totalAssets() external view returns (uint256) {
-        return totalManagedAssets;
+        return totalSupply();
     }
 
     /**
@@ -81,12 +79,8 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
 
     /**
      * @dev Returns the maximum amount of the underlying asset that can be deposited into the vault for the receiver at the current period.
-     *
-     * @param receiver The user who wants to deposit.
-     *
-     * @return maxAssets The maximum amount of the underlying asset can be deposited.
      */
-    function maxDeposit(address receiver) public view virtual returns (uint256) {
+    function maxDeposit(address) public view virtual returns (uint256) {
         return type(uint256).max;
     }
 
@@ -160,9 +154,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         internal
         virtual
     {
-        totalManagedAssets += assets;
-
-        _asset.safeTransferFrom(caller, address(this), assets);
+        ASSET.safeTransferFrom(caller, address(this), assets);
         _mint(receiver, depositPeriod, shares, "");
         emit Deposit(caller, receiver, depositPeriod, assets, shares);
     }
@@ -329,13 +321,19 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
             revert MultiTokenVault__CallerMissingApprovalForAll(caller, owner);
         }
 
-        totalManagedAssets -= assets;
-
         _burn(owner, depositPeriod, shares);
 
-        _asset.safeTransfer(receiver, assets);
+        ASSET.safeTransfer(receiver, assets);
 
         emit Withdraw(caller, receiver, owner, depositPeriod, assets, shares);
+    }
+
+    function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
+        internal
+        virtual
+        override(ERC1155Supply, ERC1155)
+    {
+        ERC1155Supply._update(from, to, ids, values);
     }
 
     // =============== Operational ===============

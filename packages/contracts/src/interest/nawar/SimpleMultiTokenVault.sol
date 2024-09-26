@@ -20,7 +20,7 @@ contract SimpleMultiTokenVault is MultiTokenVault {
     IYieldStrategy public immutable YIELD_STRATEGY;
 
     /// @notice The contract context for calculating interest.
-    ICalcInterestMetadata CONTEXT;
+    ICalcInterestMetadata public immutable CONTEXT;
 
     /**
      * @notice Constructor to initialize the vault with the asset, URI, asset-to-shares ratio, and yield strategy.
@@ -67,10 +67,10 @@ contract SimpleMultiTokenVault is MultiTokenVault {
      * @notice Converts a given amount of assets to shares for a specific deposit period.
      * @dev Uses the asset-to-shares ratio to calculate the shares from assets.
      * @param assets The amount of assets to convert.
-     * @param depositPeriod The specific deposit period during which the assets are converted to shares.
+     * The specific deposit period during which the assets are converted to shares.
      * @return shares The number of shares corresponding to the assets.
      */
-    function convertToSharesForDepositPeriod(uint256 assets, uint256 depositPeriod)
+    function convertToSharesForDepositPeriod(uint256 assets, uint256 /* depositPeriod */ )
         public
         pure
         override
