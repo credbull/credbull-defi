@@ -6,7 +6,7 @@ import { DualRateYieldStrategy } from "@credbull/strategy/DualRateYieldStrategy.
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
 
-import { IDualRateContext } from "@credbull/interest/IDualRateContext.sol";
+import { IDualRateContext } from "@credbull/interest/context/IDualRateContext.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
@@ -18,7 +18,7 @@ contract DualRateYieldStrategyTest is Test {
     uint256 public constant DECIMALS = 6;
     uint256 public constant SCALE = 10 ** DECIMALS;
 
-    function test__MultiRateYieldStrategy__CalculatYield() public {
+    function test__DualRateYieldStrategyTest__CalculateYield() public {
         uint256 fullRate = 10 * SCALE;
         uint256 reducedRate = 55 * SCALE / 10; // 5.5%
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
@@ -49,7 +49,7 @@ contract DualRateYieldStrategyTest is Test {
         );
     }
 
-    function test__MultiRateYieldStrategy__SingleUserScenarios() public {
+    function test__DualRateYieldStrategyTest__SingleUserScenarios() public {
         uint256 fullRate = 10 * SCALE;
         uint256 reducedRateTenor1 = 5 * SCALE;
         uint256 reducedRateTenor2 = 55 * SCALE / 10;
@@ -118,7 +118,7 @@ contract DualRateYieldStrategyTest is Test {
         // TODO MultiToken Scenario S10: User deposits 1000 USD, retains for extra cycle, redeems the Principal after new cycle ends
     }
 
-    function test__MultiRateYieldStrategy__MultipleUserScenarios() public {
+    function test__DualRateYieldStrategyTest__MultipleUserScenarios() public {
         uint256 fullRate = 10 * SCALE;
         uint256 reducedRateTenor1 = 5 * SCALE;
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
@@ -170,19 +170,15 @@ contract DualRateContextMock is CalcInterestMetadata, IDualRateContext {
         reducedRateInPercentageScaled = reducedRateInPercentageScaled_;
     }
 
-    function fullRateScaled() public view returns (uint256 fullRateInPercentageScaled_) {
-        return RATE_PERCENT_SCALED;
+    function numPeriodsForFullRate() public view override returns (uint256 numPeriods) {
+        return TENOR;
     }
 
-    function reducedRateScaled() public view returns (uint256 reducedRateInPercentageScaled_) {
+    function reducedRateScaled() public view override returns (uint256 reducedRateInPercentageScaled_) {
         return reducedRateInPercentageScaled;
     }
 
     function setReducedRate(uint256 reducedRateInPercentageScaled_) public {
         reducedRateInPercentageScaled = reducedRateInPercentageScaled_;
-    }
-
-    function numPeriodsForFullRate() public view returns (uint256 numPeriods) {
-        return TENOR;
     }
 }

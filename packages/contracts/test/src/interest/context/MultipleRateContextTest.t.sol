@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { DynamicDualRateContext } from "@credbull/interest/DynamicDualRateContext.sol";
+import { IMultipleRateContext } from "@credbull/interest/context/IMultipleRateContext.sol";
+import { MultipleRateContext } from "@credbull/interest/context/MultipleRateContext.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-contract DynamicDualRateContextTest is Test {
+contract MultipleRateContextTest is Test {
     uint256 public constant TOLERANCE = 1; // with 6 decimals, diff of 0.000001
     uint256 public constant DECIMALS = 6;
     uint256 public constant SCALE = 10 ** DECIMALS;
@@ -34,7 +35,7 @@ contract DynamicDualRateContextTest is Test {
         [63, scaled(59) / 10] // 5.9%
     ];
 
-    DynamicDualRateContext internal toTest;
+    MultipleRateContext internal toTest;
 
     function scaled(uint256 toScale) private pure returns (uint256) {
         return toScale * SCALE;
@@ -47,12 +48,12 @@ contract DynamicDualRateContextTest is Test {
     }
 
     function setUp() public {
-        toTest = new DynamicDualRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
+        toTest = new MultipleRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
         initialiseRates();
     }
 
-    function test_DynamicDualRateContext_SetRateWorks() public {
-        toTest = new DynamicDualRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
+    function test_MultipleRateContext_SetRateWorks() public {
+        toTest = new MultipleRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
 
         // Periods: 1 -> 5
         uint256 rate = scaled(175) / 10;
@@ -62,13 +63,13 @@ contract DynamicDualRateContextTest is Test {
 
         // Checked event emission.
         vm.expectEmit();
-        emit DynamicDualRateContext.ReducedRateAdded(4, rate, SCALE);
+        emit MultipleRateContext.ReducedRateAdded(4, rate, SCALE);
         toTest.setReducedRate(4, rate); // 17.5%
 
         vm.expectEmit();
-        emit DynamicDualRateContext.ReducedRateRemoved(4, rate, SCALE);
+        emit MultipleRateContext.ReducedRateRemoved(4, rate, SCALE);
         vm.expectEmit();
-        emit DynamicDualRateContext.ReducedRateAdded(4, rate, SCALE);
+        emit MultipleRateContext.ReducedRateAdded(4, rate, SCALE);
         toTest.setReducedRate(4, rate); // 17.5%
 
         // Periods: 1 -> 5
@@ -83,19 +84,19 @@ contract DynamicDualRateContextTest is Test {
         assertRates(expectedRates, actualRates, "Set Rate Missing for Range 1->5, Rate Setting");
     }
 
-    function test_DynamicDualRateContext_RevertSetReducedRates_WhenPeriodIsZero() public {
+    function test_MultipleRateContext_RevertSetReducedRates_WhenPeriodIsZero() public {
         vm.expectRevert(
-            abi.encodeWithSelector(DynamicDualRateContext.DynamicDualRateContext_InvalidReducedRatePeriod.selector, 0)
+            abi.encodeWithSelector(MultipleRateContext.MultipleRateContext_InvalidReducedRatePeriod.selector, 0)
         );
         toTest.setReducedRate(0, PERCENT_10_SCALED);
     }
 
-    function test_DynamicDualRateContext_RemoveRateWorks() public {
-        toTest = new DynamicDualRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
+    function test_MultipleRateContext_RemoveRateWorks() public {
+        toTest = new MultipleRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
         toTest.setReducedRate(3, PERCENT_10_SCALED); // 10%
 
         vm.expectEmit();
-        emit DynamicDualRateContext.ReducedRateRemoved(3, PERCENT_10_SCALED, SCALE);
+        emit MultipleRateContext.ReducedRateRemoved(3, PERCENT_10_SCALED, SCALE);
         bool wasRemoved = toTest.removeReducedRate(3);
         assertTrue(wasRemoved, "Reduced Rate was not removed.");
 
@@ -109,35 +110,35 @@ contract DynamicDualRateContextTest is Test {
         assertFalse(wasRemoved, "Reduced Rate was removed.");
     }
 
-    function test_DynamicDualRateContext_RevertRemoveReducedRates_WhenPeriodIsZero() public {
+    function test_MultipleRateContext_RevertRemoveReducedRates_WhenPeriodIsZero() public {
         vm.expectRevert(
-            abi.encodeWithSelector(DynamicDualRateContext.DynamicDualRateContext_InvalidReducedRatePeriod.selector, 0)
+            abi.encodeWithSelector(MultipleRateContext.MultipleRateContext_InvalidReducedRatePeriod.selector, 0)
         );
         toTest.removeReducedRate(0);
     }
 
-    function test_DynamicDualRateContext_AttributesAsExpected() public view {
+    function test_MultipleRateContext_AttributesAsExpected() public view {
         assertEq(PERCENT_5_5_SCALED, toTest.DEFAULT_REDUCED_RATE(), "Incorrect Reduced Rate");
-        assertEq(PERCENT_5_SCALED, toTest.fullRateScaled(), "Incorrect Full Rate");
+        assertEq(PERCENT_5_SCALED, toTest.rateScaled(), "Incorrect Full Rate");
         assertEq(TENOR, toTest.numPeriodsForFullRate(), "Incorrect No Of Period For Full Rate");
     }
 
-    function test_DynamicDualRateContext_RevertGetReducedRates_WhenFromAndToSame() public {
+    function test_MultipleRateContext_RevertGetReducedRates_WhenFromAndToSame() public {
         vm.expectRevert(
-            abi.encodeWithSelector(DynamicDualRateContext.DynamicDualRateContext_InvalidPeriodRange.selector, 3, 3)
+            abi.encodeWithSelector(IMultipleRateContext.IMultipleRateContext_InvalidPeriodRange.selector, 3, 3)
         );
         toTest.reducedRatesFor(3, 3);
     }
 
-    function test_DynamicDualRateContext_RevertGetReducedRates_WhenToBeforeFrom() public {
+    function test_MultipleRateContext_RevertGetReducedRates_WhenToBeforeFrom() public {
         vm.expectRevert(
-            abi.encodeWithSelector(DynamicDualRateContext.DynamicDualRateContext_InvalidPeriodRange.selector, 4, 1)
+            abi.encodeWithSelector(IMultipleRateContext.IMultipleRateContext_InvalidPeriodRange.selector, 4, 1)
         );
         toTest.reducedRatesFor(4, 1);
     }
 
-    function test_DynamicDualRateContext_DefaultRateWhenUnconfigured() public {
-        toTest = new DynamicDualRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
+    function test_MultipleRateContext_DefaultRateWhenUnconfigured() public {
+        toTest = new MultipleRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
 
         // Periods: 1 -> 12
         uint256[][] memory expectedRates = DEFAULT_REDUCED_RATES;
@@ -145,7 +146,7 @@ contract DynamicDualRateContextTest is Test {
         assertRates(expectedRates, actualRates, "Incorrect Rates for Range 1->12, Unconfigured");
     }
 
-    function test_DynamicDualRateContext_CorrectRatesReturned() public view {
+    function test_MultipleRateContext_CorrectRatesReturned() public view {
         // Periods: 4 -> 10
         uint256[][] memory expectedRates = new uint256[][](2);
         expectedRates[0] = REDUCED_RATES[0];

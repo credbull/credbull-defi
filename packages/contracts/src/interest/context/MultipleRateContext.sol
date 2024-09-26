@@ -5,28 +5,24 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
-import { IDynamicDualRateContext } from "@credbull/interest/IDynamicDualRateContext.sol";
+import { IMultipleRateContext } from "@credbull/interest/context/IMultipleRateContext.sol";
 
 /**
- * @title A dual rate context (full & reduced) where the Reduced Rates are configurable and many.
+ * @title Our multiple rate context reference implementation.
  * @author credbull
- * @notice A reference implementation of [IDynamicDualRateContext].
+ * @dev Context for yield calculations with a rate and many reduced rates, applicable per period. All rate values
+ *  are expressed in percentage terms and scaled using [scale()]. The 'full' rate values are encapsulated by the
+ *  [ICalcInterestMetadata].
  */
-contract DynamicDualRateContext is CalcInterestMetadata, IDynamicDualRateContext {
+contract MultipleRateContext is CalcInterestMetadata, IMultipleRateContext {
     using EnumerableMap for EnumerableMap.UintToUintMap;
     using Math for uint256;
 
     /**
-     * @notice Reverts when the `from` and `to` periods do not represent a valid period range.
-     * @param from the start/earlier period
-     * @param to the end/later period.
-     */
-    error DynamicDualRateContext_InvalidPeriodRange(uint256 from, uint256 to);
-    /**
      * @notice Reverts when the `from` period is invalid.
      * @param from the period from which the Reduced Rate was to apply.
      */
-    error DynamicDualRateContext_InvalidReducedRatePeriod(uint256 from);
+    error MultipleRateContext_InvalidReducedRatePeriod(uint256 from);
 
     /**
      * @notice Emitted when a Reduced Rate is set.
@@ -63,10 +59,6 @@ contract DynamicDualRateContext is CalcInterestMetadata, IDynamicDualRateContext
         TENOR = tenor_;
     }
 
-    function fullRateScaled() public view returns (uint256 fullRateInPercentageScaled_) {
-        return RATE_PERCENT_SCALED;
-    }
-
     function numPeriodsForFullRate() public view returns (uint256 numPeriods) {
         return TENOR;
     }
@@ -88,7 +80,7 @@ contract DynamicDualRateContext is CalcInterestMetadata, IDynamicDualRateContext
         returns (uint256[][] memory reducedRatesScaled)
     {
         if (toPeriod <= fromPeriod) {
-            revert DynamicDualRateContext_InvalidPeriodRange(fromPeriod, toPeriod);
+            revert IMultipleRateContext_InvalidPeriodRange(fromPeriod, toPeriod);
         }
 
         // If there are no custom Reduced Rates, use the default Reduced Rate.
@@ -139,15 +131,15 @@ contract DynamicDualRateContext is CalcInterestMetadata, IDynamicDualRateContext
 
     /**
      * @notice Sets a Reduced Rate to be effective from the specified Period, replacing any existing rate.
-     * @dev Emits [TestDynamicDualRateContext_ReducedRateRemoved] first, when an existing rate is present. Emits
-     *  [TestDynamicDualRateContext_ReducedRateAdded] when a rate is set. Expected to be Access Controlled.
+     * @dev Emits [ReducedRateRemoved] first, when an existing rate is present. Emits
+     *  [ReducedRateAdded] when a rate is set. Expected to be Access Controlled.
      *
      * @param fromPeriod_ The [uint256] period from which the custom Reduced Rate applies.
      * @param reducedRate_ The [uint256] scaled Reduced Rate.
      */
     function setReducedRate(uint256 fromPeriod_, uint256 reducedRate_) public {
         if (fromPeriod_ == 0) {
-            revert DynamicDualRateContext_InvalidReducedRatePeriod(fromPeriod_);
+            revert MultipleRateContext_InvalidReducedRatePeriod(fromPeriod_);
         }
 
         (bool isPresent, uint256 toReplace) = reducedRatesMap.tryGet(fromPeriod_);
@@ -161,7 +153,7 @@ contract DynamicDualRateContext is CalcInterestMetadata, IDynamicDualRateContext
 
     /**
      * @notice Removes any existing Reduced Rate associated with `fromPeriod_`.
-     * @dev Emits [TestDynamicDualRateContext_ReducedRateRemoved] when a rate is removed.
+     * @dev Emits [ReducedRateRemoved] when a rate is removed.
      *  Expected to be Access Controlled.
      *
      * @param fromPeriod_ The [uint256] period from which to remove any associated Reduced Rate.
@@ -169,7 +161,7 @@ contract DynamicDualRateContext is CalcInterestMetadata, IDynamicDualRateContext
      */
     function removeReducedRate(uint256 fromPeriod_) public returns (bool wasRemoved) {
         if (fromPeriod_ == 0) {
-            revert DynamicDualRateContext_InvalidReducedRatePeriod(fromPeriod_);
+            revert MultipleRateContext_InvalidReducedRatePeriod(fromPeriod_);
         }
 
         (bool isPresent, uint256 toRemove) = reducedRatesMap.tryGet(fromPeriod_);

@@ -2,14 +2,14 @@
 pragma solidity ^0.8.20;
 
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
-import { DynamicDualRateYieldStrategy } from "@credbull/strategy/DynamicDualRateYieldStrategy.sol";
-import { DynamicDualRateContext } from "@credbull/interest/DynamicDualRateContext.sol";
+import { MultipleRateYieldStrategy } from "@credbull/strategy/MultipleRateYieldStrategy.sol";
+import { MultipleRateContext } from "@credbull/interest/context/MultipleRateContext.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-contract DynamicDualRateYieldStrategyScenarioTest is Test {
+contract MultipleRateYieldStrategyScenarioTest is Test {
     uint256 public constant TOLERANCE = 1; // with 6 decimals, diff of 0.000001
     uint256 public constant DECIMALS = 6;
     uint256 public constant SCALE = 10 ** DECIMALS;
@@ -26,14 +26,14 @@ contract DynamicDualRateYieldStrategyScenarioTest is Test {
     uint256 public immutable DEFAULT_FREQUENCY = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
 
     IYieldStrategy internal yieldStrategy;
-    DynamicDualRateContext internal context;
+    MultipleRateContext internal context;
     address internal contextAddress;
     uint256 internal principal;
     uint256 internal depositPeriod;
 
     function setUp() public {
-        yieldStrategy = new DynamicDualRateYieldStrategy();
-        context = new DynamicDualRateContext(
+        yieldStrategy = new MultipleRateYieldStrategy();
+        context = new MultipleRateContext(
             DEFAULT_FULL_RATE,
             DEFAULT_REDUCED_RATE,
             Frequencies.toValue(Frequencies.Frequency.DAYS_365),
@@ -54,7 +54,7 @@ contract DynamicDualRateYieldStrategyScenarioTest is Test {
      *  Then the user should receive the prorated yield (2.055 USDC)
      *  And the principal should remain in the vault
      */
-    function test_DynamicRateYieldStrategy_S1() public view {
+    function test_MultipleRateYieldStrategy_S1() public view {
         assertEq(
             2_054_794, // $1,000 * ((5% / 365) * 15) =  2.054794
             yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod + 15),
@@ -71,7 +71,7 @@ contract DynamicDualRateYieldStrategyScenarioTest is Test {
      *  Then the user should receive their principal of 1000 USDC
      *  And the prorated yield based on the T-Bill Rate (2.74 USDC)
      */
-    function test_DynamicRateYieldStrategy_S2() public view {
+    function test_MultipleRateYieldStrategy_S2() public view {
         assertEq(
             2_739_726, // $1,000 * ((5% / 365) * 20) =  2.739726
             yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod + 20),
@@ -98,7 +98,7 @@ contract DynamicDualRateYieldStrategyScenarioTest is Test {
      *  Then the user should receive their principal of 1000 USDC
      *  And the yield based on 10% APY (8.22 USDC)
      */
-    function test_DynamicRateYieldStrategy_S3_S4() public view {
+    function test_MultipleRateYieldStrategy_S3_S4() public view {
         assertEq(
             8_219_178, // $1,000 * ((10% / 365) * 30) = 8.219178
             yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod + MATURITY_PERIOD),
@@ -117,7 +117,7 @@ contract DynamicDualRateYieldStrategyScenarioTest is Test {
      *  And should inform the user that a one-day notice is required for APY redemption
      */
     // NOTE (JL,2024-09-21): Not applicable for Yield Calculation.
-    // function test_DynamicRateYieldStrategy_S5() public { }
+    // function test_MultipleRateYieldStrategy_S5() public { }
 
     /**
      * S6
@@ -130,7 +130,7 @@ contract DynamicDualRateYieldStrategyScenarioTest is Test {
      *  And should inform the user that a one-day notice is required for Principal redemption
      */
     // NOTE (JL,2024-09-21): Not applicable for Yield Calculation.
-    // function test_DynamicRateYieldStrategy_S6() public { }
+    // function test_MultipleRateYieldStrategy_S6() public { }
 
     /**
      * S7
@@ -146,7 +146,7 @@ contract DynamicDualRateYieldStrategyScenarioTest is Test {
      *
      *  NOTE (JL,2024-09-21): The 45 days above should be 46 days. Raised to Product.
      */
-    function test_DynamicRateYieldStrategy_S7() public {
+    function test_MultipleRateYieldStrategy_S7() public {
         context.setReducedRate(31, PERCENT_5_5_SCALED);
         assertApproxEqAbs(
             10_479_452, // Full[30]+Reduced[15] = 8.2191781 + ($1,000 * ((5.5% / 365) * 15) = 10.479452
@@ -170,7 +170,7 @@ contract DynamicDualRateYieldStrategyScenarioTest is Test {
      *
      *  NOTE (JL,2024-09-21): The 50 days above should be 51 days. Raised to Product.
      */
-    function test_DynamicRateYieldStrategy_S8() public {
+    function test_MultipleRateYieldStrategy_S8() public {
         context.setReducedRate(31, PERCENT_5_5_SCALED);
         assertApproxEqAbs(
             11_232_876, // Full[30]+Reduced[20] = 8.2191781 + ($1,000 * ((5.5% / 365) * 20) = 11.232876
@@ -203,7 +203,7 @@ contract DynamicDualRateYieldStrategyScenarioTest is Test {
      *  And the yield from the first cycle (8.22 USDC)
      *  And the yield from the second cycle (8.22 USDC)
      */
-    function test_DynamicRateYieldStrategy_S9_S10() public {
+    function test_MultipleRateYieldStrategy_S9_S10() public {
         context.setReducedRate(31, PERCENT_5_5_SCALED);
         assertApproxEqAbs(
             16_438_356, // $1,000 * ((10% / 365) * 60) = 16.438356
@@ -223,7 +223,7 @@ contract DynamicDualRateYieldStrategyScenarioTest is Test {
      *  Then User A should receive 10% APY on their investment
      *  And User B should receive 5% APY on their investment
      */
-    function test_DynamicRateYieldStrategy_MU1() public view {
+    function test_MultipleRateYieldStrategy_MU1() public view {
         // User A
         assertApproxEqAbs(
             8_219_178, // $1,000 * ((10% / 365) * 30) = 8.219718
@@ -254,7 +254,7 @@ contract DynamicDualRateYieldStrategyScenarioTest is Test {
      *  Then User A should receive 10% APY for the first 30 days and 5.5% for the next 15 days
      *  And User B should receive 10% APY for the full 30 days
      */
-    function test_DynamicRateYieldStrategy_MU2() public {
+    function test_MultipleRateYieldStrategy_MU2() public {
         // Reduced Rate for second cycle.
         context.setReducedRate(31, PERCENT_5_5_SCALED);
 
@@ -318,7 +318,7 @@ contract DynamicDualRateYieldStrategyScenarioTest is Test {
      * Total redemption = 1000 + 4.32 = 1004.32 USDC
      *
      */
-    function test_DynamicRateYieldStrategy_MU3() public {
+    function test_MultipleRateYieldStrategy_MU3() public {
         // Reduced Rate from Day 20 onwards.
         context.setReducedRate(20, PERCENT_5_5_SCALED);
 

@@ -2,14 +2,14 @@
 pragma solidity ^0.8.20;
 
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
-import { DynamicDualRateYieldStrategy } from "@credbull/strategy/DynamicDualRateYieldStrategy.sol";
-import { DynamicDualRateContext } from "@credbull/interest/DynamicDualRateContext.sol";
+import { MultipleRateYieldStrategy } from "@credbull/strategy/MultipleRateYieldStrategy.sol";
+import { MultipleRateContext } from "@credbull/interest/context/MultipleRateContext.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-contract DynamicDualRateYieldStrategyTest is Test {
+contract MultipleRateYieldStrategyTest is Test {
     uint256 public constant TOLERANCE = 1; // with 6 decimals, diff of 0.000001
     uint256 public constant DECIMALS = 6;
     uint256 public constant SCALE = 10 ** DECIMALS;
@@ -26,14 +26,14 @@ contract DynamicDualRateYieldStrategyTest is Test {
     uint256 public immutable DEFAULT_FREQUENCY = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
 
     IYieldStrategy internal yieldStrategy;
-    DynamicDualRateContext internal context;
+    MultipleRateContext internal context;
     address internal contextAddress;
     uint256 internal principal;
     uint256 internal depositPeriod;
 
     function setUp() public {
-        yieldStrategy = new DynamicDualRateYieldStrategy();
-        context = new DynamicDualRateContext(
+        yieldStrategy = new MultipleRateYieldStrategy();
+        context = new MultipleRateContext(
             DEFAULT_FULL_RATE,
             DEFAULT_REDUCED_RATE,
             Frequencies.toValue(Frequencies.Frequency.DAYS_365),
@@ -44,4 +44,6 @@ contract DynamicDualRateYieldStrategyTest is Test {
         principal = 1_000 * SCALE;
         depositPeriod = 1;
     }
+
+    // TODO (JL,2024-09-26): Add tests.
 }

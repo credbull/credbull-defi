@@ -1,26 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IDynamicDualRateContext } from "@credbull/interest/IDynamicDualRateContext.sol";
+import { IMultipleRateContext } from "@credbull/interest/context/IMultipleRateContext.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 
 /**
- * @title DynamicDualRateYieldStrategy
+ * @title MultipleRateYieldStrategy
  * @dev Calculates returns using different rates depending on the holding period.
  */
-contract DynamicDualRateYieldStrategy is IYieldStrategy {
-    /// @notice When the `contextContract` parameter is invalid.
-    error DynamicDualRateYieldStrategy_InvalidContextAddress();
-    /// @notice When the `fromPeriod` and `toPeriod` parameters do not form a valid range.
-    error DynamicDualRateYieldStrategy_InvalidPeriodRange(uint256 from, uint256 to);
-
+contract MultipleRateYieldStrategy is IYieldStrategy {
     /**
      * @notice Returns the yield for `principal` from `fromPeriod` to `toPeriod` using full and reduced rates.
-     * @dev Reverts with [DynamicDualRateYieldStrategy_InvalidContextAddress] if `contextContract` is invalid. Reverts
-     *  with [DynamicDualRateYieldStrategy_InvalidPeriodRange] if `fromPeriod` and `toPeriod` do not form a valid range.
+     * @dev Reverts with [IYieldStrategy_InvalidContextAddress] if `contextContract` is invalid.
+     *  Reverts with [IYieldStrategy_InvalidPeriodRange] if `fromPeriod` and `toPeriod` do not form a valid range.
      *
-     * @param contextContract The contract with the data calculating the yield.
+     * @param contextContract The [address] of the contract providing additional data required for the calculation.
      * @param principal The principal amount to calculate the yield for.
      * @param fromPeriod The starting period to calculate the yeild from.
      * @param toPeriod The terminating period to calculate the yield with.
@@ -33,18 +28,18 @@ contract DynamicDualRateYieldStrategy is IYieldStrategy {
         returns (uint256 yield)
     {
         if (address(0) == contextContract) {
-            revert DynamicDualRateYieldStrategy_InvalidContextAddress();
+            revert IYieldStrategy_InvalidContextAddress();
         }
         if (fromPeriod >= toPeriod) {
-            revert DynamicDualRateYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod);
+            revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod);
         }
 
-        IDynamicDualRateContext context = IDynamicDualRateContext(contextContract);
+        IMultipleRateContext context = IMultipleRateContext(contextContract);
 
         // Calculate interest for full-rate periods
         uint256 noOfFullRatePeriods = _noOfFullRatePeriods(context.numPeriodsForFullRate(), fromPeriod, toPeriod);
         yield = CalcSimpleInterest.calcInterest(
-            principal, context.fullRateScaled(), noOfFullRatePeriods, context.frequency(), context.scale()
+            principal, context.rateScaled(), noOfFullRatePeriods, context.frequency(), context.scale()
         );
 
         // Calculate interest for reduced-rate periods
@@ -75,14 +70,14 @@ contract DynamicDualRateYieldStrategy is IYieldStrategy {
         returns (uint256 price)
     {
         if (address(0) == contextContract) {
-            revert DynamicDualRateYieldStrategy_InvalidContextAddress();
+            revert IYieldStrategy_InvalidContextAddress();
         }
 
         // NOTE (JL,2024-09-25): Seeing as this only uses Full Rate, I left it alone.
-        IDynamicDualRateContext context = IDynamicDualRateContext(contextContract);
+        IMultipleRateContext context = IMultipleRateContext(contextContract);
 
         return CalcSimpleInterest.calcPriceFromInterest(
-            numPeriodsElapsed, context.fullRateScaled(), context.frequency(), context.scale()
+            numPeriodsElapsed, context.rateScaled(), context.frequency(), context.scale()
         );
     }
 
