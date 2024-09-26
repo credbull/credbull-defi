@@ -7,15 +7,8 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
  * @title IMultiTokenVault
  */
 interface IMultiTokenVault is IERC1155 {
-    error IMultiTokenVault__RedeemBeforeDeposit(address owner, uint256 depositPeriod, uint256 redeemPeriod);
-    error IMultiTokenVault__RedeemPeriodNotSupported(address owner, uint256 currentPeriod, uint256 redeemPeriod);
-
     event Deposit(
         address indexed sender, address indexed receiver, uint256 depositPeriod, uint256 assets, uint256 shares
-    );
-
-    event Withdraw(
-        address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
     );
 
     event Withdraw(
@@ -53,15 +46,6 @@ interface IMultiTokenVault is IERC1155 {
      * @return maxAssets The maximum amount of the underlying asset can be deposited.
      */
     function maxDepositAtPeriod(address receiver, uint256 depositPeriod) external view returns (uint256 maxAssets);
-
-    /**
-     * @dev Returns the maximum amount of the underlying asset that can be deposited into the vault for the receiver at the current deposit period.
-     *
-     * @param receiver The user who wants to deposit.
-     *
-     * @return maxAssets The maximum amount of the underlying asset can be deposited.
-     */
-    function maxDeposit(address receiver) external view returns (uint256 maxAssets);
 
     /**
      * @dev Converts assets to shares for the deposit period.
@@ -178,52 +162,6 @@ interface IMultiTokenVault is IERC1155 {
         external
         returns (uint256 assets);
 
-    /**
-     * @dev Redeems the total amount of shares minted from the vault to the owner, while the redemption happens at the current redeem period
-     * And return the equivalent amount of assets to the receiver.
-     *
-     * @param shares The amount of shares to be redeemed from the vault.
-     * @param receiver The address that will receive the minted shares.
-     * @param owner The address that owns the minted shares.
-     *
-     * @return assets The amount of equivalent assets to get.
-     */
-    function redeem(uint256 shares, address receiver, address owner) external returns (uint256 assets);
-
-    /**
-     * @dev Returns the total amount of assets the user can withdraw from the vault.
-     *
-     * @param receiver The address of shares to be redeemed from the vault.
-     *
-     * @return assets The total amount of underlying assets that user can withdraw.
-     */
-    function previewWithdraw(address receiver) external view returns (uint256 assets);
-
-    /**
-     * @dev The owner withdraws the assets deposited at the time of the deposit period.
-     *
-     * @param assets The amount of assets to be withdrawn from the vault.
-     * @param receiver The address that will receive the minted shares.
-     * @param owner The address that owns the minted shares.
-     * @param depositPeriod The related time period that the assets has deposited at, represents the ERC-1155 token ID.
-     *
-     * @return shares The amount of shares that the receiver can get.
-     */
-    function withdrawForDepositPeriod(uint256 assets, address receiver, address owner, uint256 depositPeriod)
-        external
-        returns (uint256 shares);
-
-    /**
-     * @dev This function allows the owner to withdraw assets from the vault regardless of the deposit periods.
-     *
-     * @param assets The amount of assets to be withdrawn from the vault.
-     * @param receiver The address that will receive the minted shares.
-     * @param owner The address that owns the minted shares.
-     *
-     * @return shares The amount of shares that the receiver can get.
-     */
-    function withdraw(uint256 assets, address receiver, address owner) external returns (uint256 shares);
-
     // =============== Operational ===============
 
     /**
@@ -240,11 +178,4 @@ interface IMultiTokenVault is IERC1155 {
      * @param currentTimePeriodsElapsed_ The current number of time periods elapsed.
      */
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) external;
-
-    /**
-     * @dev Get the total balance of assets currently deposited in the vault.
-     *
-     * @return balance The total amount of assets in the vault.
-     */
-    function totalBalance() external view returns (uint256 balance);
 }
