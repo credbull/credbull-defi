@@ -30,6 +30,10 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
     uint256 internal totalDepositedAssets;
 
     error MultiTokenVault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 maxShares);
+    error MultiTokenVault__ExceededMaxDeposit(
+        address receiver, uint256 depositPeriod, uint256 assets, uint256 maxAssets
+    );
+
     error MultiTokenVault__RedeemTimePeriodNotSupported(address owner, uint256 period, uint256 redeemPeriod);
     error MultiTokenVault__CallerMissingApprovalForAll(address operator, address owner);
     error MultiTokenVault__RedeemBeforeDeposit(address owner, uint256 depositPeriod, uint256 redeemPeriod);
@@ -57,6 +61,10 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
 
     // =============== Deposit ===============
 
+    function maxDeposit(address /*receiver*/ ) public view virtual returns (uint256) {
+        return type(uint256).max;
+    }
+
     /**
      * @notice Convert a given amount of assets to shares for a specific deposit period.
      * @dev The conversion logic depends on the specific asset-to-shares ratio defined by the vault.
@@ -79,8 +87,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
         return convertToSharesForDepositPeriod(assets, currentTimePeriodsElapsed());
     }
 
-    function previewDeposit(uint256 assets) public view override returns (uint256 depositPeriod, uint256 shares) {
-        depositPeriod = currentTimePeriodsElapsed();
+    function previewDeposit(uint256 assets) public view override returns (uint256 shares) {
         shares = convertToShares(assets);
     }
 
@@ -89,17 +96,18 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ReentrancyGuard,
      * Initially, assets and shares are equivalent.
      * @param assets The amount of asset to be deposited into the vault.
      * @param receiver The address that will receive the minted shares.
-     * @return depositPeriod The current time period for the deposit, corresponding to the token ID in ERC1155.
      * @return shares The amount of ERC1155 tokens minted, where the `depositPeriod` acts as the token ID.
      */
-    function deposit(uint256 assets, address receiver)
-        public
-        virtual
-        override
-        nonReentrant
-        returns (uint256 depositPeriod, uint256 shares)
-    {
-        (depositPeriod, shares) = previewDeposit(assets);
+    function deposit(uint256 assets, address receiver) public virtual override nonReentrant returns (uint256 shares) {
+        //error MultiTokenVault__ExceededMaxDeposit(address receiver, uint256 depositPeriod, uint256 assets, uint256 maxAssets);
+        uint256 maxAssets = maxDeposit(receiver);
+        uint256 depositPeriod = currentTimePeriodsElapsed();
+
+        if (assets > maxAssets) {
+            revert MultiTokenVault__ExceededMaxDeposit(receiver, depositPeriod, assets, maxAssets);
+        }
+
+        shares = previewDeposit(assets);
 
         _deposit(_msgSender(), receiver, depositPeriod, assets, shares);
     }
