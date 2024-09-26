@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IMultipleRateContext } from "@credbull/interest/context/IMultipleRateContext.sol";
-import { MultipleRateContext } from "@credbull/interest/context/MultipleRateContext.sol";
+import { IMultipleRateContext } from "@test/test/interest/context/IMultipleRateContext.t.sol";
+import { MultipleRateContext } from "@test/test/interest/context/MultipleRateContext.t.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 

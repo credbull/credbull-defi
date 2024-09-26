@@ -5,7 +5,8 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
-import { IMultipleRateContext } from "@credbull/interest/context/IMultipleRateContext.sol";
+
+import { IMultipleRateContext } from "@test/test/interest/context/IMultipleRateContext.t.sol";
 
 /**
  * @title Our multiple rate context reference implementation.

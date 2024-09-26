@@ -27,7 +27,7 @@ interface ITripleRateContext is ICalcInterestMetadata {
     /**
      * @notice Returns a tuple of the previous Tenor Period and its associated Reduced Rate.
      *
-     * @return previousTenorPeriod The current Tenor Period.
+     * @return previousTenorPeriod The previous Tenor Period.
      * @return reducedRateInPercentageScaled The associated Reduced Rate.
      */
     function previousTenorPeriodAndRate()

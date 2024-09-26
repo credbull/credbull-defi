@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
 import { ITripleRateContext } from "@credbull/interest/context/ITripleRateContext.sol";
 
@@ -13,8 +11,6 @@ import { ITripleRateContext } from "@credbull/interest/context/ITripleRateContex
  *  [ICalcInterestMetadata].
  */
 contract TripleRateContext is CalcInterestMetadata, ITripleRateContext {
-    using Math for uint256;
-
     /**
      * @notice Reverts when the Tenor Period is before the currently set Tenor Period.
      *
