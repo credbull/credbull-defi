@@ -2,14 +2,10 @@
 pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
-import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
-
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { ERC20Burnable } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-
-import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
@@ -17,25 +13,25 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  * @dev A vault that uses SimpleInterest and Discounting to calculate shares per asset.
  *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
  */
-abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
+abstract contract MultiTokenVault is IMultiTokenVault, ERC1155 {
     using Math for uint256;
+    using SafeERC20 for IERC20;
 
-    IERC5679Ext1155 public immutable DEPOSITS;
+    // TODO lucas - temp (start)
+    error IMultiTokenVault__RedeemBeforeDeposit(address owner, uint256 depositPeriod, uint256 redeemPeriod);
+    error IMultiTokenVault__RedeemPeriodNotSupported(address owner, uint256 currentPeriod, uint256 redeemPeriod);
+    // TODO lucas - temp (end)
+
     uint256 public currentPeriodElapsed = 0; // the current number of time periods elapsed
+
+    /// @notice The ERC20 token used as the underlying asset in the vault.
+    IERC20 private immutable ASSET;
 
     error MultiTokenVault__UnsupportedFunction(string functionName);
     error MultiTokenVault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 max);
 
-    /**
-     * @notice Constructor to initialize the vault with asset and deposit ledger.
-     * @param asset_ The ERC20 token that represents the underlying asset.
-     * @param depositLedger The ledger contract managing deposits.
-     */
-    constructor(IERC20Metadata asset_, IERC5679Ext1155 depositLedger)
-        ERC4626(asset_)
-        ERC20("Multi Token Vault", "cMTV")
-    {
-        DEPOSITS = depositLedger;
+    constructor(IERC20Metadata asset_) ERC1155("") {
+        ASSET = asset_;
     }
 
     // =============== View ===============
@@ -44,7 +40,7 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
      * @dev See {IMultiTokenVault-getSharesAtPeriod}
      */
     function sharesAtPeriod(address account, uint256 depositPeriod) public view returns (uint256 shares) {
-        return DEPOSITS.balanceOf(account, depositPeriod);
+        return balanceOf(account, depositPeriod);
     }
 
     // =============== Deposit ===============
@@ -61,28 +57,27 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
     /**
      * @dev See {IMultiTokenVault-convertToShares}
      */
-    function convertToShares(uint256 assets) public view override(ERC4626, IMultiTokenVault) returns (uint256 shares) {
+    function convertToShares(uint256 assets) public view override returns (uint256 shares) {
         return convertToSharesForDepositPeriod(assets, currentPeriodElapsed);
     }
 
     /**
      * @dev See {IMultiTokenVault-previewDeposit}
      */
-    function previewDeposit(uint256 assets) public view override(ERC4626, IMultiTokenVault) returns (uint256 shares) {
+    function previewDeposit(uint256 assets) public view override returns (uint256 shares) {
         return convertToShares(assets);
     }
 
     /**
      * @dev See {IMultiTokenVault-deposit}
      */
-    function deposit(uint256 assets, address receiver)
-        public
-        virtual
-        override(ERC4626, IMultiTokenVault)
-        returns (uint256)
-    {
-        uint256 shares = super.deposit(assets, receiver);
-        DEPOSITS.safeMint(receiver, currentPeriodElapsed, shares, "");
+    function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
+        uint256 shares = previewDeposit(assets);
+
+        ASSET.safeTransferFrom(_msgSender(), address(this), assets);
+
+        _mint(receiver, currentPeriodElapsed, shares, "");
+
         return shares;
     }
 
@@ -132,11 +127,12 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
             revert MultiTokenVault__ExceededMaxRedeem(owner, depositPeriod, shares, maxShares);
         }
 
-        DEPOSITS.burn(owner, depositPeriod, shares, _emptyBytesArray()); // deposit specific
+        _burn(owner, depositPeriod, shares); // deposit specific
 
         // logic for fungible shares below
         uint256 assets = previewRedeemForDepositPeriod(shares, depositPeriod);
-        ERC4626._withdraw(_msgSender(), receiver, owner, assets, shares);
+
+        ASSET.safeTransfer(receiver, assets);
 
         return assets;
     }
@@ -178,15 +174,15 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
     /**
      * @dev See {IMultiTokenVault-asset}
      */
-    function asset() public view virtual override(ERC4626, IMultiTokenVault) returns (address asset_) {
-        return ERC4626.asset();
+    function asset() public view virtual override returns (address asset_) {
+        return address(ASSET);
     }
 
     /**
      * @dev See {ERC20-decimals}
      */
-    function decimals() public view virtual override(ERC20, ERC4626) returns (uint8) {
-        return ERC4626.decimals();
+    function decimals() public view virtual returns (uint8) {
+        return IERC20Metadata(address(ASSET)).decimals();
     }
 
     // =============== Utility ===============
@@ -205,64 +201,32 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC4626, ERC20Burnable {
         currentPeriodElapsed = currentTimePeriodsElapsed_;
     }
 
-    /**
-     * @notice Internal function to update token transfers.
-     * @param from The address transferring the tokens.
-     * @param to The address receiving the tokens.
-     * @param value The amount of tokens being transferred.
-     */
-    function _update(address from, address to, uint256 value) internal virtual override {
-        ERC20._update(from, to, value);
-    }
-
     function _emptyBytesArray() internal pure returns (bytes[] memory) {
         return new bytes[](0);
     }
 
-    // ========================= IERC4626 =========================
+    // ===================================================================================
+    // ====================================== ADDED ======================================
+    // ===================================================================================
 
-    /**
-     * MUST override with logic to account for depositPeriod or revert
-     * @dev See {IERC4626-convertToAssets}
-     */
-    function convertToAssets(uint256) public pure override returns (uint256 /* assets */ ) {
-        revert MultiTokenVault__UnsupportedFunction("convertToAssets");
-    }
-
-    /**
-     * MUST override with logic to account for depositPeriod or revert
-     * @dev See {IERC4626-previewRedeem}
-     */
-    function previewRedeem(uint256 /* shares */ ) public view virtual override returns (uint256 /* assets */ ) {
-        revert MultiTokenVault__UnsupportedFunction("previewRedeem");
-    }
-
-    /**
-     * MUST override with logic to account for depositPeriod or revert
-     * @dev See {IERC4626-redeem}
-     */
-    function redeem(uint256, /* shares */ address, /* receiver */ address /*owner*/ )
+    // ========================= IMultiTokenVault - New =========================
+    function maxDepositAtPeriod(address, /* receiver */ uint256 /* depositPeriod */ )
         public
-        virtual
-        override
-        returns (uint256 /* assets */ )
+        pure
+        returns (uint256 /* maxAssets */ )
     {
-        revert MultiTokenVault__UnsupportedFunction("redeem");
+        revert MultiTokenVault__UnsupportedFunction("maxDepositAtPeriod");
     }
 
-    /**
-     * MUST override with logic to account for depositPeriod or revert
-     * @dev See {IERC4626-previewWithdraw}
-     */
-    function previewWithdraw(uint256) public pure override returns (uint256 /* shares */ ) {
-        revert MultiTokenVault__UnsupportedFunction("previewWithdraw");
+    function maxRedeemAtPeriod(address, /* owner */ uint256 /* depositPeriod */ )
+        public
+        pure
+        returns (uint256 /* maxShares */ )
+    {
+        revert MultiTokenVault__UnsupportedFunction("maxRedeemAtPeriod");
     }
 
-    /**
-     * MUST override with logic to account for depositPeriod or revert
-     * @dev See {IERC4626-withdraw}
-     */
-    function withdraw(uint256, address, address) public pure override returns (uint256 /* shares */ ) {
-        revert MultiTokenVault__UnsupportedFunction("withdraw");
+    function totalAssets() public pure returns (uint256 /* totalAssets */ ) {
+        revert MultiTokenVault__UnsupportedFunction("totalAssets");
     }
 }

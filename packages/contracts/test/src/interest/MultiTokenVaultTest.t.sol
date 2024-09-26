@@ -4,8 +4,6 @@ pragma solidity ^0.8.20;
 import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
 import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
-import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
-import { ERC1155MintableBurnable } from "@test/test/interest/ERC1155MintableBurnable.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
@@ -13,7 +11,6 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 
 contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
     IERC20Metadata private asset;
-    IERC5679Ext1155 private depositLedger;
 
     IMultiTokenVaultTestParams private deposit1TestParams;
     IMultiTokenVaultTestParams private deposit2TestParams;
@@ -27,11 +24,32 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         SCALE = 10 ** asset.decimals();
         _transferAndAssert(asset, owner, alice, 100_000 * SCALE);
 
-        depositLedger = new ERC1155MintableBurnable();
-
         deposit1TestParams = IMultiTokenVaultTestParams({ principal: 500 * SCALE, depositPeriod: 10, redeemPeriod: 21 });
-
         deposit2TestParams = IMultiTokenVaultTestParams({ principal: 300 * SCALE, depositPeriod: 15, redeemPeriod: 17 });
+    }
+
+    function test__MultiTokenVaulTest__SimpleDeposit() public {
+        uint256 assetToSharesRatio = 1;
+
+        MultiTokenVault vault = new SimpleMultiTokenVault(asset, assetToSharesRatio, 10);
+
+        address vaultAddress = address(vault);
+
+        assertEq(0, asset.allowance(alice, vaultAddress), "vault shouldn't have an allowance to start");
+        assertEq(0, asset.balanceOf(vaultAddress), "vault shouldn't have a balance to start");
+
+        vm.startPrank(alice);
+        asset.approve(vaultAddress, deposit1TestParams.principal);
+
+        assertEq(deposit1TestParams.principal, asset.allowance(alice, vaultAddress), "vault should have allowance");
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        vault.deposit(deposit1TestParams.principal, alice);
+        vm.stopPrank();
+
+        assertEq(deposit1TestParams.principal, asset.balanceOf(vaultAddress), "vault should have the asset");
+        assertEq(0, asset.allowance(alice, vaultAddress), "vault shouldn't have an allowance after deposit");
     }
 
     // Scenario: Calculating returns for a standard investment
@@ -39,7 +57,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         uint256 assetToSharesRatio = 2;
 
         // setup
-        MultiTokenVault vault = new SimpleMultiTokenVault(asset, depositLedger, assetToSharesRatio, 10);
+        MultiTokenVault vault = new SimpleMultiTokenVault(asset, assetToSharesRatio, 10);
         uint256 assetBalanceBeforeDeposits = asset.balanceOf(alice); // the asset balance from the start
 
         // verify deposit - period 1
@@ -52,7 +70,9 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
             vault.sharesAtPeriod(alice, deposit1TestParams.depositPeriod),
             "getSharesAtPeriod incorrect at period 1"
         );
-        assertEq(deposit1Shares, vault.balanceOf(alice), "balance incorrect at period 1");
+        assertEq(
+            deposit1Shares, vault.balanceOf(alice, deposit1TestParams.depositPeriod), "balance incorrect at period 1"
+        );
 
         // verify deposit - period 2
         uint256 deposit2Shares = _testDepositOnly(alice, vault, deposit2TestParams);
@@ -64,7 +84,9 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
             vault.sharesAtPeriod(alice, deposit2TestParams.depositPeriod),
             "getSharesAtPeriod incorrect at period 2"
         );
-        assertEq(deposit1Shares + deposit2Shares, vault.balanceOf(alice), "balance incorrect at period 2");
+        assertEq(
+            deposit2Shares, vault.balanceOf(alice, deposit2TestParams.depositPeriod), "balance incorrect at period 2"
+        );
 
         // verify redeem - period 1
         uint256 deposit1ExpectedYield = _expectedReturns(deposit1Shares, vault, deposit1TestParams);
@@ -105,12 +127,7 @@ contract SimpleMultiTokenVault is MultiTokenVault {
     uint256 internal immutable ASSET_TO_SHARES_RATIO;
     uint256 internal immutable YIELD_PERCENTAGE;
 
-    constructor(
-        IERC20Metadata asset,
-        IERC5679Ext1155 depositLedger,
-        uint256 assetToSharesRatio,
-        uint256 yieldPercentage
-    ) MultiTokenVault(asset, depositLedger) {
+    constructor(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage) MultiTokenVault(asset) {
         ASSET_TO_SHARES_RATIO = assetToSharesRatio;
         YIELD_PERCENTAGE = yieldPercentage;
     }
