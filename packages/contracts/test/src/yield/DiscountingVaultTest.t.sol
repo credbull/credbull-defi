@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { DiscountingVault } from "@test/src/yield/DiscountingVault.t.sol";
+import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/yield/strategy/SimpleInterestYieldStrategy.sol";
@@ -98,7 +99,6 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
     }
 
-    // Scenario: Calculating returns for a rolled-over investment
     function test__DiscountingVaultTest__ShouldRevertIfRedeemBeforeTenor() public {
         DiscountingVault.DiscountingVaultParams memory params = DiscountingVault.DiscountingVaultParams({
             asset: asset,
@@ -110,23 +110,23 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         });
 
         uint256 deposit = 100 * SCALE;
-        DiscountingVaultForTest vault = new DiscountingVaultForTest(params);
+        DiscountingVault vault = new DiscountingVault(params);
+        uint256 depositPeriod = vault.currentTimePeriodsElapsed();
+        uint256 shares = vault.convertToShares(deposit);
 
         // check redeemPeriod > depositPeriod
         uint256 invalidRedeemPeriod = params.tenor - 1;
-        assertEq(
-            0,
-            vault.convertToAssetsForImpliedDepositPeriod(deposit, invalidRedeemPeriod),
-            "no assets if redeemPeriod < tenor"
-        );
 
         // redeem before tenor - unable to derive deposit
         vm.expectRevert(
             abi.encodeWithSelector(
-                DiscountingVault.DiscountingVault__DepositPeriodNotDerivable.selector, invalidRedeemPeriod, params.tenor
+                MultiTokenVault.MultiTokenVault__RedeemTimePeriodNotSupported.selector,
+                alice,
+                depositPeriod,
+                invalidRedeemPeriod
             )
         );
-        vault.getDepositPeriodFromRedeemPeriod(invalidRedeemPeriod);
+        vault.redeemForDepositPeriod(shares, alice, alice, depositPeriod, invalidRedeemPeriod);
     }
 
     function _expectedReturns(
@@ -137,22 +137,5 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         return yieldStrategy.calcYield(
             address(vault), testParams.principal, testParams.depositPeriod, testParams.redeemPeriod
         );
-    }
-}
-
-contract DiscountingVaultForTest is DiscountingVault {
-    constructor(DiscountingVaultParams memory params) DiscountingVault(params) { }
-
-    function convertToAssetsForImpliedDepositPeriod(uint256 shares, uint256 redeemPeriod)
-        public
-        view
-        returns (uint256 assets)
-    {
-        return super._convertToAssetsForImpliedDepositPeriod(shares, redeemPeriod);
-    }
-
-    // MUST hold that depositPeriod + TENOR = redeemPeriod
-    function getDepositPeriodFromRedeemPeriod(uint256 redeemPeriod) public view returns (uint256 depositPeriod) {
-        return super._depositPeriodFromRedeemPeriod(redeemPeriod);
     }
 }

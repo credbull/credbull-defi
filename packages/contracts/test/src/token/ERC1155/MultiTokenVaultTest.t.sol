@@ -31,7 +31,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
     function test__MultiTokenVaulTest__SimpleDeposit() public {
         uint256 assetToSharesRatio = 1;
 
-        MultiTokenVault vault = new SimpleMultiTokenVaultMock(asset, assetToSharesRatio, 10, owner);
+        MultiTokenVault vault = new SimpleMultiTokenVault(asset, assetToSharesRatio, 10, owner);
 
         address vaultAddress = address(vault);
 
@@ -57,7 +57,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         uint256 assetToSharesRatio = 2;
 
         // setup
-        MultiTokenVault vault = new SimpleMultiTokenVaultMock(asset, assetToSharesRatio, 10, owner);
+        MultiTokenVault vault = new SimpleMultiTokenVault(asset, assetToSharesRatio, 10, owner);
         uint256 assetBalanceBeforeDeposits = asset.balanceOf(alice); // the asset balance from the start
 
         // verify deposit - period 1
@@ -120,13 +120,13 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         IMultiTokenVault vault,
         IMultiTokenVaultTestParams memory testParams
     ) internal view override returns (uint256 expectedReturns_) {
-        SimpleMultiTokenVaultMock simpleMultitokenVault = SimpleMultiTokenVaultMock(address(vault));
+        SimpleMultiTokenVault simpleMultitokenVault = SimpleMultiTokenVault(address(vault));
 
         return simpleMultitokenVault.calcYield(testParams.principal, testParams.depositPeriod, testParams.redeemPeriod);
     }
 }
 
-contract SimpleMultiTokenVaultMock is MultiTokenVault {
+contract SimpleMultiTokenVault is MultiTokenVault {
     uint256 internal immutable ASSET_TO_SHARES_RATIO;
     uint256 internal immutable YIELD_PERCENTAGE;
 

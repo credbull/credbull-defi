@@ -19,8 +19,6 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
     IYieldStrategy public immutable YIELD_STRATEGY;
     uint256 public immutable TENOR;
 
-    error DiscountingVault__DepositPeriodNotDerivable(uint256 redeemPeriod, uint256 tenor);
-
     struct DiscountingVaultParams {
         IERC20Metadata asset;
         IYieldStrategy yieldStrategy;
@@ -87,30 +85,5 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
 
         uint256 principal = _convertToPrincipalAtDepositPeriod(shares, depositPeriod);
         return principal + calcYield(principal, depositPeriod, redeemPeriod);
-    }
-
-    /// @notice Converts `shares` to assets for an implied deposit period.
-    function _convertToAssetsForImpliedDepositPeriod(uint256 shares, uint256 redeemPeriod)
-        internal
-        view
-        returns (uint256 assets)
-    {
-        // Redeeming before TENOR - return the discounted amount (no interest).
-        if (redeemPeriod < TENOR) return 0;
-
-        uint256 impliedDepositPeriod = _depositPeriodFromRedeemPeriod(redeemPeriod);
-        return convertToAssetsForDepositPeriod(shares, impliedDepositPeriod, redeemPeriod);
-    }
-
-    // =============== Utility ===============
-
-    /// @notice Derives `depositPeriod` from `redeemPeriod`.
-    /// @dev MUST hold that depositPeriod + TENOR = redeemPeriod
-    function _depositPeriodFromRedeemPeriod(uint256 redeemPeriod) internal view returns (uint256 depositPeriod) {
-        if (redeemPeriod < TENOR) {
-            revert DiscountingVault__DepositPeriodNotDerivable(redeemPeriod, TENOR); // unable to derive deposit period
-        }
-
-        return redeemPeriod - TENOR;
     }
 }
