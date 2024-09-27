@@ -2,13 +2,15 @@
 pragma solidity ^0.8.23;
 
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
+import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 /**
  * @title MultiTokenVault
@@ -17,8 +19,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  *      of time periods that have elapsed and allows users to deposit and redeem assets based on these periods.
  *      Designed to be secure and production-ready for Hacken audit.
  */
-abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ERC1155Supply, ReentrancyGuard, Ownable {
-    using Math for uint256;
+abstract contract MultiTokenVault is ERC165, ERC1155Supply, IMultiTokenVault, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
     /// @notice Tracks the number of time periods that have elapsed.
@@ -328,14 +329,6 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ERC1155Supply, R
         emit Withdraw(caller, receiver, owner, depositPeriod, assets, shares);
     }
 
-    function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
-        internal
-        virtual
-        override(ERC1155Supply, ERC1155)
-    {
-        ERC1155Supply._update(from, to, ids, values);
-    }
-
     // =============== Operational ===============
 
     /**
@@ -355,5 +348,26 @@ abstract contract MultiTokenVault is IMultiTokenVault, ERC1155, ERC1155Supply, R
      */
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public virtual onlyOwner {
         _currentTimePeriodsElapsed = currentTimePeriodsElapsed_;
+    }
+
+    // =============== Overriding ===============
+
+    /**
+     * @dev Returns true if this contract implements the interface defined by `interfaceId`.
+     *      This function checks for support of the IERC1155 interface, IMultiTokenVault interface,
+     *      and delegates to the super class for any other interface support checks.
+     *
+     * @param interfaceId The identifier of the interface to check for support.
+     * @return bool True if the contract supports the requested interface.
+     */
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165, IERC165, ERC1155)
+        returns (bool)
+    {
+        return interfaceId == type(IERC1155).interfaceId || interfaceId == type(IMultiTokenVault).interfaceId
+            || super.supportsInterface(interfaceId);
     }
 }
