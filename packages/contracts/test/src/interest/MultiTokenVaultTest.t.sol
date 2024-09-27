@@ -31,7 +31,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
     function test__MultiTokenVaulTest__SimpleDeposit() public {
         uint256 assetToSharesRatio = 1;
 
-        MultiTokenVault vault = new SimpleMultiTokenVault(asset, assetToSharesRatio, 10);
+        MultiTokenVault vault = new SimpleMultiTokenVaultMock(asset, assetToSharesRatio, 10, owner);
 
         address vaultAddress = address(vault);
 
@@ -57,7 +57,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         uint256 assetToSharesRatio = 2;
 
         // setup
-        MultiTokenVault vault = new SimpleMultiTokenVault(asset, assetToSharesRatio, 10);
+        MultiTokenVault vault = new SimpleMultiTokenVaultMock(asset, assetToSharesRatio, 10, owner);
         uint256 assetBalanceBeforeDeposits = asset.balanceOf(alice); // the asset balance from the start
 
         // verify deposit - period 1
@@ -69,6 +69,9 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
             deposit1Shares,
             vault.sharesAtPeriod(alice, deposit1TestParams.depositPeriod),
             "getSharesAtPeriod incorrect at period 1"
+        );
+        assertEq(
+            deposit1Shares, vault.balanceOf(alice, deposit1TestParams.depositPeriod), "balance incorrect at period 1"
         );
         assertEq(
             deposit1Shares, vault.balanceOf(alice, deposit1TestParams.depositPeriod), "balance incorrect at period 1"
@@ -117,17 +120,19 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         IMultiTokenVault vault,
         IMultiTokenVaultTestParams memory testParams
     ) internal view override returns (uint256 expectedReturns_) {
-        SimpleMultiTokenVault simpleMultitokenVault = SimpleMultiTokenVault(address(vault));
+        SimpleMultiTokenVaultMock simpleMultitokenVault = SimpleMultiTokenVaultMock(address(vault));
 
         return simpleMultitokenVault.calcYield(testParams.principal, testParams.depositPeriod, testParams.redeemPeriod);
     }
 }
 
-contract SimpleMultiTokenVault is MultiTokenVault {
+contract SimpleMultiTokenVaultMock is MultiTokenVault {
     uint256 internal immutable ASSET_TO_SHARES_RATIO;
     uint256 internal immutable YIELD_PERCENTAGE;
 
-    constructor(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage) MultiTokenVault(asset) {
+    constructor(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage, address initialOwner)
+        MultiTokenVault(asset, initialOwner)
+    {
         ASSET_TO_SHARES_RATIO = assetToSharesRatio;
         YIELD_PERCENTAGE = yieldPercentage;
     }

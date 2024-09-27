@@ -38,7 +38,8 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             yieldStrategy: yieldStrategy,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
-            tenor: 30
+            tenor: 30,
+            initialOwner: owner
         });
 
         DiscountingVault vault = new DiscountingVault(params);
@@ -61,7 +62,8 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             yieldStrategy: yieldStrategy,
             interestRatePercentageScaled: 12 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.MONTHLY),
-            tenor: 3
+            tenor: 3,
+            initialOwner: owner
         });
 
         DiscountingVault vault = new DiscountingVault(params);
@@ -78,7 +80,8 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             yieldStrategy: yieldStrategy,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
-            tenor: 30
+            tenor: 30,
+            initialOwner: owner
         });
 
         uint256 deposit = 50_000 * SCALE;
@@ -102,7 +105,8 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             yieldStrategy: yieldStrategy,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
-            tenor: 30
+            tenor: 30,
+            initialOwner: owner
         });
 
         uint256 deposit = 100 * SCALE;
