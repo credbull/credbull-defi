@@ -5,12 +5,10 @@ import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.so
 import { ITripleRateContext } from "@credbull/interest/context/ITripleRateContext.sol";
 
 /**
- * @title A triple rate context, with the 'full' rate and 2 reduced rates that apply temporally across 2 tenor periods.
- * @dev Context for yield calculations with a rate and dual reduced rates, applicable across Tenor Periods. All rate
- *  are expressed in percentage terms and scaled using [scale()]. The 'full' rate values are encapsulated by the
- *  [ICalcInterestMetadata].
+ * @title Our triple rate context reference implementation, realising [ITripleRateContext].
+ * @dev This is an abstract contract intended to be inherited from and overriden with Access Control functionality.
  */
-contract TripleRateContext is CalcInterestMetadata, ITripleRateContext {
+abstract contract TripleRateContext is CalcInterestMetadata, ITripleRateContext {
     /**
      * @notice Reverts when the Tenor Period is before the currently set Tenor Period.
      *
@@ -89,7 +87,7 @@ contract TripleRateContext is CalcInterestMetadata, ITripleRateContext {
      * @param tenorPeriod_ The [uint256] Tenor Period at which to set the associated Rate.
      * @param reducedRateScaled_ The [uint256] Reduced Rate scaled percentage value.
      */
-    function setReducedRateAt(uint256 tenorPeriod_, uint256 reducedRateScaled_) public {
+    function setReducedRateAt(uint256 tenorPeriod_, uint256 reducedRateScaled_) public virtual {
         if (tenorPeriod_ <= _currentTenorPeriod) {
             revert TripleRateContext_TenorPeriodRegressionNotAllowed(_currentTenorPeriod, tenorPeriod_);
         }

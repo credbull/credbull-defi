@@ -2,11 +2,11 @@
 pragma solidity ^0.8.20;
 
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
-import { DualRateYieldStrategy } from "@credbull/strategy/DualRateYieldStrategy.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
 
-import { IDualRateContext } from "@credbull/interest/context/IDualRateContext.sol";
+import { DualRateYieldStrategy } from "@test/test/strategy/DualRateYieldStrategy.t.sol";
+import { IDualRateContext } from "@test/test/interest/context/IDualRateContext.t.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IDualRateContext } from "@credbull/interest/context/IDualRateContext.sol";
 import { CalcSimpleInterest } from "@credbull/interest/CalcSimpleInterest.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
+
+import { IDualRateContext } from "@test/test/interest/context/IDualRateContext.t.sol";
 
 /**
  * @title DualRateYieldStrategy

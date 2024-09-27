@@ -2,11 +2,10 @@
 pragma solidity ^0.8.20;
 
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
-
 import { TripleRateYieldStrategy } from "@credbull/strategy/TripleRateYieldStrategy.sol";
-import { TripleRateContext } from "@credbull/interest/context/TripleRateContext.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
+import { TestTripleRateContext } from "@test/test/interest/context/TestTripleRateContext.t.sol";
 
 import { Test } from "forge-std/Test.sol";
 
@@ -27,14 +26,14 @@ contract TripleRateYieldStrategyTest is Test {
     uint256 public immutable DEFAULT_FREQUENCY = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
 
     IYieldStrategy internal yieldStrategy;
-    TripleRateContext internal context;
+    TestTripleRateContext internal context;
     address internal contextAddress;
     uint256 internal principal;
     uint256 internal depositPeriod;
 
     function setUp() public {
         yieldStrategy = new TripleRateYieldStrategy();
-        context = new TripleRateContext(
+        context = new TestTripleRateContext(
             DEFAULT_FULL_RATE,
             DEFAULT_REDUCED_RATE,
             Frequencies.toValue(Frequencies.Frequency.DAYS_365),

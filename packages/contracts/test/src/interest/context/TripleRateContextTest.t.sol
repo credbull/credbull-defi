@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { TripleRateContext } from "@credbull/interest/context/TripleRateContext.sol";
+import { TestTripleRateContext } from "@test/test/interest/context/TestTripleRateContext.t.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
@@ -23,7 +24,7 @@ contract TripleRateContextTest is Test {
     TripleRateContext internal toTest;
 
     function setUp() public {
-        toTest = new TripleRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
+        toTest = new TestTripleRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
     }
 
     function test_TripleRateContext_ConstructedAsExpected() public view {
