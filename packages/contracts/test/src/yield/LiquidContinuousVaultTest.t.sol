@@ -34,6 +34,7 @@ contract LiquidContinuousVaultTest is IMultiTokenVaultTestBase {
             .LiquidContinuousVaultParams({
             asset: asset,
             yieldStrategy: new SimpleInterestYieldStrategy(),
+            redeemNoticePeriod: 1,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
             tenor: 30
@@ -58,6 +59,7 @@ contract LiquidContinuousVaultTest is IMultiTokenVaultTestBase {
             .LiquidContinuousVaultParams({
             asset: asset,
             yieldStrategy: new SimpleInterestYieldStrategy(),
+            redeemNoticePeriod: 1,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
             tenor: 30

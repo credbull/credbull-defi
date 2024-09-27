@@ -40,9 +40,16 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     /**
      * @inheritdoc IMultiTokenVault
      */
-    function deposit(uint256 assets, address receiver) public virtual override nonReentrant returns (uint256 shares) {
+    function deposit(uint256 assets, address receiver) public virtual override returns (uint256 shares) {
+        return _depositForDepositPeriod(assets, receiver, currentTimePeriodsElapsed());
+    }
+
+    function _depositForDepositPeriod(uint256 assets, address receiver, uint256 depositPeriod)
+        internal
+        virtual
+        returns (uint256 shares)
+    {
         uint256 maxAssets = maxDeposit(receiver);
-        uint256 depositPeriod = currentTimePeriodsElapsed();
 
         if (assets > maxAssets) {
             revert MultiTokenVault__ExceededMaxDeposit(receiver, depositPeriod, assets, maxAssets);
@@ -62,7 +69,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
         address owner,
         uint256 depositPeriod,
         uint256 redeemPeriod
-    ) public virtual nonReentrant returns (uint256 assets) {
+    ) public virtual returns (uint256 assets) {
         if (depositPeriod > redeemPeriod) {
             revert MultiTokenVault__RedeemBeforeDeposit(owner, depositPeriod, redeemPeriod);
         }
@@ -227,6 +234,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     function _deposit(address caller, address receiver, uint256 depositPeriod, uint256 assets, uint256 shares)
         internal
         virtual
+        nonReentrant
     {
         ASSET.safeTransferFrom(caller, address(this), assets);
         _mint(receiver, depositPeriod, shares, "");
@@ -252,7 +260,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
         uint256 depositPeriod,
         uint256 assets,
         uint256 shares
-    ) internal virtual {
+    ) internal virtual nonReentrant {
         if (caller != owner && isApprovedForAll(owner, caller)) {
             revert MultiTokenVault__CallerMissingApprovalForAll(caller, owner);
         }
