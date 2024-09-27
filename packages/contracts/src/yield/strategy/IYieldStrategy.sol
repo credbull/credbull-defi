@@ -21,7 +21,7 @@ interface IYieldStrategy {
      * @param principal The principal amount to calculate the yield for.
      * @param fromTimePeriod The period, inclusive, at the start of the Period Range.
      * @param toTimePeriod The period, inclusive, at the end of the Period Range.
-     * @return yield The calculated yeild.
+     * @return yield The calculated yield.
      */
     function calcYield(address contextContract, uint256 principal, uint256 fromTimePeriod, uint256 toTimePeriod)
         external
