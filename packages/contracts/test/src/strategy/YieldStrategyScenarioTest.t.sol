@@ -2,8 +2,6 @@
 pragma solidity ^0.8.20;
 
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
-import { TripleRateYieldStrategy } from "@credbull/strategy/TripleRateYieldStrategy.sol";
-import { TripleRateContext } from "@credbull/interest/context/TripleRateContext.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 

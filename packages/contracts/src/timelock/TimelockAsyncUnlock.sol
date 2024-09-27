@@ -83,7 +83,7 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
     {
         UnlockItem storage unlockRequest = _unlockRequests[depositPeriod][tokenOwner];
 
-        //        uint256 maxUnlock_ = maxUnlock(tokenOwner, depositPeriod);
+        // TODO - add check for maxRequestUnlock() here
 
         if (unlockRequest.amount > 0 && unlockRequest.unlockPeriod == unlockPeriod) {
             // Add to the existing unlock request if the unlockPeriod is the same
@@ -110,6 +110,8 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
         if (amount > unlockRequest.amount) {
             revert ITimelockOpenEnded__ExceededMaxUnlock(tokenOwner, amount, unlockRequest.amount);
         }
+
+        // TODO - add check for maxUnlock() here
 
         // maybe being too strict?  user can just call this again with the "right" unlockPeriod
         if (unlockPeriod != unlockRequest.unlockPeriod) {

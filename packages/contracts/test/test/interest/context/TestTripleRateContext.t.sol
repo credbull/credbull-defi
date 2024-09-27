@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
 import { TripleRateContext } from "@credbull/interest/context/TripleRateContext.sol";
 
 contract TestTripleRateContext is TripleRateContext {

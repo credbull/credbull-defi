@@ -8,8 +8,6 @@ import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 import { TestTripleRateContext } from "@test/test/interest/context/TestTripleRateContext.t.sol";
 import { YieldStrategyScenarioTest } from "@test/src/strategy/YieldStrategyScenarioTest.t.sol";
 
-import { Test } from "forge-std/Test.sol";
-
 contract TripleRateYieldStrategyScenarioTest is YieldStrategyScenarioTest {
     IYieldStrategy internal yieldStrategy;
     TestTripleRateContext internal context;
