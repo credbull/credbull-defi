@@ -11,6 +11,9 @@ import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
  *  depending on the holding period.
  */
 contract TripleRateYieldStrategy is IYieldStrategy {
+    /**
+     * @inheritdoc IYieldStrategy
+     */
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
@@ -74,6 +77,9 @@ contract TripleRateYieldStrategy is IYieldStrategy {
         }
     }
 
+    /**
+     * @inheritdoc IYieldStrategy
+     */
     function calcPrice(address contextContract, uint256 numPeriodsElapsed)
         public
         view
