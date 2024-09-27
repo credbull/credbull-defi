@@ -8,7 +8,6 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import { IERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
 /**
  * @title MultiTokenVault
@@ -33,7 +32,6 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     error MultiTokenVault__RedeemTimePeriodNotSupported(address owner, uint256 period, uint256 redeemPeriod);
     error MultiTokenVault__CallerMissingApprovalForAll(address operator, address owner);
     error MultiTokenVault__RedeemBeforeDeposit(address owner, uint256 depositPeriod, uint256 redeemPeriod);
-    error MultiTokenVault__NotERC1155Holder(address receiver);
 
     /**
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
@@ -67,13 +65,6 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
 
         if (assets > maxAssets) {
             revert MultiTokenVault__ExceededMaxDeposit(receiver, depositPeriod, assets, maxAssets);
-        }
-
-        // Check if the receiver is a contract and supports IERC1155Receiver
-        if (receiver.code.length > 0) {
-            if (!IERC165(receiver).supportsInterface(type(IERC1155Receiver).interfaceId)) {
-                revert MultiTokenVault__NotERC1155Holder(receiver);
-            }
         }
 
         shares = previewDeposit(assets);
