@@ -2,15 +2,13 @@
 pragma solidity ^0.8.23;
 
 import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
-import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import { ERC1155Supply, ERC1155 } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import { IERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
 /**
  * @title MultiTokenVault
@@ -19,7 +17,7 @@ import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
  *      of time periods that have elapsed and allows users to deposit and redeem assets based on these periods.
  *      Designed to be secure and production-ready for Hacken audit.
  */
-abstract contract MultiTokenVault is ERC165, ERC1155Supply, IMultiTokenVault, ReentrancyGuard, Ownable {
+abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
     /// @notice Tracks the number of time periods that have elapsed.
@@ -135,6 +133,14 @@ abstract contract MultiTokenVault is ERC165, ERC1155Supply, IMultiTokenVault, Re
 
         if (assets > maxAssets) {
             revert MultiTokenVault__ExceededMaxDeposit(receiver, depositPeriod, assets, maxAssets);
+        }
+
+        // Check if the receiver is a contract and supports IERC1155Receiver
+        if (receiver.code.length > 0) {
+            require(
+                IERC165(receiver).supportsInterface(type(IERC1155Receiver).interfaceId),
+                "MultiTokenVault: Receiver does not implement IERC1155Receiver"
+            );
         }
 
         shares = previewDeposit(assets);
@@ -360,14 +366,7 @@ abstract contract MultiTokenVault is ERC165, ERC1155Supply, IMultiTokenVault, Re
      * @param interfaceId The identifier of the interface to check for support.
      * @return bool True if the contract supports the requested interface.
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165, IERC165, ERC1155)
-        returns (bool)
-    {
-        return interfaceId == type(IERC1155).interfaceId || interfaceId == type(IMultiTokenVault).interfaceId
-            || super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165, ERC1155) returns (bool) {
+        return interfaceId == type(IMultiTokenVault).interfaceId || super.supportsInterface(interfaceId);
     }
 }
