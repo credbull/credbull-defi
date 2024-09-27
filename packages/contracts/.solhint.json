@@ -2,6 +2,9 @@
   "extends": "solhint:recommended",
   "rules": {
     "func-visibility": ["error",{"ignoreConstructors":true}],
+    "interface-starts-with-i": "warn",
+    "func-param-name-mixedcase": "warn",
+    "modifier-name-mixedcase": "warn",
     "func-name-mixedcase": "off",
     "var-name-mixedcase": "off",
     "no-console": "off",
