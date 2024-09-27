@@ -50,6 +50,8 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
 
         assertEq(deposit1TestParams.principal, asset.balanceOf(vaultAddress), "vault should have the asset");
         assertEq(0, asset.allowance(alice, vaultAddress), "vault shouldn't have an allowance after deposit");
+
+        testVaultAtPeriods(vault, deposit1TestParams);
     }
 
     // Scenario: Calculating returns for a standard investment
@@ -113,6 +115,9 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
             TOLERANCE,
             "deposit2 deposit assets incorrect"
         );
+
+        testVaultAtPeriods(vault, deposit1TestParams);
+        testVaultAtPeriods(vault, deposit2TestParams);
     }
 
     function _expectedReturns(
