@@ -25,9 +25,9 @@ interface IMultiTokenVault is IERC1155 {
     /**
      * @dev Returns the total amount of the underlying asset that is managed by vault.
      *
-     * @return totalManagedAssets The total amount of the underlying asset that is managed by vault.
+     * @return totalAssets The total amount of the underlying asset that is managed by vault.
      */
-    function totalAssets() external view returns (uint256 totalManagedAssets);
+    function totalAssets() external view returns (uint256);
 
     /**
      * @dev Deposits assets into the vault and mints shares for the current time period.

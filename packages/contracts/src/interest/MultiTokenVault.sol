@@ -43,21 +43,14 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     }
 
     /**
-     * @dev Returns the total amount of the underlying asset that is managed by vault.
-     *
-     * @return totalManagedAssets The total amount of the underlying asset that is managed by vault.
+     * @inheritdoc IMultiTokenVault
      */
     function totalAssets() external view returns (uint256) {
-        return totalSupply();
+        return ASSET.balanceOf(address(this));
     }
 
     /**
-     * @dev Deposits assets into the vault and mints shares for the current time period.
-     *
-     * @param assets The amount of the ERC-20 underlying assets to be deposited into the vault.
-     * @param receiver The address that will receive the minted shares.
-     *
-     * @return shares The amount of ERC-1155 tokens minted.
+     * @inheritdoc IMultiTokenVault
      */
     function deposit(uint256 assets, address receiver) public virtual override nonReentrant returns (uint256 shares) {
         uint256 maxAssets = maxDeposit(receiver);
@@ -73,17 +66,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     }
 
     /**
-     * @dev Redeems the shares minted at the time of the deposit period from the vault to the owner,
-     *      while the redemption happens at the defined redeem period
-     *      And return the equivalent amount of assets to the receiver.
-     *
-     * @param shares The amount of the ERC-1155 tokens to redeem.
-     * @param receiver The address that will receive the minted shares.
-     * @param owner The address that owns the minted shares.
-     * @param depositPeriod The deposit period in which the shares were issued.
-     * @param redeemPeriod The time period in which the shares are redeemed.
-     *
-     * @return assets The equivalent amount of the ERC-20 underlying assets.
+     * @inheritdoc IMultiTokenVault
      */
     function redeemForDepositPeriod(
         uint256 shares,
@@ -112,16 +95,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     }
 
     /**
-     * @dev Redeems the shares minted at the time of the deposit period from the vault to the owner,
-     *      while the redemption happens at the current redeem period
-     *      And return the equivalent amount of assets to the receiver.
-     *
-     * @param shares The amount of the ERC-1155 tokens to redeem.
-     * @param receiver The address that will receive the minted shares.
-     * @param owner The address that owns the minted shares.
-     * @param depositPeriod The deposit period in which the shares were issued.
-     *
-     * @return assets The equivalent amount of the ERC-20 underlying assets.
+     * @inheritdoc IMultiTokenVault
      */
     function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
         public
@@ -132,51 +106,35 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     }
 
     /**
-     * @notice This function is for only testing purposes.
-     * @dev This function is made to set the current number of time periods elapsed.
-     *
-     * @param currentTimePeriodsElapsed_ The current number of time periods elapsed.
+     * @inheritdoc IMultiTokenVault
      */
     function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public virtual onlyOwner {
         _currentTimePeriodsElapsed = currentTimePeriodsElapsed_;
     }
 
     /**
-     * @dev Returns the ERC-20 underlying asset address used in the vault.
-     *
-     * @return asset The ERC-20 underlying asset address.
+     * @inheritdoc IMultiTokenVault
      */
     function asset() public view virtual returns (address) {
         return address(ASSET);
     }
 
     /**
-     * @dev Returns the shares held by the owner for deposit period.
-     *
-     * @param owner The owner address hold the shares.
-     * @param depositPeriod The time period in which the user hold the shares.
-     *
-     * @return shares The total amount of ERC-1155 shares that is held by the owner.
+     * @inheritdoc IMultiTokenVault
      */
     function sharesAtPeriod(address owner, uint256 depositPeriod) public view returns (uint256 shares) {
         return balanceOf(owner, depositPeriod);
     }
 
     /**
-     * @dev Returns the maximum amount of the underlying asset that can be deposited into
-     *      the vault for the receiver at the current period.
+     * @inheritdoc IMultiTokenVault
      */
     function maxDeposit(address) public view virtual returns (uint256) {
         return type(uint256).max;
     }
 
     /**
-     * @dev Converts assets to shares for the deposit period.
-     *
-     * @param assets The amount of the ERC-20 underlying assets to be converted.
-     * @param depositPeriod The time period in which the assets are converted.
-     *
-     * @return shares The amount of equivalent ERC-1155 shares.
+     * @inheritdoc IMultiTokenVault
      */
     function convertToSharesForDepositPeriod(uint256 assets, uint256 depositPeriod)
         public
@@ -185,49 +143,28 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
         returns (uint256 shares);
 
     /**
-     * @dev Converts assets to shares at the current period.
-     *
-     * @param assets The amount of the ERC-20 underlying assets to be converted.
-     *
-     * @return shares The amount of equivalent ERC-1155 shares.
+     * @inheritdoc IMultiTokenVault
      */
     function convertToShares(uint256 assets) public view virtual returns (uint256 shares) {
         return convertToSharesForDepositPeriod(assets, currentTimePeriodsElapsed());
     }
 
     /**
-     * @dev Simulate the deposit of the underlying assets into the vault and return
-     *      the equivalent amount of shares for the current period.
-     *
-     * @param assets The amount of the ERC-20 underlying assets to be deposited.
-     *
-     * @return shares The amount of ERC-1155 tokens minted.
+     * @inheritdoc IMultiTokenVault
      */
     function previewDeposit(uint256 assets) public view override returns (uint256 shares) {
         shares = convertToShares(assets);
     }
 
     /**
-     * @dev Returns the maximum amount of Vault shares that can be redeemed from
-     *      the owner at the deposit period, through a redeem call.
-     *
-     * @param owner The address of the owner that hold the assets.
-     * @param depositPeriod The time period in which the redeem is called.
-     *
-     * @return maxShares The maximum amount of ERC-1155 tokens can be minted.
+     * @inheritdoc IMultiTokenVault
      */
     function maxRedeemAtPeriod(address owner, uint256 depositPeriod) public view virtual returns (uint256 maxShares) {
         return balanceOf(owner, depositPeriod);
     }
 
     /**
-     * @dev Converts shares to assets for deposit period and redeem period.
-     *
-     * @param shares The amount of ERC-1155 tokens to be converted.
-     * @param depositPeriod The time period in which the shares has been minted.
-     * @param redeemPeriod The time period in which the shares are converted.
-     *
-     * @return assets The equivalent amount of the ERC-20 underlying asset.
+     * @inheritdoc IMultiTokenVault
      */
     function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
         public
@@ -236,12 +173,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
         returns (uint256 assets);
 
     /**
-     * @dev Converts shares to assets for deposit period at the current redeem period.
-     *
-     * @param shares The amount of ERC-1155 tokens to be converted.
-     * @param depositPeriod The time period in which the shares has been minted.
-     *
-     * @return assets The equivalent amount of the ERC-20 underlying asset.
+     * @inheritdoc IMultiTokenVault
      */
     function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
         public
@@ -253,14 +185,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     }
 
     /**
-     * @dev Returns the amount of assets that will be redeemed for a given amount of
-     *      shares at depositPeriod and redeemPeriod.
-     *
-     * @param shares The amount of ERC-1155 tokens to redeem.
-     * @param depositPeriod The time period in which the shares has been minted.
-     * @param redeemPeriod The time period in which the shares are redeemed.
-     *
-     * @return assets The equivalent amount of the ERC-20 underlying asset.
+     * @inheritdoc IMultiTokenVault
      */
     function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
         public
@@ -272,12 +197,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     }
 
     /**
-     * @dev Returns the amount of assets that will be redeemed for a given amount of shares at a depositPeriod.
-     *
-     * @param shares The amount of the ERC-1155 tokens to redeem.
-     * @param depositPeriod The deposit period in which the shares were issued.
-     *
-     * @return assets The equivalent amount of the ERC-20 underlying assets.
+     * @inheritdoc IMultiTokenVault
      */
     function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod)
         public
@@ -289,9 +209,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     }
 
     /**
-     * @dev Returns the current number of time periods elapsed.
-     *
-     * @return _currentTimePeriodsElapsed The current number of time periods elapsed.
+     * @inheritdoc IMultiTokenVault
      */
     function currentTimePeriodsElapsed() public view virtual returns (uint256) {
         return _currentTimePeriodsElapsed;
@@ -303,6 +221,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      *      and delegates to the super class for any other interface support checks.
      *
      * @param interfaceId The identifier of the interface to check for support.
+     *
      * @return bool True if the contract supports the requested interface.
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165, ERC1155) returns (bool) {
