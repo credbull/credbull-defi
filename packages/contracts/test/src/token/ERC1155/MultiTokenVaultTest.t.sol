@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
-import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
-import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
+import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
+import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
+import { IMultiTokenVaultTestBase } from "./IMultiTokenVaultTestBase.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 

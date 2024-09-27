@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { ERC1155MintableBurnable } from "@test/test/interest/ERC1155MintableBurnable.t.sol";
+import { ERC1155MintableBurnable } from "@test/test/token/ERC1155/ERC1155MintableBurnable.t.sol";
 import { SimpleTimelockAsyncUnlock } from "@test/test/timelock/SimpleTimelockAsyncUnlock.t.sol";
-import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
+import { IERC5679Ext1155 } from "@credbull/token/ERC1155/IERC5679Ext1155.sol";
 
 import { Deposit } from "@test/src/timelock/TimelockTest.t.sol";
 import { Test } from "forge-std/Test.sol";

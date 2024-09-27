@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
-import { IERC5679Ext1155 } from "@credbull/interest/IERC5679Ext1155.sol";
+import { IERC5679Ext1155 } from "@credbull/token/ERC1155/IERC5679Ext1155.sol";
 import { TimerCheats } from "@test/test/timelock/TimerCheats.t.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 

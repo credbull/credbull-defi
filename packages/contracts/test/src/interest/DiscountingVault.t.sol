@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { CalcDiscounted } from "@credbull/interest/CalcDiscounted.sol";
 import { CalcInterestMetadata } from "@credbull/interest/CalcInterestMetadata.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
-import { MultiTokenVault } from "@credbull/interest/MultiTokenVault.sol";
+import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";

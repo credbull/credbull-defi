@@ -2,13 +2,13 @@
 pragma solidity ^0.8.20;
 
 import { DiscountingVault } from "@test/src/interest/DiscountingVault.t.sol";
-import { IMultiTokenVault } from "@credbull/interest/IMultiTokenVault.sol";
+import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IYieldStrategy } from "@credbull/strategy/IYieldStrategy.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/strategy/SimpleInterestYieldStrategy.sol";
 
 import { Frequencies } from "@test/src/interest/Frequencies.t.sol";
 
-import { IMultiTokenVaultTestBase } from "@test/src/interest/IMultiTokenVaultTestBase.t.sol";
+import { IMultiTokenVaultTestBase } from "@test/src/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
