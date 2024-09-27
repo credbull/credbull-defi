@@ -215,6 +215,9 @@ contract TimelockAsyncUnlockTest is Test {
 
         uint256 totalDeposits = depositAmount1 + depositAmount2;
         assertEq(totalDeposits, asyncUnlock.lockedAmount(alice, depositPeriod), "deposit not locked");
+        assertEq(0, asyncUnlock.unlockedAmount(alice, depositPeriod), "nothing should be unlocked");
+        assertEq(totalDeposits, asyncUnlock.maxRequestUnlock(alice, depositPeriod), "maxRequestUnlock should be total");
+        assertEq(totalDeposits, asyncUnlock.maxUnlock(alice, depositPeriod), "maxUnlock should be total");
 
         // request unlock at exactly depositPeriod + noticePeriod
         uint256 unlockPeriod1 = depositPeriod + NOTICE_PERIOD;
@@ -231,6 +234,14 @@ contract TimelockAsyncUnlockTest is Test {
             asyncUnlock.unlockRequested(alice, depositPeriod).amount,
             "unlockRequest should have partial amount 1"
         );
+        assertEq(totalDeposits, asyncUnlock.lockedAmount(alice, depositPeriod), "deposit not locked");
+        assertEq(0, asyncUnlock.unlockedAmount(alice, depositPeriod), "nothing should be unlocked");
+        assertEq(
+            totalDeposits - partialUnlockAmount1,
+            asyncUnlock.maxRequestUnlock(alice, depositPeriod),
+            "maxRequestUnlock incorrect - unlockPeriod1"
+        );
+        assertEq(totalDeposits, asyncUnlock.maxUnlock(alice, depositPeriod), "maxUnlock should be total");
 
         // request to unlock the remainder
         vm.prank(alice);
@@ -256,6 +267,14 @@ contract TimelockAsyncUnlockTest is Test {
             asyncUnlock.unlockRequested(alice, depositPeriod).amount,
             "unlockRequest should have partial amount 2"
         );
+        assertEq(totalDeposits, asyncUnlock.lockedAmount(alice, depositPeriod), "deposit not locked");
+        assertEq(0, asyncUnlock.unlockedAmount(alice, depositPeriod), "nothing should be unlocked");
+        assertEq(
+            totalDeposits - partialUnlockAmount2,
+            asyncUnlock.maxRequestUnlock(alice, depositPeriod),
+            "maxRequestUnlock incorrect - unlockPeriod2"
+        );
+        assertEq(totalDeposits, asyncUnlock.maxUnlock(alice, depositPeriod), "maxUnlock should be total");
 
         // now unlock
         vm.prank(alice);
@@ -266,6 +285,17 @@ contract TimelockAsyncUnlockTest is Test {
             totalDeposits - partialUnlockAmount2,
             asyncUnlock.lockedAmount(alice, depositPeriod),
             "deposit lock not released"
+        );
+        assertEq(0, asyncUnlock.unlockedAmount(alice, depositPeriod), "nothing should be unlocked"); // there's no unlocked state per-se
+        assertEq(
+            totalDeposits - partialUnlockAmount2,
+            asyncUnlock.maxRequestUnlock(alice, depositPeriod),
+            "maxRequestUnlock incorrect residual"
+        );
+        assertEq(
+            totalDeposits - partialUnlockAmount2,
+            asyncUnlock.maxUnlock(alice, depositPeriod),
+            "maxUnlock should be residual"
         );
     }
 }

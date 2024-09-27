@@ -22,7 +22,12 @@ contract SimpleTimelockAsyncUnlock is TimelockAsyncUnlock, TimerCheats {
     }
 
     /// @notice Returns the amount of tokens locked for `account` at the given `depositPeriod`.
-    function lockedAmount(address account, uint256 depositPeriod) public view returns (uint256 lockedAmount_) {
+    function lockedAmount(address account, uint256 depositPeriod)
+        public
+        view
+        override
+        returns (uint256 lockedAmount_)
+    {
         return DEPOSITS.balanceOf(account, depositPeriod);
     }
 

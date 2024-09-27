@@ -83,6 +83,8 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
     {
         UnlockItem storage unlockRequest = _unlockRequests[depositPeriod][tokenOwner];
 
+        //        uint256 maxUnlock_ = maxUnlock(tokenOwner, depositPeriod);
+
         if (unlockRequest.amount > 0 && unlockRequest.unlockPeriod == unlockPeriod) {
             // Add to the existing unlock request if the unlockPeriod is the same
             unlockRequest.amount += amount;
@@ -120,13 +122,20 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
         _updateLockAfterUnlock(tokenOwner, depositPeriod, amount);
     }
 
-    /// @notice Unlocks `amount` of tokens for `account` from the given `depositPeriod`.
-    function unlock(address account, uint256 depositPeriod, uint256 amount) public virtual override {
-        unlock(account, depositPeriod, currentPeriod(), amount);
+    /// @notice Unlocks `amount` of tokens for `tokenOwner` from the given `depositPeriod`.
+    function unlock(address tokenOwner, uint256 depositPeriod, uint256 amount) public virtual override {
+        unlock(tokenOwner, depositPeriod, currentPeriod(), amount);
     }
 
     /// @dev there's no "unlocked" state.  deposits are locked => requested to be unlocked => redeemed
-    function unlockedAmount(address, /* account */ uint256 /* depositPeriod */ )
+    function lockedAmount(address, /* tokenOwner */ uint256 /* depositPeriod */ )
+        public
+        view
+        virtual
+        returns (uint256 lockedAmount_);
+
+    /// @dev there's no "unlocked" state.  deposits are locked => requested to be unlocked => redeemed
+    function unlockedAmount(address, /* tokenOwner */ uint256 /* depositPeriod */ )
         public
         view
         virtual
@@ -137,20 +146,43 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
     }
 
     /// @dev there's no "unlocked" state.  deposits are locked => requested to be unlocked => redeemed
-    function unlockRequested(address account, uint256 depositPeriod)
+    function unlockRequested(address tokenOwner, uint256 depositPeriod)
         public
         view
         virtual
         returns (UnlockItem memory requestUnlockItem_)
     {
-        return _unlockRequests[depositPeriod][account];
+        return _unlockRequests[depositPeriod][tokenOwner];
+    }
+
+    /// @notice Returns the max amount that can be REQUESTED to be unlocked for `account` at `depositPeriod`.
+    /// @notice Returns the max amount that can be REQUESTED to be unlocked for `account` at `depositPeriod`.
+    function maxRequestUnlock(address tokenOwner, uint256 depositPeriod)
+        public
+        view
+        virtual
+        returns (uint256 maxRequestUnlockAmount)
+    {
+        UnlockItem memory unlockRequestAmount = _unlockRequests[depositPeriod][tokenOwner];
+
+        return maxUnlock(tokenOwner, depositPeriod) - unlockRequestAmount.amount;
+    }
+
+    /// @notice Returns the max amount that can be unlocked for `account` at `lockReleasePeriod`.
+    function maxUnlock(address tokenOwner, uint256 depositPeriod)
+        public
+        view
+        virtual
+        returns (uint256 maxUnlockAmount)
+    {
+        return lockedAmount(tokenOwner, depositPeriod) - unlockedAmount(tokenOwner, depositPeriod);
     }
 
     /// @notice Returns the current period.
     function currentPeriod() public view virtual returns (uint256 currentPeriod_);
 
     /// @notice Process the lock after successful unlocking
-    function _updateLockAfterUnlock(address account, uint256 depositPeriod, uint256 amount) internal virtual;
+    function _updateLockAfterUnlock(address tokenOwner, uint256 depositPeriod, uint256 amount) internal virtual;
 
     function _emptyBytesArray() internal pure returns (bytes[] memory) {
         return new bytes[](0);
