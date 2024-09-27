@@ -30,10 +30,10 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     error MultiTokenVault__ExceededMaxDeposit(
         address receiver, uint256 depositPeriod, uint256 assets, uint256 maxAssets
     );
-
     error MultiTokenVault__RedeemTimePeriodNotSupported(address owner, uint256 period, uint256 redeemPeriod);
     error MultiTokenVault__CallerMissingApprovalForAll(address operator, address owner);
     error MultiTokenVault__RedeemBeforeDeposit(address owner, uint256 depositPeriod, uint256 redeemPeriod);
+    error MultiTokenVault__NotERC1155Holder(address receiver);
 
     /**
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
@@ -71,10 +71,9 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
 
         // Check if the receiver is a contract and supports IERC1155Receiver
         if (receiver.code.length > 0) {
-            require(
-                IERC165(receiver).supportsInterface(type(IERC1155Receiver).interfaceId),
-                "MultiTokenVault: Receiver does not implement IERC1155Receiver"
-            );
+            if (!IERC165(receiver).supportsInterface(type(IERC1155Receiver).interfaceId)) {
+                revert MultiTokenVault__NotERC1155Holder(receiver);
+            }
         }
 
         shares = previewDeposit(assets);
