@@ -23,13 +23,6 @@ interface IMultiTokenVault is IERC1155 {
     );
 
     /**
-     * @dev Returns the total amount of the underlying asset that is managed by vault.
-     *
-     * @return totalAssets The total amount of the underlying asset that is managed by vault.
-     */
-    function totalAssets() external view returns (uint256);
-
-    /**
      * @dev Deposits assets into the vault and mints shares for the current time period.
      *
      * @param assets The amount of the ERC-20 underlying assets to be deposited into the vault.
@@ -90,6 +83,13 @@ interface IMultiTokenVault is IERC1155 {
      * @return asset The ERC-20 underlying asset address.
      */
     function asset() external view returns (address);
+
+    /**
+     * @dev Returns the total amount of the underlying asset that is managed by vault.
+     *
+     * @return totalAssets The total amount of the underlying asset that is managed by vault.
+     */
+    function totalAssets() external view returns (uint256);
 
     /**
      * @dev Returns the shares held by the owner for deposit period.
@@ -204,8 +204,6 @@ interface IMultiTokenVault is IERC1155 {
         external
         view
         returns (uint256 assets);
-
-    // =============== Operational ===============
 
     /**
      * @dev Returns the current number of time periods elapsed.

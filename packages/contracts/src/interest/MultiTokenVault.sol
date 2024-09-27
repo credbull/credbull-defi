@@ -45,13 +45,6 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     /**
      * @inheritdoc IMultiTokenVault
      */
-    function totalAssets() external view returns (uint256) {
-        return ASSET.balanceOf(address(this));
-    }
-
-    /**
-     * @inheritdoc IMultiTokenVault
-     */
     function deposit(uint256 assets, address receiver) public virtual override nonReentrant returns (uint256 shares) {
         uint256 maxAssets = maxDeposit(receiver);
         uint256 depositPeriod = currentTimePeriodsElapsed();
@@ -117,6 +110,13 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      */
     function asset() public view virtual returns (address) {
         return address(ASSET);
+    }
+
+    /**
+     * @inheritdoc IMultiTokenVault
+     */
+    function totalAssets() public view returns (uint256) {
+        return ASSET.balanceOf(address(this));
     }
 
     /**
