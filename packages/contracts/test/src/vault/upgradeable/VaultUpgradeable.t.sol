@@ -16,14 +16,26 @@ import { console2 } from "forge-std/console2.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
 contract SimpleVaultUpgradeable is VaultUpgradeable {
+    uint256 public stateVariable;
+
     function withdrawERC20(address[] calldata _tokens, address _to) external {
         _withdrawERC20(_tokens, _to);
+    }
+
+    function setVariable() public {
+        stateVariable = 1;
     }
 }
 
 contract SimpleVaultUpgradeableV2 is SimpleVaultUpgradeable {
+    uint256 public newStateVariable;
+
     function newVersionMethod() external pure returns (string memory) {
         return "v2";
+    }
+
+    function setVariableNew() public {
+        newStateVariable = 2;
     }
 }
 
@@ -69,6 +81,7 @@ contract VaultUpgradeableTest is Test {
         console2.log("Proxy address: ", address(vaultProxy));
 
         vault = SimpleVaultUpgradeable(address(vaultProxy));
+        vault.setVariable();
     }
 
     function test__VaultUpgradeable__initialize() public {
@@ -109,5 +122,18 @@ contract VaultUpgradeableTest is Test {
         vm.stopPrank();
 
         assertEq(vaultV2.totalAssetDeposited(), amount * 2);
+    }
+
+    function test__VaultUpgradeable__StorageVariable() public {
+        uint256 valueBeforeUpgrade = vault.stateVariable();
+        console2.log("value before upgrade", valueBeforeUpgrade);
+
+        SimpleVaultUpgradeableV2 newVault = new SimpleVaultUpgradeableV2();
+        vault.upgradeToAndCall(address(newVault), "");
+        SimpleVaultUpgradeableV2 vaultv2 = SimpleVaultUpgradeableV2(address(vault));
+        vaultv2.setVariableNew();
+
+        uint256 valueAfterUpgrade = vaultv2.newStateVariable();
+        console2.log("value after upgrade", valueAfterUpgrade);
     }
 }
