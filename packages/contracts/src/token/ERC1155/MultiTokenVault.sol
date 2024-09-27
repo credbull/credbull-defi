@@ -50,7 +50,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
 
         shares = previewDeposit(assets);
 
-        _deposit(assets, receiver, _msgSender(), depositPeriod, shares);
+        _deposit(_msgSender(), receiver, depositPeriod, assets, shares);
     }
 
     /**
@@ -79,7 +79,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
 
         assets = previewRedeemForDepositPeriod(shares, depositPeriod, redeemPeriod);
 
-        _withdraw(shares, receiver, owner, _msgSender(), depositPeriod, assets);
+        _withdraw(_msgSender(), receiver, owner, depositPeriod, assets, shares);
     }
 
     /**
@@ -218,13 +218,13 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      * @dev An internal function to implement the functionality of depositing assets into the vault
      *      and mints shares for the current time period.
      *
-     * @param assets The amount of the ERC-20 underlying assets to be deposited into the vault.
-     * @param receiver The address that will receive the minted shares.
      * @param caller The address of who is depositing the assets.
+     * @param receiver The address that will receive the minted shares.
      * @param depositPeriod The time period in which the assets are deposited.
+     * @param assets The amount of the ERC-20 underlying assets to be deposited into the vault.
      * @param shares The amount of ERC-1155 tokens minted.
      */
-    function _deposit(uint256 assets, address receiver, address caller, uint256 depositPeriod, uint256 shares)
+    function _deposit(address caller, address receiver, uint256 depositPeriod, uint256 assets, uint256 shares)
         internal
         virtual
     {
@@ -238,20 +238,20 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      *      while the redemption happens at the defined redeem period
      *      And return the equivalent amount of assets to the receiver.
      *
-     * @param shares The amount of the ERC-1155 tokens to redeem.
+     * @param caller The address of who is redeeming the shares.
      * @param receiver The address that will receive the minted shares.
      * @param owner The address that owns the minted shares.
-     * @param caller The address of who is redeeming the shares.
      * @param depositPeriod The deposit period in which the shares were minted.
      * @param assets The equivalent amount of the ERC-20 underlying assets.
+     * @param shares The amount of the ERC-1155 tokens to redeem.
      */
     function _withdraw(
-        uint256 shares,
+        address caller,
         address receiver,
         address owner,
-        address caller,
         uint256 depositPeriod,
-        uint256 assets
+        uint256 assets,
+        uint256 shares
     ) internal virtual {
         if (caller != owner && isApprovedForAll(owner, caller)) {
             revert MultiTokenVault__CallerMissingApprovalForAll(caller, owner);
