@@ -27,11 +27,12 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
         uint256 interestRatePercentageScaled;
         uint256 frequency;
         uint256 tenor;
+        address initialOwner;
     }
 
     /// @notice Initializes the DiscountingVault.
     constructor(DiscountingVaultParams memory params)
-        MultiTokenVault(params.asset)
+        MultiTokenVault(params.asset, params.initialOwner)
         CalcInterestMetadata(params.interestRatePercentageScaled, params.frequency, params.asset.decimals())
     {
         YIELD_STRATEGY = params.yieldStrategy;
