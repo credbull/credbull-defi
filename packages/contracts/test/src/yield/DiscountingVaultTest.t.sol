@@ -39,8 +39,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             yieldStrategy: yieldStrategy,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
-            tenor: 30,
-            initialOwner: owner
+            tenor: 30
         });
 
         DiscountingVault vault = new DiscountingVault(params);
@@ -63,8 +62,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             yieldStrategy: yieldStrategy,
             interestRatePercentageScaled: 12 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.MONTHLY),
-            tenor: 3,
-            initialOwner: owner
+            tenor: 3
         });
 
         DiscountingVault vault = new DiscountingVault(params);
@@ -81,8 +79,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             yieldStrategy: yieldStrategy,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
-            tenor: 30,
-            initialOwner: owner
+            tenor: 30
         });
 
         uint256 deposit = 50_000 * SCALE;
@@ -105,8 +102,7 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
             yieldStrategy: yieldStrategy,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
-            tenor: 30,
-            initialOwner: owner
+            tenor: 30
         });
 
         uint256 deposit = 100 * SCALE;
@@ -137,5 +133,9 @@ contract DiscountingVaultTest is IMultiTokenVaultTestBase {
         return yieldStrategy.calcYield(
             address(vault), testParams.principal, testParams.depositPeriod, testParams.redeemPeriod
         );
+    }
+
+    function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
+        DiscountingVault(address(vault)).setCurrentTimePeriodsElapsed(timePeriod);
     }
 }

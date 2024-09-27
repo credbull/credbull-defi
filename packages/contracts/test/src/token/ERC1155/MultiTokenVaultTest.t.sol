@@ -3,11 +3,13 @@ pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
-import { IMultiTokenVaultTestBase } from "./IMultiTokenVaultTestBase.t.sol";
+import { IMultiTokenVaultTestBase } from "@test/src/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
+import { TimerCheats } from "@test/test/timelock/TimerCheats.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
     IERC20Metadata private asset;
@@ -28,10 +30,18 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         deposit2TestParams = IMultiTokenVaultTestParams({ principal: 300 * SCALE, depositPeriod: 15, redeemPeriod: 17 });
     }
 
+    function test__MultiTokenVaulTest__Period10() public {
+        uint256 assetToSharesRatio = 1;
+
+        MultiTokenVault vault = new MultiTokenVaultDailyPeriods(asset, assetToSharesRatio, 10);
+
+        _testVaultAtPeriod(vault, deposit1TestParams);
+    }
+
     function test__MultiTokenVaulTest__SimpleDeposit() public {
         uint256 assetToSharesRatio = 1;
 
-        MultiTokenVault vault = new SimpleMultiTokenVault(asset, assetToSharesRatio, 10, owner);
+        MultiTokenVault vault = new MultiTokenVaultDailyPeriods(asset, assetToSharesRatio, 10);
 
         address vaultAddress = address(vault);
 
@@ -59,7 +69,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         uint256 assetToSharesRatio = 2;
 
         // setup
-        MultiTokenVault vault = new SimpleMultiTokenVault(asset, assetToSharesRatio, 10, owner);
+        MultiTokenVault vault = new MultiTokenVaultDailyPeriods(asset, assetToSharesRatio, 10);
         uint256 assetBalanceBeforeDeposits = asset.balanceOf(alice); // the asset balance from the start
 
         // verify deposit - period 1
@@ -125,18 +135,23 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         IMultiTokenVault vault,
         IMultiTokenVaultTestParams memory testParams
     ) internal view override returns (uint256 expectedReturns_) {
-        SimpleMultiTokenVault simpleMultitokenVault = SimpleMultiTokenVault(address(vault));
+        return MultiTokenVaultDailyPeriods(address(vault)).calcYield(
+            testParams.principal, testParams.depositPeriod, testParams.redeemPeriod
+        );
+    }
 
-        return simpleMultitokenVault.calcYield(testParams.principal, testParams.depositPeriod, testParams.redeemPeriod);
+    function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
+        MultiTokenVaultDailyPeriods(address(vault)).setCurrentTimePeriodsElapsed(timePeriod);
     }
 }
 
-contract SimpleMultiTokenVault is MultiTokenVault {
+contract MultiTokenVaultDailyPeriods is MultiTokenVault, TimerCheats {
     uint256 internal immutable ASSET_TO_SHARES_RATIO;
     uint256 internal immutable YIELD_PERCENTAGE;
 
-    constructor(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage, address initialOwner)
-        MultiTokenVault(asset, initialOwner)
+    constructor(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage)
+        MultiTokenVault(asset)
+        TimerCheats(SafeCast.toUint48(block.timestamp))
     {
         ASSET_TO_SHARES_RATIO = assetToSharesRatio;
         YIELD_PERCENTAGE = yieldPercentage;
@@ -168,5 +183,19 @@ contract SimpleMultiTokenVault is MultiTokenVault {
         returns (uint256 shares)
     {
         return assets / ASSET_TO_SHARES_RATIO;
+    }
+
+    function currentTimePeriodsElapsed() public view override returns (uint256) {
+        return elapsed24Hours();
+    }
+
+    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public {
+        warp24HourPeriods(SafeCast.toUint48(currentTimePeriodsElapsed_));
+
+        if (currentTimePeriodsElapsed() != currentTimePeriodsElapsed_) {
+            revert Timer__ERC6372InconsistentClock(
+                SafeCast.toUint48(currentTimePeriodsElapsed()), SafeCast.toUint48(currentTimePeriodsElapsed_)
+            );
+        }
     }
 }

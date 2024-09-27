@@ -6,7 +6,6 @@ import { ERC1155Supply, ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ex
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 /**
@@ -16,11 +15,8 @@ import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol
  *      of time periods that have elapsed and allows users to deposit and redeem assets based on these periods.
  *      Designed to be secure and production-ready for Hacken audit.
  */
-abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, ReentrancyGuard, Ownable {
+abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, ReentrancyGuard {
     using SafeERC20 for IERC20;
-
-    /// @notice Tracks the number of time periods that have elapsed.
-    uint256 internal _currentTimePeriodsElapsed;
 
     /// @notice The ERC20 token used as the underlying asset in the vault.
     IERC20 private immutable ASSET;
@@ -36,9 +32,8 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     /**
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
      * @param asset_ The ERC20 token representing the underlying asset.
-     * @param initialOwner The owner of the contract.
      */
-    constructor(IERC20 asset_, address initialOwner) ERC1155("") Ownable(initialOwner) {
+    constructor(IERC20 asset_) ERC1155("") {
         ASSET = asset_;
     }
 
@@ -96,13 +91,6 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
         returns (uint256)
     {
         return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentTimePeriodsElapsed());
-    }
-
-    /**
-     * @inheritdoc IMultiTokenVault
-     */
-    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public virtual onlyOwner {
-        _currentTimePeriodsElapsed = currentTimePeriodsElapsed_;
     }
 
     /**
@@ -211,9 +199,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     /**
      * @inheritdoc IMultiTokenVault
      */
-    function currentTimePeriodsElapsed() public view virtual returns (uint256) {
-        return _currentTimePeriodsElapsed;
-    }
+    function currentTimePeriodsElapsed() public view virtual returns (uint256);
 
     /**
      * @dev Returns true if this contract implements the interface defined by `interfaceId`.

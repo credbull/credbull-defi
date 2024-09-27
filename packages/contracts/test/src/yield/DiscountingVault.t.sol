@@ -19,18 +19,20 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
     IYieldStrategy public immutable YIELD_STRATEGY;
     uint256 public immutable TENOR;
 
+    /// @notice Tracks the number of time periods that have elapsed.
+    uint256 internal _currentTimePeriodsElapsed;
+
     struct DiscountingVaultParams {
         IERC20Metadata asset;
         IYieldStrategy yieldStrategy;
         uint256 interestRatePercentageScaled;
         uint256 frequency;
         uint256 tenor;
-        address initialOwner;
     }
 
     /// @notice Initializes the DiscountingVault.
     constructor(DiscountingVaultParams memory params)
-        MultiTokenVault(params.asset, params.initialOwner)
+        MultiTokenVault(params.asset)
         CalcInterestMetadata(params.interestRatePercentageScaled, params.frequency, params.asset.decimals())
     {
         YIELD_STRATEGY = params.yieldStrategy;
@@ -85,5 +87,16 @@ contract DiscountingVault is MultiTokenVault, CalcInterestMetadata {
 
         uint256 principal = _convertToPrincipalAtDepositPeriod(shares, depositPeriod);
         return principal + calcYield(principal, depositPeriod, redeemPeriod);
+    }
+
+    /**
+     * @inheritdoc MultiTokenVault
+     */
+    function currentTimePeriodsElapsed() public view override returns (uint256) {
+        return _currentTimePeriodsElapsed;
+    }
+
+    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public {
+        _currentTimePeriodsElapsed = currentTimePeriodsElapsed_;
     }
 }

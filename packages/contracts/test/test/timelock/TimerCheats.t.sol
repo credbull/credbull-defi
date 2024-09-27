@@ -21,6 +21,7 @@ contract TimerCheats is Timer {
     }
 
     function warp24HourPeriods(uint48 numPeriods) public {
-        cheatTimestamp += numPeriods * 24 hours;
+        // use startTime as our "epoch" - warp 24 hour periods from that
+        cheatTimestamp = (startTime + numPeriods * 24 hours);
     }
 }
