@@ -7,7 +7,8 @@ import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title LiquidAsyncRedeemMultiTokenVault
@@ -24,7 +25,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  *
  */
 contract LiquidContinuousMultiTokenVault is MultiTokenVault, TimelockAsyncUnlock, Timer, CalcInterestMetadata {
-    using Math for uint256;
+    using SafeERC20 for IERC20;
 
     IYieldStrategy public immutable YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
 
@@ -41,10 +42,10 @@ contract LiquidContinuousMultiTokenVault is MultiTokenVault, TimelockAsyncUnlock
     }
 
     constructor(VaultParams memory params)
-        MultiTokenVault(params.asset)
-        Timer(params.vaultStartTimestamp)
-        TimelockAsyncUnlock(params.redeemNoticePeriod)
-        CalcInterestMetadata(params.interestRatePercentageScaled, params.frequency, params.asset.decimals())
+    MultiTokenVault(params.asset)
+    Timer(params.vaultStartTimestamp)
+    TimelockAsyncUnlock(params.redeemNoticePeriod)
+    CalcInterestMetadata(params.interestRatePercentageScaled, params.frequency, params.asset.decimals())
     {
         YIELD_STRATEGY = params.yieldStrategy;
 
@@ -65,10 +66,10 @@ contract LiquidContinuousMultiTokenVault is MultiTokenVault, TimelockAsyncUnlock
 
     /// @inheritdoc MultiTokenVault
     function convertToSharesForDepositPeriod(uint256 assets, uint256 /* depositPeriod */ )
-        public
-        view
-        override
-        returns (uint256 shares)
+    public
+    view
+    override
+    returns (uint256 shares)
     {
         if (assets < SCALE) return 0; // no shares for fractional principal
 
@@ -77,10 +78,10 @@ contract LiquidContinuousMultiTokenVault is MultiTokenVault, TimelockAsyncUnlock
 
     /// @inheritdoc MultiTokenVault
     function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
-        public
-        view
-        override
-        returns (uint256 assets)
+    public
+    view
+    override
+    returns (uint256 assets)
     {
         if (shares < SCALE) return 0; // no assets for fractional shares
 
@@ -101,9 +102,43 @@ contract LiquidContinuousMultiTokenVault is MultiTokenVault, TimelockAsyncUnlock
         uint256 depositPeriod,
         uint256 redeemPeriod
     ) public virtual override returns (uint256 assets) {
-        //unlock(owner, depositPeriod, shares); // TODO - add unlock here
+        unlock(owner, depositPeriod, redeemPeriod, shares);
 
         return super.redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemPeriod);
+    }
+
+    function redeemPrincipal(
+        address receiver,
+        address tokenOwner,
+        uint256 depositPeriod,
+        uint256 unlockPeriod,
+        uint256 principal
+    ) public {
+        redeemForDepositPeriod(principal, receiver, tokenOwner, depositPeriod, unlockPeriod);
+
+        // TODO - emit redeem redeem principal
+    }
+
+    function redeemYieldOnly(
+        address receiver,
+        address tokenOwner,
+        uint256 depositPeriod,
+        uint256 unlockPeriod,
+        uint256 principal
+    ) public nonReentrant {
+        // only unlock the yield
+        uint256 yield = calcYield(principal, depositPeriod, unlockPeriod);
+
+        unlock(tokenOwner, depositPeriod, unlockPeriod, yield);
+
+        // TODO - check the rights here - users shouldn't be able to mint
+        // move the lock by burning and minting/locking in a new period
+        _burn(tokenOwner, depositPeriod, principal);
+        _mint(tokenOwner, currentPeriod(), principal, "");
+
+        assetIERC20().safeTransfer(receiver, yield);
+
+        // TODO - emit redeem redeem yield event
     }
 
     /// @notice Locks `amount` of tokens for `account` at the given `depositPeriod`.
@@ -113,20 +148,20 @@ contract LiquidContinuousMultiTokenVault is MultiTokenVault, TimelockAsyncUnlock
 
     /// @notice Returns the amount of tokens locked for `account` at the given `depositPeriod`.
     function lockedAmount(address account, uint256 depositPeriod)
-        public
-        view
-        override
-        returns (uint256 lockedAmount_)
+    public
+    view
+    override
+    returns (uint256 lockedAmount_)
     {
         return balanceOf(account, depositPeriod);
     }
 
     // TODO - need to decide does unlock call redeem or vice-versa ?
     function _updateLockAfterUnlock(address, /* account */ uint256, /* depositPeriod */ uint256 amount)
-        internal
-        virtual
-        override
-    // solhint-disable-next-line no-empty-blocks
+    internal
+    virtual
+    override
+        // solhint-disable-next-line no-empty-blocks
     { }
 
     /// @inheritdoc TimelockAsyncUnlock
