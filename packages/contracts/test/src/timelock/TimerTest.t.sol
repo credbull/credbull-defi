@@ -5,7 +5,7 @@ import { Timer } from "@credbull/timelock/Timer.sol";
 import { Test } from "forge-std/Test.sol";
 
 contract TimerTest is Test {
-    uint48 public constant START_TIME = 1704110460000; // Jan 1, 2024 at 12:01pm UTC
+    uint256 public constant START_TIME = 1704110460000; // Jan 1, 2024 at 12:01pm UTC
 
     Timer private clock;
 
@@ -19,14 +19,14 @@ contract TimerTest is Test {
     }
 
     function test__Clock__Consistency() public {
-        uint48 initialTimestamp = clock.clock();
+        uint256 initialTimestamp = clock.timestamp();
         uint256 offsetSeconds = 1000;
 
         vm.warp(block.timestamp + offsetSeconds);
 
-        uint48 newTimestamp = clock.clock();
-        assertEq(newTimestamp, initialTimestamp + offsetSeconds);
-        assertEq(newTimestamp, uint48(block.timestamp));
+        assertEq(clock.timestamp(), initialTimestamp + offsetSeconds);
+        assertEq(clock.timestamp(), block.timestamp);
+        assertEq(clock.clock(), uint48(block.timestamp));
     }
 
     function test__Clock__ElapsedTime() public {

@@ -64,7 +64,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         virtual
         returns (uint256 actualSharesAtPeriod, uint256 actualAssetsAtPeriod)
     {
-        uint256 prevVaultPeriodsElapsed = vault.currentTimePeriodsElapsed(); // save previous state for later
+        uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed(); // save previous state for later
 
         // ------------------- check toShares/toAssets - specified period -------------------
         actualSharesAtPeriod = vault.convertToSharesForDepositPeriod(testParams.principal, testParams.depositPeriod);
@@ -105,7 +105,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         virtual
         returns (uint256 actualSharesAtPeriod, uint256 actualAssetsAtPeriod)
     {
-        uint256 prevVaultPeriodsElapsed = vault.currentTimePeriodsElapsed();
+        uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
 
         // ------------------- check previewDeposit/previewRedeem - current period -------------------
         _warpToPeriod(vault, testParams.depositPeriod); // warp to deposit
@@ -143,7 +143,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         IERC20 asset = IERC20(vault.asset());
 
         // capture state before for validations
-        uint256 prevVaultPeriodsElapsed = vault.currentTimePeriodsElapsed();
+        uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
         uint256 prevReceiverAssetBalance = asset.balanceOf(receiver);
 
         // ------------------- deposit -------------------
@@ -168,7 +168,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
         // capture state before for validations
         vm.startPrank(owner);
-        uint256 prevVaultPeriodsElapsed = vault.currentTimePeriodsElapsed();
+        uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
         vm.stopPrank();
         uint256 prevReceiverVaultBalance = vault.sharesAtPeriod(receiver, testParams.depositPeriod);
 
@@ -205,7 +205,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
     ) internal virtual returns (uint256 actualAssetsAtPeriod_) {
         IERC20 asset = IERC20(vault.asset());
 
-        uint256 prevVaultPeriodsElapsed = vault.currentTimePeriodsElapsed();
+        uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
 
         // ------------------- prep redeem -------------------
         uint256 expectedReturns = _expectedReturns(sharesToRedeemAtPeriod, vault, testParams);

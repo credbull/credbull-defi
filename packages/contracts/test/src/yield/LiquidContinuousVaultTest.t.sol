@@ -67,7 +67,7 @@ contract LiquidContinuousVaultTest is IMultiTokenVaultTestBase {
 
         uint256 deposit = 100 * SCALE;
         LiquidContinuousVault vault = new LiquidContinuousVault(params);
-        uint256 depositPeriod = vault.currentTimePeriodsElapsed();
+        uint256 depositPeriod = vault.currentPeriod();
         uint256 shares = vault.convertToShares(deposit);
 
         // check redeemPeriod > depositPeriod
@@ -98,6 +98,6 @@ contract LiquidContinuousVaultTest is IMultiTokenVaultTestBase {
     }
 
     function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
-        LiquidContinuousVault(address(vault)).setCurrentTimePeriodsElapsed(timePeriod);
+        LiquidContinuousVault(address(vault)).setCurrentPeriod(timePeriod);
     }
 }

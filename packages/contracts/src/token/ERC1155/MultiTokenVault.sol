@@ -41,7 +41,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      * @inheritdoc IMultiTokenVault
      */
     function deposit(uint256 assets, address receiver) public virtual override returns (uint256 shares) {
-        return _depositForDepositPeriod(assets, receiver, currentTimePeriodsElapsed());
+        return _depositForDepositPeriod(assets, receiver, currentPeriodsElapsed());
     }
 
     function _depositForDepositPeriod(uint256 assets, address receiver, uint256 depositPeriod)
@@ -74,8 +74,8 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
             revert MultiTokenVault__RedeemBeforeDeposit(owner, depositPeriod, redeemPeriod);
         }
 
-        if (currentTimePeriodsElapsed() < redeemPeriod) {
-            revert MultiTokenVault__RedeemTimePeriodNotSupported(owner, currentTimePeriodsElapsed(), redeemPeriod);
+        if (currentPeriodsElapsed() < redeemPeriod) {
+            revert MultiTokenVault__RedeemTimePeriodNotSupported(owner, currentPeriodsElapsed(), redeemPeriod);
         }
 
         uint256 maxShares = maxRedeemAtPeriod(owner, depositPeriod);
@@ -97,7 +97,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
         virtual
         returns (uint256)
     {
-        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentTimePeriodsElapsed());
+        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentPeriodsElapsed());
     }
 
     /**
@@ -141,7 +141,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      * @inheritdoc IMultiTokenVault
      */
     function convertToShares(uint256 assets) public view virtual returns (uint256 shares) {
-        return convertToSharesForDepositPeriod(assets, currentTimePeriodsElapsed());
+        return convertToSharesForDepositPeriod(assets, currentPeriodsElapsed());
     }
 
     /**
@@ -176,7 +176,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
         virtual
         returns (uint256)
     {
-        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed());
+        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentPeriodsElapsed());
     }
 
     /**
@@ -200,13 +200,13 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
         virtual
         returns (uint256 assets)
     {
-        return previewRedeemForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed());
+        return previewRedeemForDepositPeriod(shares, depositPeriod, currentPeriodsElapsed());
     }
 
     /**
      * @inheritdoc IMultiTokenVault
      */
-    function currentTimePeriodsElapsed() public view virtual returns (uint256);
+    function currentPeriodsElapsed() public view virtual returns (uint256 currentPeriod_);
 
     /**
      * @dev Returns true if this contract implements the interface defined by `interfaceId`.

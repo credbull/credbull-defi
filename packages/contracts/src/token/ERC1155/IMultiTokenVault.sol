@@ -198,9 +198,9 @@ interface IMultiTokenVault is IERC1155 {
         returns (uint256 assets);
 
     /**
-     * @dev Returns the current number of time periods elapsed.
+     * @dev Returns the current number of time periods elapsed since vault start
      *
-     * @return currentTimePeriodsElapsed_ The current number of time periods elapsed.
+     * @return currentPeriodsElapsed_ The number of time periods elapsed.
      */
-    function currentTimePeriodsElapsed() external view returns (uint256 currentTimePeriodsElapsed_);
+    function currentPeriodsElapsed() external view returns (uint256 currentPeriodsElapsed_);
 }

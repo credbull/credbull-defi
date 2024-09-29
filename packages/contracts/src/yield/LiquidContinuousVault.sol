@@ -20,7 +20,7 @@ contract LiquidContinuousVault is MultiTokenVault, TimelockAsyncUnlock, CalcInte
     using Math for uint256;
 
     IYieldStrategy public immutable YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
-    uint256 internal _currentTimePeriodsElapsed; // TODO - replace period state with Timer implementation
+    uint256 internal _currentPeriod; // TODO - replace period state with Timer implementation
 
     struct LiquidContinuousVaultParams {
         IERC20Metadata asset;
@@ -117,16 +117,17 @@ contract LiquidContinuousVault is MultiTokenVault, TimelockAsyncUnlock, CalcInte
     // solhint-disable-next-line no-empty-blocks
     { }
 
+    /// @inheritdoc TimelockAsyncUnlock
     function currentPeriod() public view override returns (uint256 currentPeriod_) {
-        return currentTimePeriodsElapsed();
+        return _currentPeriod;
+    }
+
+    function setCurrentPeriod(uint256 currentPeriod_) public {
+        _currentPeriod = currentPeriod_; // TODO - replace period state with Timer implementation
     }
 
     /// @inheritdoc MultiTokenVault
-    function currentTimePeriodsElapsed() public view override returns (uint256) {
-        return _currentTimePeriodsElapsed; // TODO - replace period state with Timer implementation
-    }
-
-    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public {
-        _currentTimePeriodsElapsed = currentTimePeriodsElapsed_; // TODO - replace period state with Timer implementation
+    function currentPeriodsElapsed() public view override returns (uint256 numPeriodsElapsed_) {
+        return currentPeriod(); // vault starts at period 0. so currentPeriodsElapsed() = currentPeriod() - 0
     }
 }

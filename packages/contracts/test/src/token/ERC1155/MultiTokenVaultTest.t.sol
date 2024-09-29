@@ -9,7 +9,6 @@ import { TimerCheats } from "@test/test/timelock/TimerCheats.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
     IERC20Metadata private asset;
@@ -141,7 +140,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
     }
 
     function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
-        MultiTokenVaultDailyPeriods(address(vault)).setCurrentTimePeriodsElapsed(timePeriod);
+        MultiTokenVaultDailyPeriods(address(vault)).setCurrentPeriodsElapsed(timePeriod);
     }
 }
 
@@ -151,7 +150,7 @@ contract MultiTokenVaultDailyPeriods is MultiTokenVault, TimerCheats {
 
     constructor(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage)
         MultiTokenVault(asset)
-        TimerCheats(SafeCast.toUint48(block.timestamp))
+        TimerCheats(block.timestamp)
     {
         ASSET_TO_SHARES_RATIO = assetToSharesRatio;
         YIELD_PERCENTAGE = yieldPercentage;
@@ -185,17 +184,15 @@ contract MultiTokenVaultDailyPeriods is MultiTokenVault, TimerCheats {
         return assets / ASSET_TO_SHARES_RATIO;
     }
 
-    function currentTimePeriodsElapsed() public view override returns (uint256) {
+    function currentPeriodsElapsed() public view override returns (uint256 currentPeriod_) {
         return elapsed24Hours();
     }
 
-    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public {
-        warp24HourPeriods(SafeCast.toUint48(currentTimePeriodsElapsed_));
+    function setCurrentPeriodsElapsed(uint256 currentTimePeriodsElapsed_) public {
+        warp24HourPeriods(currentTimePeriodsElapsed_);
 
-        if (currentTimePeriodsElapsed() != currentTimePeriodsElapsed_) {
-            revert Timer__ERC6372InconsistentClock(
-                SafeCast.toUint48(currentTimePeriodsElapsed()), SafeCast.toUint48(currentTimePeriodsElapsed_)
-            );
+        if (currentPeriodsElapsed() != currentTimePeriodsElapsed_) {
+            revert Timer__ERC6372InconsistentTime(currentPeriodsElapsed(), currentTimePeriodsElapsed_);
         }
     }
 }
