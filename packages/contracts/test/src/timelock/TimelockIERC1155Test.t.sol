@@ -5,7 +5,6 @@ import { TimelockIERC1155 } from "@test/test/timelock/TimelockIERC1155.t.sol";
 import { ITimelock } from "@credbull/timelock/ITimelock.sol";
 import { TimelockTest } from "@test/src/timelock/TimelockTest.t.sol";
 import { TimerCheats } from "@test/test/timelock/TimerCheats.t.sol";
-import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 contract TimelockIERC1155Test is TimelockTest {
     function setUp() public {
@@ -57,7 +56,7 @@ contract SimpleTimelockIERC1155 is TimelockIERC1155, TimerCheats {
 
     constructor(address _initialOwner, uint256 _lockDuration)
         TimelockIERC1155(_initialOwner)
-        TimerCheats(SafeCast.toUint48(block.timestamp))
+        TimerCheats(block.timestamp)
     {
         myLockDuration = _lockDuration;
     }
@@ -71,6 +70,6 @@ contract SimpleTimelockIERC1155 is TimelockIERC1155, TimerCheats {
     }
 
     function setCurrentPeriod(uint256 currentPeriod_) public {
-        warp24HourPeriods(SafeCast.toUint48(currentPeriod_));
+        warp24HourPeriods(currentPeriod_);
     }
 }

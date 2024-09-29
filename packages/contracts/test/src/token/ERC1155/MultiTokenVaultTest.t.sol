@@ -3,7 +3,8 @@ pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
-import { IMultiTokenVaultTestBase } from "./IMultiTokenVaultTestBase.t.sol";
+import { IMultiTokenVaultTestBase } from "@test/src/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
+import { TimerCheats } from "@test/test/timelock/TimerCheats.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
@@ -28,10 +29,18 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         deposit2TestParams = IMultiTokenVaultTestParams({ principal: 300 * SCALE, depositPeriod: 15, redeemPeriod: 17 });
     }
 
+    function test__MultiTokenVaulTest__Period10() public {
+        uint256 assetToSharesRatio = 1;
+
+        MultiTokenVault vault = new MultiTokenVaultDailyPeriods(asset, assetToSharesRatio, 10);
+
+        _testVaultAtPeriod(vault, deposit1TestParams);
+    }
+
     function test__MultiTokenVaulTest__SimpleDeposit() public {
         uint256 assetToSharesRatio = 1;
 
-        MultiTokenVault vault = new SimpleMultiTokenVaultMock(asset, assetToSharesRatio, 10, owner);
+        MultiTokenVault vault = new MultiTokenVaultDailyPeriods(asset, assetToSharesRatio, 10);
 
         address vaultAddress = address(vault);
 
@@ -50,6 +59,8 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
 
         assertEq(deposit1TestParams.principal, asset.balanceOf(vaultAddress), "vault should have the asset");
         assertEq(0, asset.allowance(alice, vaultAddress), "vault shouldn't have an allowance after deposit");
+
+        testVaultAtPeriods(vault, deposit1TestParams);
     }
 
     // Scenario: Calculating returns for a standard investment
@@ -57,7 +68,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         uint256 assetToSharesRatio = 2;
 
         // setup
-        MultiTokenVault vault = new SimpleMultiTokenVaultMock(asset, assetToSharesRatio, 10, owner);
+        MultiTokenVault vault = new MultiTokenVaultDailyPeriods(asset, assetToSharesRatio, 10);
         uint256 assetBalanceBeforeDeposits = asset.balanceOf(alice); // the asset balance from the start
 
         // verify deposit - period 1
@@ -113,6 +124,9 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
             TOLERANCE,
             "deposit2 deposit assets incorrect"
         );
+
+        testVaultAtPeriods(vault, deposit1TestParams);
+        testVaultAtPeriods(vault, deposit2TestParams);
     }
 
     function _expectedReturns(
@@ -120,18 +134,23 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         IMultiTokenVault vault,
         IMultiTokenVaultTestParams memory testParams
     ) internal view override returns (uint256 expectedReturns_) {
-        SimpleMultiTokenVaultMock simpleMultitokenVault = SimpleMultiTokenVaultMock(address(vault));
+        return MultiTokenVaultDailyPeriods(address(vault)).calcYield(
+            testParams.principal, testParams.depositPeriod, testParams.redeemPeriod
+        );
+    }
 
-        return simpleMultitokenVault.calcYield(testParams.principal, testParams.depositPeriod, testParams.redeemPeriod);
+    function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
+        MultiTokenVaultDailyPeriods(address(vault)).setCurrentPeriodsElapsed(timePeriod);
     }
 }
 
-contract SimpleMultiTokenVaultMock is MultiTokenVault {
+contract MultiTokenVaultDailyPeriods is MultiTokenVault, TimerCheats {
     uint256 internal immutable ASSET_TO_SHARES_RATIO;
     uint256 internal immutable YIELD_PERCENTAGE;
 
-    constructor(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage, address initialOwner)
-        MultiTokenVault(asset, initialOwner)
+    constructor(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage)
+        MultiTokenVault(asset)
+        TimerCheats(block.timestamp)
     {
         ASSET_TO_SHARES_RATIO = assetToSharesRatio;
         YIELD_PERCENTAGE = yieldPercentage;
@@ -163,5 +182,17 @@ contract SimpleMultiTokenVaultMock is MultiTokenVault {
         returns (uint256 shares)
     {
         return assets / ASSET_TO_SHARES_RATIO;
+    }
+
+    function currentPeriodsElapsed() public view override returns (uint256 currentPeriod_) {
+        return elapsed24Hours();
+    }
+
+    function setCurrentPeriodsElapsed(uint256 currentTimePeriodsElapsed_) public {
+        warp24HourPeriods(currentTimePeriodsElapsed_);
+
+        if (currentPeriodsElapsed() != currentTimePeriodsElapsed_) {
+            revert Timer__ERC6372InconsistentTime(currentPeriodsElapsed(), currentTimePeriodsElapsed_);
+        }
     }
 }

@@ -6,7 +6,6 @@ import { ERC1155Supply, ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ex
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 /**
@@ -16,11 +15,8 @@ import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol
  *      of time periods that have elapsed and allows users to deposit and redeem assets based on these periods.
  *      Designed to be secure and production-ready for Hacken audit.
  */
-abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, ReentrancyGuard, Ownable {
+abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, ReentrancyGuard {
     using SafeERC20 for IERC20;
-
-    /// @notice Tracks the number of time periods that have elapsed.
-    uint256 internal _currentTimePeriodsElapsed;
 
     /// @notice The ERC20 token used as the underlying asset in the vault.
     IERC20 private immutable ASSET;
@@ -36,18 +32,24 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     /**
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
      * @param asset_ The ERC20 token representing the underlying asset.
-     * @param initialOwner The owner of the contract.
      */
-    constructor(IERC20 asset_, address initialOwner) ERC1155("") Ownable(initialOwner) {
+    constructor(IERC20 asset_) ERC1155("") {
         ASSET = asset_;
     }
 
     /**
      * @inheritdoc IMultiTokenVault
      */
-    function deposit(uint256 assets, address receiver) public virtual override nonReentrant returns (uint256 shares) {
+    function deposit(uint256 assets, address receiver) public virtual override returns (uint256 shares) {
+        return _depositForDepositPeriod(assets, receiver, currentPeriodsElapsed());
+    }
+
+    function _depositForDepositPeriod(uint256 assets, address receiver, uint256 depositPeriod)
+        internal
+        virtual
+        returns (uint256 shares)
+    {
         uint256 maxAssets = maxDeposit(receiver);
-        uint256 depositPeriod = currentTimePeriodsElapsed();
 
         if (assets > maxAssets) {
             revert MultiTokenVault__ExceededMaxDeposit(receiver, depositPeriod, assets, maxAssets);
@@ -55,7 +57,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
 
         shares = previewDeposit(assets);
 
-        _deposit(assets, receiver, _msgSender(), depositPeriod, shares);
+        _deposit(_msgSender(), receiver, depositPeriod, assets, shares);
     }
 
     /**
@@ -67,13 +69,13 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
         address owner,
         uint256 depositPeriod,
         uint256 redeemPeriod
-    ) public virtual nonReentrant returns (uint256 assets) {
+    ) public virtual returns (uint256 assets) {
         if (depositPeriod > redeemPeriod) {
             revert MultiTokenVault__RedeemBeforeDeposit(owner, depositPeriod, redeemPeriod);
         }
 
-        if (currentTimePeriodsElapsed() < redeemPeriod) {
-            revert MultiTokenVault__RedeemTimePeriodNotSupported(owner, currentTimePeriodsElapsed(), redeemPeriod);
+        if (currentPeriodsElapsed() < redeemPeriod) {
+            revert MultiTokenVault__RedeemTimePeriodNotSupported(owner, currentPeriodsElapsed(), redeemPeriod);
         }
 
         uint256 maxShares = maxRedeemAtPeriod(owner, depositPeriod);
@@ -84,7 +86,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
 
         assets = previewRedeemForDepositPeriod(shares, depositPeriod, redeemPeriod);
 
-        _withdraw(shares, receiver, owner, _msgSender(), depositPeriod, assets);
+        _withdraw(_msgSender(), receiver, owner, depositPeriod, assets, shares);
     }
 
     /**
@@ -95,14 +97,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
         virtual
         returns (uint256)
     {
-        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentTimePeriodsElapsed());
-    }
-
-    /**
-     * @inheritdoc IMultiTokenVault
-     */
-    function setCurrentTimePeriodsElapsed(uint256 currentTimePeriodsElapsed_) public virtual onlyOwner {
-        _currentTimePeriodsElapsed = currentTimePeriodsElapsed_;
+        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentPeriodsElapsed());
     }
 
     /**
@@ -146,7 +141,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      * @inheritdoc IMultiTokenVault
      */
     function convertToShares(uint256 assets) public view virtual returns (uint256 shares) {
-        return convertToSharesForDepositPeriod(assets, currentTimePeriodsElapsed());
+        return convertToSharesForDepositPeriod(assets, currentPeriodsElapsed());
     }
 
     /**
@@ -181,7 +176,7 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
         virtual
         returns (uint256)
     {
-        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed());
+        return convertToAssetsForDepositPeriod(shares, depositPeriod, currentPeriodsElapsed());
     }
 
     /**
@@ -205,15 +200,13 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
         virtual
         returns (uint256 assets)
     {
-        return previewRedeemForDepositPeriod(shares, depositPeriod, currentTimePeriodsElapsed());
+        return previewRedeemForDepositPeriod(shares, depositPeriod, currentPeriodsElapsed());
     }
 
     /**
      * @inheritdoc IMultiTokenVault
      */
-    function currentTimePeriodsElapsed() public view virtual returns (uint256) {
-        return _currentTimePeriodsElapsed;
-    }
+    function currentPeriodsElapsed() public view virtual returns (uint256 currentPeriod_);
 
     /**
      * @dev Returns true if this contract implements the interface defined by `interfaceId`.
@@ -232,15 +225,16 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      * @dev An internal function to implement the functionality of depositing assets into the vault
      *      and mints shares for the current time period.
      *
-     * @param assets The amount of the ERC-20 underlying assets to be deposited into the vault.
-     * @param receiver The address that will receive the minted shares.
      * @param caller The address of who is depositing the assets.
+     * @param receiver The address that will receive the minted shares.
      * @param depositPeriod The time period in which the assets are deposited.
+     * @param assets The amount of the ERC-20 underlying assets to be deposited into the vault.
      * @param shares The amount of ERC-1155 tokens minted.
      */
-    function _deposit(uint256 assets, address receiver, address caller, uint256 depositPeriod, uint256 shares)
+    function _deposit(address caller, address receiver, uint256 depositPeriod, uint256 assets, uint256 shares)
         internal
         virtual
+        nonReentrant
     {
         ASSET.safeTransferFrom(caller, address(this), assets);
         _mint(receiver, depositPeriod, shares, "");
@@ -252,21 +246,21 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      *      while the redemption happens at the defined redeem period
      *      And return the equivalent amount of assets to the receiver.
      *
-     * @param shares The amount of the ERC-1155 tokens to redeem.
+     * @param caller The address of who is redeeming the shares.
      * @param receiver The address that will receive the minted shares.
      * @param owner The address that owns the minted shares.
-     * @param caller The address of who is redeeming the shares.
      * @param depositPeriod The deposit period in which the shares were minted.
      * @param assets The equivalent amount of the ERC-20 underlying assets.
+     * @param shares The amount of the ERC-1155 tokens to redeem.
      */
     function _withdraw(
-        uint256 shares,
+        address caller,
         address receiver,
         address owner,
-        address caller,
         uint256 depositPeriod,
-        uint256 assets
-    ) internal virtual {
+        uint256 assets,
+        uint256 shares
+    ) internal virtual nonReentrant {
         if (caller != owner && isApprovedForAll(owner, caller)) {
             revert MultiTokenVault__CallerMissingApprovalForAll(caller, owner);
         }

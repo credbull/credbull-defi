@@ -64,7 +64,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         virtual
         returns (uint256 actualSharesAtPeriod, uint256 actualAssetsAtPeriod)
     {
-        uint256 prevVaultPeriodsElapsed = vault.currentTimePeriodsElapsed(); // save previous state for later
+        uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed(); // save previous state for later
 
         // ------------------- check toShares/toAssets - specified period -------------------
         actualSharesAtPeriod = vault.convertToSharesForDepositPeriod(testParams.principal, testParams.depositPeriod);
@@ -83,16 +83,10 @@ abstract contract IMultiTokenVaultTestBase is Test {
         );
 
         // ------------------- check toShares/toAssets - current period -------------------
-        vm.startPrank(owner);
-        vault.setCurrentTimePeriodsElapsed(testParams.depositPeriod); // set deposit numPeriods
-        vm.stopPrank();
-
+        _warpToPeriod(vault, testParams.depositPeriod); // warp to deposit
         uint256 actualShares = vault.convertToShares(testParams.principal);
 
-        vm.startPrank(owner);
-        vault.setCurrentTimePeriodsElapsed(testParams.redeemPeriod); // set redeem numPeriods
-        vm.stopPrank();
-
+        _warpToPeriod(vault, testParams.redeemPeriod); // warp to redeem
         assertApproxEqAbs(
             expectedAssetsAtRedeem,
             vault.convertToAssetsForDepositPeriod(actualShares, testParams.depositPeriod),
@@ -100,9 +94,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
             _assertMsg("toShares/toAssets yield does not equal principal + interest", vault, testParams.depositPeriod)
         );
 
-        vm.startPrank(owner);
-        vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed); // restore the vault to previous state
-        vm.stopPrank();
+        _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore to previous state
 
         return (actualAssetsAtPeriod, actualAssetsAtPeriod);
     }
@@ -113,19 +105,13 @@ abstract contract IMultiTokenVaultTestBase is Test {
         virtual
         returns (uint256 actualSharesAtPeriod, uint256 actualAssetsAtPeriod)
     {
-        uint256 prevVaultPeriodsElapsed = vault.currentTimePeriodsElapsed();
+        uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
 
         // ------------------- check previewDeposit/previewRedeem - current period -------------------
-        vm.startPrank(owner);
-        vault.setCurrentTimePeriodsElapsed(testParams.depositPeriod); // set deposit period prior to deposit
-        vm.stopPrank();
-
+        _warpToPeriod(vault, testParams.depositPeriod); // warp to deposit
         actualSharesAtPeriod = vault.previewDeposit(testParams.principal);
 
-        vm.startPrank(owner);
-        vault.setCurrentTimePeriodsElapsed(testParams.redeemPeriod); // warp to redeem / withdraw
-        vm.stopPrank();
-
+        _warpToPeriod(vault, testParams.redeemPeriod); // warp to redeem / withdraw
         actualAssetsAtPeriod = vault.previewRedeemForDepositPeriod(actualSharesAtPeriod, testParams.depositPeriod);
 
         uint256 expectedAssetsAtRedeem =
@@ -143,9 +129,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
             )
         );
 
-        vm.startPrank(owner);
-        vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed);
-        vm.stopPrank();
+        _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore previous period state
 
         return (actualSharesAtPeriod, actualAssetsAtPeriod);
     }
@@ -159,7 +143,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         IERC20 asset = IERC20(vault.asset());
 
         // capture state before for validations
-        uint256 prevVaultPeriodsElapsed = vault.currentTimePeriodsElapsed();
+        uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
         uint256 prevReceiverAssetBalance = asset.balanceOf(receiver);
 
         // ------------------- deposit -------------------
@@ -169,9 +153,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         uint256 actualAssetsAtPeriod =
             _testRedeemOnly(receiver, vault, testParams, actualSharesAtPeriod, prevReceiverAssetBalance);
 
-        vm.startPrank(owner);
-        vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed); // restore the vault to previous state
-        vm.stopPrank();
+        _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore previous period state
 
         return (actualSharesAtPeriod, actualAssetsAtPeriod);
     }
@@ -186,14 +168,12 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
         // capture state before for validations
         vm.startPrank(owner);
-        uint256 prevVaultPeriodsElapsed = vault.currentTimePeriodsElapsed();
+        uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
         vm.stopPrank();
         uint256 prevReceiverVaultBalance = vault.sharesAtPeriod(receiver, testParams.depositPeriod);
 
         // ------------------- deposit -------------------
-        vm.startPrank(owner);
-        vault.setCurrentTimePeriodsElapsed(testParams.depositPeriod); // set deposit numPeriods
-        vm.stopPrank();
+        _warpToPeriod(vault, testParams.depositPeriod); // warp to deposit period
 
         vm.startPrank(receiver);
         assertGe(
@@ -210,9 +190,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
             _assertMsg("receiver did not receive the correct vault shares ", vault, testParams.depositPeriod)
         );
 
-        vm.startPrank(owner);
-        vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed);
-        vm.stopPrank();
+        _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore previous period state
 
         return actualSharesAtPeriod;
     }
@@ -227,7 +205,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
     ) internal virtual returns (uint256 actualAssetsAtPeriod_) {
         IERC20 asset = IERC20(vault.asset());
 
-        uint256 prevVaultPeriodsElapsed = vault.currentTimePeriodsElapsed();
+        uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
 
         // ------------------- prep redeem -------------------
         uint256 expectedReturns = _expectedReturns(sharesToRedeemAtPeriod, vault, testParams);
@@ -237,9 +215,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         vm.stopPrank();
 
         // ------------------- redeem -------------------
-        vm.startPrank(owner);
-        vault.setCurrentTimePeriodsElapsed(testParams.redeemPeriod); // warp the vault to redeem period
-        vm.stopPrank();
+        _warpToPeriod(vault, testParams.redeemPeriod); // warp the vault to redeem period
 
         vm.startPrank(receiver);
         uint256 actualAssetsAtPeriod =
@@ -261,9 +237,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
             _assertMsg("receiver did not receive the correct yield", vault, testParams.depositPeriod)
         );
 
-        vm.startPrank(owner);
-        vault.setCurrentTimePeriodsElapsed(prevVaultPeriodsElapsed); // restore the vault to previous state
-        vm.stopPrank();
+        _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore the vault to previous state
 
         return actualAssetsAtPeriod;
     }
@@ -274,6 +248,9 @@ abstract contract IMultiTokenVaultTestBase is Test {
         view
         virtual
         returns (uint256 expectedReturns_);
+
+    /// @dev warp the vault to the given timePeriod for testing purposes
+    function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal virtual;
 
     function _assertMsg(string memory prefix, IMultiTokenVault vault, uint256 numPeriods)
         internal
