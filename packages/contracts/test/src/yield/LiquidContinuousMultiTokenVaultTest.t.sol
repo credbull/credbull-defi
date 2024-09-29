@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { LiquidContinuousVault } from "@credbull/yield/LiquidContinuousVault.sol";
+import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/yield/strategy/SimpleInterestYieldStrategy.sol";
@@ -13,7 +13,7 @@ import { IMultiTokenVaultTestBase } from "@test/src/token/ERC1155/IMultiTokenVau
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-contract LiquidContinuousVaultTest is IMultiTokenVaultTestBase {
+contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
     IERC20Metadata private asset;
 
     uint256 internal SCALE;
@@ -30,17 +30,17 @@ contract LiquidContinuousVaultTest is IMultiTokenVaultTestBase {
     function test__LiquidContinuousVaultTest__Daily_6APY_30day_50K() public {
         uint256 deposit = 50_000 * SCALE;
 
-        LiquidContinuousVault.LiquidContinuousVaultParams memory params = LiquidContinuousVault
-            .LiquidContinuousVaultParams({
+        LiquidContinuousMultiTokenVault.VaultParams memory params = LiquidContinuousMultiTokenVault.VaultParams({
             asset: asset,
             yieldStrategy: new SimpleInterestYieldStrategy(),
+            vaultStartTimestamp: block.timestamp,
             redeemNoticePeriod: 1,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
             tenor: 30
         });
 
-        LiquidContinuousVault vault = new LiquidContinuousVault(params);
+        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(params);
 
         // verify interest
         uint256 actualInterest = vault.calcYield(deposit, 0, params.tenor);
@@ -55,10 +55,10 @@ contract LiquidContinuousVaultTest is IMultiTokenVaultTestBase {
     }
 
     function test__LiquidContinuousVaultTest__ShouldRevertIfRedeemBeforeTenor() public {
-        LiquidContinuousVault.LiquidContinuousVaultParams memory params = LiquidContinuousVault
-            .LiquidContinuousVaultParams({
+        LiquidContinuousMultiTokenVault.VaultParams memory params = LiquidContinuousMultiTokenVault.VaultParams({
             asset: asset,
             yieldStrategy: new SimpleInterestYieldStrategy(),
+            vaultStartTimestamp: block.timestamp,
             redeemNoticePeriod: 1,
             interestRatePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
@@ -66,7 +66,7 @@ contract LiquidContinuousVaultTest is IMultiTokenVaultTestBase {
         });
 
         uint256 deposit = 100 * SCALE;
-        LiquidContinuousVault vault = new LiquidContinuousVault(params);
+        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(params);
         uint256 depositPeriod = vault.currentPeriod();
         uint256 shares = vault.convertToShares(deposit);
 
@@ -90,14 +90,18 @@ contract LiquidContinuousVaultTest is IMultiTokenVaultTestBase {
         IMultiTokenVault vault,
         IMultiTokenVaultTestParams memory testParams
     ) internal view override returns (uint256 expectedReturns_) {
-        LiquidContinuousVault liquidVault = LiquidContinuousVault(address(vault));
+        LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         return liquidVault.YIELD_STRATEGY().calcYield(
             address(vault), testParams.principal, testParams.depositPeriod, testParams.redeemPeriod
         );
     }
 
+    /// @dev this assumes timePeriod is in days
     function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
-        LiquidContinuousVault(address(vault)).setCurrentPeriod(timePeriod);
+        uint256 warpToTimeInSeconds =
+            LiquidContinuousMultiTokenVault(address(vault)).startTimestamp() + timePeriod * 24 hours;
+
+        vm.warp(warpToTimeInSeconds);
     }
 }

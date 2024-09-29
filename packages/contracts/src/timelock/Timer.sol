@@ -14,12 +14,12 @@ import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
  * - `Monthly` or `Annual` - not supported due to the (more) complex rules
  */
 contract Timer is IERC6372 {
-    uint256 public startTime;
+    uint256 public startTimestamp;
 
     error Timer__ERC6372InconsistentTime(uint256 actualTime, uint256 expectTIme);
 
-    constructor(uint256 startTime_) {
-        startTime = startTime_;
+    constructor(uint256 startTimestamp_) {
+        startTimestamp = startTimestamp_;
     }
 
     /// @dev returns the current timepoint (timestamp mode)
@@ -42,7 +42,7 @@ contract Timer is IERC6372 {
 
     /// @dev returns the elapsed time in seconds since starTime
     function elapsedSeconds() public view returns (uint256 elapsedSeconds_) {
-        return timestamp() - startTime;
+        return timestamp() - startTimestamp;
     }
 
     /// @dev returns the elapsed time in minutes since starTime
@@ -55,7 +55,7 @@ contract Timer is IERC6372 {
         return elapsedSeconds() / 24 hours;
     }
 
-    function _setStartTime(uint256 startTime_) internal {
-        startTime = startTime_;
+    function _setStartTimestamp(uint256 startTimestamp_) internal {
+        startTimestamp = startTimestamp_;
     }
 }

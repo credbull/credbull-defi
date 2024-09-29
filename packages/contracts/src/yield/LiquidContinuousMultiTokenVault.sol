@@ -5,40 +5,52 @@ import { CalcInterestMetadata } from "@credbull/yield/CalcInterestMetadata.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
+import { Timer } from "@credbull/timelock/Timer.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
- * @title LiquidContinuousVault
- * MultiTokenVault with the following properties:
+ * @title LiquidAsyncRedeemMultiTokenVault
+ * Vault with the following properties:
  * - Liquid - short-term time horizon
  * - Continuous - ongoing deposits and redeems without a maturity
+ * - MultiToken - each deposit period received a different ERC1155 share token
+ * - Async Redeem  - two step redeem process: request to redeem and then redeem after notice period
  * - Multiple rates - full rate on deposits held "tenor" days, reduced rates for days 1-29
- * - Redeem with Notice - two step redeem process: request to redeem and then redeem after notice period
+ *
+ * @dev Vault MUST be a Daily frequency of 360 or 365.  `depositPeriods` will be used as IERC1155 `ids`.
+ * - Seconds frequency is NOT SUPPORTED.  Results in too many periods to manage as IERC155 ids
+ * - Month or Annual frequency is NOT SUPPORTED.  Requires a more advanced timer e.g. an external Oracle.
+ *
  */
-contract LiquidContinuousVault is MultiTokenVault, TimelockAsyncUnlock, CalcInterestMetadata {
+contract LiquidContinuousMultiTokenVault is MultiTokenVault, TimelockAsyncUnlock, Timer, CalcInterestMetadata {
     using Math for uint256;
 
     IYieldStrategy public immutable YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
-    uint256 internal _currentPeriod; // TODO - replace period state with Timer implementation
 
-    struct LiquidContinuousVaultParams {
+    error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
+
+    struct VaultParams {
         IERC20Metadata asset;
         IYieldStrategy yieldStrategy;
+        uint256 vaultStartTimestamp;
         uint256 redeemNoticePeriod;
         uint256 interestRatePercentageScaled;
         uint256 frequency; // MUST be a daily frequency, either 360 or 365
         uint256 tenor;
     }
 
-    constructor(LiquidContinuousVaultParams memory params)
+    constructor(VaultParams memory params)
         MultiTokenVault(params.asset)
+        Timer(params.vaultStartTimestamp)
         TimelockAsyncUnlock(params.redeemNoticePeriod)
         CalcInterestMetadata(params.interestRatePercentageScaled, params.frequency, params.asset.decimals())
     {
         YIELD_STRATEGY = params.yieldStrategy;
 
-        // TODO - revert if not a daily frequency of 360 or 365
+        if (params.frequency != 360 && params.frequency != 365) {
+            revert LiquidContinuousMultiTokenVault__InvalidFrequency(params.frequency);
+        }
     }
 
     /// @dev returns
@@ -119,15 +131,11 @@ contract LiquidContinuousVault is MultiTokenVault, TimelockAsyncUnlock, CalcInte
 
     /// @inheritdoc TimelockAsyncUnlock
     function currentPeriod() public view override returns (uint256 currentPeriod_) {
-        return _currentPeriod;
-    }
-
-    function setCurrentPeriod(uint256 currentPeriod_) public {
-        _currentPeriod = currentPeriod_; // TODO - replace period state with Timer implementation
+        return currentPeriodsElapsed(); // vault is 0 based. so currentPeriodsElapsed() = currentPeriod() - 0
     }
 
     /// @inheritdoc MultiTokenVault
     function currentPeriodsElapsed() public view override returns (uint256 numPeriodsElapsed_) {
-        return currentPeriod(); // vault starts at period 0. so currentPeriodsElapsed() = currentPeriod() - 0
+        return Timer.elapsed24Hours(); // vault is 0 based. so currentPeriodsElapsed() = currentPeriod() - 0
     }
 }
