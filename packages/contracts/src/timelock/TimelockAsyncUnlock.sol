@@ -50,10 +50,10 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
             );
         }
 
-        uint256 currentWithNoticePeriod = currentPeriod() + NOTICE_PERIOD;
-        if (unlockPeriod < currentWithNoticePeriod) {
+        uint256 minUnlockPeriod = _minUnlockPeriod();
+        if (unlockPeriod < minUnlockPeriod) {
             revert TimelockAsyncUnlock__RequestBeforeCurrentWithNoticePeriod(
-                _msgSender(), unlockPeriod, currentWithNoticePeriod
+                _msgSender(), unlockPeriod, minUnlockPeriod
             );
         }
         _;
@@ -75,11 +75,11 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
         NOTICE_PERIOD = noticePeriod_;
     }
 
-    /// @notice Requests unlocking of `amount`, which will be available after the `unlockPeriod`.
+    /// @notice Request unlock of `amount` for the `tokenOwner` at the specified `unlockPeriod`.
     function requestUnlock(address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount)
-    public
-    onlyTokenOwner(tokenOwner)
-    validateRequestPeriod(depositPeriod, unlockPeriod)
+        public
+        onlyTokenOwner(tokenOwner)
+        validateRequestPeriod(depositPeriod, unlockPeriod)
     {
         UnlockItem storage unlockRequest = _unlockRequests[depositPeriod][tokenOwner];
 
@@ -99,11 +99,11 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
         }
     }
 
-    /// @notice Unlocks `amount` after the `redeemPeriod`, transferring to `tokenOwner`.
+    /// @notice Unlocks `amount` for the `tokenOwner` at the specified `unlockPeriod`.
     function unlock(address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount)
-    public
-    onlyTokenOwner(tokenOwner)
-    validateUnlockPeriod(depositPeriod, unlockPeriod)
+        public
+        onlyTokenOwner(tokenOwner)
+        validateUnlockPeriod(depositPeriod, unlockPeriod)
     {
         UnlockItem storage unlockRequest = _unlockRequests[depositPeriod][tokenOwner];
 
@@ -120,8 +120,7 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
 
         unlockRequest.amount -= amount;
 
-        // Process the unlock
-        _updateLockAfterUnlock(tokenOwner, depositPeriod, amount);
+        _finalizeUnlock(tokenOwner, depositPeriod, unlockPeriod, amount);
     }
 
     /// @notice Unlocks `amount` of tokens for `tokenOwner` from the given `depositPeriod`.
@@ -131,39 +130,38 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
 
     /// @dev there's no "unlocked" state.  deposits are locked => requested to be unlocked => redeemed
     function lockedAmount(address, /* tokenOwner */ uint256 /* depositPeriod */ )
-    public
-    view
-    virtual
-    returns (uint256 lockedAmount_);
+        public
+        view
+        virtual
+        returns (uint256 lockedAmount_);
 
     /// @dev there's no "unlocked" state.  deposits are locked => requested to be unlocked => redeemed
     function unlockedAmount(address, /* tokenOwner */ uint256 /* depositPeriod */ )
-    public
-    view
-    virtual
-    override
-    returns (uint256 unlockedAmount_)
+        public
+        view
+        virtual
+        override
+        returns (uint256 unlockedAmount_)
     {
         return 0;
     }
 
     /// @dev there's no "unlocked" state.  deposits are locked => requested to be unlocked => redeemed
     function unlockRequested(address tokenOwner, uint256 depositPeriod)
-    public
-    view
-    virtual
-    returns (UnlockItem memory requestUnlockItem_)
+        public
+        view
+        virtual
+        returns (UnlockItem memory requestUnlockItem_)
     {
         return _unlockRequests[depositPeriod][tokenOwner];
     }
 
     /// @notice Returns the max amount that can be REQUESTED to be unlocked for `account` at `depositPeriod`.
-    /// @notice Returns the max amount that can be REQUESTED to be unlocked for `account` at `depositPeriod`.
     function maxRequestUnlock(address tokenOwner, uint256 depositPeriod)
-    public
-    view
-    virtual
-    returns (uint256 maxRequestUnlockAmount)
+        public
+        view
+        virtual
+        returns (uint256 maxRequestUnlockAmount)
     {
         UnlockItem memory unlockRequestAmount = _unlockRequests[depositPeriod][tokenOwner];
 
@@ -172,10 +170,10 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
 
     /// @notice Returns the max amount that can be unlocked for `account` at `lockReleasePeriod`.
     function maxUnlock(address tokenOwner, uint256 depositPeriod)
-    public
-    view
-    virtual
-    returns (uint256 maxUnlockAmount)
+        public
+        view
+        virtual
+        returns (uint256 maxUnlockAmount)
     {
         return lockedAmount(tokenOwner, depositPeriod) - unlockedAmount(tokenOwner, depositPeriod);
     }
@@ -188,8 +186,18 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
     /// @notice Returns the current period.
     function currentPeriod() public view virtual returns (uint256 currentPeriod_);
 
-    /// @notice Process the lock after successful unlocking
-    function _updateLockAfterUnlock(address tokenOwner, uint256 depositPeriod, uint256 amount) internal virtual;
+    /// @notice Finalize unlock of `amount` for the `tokenOwner` at the specified `unlockPeriod`.
+    /// @dev child contracts override to implement the actual behavior, e.g. by transferring unlocked tokens
+
+    function _finalizeUnlock(address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount)
+        internal
+        virtual // solhint-disable-next-line no-empty-blocks
+    { }
+
+    /// @notice Returns the current period.
+    function _minUnlockPeriod() internal view returns (uint256 minUnlockPeriod_) {
+        return currentPeriod() + NOTICE_PERIOD;
+    }
 
     function _emptyBytesArray() internal pure returns (bytes[] memory) {
         return new bytes[](0);

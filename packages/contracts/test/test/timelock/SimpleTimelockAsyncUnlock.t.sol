@@ -38,7 +38,11 @@ contract SimpleTimelockAsyncUnlock is TimelockAsyncUnlock, TimerCheats {
         warp24HourPeriods(currentPeriod_);
     }
 
-    function _updateLockAfterUnlock(address account, uint256 depositPeriod, uint256 amount) internal virtual override {
+    function _finalizeUnlock(address account, uint256 depositPeriod, uint256, /* unlockPeriod */ uint256 amount)
+        internal
+        virtual
+        override
+    {
         DEPOSITS.burn(account, depositPeriod, amount, _emptyBytesArray());
     }
 }
