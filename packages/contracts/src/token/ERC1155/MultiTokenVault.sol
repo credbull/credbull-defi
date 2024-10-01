@@ -45,9 +45,9 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
     }
 
     function _depositForDepositPeriod(uint256 assets, address receiver, uint256 depositPeriod)
-    internal
-    virtual
-    returns (uint256 shares)
+        internal
+        virtual
+        returns (uint256 shares)
     {
         uint256 maxAssets = maxDeposit(receiver);
 
@@ -93,9 +93,9 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      * @inheritdoc IMultiTokenVault
      */
     function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
-    public
-    virtual
-    returns (uint256)
+        public
+        virtual
+        returns (uint256)
     {
         return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentPeriodsElapsed());
     }
@@ -136,10 +136,10 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      * @inheritdoc IMultiTokenVault
      */
     function convertToSharesForDepositPeriod(uint256 assets, uint256 depositPeriod)
-    public
-    view
-    virtual
-    returns (uint256 shares);
+        public
+        view
+        virtual
+        returns (uint256 shares);
 
     /**
      * @inheritdoc IMultiTokenVault
@@ -166,19 +166,19 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      * @inheritdoc IMultiTokenVault
      */
     function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
-    public
-    view
-    virtual
-    returns (uint256 assets);
+        public
+        view
+        virtual
+        returns (uint256 assets);
 
     /**
      * @inheritdoc IMultiTokenVault
      */
     function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
-    public
-    view
-    virtual
-    returns (uint256)
+        public
+        view
+        virtual
+        returns (uint256)
     {
         return convertToAssetsForDepositPeriod(shares, depositPeriod, currentPeriodsElapsed());
     }
@@ -187,10 +187,10 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      * @inheritdoc IMultiTokenVault
      */
     function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
-    public
-    view
-    virtual
-    returns (uint256 assets)
+        public
+        view
+        virtual
+        returns (uint256 assets)
     {
         return convertToAssetsForDepositPeriod(shares, depositPeriod, redeemPeriod);
     }
@@ -199,10 +199,10 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      * @inheritdoc IMultiTokenVault
      */
     function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod)
-    public
-    view
-    virtual
-    returns (uint256 assets)
+        public
+        view
+        virtual
+        returns (uint256 assets)
     {
         return previewRedeemForDepositPeriod(shares, depositPeriod, currentPeriodsElapsed());
     }
@@ -236,9 +236,9 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
      * @param shares The amount of ERC-1155 tokens minted.
      */
     function _deposit(address caller, address receiver, uint256 depositPeriod, uint256 assets, uint256 shares)
-    internal
-    virtual
-    nonReentrant
+        internal
+        virtual
+        nonReentrant
     {
         ASSET.safeTransferFrom(caller, address(this), assets);
         _mint(receiver, depositPeriod, shares, "");
