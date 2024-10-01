@@ -32,6 +32,7 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
             vaultStartTimestamp: block.timestamp,
             redeemNoticePeriod: 1,
             interestRatePercentageScaled: 6 * SCALE,
+            reducedInterestRatePercentageScaled: 35 * SCALE / 10,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
             tenor: 30
         });
@@ -117,10 +118,10 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
 
     // verify deposit.  updates vault assets and shares.
     function _testDepositOnly(address receiver, IMultiTokenVault vault, IMultiTokenVaultTestParams memory testParams)
-    internal
-    virtual
-    override
-    returns (uint256 actualSharesAtPeriod_)
+        internal
+        virtual
+        override
+        returns (uint256 actualSharesAtPeriod_)
     {
         uint256 actualSharesAtPeriod = super._testDepositOnly(receiver, vault, testParams);
 
@@ -161,7 +162,7 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         );
 
         uint256 actualAssetsAtPeriod =
-                            super._testRedeemOnly(receiver, vault, testParams, sharesToRedeemAtPeriod, prevReceiverAssetBalance);
+            super._testRedeemOnly(receiver, vault, testParams, sharesToRedeemAtPeriod, prevReceiverAssetBalance);
 
         // verify locks and request locks released
         assertEq(0, liquidVault.lockedAmount(alice, testParams.depositPeriod), "deposit lock not released");
