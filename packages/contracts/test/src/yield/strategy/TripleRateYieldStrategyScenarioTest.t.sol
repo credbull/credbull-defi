@@ -17,6 +17,7 @@ contract TripleRateYieldStrategyScenarioTest is YieldStrategyScenarioTest {
         context = new TestTripleRateContext(
             DEFAULT_FULL_RATE,
             DEFAULT_REDUCED_RATE,
+            EFFECTIVE_FROM_PERIOD,
             Frequencies.toValue(Frequencies.Frequency.DAYS_365),
             MATURITY_PERIOD,
             DECIMALS
