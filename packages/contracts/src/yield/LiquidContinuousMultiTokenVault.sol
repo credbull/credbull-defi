@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IBuyableAsyncSellable } from "@credbull/yield/IBuyableAsyncSellable.sol";
+import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
+import { ITradeable } from "@credbull/yield/ITradeable.sol";
+import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { TripleRateContext } from "@credbull/yield/context/TripleRateContext.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
-import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
-import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Pausable } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
-import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -32,7 +31,7 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
  */
 contract LiquidContinuousMultiTokenVault is
     MultiTokenVault,
-    IBuyableAsyncSellable,
+    ITradeable,
     TimelockAsyncUnlock,
     TripleRateContext,
     Timer,
@@ -54,7 +53,6 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     IYieldStrategy public immutable YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidOwnerAddress(address ownerAddress);
@@ -76,7 +74,6 @@ contract LiquidContinuousMultiTokenVault is
         }
 
         _grantRole(DEFAULT_ADMIN_ROLE, params.contractOwner);
-        _grantRole(PAUSER_ROLE, params.contractOwner);
 
         YIELD_STRATEGY = params.yieldStrategy;
 
@@ -130,36 +127,70 @@ contract LiquidContinuousMultiTokenVault is
 
     // ===================== Buyable/Sellable =====================
 
-    /// @notice Buy (deposit) a specified `amount` of tokens.
-    function buy(uint256 amount) public returns (uint256 shares) {
-        return deposit(amount, _msgSender());
+    /// @inheritdoc ITradeable
+    /// @dev - requesting to buy is not required, User directly executeBuy
+    function requestBuy(uint256 /* currencyTokenAmount */ )
+        public
+        view
+        override
+        onlyRole(DEFAULT_ADMIN_ROLE)
+        returns (uint256 requestId)
+    {
+        return 0;
     }
 
-    /// @notice Request to sell (redeem)  `amount` of tokens.
-    /// @param amount The amount a User wants to sell (redeem).  This could be yield only, or include principal + yield.
-    function sellRequest(uint256 amount) public {
-        sellRequest(amount, currentPeriod()); // TODO - need helper to find which depositPeriods we want to sell from...
+    /// @inheritdoc ITradeable
+    function requestSell(uint256 componentTokenAmount) public override returns (uint256 requestId) {
+        return requestSell(componentTokenAmount, currentPeriod()); // TODO - need helper to find which depositPeriods we want to sell from...
     }
 
     /// @notice Request to sell (redeem) `amount` of tokens at the `depositPeriod`
     /// @param amount The amount a User wants to sell (redeem).  This could be yield only, or include principal + yield.
-    function sellRequest(uint256 amount, uint256 depositPeriod) public {
+    function requestSell(uint256 amount, uint256 depositPeriod) public returns (uint256 requestId) {
         requestUnlock(_msgSender(), depositPeriod, _minUnlockPeriod(), amount);
+
+        return 0; // TODO - need to add requestId to requestUnlock()
     }
 
-    /// @notice Fulfill a sell (redeem) request for `amount` of tokens
-    /// @param amount The amount a User wants to sell (redeem).  This could be yield only, or include principal + yield.
-    function fulfillSellRequest(uint256 amount) public {
-        fulfillSellRequest(amount, currentPeriod()); // TODO - need helper to find which depositPeriods we want to sell from...
+    /// @inheritdoc ITradeable
+    function executeBuy(
+        address requestor,
+        uint256, /* requestId */
+        uint256 currencyTokenAmount,
+        uint256 /* componentTokenAmount */
+    ) public override {
+        // TODO - verify currencyTokenAmount convertToShares = componentTokenAmount
+
+        deposit(currencyTokenAmount, requestor);
     }
 
-    /// @notice Fulfill a sell (redeem) request for `amount` of tokens at the `depositPeriod`
-    /// @param amount The amount a User wants to sell (redeem).  This could be yield only, or include principal + yield.
-    function fulfillSellRequest(uint256 amount, uint256 depositPeriod) public {
-        unlock(_msgSender(), depositPeriod, currentPeriod(), amount);
-
-        redeemForDepositPeriod(amount, _msgSender(), _msgSender(), depositPeriod, currentPeriod());
+    /// @inheritdoc ITradeable
+    function executeSell(
+        address requestor,
+        uint256 requestId,
+        uint256 currencyTokenAmount,
+        uint256 componentTokenAmount
+    ) public override {
+        // TODO - verify currencyTokenAmount convertToAssets = componentTokenAmount
+        executeSell(requestor, currentPeriod(), requestId, currencyTokenAmount, componentTokenAmount);
     }
+
+    function executeSell(
+        address requestor,
+        uint256 depositPeriod,
+        uint256, /* requestId */
+        uint256 currencyTokenAmount,
+        uint256 /* componentTokenAmount */
+    ) public {
+        // TODO - verify currencyTokenAmount convertToAssets = componentTokenAmount
+        unlock(_msgSender(), depositPeriod, currentPeriod(), currencyTokenAmount);
+
+        // TODO - need helper to find which depositPeriods we want to sell from...
+        redeemForDepositPeriod(currencyTokenAmount, requestor, requestor, depositPeriod, currentPeriod());
+    }
+
+    // solhint-disable-next-line
+    function distributeYield(address user, uint256 amount) external { }
 
     /// @notice Returns the total yield generated by the contract.
     function yieldGenerated() external pure returns (uint256 yield) {
@@ -215,20 +246,23 @@ contract LiquidContinuousMultiTokenVault is
         return balanceOf(account, depositPeriod);
     }
 
-    // ===================== ERC1155 =====================
+    // ===================== ERC1155Pausable =====================
 
     function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
         internal
-        override(ERC1155Pausable, ERC1155Supply)
+        override(ERC1155Pausable, ERC1155)
+        whenNotPaused
     {
-        ERC1155Supply._update(from, to, ids, values);
+        ERC1155Pausable._update(from, to, ids, values);
     }
 
-    function pause() public onlyRole(PAUSER_ROLE) {
+    function pause() public onlyRole(DEFAULT_ADMIN_ROLE) {
+        // TODO - change to Operator
         _pause();
     }
 
-    function unpause() public onlyRole(PAUSER_ROLE) {
+    function unpause() public onlyRole(DEFAULT_ADMIN_ROLE) {
+        // TODO - change to Operator
         _unpause();
     }
 

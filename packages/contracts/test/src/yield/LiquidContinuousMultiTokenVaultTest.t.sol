@@ -43,19 +43,43 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
     function test__RequestRedeemTest__RedeemAtTenor() public {
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = FIXED_6APY_PARAMS;
 
-        uint256 deposit = 100 * SCALE;
+        uint256 principal = 100 * SCALE;
         LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(FIXED_6APY_PARAMS);
 
-        testVaultAtPeriods(vault, deposit, 0, vaultParams.tenor);
+        testVaultAtPeriods(vault, principal, 0, vaultParams.tenor);
     }
 
     function test__LiquidContinuousVaultTest__RedeemBeforeTenor() public {
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = FIXED_6APY_PARAMS;
 
-        uint256 deposit = 100 * SCALE;
+        uint256 principal = 100 * SCALE;
         LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(FIXED_6APY_PARAMS);
 
-        testVaultAtPeriods(vault, deposit, 0, vaultParams.tenor - 1);
+        testVaultAtPeriods(vault, principal, 0, vaultParams.tenor - 1);
+    }
+
+    function test__LiquidContinuousVaultTest__BuyAndSell() public {
+        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(FIXED_6APY_PARAMS);
+
+        uint256 principal = 100 * SCALE;
+
+        uint256 depositPeriod = 11;
+        _warpToPeriod(vault, depositPeriod);
+
+        // buy
+        vm.startPrank(alice);
+        asset.approve(address(vault), principal); // grant the vault allowance
+        vault.executeBuy(alice, 0, principal, principal);
+
+        assertEq(principal, asset.balanceOf(address(vault)), "vault should have the principal worth of assets");
+        assertEq(principal, vault.balanceOf(alice, depositPeriod), "user should have principal worth of vault shares");
+
+        _warpToPeriod(vault, depositPeriod);
+
+        // requestSell
+        // TODO - we should be able to redeem principal + yield
+
+        // sell
     }
 
     // Scenario: Calculating returns for a standard investment

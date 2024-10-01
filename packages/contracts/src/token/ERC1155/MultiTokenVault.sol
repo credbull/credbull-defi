@@ -3,7 +3,6 @@ pragma solidity ^0.8.23;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -16,7 +15,7 @@ import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol
  *      of time periods that have elapsed and allows users to deposit and redeem assets based on these periods.
  *      Designed to be secure and production-ready for Hacken audit.
  */
-abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, ReentrancyGuard {
+abstract contract MultiTokenVault is ERC1155, IMultiTokenVault, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     /// @notice The ERC20 token used as the underlying asset in the vault.
@@ -110,13 +109,6 @@ abstract contract MultiTokenVault is ERC1155Supply, IMultiTokenVault, Reentrancy
 
     function assetIERC20() public view virtual returns (IERC20 assetIERC20_) {
         return ASSET;
-    }
-
-    /**
-     * @inheritdoc IMultiTokenVault
-     */
-    function totalAssets() public view returns (uint256) {
-        return ASSET.balanceOf(address(this));
     }
 
     /**

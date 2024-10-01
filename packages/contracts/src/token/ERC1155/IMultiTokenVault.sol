@@ -77,13 +77,6 @@ interface IMultiTokenVault is IERC1155 {
     function asset() external view returns (address asset_);
 
     /**
-     * @dev Returns the total amount of the underlying asset that is managed by vault.
-     *
-     * @return totalAssets_ The total amount of the underlying asset that is managed by vault.
-     */
-    function totalAssets() external view returns (uint256 totalAssets_);
-
-    /**
      * @dev Returns the shares held by the owner for deposit period.
      *
      * @param owner The owner address hold the shares.
