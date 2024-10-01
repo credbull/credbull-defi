@@ -65,6 +65,7 @@ contract LiquidContinuousMultiTokenVault is
         TripleRateContext(
             params.fullRateScaled,
             params.reducedRateScaled,
+            currentPeriod(),
             params.frequency,
             params.tenor,
             params.asset.decimals()
@@ -252,5 +253,26 @@ contract LiquidContinuousMultiTokenVault is
         returns (bool)
     {
         return MultiTokenVault.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @inheritdoc TripleRateContext
+     */
+    // NOTE (JL,2024-09-30): Add Access Control modifier for Operator(?)
+    function setReducedRateAt(uint256 tenorPeriod_, uint256 reducedRateScaled_) public override {
+        super.setReducedRateAt(tenorPeriod_, reducedRateScaled_);
+    }
+
+    /**
+     * @notice Sets the `reducedRateScaled_` against the Current Period.
+     * @dev Convenience method for setting the Reduced Rate agains the current Tenor Period.
+     *  Reverts with [TripleRateContext_PeriodRegressionNotAllowed] if current Tenor Period is before the
+     *  stored current Tenor Period (the setting).  Emits [CurrentTenorPeriodAndRateChanged] upon mutation.
+     *
+     * @param reducedRateScaled_ The [uint256] Reduced Rate scaled percentage value.
+     */
+    // NOTE (JL,2024-09-30): Add Access Control modifier for Operator(?)
+    function setReducedRateAtCurrent(uint256 reducedRateScaled_) public {
+        super.setReducedRateAt(currentPeriod(), reducedRateScaled_);
     }
 }

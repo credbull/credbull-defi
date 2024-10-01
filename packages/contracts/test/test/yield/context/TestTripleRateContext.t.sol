@@ -7,8 +7,18 @@ contract TestTripleRateContext is TripleRateContext {
     constructor(
         uint256 fullRateInPercentageScaled_,
         uint256 reducedRateInPercentageScaled_,
+        uint256 fromPeriod_,
         uint256 frequency_,
         uint256 tenor_,
         uint256 decimals
-    ) TripleRateContext(fullRateInPercentageScaled_, reducedRateInPercentageScaled_, frequency_, tenor_, decimals) { }
+    )
+        TripleRateContext(
+            fullRateInPercentageScaled_,
+            reducedRateInPercentageScaled_,
+            fromPeriod_,
+            frequency_,
+            tenor_,
+            decimals
+        )
+    { }
 }

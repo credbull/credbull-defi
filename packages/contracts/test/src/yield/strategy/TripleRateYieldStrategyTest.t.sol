@@ -21,6 +21,7 @@ contract TripleRateYieldStrategyTest is Test {
     uint256 public constant DEFAULT_FULL_RATE = PERCENT_10_SCALED;
     uint256 public constant DEFAULT_REDUCED_RATE = PERCENT_5_SCALED;
 
+    uint256 public constant EFFECTIVE_FROM_PERIOD = 0;
     uint256 public constant MATURITY_PERIOD = 30;
 
     uint256 public immutable DEFAULT_FREQUENCY = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
@@ -36,6 +37,7 @@ contract TripleRateYieldStrategyTest is Test {
         context = new TestTripleRateContext(
             DEFAULT_FULL_RATE,
             DEFAULT_REDUCED_RATE,
+            EFFECTIVE_FROM_PERIOD,
             Frequencies.toValue(Frequencies.Frequency.DAYS_365),
             MATURITY_PERIOD,
             DECIMALS
