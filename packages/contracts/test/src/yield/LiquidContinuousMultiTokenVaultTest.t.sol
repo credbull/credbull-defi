@@ -18,7 +18,7 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
 
     uint256 internal SCALE;
 
-    LiquidContinuousMultiTokenVault.VaultParams private FIXED_6APY_PARAMS;
+    LiquidContinuousMultiTokenVault.VaultParams private FIXED_10APY_PARAMS;
 
     function setUp() public {
         vm.prank(owner);
@@ -27,7 +27,100 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         SCALE = 10 ** asset.decimals();
         _transferAndAssert(asset, owner, alice, 100_000 * SCALE);
 
-        FIXED_6APY_PARAMS = LiquidContinuousMultiTokenVault.VaultParams({
+        FIXED_10APY_PARAMS = LiquidContinuousMultiTokenVault.VaultParams({
+            contractOwner: owner,
+            asset: asset,
+            yieldStrategy: new SimpleInterestYieldStrategy(),
+            vaultStartTimestamp: block.timestamp,
+            redeemNoticePeriod: 1,
+            fullRateScaled: 10 * SCALE,
+            reducedRateScaled: 0 * SCALE,
+            frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            tenor: 30
+        });
+    }
+
+    function test__RequestRedeemTest__RedeemAtTenor() public {
+        LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = FIXED_10APY_PARAMS;
+
+        uint256 principal = 100 * SCALE;
+        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(FIXED_10APY_PARAMS);
+
+        testVaultAtPeriods(vault, principal, 0, vaultParams.tenor);
+    }
+
+    function test__LiquidContinuousVaultTest__RedeemBeforeTenor() public {
+        LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = FIXED_10APY_PARAMS;
+
+        uint256 principal = 100 * SCALE;
+        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(FIXED_10APY_PARAMS);
+
+        testVaultAtPeriods(vault, principal, 0, vaultParams.tenor - 1);
+    }
+
+    function test__LiquidContinuousVaultTest__BuyAndSell() public {
+        LiquidContinuousMultiTokenVaultMock vault = new LiquidContinuousMultiTokenVaultMock(FIXED_10APY_PARAMS);
+
+        IMultiTokenVaultTestParams memory testParams =
+            IMultiTokenVaultTestParams({ principal: 2_000 * SCALE, depositPeriod: 11, redeemPeriod: 71 });
+
+        uint256 assetStartBalance = asset.balanceOf(alice);
+
+        uint256 sharesAmount = testParams.principal; // 1 principal = 1 share
+
+        // ---------------- buy (deposit) ----------------
+        _warpToPeriod(vault, testParams.depositPeriod);
+
+        vm.startPrank(alice);
+        asset.approve(address(vault), testParams.principal); // grant the vault allowance
+        vault.executeBuy(alice, 0, testParams.principal, sharesAmount);
+        vm.stopPrank();
+
+        assertEq(
+            testParams.principal, asset.balanceOf(address(vault)), "vault should have the principal worth of assets"
+        );
+        assertEq(
+            testParams.principal,
+            vault.balanceOf(alice, testParams.depositPeriod),
+            "user should have principal worth of vault shares"
+        );
+
+        // ---------------- requestSell (requestRedeem) ----------------
+        _warpToPeriod(vault, testParams.redeemPeriod - vault.noticePeriod());
+
+        // requestSell
+        vm.prank(alice);
+        uint256 requestId = vault.requestSellForDepositPeriod(sharesAmount, testParams.depositPeriod); // TODO - test should not pass in depositPeriod here
+        assertEq(
+            sharesAmount,
+            vault.unlockRequested(alice, testParams.depositPeriod).amount,
+            "unlockRequest should be created"
+        );
+
+        // ---------------- sell (redeem) ----------------
+        uint256 expectedYield = _expectedReturns(sharesAmount, vault, testParams);
+        assertEq(33_333333, expectedYield, "expected returns incorrect");
+        vm.prank(owner);
+        _transferAndAssert(asset, owner, address(vault), expectedYield); // fund the vault to cover redeem
+
+        _warpToPeriod(vault, testParams.redeemPeriod);
+
+        vm.prank(alice);
+        vault.executeSellForDepositPeriod(
+            alice, testParams.depositPeriod, requestId, testParams.principal + expectedYield, sharesAmount
+        );
+
+        assertEq(0, vault.balanceOf(alice, testParams.depositPeriod), "user should have no shares remaining");
+        assertEq(
+            assetStartBalance + expectedYield,
+            asset.balanceOf(alice),
+            "user should have received principal + yield back"
+        );
+    }
+
+    // Scenario: Calculating returns for a standard investment
+    function test__LiquidContinuousVaultTest__Daily_6APY_30day_50K() public {
+        LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = LiquidContinuousMultiTokenVault.VaultParams({
             contractOwner: owner,
             asset: asset,
             yieldStrategy: new SimpleInterestYieldStrategy(),
@@ -38,53 +131,7 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
             tenor: 30
         });
-    }
 
-    function test__RequestRedeemTest__RedeemAtTenor() public {
-        LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = FIXED_6APY_PARAMS;
-
-        uint256 principal = 100 * SCALE;
-        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(FIXED_6APY_PARAMS);
-
-        testVaultAtPeriods(vault, principal, 0, vaultParams.tenor);
-    }
-
-    function test__LiquidContinuousVaultTest__RedeemBeforeTenor() public {
-        LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = FIXED_6APY_PARAMS;
-
-        uint256 principal = 100 * SCALE;
-        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(FIXED_6APY_PARAMS);
-
-        testVaultAtPeriods(vault, principal, 0, vaultParams.tenor - 1);
-    }
-
-    function test__LiquidContinuousVaultTest__BuyAndSell() public {
-        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(FIXED_6APY_PARAMS);
-
-        uint256 principal = 100 * SCALE;
-
-        uint256 depositPeriod = 11;
-        _warpToPeriod(vault, depositPeriod);
-
-        // buy
-        vm.startPrank(alice);
-        asset.approve(address(vault), principal); // grant the vault allowance
-        vault.executeBuy(alice, 0, principal, principal);
-
-        assertEq(principal, asset.balanceOf(address(vault)), "vault should have the principal worth of assets");
-        assertEq(principal, vault.balanceOf(alice, depositPeriod), "user should have principal worth of vault shares");
-
-        _warpToPeriod(vault, depositPeriod);
-
-        // requestSell
-        // TODO - we should be able to redeem principal + yield
-
-        // sell
-    }
-
-    // Scenario: Calculating returns for a standard investment
-    function test__LiquidContinuousVaultTest__Daily_6APY_30day_50K() public {
-        LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = FIXED_6APY_PARAMS;
         uint256 deposit = 50_000 * SCALE;
 
         LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(vaultParams);
@@ -176,5 +223,23 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         uint256 warpToTimeInSeconds = Timer(address(vault)).startTimestamp() + timePeriod * 24 hours;
 
         vm.warp(warpToTimeInSeconds);
+    }
+}
+
+contract LiquidContinuousMultiTokenVaultMock is LiquidContinuousMultiTokenVault {
+    constructor(VaultParams memory params) LiquidContinuousMultiTokenVault(params) { }
+
+    function requestSellForDepositPeriod(uint256 amount, uint256 depositPeriod) public returns (uint256 requestId) {
+        return super._requestSell(amount, depositPeriod);
+    }
+
+    function executeSellForDepositPeriod(
+        address requestor,
+        uint256 depositPeriod,
+        uint256 requestId,
+        uint256 currencyTokenAmount,
+        uint256 componentTokenAmount
+    ) public {
+        super._executeSell(requestor, depositPeriod, requestId, currencyTokenAmount, componentTokenAmount);
     }
 }

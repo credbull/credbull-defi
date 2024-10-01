@@ -132,6 +132,7 @@ contract LiquidContinuousMultiTokenVault is
     function requestBuy(uint256 /* currencyTokenAmount */ )
         public
         view
+        virtual
         override
         onlyRole(DEFAULT_ADMIN_ROLE)
         returns (uint256 requestId)
@@ -140,13 +141,15 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     /// @inheritdoc ITradeable
-    function requestSell(uint256 componentTokenAmount) public override returns (uint256 requestId) {
-        return requestSell(componentTokenAmount, currentPeriod()); // TODO - need helper to find which depositPeriods we want to sell from...
+    function requestSell(uint256 componentTokenAmount) public virtual override returns (uint256 requestId) {
+        // TODO - need helper to find which depositPeriods we want to sell from...
+
+        return _requestSell(componentTokenAmount, currentPeriod());
     }
 
     /// @notice Request to sell (redeem) `amount` of tokens at the `depositPeriod`
     /// @param amount The amount a User wants to sell (redeem).  This could be yield only, or include principal + yield.
-    function requestSell(uint256 amount, uint256 depositPeriod) public returns (uint256 requestId) {
+    function _requestSell(uint256 amount, uint256 depositPeriod) internal virtual returns (uint256 requestId) {
         requestUnlock(_msgSender(), depositPeriod, _minUnlockPeriod(), amount);
 
         return 0; // TODO - need to add requestId to requestUnlock()
@@ -159,7 +162,7 @@ contract LiquidContinuousMultiTokenVault is
         uint256 currencyTokenAmount,
         uint256 /* componentTokenAmount */
     ) public override {
-        // TODO - verify currencyTokenAmount convertToShares = componentTokenAmount
+        // TODO - verify currencyTokenAmount convertToShares(currencyTokenAmount) = componentTokenAmount
 
         deposit(currencyTokenAmount, requestor);
     }
@@ -171,22 +174,20 @@ contract LiquidContinuousMultiTokenVault is
         uint256 currencyTokenAmount,
         uint256 componentTokenAmount
     ) public override {
-        // TODO - verify currencyTokenAmount convertToAssets = componentTokenAmount
-        executeSell(requestor, currentPeriod(), requestId, currencyTokenAmount, componentTokenAmount);
+        // TODO - verify currencyTokenAmount convertToAssets(componentTokenAmount) = currencyTokenAmount
+        _executeSell(requestor, currentPeriod(), requestId, currencyTokenAmount, componentTokenAmount);
     }
 
-    function executeSell(
+    function _executeSell(
         address requestor,
         uint256 depositPeriod,
         uint256, /* requestId */
-        uint256 currencyTokenAmount,
-        uint256 /* componentTokenAmount */
-    ) public {
-        // TODO - verify currencyTokenAmount convertToAssets = componentTokenAmount
-        unlock(_msgSender(), depositPeriod, currentPeriod(), currencyTokenAmount);
-
+        uint256, /* currencyTokenAmount */
+        uint256 componentTokenAmount
+    ) internal {
+        // TODO - verify currencyTokenAmount convertToAssets(componentTokenAmount) = currencyTokenAmount
         // TODO - need helper to find which depositPeriods we want to sell from...
-        redeemForDepositPeriod(currencyTokenAmount, requestor, requestor, depositPeriod, currentPeriod());
+        redeemForDepositPeriod(componentTokenAmount, requestor, requestor, depositPeriod, currentPeriod());
     }
 
     // solhint-disable-next-line
