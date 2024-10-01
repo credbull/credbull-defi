@@ -54,7 +54,9 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     IYieldStrategy public immutable YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
+
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidOwnerAddress(address ownerAddress);
@@ -78,6 +80,7 @@ contract LiquidContinuousMultiTokenVault is
 
         _grantRole(DEFAULT_ADMIN_ROLE, params.contractOwner);
         _grantRole(PAUSER_ROLE, params.contractOwner);
+        _grantRole(OPERATOR_ROLE, params.contractOwner);
 
         YIELD_STRATEGY = params.yieldStrategy;
 
@@ -258,8 +261,11 @@ contract LiquidContinuousMultiTokenVault is
     /**
      * @inheritdoc TripleRateContext
      */
-    // NOTE (JL,2024-09-30): Add Access Control modifier for Operator(?)
-    function setReducedRateAt(uint256 tenorPeriod_, uint256 reducedRateScaled_) public override {
+    function setReducedRateAt(uint256 tenorPeriod_, uint256 reducedRateScaled_)
+        public
+        override
+        onlyRole(OPERATOR_ROLE)
+    {
         super.setReducedRateAt(tenorPeriod_, reducedRateScaled_);
     }
 
@@ -271,8 +277,7 @@ contract LiquidContinuousMultiTokenVault is
      *
      * @param reducedRateScaled_ The [uint256] Reduced Rate scaled percentage value.
      */
-    // NOTE (JL,2024-09-30): Add Access Control modifier for Operator(?)
-    function setReducedRateAtCurrent(uint256 reducedRateScaled_) public {
+    function setReducedRateAtCurrent(uint256 reducedRateScaled_) public onlyRole(OPERATOR_ROLE) {
         super.setReducedRateAt(currentPeriod(), reducedRateScaled_);
     }
 }
