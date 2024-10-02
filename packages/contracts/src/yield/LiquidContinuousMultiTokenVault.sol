@@ -70,7 +70,7 @@ contract LiquidContinuousMultiTokenVault is
         TripleRateContext(
             ContextParams({
                 fullRateScaled: params.fullRateScaled,
-                initialReducedRate: PeriodRate({ interestRate: params.reducedRateScaled, effectiveFromPeriod: currentPeriod() }),
+                initialReducedRate: PeriodRate({ interestRate: params.reducedRateScaled, effectiveFromPeriod: 0 }),
                 frequency: params.frequency,
                 tenor: params.tenor,
                 decimals: params.asset.decimals()
