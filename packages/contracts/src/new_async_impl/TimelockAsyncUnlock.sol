@@ -2,8 +2,9 @@
 pragma solidity ^0.8.20;
 
 import { ITimelockAsyncUnlock } from "@credbull/new_async_impl/ITimelockAsyncUnlock.sol";
+import { Context } from "@openzeppelin/contracts/utils/Context.sol";
 
-abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock {
+abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
     mapping(uint256 depositPeriod => mapping(address account => uint256 amount)) private _unlockRequests;
     mapping(uint256 depositPeriod => mapping(address account => mapping(uint256 unlockPeriod => uint256 amount)))
         private _unlockRequestsByUnlockPeriod;
@@ -11,15 +12,22 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock {
     uint256 private _noticePeriod;
 
     error TimelockAsyncUnlock__ExceededMaxUnlock(address owner, uint256 amount, uint256 unlockRequestedAmount);
+    error TimelockAsyncUnlock__UnlockBeforeDepositPeriod(
+        address caller, address owner, uint256 depositPeriod, uint256 unlockPeriod
+    );
+    error TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(
+        address caller, address owner, uint256 currentPeriod, uint256 unlockPeriod
+    );
+    error TimelockAsyncUnlock__ExceededMaxRequestUnlock(address owner, uint256 amount, uint256 maxRequestUnlockAmount);
 
-    modifier validateUnlockPeriod(uint256 depositPeriod, uint256 unlockPeriod) {
+    modifier validateUnlockPeriod(address owner, uint256 depositPeriod, uint256 unlockPeriod) {
         if (unlockPeriod < depositPeriod) {
-            revert();
+            revert TimelockAsyncUnlock__UnlockBeforeDepositPeriod(_msgSender(), owner, depositPeriod, unlockPeriod);
         }
 
         // Need to check with Ian
         if (unlockPeriod >= currentPeriod()) {
-            revert();
+            revert TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(_msgSender(), owner, currentPeriod(), unlockPeriod);
         }
 
         _;
@@ -68,7 +76,7 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock {
          * Need to check if msg.sender = owner or isApprovedForAll(owner, msg.sender) in multitoken vault
          */
         if (maxRequestUnlock(owner, depositPeriod) < amount) {
-            revert();
+            revert TimelockAsyncUnlock__ExceededMaxRequestUnlock(owner, amount, maxRequestUnlock(owner, depositPeriod));
         }
 
         unlockPeriod = currentUnlockPeriod();
@@ -83,7 +91,7 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock {
     function unlock(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount)
         public
         virtual
-        validateUnlockPeriod(depositPeriod, unlockPeriod)
+        validateUnlockPeriod(owner, depositPeriod, unlockPeriod)
     {
         uint256 unlockRequestedAmount = _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod];
 
