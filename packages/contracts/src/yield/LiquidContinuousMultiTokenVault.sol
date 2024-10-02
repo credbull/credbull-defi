@@ -33,8 +33,8 @@ contract LiquidContinuousMultiTokenVault is
     MultiTokenVault,
     ITradeable,
     TimelockAsyncUnlock,
-    TripleRateContext,
     Timer,
+    TripleRateContext,
     ERC1155Pausable,
     AccessControl
 {
@@ -54,26 +54,31 @@ contract LiquidContinuousMultiTokenVault is
 
     IYieldStrategy public immutable YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
 
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidOwnerAddress(address ownerAddress);
 
     constructor(VaultParams memory params)
         MultiTokenVault(params.asset)
         TimelockAsyncUnlock(params.redeemNoticePeriod)
-        TripleRateContext(
-            params.fullRateScaled,
-            params.reducedRateScaled,
-            params.frequency,
-            params.tenor,
-            params.asset.decimals()
-        )
         Timer(params.vaultStartTimestamp)
+        TripleRateContext(
+            ContextParams({
+                fullRateScaled: params.fullRateScaled,
+                initialReducedRate: PeriodRate({ interestRate: params.reducedRateScaled, effectiveFromPeriod: currentPeriod() }),
+                frequency: params.frequency,
+                tenor: params.tenor,
+                decimals: params.asset.decimals()
+            })
+        )
     {
         if (params.contractOwner == address(0)) {
             revert LiquidContinuousMultiTokenVault__InvalidOwnerAddress(params.contractOwner);
         }
 
         _grantRole(DEFAULT_ADMIN_ROLE, params.contractOwner);
+        _grantRole(OPERATOR_ROLE, params.contractOwner);
 
         YIELD_STRATEGY = params.yieldStrategy;
 
@@ -287,5 +292,28 @@ contract LiquidContinuousMultiTokenVault is
         returns (bool)
     {
         return MultiTokenVault.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @inheritdoc TripleRateContext
+     */
+    function setReducedRate(uint256 reducedRateScaled_, uint256 effectiveFromPeriod_)
+        public
+        override
+        onlyRole(OPERATOR_ROLE)
+    {
+        super.setReducedRate(effectiveFromPeriod_, reducedRateScaled_);
+    }
+
+    /**
+     * @notice Sets the `reducedRateScaled_` against the Current Period.
+     * @dev Convenience method for setting the Reduced Rate agains the current Period.
+     *  Reverts with [TripleRateContext_PeriodRegressionNotAllowed] if current Period is before the
+     *  stored current Period (the setting).  Emits [CurrentPeriodRateChanged] upon mutation.
+     *
+     * @param reducedRateScaled_ The scaled percentage 'reduced' Interest Rate.
+     */
+    function setReducedRateAtCurrent(uint256 reducedRateScaled_) public onlyRole(OPERATOR_ROLE) {
+        super.setReducedRate(currentPeriod(), reducedRateScaled_);
     }
 }
