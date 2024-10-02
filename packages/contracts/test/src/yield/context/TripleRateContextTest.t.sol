@@ -35,47 +35,43 @@ contract TripleRateContextTest is Test {
         assertEq(PERCENT_5_SCALED, toTest.rateScaled(), "Incorrect Full Rate");
         assertEq(TENOR, toTest.numPeriodsForFullRate(), "Incorrect No Of Period For Full Rate");
 
-        ITripleRateContext.TenorPeriodRate memory currentTenorPeriodRate = toTest.currentTenorPeriodRate();
-        assertEq(
-            EFFECTIVE_FROM_PERIOD, currentTenorPeriodRate.effectiveFromTenorPeriod, "Incorrect Current Tenor Period"
-        );
-        assertEq(PERCENT_5_5_SCALED, currentTenorPeriodRate.interestRate, "Incorrect Current Reduced Rate");
+        ITripleRateContext.PeriodRate memory currentPeriodRate = toTest.currentPeriodRate();
+        assertEq(EFFECTIVE_FROM_PERIOD, currentPeriodRate.effectiveFromPeriod, "Incorrect Current Period");
+        assertEq(PERCENT_5_5_SCALED, currentPeriodRate.interestRate, "Incorrect Current Reduced Rate");
 
-        ITripleRateContext.TenorPeriodRate memory previousTenorPeriodRate = toTest.previousTenorPeriodRate();
-        assertEq(0, previousTenorPeriodRate.effectiveFromTenorPeriod, "Incorrect Previous Tenor Period");
-        assertEq(0, previousTenorPeriodRate.interestRate, "Incorrect Previous Reduced Rate");
+        ITripleRateContext.PeriodRate memory previousPeriodRate = toTest.previousPeriodRate();
+        assertEq(0, previousPeriodRate.effectiveFromPeriod, "Incorrect Previous Period");
+        assertEq(0, previousPeriodRate.interestRate, "Incorrect Previous Reduced Rate");
     }
 
-    function test_TripleRateContext_SetCurrentTenorPeriodRateWorks() public {
+    function test_TripleRateContext_SetCurrentPeriodRateWorks() public {
         // Checked event emission.
         vm.expectEmit();
-        emit TripleRateContext.CurrentTenorPeriodRateChanged(PERCENT_10_SCALED, 3);
+        emit TripleRateContext.CurrentPeriodRateChanged(PERCENT_10_SCALED, 3);
 
-        toTest.setReducedRateAt(3, PERCENT_10_SCALED);
+        toTest.setReducedRate(PERCENT_10_SCALED, 3);
 
-        ITripleRateContext.TenorPeriodRate memory currentTenorPeriodRate = toTest.currentTenorPeriodRate();
-        assertEq(3, currentTenorPeriodRate.effectiveFromTenorPeriod, "Incorrect Current Tenor Period");
-        assertEq(PERCENT_10_SCALED, currentTenorPeriodRate.interestRate, "Incorrect Current Reduced Rate");
+        ITripleRateContext.PeriodRate memory currentPeriodRate = toTest.currentPeriodRate();
+        assertEq(3, currentPeriodRate.effectiveFromPeriod, "Incorrect Current Period");
+        assertEq(PERCENT_10_SCALED, currentPeriodRate.interestRate, "Incorrect Current Reduced Rate");
 
-        ITripleRateContext.TenorPeriodRate memory previousTenorPeriodRate = toTest.previousTenorPeriodRate();
-        assertEq(
-            EFFECTIVE_FROM_PERIOD, previousTenorPeriodRate.effectiveFromTenorPeriod, "Incorrect Previous Tenor Period"
-        );
-        assertEq(PERCENT_5_5_SCALED, previousTenorPeriodRate.interestRate, "Incorrect Previous Reduced Rate");
+        ITripleRateContext.PeriodRate memory previousPeriodRate = toTest.previousPeriodRate();
+        assertEq(EFFECTIVE_FROM_PERIOD, previousPeriodRate.effectiveFromPeriod, "Incorrect Previous Period");
+        assertEq(PERCENT_5_5_SCALED, previousPeriodRate.interestRate, "Incorrect Previous Reduced Rate");
     }
 
-    function test_TripleRateContext_RevertSetCurrentTenorPeriodRate_WhenPeriodIsAtOrBeforeCurrent() public {
+    function test_TripleRateContext_RevertSetCurrentPeriodRate_WhenPeriodIsAtOrBeforeCurrent() public {
         // Before
         vm.expectRevert(
-            abi.encodeWithSelector(TripleRateContext.TripleRateContext_TenorPeriodRegressionNotAllowed.selector, 0, 0)
+            abi.encodeWithSelector(TripleRateContext.TripleRateContext_PeriodRegressionNotAllowed.selector, 0, 0)
         );
-        toTest.setReducedRateAt(0, PERCENT_10_SCALED);
+        toTest.setReducedRate(PERCENT_10_SCALED, 0);
 
-        toTest.setReducedRateAt(3, PERCENT_10_SCALED);
+        toTest.setReducedRate(PERCENT_10_SCALED, 3);
         // At
         vm.expectRevert(
-            abi.encodeWithSelector(TripleRateContext.TripleRateContext_TenorPeriodRegressionNotAllowed.selector, 3, 3)
+            abi.encodeWithSelector(TripleRateContext.TripleRateContext_PeriodRegressionNotAllowed.selector, 3, 3)
         );
-        toTest.setReducedRateAt(3, PERCENT_5_SCALED);
+        toTest.setReducedRate(PERCENT_5_SCALED, 3);
     }
 }

@@ -261,23 +261,23 @@ contract LiquidContinuousMultiTokenVault is
     /**
      * @inheritdoc TripleRateContext
      */
-    function setReducedRateAt(uint256 tenorPeriod_, uint256 reducedRateScaled_)
+    function setReducedRate(uint256 reducedRateScaled_, uint256 effectiveFromPeriod_)
         public
         override
         onlyRole(OPERATOR_ROLE)
     {
-        super.setReducedRateAt(tenorPeriod_, reducedRateScaled_);
+        super.setReducedRate(effectiveFromPeriod_, reducedRateScaled_);
     }
 
     /**
      * @notice Sets the `reducedRateScaled_` against the Current Period.
-     * @dev Convenience method for setting the Reduced Rate agains the current Tenor Period.
-     *  Reverts with [TripleRateContext_PeriodRegressionNotAllowed] if current Tenor Period is before the
-     *  stored current Tenor Period (the setting).  Emits [CurrentTenorPeriodAndRateChanged] upon mutation.
+     * @dev Convenience method for setting the Reduced Rate agains the current Period.
+     *  Reverts with [TripleRateContext_PeriodRegressionNotAllowed] if current Period is before the
+     *  stored current Period (the setting).  Emits [CurrentPeriodRateChanged] upon mutation.
      *
-     * @param reducedRateScaled_ The [uint256] Reduced Rate scaled percentage value.
+     * @param reducedRateScaled_ The scaled percentage 'reduced' Interest Rate.
      */
     function setReducedRateAtCurrent(uint256 reducedRateScaled_) public onlyRole(OPERATOR_ROLE) {
-        super.setReducedRateAt(currentPeriod(), reducedRateScaled_);
+        super.setReducedRate(currentPeriod(), reducedRateScaled_);
     }
 }

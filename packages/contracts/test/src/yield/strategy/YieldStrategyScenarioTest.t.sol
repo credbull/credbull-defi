@@ -31,7 +31,7 @@ abstract contract YieldStrategyScenarioTest is Test {
 
     function _contextAddress() internal virtual returns (address);
 
-    function _setReducedRateAt(uint256 _period, uint256 _reducedRate) internal virtual;
+    function _setReducedRate(uint256 reducedRateScaled_, uint256 effectiveFromPeriod_) internal virtual;
 
     function setUp() public virtual {
         principal = 1_000 * SCALE;
@@ -140,7 +140,7 @@ abstract contract YieldStrategyScenarioTest is Test {
      *  NOTE (JL,2024-09-21): The 45 days above should be 46 days. Raised to Product.
      */
     function test_YieldStrategyScenarioTest_S7() public {
-        _setReducedRateAt(31, PERCENT_5_5_SCALED);
+        _setReducedRate(PERCENT_5_5_SCALED, 31);
         assertApproxEqAbs(
             10_479_452, // Full[30]+Reduced[15] = 8.2191781 + ($1,000 * ((5.5% / 365) * 15) = 10.479452
             _yieldStrategy().calcYield(_contextAddress(), principal, depositPeriod, depositPeriod + 45),
@@ -164,7 +164,7 @@ abstract contract YieldStrategyScenarioTest is Test {
      *  NOTE (JL,2024-09-21): The 50 days above should be 51 days. Raised to Product.
      */
     function test_YieldStrategyScenarioTest_S8() public {
-        _setReducedRateAt(31, PERCENT_5_5_SCALED);
+        _setReducedRate(PERCENT_5_5_SCALED, 31);
         assertApproxEqAbs(
             11_232_876, // Full[30]+Reduced[20] = 8.2191781 + ($1,000 * ((5.5% / 365) * 20) = 11.232876
             _yieldStrategy().calcYield(_contextAddress(), principal, depositPeriod, depositPeriod + 50),
@@ -197,7 +197,7 @@ abstract contract YieldStrategyScenarioTest is Test {
      *  And the yield from the second cycle (8.22 USDC)
      */
     function test_YieldStrategyScenarioTest_S9_S10() public {
-        _setReducedRateAt(31, PERCENT_5_5_SCALED);
+        _setReducedRate(PERCENT_5_5_SCALED, 31);
         assertApproxEqAbs(
             16_438_356, // $1,000 * ((10% / 365) * 60) = 16.438356
             _yieldStrategy().calcYield(
@@ -253,7 +253,7 @@ abstract contract YieldStrategyScenarioTest is Test {
      */
     function test_YieldStrategyScenarioTest_MU2() public {
         // Reduced Rate for second cycle.
-        _setReducedRateAt(31, PERCENT_5_5_SCALED);
+        _setReducedRate(PERCENT_5_5_SCALED, 31);
 
         uint256 redemptionPeriod = 46;
 
@@ -317,7 +317,7 @@ abstract contract YieldStrategyScenarioTest is Test {
      */
     function test_YieldStrategyScenarioTest_MU3() public {
         // Reduced Rate from Day 20 onwards.
-        _setReducedRateAt(20, PERCENT_5_5_SCALED);
+        _setReducedRate(PERCENT_5_5_SCALED, 20);
 
         uint256 redemptionPeriod = 45;
 

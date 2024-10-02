@@ -103,7 +103,7 @@ contract TripleRateYieldStrategyTest is Test {
         );
 
         // Update current tenor at Day 31:
-        context.setReducedRateAt(31, PERCENT_5_5_SCALED);
+        context.setReducedRate(PERCENT_5_5_SCALED, 31);
 
         // 37 Days:
         // ($1,000 * ((10% / 365) * 30) + ($1,000 * ((5.5% / 365) * 7))) = 9.273973

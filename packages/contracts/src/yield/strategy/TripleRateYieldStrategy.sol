@@ -7,7 +7,7 @@ import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 
 /**
  * @title TripleRateYieldStrategy
- * @dev Calculates returns using 1 'full' rate and 2 reduced rates, applied according to the Tenor Period, and
+ * @dev Calculates returns using 1 'full' rate and 2 'reduced' rates, applied according to the Tenor Period, and
  *  depending on the holding period.
  */
 contract TripleRateYieldStrategy is IYieldStrategy {
@@ -38,16 +38,16 @@ contract TripleRateYieldStrategy is IYieldStrategy {
         // Calculate interest for reduced-rate periods
         if (_noOfPeriods(fromPeriod, toPeriod) - noOfFullRatePeriods > 0) {
             uint256 firstReducedRatePeriod = _firstReducedRatePeriod(noOfFullRatePeriods, fromPeriod);
-            ITripleRateContext.TenorPeriodRate memory currentTenorPeriodRate = context.currentTenorPeriodRate();
+            ITripleRateContext.PeriodRate memory currentPeriodRate = context.currentPeriodRate();
 
             // Previous Tenor Period ... Current Tenor Period ... 1st Reduced Rate Period ... To Period
             // If the 1st RR Period is on or after the current Tenor Period, then RR Interest is:
             //  1st RR Period -> To Period @ Current Rate.
-            if (firstReducedRatePeriod >= currentTenorPeriodRate.effectiveFromTenorPeriod) {
+            if (firstReducedRatePeriod >= currentPeriodRate.effectiveFromPeriod) {
                 //  1st RR Period -> To Period @ Current Rate.
                 yield += CalcSimpleInterest.calcInterest(
                     principal,
-                    currentTenorPeriodRate.interestRate,
+                    currentPeriodRate.interestRate,
                     toPeriod - firstReducedRatePeriod,
                     context.frequency(),
                     context.scale()
@@ -58,13 +58,13 @@ contract TripleRateYieldStrategy is IYieldStrategy {
             //  1st RR Period -> Current Period @ Previous Rate +
             //  Current Period -> To Period @ Current Rate.
             else {
-                ITripleRateContext.TenorPeriodRate memory previousTenorPeriodRate = context.previousTenorPeriodRate();
+                ITripleRateContext.PeriodRate memory previousPeriodRate = context.previousPeriodRate();
 
                 //  1st RR Period -> Current Period @ Previous Rate +
                 yield += CalcSimpleInterest.calcInterest(
                     principal,
-                    previousTenorPeriodRate.interestRate,
-                    currentTenorPeriodRate.effectiveFromTenorPeriod - firstReducedRatePeriod,
+                    previousPeriodRate.interestRate,
+                    currentPeriodRate.effectiveFromPeriod - firstReducedRatePeriod,
                     context.frequency(),
                     context.scale()
                 );
@@ -72,8 +72,8 @@ contract TripleRateYieldStrategy is IYieldStrategy {
                 //  Current Period -> To Period @ Current Rate.
                 yield += CalcSimpleInterest.calcInterest(
                     principal,
-                    currentTenorPeriodRate.interestRate,
-                    toPeriod - currentTenorPeriodRate.effectiveFromTenorPeriod,
+                    currentPeriodRate.interestRate,
+                    toPeriod - currentPeriodRate.effectiveFromPeriod,
                     context.frequency(),
                     context.scale()
                 );

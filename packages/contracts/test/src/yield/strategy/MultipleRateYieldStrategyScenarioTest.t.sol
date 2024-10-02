@@ -34,7 +34,7 @@ contract MultipleRateYieldStrategyScenarioTest is YieldStrategyScenarioTest {
         return address(context);
     }
 
-    function _setReducedRateAt(uint256 _period, uint256 _reducedRate) internal virtual override {
-        context.setReducedRate(_period, _reducedRate);
+    function _setReducedRate(uint256 reducedRateScaled_, uint256 effectiveFromPeriod_) internal virtual override {
+        context.setReducedRate(effectiveFromPeriod_, reducedRateScaled_);
     }
 }
