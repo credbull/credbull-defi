@@ -11,28 +11,30 @@ import { ICalcInterestMetadata } from "@credbull/yield/ICalcInterestMetadata.sol
  *  encapsulated by the [ICalcInterestMetadata].
  */
 interface ITripleRateContext is ICalcInterestMetadata {
-    /// @notice Associates an Interest Rate with the Tenor Period from which it applies.
-    struct TenorPeriodRate {
+    /// @notice Associates an Interest Rate with the Period from which it applies.
+    struct PeriodRate {
         /// @dev The Interest Rate in percentage terms and scaled.
         uint256 interestRate;
-        /// @dev The Tenor Period from which the associated rate applies.
-        uint256 effectiveFromTenorPeriod;
+        /// @dev The Period from which the associated rate applies.
+        uint256 effectiveFromPeriod;
     }
 
     /// @notice Returns the number of periods required to earn the full rate.
     function numPeriodsForFullRate() external view returns (uint256 numPeriods);
 
     /**
-     * @notice Returns the [TenorPeriodRate] of the current Reduced Interest Rate and its associated Tenor Period.
+     * @notice Returns the [PeriodRate] of the current (at invocation) Reduced Interest Rate and its
+     *  associated Period.
      *
-     * @return currentTenorPeriodRate_ The current [TenorPeriodRate].
+     * @return currentPeriodRate_ The current [PeriodRate].
      */
-    function currentTenorPeriodRate() external view returns (TenorPeriodRate memory currentTenorPeriodRate_);
+    function currentPeriodRate() external view returns (PeriodRate memory currentPeriodRate_);
 
     /**
-     * @notice Returns the [TenorPeriodRate] of the previous Reduced Interest Rate and its associated Tenor Period.
+     * @notice Returns the [PeriodRate] of the previous Reduced Interest Rate and its associated Period.
+     * @dev When the current [PeriodRate] is set, its existing value becomes the previous [PeriodRate].
      *
-     * @return previousTenorPeriodRate_ The previous [TenorPeriodRate].
+     * @return previousPeriodRate_ The previous [PeriodRate].
      */
-    function previousTenorPeriodRate() external view returns (TenorPeriodRate memory previousTenorPeriodRate_);
+    function previousPeriodRate() external view returns (PeriodRate memory previousPeriodRate_);
 }
