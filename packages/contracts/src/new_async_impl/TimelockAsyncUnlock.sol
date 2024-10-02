@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-abstract contract TimelockAsyncUnlock {
+import { ITimelockAsyncUnlock } from "@credbull/new_async_impl/ITimelockAsyncUnlock.sol";
+
+abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock {
     struct UnlockItem {
         address account;
         uint256 depositPeriod;
@@ -53,12 +55,16 @@ abstract contract TimelockAsyncUnlock {
      * @dev Caller should be owner or approved user for owner
      */
 
-    function requestUnlock(address owner, uint256 amount, uint256 depositPeriod) public virtual {
+    function requestUnlock(address owner, uint256 amount, uint256 depositPeriod) public virtual
+    returns (uint256 unlockPeriod)
+    {
         /**
          * Need to check if msg.sender = owner or isApprovedForAll(owner, msg.sender) in multitoken vault
          */
+         unlockPeriod = currentUnlockPeriod();
+
         _unlockRequests1[depositPeriod][owner] += amount;
-        _unlockRequests2[depositPeriod][owner][currentUnlockPeriod()] += amount;
+        _unlockRequests2[depositPeriod][owner][unlockPeriod] += amount;
     }
 
     /**
