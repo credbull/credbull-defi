@@ -100,8 +100,8 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
             revert TimelockAsyncUnlock__UnlockBeforeDepositPeriod(_msgSender(), owner, depositPeriod, unlockPeriod);
         }
 
-        // Need to check with Ian
-        if (unlockPeriod >= currentPeriod()) {
+        // Need to check with Ian ;;
+        if (unlockPeriod > currentPeriod()) {
             revert TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(_msgSender(), owner, currentPeriod(), unlockPeriod);
         }
     }

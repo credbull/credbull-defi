@@ -32,4 +32,14 @@ contract SimpleTimelockAsyncUnlock is TimelockAsyncUnlock, TimerCheats {
     function setCurrentPeriod(uint256 currentPeriod_) public {
         warp24HourPeriods(currentPeriod_);
     }
+
+    function unlock(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount) public override {
+        super.unlock(owner, depositPeriod, unlockPeriod, amount);
+
+        DEPOSITS.burn(owner, depositPeriod, amount, _emptyBytesArray());
+    }
+
+    function _emptyBytesArray() internal pure returns (bytes[] memory) {
+        return new bytes[](0);
+    }
 }

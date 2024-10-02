@@ -28,12 +28,18 @@ contract TimelockAsyncUnlockTest is Test {
         asyncUnlock = new SimpleTimelockAsyncUnlock(NOTICE_PERIOD, deposits);
     }
 
+    /**
+     * S1
+     * Scenario: Alice locks [amount]
+     * Alice requests unlock for [amount]
+     * Alice unlocks [amount] at unlockPeriod
+     */
     function test__TimelockAsyncUnlock__RequestAndUnlockSucceeds() public {
         vm.prank(alice);
         asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
         assertEq(depositDay1.amount, asyncUnlock.lockedAmount(alice, depositDay1.depositPeriod), "deposit not locked");
 
-        // uint256 unlockPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
+        uint256 unlockPeriod = asyncUnlock.currentPeriod() + NOTICE_PERIOD;
 
         // request unlock
         vm.prank(alice);
@@ -44,5 +50,16 @@ contract TimelockAsyncUnlockTest is Test {
             asyncUnlock.unlockRequested(alice, depositDay1.depositPeriod),
             "unlockRequest should be created"
         );
+
+        // warp to unlock period
+        asyncUnlock.setCurrentPeriod(unlockPeriod);
+
+        // now unlock
+        vm.prank(alice);
+        asyncUnlock.unlock(alice, depositDay1.depositPeriod, unlockPeriod, depositDay1.amount);
+
+        assertEq(0, asyncUnlock.unlockRequested(alice, depositDay1.depositPeriod), "unlockRequest should be released");
+        assertEq(0, asyncUnlock.lockedAmount(alice, depositDay1.depositPeriod), "deposit lock not released");
+        assertEq(0, asyncUnlock.DEPOSITS().balanceOf(alice, depositDay1.depositPeriod), "deposits should be redeemed");
     }
 }
