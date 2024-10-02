@@ -51,7 +51,7 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
     function maxRequestUnlock(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
         return lockedAmount(owner, depositPeriod) - unlockRequested(owner, depositPeriod);
     }
-    
+
     function requestUnlock(address owner, uint256 amount, uint256 depositPeriod)
         public
         virtual
@@ -72,10 +72,7 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
     /**
      * @dev every one can call this unlock function
      */
-    function unlock(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount)
-        public
-        virtual
-    {
+    function unlock(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount) public virtual {
         _performUnlockValidation(owner, depositPeriod, unlockPeriod);
 
         uint256 unlockRequestedAmount = _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod];
