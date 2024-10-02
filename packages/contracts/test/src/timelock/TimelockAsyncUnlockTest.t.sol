@@ -62,4 +62,27 @@ contract TimelockAsyncUnlockTest is Test {
         assertEq(0, asyncUnlock.lockedAmount(alice, depositDay1.depositPeriod), "deposit lock not released");
         assertEq(0, asyncUnlock.DEPOSITS().balanceOf(alice, depositDay1.depositPeriod), "deposits should be redeemed");
     }
+
+    /**
+     * S2
+     * Scenario: Alice tries to unlock prior to deposit period
+     * and expect it fails
+     */
+    function test__TimelockAsyncUnlock__UnlockPriorToDepositPeriodFails() public {
+        uint256 requestedUnlockPeriod = depositDay1.depositPeriod - 1;
+
+        vm.prank(alice);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeDepositPeriod.selector,
+                alice,
+                alice,
+                depositDay1.depositPeriod,
+                requestedUnlockPeriod
+            )
+        );
+
+        asyncUnlock.unlock(alice, depositDay1.depositPeriod, requestedUnlockPeriod, depositDay1.amount);
+    }
 }
