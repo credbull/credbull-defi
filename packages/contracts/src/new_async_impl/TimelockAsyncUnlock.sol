@@ -19,19 +19,7 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
         address caller, address owner, uint256 currentPeriod, uint256 unlockPeriod
     );
     error TimelockAsyncUnlock__ExceededMaxRequestUnlock(address owner, uint256 amount, uint256 maxRequestUnlockAmount);
-
-    modifier validateUnlockPeriod(address owner, uint256 depositPeriod, uint256 unlockPeriod) {
-        if (unlockPeriod < depositPeriod) {
-            revert TimelockAsyncUnlock__UnlockBeforeDepositPeriod(_msgSender(), owner, depositPeriod, unlockPeriod);
-        }
-
-        // Need to check with Ian
-        if (unlockPeriod >= currentPeriod()) {
-            revert TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(_msgSender(), owner, currentPeriod(), unlockPeriod);
-        }
-
-        _;
-    }
+    error TimelockAsyncUnlock__AuthorizeCallerFailed(address caller, address owner);
 
     constructor(uint256 noticePeriod_) {
         _noticePeriod = noticePeriod_;
@@ -63,18 +51,14 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
     function maxRequestUnlock(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
         return lockedAmount(owner, depositPeriod) - unlockRequested(owner, depositPeriod);
     }
-    /**
-     * @dev Caller should be owner or approved user for owner
-     */
-
+    
     function requestUnlock(address owner, uint256 amount, uint256 depositPeriod)
         public
         virtual
         returns (uint256 unlockPeriod)
     {
-        /**
-         * Need to check if msg.sender = owner or isApprovedForAll(owner, msg.sender) in multitoken vault
-         */
+        _authorizeCaller(_msgSender(), owner);
+
         if (maxRequestUnlock(owner, depositPeriod) < amount) {
             revert TimelockAsyncUnlock__ExceededMaxRequestUnlock(owner, amount, maxRequestUnlock(owner, depositPeriod));
         }
@@ -91,8 +75,9 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
     function unlock(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount)
         public
         virtual
-        validateUnlockPeriod(owner, depositPeriod, unlockPeriod)
     {
+        _performUnlockValidation(owner, depositPeriod, unlockPeriod);
+
         uint256 unlockRequestedAmount = _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod];
 
         if (amount > unlockRequestedAmount) {
@@ -101,5 +86,26 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
 
         _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod] = unlockRequestedAmount - amount;
         _unlockRequests[depositPeriod][owner] -= amount;
+    }
+
+    function _authorizeCaller(address caller, address owner) internal virtual {
+        /**
+         * check if caller has authorization to call
+         * In multi token vault, we have to check if caller = owner or isApprovedForAll(owner, caller) in overrided internal function
+         */
+        if (caller != owner) {
+            revert TimelockAsyncUnlock__AuthorizeCallerFailed(_msgSender(), owner);
+        }
+    }
+
+    function _performUnlockValidation(address owner, uint256 depositPeriod, uint256 unlockPeriod) internal virtual {
+        if (unlockPeriod < depositPeriod) {
+            revert TimelockAsyncUnlock__UnlockBeforeDepositPeriod(_msgSender(), owner, depositPeriod, unlockPeriod);
+        }
+
+        // Need to check with Ian
+        if (unlockPeriod >= currentPeriod()) {
+            revert TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(_msgSender(), owner, currentPeriod(), unlockPeriod);
+        }
     }
 }
