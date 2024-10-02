@@ -20,7 +20,6 @@ custodian = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
 full_rate_bps = 10_00
 # rate in basis points, e.g.  5.5% = 550 bps
 reduced_rate_bps = 5_50
-vault_start_timestamp = 0
 
 [evm.contracts.upside_vault]
 # 2 decimal place percentage (meaining value divided by 100) as integer.
