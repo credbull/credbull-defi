@@ -34,8 +34,8 @@ contract LiquidContinuousMultiTokenVault is
     MultiTokenVault,
     IBuyableAsyncSellable,
     TimelockAsyncUnlock,
-    TripleRateContext,
     Timer,
+    TripleRateContext,
     ERC1155Pausable,
     AccessControl
 {
@@ -64,15 +64,16 @@ contract LiquidContinuousMultiTokenVault is
     constructor(VaultParams memory params)
         MultiTokenVault(params.asset)
         TimelockAsyncUnlock(params.redeemNoticePeriod)
-        TripleRateContext(
-            params.fullRateScaled,
-            params.reducedRateScaled,
-            currentPeriod(),
-            params.frequency,
-            params.tenor,
-            params.asset.decimals()
-        )
         Timer(params.vaultStartTimestamp)
+        TripleRateContext(
+            ContextParams({
+                fullRateScaled: params.fullRateScaled,
+                initialReducedRate: PeriodRate({ interestRate: params.reducedRateScaled, effectiveFromPeriod: currentPeriod() }),
+                frequency: params.frequency,
+                tenor: params.tenor,
+                decimals: params.asset.decimals()
+            })
+        )
     {
         if (params.contractOwner == address(0)) {
             revert LiquidContinuousMultiTokenVault__InvalidOwnerAddress(params.contractOwner);
