@@ -48,6 +48,6 @@ contract TimerTest is Test {
         assertEq(block.timestamp, futureTimer.timestamp());
 
         vm.expectRevert(abi.encodeWithSelector(Timer.Timer__StartTimeNotReached.selector, block.timestamp, futureStart));
-        assertEq(0, futureTimer.elapsedSeconds(), "elapsed with future startTime should revert");
+        futureTimer.elapsedSeconds(); // "elapsed with future startTime should revert");
     }
 }
