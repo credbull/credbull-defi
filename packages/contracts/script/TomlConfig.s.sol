@@ -16,4 +16,24 @@ abstract contract TomlConfig is Script {
         console2.log(string.concat("Loading toml configuration from: ", path));
         return vm.readFile(path);
     }
+
+    function _readUintWithDefault(string memory tomlConfig, string memory tomlKey, uint256 defaultValue)
+        internal
+        view
+        returns (uint256 value)
+    {
+        if (!vm.keyExistsToml(tomlConfig, tomlKey)) return defaultValue;
+
+        return tomlConfig.readUint(tomlKey);
+    }
+
+    function _readBoolWithDefault(string memory tomlConfig, string memory tomlKey, bool defaultValue)
+        internal
+        view
+        returns (bool value)
+    {
+        if (!vm.keyExistsToml(tomlConfig, tomlKey)) return defaultValue;
+
+        return tomlConfig.readBool(tomlKey);
+    }
 }
