@@ -10,6 +10,7 @@ import { Timer } from "@credbull/timelock/Timer.sol";
 
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Pausable } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
+import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -33,15 +34,17 @@ contract LiquidContinuousMultiTokenVault is
     MultiTokenVault,
     ITradeable,
     TimelockAsyncUnlock,
-    TripleRateContext,
     Timer,
+    TripleRateContext,
     ERC1155Pausable,
+    ERC1155Supply,
     AccessControl
 {
     using SafeERC20 for IERC20;
 
     struct VaultParams {
         address contractOwner;
+        address contractOperator;
         IERC20Metadata asset;
         IYieldStrategy yieldStrategy;
         uint256 vaultStartTimestamp;
@@ -54,26 +57,36 @@ contract LiquidContinuousMultiTokenVault is
 
     IYieldStrategy public immutable YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
 
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidOwnerAddress(address ownerAddress);
+    error LiquidContinuousMultiTokenVault__InvalidOperatorAddress(address ownerAddress);
 
     constructor(VaultParams memory params)
         MultiTokenVault(params.asset)
         TimelockAsyncUnlock(params.redeemNoticePeriod)
-        TripleRateContext(
-            params.fullRateScaled,
-            params.reducedRateScaled,
-            params.frequency,
-            params.tenor,
-            params.asset.decimals()
-        )
         Timer(params.vaultStartTimestamp)
+        TripleRateContext(
+            ContextParams({
+                fullRateScaled: params.fullRateScaled,
+                initialReducedRate: PeriodRate({ interestRate: params.reducedRateScaled, effectiveFromPeriod: 0 }),
+                frequency: params.frequency,
+                tenor: params.tenor,
+                decimals: params.asset.decimals()
+            })
+        )
     {
         if (params.contractOwner == address(0)) {
             revert LiquidContinuousMultiTokenVault__InvalidOwnerAddress(params.contractOwner);
         }
 
+        if (params.contractOperator == address(0)) {
+            revert LiquidContinuousMultiTokenVault__InvalidOperatorAddress(params.contractOwner);
+        }
+
         _grantRole(DEFAULT_ADMIN_ROLE, params.contractOwner);
+        _grantRole(OPERATOR_ROLE, params.contractOperator);
 
         YIELD_STRATEGY = params.yieldStrategy;
 
@@ -134,7 +147,7 @@ contract LiquidContinuousMultiTokenVault is
         view
         virtual
         override
-        onlyRole(DEFAULT_ADMIN_ROLE)
+        onlyRole(OPERATOR_ROLE)
         returns (uint256 requestId)
     {
         return 0;
@@ -233,7 +246,7 @@ contract LiquidContinuousMultiTokenVault is
 
     /// @notice Locks `amount` of tokens for `account` at the given `depositPeriod`.
     /// @dev - users should call deposit() instead that returns shares
-    function lock(address account, uint256 depositPeriod, uint256 amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function lock(address account, uint256 depositPeriod, uint256 amount) public onlyRole(OPERATOR_ROLE) {
         _depositForDepositPeriod(amount, account, depositPeriod);
     }
 
@@ -251,19 +264,17 @@ contract LiquidContinuousMultiTokenVault is
 
     function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
         internal
-        override(ERC1155Pausable, ERC1155)
+        override(ERC1155Supply, ERC1155Pausable, ERC1155)
         whenNotPaused
     {
-        ERC1155Pausable._update(from, to, ids, values);
+        ERC1155Supply._update(from, to, ids, values);
     }
 
-    function pause() public onlyRole(DEFAULT_ADMIN_ROLE) {
-        // TODO - change to Operator
+    function pause() public onlyRole(OPERATOR_ROLE) {
         _pause();
     }
 
-    function unpause() public onlyRole(DEFAULT_ADMIN_ROLE) {
-        // TODO - change to Operator
+    function unpause() public onlyRole(OPERATOR_ROLE) {
         _unpause();
     }
 
@@ -287,5 +298,28 @@ contract LiquidContinuousMultiTokenVault is
         returns (bool)
     {
         return MultiTokenVault.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @inheritdoc TripleRateContext
+     */
+    function setReducedRate(uint256 reducedRateScaled_, uint256 effectiveFromPeriod_)
+        public
+        override
+        onlyRole(OPERATOR_ROLE)
+    {
+        super.setReducedRate(effectiveFromPeriod_, reducedRateScaled_);
+    }
+
+    /**
+     * @notice Sets the `reducedRateScaled_` against the Current Period.
+     * @dev Convenience method for setting the Reduced Rate agains the current Period.
+     *  Reverts with [TripleRateContext_PeriodRegressionNotAllowed] if current Period is before the
+     *  stored current Period (the setting).  Emits [CurrentPeriodRateChanged] upon mutation.
+     *
+     * @param reducedRateScaled_ The scaled percentage 'reduced' Interest Rate.
+     */
+    function setReducedRateAtCurrent(uint256 reducedRateScaled_) public onlyRole(OPERATOR_ROLE) {
+        super.setReducedRate(currentPeriod(), reducedRateScaled_);
     }
 }
