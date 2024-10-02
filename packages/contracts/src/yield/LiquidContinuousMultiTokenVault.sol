@@ -10,6 +10,7 @@ import { Timer } from "@credbull/timelock/Timer.sol";
 
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC1155Pausable } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
+import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -36,6 +37,7 @@ contract LiquidContinuousMultiTokenVault is
     Timer,
     TripleRateContext,
     ERC1155Pausable,
+    ERC1155Supply,
     AccessControl
 {
     using SafeERC20 for IERC20;
@@ -139,7 +141,7 @@ contract LiquidContinuousMultiTokenVault is
         view
         virtual
         override
-        onlyRole(DEFAULT_ADMIN_ROLE)
+        onlyRole(OPERATOR_ROLE)
         returns (uint256 requestId)
     {
         return 0;
@@ -238,7 +240,7 @@ contract LiquidContinuousMultiTokenVault is
 
     /// @notice Locks `amount` of tokens for `account` at the given `depositPeriod`.
     /// @dev - users should call deposit() instead that returns shares
-    function lock(address account, uint256 depositPeriod, uint256 amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function lock(address account, uint256 depositPeriod, uint256 amount) public onlyRole(OPERATOR_ROLE) {
         _depositForDepositPeriod(amount, account, depositPeriod);
     }
 
@@ -256,19 +258,17 @@ contract LiquidContinuousMultiTokenVault is
 
     function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
         internal
-        override(ERC1155Pausable, ERC1155)
+        override(ERC1155Supply, ERC1155Pausable, ERC1155)
         whenNotPaused
     {
-        ERC1155Pausable._update(from, to, ids, values);
+        ERC1155Supply._update(from, to, ids, values);
     }
 
-    function pause() public onlyRole(DEFAULT_ADMIN_ROLE) {
-        // TODO - change to Operator
+    function pause() public onlyRole(OPERATOR_ROLE) {
         _pause();
     }
 
-    function unpause() public onlyRole(DEFAULT_ADMIN_ROLE) {
-        // TODO - change to Operator
+    function unpause() public onlyRole(OPERATOR_ROLE) {
         _unpause();
     }
 
