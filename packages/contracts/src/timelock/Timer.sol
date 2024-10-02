@@ -17,6 +17,7 @@ contract Timer is IERC6372 {
     uint256 public startTimestamp;
 
     error Timer__ERC6372InconsistentTime(uint256 actualTime, uint256 expectTIme);
+    error Timer__StartTimeNotReached(uint256 currentTime, uint256 startTime);
 
     constructor(uint256 startTimestamp_) {
         startTimestamp = startTimestamp_;
@@ -42,6 +43,10 @@ contract Timer is IERC6372 {
 
     /// @dev returns the elapsed time in seconds since starTime
     function elapsedSeconds() public view returns (uint256 elapsedSeconds_) {
+        if (startTimestamp > timestamp()) {
+            revert Timer__StartTimeNotReached(timestamp(), startTimestamp);
+        }
+
         return timestamp() - startTimestamp;
     }
 
