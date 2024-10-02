@@ -16,6 +16,12 @@ operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # devops custodian (wallet 3) - public address, okay to share
 custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
 
+[evm.contracts.liquid_continuous_multi_token_vault]
+# rate in basis points, e.g.  10% = 1000 bps
+full_rate_bps = 10_00
+# rate in basis points, e.g.  5.5% = 550 bps
+reduced_rate_bps = 5_50
+
 [evm.contracts.upside_vault]
 # 2 decimal place percentage (meaining value divided by 100) as integer.
 collateral_percentage = 200
