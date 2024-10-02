@@ -54,7 +54,6 @@ contract LiquidContinuousMultiTokenVault is
 
     IYieldStrategy public immutable YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
 
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
@@ -79,7 +78,6 @@ contract LiquidContinuousMultiTokenVault is
         }
 
         _grantRole(DEFAULT_ADMIN_ROLE, params.contractOwner);
-        _grantRole(PAUSER_ROLE, params.contractOwner);
         _grantRole(OPERATOR_ROLE, params.contractOwner);
 
         YIELD_STRATEGY = params.yieldStrategy;
