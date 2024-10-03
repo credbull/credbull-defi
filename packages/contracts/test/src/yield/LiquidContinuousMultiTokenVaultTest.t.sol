@@ -119,15 +119,15 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         uint256 deposit = 50_000 * _scale;
 
         // verify returns
-        uint256 actualYield = _liquidVault.calcYield(deposit, 0, _liquidVault.TENOR());
+        uint256 actualYield = _liquidVault.calcYield(deposit, 0, _liquidVault.TENOR() - 1);
         assertEq(416_666666, actualYield, "interest not correct for $50k deposit after 30 days");
 
         // verify principal + returns
         uint256 actualShares = _liquidVault.convertToShares(deposit);
-        uint256 actualReturns = _liquidVault.convertToAssetsForDepositPeriod(actualShares, 0, _liquidVault.TENOR());
+        uint256 actualReturns = _liquidVault.convertToAssetsForDepositPeriod(actualShares, 0, _liquidVault.TENOR() - 1);
         assertEq(50_416_666666, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
 
-        testVaultAtPeriods(_liquidVault, deposit, 0, _liquidVault.TENOR());
+        testVaultAtPeriods(_liquidVault, deposit, 0, _liquidVault.TENOR() - 1);
     }
 
     // verify deposit.  updates vault assets and shares.
