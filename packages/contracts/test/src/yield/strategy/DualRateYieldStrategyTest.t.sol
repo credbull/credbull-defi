@@ -189,6 +189,7 @@ contract DualRateContextMock is Initializable, UUPSUpgradeable, CalcInterestMeta
     uint256 public reducedRateInPercentageScaled;
     uint256 public TENOR;
 
+    // solhint-disable-next-line no-empty-blocks
     function _authorizeUpgrade(address implementation) internal override { }
 
     function mockInitialize(

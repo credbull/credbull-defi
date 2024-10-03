@@ -86,6 +86,7 @@ contract SimpleInterestYieldStrategyTest is Test {
 }
 
 contract CalcInterestMetadataMock is Initializable, UUPSUpgradeable, CalcInterestMetadata {
+    // solhint-disable-next-line no-empty-blocks
     function _authorizeUpgrade(address) internal override { }
 
     function mockInitialize(uint256 interestRatePercentage, uint256 frequency, uint256 decimals) public initializer {

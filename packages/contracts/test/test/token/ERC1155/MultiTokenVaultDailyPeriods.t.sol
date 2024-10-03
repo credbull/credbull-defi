@@ -12,14 +12,6 @@ contract MultiTokenVaultDailyPeriods is Initializable, UUPSUpgradeable, MultiTok
     uint256 internal ASSET_TO_SHARES_RATIO;
     uint256 internal YIELD_PERCENTAGE;
 
-    // constructor(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage)
-    // {
-    //     __TimerCheats__init(block.timestamp);
-    //     __MultiTokenVault_init(asset);
-    //     ASSET_TO_SHARES_RATIO = assetToSharesRatio;
-    //     YIELD_PERCENTAGE = yieldPercentage;
-    // }
-
     function initialize(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage) public initializer {
         __TimerCheats__init(block.timestamp);
         __MultiTokenVault_init(asset);
@@ -27,6 +19,7 @@ contract MultiTokenVaultDailyPeriods is Initializable, UUPSUpgradeable, MultiTok
         YIELD_PERCENTAGE = yieldPercentage;
     }
 
+    // solhint-disable-next-line no-empty-blocks
     function _authorizeUpgrade(address newImplementation) internal virtual override { }
 
     function calcYield(uint256 principal, uint256, /* depositPeriod */ uint256 /* toPeriod */ )

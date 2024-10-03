@@ -8,7 +8,6 @@
     "func-name-mixedcase": "off",
     "var-name-mixedcase": "off",
     "no-console": "off",
-    "one-contract-per-file": "off",
-    "no-empty-blocks": "off"
+    "one-contract-per-file": "off"
   }
 }

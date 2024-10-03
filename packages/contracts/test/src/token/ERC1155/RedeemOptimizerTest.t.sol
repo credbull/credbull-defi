@@ -6,7 +6,6 @@ import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 
 import { MultiTokenVaultTest } from "@test/src/token/ERC1155/MultiTokenVaultTest.t.sol";
-import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriods.t.sol";
 
 contract RedeemOptimizerTest is MultiTokenVaultTest {
     function setUp() public override {

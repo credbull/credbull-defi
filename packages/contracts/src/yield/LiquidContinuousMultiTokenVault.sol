@@ -58,8 +58,7 @@ contract LiquidContinuousMultiTokenVault is
     IYieldStrategy public YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
 
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    bytes32 public constant UPGRADE_ROLE = keccak256("UPGRADE_ROLE");
+    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidOwnerAddress(address ownerAddress);
@@ -91,8 +90,7 @@ contract LiquidContinuousMultiTokenVault is
 
         _grantRole(DEFAULT_ADMIN_ROLE, params.contractOwner);
         _grantRole(OPERATOR_ROLE, params.contractOperator);
-        _grantRole(UPGRADE_ROLE, params.contractOperator);
-        _grantRole(PAUSER_ROLE, params.contractOperator);
+        _grantRole(UPGRADER_ROLE, params.contractOperator);
 
         YIELD_STRATEGY = params.yieldStrategy;
 
@@ -101,7 +99,8 @@ contract LiquidContinuousMultiTokenVault is
         }
     }
 
-    function _authorizeUpgrade(address newImplementation) internal view override onlyRole(UPGRADE_ROLE) { }
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address newImplementation) internal view override onlyRole(UPGRADER_ROLE) { }
     // ===================== MultiTokenVault =====================
 
     /// @inheritdoc MultiTokenVault
@@ -269,11 +268,11 @@ contract LiquidContinuousMultiTokenVault is
 
     // ===================== ERC1155Pausable =====================
 
-    function pause() public onlyRole(PAUSER_ROLE) {
+    function pause() public onlyRole(OPERATOR_ROLE) {
         _pause();
     }
 
-    function unpause() public onlyRole(PAUSER_ROLE) {
+    function unpause() public onlyRole(OPERATOR_ROLE) {
         _unpause();
     }
 

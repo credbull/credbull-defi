@@ -10,8 +10,7 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 contract SimpleTimelockAsyncUnlock is Initializable, UUPSUpgradeable, TimelockAsyncUnlock, TimerCheats {
     IERC5679Ext1155 public DEPOSITS;
 
-    constructor() { }
-
+    // solhint-disable-next-line no-empty-blocks
     function _authorizeUpgrade(address newImplementation) internal virtual override { }
 
     function initialize(uint256 noticePeriod_, IERC5679Ext1155 deposits) public initializer {
