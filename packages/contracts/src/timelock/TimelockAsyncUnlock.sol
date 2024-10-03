@@ -25,12 +25,15 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
         _noticePeriod = noticePeriod_;
     }
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function noticePeriod() public view virtual returns (uint256) {
         return _noticePeriod;
     }
 
     /**
-     * @dev Need implementation in child contract
+     * @inheritdoc ITimelockAsyncUnlock
      */
     function currentPeriod() public view virtual returns (uint256 currentPeriod_);
 
@@ -39,15 +42,20 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
     }
 
     /**
-     * @dev Return locked token amount for depositPeriod in owner
-     * In multi token vault, override lockedAmount to call sharesAtPeriod
+     * @inheritdoc ITimelockAsyncUnlock
      */
     function lockedAmount(address owner, uint256 depositPeriod) public view virtual returns (uint256 lockedAmount_);
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function unlockRequested(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
         return _unlockRequests[depositPeriod][owner];
     }
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function unlockRequested(address owner, uint256 depositPeriod, uint256 unlockPeriod)
         public
         view
@@ -57,10 +65,16 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
         return _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod];
     }
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function maxRequestUnlock(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
         return lockedAmount(owner, depositPeriod) - unlockRequested(owner, depositPeriod);
     }
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function requestUnlock(address owner, uint256 depositPeriod, uint256 amount)
         public
         virtual
@@ -79,7 +93,8 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
     }
 
     /**
-     * @dev every one can call this unlock function
+     * @inheritdoc ITimelockAsyncUnlock
+     * @notice every one can call this unlock function
      */
     function unlock(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount) public virtual {
         _performUnlockValidation(owner, depositPeriod, unlockPeriod);
@@ -94,22 +109,25 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
         _unlockRequests[depositPeriod][owner] -= amount;
     }
 
+    /**
+     * @dev An internal function to check if the caller is eligible to manage the unlocks of the owner
+     * It can be overridden and new authorization logic can be written in child contracts
+     */
     function _authorizeCaller(address caller, address owner) internal virtual {
-        /**
-         * check if caller has authorization to call
-         * In multi token vault, we have to check if caller = owner or isApprovedForAll(owner, caller) in overrided internal function
-         */
         if (caller != owner) {
             revert TimelockAsyncUnlock__AuthorizeCallerFailed(caller, owner);
         }
     }
 
+    /**
+     * @dev An internal function to check if unlock can be performed
+     */
     function _performUnlockValidation(address owner, uint256 depositPeriod, uint256 unlockPeriod) internal virtual {
         if (unlockPeriod < depositPeriod) {
             revert TimelockAsyncUnlock__UnlockBeforeDepositPeriod(_msgSender(), owner, depositPeriod, unlockPeriod);
         }
 
-        // Need to check with Ian ;;
+        // Need to check with Ian
         if (unlockPeriod > currentPeriod()) {
             revert TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(_msgSender(), owner, currentPeriod(), unlockPeriod);
         }
