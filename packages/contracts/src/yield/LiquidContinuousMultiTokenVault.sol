@@ -47,7 +47,7 @@ contract LiquidContinuousMultiTokenVault is
         address contractOperator;
         IERC20Metadata asset;
         IYieldStrategy yieldStrategy;
-        // IRedeemOptimizer redeemOptimizer;   // TODO - add in the redeemOptimizer
+        IRedeemOptimizer redeemOptimizer;
         uint256 vaultStartTimestamp;
         uint256 redeemNoticePeriod;
         TripleRateContext.ContextParams contextParams;
@@ -56,6 +56,8 @@ contract LiquidContinuousMultiTokenVault is
     IYieldStrategy public yieldStrategy;
     IRedeemOptimizer public redeemOptimizer;
 
+    uint256 private constant ZERO_REQUEST_ID = 0;
+
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 
@@ -63,6 +65,7 @@ contract LiquidContinuousMultiTokenVault is
     error LiquidContinuousMultiTokenVault__InvalidOwnerAddress(address ownerAddress);
     error LiquidContinuousMultiTokenVault__InvalidOperatorAddress(address ownerAddress);
     error LiquidContinuousMultiTokenVault__AmountMismatch(uint256 amount1, uint256 amount2);
+    error LiquidContinuousMultiTokenVault__UnlockPeriodMismatch(uint256 unlockPeriod1, uint256 unlockPeriod2);
 
     function initialize(VaultParams memory vaultParams) public initializer {
         __UUPSUpgradeable_init();
@@ -85,6 +88,7 @@ contract LiquidContinuousMultiTokenVault is
         _grantRole(UPGRADER_ROLE, vaultParams.contractOperator);
 
         yieldStrategy = vaultParams.yieldStrategy;
+        redeemOptimizer = vaultParams.redeemOptimizer;
 
         if (vaultParams.contextParams.frequency != 360 && vaultParams.contextParams.frequency != 365) {
             revert LiquidContinuousMultiTokenVault__InvalidFrequency(vaultParams.contextParams.frequency);
@@ -140,31 +144,35 @@ contract LiquidContinuousMultiTokenVault is
     // ===================== Buyable/Sellable =====================
 
     /// @inheritdoc IComponentToken
-    /// @dev - requesting to buy is not required, Users can directly executeBuy
-    function requestBuy(uint256 /* currencyTokenAmount */ )
-        public
-        view
-        virtual
-        override
-        onlyRole(OPERATOR_ROLE)
-        returns (uint256 requestId)
-    {
-        return 0;
+    /// @dev - buys can be directly executed.
+    function requestBuy(uint256 currencyTokenAmount) public virtual override returns (uint256 requestId) {
+        uint256 componentTokenAmount = currencyTokenAmount; // 1 asset = 1 share
+
+        executeBuy(_msgSender(), ZERO_REQUEST_ID, currencyTokenAmount, componentTokenAmount);
+
+        return ZERO_REQUEST_ID;
     }
 
     /// @inheritdoc IComponentToken
     function requestSell(uint256 componentTokenAmount) public virtual override returns (uint256 requestId) {
-        // TODO - need helper to find which depositPeriods we want to sell from...
+        (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
+            redeemOptimizer.optimizeRedeemShares(this, _msgSender(), componentTokenAmount, minUnlockPeriod());
 
-        return _requestSell(componentTokenAmount, currentPeriod());
-    }
+        uint256 unlockPeriod = 0;
+        uint256[] memory unlockPeriods = new uint256[](depositPeriods.length);
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            unlockPeriods[i] = requestUnlock(_msgSender(), depositPeriods[i], sharesAtPeriods[i]);
 
-    /// @notice Request to sell (redeem) `amount` of tokens at the `depositPeriod`
-    /// @param amount The amount a User wants to sell (redeem).  This could be yield only, or include principal + yield.
-    function _requestSell(uint256 amount, uint256 depositPeriod) internal virtual returns (uint256 requestId) {
-        requestUnlock(_msgSender(), depositPeriod, amount);
+            if (i == 0) {
+                // initialize
+                unlockPeriod = unlockPeriods[i];
+            } else if (unlockPeriod != unlockPeriods[i]) {
+                // validate for other periods
+                revert LiquidContinuousMultiTokenVault__UnlockPeriodMismatch(unlockPeriod, unlockPeriods[i]);
+            }
+        }
 
-        return 0; // TODO - need to add requestId to requestUnlock()
+        return unlockPeriods[0];
     }
 
     /// @inheritdoc IComponentToken
@@ -184,25 +192,17 @@ contract LiquidContinuousMultiTokenVault is
     /// @inheritdoc IComponentToken
     function executeSell(
         address requestor,
-        uint256 requestId,
-        uint256 currencyTokenAmount,
-        uint256 componentTokenAmount
-    ) public override {
-        // TODO - verify currencyTokenAmount convertToAssets(componentTokenAmount) = currencyTokenAmount
-        // TODO - verifying currencyTokeAmount figuring out the componentTokenAmount here is non-trivial.  it will span multiple periods.
-        _executeSell(requestor, currentPeriod(), requestId, currencyTokenAmount, componentTokenAmount);
-    }
-
-    function _executeSell(
-        address requestor,
-        uint256 depositPeriod,
         uint256, /* requestId */
         uint256, /* currencyTokenAmount */
         uint256 componentTokenAmount
-    ) internal {
-        // TODO - verify currencyTokenAmount convertToAssets(componentTokenAmount) = currencyTokenAmount
-        // TODO - need helper to find which depositPeriods we want to sell from...
-        redeemForDepositPeriod(componentTokenAmount, requestor, requestor, depositPeriod, currentPeriod());
+    ) public override {
+        // TODO - we should go through the locks rather than having to figure out the periods again
+        (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
+            redeemOptimizer.optimizeRedeemShares(this, _msgSender(), componentTokenAmount, currentPeriod());
+
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            redeemForDepositPeriod(sharesAtPeriods[i], requestor, requestor, depositPeriods[i], currentPeriod());
+        }
     }
 
     // ===================== Yield / YieldStrategy =====================
@@ -287,7 +287,7 @@ contract LiquidContinuousMultiTokenVault is
         return MultiTokenVault.supportsInterface(interfaceId);
     }
 
-    function getVersion() external view returns (uint256 version) {
+    function getVersion() public pure returns (uint256 version) {
         return 1;
     }
 }

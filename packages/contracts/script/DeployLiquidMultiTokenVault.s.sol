@@ -5,16 +5,19 @@ pragma solidity ^0.8.20;
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
-import { TripleRateContext } from "@credbull/yield/context/TripleRateContext.sol";
 import { ITripleRateContext } from "@credbull/yield/context/ITripleRateContext.sol";
+import { TripleRateContext } from "@credbull/yield/context/TripleRateContext.sol";
+import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
+import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
 
-import { TomlConfig } from "./TomlConfig.s.sol";
-import { stdToml } from "forge-std/StdToml.sol";
+import { TomlConfig } from "@script/TomlConfig.s.sol";
+
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
+import { stdToml } from "forge-std/StdToml.sol";
 import { console2 } from "forge-std/console2.sol";
 
 contract DeployLiquidMultiTokenVault is TomlConfig {
@@ -39,10 +42,20 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
     function run(address contractOwner) public returns (LiquidContinuousMultiTokenVault vault) {
         IERC20Metadata usdc = _usdcOrDeployMock(contractOwner);
 
-        IYieldStrategy yieldStrategy = _deployYieldStrategy(contractOwner);
+        vm.startBroadcast(contractOwner);
+
+        IYieldStrategy yieldStrategy = new TripleRateYieldStrategy();
+        console2.log(string.concat("!!!!! Deploying IYieldStrategy [", vm.toString(address(yieldStrategy)), "] !!!!!"));
+
+        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO();
+        console2.log(
+            string.concat("!!!!! Deploying IRedeemOptimizer [", vm.toString(address(redeemOptimizer)), "] !!!!!")
+        );
+
+        vm.stopBroadcast();
 
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams =
-            _createVaultParams(contractOwner, usdc, yieldStrategy);
+            _createVaultParams(contractOwner, usdc, yieldStrategy, redeemOptimizer);
 
         vm.startBroadcast(contractOwner);
 
@@ -71,11 +84,12 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         return LiquidContinuousMultiTokenVault(address(liquidVault));
     }
 
-    function _createVaultParams(address contractOwner, IERC20Metadata asset, IYieldStrategy yieldStrategy)
-        public
-        view
-        returns (LiquidContinuousMultiTokenVault.VaultParams memory vaultParams_)
-    {
+    function _createVaultParams(
+        address contractOwner,
+        IERC20Metadata asset,
+        IYieldStrategy yieldStrategy,
+        IRedeemOptimizer redeemOptimizer
+    ) public view returns (LiquidContinuousMultiTokenVault.VaultParams memory vaultParams_) {
         string memory contractKey = ".evm.contracts.liquid_continuous_multi_token_vault";
         uint256 fullRateBasisPoints = tomlConfig.readUint(string.concat(contractKey, ".full_rate_bps"));
         uint256 reducedRateBasisPoints = tomlConfig.readUint(string.concat(contractKey, ".reduced_rate_bps"));
@@ -100,25 +114,13 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
             contractOperator: operator,
             asset: asset,
             yieldStrategy: yieldStrategy,
+            redeemOptimizer: redeemOptimizer,
             vaultStartTimestamp: startTimestamp,
             redeemNoticePeriod: 1,
             contextParams: contextParams
         });
 
         return vaultParams;
-    }
-
-    function _deployYieldStrategy(address contractOwner) internal returns (IYieldStrategy) {
-        vm.startBroadcast(contractOwner);
-
-        IYieldStrategy yieldStrategy = new TripleRateYieldStrategy();
-        console2.log(
-            string.concat("!!!!! Deploying TripleRateYieldStrategy [", vm.toString(address(yieldStrategy)), "] !!!!!")
-        );
-
-        vm.stopBroadcast();
-
-        return yieldStrategy;
     }
 
     function _usdcOrDeployMock(address contractOwner) internal returns (IERC20Metadata asset) {

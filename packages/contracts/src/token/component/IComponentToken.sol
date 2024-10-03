@@ -3,9 +3,17 @@ pragma solidity ^0.8.20;
 
 /**
  * @title IComponentToken
- * @dev Interface for buying and selling tokens.  Selling requires a two-step request and sell process.
+ * @dev Interface for buying and selling tokens.
+ *
+ * Similar to ERC-4626 Tokenized Vault standard, here:
+ * - currencyToken is the "asset" ERC20 token.  e.g. USDC or another stablecoin
+ * - componentToken is the "share" ERC20 token.  i.e. the Vault token
+ * // TODO - add proposed "deposit-aware" interface
+ * //
  */
 interface IComponentToken {
+    // --------------------- Plume invoked ---------------------
+
     /**
      * @notice Submit a request to send currencyTokenAmount of CurrencyToken to buy ComponentToken
      * @param currencyTokenAmount Amount of CurrencyToken to send
@@ -19,6 +27,8 @@ interface IComponentToken {
      * @return requestId Unique identifier for the sell request
      */
     function requestSell(uint256 componentTokenAmount) external returns (uint256 requestId);
+
+    // --------------------- Credbull invoked ---------------------
 
     /**
      * @notice Executes a request to buy ComponentToken with CurrencyToken

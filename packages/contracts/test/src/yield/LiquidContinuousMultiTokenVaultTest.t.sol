@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
+import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault.s.sol";
 
@@ -25,9 +26,9 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         _liquidVault = _deployVault.run(owner);
 
         _asset = IERC20Metadata(_liquidVault.asset());
+        _vaultParams =
+            _deployVault._createVaultParams(owner, _asset, new TripleRateYieldStrategy(), new RedeemOptimizerFIFO());
         _scale = 10 ** _asset.decimals();
-
-        _vaultParams = _deployVault._createVaultParams(owner, _asset, new TripleRateYieldStrategy());
 
         _transferAndAssert(_asset, owner, alice, 100_000 * _scale);
     }
@@ -76,7 +77,7 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
 
         // requestSell
         vm.prank(alice);
-        uint256 requestId = liquidVault.requestSellForDepositPeriod(sharesAmount, testParams.depositPeriod); // TODO - test should not pass in depositPeriod here
+        uint256 requestId = liquidVault.requestSell(sharesAmount);
         assertEq(
             sharesAmount,
             liquidVault.unlockRequested(alice, testParams.depositPeriod),
@@ -92,9 +93,7 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         _warpToPeriod(liquidVault, testParams.redeemPeriod);
 
         vm.prank(alice);
-        liquidVault.executeSellForDepositPeriod(
-            alice, testParams.depositPeriod, requestId, testParams.principal + expectedYield, sharesAmount
-        );
+        liquidVault.executeSell(alice, requestId, testParams.principal + expectedYield, sharesAmount);
 
         assertEq(0, liquidVault.balanceOf(alice, testParams.depositPeriod), "user should have no shares remaining");
         assertEq(
@@ -250,20 +249,6 @@ contract LiquidContinuousMultiTokenVaultMock is LiquidContinuousMultiTokenVault 
 
     function mockInitialize(VaultParams memory params) public initializer {
         super.initialize(params);
-    }
-
-    function requestSellForDepositPeriod(uint256 amount, uint256 depositPeriod) public returns (uint256 requestId) {
-        return super._requestSell(amount, depositPeriod);
-    }
-
-    function executeSellForDepositPeriod(
-        address requestor,
-        uint256 depositPeriod,
-        uint256 requestId,
-        uint256 currencyTokenAmount,
-        uint256 componentTokenAmount
-    ) public {
-        super._executeSell(requestor, depositPeriod, requestId, currencyTokenAmount, componentTokenAmount);
     }
 }
 
