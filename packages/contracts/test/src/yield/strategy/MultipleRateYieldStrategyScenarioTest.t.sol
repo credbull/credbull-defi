@@ -10,6 +10,7 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { YieldStrategyScenarioTest } from "@test/src/yield/strategy/YieldStrategyScenarioTest.t.sol";
 
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
+import { console2 } from "forge-std/console2.sol";
 
 contract MultipleRateYieldStrategyScenarioTest is YieldStrategyScenarioTest {
     IYieldStrategy internal yieldStrategy;
@@ -46,8 +47,9 @@ contract MultipleRateYieldStrategyScenarioTest is YieldStrategyScenarioTest {
         uint256 tenor,
         uint256 decimals
     ) private returns (MultipleRateContext) {
+        console2.log("maturityperiod", MATURITY_PERIOD);
         MultipleRateContext _context = new MultipleRateContext();
-        context = MultipleRateContext(
+        _context = MultipleRateContext(
             address(
                 new ERC1967Proxy(
                     address(_context),

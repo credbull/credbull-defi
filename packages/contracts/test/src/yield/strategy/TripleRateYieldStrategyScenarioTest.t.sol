@@ -22,8 +22,8 @@ contract TripleRateYieldStrategyScenarioTest is YieldStrategyScenarioTest {
                     address(context),
                     abi.encodeWithSelector(
                         context.__TestTripeRateContext_init.selector,
-                        PERCENT_5_SCALED,
-                        PERCENT_5_5_SCALED,
+                        DEFAULT_FULL_RATE,
+                        DEFAULT_REDUCED_RATE,
                         EFFECTIVE_FROM_PERIOD,
                         Frequencies.toValue(Frequencies.Frequency.DAYS_365),
                         MATURITY_PERIOD,

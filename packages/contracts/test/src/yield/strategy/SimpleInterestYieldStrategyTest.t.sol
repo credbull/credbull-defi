@@ -89,6 +89,6 @@ contract CalcInterestMetadataMock is Initializable, UUPSUpgradeable, CalcInteres
     function _authorizeUpgrade(address) internal override { }
 
     function mockInitialize(uint256 interestRatePercentage, uint256 frequency, uint256 decimals) public initializer {
-        __CalcInterestMetadata_init(interestRatePercentage * SCALE, frequency, decimals);
+        __CalcInterestMetadata_init(interestRatePercentage, frequency, decimals);
     }
 }
