@@ -44,6 +44,7 @@ contract LiquidContinuousMultiTokenVault is
 
     struct VaultParams {
         address contractOwner;
+        address contractOperator;
         IERC20Metadata asset;
         IYieldStrategy yieldStrategy;
         uint256 vaultStartTimestamp;
@@ -60,6 +61,7 @@ contract LiquidContinuousMultiTokenVault is
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidOwnerAddress(address ownerAddress);
+    error LiquidContinuousMultiTokenVault__InvalidOperatorAddress(address ownerAddress);
 
     constructor(VaultParams memory params)
         MultiTokenVault(params.asset)
@@ -68,7 +70,7 @@ contract LiquidContinuousMultiTokenVault is
         TripleRateContext(
             ContextParams({
                 fullRateScaled: params.fullRateScaled,
-                initialReducedRate: PeriodRate({ interestRate: params.reducedRateScaled, effectiveFromPeriod: currentPeriod() }),
+                initialReducedRate: PeriodRate({ interestRate: params.reducedRateScaled, effectiveFromPeriod: 0 }),
                 frequency: params.frequency,
                 tenor: params.tenor,
                 decimals: params.asset.decimals()
@@ -79,8 +81,12 @@ contract LiquidContinuousMultiTokenVault is
             revert LiquidContinuousMultiTokenVault__InvalidOwnerAddress(params.contractOwner);
         }
 
+        if (params.contractOperator == address(0)) {
+            revert LiquidContinuousMultiTokenVault__InvalidOperatorAddress(params.contractOwner);
+        }
+
         _grantRole(DEFAULT_ADMIN_ROLE, params.contractOwner);
-        _grantRole(OPERATOR_ROLE, params.contractOwner);
+        _grantRole(OPERATOR_ROLE, params.contractOperator);
 
         YIELD_STRATEGY = params.yieldStrategy;
 
