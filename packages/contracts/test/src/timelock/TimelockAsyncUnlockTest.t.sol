@@ -303,4 +303,35 @@ contract TimelockAsyncUnlockTest is Test {
             "unlockRequested should return 0 after bob unlocks"
         );
     }
+
+    /**
+     * S7
+     * Scenario: Alice locks and requests unlock amount
+     * Alice tries to unlock the amount which is bigger than one he requests
+     * We expect it to fail
+     */
+    function test__TimelockAsyncUnlock__ExceededMaxUnlock() public {
+        vm.prank(alice);
+        asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
+
+        asyncUnlock.setCurrentPeriod(depositDay1.depositPeriod);
+
+        vm.prank(alice);
+        asyncUnlock.requestUnlock(alice, depositDay1.depositPeriod, depositDay1.amount);
+
+        uint256 unlockAmount = depositDay1.amount + 10;
+        uint256 unlockPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
+
+        asyncUnlock.setCurrentPeriod(unlockPeriod);
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__ExceededMaxUnlock.selector,
+                alice,
+                unlockAmount,
+                depositDay1.amount
+            )
+        );
+        asyncUnlock.unlock(alice, depositDay1.depositPeriod, unlockPeriod, unlockAmount);
+    }
 }
