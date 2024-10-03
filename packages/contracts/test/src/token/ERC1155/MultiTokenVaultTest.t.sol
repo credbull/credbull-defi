@@ -29,7 +29,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
         deposit1TestParams = IMultiTokenVaultTestParams({ principal: 500 * SCALE, depositPeriod: 10, redeemPeriod: 21 });
         deposit2TestParams = IMultiTokenVaultTestParams({ principal: 300 * SCALE, depositPeriod: 15, redeemPeriod: 17 });
-        deposit3TestParams = IMultiTokenVaultTestParams({ principal: 700 * SCALE, depositPeriod: 30, redeemPeriod: 24 });
+        deposit3TestParams = IMultiTokenVaultTestParams({ principal: 700 * SCALE, depositPeriod: 30, redeemPeriod: 55 });
     }
 
     function test__MultiTokenVaulTest__Period10() public {

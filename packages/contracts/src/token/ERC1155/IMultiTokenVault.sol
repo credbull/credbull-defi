@@ -130,6 +130,19 @@ interface IMultiTokenVault is IERC1155Upgradeable {
         returns (uint256 assets);
 
     /**
+     * @notice Converts shares to assets for the given deposit periods at the redeem period.
+     * @param shares The amount of shares to convert.
+     * @param depositPeriods The periods during which the shares were issued.
+     * @param redeemPeriod The period during which the shares are redeemed.
+     * @return assets The equivalent amount of assets.
+     */
+    function convertToAssetsForDepositPeriods(
+        uint256[] memory shares,
+        uint256[] memory depositPeriods,
+        uint256 redeemPeriod
+    ) external view returns (uint256[] memory assets);
+
+    /**
      * @notice Converts shares to assets for a specific deposit period at the current redeem period.
      * @param shares The amount of shares to convert.
      * @param depositPeriod The period during which the shares were issued.

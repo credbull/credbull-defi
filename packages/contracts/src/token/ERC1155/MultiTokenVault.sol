@@ -40,6 +40,7 @@ abstract contract MultiTokenVault is
     error MultiTokenVault__RedeemTimePeriodNotSupported(address owner, uint256 period, uint256 redeemPeriod);
     error MultiTokenVault__CallerMissingApprovalForAll(address operator, address owner);
     error MultiTokenVault__RedeemBeforeDeposit(address owner, uint256 depositPeriod, uint256 redeemPeriod);
+    error MultiTokenVault__InvalidArrayLength(uint256 depositPeriodsLength, uint256 sharesLength);
 
     /**
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
@@ -178,6 +179,26 @@ abstract contract MultiTokenVault is
         view
         virtual
         returns (uint256 assets);
+
+    /**
+     * @inheritdoc IMultiTokenVault
+     */
+    function convertToAssetsForDepositPeriods(
+        uint256[] memory shares,
+        uint256[] memory depositPeriods,
+        uint256 redeemPeriod
+    ) external view returns (uint256[] memory assets_) {
+        if (shares.length != depositPeriods.length) {
+            revert MultiTokenVault__InvalidArrayLength(depositPeriods.length, shares.length);
+        }
+
+        uint256[] memory assets = new uint256[](depositPeriods.length);
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            assets[i] = convertToAssetsForDepositPeriod(shares[i], depositPeriods[i], redeemPeriod);
+        }
+
+        return assets;
+    }
 
     /**
      * @inheritdoc IMultiTokenVault
