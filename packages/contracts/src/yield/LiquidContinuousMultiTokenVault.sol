@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { ITradeable } from "@credbull/yield/ITradeable.sol";
-import { TimelockAsyncUnlock1 } from "@credbull/timelock/TimelockAsyncUnlock1.sol";
+import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { TripleRateContext } from "@credbull/yield/context/TripleRateContext.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
@@ -33,7 +33,7 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
 contract LiquidContinuousMultiTokenVault is
     MultiTokenVault,
     ITradeable,
-    TimelockAsyncUnlock1,
+    TimelockAsyncUnlock,
     Timer,
     TripleRateContext,
     ERC1155Pausable,
@@ -65,7 +65,7 @@ contract LiquidContinuousMultiTokenVault is
 
     constructor(VaultParams memory params)
         MultiTokenVault(params.asset)
-        TimelockAsyncUnlock1(params.redeemNoticePeriod)
+        TimelockAsyncUnlock(params.redeemNoticePeriod)
         Timer(params.vaultStartTimestamp)
         TripleRateContext(
             ContextParams({
@@ -117,7 +117,7 @@ contract LiquidContinuousMultiTokenVault is
         uint256 depositPeriod,
         uint256 redeemPeriod
     ) public virtual override returns (uint256 assets) {
-        unlock(owner, depositPeriod, redeemPeriod, shares);
+        // unlock(owner, depositPeriod, redeemPeriod, shares);
 
         return super.redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemPeriod);
     }
@@ -163,7 +163,7 @@ contract LiquidContinuousMultiTokenVault is
     /// @notice Request to sell (redeem) `amount` of tokens at the `depositPeriod`
     /// @param amount The amount a User wants to sell (redeem).  This could be yield only, or include principal + yield.
     function _requestSell(uint256 amount, uint256 depositPeriod) internal virtual returns (uint256 requestId) {
-        requestUnlock(_msgSender(), depositPeriod, _minUnlockPeriod(), amount);
+        requestUnlock(_msgSender(), depositPeriod, amount);
 
         return 0; // TODO - need to add requestId to requestUnlock()
     }
@@ -250,7 +250,7 @@ contract LiquidContinuousMultiTokenVault is
         _depositForDepositPeriod(amount, account, depositPeriod);
     }
 
-    /// @inheritdoc TimelockAsyncUnlock1
+    /// @inheritdoc TimelockAsyncUnlock
     function lockedAmount(address account, uint256 depositPeriod)
         public
         view
@@ -280,7 +280,7 @@ contract LiquidContinuousMultiTokenVault is
 
     // ===================== Utility =====================
 
-    /// @inheritdoc TimelockAsyncUnlock1
+    /// @inheritdoc TimelockAsyncUnlock
     function currentPeriod() public view override returns (uint256 currentPeriod_) {
         return currentPeriodsElapsed(); // vault is 0 based. so currentPeriodsElapsed() = currentPeriod() - 0
     }

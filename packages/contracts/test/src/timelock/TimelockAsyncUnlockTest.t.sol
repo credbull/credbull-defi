@@ -334,4 +334,29 @@ contract TimelockAsyncUnlockTest is Test {
         );
         asyncUnlock.unlock(alice, depositDay1.depositPeriod, unlockPeriod, unlockAmount);
     }
+
+    /**
+     * S8
+     * Scenario: Alice locks and requests unlock amount bigger than locked amount
+     * We expect it to fail
+     */
+    function test__TimelockAsyncUnlock__ExceededMaxRequestUnlock() public {
+        vm.prank(alice);
+        asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
+
+        asyncUnlock.setCurrentPeriod(depositDay1.depositPeriod);
+
+        uint256 requestUnlockAmount = depositDay1.amount + 10;
+
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__ExceededMaxRequestUnlock.selector,
+                alice,
+                requestUnlockAmount,
+                depositDay1.amount
+            )
+        );
+        asyncUnlock.requestUnlock(alice, depositDay1.depositPeriod, requestUnlockAmount);
+    }
 }
