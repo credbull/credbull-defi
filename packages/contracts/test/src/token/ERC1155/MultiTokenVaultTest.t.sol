@@ -4,21 +4,23 @@ pragma solidity ^0.8.20;
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IMultiTokenVaultTestBase } from "@test/src/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
-import { TimerCheats } from "@test/test/timelock/TimerCheats.t.sol";
+import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriods.t.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
-    IERC20Metadata private asset;
+contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
+    IERC20Metadata internal asset;
 
-    IMultiTokenVaultTestParams private deposit1TestParams;
-    IMultiTokenVaultTestParams private deposit2TestParams;
+    IMultiTokenVaultTestParams internal deposit1TestParams;
+    IMultiTokenVaultTestParams internal deposit2TestParams;
+    IMultiTokenVaultTestParams internal deposit3TestParams;
 
     uint256 internal SCALE;
 
-    function setUp() public {
+    function setUp() public virtual {
         vm.prank(owner);
         asset = new SimpleUSDC(1_000_000 ether);
 
@@ -27,12 +29,13 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
 
         deposit1TestParams = IMultiTokenVaultTestParams({ principal: 500 * SCALE, depositPeriod: 10, redeemPeriod: 21 });
         deposit2TestParams = IMultiTokenVaultTestParams({ principal: 300 * SCALE, depositPeriod: 15, redeemPeriod: 17 });
+        deposit3TestParams = IMultiTokenVaultTestParams({ principal: 700 * SCALE, depositPeriod: 30, redeemPeriod: 55 });
     }
 
     function test__MultiTokenVaulTest__Period10() public {
         uint256 assetToSharesRatio = 1;
 
-        MultiTokenVault vault = new MultiTokenVaultDailyPeriods(asset, assetToSharesRatio, 10);
+        MultiTokenVault vault = _createMultiTokenVault(asset, assetToSharesRatio, 10);
 
         _testVaultAtPeriod(vault, deposit1TestParams);
     }
@@ -40,7 +43,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
     function test__MultiTokenVaulTest__SimpleDeposit() public {
         uint256 assetToSharesRatio = 1;
 
-        MultiTokenVault vault = new MultiTokenVaultDailyPeriods(asset, assetToSharesRatio, 10);
+        MultiTokenVault vault = _createMultiTokenVault(asset, assetToSharesRatio, 10);
 
         address vaultAddress = address(vault);
 
@@ -68,7 +71,7 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         uint256 assetToSharesRatio = 2;
 
         // setup
-        MultiTokenVault vault = new MultiTokenVaultDailyPeriods(asset, assetToSharesRatio, 10);
+        MultiTokenVaultDailyPeriods vault = _createMultiTokenVault(asset, assetToSharesRatio, 10);
         uint256 assetBalanceBeforeDeposits = asset.balanceOf(alice); // the asset balance from the start
 
         // verify deposit - period 1
@@ -101,6 +104,9 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
         assertEq(
             deposit2Shares, vault.balanceOf(alice, deposit2TestParams.depositPeriod), "balance incorrect at period 2"
         );
+
+        // New check for sharesAtPeriods
+        _warpToPeriod(vault, deposit2TestParams.depositPeriod); // warp to deposit2Period
 
         // verify redeem - period 1
         uint256 deposit1ExpectedYield = _expectedReturns(deposit1Shares, vault, deposit1TestParams);
@@ -142,57 +148,20 @@ contract MultiTokenVaulTest is IMultiTokenVaultTestBase {
     function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
         MultiTokenVaultDailyPeriods(address(vault)).setCurrentPeriodsElapsed(timePeriod);
     }
-}
 
-contract MultiTokenVaultDailyPeriods is MultiTokenVault, TimerCheats {
-    uint256 internal immutable ASSET_TO_SHARES_RATIO;
-    uint256 internal immutable YIELD_PERCENTAGE;
-
-    constructor(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage)
-        MultiTokenVault(asset)
-        TimerCheats(block.timestamp)
+    function _createMultiTokenVault(IERC20Metadata _asset, uint256 assetToSharesRatio, uint256 yieldPercentage)
+        internal
+        returns (MultiTokenVaultDailyPeriods)
     {
-        ASSET_TO_SHARES_RATIO = assetToSharesRatio;
-        YIELD_PERCENTAGE = yieldPercentage;
-    }
+        MultiTokenVaultDailyPeriods _vault = new MultiTokenVaultDailyPeriods();
 
-    function calcYield(uint256 principal, uint256, /* depositPeriod */ uint256 /* toPeriod */ )
-        public
-        view
-        returns (uint256 yield)
-    {
-        return principal * YIELD_PERCENTAGE / 100;
-    }
-
-    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
-        public
-        view
-        override
-        returns (uint256 assets)
-    {
-        uint256 principal = shares * ASSET_TO_SHARES_RATIO;
-
-        return principal + calcYield(principal, depositPeriod, redeemPeriod);
-    }
-
-    function convertToSharesForDepositPeriod(uint256 assets, uint256 /* depositPeriod */ )
-        public
-        view
-        override
-        returns (uint256 shares)
-    {
-        return assets / ASSET_TO_SHARES_RATIO;
-    }
-
-    function currentPeriodsElapsed() public view override returns (uint256 currentPeriod_) {
-        return elapsed24Hours();
-    }
-
-    function setCurrentPeriodsElapsed(uint256 currentTimePeriodsElapsed_) public {
-        warp24HourPeriods(currentTimePeriodsElapsed_);
-
-        if (currentPeriodsElapsed() != currentTimePeriodsElapsed_) {
-            revert Timer__ERC6372InconsistentTime(currentPeriodsElapsed(), currentTimePeriodsElapsed_);
-        }
+        return MultiTokenVaultDailyPeriods(
+            address(
+                new ERC1967Proxy(
+                    address(_vault),
+                    abi.encodeWithSelector(_vault.initialize.selector, _asset, assetToSharesRatio, yieldPercentage)
+                )
+            )
+        );
     }
 }

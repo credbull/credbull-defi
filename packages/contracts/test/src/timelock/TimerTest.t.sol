@@ -3,14 +3,16 @@ pragma solidity ^0.8.20;
 
 import { Timer } from "@credbull/timelock/Timer.sol";
 import { Test } from "forge-std/Test.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract TimerTest is Test {
     uint256 public constant START_TIME = 1704110460000; // Jan 1, 2024 at 12:01pm UTC
 
-    Timer private clock;
+    MockTimer private clock;
 
     function setUp() public {
-        clock = new Timer(1704110460000);
+        clock = new MockTimer();
+        clock.initialize(START_TIME);
     }
 
     function test__Timer__InitialClockMode() public view {
@@ -42,12 +44,19 @@ contract TimerTest is Test {
     function test__Timer__ElapsedWithFutureStartTimeReverts() public {
         uint256 futureStart = block.timestamp + 50 days;
 
-        Timer futureTimer = new Timer(futureStart);
+        MockTimer futureTimer = new MockTimer();
+        futureTimer.initialize(futureStart);
 
         assertEq(futureStart, futureTimer.startTimestamp());
         assertEq(block.timestamp, futureTimer.timestamp());
 
         vm.expectRevert(abi.encodeWithSelector(Timer.Timer__StartTimeNotReached.selector, block.timestamp, futureStart));
         futureTimer.elapsedSeconds(); // "elapsed with future startTime should revert");
+    }
+}
+
+contract MockTimer is Initializable, Timer {
+    function initialize(uint256 startTime) public initializer {
+        __Timer_init(startTime);
     }
 }

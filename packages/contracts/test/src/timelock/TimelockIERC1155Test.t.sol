@@ -54,10 +54,8 @@ contract TimelockIERC1155Test is TimelockTest {
 contract SimpleTimelockIERC1155 is TimelockIERC1155, TimerCheats {
     uint256 public myLockDuration;
 
-    constructor(address _initialOwner, uint256 _lockDuration)
-        TimelockIERC1155(_initialOwner)
-        TimerCheats(block.timestamp)
-    {
+    constructor(address _initialOwner, uint256 _lockDuration) TimelockIERC1155(_initialOwner) {
+        __TimerCheats__init(block.timestamp);
         myLockDuration = _lockDuration;
     }
 

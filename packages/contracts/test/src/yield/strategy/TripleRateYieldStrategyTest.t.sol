@@ -6,6 +6,7 @@ import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYiel
 
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
 import { TestTripleRateContext } from "@test/test/yield/context/TestTripleRateContext.t.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { Test } from "forge-std/Test.sol";
 
@@ -34,13 +35,22 @@ contract TripleRateYieldStrategyTest is Test {
 
     function setUp() public {
         yieldStrategy = new TripleRateYieldStrategy();
-        context = new TestTripleRateContext(
-            DEFAULT_FULL_RATE,
-            DEFAULT_REDUCED_RATE,
-            EFFECTIVE_FROM_PERIOD,
-            Frequencies.toValue(Frequencies.Frequency.DAYS_365),
-            MATURITY_PERIOD,
-            DECIMALS
+        context = new TestTripleRateContext();
+        context = TestTripleRateContext(
+            address(
+                new ERC1967Proxy(
+                    address(context),
+                    abi.encodeWithSelector(
+                        context.__TestTripeRateContext_init.selector,
+                        DEFAULT_FULL_RATE,
+                        DEFAULT_REDUCED_RATE,
+                        EFFECTIVE_FROM_PERIOD,
+                        Frequencies.toValue(Frequencies.Frequency.DAYS_365),
+                        MATURITY_PERIOD,
+                        DECIMALS
+                    )
+                )
+            )
         );
         contextAddress = address(context);
         principal = 1_000 * SCALE;

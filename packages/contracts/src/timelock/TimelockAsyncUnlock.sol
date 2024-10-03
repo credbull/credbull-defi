@@ -2,9 +2,13 @@
 pragma solidity ^0.8.20;
 
 import { ITimelockAsyncUnlock } from "@credbull/timelock/ITimelockAsyncUnlock.sol";
-import { Context } from "@openzeppelin/contracts/utils/Context.sol";
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
+/**
+ * @title TimelockAsyncUnlock
+ */
+abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, ContextUpgradeable {
     mapping(uint256 depositPeriod => mapping(address account => uint256 amount)) private _unlockRequests;
     mapping(uint256 depositPeriod => mapping(address account => mapping(uint256 unlockPeriod => uint256 amount)))
         private _unlockRequestsByUnlockPeriod;
@@ -21,7 +25,8 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
     error TimelockAsyncUnlock__ExceededMaxRequestUnlock(address owner, uint256 amount, uint256 maxRequestUnlockAmount);
     error TimelockAsyncUnlock__AuthorizeCallerFailed(address caller, address owner);
 
-    constructor(uint256 noticePeriod_) {
+    function __TimelockAsyncUnlock_init(uint256 noticePeriod_) internal virtual onlyInitializing {
+        __Context_init();
         _noticePeriod = noticePeriod_;
     }
 
@@ -132,4 +137,11 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
             revert TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(_msgSender(), owner, currentPeriod(), unlockPeriod);
         }
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

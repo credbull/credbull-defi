@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { ERC1155MintableBurnable } from "@test/test/token/ERC1155/ERC1155MintableBurnable.t.sol";
 import { SimpleTimelockAsyncUnlock } from "@test/test/timelock/SimpleTimelockAsyncUnlock.t.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { IERC5679Ext1155 } from "@credbull/token/ERC1155/IERC5679Ext1155.sol";
 
 import { Deposit } from "@test/src/timelock/TimelockTest.t.sol";
@@ -25,7 +26,15 @@ contract TimelockAsyncUnlockTest is Test {
 
     function setUp() public {
         deposits = new ERC1155MintableBurnable();
-        asyncUnlock = new SimpleTimelockAsyncUnlock(NOTICE_PERIOD, deposits);
+        asyncUnlock = new SimpleTimelockAsyncUnlock();
+        asyncUnlock = SimpleTimelockAsyncUnlock(
+            address(
+                new ERC1967Proxy(
+                    address(asyncUnlock),
+                    abi.encodeWithSelector(asyncUnlock.initialize.selector, NOTICE_PERIOD, deposits)
+                )
+            )
+        );
     }
 
     /**

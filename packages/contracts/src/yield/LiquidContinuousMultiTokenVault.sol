@@ -2,19 +2,19 @@
 pragma solidity ^0.8.20;
 
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
-import { ITradeable } from "@credbull/yield/ITradeable.sol";
+import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
+import { IComponentToken } from "@credbull/token/component/IComponentToken.sol";
 import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { TripleRateContext } from "@credbull/yield/context/TripleRateContext.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 
-import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import { ERC1155Pausable } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
-import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title LiquidContinuousMultiTokenVault
@@ -31,14 +31,14 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
  *
  */
 contract LiquidContinuousMultiTokenVault is
+    Initializable,
+    UUPSUpgradeable,
     MultiTokenVault,
-    ITradeable,
+    IComponentToken,
     TimelockAsyncUnlock,
     Timer,
     TripleRateContext,
-    ERC1155Pausable,
-    ERC1155Supply,
-    AccessControl
+    AccessControlUpgradeable
 {
     using SafeERC20 for IERC20;
 
@@ -47,53 +47,52 @@ contract LiquidContinuousMultiTokenVault is
         address contractOperator;
         IERC20Metadata asset;
         IYieldStrategy yieldStrategy;
+        // IRedeemOptimizer redeemOptimizer;   // TODO - add in the redeemOptimizer
         uint256 vaultStartTimestamp;
         uint256 redeemNoticePeriod;
-        uint256 fullRateScaled;
-        uint256 reducedRateScaled;
-        uint256 frequency; // MUST be a daily frequency, either 360 or 365
-        uint256 tenor;
+        TripleRateContext.ContextParams contextParams;
     }
 
-    IYieldStrategy public immutable YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
+    IYieldStrategy public yieldStrategy;
+    IRedeemOptimizer public redeemOptimizer;
 
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidOwnerAddress(address ownerAddress);
     error LiquidContinuousMultiTokenVault__InvalidOperatorAddress(address ownerAddress);
+    error LiquidContinuousMultiTokenVault__AmountMismatch(uint256 amount1, uint256 amount2);
 
-    constructor(VaultParams memory params)
-        MultiTokenVault(params.asset)
-        TimelockAsyncUnlock(params.redeemNoticePeriod)
-        Timer(params.vaultStartTimestamp)
-        TripleRateContext(
-            ContextParams({
-                fullRateScaled: params.fullRateScaled,
-                initialReducedRate: PeriodRate({ interestRate: params.reducedRateScaled, effectiveFromPeriod: 0 }),
-                frequency: params.frequency,
-                tenor: params.tenor,
-                decimals: params.asset.decimals()
-            })
-        )
-    {
-        if (params.contractOwner == address(0)) {
-            revert LiquidContinuousMultiTokenVault__InvalidOwnerAddress(params.contractOwner);
+    function initialize(VaultParams memory vaultParams) public initializer {
+        __UUPSUpgradeable_init();
+        __AccessControl_init();
+        __MultiTokenVault_init(vaultParams.asset);
+        __TimelockAsyncUnlock_init(vaultParams.redeemNoticePeriod);
+        __TripleRateContext_init(vaultParams.contextParams);
+        __Timer_init(vaultParams.vaultStartTimestamp);
+
+        if (vaultParams.contractOwner == address(0)) {
+            revert LiquidContinuousMultiTokenVault__InvalidOwnerAddress(vaultParams.contractOwner);
         }
 
-        if (params.contractOperator == address(0)) {
-            revert LiquidContinuousMultiTokenVault__InvalidOperatorAddress(params.contractOwner);
+        if (vaultParams.contractOperator == address(0)) {
+            revert LiquidContinuousMultiTokenVault__InvalidOperatorAddress(vaultParams.contractOwner);
         }
 
-        _grantRole(DEFAULT_ADMIN_ROLE, params.contractOwner);
-        _grantRole(OPERATOR_ROLE, params.contractOperator);
+        _grantRole(DEFAULT_ADMIN_ROLE, vaultParams.contractOwner);
+        _grantRole(OPERATOR_ROLE, vaultParams.contractOperator);
+        _grantRole(UPGRADER_ROLE, vaultParams.contractOperator);
 
-        YIELD_STRATEGY = params.yieldStrategy;
+        yieldStrategy = vaultParams.yieldStrategy;
 
-        if (params.frequency != 360 && params.frequency != 365) {
-            revert LiquidContinuousMultiTokenVault__InvalidFrequency(params.frequency);
+        if (vaultParams.contextParams.frequency != 360 && vaultParams.contextParams.frequency != 365) {
+            revert LiquidContinuousMultiTokenVault__InvalidFrequency(vaultParams.contextParams.frequency);
         }
     }
+
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address newImplementation) internal view override onlyRole(UPGRADER_ROLE) { }
 
     // ===================== MultiTokenVault =====================
 
@@ -140,8 +139,8 @@ contract LiquidContinuousMultiTokenVault is
 
     // ===================== Buyable/Sellable =====================
 
-    /// @inheritdoc ITradeable
-    /// @dev - requesting to buy is not required, User directly executeBuy
+    /// @inheritdoc IComponentToken
+    /// @dev - requesting to buy is not required, Users can directly executeBuy
     function requestBuy(uint256 /* currencyTokenAmount */ )
         public
         view
@@ -153,7 +152,7 @@ contract LiquidContinuousMultiTokenVault is
         return 0;
     }
 
-    /// @inheritdoc ITradeable
+    /// @inheritdoc IComponentToken
     function requestSell(uint256 componentTokenAmount) public virtual override returns (uint256 requestId) {
         // TODO - need helper to find which depositPeriods we want to sell from...
 
@@ -168,19 +167,21 @@ contract LiquidContinuousMultiTokenVault is
         return 0; // TODO - need to add requestId to requestUnlock()
     }
 
-    /// @inheritdoc ITradeable
+    /// @inheritdoc IComponentToken
     function executeBuy(
         address requestor,
         uint256, /* requestId */
         uint256 currencyTokenAmount,
-        uint256 /* componentTokenAmount */
+        uint256 componentTokenAmount
     ) public override {
-        // TODO - verify currencyTokenAmount convertToShares(currencyTokenAmount) = componentTokenAmount
+        if (currencyTokenAmount != componentTokenAmount) {
+            revert LiquidContinuousMultiTokenVault__AmountMismatch(currencyTokenAmount, componentTokenAmount);
+        }
 
         deposit(currencyTokenAmount, requestor);
     }
 
-    /// @inheritdoc ITradeable
+    /// @inheritdoc IComponentToken
     function executeSell(
         address requestor,
         uint256 requestId,
@@ -188,6 +189,7 @@ contract LiquidContinuousMultiTokenVault is
         uint256 componentTokenAmount
     ) public override {
         // TODO - verify currencyTokenAmount convertToAssets(componentTokenAmount) = currencyTokenAmount
+        // TODO - verifying currencyTokeAmount figuring out the componentTokenAmount here is non-trivial.  it will span multiple periods.
         _executeSell(requestor, currentPeriod(), requestId, currencyTokenAmount, componentTokenAmount);
     }
 
@@ -203,43 +205,16 @@ contract LiquidContinuousMultiTokenVault is
         redeemForDepositPeriod(componentTokenAmount, requestor, requestor, depositPeriod, currentPeriod());
     }
 
-    // solhint-disable-next-line
-    function distributeYield(address user, uint256 amount) external { }
-
-    /// @notice Returns the total yield generated by the contract.
-    function yieldGenerated() external pure returns (uint256 yield) {
-        return 0;
-    }
-
-    // ===================== Yield =====================
+    // ===================== Yield / YieldStrategy =====================
 
     /// @dev yield based on the associated yieldStrategy
     function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod) public view returns (uint256 yield) {
-        return YIELD_STRATEGY.calcYield(address(this), principal, fromPeriod, toPeriod);
+        return yieldStrategy.calcYield(address(this), principal, fromPeriod, toPeriod);
     }
 
     /// @dev price is not used in Vault calculations.  however, 1 asset = 1 share, implying a price of 1
     function calcPrice(uint256 /* numPeriodsElapsed */ ) public view virtual returns (uint256 price) {
         return 1; // 1 asset = 1 share
-    }
-
-    /// @notice Harvest yield for the given `principal`, but keeping the principal invested.
-    function _harvestYield(address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod, uint256 principal)
-        internal
-        nonReentrant
-    {
-        // only unlock the yield
-        uint256 yield = calcYield(principal, depositPeriod, unlockPeriod);
-
-        unlock(tokenOwner, depositPeriod, unlockPeriod, yield);
-
-        // move the lock by burning and minting/locking in a new period
-        _burn(tokenOwner, depositPeriod, principal);
-        _mint(tokenOwner, currentPeriod(), principal, ""); // TODO confirm access.  Operators only or user allowed action?
-
-        assetIERC20().safeTransfer(tokenOwner, yield);
-
-        // TODO - emit redeem redeem yield event
     }
 
     // ===================== TimelockAsyncUnlock =====================
@@ -260,49 +235,9 @@ contract LiquidContinuousMultiTokenVault is
         return balanceOf(account, depositPeriod);
     }
 
-    // ===================== ERC1155Pausable =====================
+    // ===================== TripleRateContext =====================
 
-    function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
-        internal
-        override(ERC1155Supply, ERC1155Pausable, ERC1155)
-        whenNotPaused
-    {
-        ERC1155Supply._update(from, to, ids, values);
-    }
-
-    function pause() public onlyRole(OPERATOR_ROLE) {
-        _pause();
-    }
-
-    function unpause() public onlyRole(OPERATOR_ROLE) {
-        _unpause();
-    }
-
-    // ===================== Utility =====================
-
-    /// @inheritdoc TimelockAsyncUnlock
-    function currentPeriod() public view override returns (uint256 currentPeriod_) {
-        return currentPeriodsElapsed(); // vault is 0 based. so currentPeriodsElapsed() = currentPeriod() - 0
-    }
-
-    /// @inheritdoc MultiTokenVault
-    function currentPeriodsElapsed() public view override returns (uint256 numPeriodsElapsed_) {
-        return elapsed24Hours(); // vault is 0 based. so currentPeriodsElapsed() = currentPeriod() - 0
-    }
-
-    /// @inheritdoc MultiTokenVault
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(MultiTokenVault, ERC1155, AccessControl)
-        returns (bool)
-    {
-        return MultiTokenVault.supportsInterface(interfaceId);
-    }
-
-    /**
-     * @inheritdoc TripleRateContext
-     */
+    /// @inheritdoc TripleRateContext
     function setReducedRate(uint256 reducedRateScaled_, uint256 effectiveFromPeriod_)
         public
         override
@@ -321,5 +256,38 @@ contract LiquidContinuousMultiTokenVault is
      */
     function setReducedRateAtCurrent(uint256 reducedRateScaled_) public onlyRole(OPERATOR_ROLE) {
         super.setReducedRate(currentPeriod(), reducedRateScaled_);
+    }
+
+    // ===================== Utility =====================
+
+    /// @inheritdoc TimelockAsyncUnlock
+    function currentPeriod() public view override returns (uint256 currentPeriod_) {
+        return currentPeriodsElapsed(); // vault is 0 based. so currentPeriodsElapsed() = currentPeriod() - 0
+    }
+
+    /// @inheritdoc MultiTokenVault
+    function currentPeriodsElapsed() public view override returns (uint256 numPeriodsElapsed_) {
+        return elapsed24Hours(); // vault is 0 based. so currentPeriodsElapsed() = currentPeriod() - 0
+    }
+
+    function pause() public onlyRole(OPERATOR_ROLE) {
+        _pause();
+    }
+
+    function unpause() public onlyRole(OPERATOR_ROLE) {
+        _unpause();
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(MultiTokenVault, AccessControlUpgradeable)
+        returns (bool)
+    {
+        return MultiTokenVault.supportsInterface(interfaceId);
+    }
+
+    function getVersion() external view returns (uint256 version) {
+        return 1;
     }
 }
