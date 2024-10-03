@@ -54,6 +54,11 @@ interface ITimelockAsyncUnlock {
      */
     function unlockRequested(address owner, uint256 depositPeriod) external view returns (uint256);
 
+    function unlockRequested(address owner, uint256 depositPeriod, uint256 unlockPeriod)
+        external
+        view
+        returns (uint256);
+
     /**
      * @dev Return the amount of owner that can be requested to be unlocked for depositPeriod
      * This can be calculated simply by lockedAmount - unlockRequested

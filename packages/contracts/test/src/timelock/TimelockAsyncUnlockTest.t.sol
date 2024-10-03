@@ -111,4 +111,146 @@ contract TimelockAsyncUnlockTest is Test {
 
         asyncUnlock.unlock(alice, depositDay1.depositPeriod, unlockPeriod, depositDay1.amount);
     }
+
+    /**
+     * S4
+     * Scenario: Alice requests unlock multiple times
+     * Alice unlocks multiple times
+     */
+    function test__TimelockAsyncUnlock__MultipleRequestsAndUnlocks() public {
+        uint256 depositPeriod = 11;
+        uint256 depositAmount1 = 34;
+        uint256 depositAmount2 = 56;
+
+        vm.startPrank(alice);
+        asyncUnlock.lock(alice, depositPeriod, depositAmount1);
+        asyncUnlock.lock(alice, depositPeriod, depositAmount2);
+        vm.stopPrank();
+
+        uint256 totalDeposits = depositAmount1 + depositAmount2;
+
+        assertEq(totalDeposits, asyncUnlock.lockedAmount(alice, depositPeriod), "deposit not locked");
+        assertEq(totalDeposits, asyncUnlock.maxRequestUnlock(alice, depositPeriod), "maxRequestUnlock should be total");
+
+        // request unlock at exactly depositPeriod + noticePeriod
+        uint256 unlockPeriod1 = depositPeriod + NOTICE_PERIOD;
+        uint256 partialUnlockAmount1 = 10;
+        asyncUnlock.setCurrentPeriod(depositPeriod);
+        vm.prank(alice);
+        asyncUnlock.requestUnlock(alice, depositPeriod, partialUnlockAmount1);
+
+        assertEq(
+            partialUnlockAmount1,
+            asyncUnlock.unlockRequested(alice, depositPeriod),
+            "unlockRequest should have partial amount 1"
+        );
+        assertEq(totalDeposits, asyncUnlock.lockedAmount(alice, depositPeriod), "deposit not locked");
+        assertEq(
+            totalDeposits - partialUnlockAmount1,
+            asyncUnlock.maxRequestUnlock(alice, depositPeriod),
+            "maxRequestUnlock incorrect - unlockPeriod1"
+        );
+
+        // request to unlock another partial amount
+        uint256 partialUnlockAmount2 = 30;
+        vm.prank(alice);
+        asyncUnlock.requestUnlock(alice, depositPeriod, partialUnlockAmount2);
+        assertEq(
+            partialUnlockAmount1 + partialUnlockAmount2,
+            asyncUnlock.unlockRequested(alice, depositPeriod),
+            "unlockRequest should have sum of 2 partial amounts"
+        );
+
+        // now create a request for a different unlockPeriod
+        uint256 unlockPeriod2 = depositPeriod + 5 + NOTICE_PERIOD;
+        asyncUnlock.setCurrentPeriod(depositPeriod + 5);
+
+        assertEq(
+            totalDeposits - partialUnlockAmount1 - partialUnlockAmount2,
+            asyncUnlock.maxRequestUnlock(alice, depositPeriod),
+            "maxRequestUnlock incorrect in second unlockPeriod"
+        );
+        vm.prank(alice);
+        asyncUnlock.requestUnlock(alice, depositPeriod, totalDeposits - partialUnlockAmount1 - partialUnlockAmount2);
+        assertEq(
+            totalDeposits, asyncUnlock.unlockRequested(alice, depositPeriod), "unlockRequest should have total amount"
+        );
+
+        // now unlock
+        asyncUnlock.setCurrentPeriod(unlockPeriod1);
+        vm.prank(alice);
+        asyncUnlock.unlock(alice, depositPeriod, unlockPeriod1, partialUnlockAmount1);
+
+        assertEq(
+            totalDeposits - partialUnlockAmount1,
+            asyncUnlock.unlockRequested(alice, depositPeriod),
+            "unlockRequested should exclude partialUnlockAmount1"
+        );
+
+        assertEq(
+            partialUnlockAmount2,
+            asyncUnlock.unlockRequested(alice, depositPeriod, unlockPeriod1),
+            "unlockRequested for unlockPeriod1 should return partialUnlockAmount2"
+        );
+
+        assertEq(
+            totalDeposits - partialUnlockAmount1,
+            asyncUnlock.lockedAmount(alice, depositPeriod),
+            "lockedAmount should exclude partialUnlockAmount1"
+        );
+
+        vm.prank(alice);
+        asyncUnlock.unlock(alice, depositPeriod, unlockPeriod1, partialUnlockAmount2);
+
+        assertEq(
+            totalDeposits - partialUnlockAmount1 - partialUnlockAmount2,
+            asyncUnlock.unlockRequested(alice, depositPeriod),
+            "unlockRequested should exclude partialUnlockAmount1+partialUnlockAmount2"
+        );
+
+        assertEq(
+            0,
+            asyncUnlock.unlockRequested(alice, depositPeriod, unlockPeriod1),
+            "unlockRequested for unlockPeriod1 should return 0 after 2 unlocks"
+        );
+
+        assertEq(
+            totalDeposits - partialUnlockAmount1 - partialUnlockAmount2,
+            asyncUnlock.lockedAmount(alice, depositPeriod),
+            "lockedAmount should exclude partialUnlockAmount1+partialUnlockAmount2"
+        );
+
+        asyncUnlock.setCurrentPeriod(unlockPeriod2);
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__ExceededMaxUnlock.selector,
+                alice,
+                totalDeposits - partialUnlockAmount1 - partialUnlockAmount2 + 1,
+                totalDeposits - partialUnlockAmount1 - partialUnlockAmount2
+            )
+        );
+        asyncUnlock.unlock(
+            alice, depositPeriod, unlockPeriod2, totalDeposits - partialUnlockAmount1 - partialUnlockAmount2 + 1
+        );
+
+        vm.prank(alice);
+        asyncUnlock.unlock(
+            alice, depositPeriod, unlockPeriod2, totalDeposits - partialUnlockAmount1 - partialUnlockAmount2
+        );
+
+        assertEq(
+            0,
+            asyncUnlock.unlockRequested(alice, depositPeriod),
+            "unlockRequested should return 0 after unlock in unlockPeriod2"
+        );
+
+        assertEq(
+            0,
+            asyncUnlock.unlockRequested(alice, depositPeriod, unlockPeriod2),
+            "unlockRequested by unlockPeriod2 should return 0 after unlock in unlockPeriod2"
+        );
+
+        assertEq(0, asyncUnlock.lockedAmount(alice, depositPeriod), "lockedAmount should return 0 after all unlocks");
+    }
 }
