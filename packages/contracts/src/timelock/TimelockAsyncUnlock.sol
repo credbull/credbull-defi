@@ -37,7 +37,7 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
      */
     function currentPeriod() public view virtual returns (uint256 currentPeriod_);
 
-    function currentUnlockPeriod() public view virtual returns (uint256) {
+    function minUnlockPeriod() public view virtual returns (uint256) {
         return currentPeriod() + noticePeriod();
     }
 
@@ -82,11 +82,11 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
     {
         _authorizeCaller(_msgSender(), owner);
 
-        if (maxRequestUnlock(owner, depositPeriod) < amount) {
+        if (amount > maxRequestUnlock(owner, depositPeriod)) {
             revert TimelockAsyncUnlock__ExceededMaxRequestUnlock(owner, amount, maxRequestUnlock(owner, depositPeriod));
         }
 
-        unlockPeriod = currentUnlockPeriod();
+        unlockPeriod = minUnlockPeriod();
 
         _unlockRequests[depositPeriod][owner] += amount;
         _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod] += amount;

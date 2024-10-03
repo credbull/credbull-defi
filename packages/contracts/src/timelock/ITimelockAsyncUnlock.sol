@@ -41,7 +41,7 @@ interface ITimelockAsyncUnlock {
     /**
      * @dev Return the unlock period based on current time
      */
-    function currentUnlockPeriod() external view returns (uint256);
+    function minUnlockPeriod() external view returns (uint256);
 
     /**
      * @dev Return the owner's locked token amount

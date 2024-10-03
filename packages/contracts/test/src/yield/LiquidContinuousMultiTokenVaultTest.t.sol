@@ -165,6 +165,8 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         // request unlock
+        _warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+
         vm.prank(alice);
         liquidVault.requestUnlock(alice, testParams.depositPeriod, testParams.principal);
         assertEq(
@@ -180,9 +182,7 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(0, liquidVault.lockedAmount(alice, testParams.depositPeriod), "deposit lock not released");
         assertEq(0, liquidVault.balanceOf(alice, testParams.depositPeriod), "deposits should be redeemed");
 
-        /* assertEq(
-            0, liquidVault.unlockRequested(alice, testParams.depositPeriod), "unlockRequest should be released"
-        ); */
+        assertEq(0, liquidVault.unlockRequested(alice, testParams.depositPeriod), "unlockRequest should be released");
 
         return actualAssetsAtPeriod;
     }
