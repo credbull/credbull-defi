@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
-import { console2 } from "forge-std/console2.sol";
 
 import { Test } from "forge-std/Test.sol";
 
@@ -49,7 +48,6 @@ abstract contract YieldStrategyScenarioTest is Test {
      *  And the principal should remain in the vault
      */
     function test_YieldStrategyScenarioTest_S1() public {
-        console2.log(address(_yieldStrategy()));
         assertEq(
             2_054_794, // $1,000 * ((5% / 365) * 15) =  2.054794
             _yieldStrategy().calcYield(_contextAddress(), principal, depositPeriod, depositPeriod + 15),

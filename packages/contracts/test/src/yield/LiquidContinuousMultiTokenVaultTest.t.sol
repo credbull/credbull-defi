@@ -130,6 +130,53 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         testVaultAtPeriods(_liquidVault, deposit, 0, _liquidVault.TENOR());
     }
 
+    function test__LiquidContinuousVaultTest__Upgradeability() public {
+        LiquidContinuousMultiTokenVault.VaultParams memory params = LiquidContinuousMultiTokenVault.VaultParams({
+            contractOwner: owner,
+            contractOperator: makeAddr("operator"),
+            asset: _asset,
+            yieldStrategy: new TripleRateYieldStrategy(),
+            vaultStartTimestamp: block.timestamp,
+            redeemNoticePeriod: 1,
+            fullRateScaled: 10 * _scale,
+            reducedRateScaled: 0 * _scale,
+            frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            tenor: 30
+        });
+
+        LiquidContinuousMultiTokenVaultMock mockVault = _createLiquidContinueMultiTokenVault(params);
+
+        IMultiTokenVaultTestParams memory testParams =
+            IMultiTokenVaultTestParams({ principal: 2_000 * _scale, depositPeriod: 11, redeemPeriod: 71 });
+        uint256 sharesAmount = testParams.principal; // 1 principal = 1 share
+        _warpToPeriod(mockVault, testParams.depositPeriod);
+
+        vm.startPrank(alice);
+        _asset.approve(address(mockVault), testParams.principal); // grant the vault allowance
+        mockVault.executeBuy(alice, 0, testParams.principal, sharesAmount);
+        vm.stopPrank();
+
+        assertEq(
+            testParams.principal,
+            mockVault.balanceOf(alice, testParams.depositPeriod),
+            "user should have principal worth of vault shares"
+        );
+
+        //Upgrade contract
+        LiquidContinuousMultiTokenVaultMockV2 mockVaultV2 = new LiquidContinuousMultiTokenVaultMockV2();
+
+        vm.prank(params.contractOperator);
+        mockVault.upgradeTo(address(mockVaultV2));
+
+        assertEq("2.0.0", mockVaultV2.version(), "version should be 2.0.0");
+
+        assertEq(
+            testParams.principal,
+            mockVault.balanceOf(alice, testParams.depositPeriod),
+            "user should have principal worth of vault shares"
+        );
+    }
+
     // verify deposit.  updates vault assets and shares.
     function _testDepositOnly(address receiver, IMultiTokenVault vault, IMultiTokenVaultTestParams memory testParams)
         internal
@@ -239,5 +286,11 @@ contract LiquidContinuousMultiTokenVaultMock is LiquidContinuousMultiTokenVault 
         uint256 componentTokenAmount
     ) public {
         super._executeSell(requestor, depositPeriod, requestId, currencyTokenAmount, componentTokenAmount);
+    }
+}
+
+contract LiquidContinuousMultiTokenVaultMockV2 is LiquidContinuousMultiTokenVaultMock {
+    function version() public pure returns (string memory) {
+        return "2.0.0";
     }
 }

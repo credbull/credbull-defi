@@ -91,6 +91,8 @@ contract LiquidContinuousMultiTokenVault is
 
         _grantRole(DEFAULT_ADMIN_ROLE, params.contractOwner);
         _grantRole(OPERATOR_ROLE, params.contractOperator);
+        _grantRole(UPGRADE_ROLE, params.contractOperator);
+        _grantRole(PAUSER_ROLE, params.contractOperator);
 
         YIELD_STRATEGY = params.yieldStrategy;
 
