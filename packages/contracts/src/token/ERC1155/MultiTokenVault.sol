@@ -129,13 +129,6 @@ abstract contract MultiTokenVault is
     /**
      * @inheritdoc IMultiTokenVault
      */
-    function totalAssets() public view returns (uint256) {
-        return ASSET.balanceOf(address(this));
-    }
-
-    /**
-     * @inheritdoc IMultiTokenVault
-     */
     function sharesAtPeriod(address owner, uint256 depositPeriod) public view returns (uint256 shares) {
         return balanceOf(owner, depositPeriod);
     }

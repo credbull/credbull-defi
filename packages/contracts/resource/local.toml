@@ -15,6 +15,12 @@ operator = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
 # Dev/Anvil Wallet, Account[2]
 custodian = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
 
+[evm.contracts.liquid_continuous_multi_token_vault]
+# rate in basis points, e.g.  10% = 1000 bps
+full_rate_bps = 10_00
+# rate in basis points, e.g.  5.5% = 550 bps
+reduced_rate_bps = 5_50
+
 [evm.contracts.upside_vault]
 # 2 decimal place percentage (meaining value divided by 100) as integer.
 collateral_percentage = 20_00

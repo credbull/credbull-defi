@@ -2,11 +2,12 @@
 pragma solidity ^0.8.20;
 
 import { Timer } from "@credbull/timelock/Timer.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract TimerCheats is Timer {
+contract TimerCheats is Initializable, Timer {
     uint256 public cheatTimestamp;
 
-    constructor(uint256 startTime_) {
+    function __TimerCheats__init(uint256 startTime_) public initializer {
         __Timer_init(startTime_);
         cheatTimestamp = startTime_;
     }

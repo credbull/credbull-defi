@@ -7,6 +7,9 @@ import { CalcInterestMetadata } from "@credbull/yield/CalcInterestMetadata.sol";
 
 import { DualRateYieldStrategy } from "@test/test/yield/strategy/DualRateYieldStrategy.t.sol";
 import { IDualRateContext } from "@test/test/yield/context/IDualRateContext.t.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
 
@@ -25,7 +28,7 @@ contract DualRateYieldStrategyTest is Test {
         uint256 tenor = 30;
 
         IYieldStrategy yieldStrategy = new DualRateYieldStrategy();
-        IDualRateContext multiRateContext = new DualRateContextMock(fullRate, reducedRate, frequency, tenor, DECIMALS);
+        IDualRateContext multiRateContext = _createDualRateContext(fullRate, reducedRate, frequency, tenor, DECIMALS);
         address contextAddress = address(multiRateContext);
 
         uint256 principal = 500 * SCALE;
@@ -58,7 +61,7 @@ contract DualRateYieldStrategyTest is Test {
 
         IYieldStrategy yieldStrategy = new DualRateYieldStrategy();
         DualRateContextMock dualRateContext =
-            new DualRateContextMock(fullRate, reducedRateTenor1, frequency, tenor, DECIMALS);
+            _createDualRateContext(fullRate, reducedRateTenor1, frequency, tenor, DECIMALS);
         address contextAddress = address(dualRateContext);
 
         uint256 principal = 1000 * SCALE;
@@ -126,7 +129,7 @@ contract DualRateYieldStrategyTest is Test {
 
         IYieldStrategy yieldStrategy = new DualRateYieldStrategy();
         DualRateContextMock dualRateContext =
-            new DualRateContextMock(fullRate, reducedRateTenor1, frequency, tenor, DECIMALS);
+            _createDualRateContext(fullRate, reducedRateTenor1, frequency, tenor, DECIMALS);
         address contextAddress = address(dualRateContext);
 
         uint256 principal = 1000 * SCALE;
@@ -153,19 +156,48 @@ contract DualRateYieldStrategyTest is Test {
 
         // TODO DualYieldStrategy: Scenario MU-3: Two users deposit at different funding round, with different T-Bill Rates, both redeem 14 days after day 30 (day 1 and day 15)
     }
-}
 
-contract DualRateContextMock is CalcInterestMetadata, IDualRateContext {
-    uint256 public reducedRateInPercentageScaled;
-    uint256 public immutable TENOR;
-
-    constructor(
+    function _createDualRateContext(
         uint256 fullRateInPercentageScaled_,
         uint256 reducedRateInPercentageScaled_,
         uint256 frequency_,
         uint256 tenor_,
         uint256 decimals
-    ) {
+    ) private returns (DualRateContextMock) {
+        DualRateContextMock toTest = new DualRateContextMock();
+
+        toTest = DualRateContextMock(
+            address(
+                new ERC1967Proxy(
+                    address(toTest),
+                    abi.encodeWithSelector(
+                        toTest.mockInitialize.selector,
+                        fullRateInPercentageScaled_,
+                        reducedRateInPercentageScaled_,
+                        frequency_,
+                        tenor_,
+                        decimals
+                    )
+                )
+            )
+        );
+        return toTest;
+    }
+}
+
+contract DualRateContextMock is Initializable, UUPSUpgradeable, CalcInterestMetadata, IDualRateContext {
+    uint256 public reducedRateInPercentageScaled;
+    uint256 public TENOR;
+
+    function _authorizeUpgrade(address implementation) internal override { }
+
+    function mockInitialize(
+        uint256 fullRateInPercentageScaled_,
+        uint256 reducedRateInPercentageScaled_,
+        uint256 frequency_,
+        uint256 tenor_,
+        uint256 decimals
+    ) public initializer {
         __CalcInterestMetadata_init(fullRateInPercentageScaled_, frequency_, decimals);
         TENOR = tenor_;
         reducedRateInPercentageScaled = reducedRateInPercentageScaled_;

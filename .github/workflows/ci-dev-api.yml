@@ -9,8 +9,7 @@ on:
   push:
     branches:
       - "main*"
-      - "development*"
-      - "ops*"
+      - "dev/**"
     paths:
       - "packages/api/**"
       - "packages/contracts/**"

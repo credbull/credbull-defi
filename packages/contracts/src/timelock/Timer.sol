@@ -14,12 +14,13 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
  * - `Seconds` periods - use elapsedSeconds().  Fine for CalcInterest, not for MultiTokenVault depositPeriods.  Too many periods to iterate!
  * - `Monthly` or `Annual` - not supported due to the (more) complex rules
  */
-contract Timer is Initializable, IERC6372 {
+abstract contract Timer is Initializable, IERC6372 {
     uint256 public startTimestamp;
 
     error Timer__ERC6372InconsistentTime(uint256 actualTime, uint256 expectTIme);
+    error Timer__StartTimeNotReached(uint256 currentTime, uint256 startTime);
 
-    function __Timer_init(uint256 startTimestamp_) public onlyInitializing {
+    function __Timer_init(uint256 startTimestamp_) internal virtual onlyInitializing {
         startTimestamp = startTimestamp_;
     }
 
@@ -43,6 +44,10 @@ contract Timer is Initializable, IERC6372 {
 
     /// @dev returns the elapsed time in seconds since starTime
     function elapsedSeconds() public view returns (uint256 elapsedSeconds_) {
+        if (startTimestamp > timestamp()) {
+            revert Timer__StartTimeNotReached(timestamp(), startTimestamp);
+        }
+
         return timestamp() - startTimestamp;
     }
 

@@ -6,6 +6,7 @@ import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYiel
 
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
 import { TestTripleRateContext } from "@test/test/yield/context/TestTripleRateContext.t.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { Test } from "forge-std/Test.sol";
 
@@ -21,6 +22,7 @@ contract TripleRateYieldStrategyTest is Test {
     uint256 public constant DEFAULT_FULL_RATE = PERCENT_10_SCALED;
     uint256 public constant DEFAULT_REDUCED_RATE = PERCENT_5_SCALED;
 
+    uint256 public constant EFFECTIVE_FROM_PERIOD = 0;
     uint256 public constant MATURITY_PERIOD = 30;
 
     uint256 public immutable DEFAULT_FREQUENCY = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
@@ -33,12 +35,22 @@ contract TripleRateYieldStrategyTest is Test {
 
     function setUp() public {
         yieldStrategy = new TripleRateYieldStrategy();
-        context = new TestTripleRateContext(
-            DEFAULT_FULL_RATE,
-            DEFAULT_REDUCED_RATE,
-            Frequencies.toValue(Frequencies.Frequency.DAYS_365),
-            MATURITY_PERIOD,
-            DECIMALS
+        context = new TestTripleRateContext();
+        context = TestTripleRateContext(
+            address(
+                new ERC1967Proxy(
+                    address(context),
+                    abi.encodeWithSelector(
+                        context.__TestTripeRateContext_init.selector,
+                        PERCENT_5_SCALED,
+                        PERCENT_5_5_SCALED,
+                        EFFECTIVE_FROM_PERIOD,
+                        Frequencies.toValue(Frequencies.Frequency.DAYS_365),
+                        MATURITY_PERIOD,
+                        DECIMALS
+                    )
+                )
+            )
         );
         contextAddress = address(context);
         principal = 1_000 * SCALE;
@@ -101,7 +113,7 @@ contract TripleRateYieldStrategyTest is Test {
         );
 
         // Update current tenor at Day 31:
-        context.setReducedRateAt(31, PERCENT_5_5_SCALED);
+        context.setReducedRate(PERCENT_5_5_SCALED, 31);
 
         // 37 Days:
         // ($1,000 * ((10% / 365) * 30) + ($1,000 * ((5.5% / 365) * 7))) = 9.273973

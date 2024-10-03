@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IBuyableAsyncSellable } from "@credbull/yield/IBuyableAsyncSellable.sol";
+import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
+import { ITradeable } from "@credbull/yield/ITradeable.sol";
+import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { TripleRateContext } from "@credbull/yield/context/TripleRateContext.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
-import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
-import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -14,6 +14,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { TripleRateContext } from "@credbull/yield/context/TripleRateContext.sol";
 
 /**
  * @title LiquidContinuousMultiTokenVault
@@ -33,16 +34,17 @@ contract LiquidContinuousMultiTokenVault is
     Initializable,
     UUPSUpgradeable,
     MultiTokenVault,
-    IBuyableAsyncSellable,
+    ITradeable,
     TimelockAsyncUnlock,
-    TripleRateContext,
     Timer,
+    TripleRateContext,
     AccessControlUpgradeable
 {
     using SafeERC20 for IERC20;
 
     struct VaultParams {
         address contractOwner;
+        address contractOperator;
         IERC20Metadata asset;
         IYieldStrategy yieldStrategy;
         uint256 vaultStartTimestamp;
@@ -54,11 +56,14 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     IYieldStrategy public YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
+
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant UPGRADE_ROLE = keccak256("UPGRADE_ROLE");
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidOwnerAddress(address ownerAddress);
+    error LiquidContinuousMultiTokenVault__InvalidOperatorAddress(address ownerAddress);
 
     function initialize(VaultParams memory params) public initializer {
         __UUPSUpgradeable_init();
@@ -66,7 +71,13 @@ contract LiquidContinuousMultiTokenVault is
         __MultiTokenVault_init(params.asset);
         __TimelockAsyncUnlock_init(params.redeemNoticePeriod);
         __TripleRateContext_init(
-            params.fullRateScaled, params.reducedRateScaled, params.frequency, params.tenor, params.asset.decimals()
+            ContextParams({
+                fullRateScaled: params.fullRateScaled,
+                initialReducedRate: PeriodRate({ interestRate: params.reducedRateScaled, effectiveFromPeriod: 0 }),
+                frequency: params.frequency,
+                tenor: params.tenor,
+                decimals: params.asset.decimals()
+            })
         );
         __Timer_init(params.vaultStartTimestamp);
 
@@ -74,8 +85,12 @@ contract LiquidContinuousMultiTokenVault is
             revert LiquidContinuousMultiTokenVault__InvalidOwnerAddress(params.contractOwner);
         }
 
+        if (params.contractOperator == address(0)) {
+            revert LiquidContinuousMultiTokenVault__InvalidOperatorAddress(params.contractOwner);
+        }
+
         _grantRole(DEFAULT_ADMIN_ROLE, params.contractOwner);
-        _grantRole(PAUSER_ROLE, params.contractOwner);
+        _grantRole(OPERATOR_ROLE, params.contractOperator);
 
         YIELD_STRATEGY = params.yieldStrategy;
 
@@ -130,36 +145,71 @@ contract LiquidContinuousMultiTokenVault is
 
     // ===================== Buyable/Sellable =====================
 
-    /// @notice Buy (deposit) a specified `amount` of tokens.
-    function buy(uint256 amount) public returns (uint256 shares) {
-        return deposit(amount, _msgSender());
+    /// @inheritdoc ITradeable
+    /// @dev - requesting to buy is not required, User directly executeBuy
+    function requestBuy(uint256 /* currencyTokenAmount */ )
+        public
+        view
+        virtual
+        override
+        onlyRole(OPERATOR_ROLE)
+        returns (uint256 requestId)
+    {
+        return 0;
     }
 
-    /// @notice Request to sell (redeem)  `amount` of tokens.
-    /// @param amount The amount a User wants to sell (redeem).  This could be yield only, or include principal + yield.
-    function sellRequest(uint256 amount) public {
-        sellRequest(amount, currentPeriod()); // TODO - need helper to find which depositPeriods we want to sell from...
+    /// @inheritdoc ITradeable
+    function requestSell(uint256 componentTokenAmount) public virtual override returns (uint256 requestId) {
+        // TODO - need helper to find which depositPeriods we want to sell from...
+
+        return _requestSell(componentTokenAmount, currentPeriod());
     }
 
     /// @notice Request to sell (redeem) `amount` of tokens at the `depositPeriod`
     /// @param amount The amount a User wants to sell (redeem).  This could be yield only, or include principal + yield.
-    function sellRequest(uint256 amount, uint256 depositPeriod) public {
+    function _requestSell(uint256 amount, uint256 depositPeriod) internal virtual returns (uint256 requestId) {
         requestUnlock(_msgSender(), depositPeriod, _minUnlockPeriod(), amount);
+
+        return 0; // TODO - need to add requestId to requestUnlock()
     }
 
-    /// @notice Fulfill a sell (redeem) request for `amount` of tokens
-    /// @param amount The amount a User wants to sell (redeem).  This could be yield only, or include principal + yield.
-    function fulfillSellRequest(uint256 amount) public {
-        fulfillSellRequest(amount, currentPeriod()); // TODO - need helper to find which depositPeriods we want to sell from...
+    /// @inheritdoc ITradeable
+    function executeBuy(
+        address requestor,
+        uint256, /* requestId */
+        uint256 currencyTokenAmount,
+        uint256 /* componentTokenAmount */
+    ) public override {
+        // TODO - verify currencyTokenAmount convertToShares(currencyTokenAmount) = componentTokenAmount
+
+        deposit(currencyTokenAmount, requestor);
     }
 
-    /// @notice Fulfill a sell (redeem) request for `amount` of tokens at the `depositPeriod`
-    /// @param amount The amount a User wants to sell (redeem).  This could be yield only, or include principal + yield.
-    function fulfillSellRequest(uint256 amount, uint256 depositPeriod) public {
-        unlock(_msgSender(), depositPeriod, currentPeriod(), amount);
-
-        redeemForDepositPeriod(amount, _msgSender(), _msgSender(), depositPeriod, currentPeriod());
+    /// @inheritdoc ITradeable
+    function executeSell(
+        address requestor,
+        uint256 requestId,
+        uint256 currencyTokenAmount,
+        uint256 componentTokenAmount
+    ) public override {
+        // TODO - verify currencyTokenAmount convertToAssets(componentTokenAmount) = currencyTokenAmount
+        _executeSell(requestor, currentPeriod(), requestId, currencyTokenAmount, componentTokenAmount);
     }
+
+    function _executeSell(
+        address requestor,
+        uint256 depositPeriod,
+        uint256, /* requestId */
+        uint256, /* currencyTokenAmount */
+        uint256 componentTokenAmount
+    ) internal {
+        // TODO - verify currencyTokenAmount convertToAssets(componentTokenAmount) = currencyTokenAmount
+        // TODO - need helper to find which depositPeriods we want to sell from...
+        redeemForDepositPeriod(componentTokenAmount, requestor, requestor, depositPeriod, currentPeriod());
+    }
+
+    // solhint-disable-next-line
+    function distributeYield(address user, uint256 amount) external { }
 
     /// @notice Returns the total yield generated by the contract.
     function yieldGenerated() external pure returns (uint256 yield) {
@@ -201,7 +251,7 @@ contract LiquidContinuousMultiTokenVault is
 
     /// @notice Locks `amount` of tokens for `account` at the given `depositPeriod`.
     /// @dev - users should call deposit() instead that returns shares
-    function lock(address account, uint256 depositPeriod, uint256 amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function lock(address account, uint256 depositPeriod, uint256 amount) public onlyRole(OPERATOR_ROLE) {
         _depositForDepositPeriod(amount, account, depositPeriod);
     }
 
@@ -215,7 +265,7 @@ contract LiquidContinuousMultiTokenVault is
         return balanceOf(account, depositPeriod);
     }
 
-    // ===================== ERC1155 =====================
+    // ===================== ERC1155Pausable =====================
 
     function pause() public onlyRole(PAUSER_ROLE) {
         _pause();
@@ -245,5 +295,28 @@ contract LiquidContinuousMultiTokenVault is
         returns (bool)
     {
         return MultiTokenVault.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @inheritdoc TripleRateContext
+     */
+    function setReducedRate(uint256 reducedRateScaled_, uint256 effectiveFromPeriod_)
+        public
+        override
+        onlyRole(OPERATOR_ROLE)
+    {
+        super.setReducedRate(effectiveFromPeriod_, reducedRateScaled_);
+    }
+
+    /**
+     * @notice Sets the `reducedRateScaled_` against the Current Period.
+     * @dev Convenience method for setting the Reduced Rate agains the current Period.
+     *  Reverts with [TripleRateContext_PeriodRegressionNotAllowed] if current Period is before the
+     *  stored current Period (the setting).  Emits [CurrentPeriodRateChanged] upon mutation.
+     *
+     * @param reducedRateScaled_ The scaled percentage 'reduced' Interest Rate.
+     */
+    function setReducedRateAtCurrent(uint256 reducedRateScaled_) public onlyRole(OPERATOR_ROLE) {
+        super.setReducedRate(currentPeriod(), reducedRateScaled_);
     }
 }

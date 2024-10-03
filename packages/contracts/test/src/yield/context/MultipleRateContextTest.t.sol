@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import { IMultipleRateContext } from "@test/test/yield/context/IMultipleRateContext.t.sol";
 import { MultipleRateContext } from "@test/test/yield/context/MultipleRateContext.t.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
 
@@ -48,12 +49,13 @@ contract MultipleRateContextTest is Test {
     }
 
     function setUp() public {
-        toTest = new MultipleRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
+        toTest = new MultipleRateContext();
+        toTest = _createMultiRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
         initialiseRates();
     }
 
     function test_MultipleRateContext_SetRateWorks() public {
-        toTest = new MultipleRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
+        toTest = _createMultiRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
 
         // Periods: 1 -> 5
         uint256 rate = scaled(175) / 10;
@@ -92,7 +94,7 @@ contract MultipleRateContextTest is Test {
     }
 
     function test_MultipleRateContext_RemoveRateWorks() public {
-        toTest = new MultipleRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
+        toTest = _createMultiRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
         toTest.setReducedRate(3, PERCENT_10_SCALED); // 10%
 
         vm.expectEmit();
@@ -138,7 +140,7 @@ contract MultipleRateContextTest is Test {
     }
 
     function test_MultipleRateContext_DefaultRateWhenUnconfigured() public {
-        toTest = new MultipleRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
+        toTest = _createMultiRateContext(PERCENT_5_SCALED, PERCENT_5_5_SCALED, FREQUENCY, TENOR, DECIMALS);
 
         // Periods: 1 -> 12
         uint256[][] memory expectedRates = DEFAULT_REDUCED_RATES;
@@ -182,5 +184,26 @@ contract MultipleRateContextTest is Test {
         for (uint256 i = 0; i < actual.length; i++) {
             assertEq(expected[i], actual[i], error);
         }
+    }
+
+    function _createMultiRateContext(
+        uint256 fullRate,
+        uint256 reducedRate,
+        uint256 frequency,
+        uint256 tenor,
+        uint256 decimals
+    ) private returns (MultipleRateContext) {
+        MultipleRateContext context = new MultipleRateContext();
+        context = MultipleRateContext(
+            address(
+                new ERC1967Proxy(
+                    address(context),
+                    abi.encodeWithSelector(
+                        context.initialize.selector, fullRate, reducedRate, frequency, tenor, decimals
+                    )
+                )
+            )
+        );
+        return context;
     }
 }

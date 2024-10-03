@@ -4,6 +4,9 @@ pragma solidity ^0.8.20;
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/yield/strategy/SimpleInterestYieldStrategy.sol";
 import { CalcInterestMetadata } from "@credbull/yield/CalcInterestMetadata.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
 
@@ -20,7 +23,7 @@ contract SimpleInterestYieldStrategyTest is Test {
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
         IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy();
-        address interestContractAddress = address(new CalcInterestMetadataMock(apy, frequency, DECIMALS));
+        address interestContractAddress = address(_createInterestMetadata(apy, frequency));
 
         uint256 principal = 500 * SCALE;
 
@@ -43,7 +46,7 @@ contract SimpleInterestYieldStrategyTest is Test {
             "yield wrong at period 1 to 31"
         );
 
-        address interest2Addr = address(new CalcInterestMetadataMock(apy * 2, frequency, DECIMALS)); // double the interest rate
+        address interest2Addr = address(_createInterestMetadata(apy * 2, frequency)); // double the interest rate
         assertApproxEqAbs(
             5_000_000, // yield should also double
             yieldStrategy.calcYield(interest2Addr, principal, 1, 31),
@@ -57,16 +60,35 @@ contract SimpleInterestYieldStrategyTest is Test {
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
         IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy();
-        address interestContractAddress = address(new CalcInterestMetadataMock(apy, frequency, DECIMALS));
+        address interestContractAddress = address(_createInterestMetadata(apy, frequency));
 
         assertEq(1 * SCALE, yieldStrategy.calcPrice(interestContractAddress, 0), "price wrong at period 0"); // 1 + (0.12 * 0) / 360 = 1
         assertEq(1_000_333, yieldStrategy.calcPrice(interestContractAddress, 1), "price wrong at period 1"); // 1 + (0.12 * 1) / 360 ≈ 1.00033
         assertEq((101 * SCALE / 100), yieldStrategy.calcPrice(interestContractAddress, 30), "price wrong at period 30"); // 1 + (0.12 * 30) / 360 = 1.01
     }
+
+    function _createInterestMetadata(uint256 interestRatePercentage, uint256 frequency)
+        private
+        returns (CalcInterestMetadataMock interestMetadata)
+    {
+        interestMetadata = new CalcInterestMetadataMock();
+        interestMetadata = CalcInterestMetadataMock(
+            address(
+                new ERC1967Proxy(
+                    address(interestMetadata),
+                    abi.encodeWithSelector(
+                        interestMetadata.mockInitialize.selector, interestRatePercentage, frequency, DECIMALS
+                    )
+                )
+            )
+        );
+    }
 }
 
-contract CalcInterestMetadataMock is CalcInterestMetadata {
-    constructor(uint256 interestRatePercentage, uint256 frequency, uint256 decimals) {
+contract CalcInterestMetadataMock is Initializable, UUPSUpgradeable, CalcInterestMetadata {
+    function _authorizeUpgrade(address) internal override { }
+
+    function mockInitialize(uint256 interestRatePercentage, uint256 frequency, uint256 decimals) public initializer {
         __CalcInterestMetadata_init(interestRatePercentage * SCALE, frequency, decimals);
     }
 }

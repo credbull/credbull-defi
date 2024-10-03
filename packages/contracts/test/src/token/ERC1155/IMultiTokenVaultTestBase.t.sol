@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { Timer } from "@credbull/timelock/Timer.sol";
 import { Test } from "forge-std/Test.sol";
 
 abstract contract IMultiTokenVaultTestBase is Test {
@@ -259,7 +260,12 @@ abstract contract IMultiTokenVaultTestBase is Test {
         returns (uint256 expectedReturns_);
 
     /// @dev warp the vault to the given timePeriod for testing purposes
-    function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal virtual;
+    /// @dev this assumes timePeriod is in days
+    function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal virtual {
+        uint256 warpToTimeInSeconds = Timer(address(vault)).startTimestamp() + timePeriod * 24 hours;
+
+        vm.warp(warpToTimeInSeconds);
+    }
 
     function _createTestParams(uint256 principal, uint256 depositPeriod, uint256 redeemPeriod)
         internal

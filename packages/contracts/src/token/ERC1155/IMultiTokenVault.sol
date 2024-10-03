@@ -5,6 +5,10 @@ import { IERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/E
 
 /**
  * @title IMultiTokenVault
+ * @dev ERC4626 Vault-like interface for a vault that:
+ *   - Users deposit ERC20 assets, and the vault returns ERC1155 share tokens specific to the deposit period.
+ *   - Users redeem ERC1155 share tokens, and the vault returns the corresponding amount of ERC20 assets.
+ *   - Each deposit period has its own ERC1155 share token, allowing for time-based calculations, e.g. for returns.
  */
 interface IMultiTokenVault is IERC1155Upgradeable {
     /// @notice The event is being emitted once user deposits.
@@ -12,7 +16,7 @@ interface IMultiTokenVault is IERC1155Upgradeable {
         address indexed sender, address indexed receiver, uint256 depositPeriod, uint256 assets, uint256 shares
     );
 
-    /// @notice The event is being emitted once user withdraws.
+    /// @notice Emitted when a user withdraws assets from the vault.
     event Withdraw(
         address indexed sender,
         address indexed receiver,
@@ -23,27 +27,21 @@ interface IMultiTokenVault is IERC1155Upgradeable {
     );
 
     /**
-     * @dev Deposits assets into the vault and mints shares for the current time period.
-     *
-     * @param assets The amount of the ERC-20 underlying assets to be deposited into the vault.
-     * @param receiver The address that will receive the minted shares.
-     *
-     * @return shares The amount of ERC-1155 tokens minted.
+     * @notice Deposits assets into the vault for the current deposit period.
+     * @param assets The amount of assets to be deposited.
+     * @param receiver The address to receive the shares.
+     * @return shares The amount of shares returned.
      */
     function deposit(uint256 assets, address receiver) external returns (uint256 shares);
 
     /**
-     * @dev Redeems the shares minted at the time of the deposit period from the vault to the owner,
-     *      while the redemption happens at the defined redeem period
-     *      And return the equivalent amount of assets to the receiver.
-     *
-     * @param shares The amount of the ERC-1155 tokens to redeem.
-     * @param receiver The address that will receive the minted shares.
-     * @param owner The address that owns the minted shares.
+     * @notice Redeems shares for assets based on a specific deposit and redeem period.
+     * @param shares The amount of shares to redeem.
+     * @param receiver The address to receive the assets.
+     * @param owner The address of the owner of the shares.
      * @param depositPeriod The deposit period in which the shares were issued.
-     * @param redeemPeriod The time period in which the shares are redeemed.
-     *
-     * @return assets The equivalent amount of the ERC-20 underlying assets.
+     * @param redeemPeriod The period in which the shares are redeemed.
+     * @return assets The equivalent amount of assets returned.
      */
     function redeemForDepositPeriod(
         uint256 shares,
@@ -54,58 +52,43 @@ interface IMultiTokenVault is IERC1155Upgradeable {
     ) external returns (uint256 assets);
 
     /**
-     * @dev Redeems the shares minted at the time of the deposit period from the vault to the owner,
-     *      while the redemption happens at the current redeem period
-     *      And return the equivalent amount of assets to the receiver.
-     *
-     * @param shares The amount of the ERC-1155 tokens to redeem.
-     * @param receiver The address that will receive the minted shares.
-     * @param owner The address that owns the minted shares.
+     * @notice Redeems shares for assets based on a specific deposit period.
+     * @param shares The amount of shares to redeem.
+     * @param receiver The address to receive the assets.
+     * @param owner The address of the owner of the shares.
      * @param depositPeriod The deposit period in which the shares were issued.
-     *
-     * @return assets The equivalent amount of the ERC-20 underlying assets.
+     * @return assets The equivalent amount of assets returned.
      */
     function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
         external
         returns (uint256 assets);
 
     /**
-     * @dev Returns the ERC-20 underlying asset address used in the vault.
-     *
-     * @return asset_ The ERC-20 underlying asset address.
+     * @notice Returns the underlying asset used by the vault.
+     * @return asset_ The address of the underlying asset.
      */
     function asset() external view returns (address asset_);
 
     /**
-     * @dev Returns the total amount of the underlying asset that is managed by vault.
-     *
-     * @return totalAssets_ The total amount of the underlying asset that is managed by vault.
-     */
-    function totalAssets() external view returns (uint256 totalAssets_);
-
-    /**
-     * @dev Returns the shares held by the owner for deposit period.
-     *
-     * @param owner The owner address hold the shares.
-     * @param depositPeriod The time period in which the user hold the shares.
-     *
-     * @return shares The total amount of ERC-1155 shares that is held by the owner.
+     * @notice Returns the shares held by the owner for a specific deposit period.
+     * @param owner The address holding the shares.
+     * @param depositPeriod The deposit period in which the shares were issued.
+     * @return shares The amount of shares held by the owner.
      */
     function sharesAtPeriod(address owner, uint256 depositPeriod) external view returns (uint256 shares);
 
     /**
-     * @dev Returns the maximum amount of the underlying asset that can be deposited into
-     *      the vault for the receiver at the current period.
+     * @notice Returns the maximum amount of assets that can be deposited for the receiver.
+     * @param receiver The address to receive the shares.
+     * @return maxAssets The maximum amount of assets that can be deposited.
      */
-    function maxDeposit(address) external view returns (uint256 maxAssets);
+    function maxDeposit(address receiver) external view returns (uint256 maxAssets);
 
     /**
-     * @dev Converts assets to shares for the deposit period.
-     *
-     * @param assets The amount of the ERC-20 underlying assets to be converted.
-     * @param depositPeriod The time period in which the assets are converted.
-     *
-     * @return shares The amount of equivalent ERC-1155 shares.
+     * @notice Converts a given amount of assets to shares for a specific deposit period.
+     * @param assets The amount of assets to convert.
+     * @param depositPeriod The period during which the shares are minted.
+     * @return shares The equivalent amount of shares.
      */
     function convertToSharesForDepositPeriod(uint256 assets, uint256 depositPeriod)
         external
@@ -113,43 +96,33 @@ interface IMultiTokenVault is IERC1155Upgradeable {
         returns (uint256 shares);
 
     /**
-     * @dev Converts assets to shares at the current period.
-     *
-     * @param assets The amount of the ERC-20 underlying assets to be converted.
-     *
-     * @return shares The amount of equivalent ERC-1155 shares.
+     * @notice Converts a given amount of assets to shares at the current period.
+     * @param assets The amount of assets to convert.
+     * @return shares The equivalent amount of shares.
      */
     function convertToShares(uint256 assets) external view returns (uint256 shares);
 
     /**
-     * @dev Simulate the deposit of the underlying assets into the vault and return
-     *      the equivalent amount of shares for the current period.
-     *
-     * @param assets The amount of the ERC-20 underlying assets to be deposited.
-     *
-     * @return shares The amount of ERC-1155 tokens minted.
+     * @notice Simulates the deposit of assets and returns the equivalent shares.
+     * @param assets The amount of assets to simulate depositing.
+     * @return shares The equivalent amount of shares.
      */
     function previewDeposit(uint256 assets) external view returns (uint256 shares);
 
     /**
-     * @dev Returns the maximum amount of Vault shares that can be redeemed from
-     *      the owner at the deposit period, through a redeem call.
-     *
-     * @param owner The address of the owner that hold the assets.
-     * @param depositPeriod The time period in which the redeem is called.
-     *
-     * @return maxShares The maximum amount of ERC-1155 tokens can be minted.
+     * @notice Returns the maximum shares that can be redeemed for a specific deposit period.
+     * @param owner The address holding the shares.
+     * @param depositPeriod The deposit period in which the shares were issued.
+     * @return maxShares The maximum amount of shares that can be redeemed.
      */
     function maxRedeemAtPeriod(address owner, uint256 depositPeriod) external view returns (uint256 maxShares);
 
     /**
-     * @dev Converts shares to assets for deposit period and redeem period.
-     *
-     * @param shares The amount of ERC-1155 tokens to be converted.
-     * @param depositPeriod The time period in which the shares has been minted.
-     * @param redeemPeriod The time period in which the shares are converted.
-     *
-     * @return assets The equivalent amount of the ERC-20 underlying asset.
+     * @notice Converts shares to assets for a specific deposit and redeem period.
+     * @param shares The amount of shares to convert.
+     * @param depositPeriod The period during which the shares were issued.
+     * @param redeemPeriod The period during which the shares are redeemed.
+     * @return assets The equivalent amount of assets.
      */
     function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
         external
@@ -157,12 +130,10 @@ interface IMultiTokenVault is IERC1155Upgradeable {
         returns (uint256 assets);
 
     /**
-     * @dev Converts shares to assets for deposit period at the current redeem period.
-     *
-     * @param shares The amount of ERC-1155 tokens to be converted.
-     * @param depositPeriod The time period in which the shares has been minted.
-     *
-     * @return assets The equivalent amount of the ERC-20 underlying asset.
+     * @notice Converts shares to assets for a specific deposit period at the current redeem period.
+     * @param shares The amount of shares to convert.
+     * @param depositPeriod The period during which the shares were issued.
+     * @return assets The equivalent amount of assets.
      */
     function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
         external
@@ -170,14 +141,11 @@ interface IMultiTokenVault is IERC1155Upgradeable {
         returns (uint256 assets);
 
     /**
-     * @dev Returns the amount of assets that will be redeemed for a given amount of
-     *      shares at depositPeriod and redeemPeriod.
-     *
-     * @param shares The amount of ERC-1155 tokens to redeem.
-     * @param depositPeriod The time period in which the shares has been minted.
-     * @param redeemPeriod The time period in which the shares are redeemed.
-     *
-     * @return assets The equivalent amount of the ERC-20 underlying asset.
+     * @notice Simulates the redemption of shares and returns the equivalent assets.
+     * @param shares The amount of shares to redeem.
+     * @param depositPeriod The deposit period in which the shares were issued.
+     * @param redeemPeriod The period in which the shares are redeemed.
+     * @return assets The estimated amount of assets returned.
      */
     function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
         external
@@ -185,12 +153,10 @@ interface IMultiTokenVault is IERC1155Upgradeable {
         returns (uint256 assets);
 
     /**
-     * @dev Returns the amount of assets that will be redeemed for a given amount of shares at a depositPeriod.
-     *
-     * @param shares The amount of the ERC-1155 tokens to redeem.
+     * @notice Simulates the redemption of shares for a specific deposit period.
+     * @param shares The amount of shares to redeem.
      * @param depositPeriod The deposit period in which the shares were issued.
-     *
-     * @return assets The equivalent amount of the ERC-20 underlying assets.
+     * @return assets The estimated amount of assets returned.
      */
     function previewRedeemForDepositPeriod(uint256 shares, uint256 depositPeriod)
         external
@@ -198,9 +164,8 @@ interface IMultiTokenVault is IERC1155Upgradeable {
         returns (uint256 assets);
 
     /**
-     * @dev Returns the current number of time periods elapsed since vault start
-     *
-     * @return currentPeriodsElapsed_ The number of time periods elapsed.
+     * @notice Returns the current number of elapsed time periods since the vault started.
+     * @return currentPeriodsElapsed_ The number of elapsed time periods.
      */
     function currentPeriodsElapsed() external view returns (uint256 currentPeriodsElapsed_);
 }
