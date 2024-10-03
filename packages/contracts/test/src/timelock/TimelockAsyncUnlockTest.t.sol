@@ -253,4 +253,54 @@ contract TimelockAsyncUnlockTest is Test {
 
         assertEq(0, asyncUnlock.lockedAmount(alice, depositPeriod), "lockedAmount should return 0 after all unlocks");
     }
+
+    /**
+     * S5
+     * Scenario: Bob requests unlock for Alice's lockedAmount
+     * We expect it to fail
+     */
+    function test__TimelockAsyncUnlock__OnlyDepositorCanRequestUnlock() public {
+        vm.prank(alice);
+        asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
+
+        vm.prank(bob);
+        vm.expectRevert(
+            abi.encodeWithSelector(TimelockAsyncUnlock.TimelockAsyncUnlock__AuthorizeCallerFailed.selector, bob, alice)
+        );
+        asyncUnlock.requestUnlock(alice, depositDay1.depositPeriod, depositDay1.amount);
+    }
+
+    /**
+     * S6
+     * Scenario: Alice locks and requests unlock
+     * Bob can unlock Alice's requested unlock amount
+     */
+    function test__TimelockAsyncUnlock__AnyoneCanUnlock() public {
+        vm.prank(alice);
+        asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
+
+        asyncUnlock.setCurrentPeriod(depositDay1.depositPeriod);
+
+        vm.prank(alice);
+        asyncUnlock.requestUnlock(alice, depositDay1.depositPeriod, depositDay1.amount);
+
+        uint256 unlockPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
+
+        asyncUnlock.setCurrentPeriod(unlockPeriod);
+
+        vm.prank(bob);
+        asyncUnlock.unlock(alice, depositDay1.depositPeriod, unlockPeriod, depositDay1.amount);
+
+        assertEq(
+            0,
+            asyncUnlock.lockedAmount(alice, depositDay1.depositPeriod),
+            "lockedAmount should return 0 after bob unlocks"
+        );
+
+        assertEq(
+            0,
+            asyncUnlock.unlockRequested(alice, depositDay1.depositPeriod),
+            "unlockRequested should return 0 after bob unlocks"
+        );
+    }
 }

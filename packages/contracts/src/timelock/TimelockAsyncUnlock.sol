@@ -100,7 +100,7 @@ abstract contract TimelockAsyncUnlock is ITimelockAsyncUnlock, Context {
          * In multi token vault, we have to check if caller = owner or isApprovedForAll(owner, caller) in overrided internal function
          */
         if (caller != owner) {
-            revert TimelockAsyncUnlock__AuthorizeCallerFailed(_msgSender(), owner);
+            revert TimelockAsyncUnlock__AuthorizeCallerFailed(caller, owner);
         }
     }
 
