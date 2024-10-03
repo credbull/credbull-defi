@@ -10,7 +10,8 @@ contract TimerTest is Test {
     Timer private clock;
 
     function setUp() public {
-        clock = new Timer(1704110460000);
+        clock = new Timer();
+        clock.__Timer_init(START_TIME);
     }
 
     function test__Clock__InitialClockMode() public view {

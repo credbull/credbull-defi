@@ -66,7 +66,7 @@ contract SimpleInterestYieldStrategyTest is Test {
 }
 
 contract CalcInterestMetadataMock is CalcInterestMetadata {
-    constructor(uint256 interestRatePercentage, uint256 frequency, uint256 decimals)
-        CalcInterestMetadata(interestRatePercentage, frequency, decimals)
-    { }
+    constructor(uint256 interestRatePercentage, uint256 frequency, uint256 decimals) {
+        __CalcInterestMetadata_init(interestRatePercentage * SCALE, frequency, decimals);
+    }
 }

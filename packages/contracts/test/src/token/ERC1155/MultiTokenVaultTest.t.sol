@@ -149,9 +149,9 @@ contract MultiTokenVaultDailyPeriods is MultiTokenVault, TimerCheats {
     uint256 internal immutable YIELD_PERCENTAGE;
 
     constructor(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage)
-        MultiTokenVault(asset)
         TimerCheats(block.timestamp)
     {
+        __MultiTokenVault_init(asset);
         ASSET_TO_SHARES_RATIO = assetToSharesRatio;
         YIELD_PERCENTAGE = yieldPercentage;
     }

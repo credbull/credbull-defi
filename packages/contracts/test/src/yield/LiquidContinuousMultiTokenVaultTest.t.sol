@@ -44,7 +44,8 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = FIXED_6APY_PARAMS;
 
         uint256 deposit = 100 * SCALE;
-        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(FIXED_6APY_PARAMS);
+        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault();
+        vault.initialize(vaultParams);
 
         testVaultAtPeriods(vault, deposit, 0, vaultParams.tenor);
     }
@@ -53,7 +54,8 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = FIXED_6APY_PARAMS;
 
         uint256 deposit = 100 * SCALE;
-        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(FIXED_6APY_PARAMS);
+        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault();
+        vault.initialize(vaultParams);
 
         testVaultAtPeriods(vault, deposit, 0, vaultParams.tenor - 1);
     }
@@ -63,7 +65,8 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = FIXED_6APY_PARAMS;
         uint256 deposit = 50_000 * SCALE;
 
-        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault(vaultParams);
+        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault();
+        vault.initialize(vaultParams);
 
         // verify interest
         uint256 actualInterest = vault.calcYield(deposit, 0, vaultParams.tenor);

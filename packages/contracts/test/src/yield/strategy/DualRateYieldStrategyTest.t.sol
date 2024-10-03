@@ -165,7 +165,8 @@ contract DualRateContextMock is CalcInterestMetadata, IDualRateContext {
         uint256 frequency_,
         uint256 tenor_,
         uint256 decimals
-    ) CalcInterestMetadata(fullRateInPercentageScaled_, frequency_, decimals) {
+    ) {
+        __CalcInterestMetadata_init(fullRateInPercentageScaled_, frequency_, decimals);
         TENOR = tenor_;
         reducedRateInPercentageScaled = reducedRateInPercentageScaled_;
     }

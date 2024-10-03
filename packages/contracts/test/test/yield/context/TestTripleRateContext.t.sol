@@ -10,5 +10,9 @@ contract TestTripleRateContext is TripleRateContext {
         uint256 frequency_,
         uint256 tenor_,
         uint256 decimals
-    ) TripleRateContext(fullRateInPercentageScaled_, reducedRateInPercentageScaled_, frequency_, tenor_, decimals) { }
+    ) {
+        __TripleRateContext_init(
+            fullRateInPercentageScaled_, reducedRateInPercentageScaled_, frequency_, tenor_, decimals
+        );
+    }
 }

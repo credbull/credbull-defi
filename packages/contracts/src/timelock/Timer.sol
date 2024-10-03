@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import { IERC6372 } from "@openzeppelin/contracts/interfaces/IERC6372.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title Timer
@@ -13,12 +14,12 @@ import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
  * - `Seconds` periods - use elapsedSeconds().  Fine for CalcInterest, not for MultiTokenVault depositPeriods.  Too many periods to iterate!
  * - `Monthly` or `Annual` - not supported due to the (more) complex rules
  */
-contract Timer is IERC6372 {
+contract Timer is Initializable, IERC6372 {
     uint256 public startTimestamp;
 
     error Timer__ERC6372InconsistentTime(uint256 actualTime, uint256 expectTIme);
 
-    constructor(uint256 startTimestamp_) {
+    function __Timer_init(uint256 startTimestamp_) public onlyInitializing {
         startTimestamp = startTimestamp_;
     }
 
@@ -58,4 +59,11 @@ contract Timer is IERC6372 {
     function _setStartTimestamp(uint256 startTimestamp_) internal {
         startTimestamp = startTimestamp_;
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import { IERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 
 /**
  * @title IMultiTokenVault
  */
-interface IMultiTokenVault is IERC1155 {
+interface IMultiTokenVault is IERC1155Upgradeable {
     /// @notice The event is being emitted once user deposits.
     event Deposit(
         address indexed sender, address indexed receiver, uint256 depositPeriod, uint256 assets, uint256 shares

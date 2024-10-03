@@ -8,13 +8,12 @@ import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 
-import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import { ERC1155Pausable } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
-import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title LiquidContinuousMultiTokenVault
@@ -31,13 +30,14 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
  *
  */
 contract LiquidContinuousMultiTokenVault is
+    Initializable,
+    UUPSUpgradeable,
     MultiTokenVault,
     IBuyableAsyncSellable,
     TimelockAsyncUnlock,
     TripleRateContext,
     Timer,
-    ERC1155Pausable,
-    AccessControl
+    AccessControlUpgradeable
 {
     using SafeERC20 for IERC20;
 
@@ -53,24 +53,23 @@ contract LiquidContinuousMultiTokenVault is
         uint256 tenor;
     }
 
-    IYieldStrategy public immutable YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
+    IYieldStrategy public YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant UPGRADE_ROLE = keccak256("UPGRADE_ROLE");
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidOwnerAddress(address ownerAddress);
 
-    constructor(VaultParams memory params)
-        MultiTokenVault(params.asset)
-        TimelockAsyncUnlock(params.redeemNoticePeriod)
-        TripleRateContext(
-            params.fullRateScaled,
-            params.reducedRateScaled,
-            params.frequency,
-            params.tenor,
-            params.asset.decimals()
-        )
-        Timer(params.vaultStartTimestamp)
-    {
+    function initialize(VaultParams memory params) public initializer {
+        __UUPSUpgradeable_init();
+        __AccessControl_init();
+        __MultiTokenVault_init(params.asset);
+        __TimelockAsyncUnlock_init(params.redeemNoticePeriod);
+        __TripleRateContext_init(
+            params.fullRateScaled, params.reducedRateScaled, params.frequency, params.tenor, params.asset.decimals()
+        );
+        __Timer_init(params.vaultStartTimestamp);
+
         if (params.contractOwner == address(0)) {
             revert LiquidContinuousMultiTokenVault__InvalidOwnerAddress(params.contractOwner);
         }
@@ -85,6 +84,7 @@ contract LiquidContinuousMultiTokenVault is
         }
     }
 
+    function _authorizeUpgrade(address newImplementation) internal view override onlyRole(UPGRADE_ROLE) { }
     // ===================== MultiTokenVault =====================
 
     /// @inheritdoc MultiTokenVault
@@ -217,13 +217,6 @@ contract LiquidContinuousMultiTokenVault is
 
     // ===================== ERC1155 =====================
 
-    function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
-        internal
-        override(ERC1155Pausable, ERC1155Supply)
-    {
-        ERC1155Supply._update(from, to, ids, values);
-    }
-
     function pause() public onlyRole(PAUSER_ROLE) {
         _pause();
     }
@@ -248,7 +241,7 @@ contract LiquidContinuousMultiTokenVault is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(MultiTokenVault, ERC1155, AccessControl)
+        override(MultiTokenVault, AccessControlUpgradeable)
         returns (bool)
     {
         return MultiTokenVault.supportsInterface(interfaceId);

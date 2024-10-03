@@ -6,7 +6,8 @@ import { Timer } from "@credbull/timelock/Timer.sol";
 contract TimerCheats is Timer {
     uint256 public cheatTimestamp;
 
-    constructor(uint256 startTime_) Timer(startTime_) {
+    constructor(uint256 startTime_) {
+        __Timer_init(startTime_);
         cheatTimestamp = startTime_;
     }
 

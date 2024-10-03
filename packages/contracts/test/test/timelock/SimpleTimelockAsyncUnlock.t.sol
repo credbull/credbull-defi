@@ -8,10 +8,8 @@ import { TimerCheats } from "@test/test/timelock/TimerCheats.t.sol";
 contract SimpleTimelockAsyncUnlock is TimelockAsyncUnlock, TimerCheats {
     IERC5679Ext1155 public immutable DEPOSITS;
 
-    constructor(uint256 noticePeriod_, IERC5679Ext1155 deposits)
-        TimelockAsyncUnlock(noticePeriod_)
-        TimerCheats(block.timestamp)
-    {
+    constructor(uint256 noticePeriod_, IERC5679Ext1155 deposits) TimerCheats(block.timestamp) {
+        __TimelockAsyncUnlock_init(noticePeriod_);
         DEPOSITS = deposits;
     }
 

@@ -3,12 +3,13 @@ pragma solidity ^0.8.20;
 
 import { CalcInterestMetadata } from "@credbull/yield/CalcInterestMetadata.sol";
 import { ITripleRateContext } from "@credbull/yield/context/ITripleRateContext.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title Our triple rate context reference implementation, realising [ITripleRateContext].
  * @dev This is an abstract contract intended to be inherited from and overriden with Access Control functionality.
  */
-abstract contract TripleRateContext is CalcInterestMetadata, ITripleRateContext {
+abstract contract TripleRateContext is Initializable, CalcInterestMetadata, ITripleRateContext {
     /**
      * @notice Reverts when the Tenor Period is before the currently set Tenor Period.
      *
@@ -25,7 +26,7 @@ abstract contract TripleRateContext is CalcInterestMetadata, ITripleRateContext 
      */
     event CurrentTenorPeriodAndRateChanged(uint256 tenorPeriod, uint256 reducedRate);
 
-    uint256 public immutable TENOR;
+    uint256 public TENOR;
 
     uint256 internal _currentTenorPeriod;
     uint256 internal _currentReducedRate;
@@ -33,15 +34,15 @@ abstract contract TripleRateContext is CalcInterestMetadata, ITripleRateContext 
     uint256 internal _previousTenorPeriod;
     uint256 internal _previousReducedRate;
 
-    constructor(
+    function __TripleRateContext_init(
         uint256 fullRateInPercentageScaled_,
         uint256 reducedRateInPercentageScaled_,
         uint256 frequency_,
         uint256 tenor_,
         uint256 decimals
-    ) CalcInterestMetadata(fullRateInPercentageScaled_, frequency_, decimals) {
+    ) internal onlyInitializing {
+        __CalcInterestMetadata_init(fullRateInPercentageScaled_, frequency_, decimals);
         TENOR = tenor_;
-
         setReducedRateAt(1, reducedRateInPercentageScaled_);
     }
 
@@ -100,4 +101,11 @@ abstract contract TripleRateContext is CalcInterestMetadata, ITripleRateContext 
 
         emit CurrentTenorPeriodAndRateChanged(tenorPeriod_, reducedRateScaled_);
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

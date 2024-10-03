@@ -55,7 +55,8 @@ contract MultipleRateContext is CalcInterestMetadata, IMultipleRateContext {
         uint256 frequency_,
         uint256 tenor_,
         uint256 decimals
-    ) CalcInterestMetadata(fullRateInPercentageScaled_, frequency_, decimals) {
+    ) {
+        __CalcInterestMetadata_init(fullRateInPercentageScaled_, frequency_, decimals);
         DEFAULT_REDUCED_RATE = reducedRateInPercentageScaled_;
         TENOR = tenor_;
     }
