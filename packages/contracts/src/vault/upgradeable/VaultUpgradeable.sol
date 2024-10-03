@@ -2,19 +2,22 @@
 
 pragma solidity ^0.8.20;
 
-import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { ERC4626Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
+import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
 /**
  * @title Credbull Vault
  * @notice The family defining contract, based upon Open Zeppelin's ERC4626 implementation.
  * @dev Uses a Custodian Account to accummulate the deposited Asset.
  */
-abstract contract Vault is ERC4626, Pausable {
+abstract contract VaultUpgradeable is UUPSUpgradeable, ERC4626Upgradeable, PausableUpgradeable {
     using Math for uint256;
 
     /// @notice Thrown when attempting to create a Credbull Vault with an invalid Custodian Address.
@@ -26,6 +29,7 @@ abstract contract Vault is ERC4626, Pausable {
     error CredbullVault__UnsupportedDecimalValue(uint8);
 
     /// @notice The set of parameters required to create a Credbull Vault instance.
+    /// @dev Using from Vault contract
     struct VaultParams {
         IERC20 asset;
         string shareName;
@@ -34,7 +38,7 @@ abstract contract Vault is ERC4626, Pausable {
     }
 
     /// @notice Address of the CUSTODIAN to receive the assets on deposit and mint
-    address public immutable CUSTODIAN;
+    address public CUSTODIAN;
 
     /**
      * @dev The assets deposited to the vault will be sent to CUSTODIAN address so this is
@@ -43,7 +47,7 @@ abstract contract Vault is ERC4626, Pausable {
     uint256 public totalAssetDeposited;
 
     /// @notice The vault decimal which is same as the asset decimal
-    uint8 public immutable VAULT_DECIMALS;
+    uint8 public VAULT_DECIMALS;
 
     /// @notice Max decimal value supported by the vault
     uint8 public constant MAX_DECIMAL = 18;
@@ -63,7 +67,17 @@ abstract contract Vault is ERC4626, Pausable {
         _;
     }
 
-    constructor(VaultParams memory params) ERC4626(params.asset) ERC20(params.shareName, params.shareSymbol) {
+    constructor() {
+        _disableInitializers();
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override { }
+
+    function initialize(VaultParams memory params) public initializer {
+        __UUPSUpgradeable_init();
+        __ERC4626_init(params.asset);
+        __ERC20_init(params.shareName, params.shareSymbol);
+
         if (params.custodian == address(0)) {
             revert CredbullVault__InvalidCustodianAddress(params.custodian);
         }
@@ -133,7 +147,7 @@ abstract contract Vault is ERC4626, Pausable {
     /// @notice Check decimal value of the asset and token used in the vaults.
     //Revert if it's not supported
     function _checkValidDecimalValue(address token) internal view returns (uint8) {
-        uint8 decimal = ERC20(token).decimals();
+        uint8 decimal = ERC20Upgradeable(token).decimals();
 
         if (decimal > MAX_DECIMAL || decimal < MIN_DECIMAL) {
             revert CredbullVault__UnsupportedDecimalValue(decimal);
@@ -143,7 +157,12 @@ abstract contract Vault is ERC4626, Pausable {
     }
 
     /// @notice The share token should not be transferable.
-    function transfer(address, /* to */ uint256 /* value */ ) public view override(ERC20, IERC20) returns (bool) {
+    function transfer(address, /* to */ uint256 /* value */ )
+        public
+        view
+        override(ERC20Upgradeable, IERC20)
+        returns (bool)
+    {
         revert CredbullVault__TransferOutsideEcosystem(msg.sender);
     }
 
@@ -151,7 +170,7 @@ abstract contract Vault is ERC4626, Pausable {
     function transferFrom(address from, address, /* to */ uint256 /* value */ )
         public
         pure
-        override(ERC20, IERC20)
+        override(ERC20Upgradeable, IERC20)
         returns (bool)
     {
         revert CredbullVault__TransferOutsideEcosystem(from);
