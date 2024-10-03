@@ -2,11 +2,17 @@
 pragma solidity ^0.8.23;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
-import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { IERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeable.sol";
+import { IERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
+import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import { ERC1155SupplyUpgradeable } from
+    "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import { ERC1155PausableUpgradeable } from
+    "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155PausableUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title MultiTokenVault
@@ -15,11 +21,17 @@ import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol
  *      of time periods that have elapsed and allows users to deposit and redeem assets based on these periods.
  *      Designed to be secure and production-ready for Hacken audit.
  */
-abstract contract MultiTokenVault is ERC1155, IMultiTokenVault, ReentrancyGuard {
+abstract contract MultiTokenVault is
+    Initializable,
+    ERC1155SupplyUpgradeable,
+    ERC1155PausableUpgradeable,
+    IMultiTokenVault,
+    ReentrancyGuardUpgradeable
+{
     using SafeERC20 for IERC20;
 
     /// @notice The ERC20 token used as the underlying asset in the vault.
-    IERC20 private immutable ASSET;
+    IERC20 private ASSET;
 
     error MultiTokenVault__ExceededMaxRedeem(address owner, uint256 depositPeriod, uint256 shares, uint256 maxShares);
     error MultiTokenVault__ExceededMaxDeposit(
@@ -33,7 +45,10 @@ abstract contract MultiTokenVault is ERC1155, IMultiTokenVault, ReentrancyGuard 
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
      * @param asset_ The ERC20 token representing the underlying asset.
      */
-    constructor(IERC20 asset_) ERC1155("") {
+    function __MultiTokenVault_init(IERC20 asset_) internal onlyInitializing {
+        __ERC1155Supply_init();
+        __ERC1155Pausable_init();
+        __ReentrancyGuard_init();
         ASSET = asset_;
     }
 
@@ -214,7 +229,13 @@ abstract contract MultiTokenVault is ERC1155, IMultiTokenVault, ReentrancyGuard 
      *
      * @return bool True if the contract supports the requested interface.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165, ERC1155) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(IERC165Upgradeable, ERC1155Upgradeable)
+        returns (bool)
+    {
         return interfaceId == type(IMultiTokenVault).interfaceId || super.supportsInterface(interfaceId);
     }
 
@@ -268,4 +289,78 @@ abstract contract MultiTokenVault is ERC1155, IMultiTokenVault, ReentrancyGuard 
 
         emit Withdraw(caller, receiver, owner, depositPeriod, assets, shares);
     }
+
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override(ERC1155SupplyUpgradeable, ERC1155PausableUpgradeable) {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    }
+
+    function balanceOf(address account, uint256 id)
+        public
+        view
+        virtual
+        override(ERC1155Upgradeable, IERC1155Upgradeable)
+        returns (uint256)
+    {
+        return super.balanceOf(account, id);
+    }
+
+    function balanceOfBatch(address[] memory accounts, uint256[] memory ids)
+        public
+        view
+        virtual
+        override(ERC1155Upgradeable, IERC1155Upgradeable)
+        returns (uint256[] memory)
+    {
+        return super.balanceOfBatch(accounts, ids);
+    }
+
+    function isApprovedForAll(address account, address operator)
+        public
+        view
+        virtual
+        override(ERC1155Upgradeable, IERC1155Upgradeable)
+        returns (bool)
+    {
+        return super.isApprovedForAll(account, operator);
+    }
+
+    function setApprovalForAll(address operator, bool approved)
+        public
+        virtual
+        override(ERC1155Upgradeable, IERC1155Upgradeable)
+    {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
+        public
+        virtual
+        override(ERC1155Upgradeable, IERC1155Upgradeable)
+    {
+        super.safeTransferFrom(from, to, id, amount, data);
+    }
+
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public virtual override(ERC1155Upgradeable, IERC1155Upgradeable) {
+        super.safeBatchTransferFrom(from, to, ids, amounts, data);
+    }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

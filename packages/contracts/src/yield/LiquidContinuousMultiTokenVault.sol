@@ -8,13 +8,13 @@ import { TripleRateContext } from "@credbull/yield/context/TripleRateContext.sol
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 
-import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import { ERC1155Pausable } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
-import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { TripleRateContext } from "@credbull/yield/context/TripleRateContext.sol";
 
 /**
  * @title LiquidContinuousMultiTokenVault
@@ -31,14 +31,14 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
  *
  */
 contract LiquidContinuousMultiTokenVault is
+    Initializable,
+    UUPSUpgradeable,
     MultiTokenVault,
     ITradeable,
     TimelockAsyncUnlock,
     Timer,
     TripleRateContext,
-    ERC1155Pausable,
-    ERC1155Supply,
-    AccessControl
+    AccessControlUpgradeable
 {
     using SafeERC20 for IERC20;
 
@@ -55,19 +55,21 @@ contract LiquidContinuousMultiTokenVault is
         uint256 tenor;
     }
 
-    IYieldStrategy public immutable YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
+    IYieldStrategy public YIELD_STRATEGY; // TODO lucasia - confirm if immutable or not
 
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidOwnerAddress(address ownerAddress);
     error LiquidContinuousMultiTokenVault__InvalidOperatorAddress(address ownerAddress);
 
-    constructor(VaultParams memory params)
-        MultiTokenVault(params.asset)
-        TimelockAsyncUnlock(params.redeemNoticePeriod)
-        Timer(params.vaultStartTimestamp)
-        TripleRateContext(
+    function initialize(VaultParams memory params) public initializer {
+        __UUPSUpgradeable_init();
+        __AccessControl_init();
+        __MultiTokenVault_init(params.asset);
+        __TimelockAsyncUnlock_init(params.redeemNoticePeriod);
+        __TripleRateContext_init(
             ContextParams({
                 fullRateScaled: params.fullRateScaled,
                 initialReducedRate: PeriodRate({ interestRate: params.reducedRateScaled, effectiveFromPeriod: 0 }),
@@ -75,8 +77,9 @@ contract LiquidContinuousMultiTokenVault is
                 tenor: params.tenor,
                 decimals: params.asset.decimals()
             })
-        )
-    {
+        );
+        __Timer_init(params.vaultStartTimestamp);
+
         if (params.contractOwner == address(0)) {
             revert LiquidContinuousMultiTokenVault__InvalidOwnerAddress(params.contractOwner);
         }
@@ -87,6 +90,7 @@ contract LiquidContinuousMultiTokenVault is
 
         _grantRole(DEFAULT_ADMIN_ROLE, params.contractOwner);
         _grantRole(OPERATOR_ROLE, params.contractOperator);
+        _grantRole(UPGRADER_ROLE, params.contractOperator);
 
         YIELD_STRATEGY = params.yieldStrategy;
 
@@ -95,6 +99,8 @@ contract LiquidContinuousMultiTokenVault is
         }
     }
 
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address newImplementation) internal view override onlyRole(UPGRADER_ROLE) { }
     // ===================== MultiTokenVault =====================
 
     /// @inheritdoc MultiTokenVault
@@ -262,14 +268,6 @@ contract LiquidContinuousMultiTokenVault is
 
     // ===================== ERC1155Pausable =====================
 
-    function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
-        internal
-        override(ERC1155Supply, ERC1155Pausable, ERC1155)
-        whenNotPaused
-    {
-        ERC1155Supply._update(from, to, ids, values);
-    }
-
     function pause() public onlyRole(OPERATOR_ROLE) {
         _pause();
     }
@@ -294,7 +292,7 @@ contract LiquidContinuousMultiTokenVault is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(MultiTokenVault, ERC1155, AccessControl)
+        override(MultiTokenVault, AccessControlUpgradeable)
         returns (bool)
     {
         return MultiTokenVault.supportsInterface(interfaceId);

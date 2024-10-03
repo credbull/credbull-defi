@@ -9,6 +9,7 @@ import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault
 
 import { IMultiTokenVaultTestBase } from "@test/src/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -30,7 +31,6 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
 
     function test__RequestRedeemTest__RedeemAtTenor() public {
         uint256 principal = 100 * _scale;
-
         testVaultAtPeriods(_liquidVault, principal, 0, _liquidVault.TENOR());
     }
 
@@ -53,7 +53,7 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
             tenor: 30
         });
 
-        LiquidContinuousMultiTokenVaultMock mockVault = new LiquidContinuousMultiTokenVaultMock(fixedApyParams);
+        LiquidContinuousMultiTokenVaultMock mockVault = _createLiquidContinueMultiTokenVault(fixedApyParams);
 
         IMultiTokenVaultTestParams memory testParams =
             IMultiTokenVaultTestParams({ principal: 2_000 * _scale, depositPeriod: 11, redeemPeriod: 71 });
@@ -128,6 +128,53 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(50_416_666666, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
 
         testVaultAtPeriods(_liquidVault, deposit, 0, _liquidVault.TENOR());
+    }
+
+    function test__LiquidContinuousVaultTest__Upgradeability() public {
+        LiquidContinuousMultiTokenVault.VaultParams memory params = LiquidContinuousMultiTokenVault.VaultParams({
+            contractOwner: owner,
+            contractOperator: makeAddr("operator"),
+            asset: _asset,
+            yieldStrategy: new TripleRateYieldStrategy(),
+            vaultStartTimestamp: block.timestamp,
+            redeemNoticePeriod: 1,
+            fullRateScaled: 10 * _scale,
+            reducedRateScaled: 0 * _scale,
+            frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            tenor: 30
+        });
+
+        LiquidContinuousMultiTokenVaultMock mockVault = _createLiquidContinueMultiTokenVault(params);
+
+        IMultiTokenVaultTestParams memory testParams =
+            IMultiTokenVaultTestParams({ principal: 2_000 * _scale, depositPeriod: 11, redeemPeriod: 71 });
+        uint256 sharesAmount = testParams.principal; // 1 principal = 1 share
+        _warpToPeriod(mockVault, testParams.depositPeriod);
+
+        vm.startPrank(alice);
+        _asset.approve(address(mockVault), testParams.principal); // grant the vault allowance
+        mockVault.executeBuy(alice, 0, testParams.principal, sharesAmount);
+        vm.stopPrank();
+
+        assertEq(
+            testParams.principal,
+            mockVault.balanceOf(alice, testParams.depositPeriod),
+            "user should have principal worth of vault shares"
+        );
+
+        //Upgrade contract
+        LiquidContinuousMultiTokenVaultMockV2 mockVaultV2 = new LiquidContinuousMultiTokenVaultMockV2();
+
+        vm.prank(params.contractOperator);
+        mockVault.upgradeTo(address(mockVaultV2));
+
+        assertEq("2.0.0", mockVaultV2.version(), "version should be 2.0.0");
+
+        assertEq(
+            testParams.principal,
+            mockVault.balanceOf(alice, testParams.depositPeriod),
+            "user should have principal worth of vault shares"
+        );
     }
 
     // verify deposit.  updates vault assets and shares.
@@ -206,10 +253,26 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
 
         vm.warp(warpToTimeInSeconds);
     }
+
+    function _createLiquidContinueMultiTokenVault(LiquidContinuousMultiTokenVault.VaultParams memory params)
+        internal
+        returns (LiquidContinuousMultiTokenVaultMock _vault)
+    {
+        _vault = new LiquidContinuousMultiTokenVaultMock();
+        _vault = LiquidContinuousMultiTokenVaultMock(
+            address(new ERC1967Proxy(address(_vault), abi.encodeWithSelector(_vault.mockInitialize.selector, params)))
+        );
+    }
 }
 
 contract LiquidContinuousMultiTokenVaultMock is LiquidContinuousMultiTokenVault {
-    constructor(VaultParams memory params) LiquidContinuousMultiTokenVault(params) { }
+    constructor() {
+        _disableInitializers();
+    }
+
+    function mockInitialize(VaultParams memory params) public initializer {
+        super.initialize(params);
+    }
 
     function requestSellForDepositPeriod(uint256 amount, uint256 depositPeriod) public returns (uint256 requestId) {
         return super._requestSell(amount, depositPeriod);
@@ -223,5 +286,11 @@ contract LiquidContinuousMultiTokenVaultMock is LiquidContinuousMultiTokenVault 
         uint256 componentTokenAmount
     ) public {
         super._executeSell(requestor, depositPeriod, requestId, currencyTokenAmount, componentTokenAmount);
+    }
+}
+
+contract LiquidContinuousMultiTokenVaultMockV2 is LiquidContinuousMultiTokenVaultMock {
+    function version() public pure returns (string memory) {
+        return "2.0.0";
     }
 }

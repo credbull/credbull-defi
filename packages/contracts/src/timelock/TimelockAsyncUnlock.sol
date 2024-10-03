@@ -2,12 +2,13 @@
 pragma solidity ^0.8.20;
 
 import { ITimelockOpenEnded } from "@credbull/timelock/ITimelockOpenEnded.sol";
-import { Context } from "@openzeppelin/contracts/utils/Context.sol";
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title TimelockAsyncUnlock
  */
-abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
+abstract contract TimelockAsyncUnlock is Initializable, ITimelockOpenEnded, ContextUpgradeable {
     struct UnlockItem {
         address account;
         uint256 depositPeriod;
@@ -15,7 +16,7 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
         uint256 amount;
     }
 
-    uint256 public immutable NOTICE_PERIOD;
+    uint256 public NOTICE_PERIOD;
 
     mapping(uint256 depositPeriod => mapping(address account => UnlockItem)) private _unlockRequests;
 
@@ -71,7 +72,8 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
         _;
     }
 
-    constructor(uint256 noticePeriod_) {
+    function __TimelockAsyncUnlock_init(uint256 noticePeriod_) internal virtual onlyInitializing {
+        __Context_init();
         NOTICE_PERIOD = noticePeriod_;
     }
 
@@ -202,4 +204,11 @@ abstract contract TimelockAsyncUnlock is ITimelockOpenEnded, Context {
     function _emptyBytesArray() internal pure returns (bytes[] memory) {
         return new bytes[](0);
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

@@ -8,6 +8,7 @@ import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYiel
 
 import { TomlConfig } from "./TomlConfig.s.sol";
 import { stdToml } from "forge-std/StdToml.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
@@ -43,16 +44,29 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
 
         vm.startBroadcast(contractOwner);
 
-        LiquidContinuousMultiTokenVault liquidVault = new LiquidContinuousMultiTokenVault(vaultParams);
+        LiquidContinuousMultiTokenVault liquidVaultImpl = new LiquidContinuousMultiTokenVault();
         console2.log(
             string.concat(
-                "!!!!! Deploying LiquidContinuousMultiTokenVault [", vm.toString(address(liquidVault)), "] !!!!!"
+                "!!!!! Deploying LiquidContinuousMultiTokenVault Implementation [",
+                vm.toString(address(liquidVaultImpl)),
+                "] !!!!!"
+            )
+        );
+
+        ERC1967Proxy liquidVault = new ERC1967Proxy(
+            address(liquidVaultImpl), abi.encodeWithSelector(liquidVaultImpl.initialize.selector, vaultParams)
+        );
+        console2.log(
+            string.concat(
+                "!!!!! Deploying LiquidContinuousMultiTokenVault Proxy [",
+                vm.toString(address(liquidVaultImpl)),
+                "] !!!!!"
             )
         );
 
         vm.stopBroadcast();
 
-        return liquidVault;
+        return LiquidContinuousMultiTokenVault(address(liquidVault));
     }
 
     function _createVaultParams(address contractOwner, IERC20Metadata asset, IYieldStrategy yieldStrategy)
