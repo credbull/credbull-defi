@@ -24,14 +24,9 @@ contract SimpleTimelockAsyncUnlock is Initializable, UUPSUpgradeable, TimelockAs
         DEPOSITS.safeMint(account, depositPeriod, amount, "");
     }
 
-    /// @notice Returns the amount of tokens locked for `account` at the given `depositPeriod`.
-    function lockedAmount(address account, uint256 depositPeriod)
-        public
-        view
-        override
-        returns (uint256 lockedAmount_)
-    {
-        return DEPOSITS.balanceOf(account, depositPeriod);
+    /// @notice Returns the amount of tokens locked for `owner` at the given `depositPeriod`.
+    function lockedAmount(address owner, uint256 depositPeriod) public view override returns (uint256 lockedAmount_) {
+        return DEPOSITS.balanceOf(owner, depositPeriod);
     }
 
     function currentPeriod() public view override returns (uint256 currentPeriod_) {
@@ -42,11 +37,13 @@ contract SimpleTimelockAsyncUnlock is Initializable, UUPSUpgradeable, TimelockAs
         warp24HourPeriods(currentPeriod_);
     }
 
-    function _finalizeUnlock(address account, uint256 depositPeriod, uint256, /* unlockPeriod */ uint256 amount)
-        internal
-        virtual
-        override
-    {
-        DEPOSITS.burn(account, depositPeriod, amount, _emptyBytesArray());
+    function unlock(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount) public override {
+        super.unlock(owner, depositPeriod, unlockPeriod, amount);
+
+        DEPOSITS.burn(owner, depositPeriod, amount, _emptyBytesArray());
+    }
+
+    function _emptyBytesArray() internal pure returns (bytes[] memory) {
+        return new bytes[](0);
     }
 }

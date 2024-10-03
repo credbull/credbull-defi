@@ -162,7 +162,7 @@ contract LiquidContinuousMultiTokenVault is
     /// @notice Request to sell (redeem) `amount` of tokens at the `depositPeriod`
     /// @param amount The amount a User wants to sell (redeem).  This could be yield only, or include principal + yield.
     function _requestSell(uint256 amount, uint256 depositPeriod) internal virtual returns (uint256 requestId) {
-        requestUnlock(_msgSender(), depositPeriod, _minUnlockPeriod(), amount);
+        requestUnlock(_msgSender(), depositPeriod, amount);
 
         return 0; // TODO - need to add requestId to requestUnlock()
     }
