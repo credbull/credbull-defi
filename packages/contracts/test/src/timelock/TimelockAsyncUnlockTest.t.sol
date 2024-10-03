@@ -85,4 +85,30 @@ contract TimelockAsyncUnlockTest is Test {
 
         asyncUnlock.unlock(alice, depositDay1.depositPeriod, requestedUnlockPeriod, depositDay1.amount);
     }
+
+    /**
+     * S3
+     * Scenario: Alice tries to unlock prior to unlock period
+     * We expect it to fail; Alice should unlock when current period is same as or later than unlock period
+     */
+    function test__TimelockAsyncUnlock__UnlockPriorToUnlockPeriodFails() public {
+        uint256 currentPeriod = 5;
+        uint256 unlockPeriod = currentPeriod + 1;
+
+        asyncUnlock.setCurrentPeriod(currentPeriod);
+
+        vm.prank(alice);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeUnlockPeriod.selector,
+                alice,
+                alice,
+                currentPeriod,
+                unlockPeriod
+            )
+        );
+
+        asyncUnlock.unlock(alice, depositDay1.depositPeriod, unlockPeriod, depositDay1.amount);
+    }
 }
