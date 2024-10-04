@@ -45,6 +45,7 @@ contract LiquidContinuousMultiTokenVault is
     struct VaultParams {
         address contractOwner;
         address contractOperator;
+        address contractUpgrader;
         IERC20Metadata asset;
         IYieldStrategy yieldStrategy;
         IRedeemOptimizer redeemOptimizer;
@@ -85,7 +86,7 @@ contract LiquidContinuousMultiTokenVault is
 
         _grantRole(DEFAULT_ADMIN_ROLE, vaultParams.contractOwner);
         _grantRole(OPERATOR_ROLE, vaultParams.contractOperator);
-        _grantRole(UPGRADER_ROLE, vaultParams.contractOperator);
+        _grantRole(UPGRADER_ROLE, vaultParams.contractUpgrader);
 
         yieldStrategy = vaultParams.yieldStrategy;
         redeemOptimizer = vaultParams.redeemOptimizer;

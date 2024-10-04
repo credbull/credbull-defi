@@ -27,12 +27,14 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
 
     address private owner;
     address private operator;
+    address private upgrader;
 
     constructor() {
         tomlConfig = loadTomlConfiguration();
 
         owner = tomlConfig.readAddress(".evm.address.owner");
         operator = tomlConfig.readAddress(".evm.address.operator");
+        upgrader = tomlConfig.readAddress(".evm.address.upgrader");
     }
 
     function run() public returns (LiquidContinuousMultiTokenVault vault) {
@@ -112,6 +114,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = LiquidContinuousMultiTokenVault.VaultParams({
             contractOwner: contractOwner,
             contractOperator: operator,
+            contractUpgrader: upgrader,
             asset: asset,
             yieldStrategy: yieldStrategy,
             redeemOptimizer: redeemOptimizer,
