@@ -4,12 +4,12 @@ pragma solidity ^0.8.23;
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeable.sol";
-import { IERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import { ERC1155SupplyUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { ERC1155PausableUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155PausableUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -254,7 +254,7 @@ abstract contract MultiTokenVault is
         public
         view
         virtual
-        override(IERC165Upgradeable, ERC1155Upgradeable)
+        override(IERC165, ERC1155Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IMultiTokenVault).interfaceId || super.supportsInterface(interfaceId);
@@ -311,22 +311,19 @@ abstract contract MultiTokenVault is
         emit Withdraw(caller, receiver, owner, depositPeriod, assets, shares);
     }
 
-    function _beforeTokenTransfer(
-        address operator,
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal virtual override(ERC1155SupplyUpgradeable, ERC1155PausableUpgradeable) {
-        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
+        internal
+        virtual
+        override(ERC1155SupplyUpgradeable, ERC1155PausableUpgradeable)
+    {
+        super._update(from, to, ids, values);
     }
 
     function balanceOf(address account, uint256 id)
         public
         view
         virtual
-        override(ERC1155Upgradeable, IERC1155Upgradeable)
+        override(ERC1155Upgradeable, IERC1155)
         returns (uint256)
     {
         return super.balanceOf(account, id);
@@ -336,7 +333,7 @@ abstract contract MultiTokenVault is
         public
         view
         virtual
-        override(ERC1155Upgradeable, IERC1155Upgradeable)
+        override(ERC1155Upgradeable, IERC1155)
         returns (uint256[] memory)
     {
         return super.balanceOfBatch(accounts, ids);
@@ -346,24 +343,20 @@ abstract contract MultiTokenVault is
         public
         view
         virtual
-        override(ERC1155Upgradeable, IERC1155Upgradeable)
+        override(ERC1155Upgradeable, IERC1155)
         returns (bool)
     {
         return super.isApprovedForAll(account, operator);
     }
 
-    function setApprovalForAll(address operator, bool approved)
-        public
-        virtual
-        override(ERC1155Upgradeable, IERC1155Upgradeable)
-    {
+    function setApprovalForAll(address operator, bool approved) public virtual override(ERC1155Upgradeable, IERC1155) {
         super.setApprovalForAll(operator, approved);
     }
 
     function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
         public
         virtual
-        override(ERC1155Upgradeable, IERC1155Upgradeable)
+        override(ERC1155Upgradeable, IERC1155)
     {
         super.safeTransferFrom(from, to, id, amount, data);
     }
@@ -374,7 +367,7 @@ abstract contract MultiTokenVault is
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) public virtual override(ERC1155Upgradeable, IERC1155Upgradeable) {
+    ) public virtual override(ERC1155Upgradeable, IERC1155) {
         super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 

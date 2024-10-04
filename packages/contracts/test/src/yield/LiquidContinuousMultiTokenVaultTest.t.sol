@@ -141,8 +141,8 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         //Upgrade contract
         LiquidContinuousMultiTokenVaultMockV2 mockVaultV2 = new LiquidContinuousMultiTokenVaultMockV2();
 
-        vm.prank(_vaultParams.contractOperator);
-        mockVault.upgradeTo(address(mockVaultV2));
+        vm.prank(_vaultParams.contractUpgrader);
+        mockVault.upgradeToAndCall(address(mockVaultV2), "");
 
         assertEq("2.0.0", mockVaultV2.version(), "version should be 2.0.0");
 
