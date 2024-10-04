@@ -5,7 +5,6 @@ import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuou
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
-import { Timer } from "@credbull/timelock/Timer.sol";
 import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault.s.sol";
 
 import { IMultiTokenVaultTestBase } from "@test/src/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
@@ -27,7 +26,7 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
 
         _asset = IERC20Metadata(_liquidVault.asset());
         _vaultParams =
-            _deployVault._createVaultParams(owner, _asset, new TripleRateYieldStrategy(), new RedeemOptimizerFIFO());
+            _deployVault._createVaultParams(owner, _asset, new TripleRateYieldStrategy(), new RedeemOptimizerFIFO(0));
         _scale = 10 ** _asset.decimals();
 
         _transferAndAssert(_asset, owner, alice, 100_000 * _scale);
@@ -219,14 +218,16 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
     ) internal view override returns (uint256 expectedReturns_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
-        return liquidVault.yieldStrategy().calcYield(
+        return liquidVault._yieldStrategy().calcYield(
             address(vault), testParams.principal, testParams.depositPeriod, testParams.redeemPeriod
         );
     }
 
     /// @dev this assumes timePeriod is in days
     function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
-        uint256 warpToTimeInSeconds = Timer(address(vault)).startTimestamp() + timePeriod * 24 hours;
+        LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
+
+        uint256 warpToTimeInSeconds = liquidVault._vaultStartTimestamp() + timePeriod * 24 hours;
 
         vm.warp(warpToTimeInSeconds);
     }

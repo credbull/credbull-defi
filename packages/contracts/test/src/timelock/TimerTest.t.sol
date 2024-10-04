@@ -3,32 +3,23 @@ pragma solidity ^0.8.20;
 
 import { Timer } from "@credbull/timelock/Timer.sol";
 import { Test } from "forge-std/Test.sol";
-import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract TimerTest is Test {
     uint256 public constant START_TIME = 1704110460000; // Jan 1, 2024 at 12:01pm UTC
 
-    MockTimer private clock;
-
-    function setUp() public {
-        clock = new MockTimer();
-        clock.initialize(START_TIME);
-    }
-
-    function test__Timer__InitialClockMode() public view {
-        // verify that the clock mode is "mode=timestamp"
-        assertEq(clock.CLOCK_MODE(), "mode=timestamp");
+    function test__Timer__InitialClockMode() public pure {
+        assertEq(Timer.CLOCK_MODE(), "mode=timestamp");
     }
 
     function test__Timer__Consistency() public {
-        uint256 initialTimestamp = clock.timestamp();
+        uint256 initialTimestamp = Timer.timestamp();
         uint256 offsetSeconds = 1000;
 
         vm.warp(block.timestamp + offsetSeconds);
 
-        assertEq(clock.timestamp(), initialTimestamp + offsetSeconds);
-        assertEq(clock.timestamp(), block.timestamp);
-        assertEq(clock.clock(), uint48(block.timestamp));
+        assertEq(Timer.timestamp(), initialTimestamp + offsetSeconds);
+        assertEq(Timer.timestamp(), block.timestamp);
+        assertEq(Timer.clock(), uint48(block.timestamp));
     }
 
     function test__Timer__ElapsedTime() public {
@@ -36,27 +27,15 @@ contract TimerTest is Test {
 
         vm.warp(START_TIME + offsetSeconds); // warp to the offset
 
-        assertEq(offsetSeconds, clock.elapsedSeconds(), "elapsedSeconds wrong");
-        assertEq(offsetSeconds / (1 minutes), clock.elapsedMinutes(), "elapsedMinutes wrong");
-        assertEq(offsetSeconds / (24 hours), clock.elapsed24Hours(), "elapsed24Hours wrong");
+        assertEq(offsetSeconds, Timer.elapsedSeconds(START_TIME), "elapsedSeconds wrong");
+        assertEq(offsetSeconds / (1 minutes), Timer.elapsedMinutes(START_TIME), "elapsedMinutes wrong");
+        assertEq(offsetSeconds / (24 hours), Timer.elapsed24Hours(START_TIME), "elapsed24Hours wrong");
     }
 
-    function test__Timer__ElapsedWithFutureStartTimeReverts() public {
+    function test__Timer__ElapsedWithFutureStartTimereverts() public {
         uint256 futureStart = block.timestamp + 50 days;
 
-        MockTimer futureTimer = new MockTimer();
-        futureTimer.initialize(futureStart);
-
-        assertEq(futureStart, futureTimer.startTimestamp());
-        assertEq(block.timestamp, futureTimer.timestamp());
-
         vm.expectRevert(abi.encodeWithSelector(Timer.Timer__StartTimeNotReached.selector, block.timestamp, futureStart));
-        futureTimer.elapsedSeconds(); // "elapsed with future startTime should revert");
-    }
-}
-
-contract MockTimer is Initializable, Timer {
-    function initialize(uint256 startTime) public initializer {
-        __Timer_init(startTime);
+        Timer.elapsedSeconds(futureStart); // "elapsed with future startTime should revert");
     }
 }

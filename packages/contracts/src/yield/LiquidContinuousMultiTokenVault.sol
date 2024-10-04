@@ -11,6 +11,7 @@ import { Timer } from "@credbull/timelock/Timer.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC6372 } from "@openzeppelin/contracts/interfaces/IERC6372.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -36,9 +37,9 @@ contract LiquidContinuousMultiTokenVault is
     MultiTokenVault,
     IComponentToken,
     TimelockAsyncUnlock,
-    Timer,
     TripleRateContext,
-    AccessControlUpgradeable
+    AccessControlUpgradeable,
+    IERC6372
 {
     using SafeERC20 for IERC20;
 
@@ -54,8 +55,10 @@ contract LiquidContinuousMultiTokenVault is
         TripleRateContext.ContextParams contextParams;
     }
 
-    IYieldStrategy public yieldStrategy;
-    IRedeemOptimizer public redeemOptimizer;
+    // add setters for these...
+    IYieldStrategy public _yieldStrategy;
+    IRedeemOptimizer public _redeemOptimizer;
+    uint256 public _vaultStartTimestamp;
 
     uint256 private constant ZERO_REQUEST_ID = 0;
 
@@ -74,7 +77,6 @@ contract LiquidContinuousMultiTokenVault is
         __MultiTokenVault_init(vaultParams.asset);
         __TimelockAsyncUnlock_init(vaultParams.redeemNoticePeriod);
         __TripleRateContext_init(vaultParams.contextParams);
-        __Timer_init(vaultParams.vaultStartTimestamp);
 
         if (vaultParams.contractOwner == address(0)) {
             revert LiquidContinuousMultiTokenVault__InvalidOwnerAddress(vaultParams.contractOwner);
@@ -88,8 +90,9 @@ contract LiquidContinuousMultiTokenVault is
         _grantRole(OPERATOR_ROLE, vaultParams.contractOperator);
         _grantRole(UPGRADER_ROLE, vaultParams.contractUpgrader);
 
-        yieldStrategy = vaultParams.yieldStrategy;
-        redeemOptimizer = vaultParams.redeemOptimizer;
+        _yieldStrategy = vaultParams.yieldStrategy;
+        _redeemOptimizer = vaultParams.redeemOptimizer;
+        _vaultStartTimestamp = vaultParams.vaultStartTimestamp;
 
         if (vaultParams.contextParams.frequency != 360 && vaultParams.contextParams.frequency != 365) {
             revert LiquidContinuousMultiTokenVault__InvalidFrequency(vaultParams.contextParams.frequency);
@@ -157,7 +160,7 @@ contract LiquidContinuousMultiTokenVault is
     /// @inheritdoc IComponentToken
     function requestSell(uint256 componentTokenAmount) public virtual override returns (uint256 requestId) {
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
-            redeemOptimizer.optimizeRedeemShares(this, _msgSender(), componentTokenAmount, minUnlockPeriod());
+            _redeemOptimizer.optimizeRedeemShares(this, _msgSender(), componentTokenAmount, minUnlockPeriod());
 
         uint256 unlockPeriod = 0;
         uint256[] memory unlockPeriods = new uint256[](depositPeriods.length);
@@ -165,11 +168,9 @@ contract LiquidContinuousMultiTokenVault is
             unlockPeriods[i] = requestUnlock(_msgSender(), depositPeriods[i], sharesAtPeriods[i]);
 
             if (i == 0) {
-                // initialize
-                unlockPeriod = unlockPeriods[i];
+                unlockPeriod = unlockPeriods[i]; // initialize the unlock period
             } else if (unlockPeriod != unlockPeriods[i]) {
-                // validate for other periods
-                revert LiquidContinuousMultiTokenVault__UnlockPeriodMismatch(unlockPeriod, unlockPeriods[i]);
+                revert LiquidContinuousMultiTokenVault__UnlockPeriodMismatch(unlockPeriod, unlockPeriods[i]); // ensure unlockPeriod is consistent
             }
         }
 
@@ -199,18 +200,28 @@ contract LiquidContinuousMultiTokenVault is
     ) public override {
         // TODO - we should go through the locks rather than having to figure out the periods again
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
-            redeemOptimizer.optimizeRedeemShares(this, _msgSender(), componentTokenAmount, currentPeriod());
+            _redeemOptimizer.optimizeRedeemShares(this, _msgSender(), componentTokenAmount, currentPeriod());
 
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
             redeemForDepositPeriod(sharesAtPeriods[i], requestor, requestor, depositPeriods[i], currentPeriod());
         }
     }
 
+    /// @dev set the IRedeemOptimizer
+    function setRedeemOptimizer(IRedeemOptimizer redeemOptimizer) public onlyRole(OPERATOR_ROLE) {
+        _redeemOptimizer = redeemOptimizer;
+    }
+
     // ===================== Yield / YieldStrategy =====================
+
+    /// @dev set the YieldStrategy
+    function setYieldStrategy(IYieldStrategy yieldStrategy) public onlyRole(OPERATOR_ROLE) {
+        _yieldStrategy = yieldStrategy;
+    }
 
     /// @dev yield based on the associated yieldStrategy
     function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod) public view returns (uint256 yield) {
-        return yieldStrategy.calcYield(address(this), principal, fromPeriod, toPeriod);
+        return _yieldStrategy.calcYield(address(this), principal, fromPeriod, toPeriod);
     }
 
     /// @dev price is not used in Vault calculations.  however, 1 asset = 1 share, implying a price of 1
@@ -259,17 +270,36 @@ contract LiquidContinuousMultiTokenVault is
         super.setReducedRate(currentPeriod(), reducedRateScaled_);
     }
 
-    // ===================== Utility =====================
+    // ===================== Timer / IERC6372 Clock =====================
 
-    /// @inheritdoc TimelockAsyncUnlock
-    function currentPeriod() public view override returns (uint256 currentPeriod_) {
-        return currentPeriodsElapsed(); // vault is 0 based. so currentPeriodsElapsed() = currentPeriod() - 0
+    /// @dev set the vault start timestamp
+    function setVaultStartTimestamp(uint256 vaultStartTimestamp) public onlyRole(OPERATOR_ROLE) {
+        _vaultStartTimestamp = vaultStartTimestamp;
     }
 
     /// @inheritdoc MultiTokenVault
+    /// @dev vault is 0 based. so currentPeriodsElapsed() = currentPeriod() - 0
     function currentPeriodsElapsed() public view override returns (uint256 numPeriodsElapsed_) {
-        return elapsed24Hours(); // vault is 0 based. so currentPeriodsElapsed() = currentPeriod() - 0
+        return Timer.elapsed24Hours(_vaultStartTimestamp);
     }
+
+    /// @inheritdoc TimelockAsyncUnlock
+    /// @dev vault is 0 based. so currentPeriodsElapsed() = currentPeriod() - 0
+    function currentPeriod() public view override returns (uint256 currentPeriod_) {
+        return currentPeriodsElapsed();
+    }
+
+    /// @inheritdoc IERC6372
+    function clock() public view returns (uint48 clock_) {
+        return Timer.clock();
+    }
+
+    /// @inheritdoc IERC6372
+    function CLOCK_MODE() public pure returns (string memory) {
+        return Timer.CLOCK_MODE();
+    }
+
+    // ===================== Utility =====================
 
     function pause() public onlyRole(OPERATOR_ROLE) {
         _pause();
