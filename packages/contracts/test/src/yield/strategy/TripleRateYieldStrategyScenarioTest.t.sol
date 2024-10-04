@@ -7,6 +7,7 @@ import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYiel
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
 import { TestTripleRateContext } from "@test/test/yield/context/TestTripleRateContext.t.sol";
 import { YieldStrategyScenarioTest } from "@test/src/yield/strategy/YieldStrategyScenarioTest.t.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract TripleRateYieldStrategyScenarioTest is YieldStrategyScenarioTest {
     IYieldStrategy internal yieldStrategy;
@@ -14,13 +15,22 @@ contract TripleRateYieldStrategyScenarioTest is YieldStrategyScenarioTest {
 
     function setUp() public override {
         yieldStrategy = new TripleRateYieldStrategy();
-        context = new TestTripleRateContext(
-            DEFAULT_FULL_RATE,
-            DEFAULT_REDUCED_RATE,
-            EFFECTIVE_FROM_PERIOD,
-            Frequencies.toValue(Frequencies.Frequency.DAYS_365),
-            MATURITY_PERIOD,
-            DECIMALS
+        context = new TestTripleRateContext();
+        context = TestTripleRateContext(
+            address(
+                new ERC1967Proxy(
+                    address(context),
+                    abi.encodeWithSelector(
+                        context.__TestTripeRateContext_init.selector,
+                        DEFAULT_FULL_RATE,
+                        DEFAULT_REDUCED_RATE,
+                        EFFECTIVE_FROM_PERIOD,
+                        Frequencies.toValue(Frequencies.Frequency.DAYS_365),
+                        MATURITY_PERIOD,
+                        DECIMALS
+                    )
+                )
+            )
         );
         super.setUp();
     }

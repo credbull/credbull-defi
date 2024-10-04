@@ -2,17 +2,21 @@
 pragma solidity ^0.8.20;
 
 import { ICalcInterestMetadata } from "@credbull/yield/ICalcInterestMetadata.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title CalcInterestMetadata
  * @dev Implements interest calculation parameters like rate, frequency, and scale.
  */
-abstract contract CalcInterestMetadata is ICalcInterestMetadata {
-    uint256 public immutable RATE_PERCENT_SCALED; // rate in percentage * scale.  e.g., at scale 1e3, 5% = 5000.
-    uint256 public immutable FREQUENCY;
-    uint256 public immutable SCALE;
+abstract contract CalcInterestMetadata is Initializable, ICalcInterestMetadata {
+    uint256 public RATE_PERCENT_SCALED; // rate in percentage * scale.  e.g., at scale 1e3, 5% = 5000.
+    uint256 public FREQUENCY;
+    uint256 public SCALE;
 
-    constructor(uint256 ratePercentageScaled_, uint256 frequency_, uint256 decimals_) {
+    function __CalcInterestMetadata_init(uint256 ratePercentageScaled_, uint256 frequency_, uint256 decimals_)
+        internal
+        onlyInitializing
+    {
         RATE_PERCENT_SCALED = ratePercentageScaled_;
         FREQUENCY = frequency_;
         SCALE = 10 ** decimals_;

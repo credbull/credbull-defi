@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import { IERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 
 /**
  * @title IMultiTokenVault
@@ -10,8 +10,8 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
  *   - Users redeem ERC1155 share tokens, and the vault returns the corresponding amount of ERC20 assets.
  *   - Each deposit period has its own ERC1155 share token, allowing for time-based calculations, e.g. for returns.
  */
-interface IMultiTokenVault is IERC1155 {
-    /// @notice Emitted when a user deposits assets into the vault.
+interface IMultiTokenVault is IERC1155Upgradeable {
+    /// @notice The event is being emitted once user deposits.
     event Deposit(
         address indexed sender, address indexed receiver, uint256 depositPeriod, uint256 assets, uint256 shares
     );
@@ -128,6 +128,19 @@ interface IMultiTokenVault is IERC1155 {
         external
         view
         returns (uint256 assets);
+
+    /**
+     * @notice Converts shares to assets for the given deposit periods at the redeem period.
+     * @param shares The amount of shares to convert.
+     * @param depositPeriods The periods during which the shares were issued.
+     * @param redeemPeriod The period during which the shares are redeemed.
+     * @return assets The equivalent amount of assets.
+     */
+    function convertToAssetsForDepositPeriods(
+        uint256[] memory shares,
+        uint256[] memory depositPeriods,
+        uint256 redeemPeriod
+    ) external view returns (uint256[] memory assets);
 
     /**
      * @notice Converts shares to assets for a specific deposit period at the current redeem period.

@@ -3,12 +3,13 @@ pragma solidity ^0.8.20;
 
 import { CalcInterestMetadata } from "@credbull/yield/CalcInterestMetadata.sol";
 import { ITripleRateContext } from "@credbull/yield/context/ITripleRateContext.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title Our triple rate context reference implementation, realising [ITripleRateContext].
  * @dev This is an abstract contract intended to be inherited from and overriden with Access Control functionality.
  */
-abstract contract TripleRateContext is CalcInterestMetadata, ITripleRateContext {
+abstract contract TripleRateContext is Initializable, CalcInterestMetadata, ITripleRateContext {
     /// @notice Constructor parameters encapsulated in a struct.
     struct ContextParams {
         /// @notice The 'full' interest rate, in scaled percentage form.
@@ -23,8 +24,32 @@ abstract contract TripleRateContext is CalcInterestMetadata, ITripleRateContext 
         uint256 decimals;
     }
 
+    /**
+     * @notice Reverts when the Tenor Period is before the currently set Tenor Period.
+     *
+     * @param tenorPeriod The current Tenor Period.
+     * @param newTenorPeriod The attempted update Tenor Period.
+     */
+    error TripleRateContext_TenorPeriodRegressionNotAllowed(uint256 tenorPeriod, uint256 newTenorPeriod);
+
+    /**
+     * @notice Emits when the current Tenor Period is set, with its associated Reduced Rate.
+     *
+     * @param tenorPeriod The updated current Tenor Period.
+     * @param reducedRate The updated Reduced Rate for the Tenor Period.
+     */
+    event CurrentTenorPeriodAndRateChanged(uint256 tenorPeriod, uint256 reducedRate);
+
+    /**
+     * @notice Reverts when the Period is before the currently set Period.
+     *
+     * @param currentPeriod The current Period.
+     * @param updatePeriod The attempted update Period.
+     */
+    error TripleRateContext_PeriodRegressionNotAllowed(uint256 currentPeriod, uint256 updatePeriod);
+
     /// @notice The Tenor, or Maturity Period, of this context.
-    uint256 public immutable TENOR;
+    uint256 public TENOR;
 
     /**
      * @notice The [PeriodRate] that is currently in effect.
@@ -47,24 +72,9 @@ abstract contract TripleRateContext is CalcInterestMetadata, ITripleRateContext 
      */
     event CurrentPeriodRateChanged(uint256 interestRate, uint256 effectiveFromPeriod);
 
-    /**
-     * @notice Reverts when the Period is before the currently set Period.
-     *
-     * @param currentPeriod The current Period.
-     * @param updatePeriod The attempted update Period.
-     */
-    error TripleRateContext_PeriodRegressionNotAllowed(uint256 currentPeriod, uint256 updatePeriod);
-
-    /**
-     * @notice Creates a [TripleRateContext] instance.
-     *
-     * @param params The [ContextParams] of construction parameters.
-     */
-    constructor(ContextParams memory params)
-        CalcInterestMetadata(params.fullRateScaled, params.frequency, params.decimals)
-    {
+    function __TripleRateContext_init(ContextParams memory params) internal onlyInitializing {
+        __CalcInterestMetadata_init(params.fullRateScaled, params.frequency, params.decimals);
         TENOR = params.tenor;
-
         _setReducedRate(params.initialReducedRate);
     }
 
@@ -119,4 +129,11 @@ abstract contract TripleRateContext is CalcInterestMetadata, ITripleRateContext 
 
         emit CurrentPeriodRateChanged(candidate_.interestRate, candidate_.effectiveFromPeriod);
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

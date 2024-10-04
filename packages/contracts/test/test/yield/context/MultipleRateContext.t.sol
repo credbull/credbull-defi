@@ -7,6 +7,7 @@ import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableM
 import { CalcInterestMetadata } from "@credbull/yield/CalcInterestMetadata.sol";
 
 import { IMultipleRateContext } from "@test/test/yield/context/IMultipleRateContext.t.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title Our multiple rate context reference implementation.
@@ -15,7 +16,7 @@ import { IMultipleRateContext } from "@test/test/yield/context/IMultipleRateCont
  *  are expressed in percentage terms and scaled using [scale()]. The 'full' rate values are encapsulated by the
  *  [ICalcInterestMetadata].
  */
-contract MultipleRateContext is CalcInterestMetadata, IMultipleRateContext {
+contract MultipleRateContext is Initializable, CalcInterestMetadata, IMultipleRateContext {
     using EnumerableMap for EnumerableMap.UintToUintMap;
     using Math for uint256;
 
@@ -40,8 +41,8 @@ contract MultipleRateContext is CalcInterestMetadata, IMultipleRateContext {
      */
     event ReducedRateRemoved(uint256 period, uint256 rateScaled, uint256 scale);
 
-    uint256 public immutable DEFAULT_REDUCED_RATE;
-    uint256 public immutable TENOR;
+    uint256 public DEFAULT_REDUCED_RATE;
+    uint256 public TENOR;
 
     /**
      * @notice A map of Period to the Reduced Rate effective from that period onwards.
@@ -49,13 +50,14 @@ contract MultipleRateContext is CalcInterestMetadata, IMultipleRateContext {
      */
     EnumerableMap.UintToUintMap internal reducedRatesMap;
 
-    constructor(
+    function initialize(
         uint256 fullRateInPercentageScaled_,
         uint256 reducedRateInPercentageScaled_,
         uint256 frequency_,
         uint256 tenor_,
         uint256 decimals
-    ) CalcInterestMetadata(fullRateInPercentageScaled_, frequency_, decimals) {
+    ) public initializer {
+        __CalcInterestMetadata_init(fullRateInPercentageScaled_, frequency_, decimals);
         DEFAULT_REDUCED_RATE = reducedRateInPercentageScaled_;
         TENOR = tenor_;
     }

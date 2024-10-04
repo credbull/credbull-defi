@@ -4,14 +4,18 @@ pragma solidity ^0.8.20;
 import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { IERC5679Ext1155 } from "@credbull/token/ERC1155/IERC5679Ext1155.sol";
 import { TimerCheats } from "@test/test/timelock/TimerCheats.t.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract SimpleTimelockAsyncUnlock is TimelockAsyncUnlock, TimerCheats {
-    IERC5679Ext1155 public immutable DEPOSITS;
+contract SimpleTimelockAsyncUnlock is Initializable, UUPSUpgradeable, TimelockAsyncUnlock, TimerCheats {
+    IERC5679Ext1155 public DEPOSITS;
 
-    constructor(uint256 noticePeriod_, IERC5679Ext1155 deposits)
-        TimelockAsyncUnlock(noticePeriod_)
-        TimerCheats(block.timestamp)
-    {
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address newImplementation) internal virtual override { }
+
+    function initialize(uint256 noticePeriod_, IERC5679Ext1155 deposits) public initializer {
+        __TimerCheats__init(block.timestamp);
+        __TimelockAsyncUnlock_init(noticePeriod_);
         DEPOSITS = deposits;
     }
 
@@ -20,14 +24,9 @@ contract SimpleTimelockAsyncUnlock is TimelockAsyncUnlock, TimerCheats {
         DEPOSITS.safeMint(account, depositPeriod, amount, "");
     }
 
-    /// @notice Returns the amount of tokens locked for `account` at the given `depositPeriod`.
-    function lockedAmount(address account, uint256 depositPeriod)
-        public
-        view
-        override
-        returns (uint256 lockedAmount_)
-    {
-        return DEPOSITS.balanceOf(account, depositPeriod);
+    /// @notice Returns the amount of tokens locked for `owner` at the given `depositPeriod`.
+    function lockedAmount(address owner, uint256 depositPeriod) public view override returns (uint256 lockedAmount_) {
+        return DEPOSITS.balanceOf(owner, depositPeriod);
     }
 
     function currentPeriod() public view override returns (uint256 currentPeriod_) {
@@ -38,11 +37,13 @@ contract SimpleTimelockAsyncUnlock is TimelockAsyncUnlock, TimerCheats {
         warp24HourPeriods(currentPeriod_);
     }
 
-    function _finalizeUnlock(address account, uint256 depositPeriod, uint256, /* unlockPeriod */ uint256 amount)
-        internal
-        virtual
-        override
-    {
-        DEPOSITS.burn(account, depositPeriod, amount, _emptyBytesArray());
+    function unlock(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount) public override {
+        super.unlock(owner, depositPeriod, unlockPeriod, amount);
+
+        DEPOSITS.burn(owner, depositPeriod, amount, _emptyBytesArray());
+    }
+
+    function _emptyBytesArray() internal pure returns (bytes[] memory) {
+        return new bytes[](0);
     }
 }

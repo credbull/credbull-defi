@@ -5,6 +5,7 @@ import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IMultiTokenVaultTestBase } from "@test/src/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
 import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriods.t.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
@@ -28,13 +29,13 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
         deposit1TestParams = IMultiTokenVaultTestParams({ principal: 500 * SCALE, depositPeriod: 10, redeemPeriod: 21 });
         deposit2TestParams = IMultiTokenVaultTestParams({ principal: 300 * SCALE, depositPeriod: 15, redeemPeriod: 17 });
-        deposit3TestParams = IMultiTokenVaultTestParams({ principal: 700 * SCALE, depositPeriod: 30, redeemPeriod: 24 });
+        deposit3TestParams = IMultiTokenVaultTestParams({ principal: 700 * SCALE, depositPeriod: 30, redeemPeriod: 55 });
     }
 
     function test__MultiTokenVaulTest__Period10() public {
         uint256 assetToSharesRatio = 1;
 
-        MultiTokenVault vault = new MultiTokenVaultDailyPeriods(asset, assetToSharesRatio, 10);
+        MultiTokenVault vault = _createMultiTokenVault(asset, assetToSharesRatio, 10);
 
         _testVaultAtPeriod(vault, deposit1TestParams);
     }
@@ -42,7 +43,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     function test__MultiTokenVaulTest__SimpleDeposit() public {
         uint256 assetToSharesRatio = 1;
 
-        MultiTokenVault vault = new MultiTokenVaultDailyPeriods(asset, assetToSharesRatio, 10);
+        MultiTokenVault vault = _createMultiTokenVault(asset, assetToSharesRatio, 10);
 
         address vaultAddress = address(vault);
 
@@ -70,7 +71,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         uint256 assetToSharesRatio = 2;
 
         // setup
-        MultiTokenVaultDailyPeriods vault = new MultiTokenVaultDailyPeriods(asset, assetToSharesRatio, 10);
+        MultiTokenVaultDailyPeriods vault = _createMultiTokenVault(asset, assetToSharesRatio, 10);
         uint256 assetBalanceBeforeDeposits = asset.balanceOf(alice); // the asset balance from the start
 
         // verify deposit - period 1
@@ -146,5 +147,21 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
     function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
         MultiTokenVaultDailyPeriods(address(vault)).setCurrentPeriodsElapsed(timePeriod);
+    }
+
+    function _createMultiTokenVault(IERC20Metadata _asset, uint256 assetToSharesRatio, uint256 yieldPercentage)
+        internal
+        returns (MultiTokenVaultDailyPeriods)
+    {
+        MultiTokenVaultDailyPeriods _vault = new MultiTokenVaultDailyPeriods();
+
+        return MultiTokenVaultDailyPeriods(
+            address(
+                new ERC1967Proxy(
+                    address(_vault),
+                    abi.encodeWithSelector(_vault.initialize.selector, _asset, assetToSharesRatio, yieldPercentage)
+                )
+            )
+        );
     }
 }

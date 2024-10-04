@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import { ITripleRateContext } from "@credbull/yield/context/ITripleRateContext.sol";
 import { TripleRateContext } from "@credbull/yield/context/TripleRateContext.sol";
 import { TestTripleRateContext } from "@test/test/yield/context/TestTripleRateContext.t.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
 
@@ -23,11 +24,25 @@ contract TripleRateContextTest is Test {
 
     uint256 public immutable FREQUENCY = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
 
-    TripleRateContext internal toTest;
+    TestTripleRateContext internal toTest;
 
     function setUp() public {
-        toTest = new TestTripleRateContext(
-            PERCENT_5_SCALED, PERCENT_5_5_SCALED, EFFECTIVE_FROM_PERIOD, FREQUENCY, TENOR, DECIMALS
+        toTest = new TestTripleRateContext();
+        toTest = TestTripleRateContext(
+            address(
+                new ERC1967Proxy(
+                    address(toTest),
+                    abi.encodeWithSelector(
+                        toTest.__TestTripeRateContext_init.selector,
+                        PERCENT_5_SCALED,
+                        PERCENT_5_5_SCALED,
+                        EFFECTIVE_FROM_PERIOD,
+                        FREQUENCY,
+                        TENOR,
+                        DECIMALS
+                    )
+                )
+            )
         );
     }
 

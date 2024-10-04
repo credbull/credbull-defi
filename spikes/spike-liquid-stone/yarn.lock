@@ -1380,6 +1380,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openzeppelin/contracts-upgradeable@npm:^5.0.2":
+  version: 5.0.2
+  resolution: "@openzeppelin/contracts-upgradeable@npm:5.0.2"
+  peerDependencies:
+    "@openzeppelin/contracts": 5.0.2
+  checksum: 7d1dbd6bcb45fb6fccf2dc51253afd044b9f77b01d34e11f7cf4c3e17c860df31ddc2c831be7ac463e2955eaea9620cec1c38cdffed7fcf235eb1fdc7ceb3716
+  languageName: node
+  linkType: hard
+
 "@parcel/watcher-android-arm64@npm:2.4.1":
   version: 2.4.1
   resolution: "@parcel/watcher-android-arm64@npm:2.4.1"
@@ -9505,6 +9514,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "se-2@workspace:."
   dependencies:
+    "@openzeppelin/contracts-upgradeable": ^5.0.2
     alchemy-sdk: ^3.4.2
     ethers: ^6.13.3
     husky: ^9.1.4

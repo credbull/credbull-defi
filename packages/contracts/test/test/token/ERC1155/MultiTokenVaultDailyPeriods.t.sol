@@ -5,18 +5,22 @@ import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { TimerCheats } from "@test/test/timelock/TimerCheats.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract MultiTokenVaultDailyPeriods is MultiTokenVault, TimerCheats {
-    uint256 internal immutable ASSET_TO_SHARES_RATIO;
-    uint256 internal immutable YIELD_PERCENTAGE;
+contract MultiTokenVaultDailyPeriods is Initializable, UUPSUpgradeable, MultiTokenVault, TimerCheats {
+    uint256 internal ASSET_TO_SHARES_RATIO;
+    uint256 internal YIELD_PERCENTAGE;
 
-    constructor(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage)
-        MultiTokenVault(asset)
-        TimerCheats(block.timestamp)
-    {
+    function initialize(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage) public initializer {
+        __TimerCheats__init(block.timestamp);
+        __MultiTokenVault_init(asset);
         ASSET_TO_SHARES_RATIO = assetToSharesRatio;
         YIELD_PERCENTAGE = yieldPercentage;
     }
+
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address newImplementation) internal virtual override { }
 
     function calcYield(uint256 principal, uint256, /* depositPeriod */ uint256 /* toPeriod */ )
         public
