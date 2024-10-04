@@ -1,208 +1,141 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { ITimelockOpenEnded } from "@credbull/timelock/ITimelockOpenEnded.sol";
+import { ITimelockAsyncUnlock } from "@credbull/timelock/ITimelockAsyncUnlock.sol";
 import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title TimelockAsyncUnlock
  */
-abstract contract TimelockAsyncUnlock is Initializable, ITimelockOpenEnded, ContextUpgradeable {
-    struct UnlockItem {
-        address account;
-        uint256 depositPeriod;
-        uint256 unlockPeriod;
-        uint256 amount;
-    }
+abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, ContextUpgradeable {
+    mapping(uint256 depositPeriod => mapping(address account => uint256 amount)) private _unlockRequests;
+    mapping(uint256 depositPeriod => mapping(address account => mapping(uint256 unlockPeriod => uint256 amount)))
+        private _unlockRequestsByUnlockPeriod;
 
-    uint256 public NOTICE_PERIOD;
+    uint256 private _noticePeriod;
 
-    mapping(uint256 depositPeriod => mapping(address account => UnlockItem)) private _unlockRequests;
-
-    error TimelockAsyncUnlock__UnlockBeforeDepositPeriod(address account, uint256 period, uint256 depositPeriod);
-    error TimelockAsyncUnlock__UnlockBeforeCurrentPeriod(address account, uint256 period, uint256 currentPeriod);
-    error TimelockAsyncUnlock__UnlockPeriodMismatch(
-        address account, uint256 unlockPeriod, uint256 requestedUnlockPeriod
+    error TimelockAsyncUnlock__ExceededMaxUnlock(address owner, uint256 amount, uint256 unlockRequestedAmount);
+    error TimelockAsyncUnlock__UnlockBeforeDepositPeriod(
+        address caller, address owner, uint256 depositPeriod, uint256 unlockPeriod
     );
-    error TimelockAsyncUnlock__RequestBeforeDepositWithNoticePeriod(
-        address account, uint256 period, uint256 depositWithNoticePeriod
+    error TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(
+        address caller, address owner, uint256 currentPeriod, uint256 unlockPeriod
     );
-    error TimelockAsyncUnlock__RequestBeforeCurrentWithNoticePeriod(
-        address account, uint256 period, uint256 currentWithNoticePeriod
-    );
-    error TimelockAsyncUnlock__RequesterNotOwner(address requester, address tokenOwner);
-
-    /// @notice Modifier to ensure only the token owner can call the function
-    modifier onlyTokenOwner(address tokenOwner) {
-        if (_msgSender() != tokenOwner) {
-            revert TimelockAsyncUnlock__RequesterNotOwner(_msgSender(), tokenOwner);
-        }
-        _;
-    }
-
-    /// @notice Modifier to check if the unlock request period is valid
-    modifier validateRequestPeriod(uint256 depositPeriod, uint256 unlockPeriod) {
-        uint256 depositWithNoticePeriod = depositPeriod + NOTICE_PERIOD;
-        if (unlockPeriod < depositWithNoticePeriod) {
-            // unlocking before depositing!
-            revert TimelockAsyncUnlock__RequestBeforeDepositWithNoticePeriod(
-                _msgSender(), unlockPeriod, depositWithNoticePeriod
-            );
-        }
-
-        uint256 minUnlockPeriod = _minUnlockPeriod();
-        if (unlockPeriod < minUnlockPeriod) {
-            revert TimelockAsyncUnlock__RequestBeforeCurrentWithNoticePeriod(
-                _msgSender(), unlockPeriod, minUnlockPeriod
-            );
-        }
-        _;
-    }
-
-    /// @notice Modifier to check if the unlock request period is valid
-    modifier validateUnlockPeriod(uint256 depositPeriod, uint256 unlockPeriod) {
-        if (unlockPeriod < depositPeriod) {
-            revert TimelockAsyncUnlock__UnlockBeforeDepositPeriod(_msgSender(), unlockPeriod, depositPeriod);
-        }
-
-        if (unlockPeriod < currentPeriod()) {
-            revert TimelockAsyncUnlock__UnlockBeforeCurrentPeriod(_msgSender(), unlockPeriod, currentPeriod());
-        }
-        _;
-    }
+    error TimelockAsyncUnlock__ExceededMaxRequestUnlock(address owner, uint256 amount, uint256 maxRequestUnlockAmount);
+    error TimelockAsyncUnlock__AuthorizeCallerFailed(address caller, address owner);
 
     function __TimelockAsyncUnlock_init(uint256 noticePeriod_) internal virtual onlyInitializing {
         __Context_init();
-        NOTICE_PERIOD = noticePeriod_;
+        _noticePeriod = noticePeriod_;
     }
 
-    /// @notice Request unlock of `amount` for the `tokenOwner` at the specified `unlockPeriod`.
-    function requestUnlock(address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount)
-        public
-        onlyTokenOwner(tokenOwner)
-        validateRequestPeriod(depositPeriod, unlockPeriod)
-    {
-        UnlockItem storage unlockRequest = _unlockRequests[depositPeriod][tokenOwner];
-
-        // TODO - add check for maxRequestUnlock() here
-
-        if (unlockRequest.amount > 0 && unlockRequest.unlockPeriod == unlockPeriod) {
-            // Add to the existing unlock request if the unlockPeriod is the same
-            unlockRequest.amount += amount;
-        } else {
-            // Overwrite the unlock request if it's a different unlockPeriod
-            _unlockRequests[depositPeriod][tokenOwner] = UnlockItem({
-                account: tokenOwner,
-                depositPeriod: depositPeriod,
-                unlockPeriod: unlockPeriod,
-                amount: amount
-            });
-        }
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
+    function noticePeriod() public view virtual returns (uint256) {
+        return _noticePeriod;
     }
 
-    /// @notice Unlocks `amount` for the `tokenOwner` at the specified `unlockPeriod`.
-    function unlock(address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount)
-        public
-        onlyTokenOwner(tokenOwner)
-        validateUnlockPeriod(depositPeriod, unlockPeriod)
-    {
-        UnlockItem storage unlockRequest = _unlockRequests[depositPeriod][tokenOwner];
-
-        if (amount > unlockRequest.amount) {
-            revert ITimelockOpenEnded__ExceededMaxUnlock(tokenOwner, amount, unlockRequest.amount);
-        }
-
-        // TODO - add check for maxUnlock() here
-
-        // maybe being too strict?  user can just call this again with the "right" unlockPeriod
-        if (unlockPeriod != unlockRequest.unlockPeriod) {
-            revert TimelockAsyncUnlock__UnlockPeriodMismatch(tokenOwner, unlockPeriod, unlockRequest.unlockPeriod);
-        }
-
-        unlockRequest.amount -= amount;
-
-        _finalizeUnlock(tokenOwner, depositPeriod, unlockPeriod, amount);
-    }
-
-    /// @notice Unlocks `amount` of tokens for `tokenOwner` from the given `depositPeriod`.
-    function unlock(address tokenOwner, uint256 depositPeriod, uint256 amount) public virtual override {
-        unlock(tokenOwner, depositPeriod, currentPeriod(), amount);
-    }
-
-    /// @dev there's no "unlocked" state.  deposits are locked => requested to be unlocked => redeemed
-    function lockedAmount(address, /* tokenOwner */ uint256 /* depositPeriod */ )
-        public
-        view
-        virtual
-        returns (uint256 lockedAmount_);
-
-    /// @dev there's no "unlocked" state.  deposits are locked => requested to be unlocked => redeemed
-    function unlockedAmount(address, /* tokenOwner */ uint256 /* depositPeriod */ )
-        public
-        view
-        virtual
-        override
-        returns (uint256 unlockedAmount_)
-    {
-        return 0;
-    }
-
-    /// @dev there's no "unlocked" state.  deposits are locked => requested to be unlocked => redeemed
-    function unlockRequested(address tokenOwner, uint256 depositPeriod)
-        public
-        view
-        virtual
-        returns (UnlockItem memory requestUnlockItem_)
-    {
-        return _unlockRequests[depositPeriod][tokenOwner];
-    }
-
-    /// @notice Returns the max amount that can be REQUESTED to be unlocked for `account` at `depositPeriod`.
-    function maxRequestUnlock(address tokenOwner, uint256 depositPeriod)
-        public
-        view
-        virtual
-        returns (uint256 maxRequestUnlockAmount)
-    {
-        UnlockItem memory unlockRequestAmount = _unlockRequests[depositPeriod][tokenOwner];
-
-        return maxUnlock(tokenOwner, depositPeriod) - unlockRequestAmount.amount;
-    }
-
-    /// @notice Returns the max amount that can be unlocked for `account` at `lockReleasePeriod`.
-    function maxUnlock(address tokenOwner, uint256 depositPeriod)
-        public
-        view
-        virtual
-        returns (uint256 maxUnlockAmount)
-    {
-        return lockedAmount(tokenOwner, depositPeriod) - unlockedAmount(tokenOwner, depositPeriod);
-    }
-
-    /// @notice Returns the current period.
-    function noticePeriod() public view virtual returns (uint256 noticePeriod_) {
-        return NOTICE_PERIOD;
-    }
-
-    /// @notice Returns the current period.
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function currentPeriod() public view virtual returns (uint256 currentPeriod_);
 
-    /// @notice Finalize unlock of `amount` for the `tokenOwner` at the specified `unlockPeriod`.
-    /// @dev child contracts override to implement the actual behavior, e.g. by transferring unlocked tokens
-
-    function _finalizeUnlock(address tokenOwner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount)
-        internal
-        virtual // solhint-disable-next-line no-empty-blocks
-    { }
-
-    /// @notice Returns the current period.
-    function _minUnlockPeriod() internal view returns (uint256 minUnlockPeriod_) {
-        return currentPeriod() + NOTICE_PERIOD;
+    function minUnlockPeriod() public view virtual returns (uint256) {
+        return currentPeriod() + noticePeriod();
     }
 
-    function _emptyBytesArray() internal pure returns (bytes[] memory) {
-        return new bytes[](0);
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
+    function lockedAmount(address owner, uint256 depositPeriod) public view virtual returns (uint256 lockedAmount_);
+
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
+    function unlockRequested(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
+        return _unlockRequests[depositPeriod][owner];
+    }
+
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
+    function unlockRequested(address owner, uint256 depositPeriod, uint256 unlockPeriod)
+        public
+        view
+        virtual
+        returns (uint256)
+    {
+        return _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod];
+    }
+
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
+    function maxRequestUnlock(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
+        return lockedAmount(owner, depositPeriod) - unlockRequested(owner, depositPeriod);
+    }
+
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
+    function requestUnlock(address owner, uint256 depositPeriod, uint256 amount)
+        public
+        virtual
+        returns (uint256 unlockPeriod)
+    {
+        _authorizeCaller(_msgSender(), owner);
+
+        if (amount > maxRequestUnlock(owner, depositPeriod)) {
+            revert TimelockAsyncUnlock__ExceededMaxRequestUnlock(owner, amount, maxRequestUnlock(owner, depositPeriod));
+        }
+
+        unlockPeriod = minUnlockPeriod();
+
+        _unlockRequests[depositPeriod][owner] += amount;
+        _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod] += amount;
+    }
+
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     * @notice every one can call this unlock function
+     */
+    function unlock(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount) public virtual {
+        _performUnlockValidation(owner, depositPeriod, unlockPeriod);
+
+        uint256 unlockRequestedAmount = _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod];
+
+        if (amount > unlockRequestedAmount) {
+            revert TimelockAsyncUnlock__ExceededMaxUnlock(owner, amount, unlockRequestedAmount);
+        }
+
+        _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod] = unlockRequestedAmount - amount;
+        _unlockRequests[depositPeriod][owner] -= amount;
+    }
+
+    /**
+     * @dev An internal function to check if the caller is eligible to manage the unlocks of the owner
+     * It can be overridden and new authorization logic can be written in child contracts
+     */
+    function _authorizeCaller(address caller, address owner) internal virtual {
+        if (caller != owner) {
+            revert TimelockAsyncUnlock__AuthorizeCallerFailed(caller, owner);
+        }
+    }
+
+    /**
+     * @dev An internal function to check if unlock can be performed
+     */
+    function _performUnlockValidation(address owner, uint256 depositPeriod, uint256 unlockPeriod) internal virtual {
+        if (unlockPeriod < depositPeriod) {
+            revert TimelockAsyncUnlock__UnlockBeforeDepositPeriod(_msgSender(), owner, depositPeriod, unlockPeriod);
+        }
+
+        // Need to check with Ian
+        if (unlockPeriod > currentPeriod()) {
+            revert TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(_msgSender(), owner, currentPeriod(), unlockPeriod);
+        }
     }
 
     /**
