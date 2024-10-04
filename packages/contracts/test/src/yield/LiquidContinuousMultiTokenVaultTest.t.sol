@@ -47,7 +47,7 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         LiquidContinuousMultiTokenVaultMock liquidVault = _createLiquidContinueMultiTokenVault(_vaultParams);
 
         IMultiTokenVaultTestParams memory testParams =
-            IMultiTokenVaultTestParams({ principal: 2_000 * _scale, depositPeriod: 11, redeemPeriod: 71 });
+            IMultiTokenVaultTestParams({ principal: 2_000 * _scale, depositPeriod: 11, redeemPeriod: 70 });
 
         uint256 assetStartBalance = _asset.balanceOf(alice);
 
