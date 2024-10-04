@@ -29,17 +29,25 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
             _deployVault._createVaultParams(owner, _asset, new TripleRateYieldStrategy(), new RedeemOptimizerFIFO(0));
         _scale = 10 ** _asset.decimals();
 
-        _transferAndAssert(_asset, owner, alice, 100_000 * _scale);
+        _transferAndAssert(_asset, owner, alice, 1_000_000_000 * _scale);
+        _transferAndAssert(_asset, owner, bob, 1_000_000_000 * _scale);
     }
 
     function test__RequestRedeemTest__RedeemAtTenor() public {
         uint256 principal = 100 * _scale;
-        testVaultAtPeriods(_liquidVault, principal, 0, _liquidVault.TENOR());
+        testVaultAtPeriods(alice, _liquidVault, principal, 0, _liquidVault.TENOR());
     }
 
     function test__LiquidContinuousVaultTest__RedeemBeforeTenor() public {
         uint256 principal = 100 * _scale;
-        testVaultAtPeriods(_liquidVault, principal, 0, _liquidVault.TENOR() - 1);
+        testVaultAtPeriods(bob, _liquidVault, principal, 0, _liquidVault.TENOR() - 1);
+    }
+
+    function test__LiquidContinuousVaultTest__Load() public {
+        vm.skip(true); // load test - should only be run during perf testing
+
+        uint256 principal = 100_000 * _scale;
+        _loadTestVault(_liquidVault, principal, 1, 1_000); // 1,000 works, 1800 too much for the vm
     }
 
     function test__LiquidContinuousVaultTest__BuyAndSell() public {
@@ -115,7 +123,7 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         uint256 actualReturns = _liquidVault.convertToAssetsForDepositPeriod(actualShares, 0, _liquidVault.TENOR() - 1);
         assertEq(50_416_666666, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
 
-        testVaultAtPeriods(_liquidVault, deposit, 0, _liquidVault.TENOR() - 1);
+        testVaultAtPeriods(alice, _liquidVault, deposit, 0, _liquidVault.TENOR() - 1);
     }
 
     function test__LiquidContinuousVaultTest__Upgradeability() public {
@@ -172,7 +180,7 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         assertEq(
-            testParams.principal, liquidVault.lockedAmount(alice, testParams.depositPeriod), "principal not locked"
+            testParams.principal, liquidVault.lockedAmount(receiver, testParams.depositPeriod), "principal not locked"
         );
 
         return actualSharesAtPeriod;
@@ -183,30 +191,27 @@ contract LiquidContinuousMultiTokenVaultTest is IMultiTokenVaultTestBase {
         address receiver,
         IMultiTokenVault vault,
         IMultiTokenVaultTestParams memory testParams,
-        uint256 sharesToRedeemAtPeriod,
-        uint256 prevReceiverAssetBalance // assetBalance before redeeming the latest deposit
+        uint256 sharesToRedeemAtPeriod
     ) internal virtual override returns (uint256 actualAssetsAtPeriod_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         // request unlock
         _warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
 
-        vm.prank(alice);
-        liquidVault.requestUnlock(alice, testParams.depositPeriod, testParams.principal);
+        vm.prank(receiver);
+        liquidVault.requestUnlock(receiver, testParams.depositPeriod, testParams.principal);
         assertEq(
             testParams.principal,
-            liquidVault.unlockRequested(alice, testParams.depositPeriod),
+            liquidVault.unlockRequested(receiver, testParams.depositPeriod),
             "unlockRequest should be created"
         );
 
-        uint256 actualAssetsAtPeriod =
-            super._testRedeemOnly(receiver, vault, testParams, sharesToRedeemAtPeriod, prevReceiverAssetBalance);
+        uint256 actualAssetsAtPeriod = super._testRedeemOnly(receiver, vault, testParams, sharesToRedeemAtPeriod);
 
         // verify locks and request locks released
-        assertEq(0, liquidVault.lockedAmount(alice, testParams.depositPeriod), "deposit lock not released");
-        assertEq(0, liquidVault.balanceOf(alice, testParams.depositPeriod), "deposits should be redeemed");
-
-        assertEq(0, liquidVault.unlockRequested(alice, testParams.depositPeriod), "unlockRequest should be released");
+        assertEq(0, liquidVault.lockedAmount(receiver, testParams.depositPeriod), "deposit lock not released");
+        assertEq(0, liquidVault.balanceOf(receiver, testParams.depositPeriod), "deposits should be redeemed");
+        assertEq(0, liquidVault.unlockRequested(receiver, testParams.depositPeriod), "unlockRequest should be released");
 
         return actualAssetsAtPeriod;
     }
