@@ -31,7 +31,6 @@ contract TripleRateYieldStrategyTest is Test {
     TestTripleRateContext internal context;
     address internal contextAddress;
     uint256 internal principal;
-    uint256 internal depositPeriod;
 
     function setUp() public {
         yieldStrategy = new TripleRateYieldStrategy();
@@ -54,12 +53,11 @@ contract TripleRateYieldStrategyTest is Test {
         );
         contextAddress = address(context);
         principal = 1_000 * SCALE;
-        depositPeriod = 1;
     }
 
     function test_TripleRateYieldStrategy_RevertCalcYield_WhenInvalidContextAddress() public {
         vm.expectRevert(IYieldStrategy.IYieldStrategy_InvalidContextAddress.selector);
-        yieldStrategy.calcYield(address(0), principal, depositPeriod, depositPeriod + MATURITY_PERIOD);
+        yieldStrategy.calcYield(address(0), principal, 1, MATURITY_PERIOD);
     }
 
     function test_TripleRateYieldStrategy_RevertCalcPrice_WhenInvalidContextAddress() public {
@@ -69,7 +67,7 @@ contract TripleRateYieldStrategyTest is Test {
 
     function test_TripleRateYieldStrategy_RevertCalcYield_WhenInvalidPeriodRange() public {
         vm.expectRevert(abi.encodeWithSelector(IYieldStrategy.IYieldStrategy_InvalidPeriodRange.selector, 1, 1));
-        yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod);
+        yieldStrategy.calcYield(contextAddress, principal, 1, 1);
 
         vm.expectRevert(abi.encodeWithSelector(IYieldStrategy.IYieldStrategy_InvalidPeriodRange.selector, 5, 3));
         yieldStrategy.calcYield(contextAddress, principal, 5, 3);
@@ -80,7 +78,7 @@ contract TripleRateYieldStrategyTest is Test {
         // $1,000 * ((5% / 365) * 21) = 2.876712
         assertApproxEqAbs(
             2_876_712,
-            yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod + 21),
+            yieldStrategy.calcYield(contextAddress, principal, 1, 21),
             TOLERANCE,
             "incorrect 21 day reduced rate yield"
         );
@@ -89,7 +87,7 @@ contract TripleRateYieldStrategyTest is Test {
         // $1,000 * ((5% / 365) * 29) = 3.972603
         assertApproxEqAbs(
             3_972_603,
-            yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod + 29),
+            yieldStrategy.calcYield(contextAddress, principal, 1, 29),
             TOLERANCE,
             "incorrect 29 day reduced rate yield"
         );
@@ -98,7 +96,7 @@ contract TripleRateYieldStrategyTest is Test {
         // $1,000 * ((10% / 365) * 30) = 8.219178
         assertApproxEqAbs(
             8_219_178,
-            yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod + 30),
+            yieldStrategy.calcYield(contextAddress, principal, 1, 30),
             TOLERANCE,
             "incorrect 30 day full rate yield"
         );
@@ -107,7 +105,7 @@ contract TripleRateYieldStrategyTest is Test {
         // ($1,000 * ((10% / 365) * 30) + ($1,000 * ((5% / 365) * 2))) = 8.493151
         assertApproxEqAbs(
             8_493_151,
-            yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod + 32),
+            yieldStrategy.calcYield(contextAddress, principal, 1, 32),
             TOLERANCE,
             "incorrect 32 day combined rate yield"
         );
@@ -119,17 +117,16 @@ contract TripleRateYieldStrategyTest is Test {
         // ($1,000 * ((10% / 365) * 30) + ($1,000 * ((5.5% / 365) * 7))) = 9.273973
         assertApproxEqAbs(
             9_273_973,
-            yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod + 37),
+            yieldStrategy.calcYield(contextAddress, principal, 1, 37),
             TOLERANCE,
             "incorrect 37 day combined rate yield"
         );
 
         // 22 Days, across Current Tenor Period:
-        depositPeriod = 20;
         // ($1,000 * ((5% / 365) * 11) + ($1,000 * ((5.5% / 365) * 11))) = 3.164384
         assertApproxEqAbs(
             3_164_384,
-            yieldStrategy.calcYield(contextAddress, principal, depositPeriod, depositPeriod + 22),
+            yieldStrategy.calcYield(contextAddress, principal, 20, 41),
             TOLERANCE,
             "incorrect 22 day across tenor periods rate yield"
         );

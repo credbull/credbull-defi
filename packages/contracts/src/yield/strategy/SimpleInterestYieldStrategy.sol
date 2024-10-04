@@ -3,13 +3,13 @@ pragma solidity ^0.8.20;
 
 import { ICalcInterestMetadata } from "@credbull/yield/ICalcInterestMetadata.sol";
 import { CalcSimpleInterest } from "@credbull/yield/CalcSimpleInterest.sol";
-import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
+import { AbstractYieldStrategy } from "@credbull/yield/strategy/AbstractYieldStrategy.sol";
 
 /**
  * @title SimpleInterestYieldStrategy
  * @dev Strategy where returns are calculated using SimpleInterest
  */
-contract SimpleInterestYieldStrategy is IYieldStrategy {
+contract SimpleInterestYieldStrategy is AbstractYieldStrategy {
     /// @dev See {CalcSimpleInterest-calcInterest}
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
@@ -25,7 +25,7 @@ contract SimpleInterestYieldStrategy is IYieldStrategy {
         }
         ICalcInterestMetadata interestData = ICalcInterestMetadata(contextContract);
 
-        uint256 numPeriodsElapsed = toPeriod - fromPeriod;
+        uint256 numPeriodsElapsed = _noOfPeriods(fromPeriod, toPeriod);
 
         return CalcSimpleInterest.calcInterest(
             principal, interestData.rateScaled(), numPeriodsElapsed, interestData.frequency(), interestData.scale()
