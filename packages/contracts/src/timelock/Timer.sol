@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IERC6372 } from "@openzeppelin/contracts/interfaces/IERC6372.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @title Timer
@@ -14,36 +12,26 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
  * - `Seconds` periods - use elapsedSeconds().  Fine for CalcInterest, not for MultiTokenVault depositPeriods.  Too many periods to iterate!
  * - `Monthly` or `Annual` - not supported due to the (more) complex rules
  */
-abstract contract Timer is Initializable, IERC6372 {
-    uint256 public startTimestamp;
-
-    error Timer__ERC6372InconsistentTime(uint256 actualTime, uint256 expectTIme);
+library Timer {
     error Timer__StartTimeNotReached(uint256 currentTime, uint256 startTime);
 
-    function __Timer_init(uint256 startTimestamp_) internal virtual onlyInitializing {
-        startTimestamp = startTimestamp_;
-    }
-
     /// @dev returns the current timepoint (timestamp mode)
-    function timestamp() public view virtual returns (uint256 timestamp_) {
+    function timestamp() internal view returns (uint256 timestamp_) {
         return block.timestamp;
     }
 
     /// @dev returns the current timepoint (timestamp mode) in uint256
-    function clock() public view virtual returns (uint48 clock_) {
+    function clock() internal view returns (uint48 clock_) {
         return SafeCast.toUint48(timestamp());
     }
 
     /// @dev returns the clock mode as required by EIP-6372.  For timestamp, MUST return mode=timestamp.
-    function CLOCK_MODE() public view virtual returns (string memory) {
-        if (timestamp() != block.timestamp) {
-            revert Timer__ERC6372InconsistentTime(timestamp(), block.timestamp);
-        }
+    function CLOCK_MODE() internal pure returns (string memory) {
         return "mode=timestamp";
     }
 
     /// @dev returns the elapsed time in seconds since starTime
-    function elapsedSeconds() public view returns (uint256 elapsedSeconds_) {
+    function elapsedSeconds(uint256 startTimestamp) internal view returns (uint256 elapsedSeconds_) {
         if (startTimestamp > timestamp()) {
             revert Timer__StartTimeNotReached(timestamp(), startTimestamp);
         }
@@ -52,23 +40,12 @@ abstract contract Timer is Initializable, IERC6372 {
     }
 
     /// @dev returns the elapsed time in minutes since starTime
-    function elapsedMinutes() public view returns (uint256 elapsedMinutes_) {
-        return elapsedSeconds() / 1 minutes;
+    function elapsedMinutes(uint256 startTimestamp) internal view returns (uint256 elapsedMinutes_) {
+        return elapsedSeconds(startTimestamp) / 1 minutes;
     }
 
     /// @dev returns the elapsed 24-hour periods since starTime
-    function elapsed24Hours() public view returns (uint256 elapsed24hours_) {
-        return elapsedSeconds() / 24 hours;
+    function elapsed24Hours(uint256 startTimestamp) internal view returns (uint256 elapsed24hours_) {
+        return elapsedSeconds(startTimestamp) / 24 hours;
     }
-
-    function _setStartTimestamp(uint256 startTimestamp_) internal {
-        startTimestamp = startTimestamp_;
-    }
-
-    /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-     */
-    uint256[49] private __gap;
 }

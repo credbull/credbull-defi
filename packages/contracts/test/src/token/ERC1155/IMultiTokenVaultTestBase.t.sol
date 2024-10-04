@@ -261,10 +261,8 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
     /// @dev warp the vault to the given timePeriod for testing purposes
     /// @dev this assumes timePeriod is in days
-    function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal virtual {
-        uint256 warpToTimeInSeconds = Timer(address(vault)).startTimestamp() + timePeriod * 24 hours;
-
-        vm.warp(warpToTimeInSeconds);
+    function _warpToPeriod(IMultiTokenVault, /* vault */ uint256 timePeriod) internal virtual {
+        vm.warp(Timer.timestamp() + timePeriod * 24 hours);
     }
 
     function _createTestParams(uint256 principal, uint256 depositPeriod, uint256 redeemPeriod)

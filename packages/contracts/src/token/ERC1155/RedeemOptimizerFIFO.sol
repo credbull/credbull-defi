@@ -9,97 +9,118 @@ import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
  * @dev Optimizes the redemption of shares using a FIFO strategy.
  */
 contract RedeemOptimizerFIFO is IRedeemOptimizer {
-    error RedeemOptimizer__InvalidPeriodRange(uint256 fromPeriod, uint256 toPeriod);
-    error RedeemOptimizer__FuturePeriodNotAllowed(uint256 toPeriod, uint256 currentPeriod);
+    error RedeemOptimizer__InvalidDepositPeriodRange(uint256 fromPeriod, uint256 toPeriod);
+    error RedeemOptimizer__FutureToDepositPeriod(uint256 toPeriod, uint256 currentPeriod);
+    error RedeemOptimizer__OptimizerFailed(uint256 amountFound, uint256 amountToFind);
+
+    enum AmountType {
+        Shares,
+        AssetsWithReturns
+    }
+
+    uint256 public immutable START_DEPOSIT_PERIOD = 0;
+
+    constructor(uint256 startDepositPeriod) {
+        START_DEPOSIT_PERIOD = startDepositPeriod;
+    }
 
     /// @inheritdoc IRedeemOptimizer
-    function optimizeRedeem(IMultiTokenVault vault, address owner, uint256 shares)
+    function optimizeRedeemShares(IMultiTokenVault vault, address owner, uint256 shares, uint256 redeemPeriod)
         public
         view
         returns (uint256[] memory depositPeriods_, uint256[] memory sharesAtPeriods_)
     {
-        return _sharesAtPeriods(vault, owner, shares, 0, vault.currentPeriodsElapsed());
+        return _findAmount(
+            vault, owner, shares, START_DEPOSIT_PERIOD, vault.currentPeriodsElapsed(), redeemPeriod, AmountType.Shares
+        );
     }
 
-    // TODO - confirm whether assets here is the "principal" (easier) or the "total desired withdraw" (trickier)
     /// @inheritdoc IRedeemOptimizer
-    function optimizeWithdraw(IMultiTokenVault vault, address owner, uint256 assets)
+    /// @dev - assets include deposit (principal) and any returns up to the redeem period
+    function optimizeWithdrawAssets(IMultiTokenVault vault, address owner, uint256 assets, uint256 redeemPeriod)
         public
         view
         returns (uint256[] memory depositPeriods_, uint256[] memory sharesAtPeriods_)
     {
-        return _sharesAtPeriods(vault, owner, assets, 0, vault.currentPeriodsElapsed());
+        return _findAmount(
+            vault,
+            owner,
+            assets,
+            START_DEPOSIT_PERIOD,
+            vault.currentPeriodsElapsed(),
+            redeemPeriod,
+            AmountType.AssetsWithReturns
+        );
     }
 
-    /// @notice Returns deposit periods and corresponding shares within the specified range.
-    function _sharesAtPeriods(
+    /// @notice Returns deposit periods and corresponding amounts (shares or assets) within the specified range.
+    function _findAmount(
         IMultiTokenVault vault,
         address owner,
-        uint256 maxShares,
-        uint256 fromPeriod,
-        uint256 toPeriod
-    ) internal view returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods_) {
-        // count periods with a non-zero balance
-        (uint256 numPeriodsWithBalance,) = _numPeriodsWithBalance(vault, owner, maxShares, fromPeriod, toPeriod);
-
-        // TODO - if the sharesCollected is less than the maxShares - should we revert or continue?
-
-        depositPeriods = new uint256[](numPeriodsWithBalance);
-        sharesAtPeriods_ = new uint256[](numPeriodsWithBalance);
-
-        // populate arrays
-        uint256 arrayIndex = 0;
-        uint256 sharesCollected_ = 0;
-
-        for (uint256 i = fromPeriod; i <= toPeriod; i++) {
-            uint256 sharesAtPeriod = vault.balanceOf(owner, i);
-
-            if (sharesAtPeriod > 0) {
-                depositPeriods[arrayIndex] = i;
-
-                uint256 shares =
-                    sharesAtPeriod + sharesCollected_ <= maxShares ? sharesAtPeriod : maxShares - sharesCollected_;
-
-                sharesAtPeriods_[arrayIndex] = shares;
-
-                arrayIndex++;
-            }
-        }
-    }
-
-    /// @notice Counts periods with non-zero shares and the total collected shares.
-    function _numPeriodsWithBalance(
-        IMultiTokenVault vault,
-        address owner,
-        uint256 maxShares,
-        uint256 fromPeriod,
-        uint256 toPeriod
-    ) internal view returns (uint256 numPeriodsWithBalance, uint256 sharesCollected) {
-        if (fromPeriod > toPeriod) {
-            revert RedeemOptimizer__InvalidPeriodRange(fromPeriod, toPeriod);
+        uint256 amountToFind,
+        uint256 fromDepositPeriod,
+        uint256 toDepositPeriod,
+        uint256 redeemPeriod,
+        AmountType amountType
+    ) internal view returns (uint256[] memory depositPeriods, uint256[] memory amountAtPeriods) {
+        if (fromDepositPeriod > toDepositPeriod) {
+            revert RedeemOptimizer__InvalidDepositPeriodRange(fromDepositPeriod, toDepositPeriod);
         }
 
         uint256 currentPeriod = vault.currentPeriodsElapsed();
-        if (toPeriod > currentPeriod) {
-            revert RedeemOptimizer__FuturePeriodNotAllowed(toPeriod, currentPeriod);
+        if (toDepositPeriod > currentPeriod) {
+            revert RedeemOptimizer__FutureToDepositPeriod(toDepositPeriod, currentPeriod);
         }
 
-        uint256 numPeriodsWithBalance_ = 0;
-        uint256 sharesCollected_ = 0;
+        // first loop: check for periods with balances.  needed to correctly size our array results
+        uint256 numPeriodsWithBalance = 0;
+        for (uint256 depositPeriod = fromDepositPeriod; depositPeriod <= toDepositPeriod; ++depositPeriod) {
+            uint256 sharesAtPeriod = vault.balanceOf(owner, depositPeriod);
 
-        for (uint256 i = fromPeriod; i <= toPeriod; i++) {
-            uint256 sharesAtPeriod = vault.balanceOf(owner, i);
+            uint256 amountAtPeriod = amountType == AmountType.Shares
+                ? sharesAtPeriod
+                : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, redeemPeriod);
 
-            if (sharesAtPeriod > 0) {
-                numPeriodsWithBalance_++;
-                sharesCollected_ += sharesAtPeriod;
-            }
-
-            if (sharesCollected_ >= maxShares) {
-                return (numPeriodsWithBalance_, maxShares);
+            if (amountAtPeriod > 0) {
+                numPeriodsWithBalance++;
             }
         }
 
-        return (numPeriodsWithBalance_, sharesCollected);
+        // second loop - collect and return the periods and amounts
+        depositPeriods = new uint256[](numPeriodsWithBalance);
+        amountAtPeriods = new uint256[](numPeriodsWithBalance);
+
+        uint256 arrayIndex = 0;
+        uint256 amountFound = 0;
+
+        for (uint256 depositPeriod = fromDepositPeriod; depositPeriod <= toDepositPeriod; ++depositPeriod) {
+            uint256 sharesAtPeriod = vault.balanceOf(owner, depositPeriod);
+
+            uint256 amountAtPeriod = amountType == AmountType.Shares
+                ? sharesAtPeriod
+                : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, redeemPeriod);
+
+            if (amountAtPeriod > 0) {
+                depositPeriods[arrayIndex] = depositPeriod;
+
+                // check if we will go "over" the amountToFind
+                if ((amountFound + amountAtPeriod) > amountToFind) {
+                    amountAtPeriods[arrayIndex] = amountToFind - amountFound; // include only the amount up to amountToFind
+
+                    return (depositPeriods, amountAtPeriods); // we're done, no need to keep looping
+                } else {
+                    amountAtPeriods[arrayIndex] = amountAtPeriod;
+                }
+
+                amountFound += amountAtPeriods[arrayIndex];
+                arrayIndex++;
+            }
+        }
+
+        if (amountFound < amountToFind) {
+            revert RedeemOptimizer__OptimizerFailed(amountFound, amountToFind);
+        }
+
+        return (depositPeriods, amountAtPeriods);
     }
 }
