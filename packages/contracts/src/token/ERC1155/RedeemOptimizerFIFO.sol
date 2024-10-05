@@ -4,6 +4,8 @@ pragma solidity ^0.8.20;
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 
+import { console } from "forge-std/console.sol";
+
 /**
  * @title RedeemOptimizerFIFO
  * @dev Optimizes the redemption of shares using a FIFO strategy.
@@ -30,6 +32,7 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
         view
         returns (uint256[] memory depositPeriods_, uint256[] memory sharesAtPeriods_)
     {
+        console.log("optimizeRedeemShares(): Shares= %d, Redeem Period= %d", shares, redeemPeriod);
         return _findAmount(
             vault, owner, shares, START_DEPOSIT_PERIOD, vault.currentPeriodsElapsed(), redeemPeriod, AmountType.Shares
         );
@@ -42,6 +45,8 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
         view
         returns (uint256[] memory depositPeriods_, uint256[] memory sharesAtPeriods_)
     {
+        console.log("optimizeWithdrawAssets(): Assets= %d, Redeem Period= %d", assets, redeemPeriod);
+
         return _findAmount(
             vault,
             owner,
@@ -67,52 +72,54 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
             revert RedeemOptimizer__InvalidDepositPeriodRange(fromDepositPeriod, toDepositPeriod);
         }
 
+        console.log("_amountsAtPeriods(): Current Period= %d", vault.currentPeriodsElapsed());
+
         uint256 currentPeriod = vault.currentPeriodsElapsed();
         if (toDepositPeriod > currentPeriod) {
             revert RedeemOptimizer__FutureToDepositPeriod(toDepositPeriod, currentPeriod);
         }
 
-        // first loop: check for periods with balances.  needed to correctly size our array results
-        uint256 numPeriodsWithBalance = 0;
-        for (uint256 depositPeriod = fromDepositPeriod; depositPeriod <= toDepositPeriod; ++depositPeriod) {
-            uint256 sharesAtPeriod = vault.balanceOf(owner, depositPeriod);
+        console.log(
+            "_amountsAtPeriods(): MaxAmount= %d, From= %d, To= %d", maxAmount, fromDepositPeriod, toDepositPeriod
+        );
+        console.log(
+            "_amountsAtPeriods(): No Of Periods= %d, Amount Type= ",
+            (toDepositPeriod - fromDepositPeriod) + 1,
+            amountType == AmountType.Shares ? "Shares" : "AssetWithReturns"
+        );
 
-            uint256 amountAtPeriod = amountType == AmountType.Shares
-                ? sharesAtPeriod
-                : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, redeemPeriod);
-
-            if (amountAtPeriod > 0) {
-                numPeriodsWithBalance++;
-            }
-        }
-
-        // second loop - collect and return the periods and amounts
-        depositPeriods = new uint256[](numPeriodsWithBalance);
-        amountAtPeriods = new uint256[](numPeriodsWithBalance);
-
+        // Query the vault to locate ...
+        // NOTE (JL,2024-10-04): The number of periods is inclusive.
+        uint256[] memory cacheDepositPeriods = new uint256[]((toDepositPeriod - fromDepositPeriod) + 1);
+        uint256[] memory cacheAmountAtPeriods = new uint256[]((toDepositPeriod - fromDepositPeriod) + 1);
         uint256 arrayIndex = 0;
         uint256 amountFound = 0;
 
         for (uint256 depositPeriod = fromDepositPeriod; depositPeriod <= toDepositPeriod; ++depositPeriod) {
             uint256 sharesAtPeriod = vault.balanceOf(owner, depositPeriod);
-
             uint256 amountAtPeriod = amountType == AmountType.Shares
                 ? sharesAtPeriod
                 : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, redeemPeriod);
 
             if (amountAtPeriod > 0) {
-                depositPeriods[arrayIndex] = depositPeriod;
+                console.log(
+                    "_amountsAtPeriods(): Period= %d, Shares= %d, Amount= %d",
+                    depositPeriod,
+                    sharesAtPeriod,
+                    amountAtPeriod
+                );
+                cacheDepositPeriods[arrayIndex] = depositPeriod;
 
-                // check if we will go "over" the amountToFind
+                // check if we will go "over" the max amount
                 if ((amountFound + amountAtPeriod) > amountToFind) {
-                    amountAtPeriods[arrayIndex] = amountToFind - amountFound; // include only the amount up to amountToFind
-
-                    return (depositPeriods, amountAtPeriods); // we're done, no need to keep looping
+                    cacheAmountAtPeriods[arrayIndex++] = maxAmount - amountFound; // include only the partial amount
+                    console.log("_amountsAtPeriods(): Partial= %d", cacheAmountAtPeriods[arrayIndex - 1]);
+                    break; // we're done, no need to keep looping
                 } else {
-                    amountAtPeriods[arrayIndex] = amountAtPeriod;
+                    cacheAmountAtPeriods[arrayIndex] = amountAtPeriod;
                 }
 
-                amountFound += amountAtPeriods[arrayIndex];
+                amountFound += cacheAmountAtPeriods[arrayIndex];
                 arrayIndex++;
             }
         }
@@ -121,6 +128,22 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
             revert RedeemOptimizer__OptimizerFailed(amountFound, amountToFind);
         }
 
-        return (depositPeriods, amountAtPeriods);
+        return _trimToSize(arrayIndex, cacheDepositPeriods, cacheAmountAtPeriods);
+    }
+
+    function _trimToSize(uint256 toSize, uint256[] memory toTrim1, uint256[] memory toTrim2)
+        private
+        pure
+        returns (uint256[] memory trimmed1, uint256[] memory trimmed2)
+    {
+        console.log("_trimToSize(): Size= %d", toSize);
+
+        trimmed1 = new uint256[](toSize);
+        trimmed2 = new uint256[](toSize);
+        for (uint256 i = 0; i < toSize; i++) {
+            console.log("trimToSize():  %d, Deposit Period= %d, Amount= %d", i, toTrim1[i], toTrim2[i]);
+            trimmed1[i] = toTrim1[i];
+            trimmed2[i] = toTrim2[i];
+        }
     }
 }

@@ -7,6 +7,8 @@ import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 
 import { MultiTokenVaultTest } from "@test/src/token/ERC1155/MultiTokenVaultTest.t.sol";
 
+import { console } from "forge-std/console.sol";
+
 contract RedeemOptimizerTest is MultiTokenVaultTest {
     function setUp() public override {
         super.setUp();
@@ -23,13 +25,15 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         (uint256[] memory depositPeriods, uint256[] memory depositShares) = _testDeposits(alice, multiTokenVault); // make a few deposits
         uint256 totalDepositShares = depositShares[0] + depositShares[1] + depositShares[2];
 
-        // warp vault ahead redemPeriod
+        // warp vault ahead redeemPeriod
         uint256 redeemPeriod = deposit3TestParams.redeemPeriod;
         _warpToPeriod(multiTokenVault, redeemPeriod);
 
         // check full redeem
+        console.log("START REDEEM!");
         (uint256[] memory redeemDepositPeriods, uint256[] memory sharesAtPeriods) =
             redeemOptimizer.optimizeRedeemShares(multiTokenVault, alice, totalDepositShares, redeemPeriod);
+        console.log("END REDEEM!");
 
         assertEq(3, redeemDepositPeriods.length, "depositPeriods wrong length - full redeem");
         assertEq(3, sharesAtPeriods.length, "sharesAtPeriods wrong length - full redeem");
@@ -42,8 +46,10 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         uint256[] memory expectedAssetsAtPeriods =
             multiTokenVault.convertToAssetsForDepositPeriods(depositShares, depositPeriods, redeemPeriod);
 
+        console.log("START WITHDRAW");
         (uint256[] memory withdrawDepositPeriods, uint256[] memory actualAssetsAtPeriods) =
             redeemOptimizer.optimizeWithdrawAssets(multiTokenVault, alice, totalDepositShares, redeemPeriod);
+        console.log("END WITHDRAW");
 
         assertEq(3, withdrawDepositPeriods.length, "depositPeriods wrong length - full redeem");
         assertEq(3, actualAssetsAtPeriods.length, "sharesAtPeriods wrong length - full redeem");
