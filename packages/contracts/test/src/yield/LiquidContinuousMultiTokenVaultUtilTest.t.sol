@@ -31,8 +31,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         uint256 scale = 10 ** asset.decimals();
         _transferAndAssert(asset, _vaultAuth.owner, alice, 1_000_000_000 * scale);
 
-        IMultiTokenVaultTestParams memory testParams =
-            IMultiTokenVaultTestParams({ principal: 2_000 * scale, depositPeriod: 11, redeemPeriod: 71 });
+        TestParam memory testParams = TestParam({ principal: 2_000 * scale, depositPeriod: 11, redeemPeriod: 71 });
 
         uint256 sharesAmount = testParams.principal; // 1 principal = 1 share
         _warpToPeriod(vaultProxy, testParams.depositPeriod);
@@ -77,11 +76,8 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__PauseDepositAndRedeem() public {
-        IMultiTokenVaultTestParams memory testParams = IMultiTokenVaultTestParams({
-            principal: 100 * _scale,
-            depositPeriod: 0,
-            redeemPeriod: _liquidVault.minUnlockPeriod()
-        });
+        TestParam memory testParams =
+            TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: _liquidVault.minUnlockPeriod() });
 
         vm.prank(alice);
         _asset.approve(address(_liquidVault), testParams.principal); // grant vault allowance on alice's principal

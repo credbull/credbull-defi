@@ -163,9 +163,17 @@ contract LiquidContinuousMultiTokenVault is
 
     /// @inheritdoc IComponentToken
     function requestSell(uint256 componentTokenAmount) public virtual override returns (uint256 requestId) {
+        // TODO - do we *always* want to optimizingRedeemShares?  perhaps we can configure to optimizeByAShares or optimizeByAssets?
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
-            _redeemOptimizer.optimizeRedeemShares(this, _msgSender(), componentTokenAmount, minUnlockPeriod());
+            optimizeRedeemShares(_msgSender(), componentTokenAmount, minUnlockPeriod());
+        return requestSell(depositPeriods, sharesAtPeriods);
+    }
 
+    function requestSell(uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
+        public
+        virtual
+        returns (uint256 requestId)
+    {
         uint256 unlockPeriod = 0;
         uint256[] memory unlockPeriods = new uint256[](depositPeriods.length);
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
@@ -204,8 +212,14 @@ contract LiquidContinuousMultiTokenVault is
     ) public override {
         // TODO - we should go through the locks rather than having to figure out the periods again
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
-            _redeemOptimizer.optimizeRedeemShares(this, _msgSender(), componentTokenAmount, currentPeriod());
+            optimizeRedeemShares(requestor, componentTokenAmount, currentPeriod());
+        return executeSell(requestor, depositPeriods, sharesAtPeriods);
+    }
 
+    function executeSell(address requestor, uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
+        public
+        virtual
+    {
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
             redeemForDepositPeriod(sharesAtPeriods[i], requestor, requestor, depositPeriods[i], currentPeriod());
         }
@@ -214,6 +228,15 @@ contract LiquidContinuousMultiTokenVault is
     /// @dev set the IRedeemOptimizer
     function setRedeemOptimizer(IRedeemOptimizer redeemOptimizer) public onlyRole(OPERATOR_ROLE) {
         _redeemOptimizer = redeemOptimizer;
+    }
+
+    // TODO - do we *always* want to optimizingRedeemShares?  perhaps we can configure to optimizeByAShares or optimizeByAssets?
+    function optimizeRedeemShares(address requestor, uint256 shares, uint256 redeemPeriod)
+        public
+        virtual
+        returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
+    {
+        return _redeemOptimizer.optimizeRedeemShares(this, requestor, shares, redeemPeriod);
     }
 
     // ===================== Yield / YieldStrategy =====================

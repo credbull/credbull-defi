@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
+import { IMTVTestParamArray } from "@test/test/token/ERC1155/IMTVTestParamArray.t.sol";
 import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriods.t.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -12,137 +13,167 @@ import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
-    IERC20Metadata internal asset;
+    IERC20Metadata internal _asset;
+    uint256 internal _scale;
 
-    address private owner = makeAddr("owner");
-    address private alice = makeAddr("alice");
+    address private _owner = makeAddr("owner");
+    address private _alice = makeAddr("alice");
 
-    IMultiTokenVaultTestParams internal deposit1TestParams;
-    IMultiTokenVaultTestParams internal deposit2TestParams;
-    IMultiTokenVaultTestParams internal deposit3TestParams;
-
-    uint256 internal SCALE;
+    TestParam internal _testParams1;
+    TestParam internal _testParams2;
+    TestParam internal _testParams3;
 
     function setUp() public virtual {
-        vm.prank(owner);
-        asset = new SimpleUSDC(1_000_000 ether);
+        vm.prank(_owner);
+        _asset = new SimpleUSDC(1_000_000 ether);
 
-        SCALE = 10 ** asset.decimals();
-        _transferAndAssert(asset, owner, alice, 100_000 * SCALE);
+        _scale = 10 ** _asset.decimals();
+        _transferAndAssert(_asset, _owner, _alice, 100_000 * _scale);
 
-        deposit1TestParams = IMultiTokenVaultTestParams({ principal: 500 * SCALE, depositPeriod: 10, redeemPeriod: 21 });
-        deposit2TestParams = IMultiTokenVaultTestParams({ principal: 300 * SCALE, depositPeriod: 15, redeemPeriod: 17 });
-        deposit3TestParams = IMultiTokenVaultTestParams({ principal: 700 * SCALE, depositPeriod: 30, redeemPeriod: 55 });
+        _testParams1 = TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 });
+        _testParams2 = TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 });
+        _testParams3 = TestParam({ principal: 700 * _scale, depositPeriod: 30, redeemPeriod: 55 });
     }
 
     function test__MultiTokenVaulTest__SimpleDeposit() public {
         uint256 assetToSharesRatio = 1;
 
-        MultiTokenVault vault = _createMultiTokenVault(asset, assetToSharesRatio, 10);
+        MultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
         address vaultAddress = address(vault);
 
-        assertEq(0, asset.allowance(alice, vaultAddress), "vault shouldn't have an allowance to start");
-        assertEq(0, asset.balanceOf(vaultAddress), "vault shouldn't have a balance to start");
+        assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance to start");
+        assertEq(0, _asset.balanceOf(vaultAddress), "vault shouldn't have a balance to start");
 
-        vm.startPrank(alice);
-        asset.approve(vaultAddress, deposit1TestParams.principal);
+        vm.startPrank(_alice);
+        _asset.approve(vaultAddress, _testParams1.principal);
 
-        assertEq(deposit1TestParams.principal, asset.allowance(alice, vaultAddress), "vault should have allowance");
+        assertEq(_testParams1.principal, _asset.allowance(_alice, vaultAddress), "vault should have allowance");
         vm.stopPrank();
 
-        vm.startPrank(alice);
-        vault.deposit(deposit1TestParams.principal, alice);
+        vm.startPrank(_alice);
+        vault.deposit(_testParams1.principal, _alice);
         vm.stopPrank();
 
-        assertEq(deposit1TestParams.principal, asset.balanceOf(vaultAddress), "vault should have the asset");
-        assertEq(0, asset.allowance(alice, vaultAddress), "vault shouldn't have an allowance after deposit");
+        assertEq(_testParams1.principal, _asset.balanceOf(vaultAddress), "vault should have the asset");
+        assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance after deposit");
 
-        testVaultAtPeriods(alice, vault, deposit1TestParams);
+        testVaultAtOffsets(_alice, vault, _testParams1);
     }
 
-    function test__MultiTokenVaulTest__Period10() public {
+    function test__MultiTokenVaulTest__SingleDeposit() public {
         uint256 assetToSharesRatio = 1;
         address charlie = makeAddr("charlie");
 
-        _transferAndAssert(asset, owner, charlie, 100_000 * SCALE);
+        _transferAndAssert(_asset, _owner, charlie, 100_000 * _scale);
 
-        MultiTokenVault vault = _createMultiTokenVault(asset, assetToSharesRatio, 10);
+        MultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
-        _testVaultAtPeriod(charlie, vault, deposit1TestParams);
+        testVaultAtPeriod(charlie, vault, _testParams1);
     }
 
-    // Scenario: Calculating returns for a standard investment
     function test__MultiTokenVaulTest__MultipleDeposits() public {
         uint256 assetToSharesRatio = 2;
 
         // setup
-        MultiTokenVaultDailyPeriods vault = _createMultiTokenVault(asset, assetToSharesRatio, 10);
+        MultiTokenVaultDailyPeriods vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
         // verify deposit - period 1
-        uint256 deposit1Shares = _testDepositOnly(alice, vault, deposit1TestParams);
-        assertEq(
-            deposit1TestParams.principal / assetToSharesRatio, deposit1Shares, "deposit shares incorrect at period 1"
-        );
+        uint256 deposit1Shares = _testDepositOnly(_alice, vault, _testParams1);
+        assertEq(_testParams1.principal / assetToSharesRatio, deposit1Shares, "deposit shares incorrect at period 1");
         assertEq(
             deposit1Shares,
-            vault.sharesAtPeriod(alice, deposit1TestParams.depositPeriod),
+            vault.sharesAtPeriod(_alice, _testParams1.depositPeriod),
             "getSharesAtPeriod incorrect at period 1"
         );
-        assertEq(
-            deposit1Shares, vault.balanceOf(alice, deposit1TestParams.depositPeriod), "balance incorrect at period 1"
-        );
-        assertEq(
-            deposit1Shares, vault.balanceOf(alice, deposit1TestParams.depositPeriod), "balance incorrect at period 1"
-        );
+        assertEq(deposit1Shares, vault.balanceOf(_alice, _testParams1.depositPeriod), "balance incorrect at period 1");
+        assertEq(deposit1Shares, vault.balanceOf(_alice, _testParams1.depositPeriod), "balance incorrect at period 1");
 
         // verify deposit - period 2
-        uint256 deposit2Shares = _testDepositOnly(alice, vault, deposit2TestParams);
-        assertEq(
-            deposit2TestParams.principal / assetToSharesRatio, deposit2Shares, "deposit shares incorrect at period 2"
-        );
+        uint256 deposit2Shares = _testDepositOnly(_alice, vault, _testParams2);
+        assertEq(_testParams2.principal / assetToSharesRatio, deposit2Shares, "deposit shares incorrect at period 2");
         assertEq(
             deposit2Shares,
-            vault.sharesAtPeriod(alice, deposit2TestParams.depositPeriod),
+            vault.sharesAtPeriod(_alice, _testParams2.depositPeriod),
             "getSharesAtPeriod incorrect at period 2"
         );
-        assertEq(
-            deposit2Shares, vault.balanceOf(alice, deposit2TestParams.depositPeriod), "balance incorrect at period 2"
-        );
+        assertEq(deposit2Shares, vault.balanceOf(_alice, _testParams2.depositPeriod), "balance incorrect at period 2");
 
         // New check for sharesAtPeriods
-        _warpToPeriod(vault, deposit2TestParams.depositPeriod); // warp to deposit2Period
+        _warpToPeriod(vault, _testParams2.depositPeriod); // warp to deposit2Period
 
         // verify redeem - period 1
-        uint256 deposit1ExpectedYield = _expectedReturns(deposit1Shares, vault, deposit1TestParams);
-        uint256 deposit1Assets = _testRedeemOnly(alice, vault, deposit1TestParams, deposit1Shares);
+        uint256 deposit1ExpectedYield = _expectedReturns(deposit1Shares, vault, _testParams1);
+        uint256 deposit1Assets = _testRedeemOnly(_alice, vault, _testParams1, deposit1Shares);
         assertApproxEqAbs(
-            deposit1TestParams.principal + deposit1ExpectedYield,
+            _testParams1.principal + deposit1ExpectedYield,
             deposit1Assets,
             TOLERANCE,
             "deposit1 deposit assets incorrect"
         );
 
         // verify redeem - period 2
-        uint256 deposit2Assets = _testRedeemOnly(alice, vault, deposit2TestParams, deposit2Shares);
+        uint256 deposit2Assets = _testRedeemOnly(_alice, vault, _testParams2, deposit2Shares);
         assertApproxEqAbs(
-            deposit2TestParams.principal + _expectedReturns(deposit1Shares, vault, deposit2TestParams),
+            _testParams2.principal + _expectedReturns(deposit1Shares, vault, _testParams2),
             deposit2Assets,
             TOLERANCE,
             "deposit2 deposit assets incorrect"
         );
 
-        testVaultAtPeriods(alice, vault, deposit1TestParams);
-        testVaultAtPeriods(alice, vault, deposit2TestParams);
+        testVaultAtOffsets(_alice, vault, _testParams1);
+        testVaultAtOffsets(_alice, vault, _testParams2);
     }
 
-    function _expectedReturns(
-        uint256, /* shares */
-        IMultiTokenVault vault,
-        IMultiTokenVaultTestParams memory testParams
-    ) internal view override returns (uint256 expectedReturns_) {
+    function test__MultiTokenVaulTest__BatchFunctions() public {
+        uint256 assetToSharesRatio = 2;
+        uint256 redeemPeriod = 2001;
+
+        MultiTokenVaultDailyPeriods vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
+        IMTVTestParamArray testParamsArray = new IMTVTestParamArray();
+        testParamsArray.addTestParam(
+            TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: redeemPeriod })
+        );
+        testParamsArray.addTestParam(
+            TestParam({ principal: 2002 * _scale, depositPeriod: 202, redeemPeriod: redeemPeriod })
+        );
+        testParamsArray.addTestParam(
+            TestParam({ principal: 3003 * _scale, depositPeriod: 303, redeemPeriod: redeemPeriod })
+        );
+
+        uint256[] memory shares = _testDepositOnly(_alice, vault, testParamsArray.getAll());
+        uint256[] memory depositPeriods = testParamsArray.getAllDepositPeriods();
+
+        // check the sharesAtDepositPeriods match
+        uint256[] memory assets = vault.convertToAssetsForDepositPeriods(shares, depositPeriods, redeemPeriod);
+
+        assertEq(3, assets.length, "assets are wrong length");
+        assertEq(
+            assets[0],
+            vault.convertToAssetsForDepositPeriod(shares[0], depositPeriods[0], redeemPeriod),
+            "asset mismatch period 0"
+        );
+        assertEq(
+            assets[1],
+            vault.convertToAssetsForDepositPeriod(shares[1], depositPeriods[1], redeemPeriod),
+            "asset mismatch period 1"
+        );
+        assertEq(
+            assets[2],
+            vault.convertToAssetsForDepositPeriod(shares[2], depositPeriods[2], redeemPeriod),
+            "asset mismatch period 2"
+        );
+    }
+
+    function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParam memory testParam)
+        internal
+        view
+        override
+        returns (uint256 expectedReturns_)
+    {
         return MultiTokenVaultDailyPeriods(address(vault)).calcYield(
-            testParams.principal, testParams.depositPeriod, testParams.redeemPeriod
+            testParam.principal, testParam.depositPeriod, testParam.redeemPeriod
         );
     }
 
@@ -150,7 +181,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         MultiTokenVaultDailyPeriods(address(vault)).setCurrentPeriodsElapsed(timePeriod);
     }
 
-    function _createMultiTokenVault(IERC20Metadata _asset, uint256 assetToSharesRatio, uint256 yieldPercentage)
+    function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)
         internal
         returns (MultiTokenVaultDailyPeriods)
     {
@@ -160,7 +191,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
             address(
                 new ERC1967Proxy(
                     address(_vault),
-                    abi.encodeWithSelector(_vault.initialize.selector, _asset, assetToSharesRatio, yieldPercentage)
+                    abi.encodeWithSelector(_vault.initialize.selector, asset_, assetToSharesRatio, yieldPercentage)
                 )
             )
         );

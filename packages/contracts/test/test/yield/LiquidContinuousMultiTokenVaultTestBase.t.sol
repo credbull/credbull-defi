@@ -41,26 +41,26 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     }
 
     // verify deposit.  updates vault assets and shares.
-    function _testDepositOnly(address receiver, IMultiTokenVault vault, IMultiTokenVaultTestParams memory testParams)
+    function _testDepositOnly(address receiver, IMultiTokenVault vault, TestParam memory testParam)
         internal
         virtual
         override
         returns (uint256 actualSharesAtPeriod_)
     {
-        uint256 actualSharesAtPeriod = super._testDepositOnly(receiver, vault, testParams);
+        uint256 actualSharesAtPeriod = super._testDepositOnly(receiver, vault, testParam);
 
         assertEq(
             actualSharesAtPeriod,
-            vault.sharesAtPeriod(receiver, testParams.depositPeriod),
+            vault.sharesAtPeriod(receiver, testParam.depositPeriod),
             _assertMsg(
-                "!!! receiver did not receive the correct vault shares - balanceOf ", vault, testParams.depositPeriod
+                "!!! receiver did not receive the correct vault shares - balanceOf ", vault, testParam.depositPeriod
             )
         );
 
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         assertEq(
-            testParams.principal, liquidVault.lockedAmount(receiver, testParams.depositPeriod), "principal not locked"
+            testParam.principal, liquidVault.lockedAmount(receiver, testParam.depositPeriod), "principal not locked"
         );
 
         return actualSharesAtPeriod;
@@ -88,41 +88,42 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     function _testRedeemOnly(
         address receiver,
         IMultiTokenVault vault,
-        IMultiTokenVaultTestParams memory testParams,
+        TestParam memory testParam,
         uint256 sharesToRedeemAtPeriod
     ) internal virtual override returns (uint256 actualAssetsAtPeriod_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         // request unlock
-        _warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+        _warpToPeriod(liquidVault, testParam.redeemPeriod - liquidVault.noticePeriod());
 
         vm.prank(receiver);
-        liquidVault.requestUnlock(receiver, testParams.depositPeriod, testParams.principal);
+        liquidVault.requestUnlock(receiver, testParam.depositPeriod, testParam.principal);
         assertEq(
-            testParams.principal,
-            liquidVault.unlockRequested(receiver, testParams.depositPeriod),
+            testParam.principal,
+            liquidVault.unlockRequested(receiver, testParam.depositPeriod),
             "unlockRequest should be created"
         );
 
-        uint256 actualAssetsAtPeriod = super._testRedeemOnly(receiver, vault, testParams, sharesToRedeemAtPeriod);
+        uint256 actualAssetsAtPeriod = super._testRedeemOnly(receiver, vault, testParam, sharesToRedeemAtPeriod);
 
         // verify locks and request locks released
-        assertEq(0, liquidVault.lockedAmount(receiver, testParams.depositPeriod), "deposit lock not released");
-        assertEq(0, liquidVault.balanceOf(receiver, testParams.depositPeriod), "deposits should be redeemed");
-        assertEq(0, liquidVault.unlockRequested(receiver, testParams.depositPeriod), "unlockRequest should be released");
+        assertEq(0, liquidVault.lockedAmount(receiver, testParam.depositPeriod), "deposit lock not released");
+        assertEq(0, liquidVault.balanceOf(receiver, testParam.depositPeriod), "deposits should be redeemed");
+        assertEq(0, liquidVault.unlockRequested(receiver, testParam.depositPeriod), "unlockRequest should be released");
 
         return actualAssetsAtPeriod;
     }
 
-    function _expectedReturns(
-        uint256, /* shares */
-        IMultiTokenVault vault,
-        IMultiTokenVaultTestParams memory testParams
-    ) internal view override returns (uint256 expectedReturns_) {
+    function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParam memory testParam)
+        internal
+        view
+        override
+        returns (uint256 expectedReturns_)
+    {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         return liquidVault._yieldStrategy().calcYield(
-            address(vault), testParams.principal, testParams.depositPeriod, testParams.redeemPeriod
+            address(vault), testParam.principal, testParam.depositPeriod, testParam.redeemPeriod
         );
     }
 

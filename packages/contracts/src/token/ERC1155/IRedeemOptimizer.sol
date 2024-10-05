@@ -8,11 +8,25 @@ import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
  * @notice Interface for optimizing redemptions and withdrawals across deposit periods.
  */
 interface IRedeemOptimizer {
+    struct OptimizerParams {
+        address owner;
+        uint256 amountToFind;
+        uint256 fromDepositPeriod;
+        uint256 toDepositPeriod;
+        uint256 redeemPeriod;
+        AmountType amountType;
+    }
+
+    enum AmountType {
+        Shares,
+        AssetsWithReturns
+    }
     /**
      * @notice Finds optimal deposit periods and shares to redeem for a given share amount and redeemPeriod
      * @return depositPeriods Array of deposit periods to redeem from.
      * @return sharesAtPeriods Array of share amounts to redeem for each deposit period.
      */
+
     function optimizeRedeemShares(IMultiTokenVault vault, address owner, uint256 shares, uint256 redeemPeriod)
         external
         view

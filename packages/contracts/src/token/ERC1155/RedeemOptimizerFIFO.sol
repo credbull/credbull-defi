@@ -13,11 +13,6 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
     error RedeemOptimizer__FutureToDepositPeriod(uint256 toPeriod, uint256 currentPeriod);
     error RedeemOptimizer__OptimizerFailed(uint256 amountFound, uint256 amountToFind);
 
-    enum AmountType {
-        Shares,
-        AssetsWithReturns
-    }
-
     uint256 public immutable START_DEPOSIT_PERIOD;
 
     constructor(uint256 startDepositPeriod) {
@@ -31,7 +26,15 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
         returns (uint256[] memory depositPeriods_, uint256[] memory sharesAtPeriods_)
     {
         return _findAmount(
-            vault, owner, shares, START_DEPOSIT_PERIOD, vault.currentPeriodsElapsed(), redeemPeriod, AmountType.Shares
+            vault,
+            OptimizerParams({
+                owner: owner,
+                amountToFind: shares,
+                fromDepositPeriod: START_DEPOSIT_PERIOD,
+                toDepositPeriod: vault.currentPeriodsElapsed(),
+                redeemPeriod: redeemPeriod,
+                amountType: AmountType.Shares
+            })
         );
     }
 
@@ -40,73 +43,80 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
     function optimizeWithdrawAssets(IMultiTokenVault vault, address owner, uint256 assets, uint256 redeemPeriod)
         public
         view
-        returns (uint256[] memory depositPeriods_, uint256[] memory sharesAtPeriods_)
+        returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
     {
         return _findAmount(
             vault,
-            owner,
-            assets,
-            START_DEPOSIT_PERIOD,
-            vault.currentPeriodsElapsed(),
-            redeemPeriod,
-            AmountType.AssetsWithReturns
+            OptimizerParams({
+                owner: owner,
+                amountToFind: assets,
+                fromDepositPeriod: START_DEPOSIT_PERIOD,
+                toDepositPeriod: vault.currentPeriodsElapsed(),
+                redeemPeriod: redeemPeriod,
+                amountType: AmountType.AssetsWithReturns
+            })
         );
     }
 
     /// @notice Returns deposit periods and corresponding amounts (shares or assets) within the specified range.
-    function _findAmount(
-        IMultiTokenVault vault,
-        address owner,
-        uint256 amountToFind,
-        uint256 fromDepositPeriod,
-        uint256 toDepositPeriod,
-        uint256 redeemPeriod,
-        AmountType amountType
-    ) internal view returns (uint256[] memory depositPeriods, uint256[] memory amountAtPeriods) {
-        if (fromDepositPeriod > toDepositPeriod) {
-            revert RedeemOptimizer__InvalidDepositPeriodRange(fromDepositPeriod, toDepositPeriod);
+    function _findAmount(IMultiTokenVault vault, OptimizerParams memory params)
+        internal
+        view
+        returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
+    {
+        if (params.fromDepositPeriod > params.toDepositPeriod) {
+            revert RedeemOptimizer__InvalidDepositPeriodRange(params.fromDepositPeriod, params.toDepositPeriod);
         }
 
-        if (toDepositPeriod > vault.currentPeriodsElapsed()) {
-            revert RedeemOptimizer__FutureToDepositPeriod(toDepositPeriod, vault.currentPeriodsElapsed());
+        if (params.toDepositPeriod > vault.currentPeriodsElapsed()) {
+            revert RedeemOptimizer__FutureToDepositPeriod(params.toDepositPeriod, vault.currentPeriodsElapsed());
         }
 
         // Create local caching arrays that can contain the maximum number of results.
-        uint256[] memory cacheDepositPeriods = new uint256[]((toDepositPeriod - fromDepositPeriod) + 1);
-        uint256[] memory cacheAmountAtPeriods = new uint256[]((toDepositPeriod - fromDepositPeriod) + 1);
+        uint256[] memory cacheDepositPeriods = new uint256[]((params.toDepositPeriod - params.fromDepositPeriod) + 1);
+        uint256[] memory cacheSharesAtPeriods = new uint256[]((params.toDepositPeriod - params.fromDepositPeriod) + 1);
+
         uint256 arrayIndex = 0;
         uint256 amountFound = 0;
 
         // Iterate over the from/to period range, inclusive of from and to.
-        for (uint256 depositPeriod = fromDepositPeriod; depositPeriod <= toDepositPeriod; ++depositPeriod) {
-            uint256 sharesAtPeriod = vault.sharesAtPeriod(owner, depositPeriod);
-            uint256 amountAtPeriod = amountType == AmountType.Shares
+        for (uint256 depositPeriod = params.fromDepositPeriod; depositPeriod <= params.toDepositPeriod; ++depositPeriod)
+        {
+            uint256 sharesAtPeriod = vault.sharesAtPeriod(params.owner, depositPeriod);
+
+            uint256 amountAtPeriod = params.amountType == AmountType.Shares
                 ? sharesAtPeriod
-                : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, redeemPeriod);
+                : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, params.redeemPeriod);
 
             // If there is an Amount, store the value.
             if (amountAtPeriod > 0) {
                 cacheDepositPeriods[arrayIndex] = depositPeriod;
 
                 // check if we will go "over" the Amount To Find.
-                if (amountFound + amountAtPeriod > amountToFind) {
-                    cacheAmountAtPeriods[arrayIndex] = amountToFind - amountFound; // include only the partial amount
-                    amountFound += cacheAmountAtPeriods[arrayIndex++];
-                    break;
+                if (amountFound + amountAtPeriod > params.amountToFind) {
+                    uint256 amountToInclude = params.amountToFind - amountFound; // we only need the amount that brings us to amountToFind
+
+                    // only include equivalent amount of shares for the amountToInclude assets
+                    cacheSharesAtPeriods[arrayIndex] = params.amountType == AmountType.Shares
+                        ? amountToInclude
+                        : vault.convertToAssetsForDepositPeriod(amountToInclude, depositPeriod, params.redeemPeriod);
+
+                    // optimization succeeded - return here to be explicit we exit the function at this point
+                    return _trimToSize(arrayIndex, cacheDepositPeriods, cacheSharesAtPeriods);
                 } else {
-                    cacheAmountAtPeriods[arrayIndex] = amountAtPeriod;
+                    cacheSharesAtPeriods[arrayIndex] = sharesAtPeriod;
                 }
 
-                amountFound += cacheAmountAtPeriods[arrayIndex];
+                amountFound += amountAtPeriod;
                 arrayIndex++;
             }
         }
 
-        if (amountFound < amountToFind) {
-            revert RedeemOptimizer__OptimizerFailed(amountFound, amountToFind);
+        if (amountFound < params.amountToFind) {
+            revert RedeemOptimizer__OptimizerFailed(amountFound, params.amountToFind);
         }
 
-        return _trimToSize(arrayIndex, cacheDepositPeriods, cacheAmountAtPeriods);
+        return _trimToSize(arrayIndex, cacheDepositPeriods, cacheSharesAtPeriods);
     }
 
     /**
