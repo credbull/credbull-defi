@@ -43,10 +43,14 @@ contract LiquidContinuousMultiTokenVault is
 {
     using SafeERC20 for IERC20;
 
+    struct VaultAuth {
+        address owner;
+        address operator;
+        address upgrader;
+    }
+
     struct VaultParams {
-        address contractOwner;
-        address contractOperator;
-        address contractUpgrader;
+        VaultAuth vaultAuth;
         IERC20Metadata asset;
         IYieldStrategy yieldStrategy;
         IRedeemOptimizer redeemOptimizer;
@@ -66,8 +70,7 @@ contract LiquidContinuousMultiTokenVault is
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
-    error LiquidContinuousMultiTokenVault__InvalidOwnerAddress(address ownerAddress);
-    error LiquidContinuousMultiTokenVault__InvalidOperatorAddress(address ownerAddress);
+    error LiquidContinuousMultiTokenVault__InvalidAuthAddress(string authName, address authAddress);
     error LiquidContinuousMultiTokenVault__AmountMismatch(uint256 amount1, uint256 amount2);
     error LiquidContinuousMultiTokenVault__UnlockPeriodMismatch(uint256 unlockPeriod1, uint256 unlockPeriod2);
 
@@ -78,17 +81,7 @@ contract LiquidContinuousMultiTokenVault is
         __TimelockAsyncUnlock_init(vaultParams.redeemNoticePeriod);
         __TripleRateContext_init(vaultParams.contextParams);
 
-        if (vaultParams.contractOwner == address(0)) {
-            revert LiquidContinuousMultiTokenVault__InvalidOwnerAddress(vaultParams.contractOwner);
-        }
-
-        if (vaultParams.contractOperator == address(0)) {
-            revert LiquidContinuousMultiTokenVault__InvalidOperatorAddress(vaultParams.contractOwner);
-        }
-
-        _grantRole(DEFAULT_ADMIN_ROLE, vaultParams.contractOwner);
-        _grantRole(OPERATOR_ROLE, vaultParams.contractOperator);
-        _grantRole(UPGRADER_ROLE, vaultParams.contractUpgrader);
+        _initVaultAuth(vaultParams.vaultAuth);
 
         _yieldStrategy = vaultParams.yieldStrategy;
         _redeemOptimizer = vaultParams.redeemOptimizer;
@@ -97,6 +90,22 @@ contract LiquidContinuousMultiTokenVault is
         if (vaultParams.contextParams.frequency != 360 && vaultParams.contextParams.frequency != 365) {
             revert LiquidContinuousMultiTokenVault__InvalidFrequency(vaultParams.contextParams.frequency);
         }
+    }
+
+    function _initVaultAuth(VaultAuth memory vaultAuth) private {
+        if (vaultAuth.owner == address(0)) {
+            revert LiquidContinuousMultiTokenVault__InvalidAuthAddress("owner", vaultAuth.owner);
+        }
+        if (vaultAuth.operator == address(0)) {
+            revert LiquidContinuousMultiTokenVault__InvalidAuthAddress("operator", vaultAuth.operator);
+        }
+        if (vaultAuth.upgrader == address(0)) {
+            revert LiquidContinuousMultiTokenVault__InvalidAuthAddress("upgrader", vaultAuth.upgrader);
+        }
+
+        _grantRole(DEFAULT_ADMIN_ROLE, vaultAuth.owner);
+        _grantRole(OPERATOR_ROLE, vaultAuth.operator);
+        _grantRole(UPGRADER_ROLE, vaultAuth.upgrader);
     }
 
     // solhint-disable-next-line no-empty-blocks
@@ -255,7 +264,7 @@ contract LiquidContinuousMultiTokenVault is
         override
         onlyRole(OPERATOR_ROLE)
     {
-        super.setReducedRate(effectiveFromPeriod_, reducedRateScaled_);
+        super.setReducedRate(reducedRateScaled_, effectiveFromPeriod_);
     }
 
     /**
@@ -267,7 +276,7 @@ contract LiquidContinuousMultiTokenVault is
      * @param reducedRateScaled_ The scaled percentage 'reduced' Interest Rate.
      */
     function setReducedRateAtCurrent(uint256 reducedRateScaled_) public onlyRole(OPERATOR_ROLE) {
-        super.setReducedRate(currentPeriod(), reducedRateScaled_);
+        setReducedRate(reducedRateScaled_, currentPeriod());
     }
 
     // ===================== Timer / IERC6372 Clock =====================

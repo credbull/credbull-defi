@@ -2,29 +2,9 @@
 pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
-import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault.s.sol";
-
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
 
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
 contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultTestBase {
-    LiquidContinuousMultiTokenVault private _liquidVault;
-
-    IERC20Metadata private _asset;
-    uint256 private _scale;
-
-    function setUp() public {
-        DeployLiquidMultiTokenVault _deployVault = new DeployLiquidMultiTokenVault();
-        _liquidVault = _deployVault.run(owner);
-
-        _asset = IERC20Metadata(_liquidVault.asset());
-        _scale = 10 ** _asset.decimals();
-
-        _transferAndAssert(_asset, owner, alice, 1_000_000_000 * _scale);
-        _transferAndAssert(_asset, owner, bob, 1_000_000_000 * _scale);
-    }
-
     function test__RequestRedeemTest__RedeemAtTenor() public {
         uint256 principal = 100 * _scale;
         testVaultAtPeriods(alice, _liquidVault, principal, 0, _liquidVault.TENOR());

@@ -197,9 +197,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         IERC20 asset = IERC20(vault.asset());
 
         // capture state before for validations
-        vm.startPrank(owner);
         uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
-        vm.stopPrank();
         uint256 prevReceiverVaultBalance = vault.sharesAtPeriod(account, testParams.depositPeriod);
 
         // ------------------- deposit -------------------
