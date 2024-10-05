@@ -88,8 +88,8 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
             if (amountAtPeriod > 0) {
                 cacheDepositPeriods[arrayIndex] = depositPeriod;
 
-                // check if we will go "over" the max amount
-                if ((amountFound + amountAtPeriod) > amountToFind) {
+                // check if we will go "over" the Amount To Find.
+                if (amountFound + amountAtPeriod > amountToFind) {
                     cacheAmountAtPeriods[arrayIndex] = amountToFind - amountFound; // include only the partial amount
                     amountFound += cacheAmountAtPeriods[arrayIndex++];
                     break;
