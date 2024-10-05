@@ -4,8 +4,6 @@ pragma solidity ^0.8.20;
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 
-import { console } from "forge-std/console.sol";
-
 /**
  * @title RedeemOptimizerFIFO
  * @dev Optimizes the redemption of shares using a FIFO strategy.
@@ -32,7 +30,6 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
         view
         returns (uint256[] memory depositPeriods_, uint256[] memory sharesAtPeriods_)
     {
-        console.log("optimizeRedeemShares(): Shares= %d, Redeem Period= %d", shares, redeemPeriod);
         return _findAmount(
             vault, owner, shares, START_DEPOSIT_PERIOD, vault.currentPeriodsElapsed(), redeemPeriod, AmountType.Shares
         );
@@ -45,8 +42,6 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
         view
         returns (uint256[] memory depositPeriods_, uint256[] memory sharesAtPeriods_)
     {
-        console.log("optimizeWithdrawAssets(): Assets= %d, Redeem Period= %d", assets, redeemPeriod);
-
         return _findAmount(
             vault,
             owner,
@@ -72,19 +67,9 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
             revert RedeemOptimizer__InvalidDepositPeriodRange(fromDepositPeriod, toDepositPeriod);
         }
 
-        console.log("_amountsAtPeriods(): Current Period= %d", vault.currentPeriodsElapsed());
         if (toDepositPeriod > vault.currentPeriodsElapsed()) {
             revert RedeemOptimizer__FutureToDepositPeriod(toDepositPeriod, vault.currentPeriodsElapsed());
         }
-
-        console.log(
-            "_amountsAtPeriods(): To Find= %d, From= %d, To= %d", amountToFind, fromDepositPeriod, toDepositPeriod
-        );
-        console.log(
-            "_amountsAtPeriods(): No Of Periods= %d, Amount Type= ",
-            (toDepositPeriod - fromDepositPeriod) + 1,
-            amountType == AmountType.Shares ? "Shares" : "AssetWithReturns"
-        );
 
         // Create local caching arrays that can contain the maximum number of results.
         uint256[] memory cacheDepositPeriods = new uint256[]((toDepositPeriod - fromDepositPeriod) + 1);
@@ -103,17 +88,9 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
             if (amountAtPeriod > 0) {
                 cacheDepositPeriods[arrayIndex] = depositPeriod;
 
-                console.log(
-                    "_amountsAtPeriods(): Period= %d, Shares= %d, Amount= %d",
-                    depositPeriod,
-                    sharesAtPeriod,
-                    amountAtPeriod
-                );
-
                 // check if we will go "over" the max amount
                 if ((amountFound + amountAtPeriod) > amountToFind) {
                     cacheAmountAtPeriods[arrayIndex] = amountToFind - amountFound; // include only the partial amount
-                    console.log("_amountsAtPeriods(): Partial= %d", cacheAmountAtPeriods[arrayIndex]);
                     amountFound += cacheAmountAtPeriods[arrayIndex++];
                     break;
                 } else {
@@ -135,7 +112,7 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
     /**
      * @notice Utility function that trims the specified arrays to the specified size.
      * @dev Allocates 2 arrays of size `toSize` and copies the `array1` and `array2` elements to their corresponding
-     *  trimmed version.
+     *  trimmed version. Assumes that the parameter arrays are at least as large as `toSize`.
      *
      * @param toSize The size to trim the arrays to.
      * @param toTrim1 The first array to trim.
@@ -148,12 +125,9 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
         pure
         returns (uint256[] memory trimmed1, uint256[] memory trimmed2)
     {
-        console.log("_trimToSize(): Size= %d", toSize);
-
         trimmed1 = new uint256[](toSize);
         trimmed2 = new uint256[](toSize);
         for (uint256 i = 0; i < toSize; i++) {
-            console.log("trimToSize():  %d, Deposit Period= %d, Amount= %d", i, toTrim1[i], toTrim2[i]);
             trimmed1[i] = toTrim1[i];
             trimmed2[i] = toTrim2[i];
         }

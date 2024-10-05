@@ -7,8 +7,6 @@ import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 
 import { MultiTokenVaultTest } from "@test/src/token/ERC1155/MultiTokenVaultTest.t.sol";
 
-import { console } from "forge-std/console.sol";
-
 contract RedeemOptimizerTest is MultiTokenVaultTest {
     function setUp() public override {
         super.setUp();
@@ -30,36 +28,37 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         _warpToPeriod(multiTokenVault, redeemPeriod);
 
         // check full redeem
-        console.log("START REDEEM!");
         (uint256[] memory redeemDepositPeriods, uint256[] memory sharesAtPeriods) =
             redeemOptimizer.optimizeRedeemShares(multiTokenVault, alice, totalDepositShares, redeemPeriod);
-        console.log("END REDEEM!");
 
         assertEq(3, redeemDepositPeriods.length, "depositPeriods wrong length - full redeem");
         assertEq(3, sharesAtPeriods.length, "sharesAtPeriods wrong length - full redeem");
 
-        assertEq(deposit1TestParams.depositPeriod, redeemDepositPeriods[0], "optimizeRedeem - wrong depositPeriod");
-        assertEq(depositShares[0], sharesAtPeriods[0], "optimizeRedeem - wrong shares");
+        assertEq(deposit1TestParams.depositPeriod, redeemDepositPeriods[0], "optimizeRedeem - wrong depositPeriod 0");
+        assertEq(depositShares[0], sharesAtPeriods[0], "optimizeRedeem - wrong shares 0");
 
-        // TODO - check the other depositPeriods
+        assertEq(deposit2TestParams.depositPeriod, redeemDepositPeriods[1], "optimizeRedeem - wrong depositPeriod 1");
+        assertEq(depositShares[1], sharesAtPeriods[1], "optimizeRedeem - wrong shares 1");
 
+        assertEq(deposit3TestParams.depositPeriod, redeemDepositPeriods[2], "optimizeRedeem - wrong depositPeriod 2");
+        assertEq(depositShares[2], sharesAtPeriods[2], "optimizeRedeem - wrong shares 2");
+
+        // Check full withdraw
         uint256[] memory expectedAssetsAtPeriods =
             multiTokenVault.convertToAssetsForDepositPeriods(depositShares, depositPeriods, redeemPeriod);
 
-        console.log("START WITHDRAW");
         (uint256[] memory withdrawDepositPeriods, uint256[] memory actualAssetsAtPeriods) =
             redeemOptimizer.optimizeWithdrawAssets(multiTokenVault, alice, totalDepositShares, redeemPeriod);
-        console.log("END WITHDRAW");
 
-        // assertEq(3, withdrawDepositPeriods.length, "depositPeriods wrong length - full redeem");
-        // assertEq(3, actualAssetsAtPeriods.length, "sharesAtPeriods wrong length - full redeem");
         assertEq(2, withdrawDepositPeriods.length, "depositPeriods wrong length - full redeem");
         assertEq(2, actualAssetsAtPeriods.length, "sharesAtPeriods wrong length - full redeem");
 
         assertEq(deposit1TestParams.depositPeriod, withdrawDepositPeriods[0], "optimizeWithdraw - wrong depositPeriod");
         assertEq(expectedAssetsAtPeriods[0], actualAssetsAtPeriods[0], "optimizeWithdraw - wrong assets");
 
-        // TODO - check the other withdrawPeriods
+        // This is a partial amount, as the 2 amounts satisfy the 'to find' criterion.
+        assertEq(deposit2TestParams.depositPeriod, withdrawDepositPeriods[1], "optimizeWithdraw - wrong depositPeriod");
+        assertEq(200 * SCALE, actualAssetsAtPeriods[1], "optimizeWithdraw - wrong partial assets");
     }
 
     function test__RedeemOptimizerTest__InsufficientSharesShouldRevert() public {
