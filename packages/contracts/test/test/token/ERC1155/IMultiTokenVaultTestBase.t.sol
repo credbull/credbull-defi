@@ -183,7 +183,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         );
         assertEq(
             prevReceiverVaultBalance + actualSharesAtPeriod,
-            vault.sharesAtPeriod(account, testParam.depositPeriod),
+            vault.balanceOf(account, testParam.depositPeriod),
             _assertMsg("receiver did not receive the correct vault shares - balanceOf ", vault, testParam.depositPeriod)
         );
 
@@ -196,7 +196,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
     function _testRedeemOnly(
         address account,
         IMultiTokenVault vault,
-        TestParam memory testParams,
+        TestParam memory testParam,
         uint256 sharesToRedeemAtPeriod
     ) internal virtual returns (uint256 actualAssetsAtPeriod_) {
         IERC20 asset = IERC20(vault.asset());
@@ -205,31 +205,31 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
         // ------------------- prep redeem -------------------
         uint256 assetBalanceBeforeRedeem = asset.balanceOf(account);
-        uint256 expectedReturns = _expectedReturns(sharesToRedeemAtPeriod, vault, testParams);
+        uint256 expectedReturns = _expectedReturns(sharesToRedeemAtPeriod, vault, testParam);
 
         _transferFromTokenOwner(asset, address(vault), expectedReturns);
 
         // ------------------- redeem -------------------
-        _warpToPeriod(vault, testParams.redeemPeriod); // warp the vault to redeem period
+        _warpToPeriod(vault, testParam.redeemPeriod); // warp the vault to redeem period
 
         vm.startPrank(account);
         uint256 actualAssetsAtPeriod =
-            vault.redeemForDepositPeriod(sharesToRedeemAtPeriod, account, account, testParams.depositPeriod);
+            vault.redeemForDepositPeriod(sharesToRedeemAtPeriod, account, account, testParam.depositPeriod);
         vm.stopPrank();
 
         assertApproxEqAbs(
-            testParams.principal + expectedReturns,
+            testParam.principal + expectedReturns,
             actualAssetsAtPeriod,
             TOLERANCE,
-            _assertMsg("assets does not equal principal + yield", vault, testParams.depositPeriod)
+            _assertMsg("assets does not equal principal + yield", vault, testParam.depositPeriod)
         );
 
         // verify the receiver has the USDC back
         assertApproxEqAbs(
-            assetBalanceBeforeRedeem + testParams.principal + expectedReturns,
+            assetBalanceBeforeRedeem + testParam.principal + expectedReturns,
             asset.balanceOf(account),
             TOLERANCE,
-            _assertMsg("receiver did not receive the correct yield", vault, testParams.depositPeriod)
+            _assertMsg("receiver did not receive the correct yield", vault, testParam.depositPeriod)
         );
 
         _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore the vault to previous state
@@ -286,8 +286,8 @@ abstract contract IMultiTokenVaultTestBase is Test {
         vm.warp(Timer.timestamp() + timePeriod * 24 hours);
     }
 
-    /// @dev - creates a IMultiTokenVaultTestParams for testing
-    function _createTestParams(uint256 principal, uint256 depositPeriod, uint256 redeemPeriod)
+    /// @dev - creates a TestParam for testing
+    function _createTestParam(uint256 principal, uint256 depositPeriod, uint256 redeemPeriod)
         internal
         pure
         returns (TestParam memory testParam)

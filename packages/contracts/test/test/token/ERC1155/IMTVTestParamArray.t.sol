@@ -51,4 +51,14 @@ contract IMTVTestParamArray {
 
         return depositPeriods;
     }
+
+    function accountArray(address account, uint256 size) public pure returns (address[] memory accounts_) {
+        address[] memory accounts = new address[](size);
+
+        for (uint256 i = 0; i < size; i++) {
+            accounts[i] = account;
+        }
+
+        return accounts;
+    }
 }

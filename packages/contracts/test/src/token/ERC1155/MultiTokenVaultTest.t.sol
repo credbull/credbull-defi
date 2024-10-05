@@ -18,6 +18,8 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
     address private _owner = makeAddr("owner");
     address private _alice = makeAddr("alice");
+    address private _bob = makeAddr("bob");
+    address private _charlie = makeAddr("charlie");
 
     TestParam internal _testParams1;
     TestParam internal _testParams2;
@@ -38,7 +40,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     function test__MultiTokenVaulTest__SimpleDeposit() public {
         uint256 assetToSharesRatio = 1;
 
-        MultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
         address vaultAddress = address(vault);
 
@@ -61,22 +63,79 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         testVaultAtOffsets(_alice, vault, _testParams1);
     }
 
-    function test__MultiTokenVaulTest__SingleDeposit() public {
+    function test__MultiTokenVaulTest__DepositAndRedeem() public {
         uint256 assetToSharesRatio = 1;
-        address charlie = makeAddr("charlie");
 
-        _transferAndAssert(_asset, _owner, charlie, 100_000 * _scale);
+        _transferAndAssert(_asset, _owner, _charlie, 100_000 * _scale);
 
         MultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
-        testVaultAtPeriod(charlie, vault, _testParams1);
+        testVaultAtPeriod(_charlie, vault, _testParams1);
     }
 
-    function test__MultiTokenVaulTest__MultipleDeposits() public {
+    function test__MultiTokenVaulTest__RedeemBeforeDepositPeriodReverts() public {
+        MultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
+
+        TestParam memory testParam = TestParam({ principal: 1001 * _scale, depositPeriod: 2, redeemPeriod: 1 });
+
+        // deposit period > redeem period should fail
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MultiTokenVault.MultiTokenVault__RedeemBeforeDeposit.selector,
+                _alice,
+                testParam.depositPeriod,
+                testParam.redeemPeriod
+            )
+        );
+        vault.redeemForDepositPeriod(1, _alice, _alice, testParam.depositPeriod, testParam.redeemPeriod);
+    }
+
+    function test__MultiTokenVaulTest__CurrentBeforeRedeemPeriodReverts() public {
+        MultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
+
+        TestParam memory testParam = TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: 3 });
+
+        uint256 currentPeriod = testParam.redeemPeriod - 1;
+
+        _warpToPeriod(vault, currentPeriod);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MultiTokenVault.MultiTokenVault__RedeemTimePeriodNotSupported.selector,
+                _alice,
+                currentPeriod,
+                testParam.redeemPeriod
+            )
+        );
+        vault.redeemForDepositPeriod(1, _alice, _alice, testParam.depositPeriod, testParam.redeemPeriod);
+    }
+
+    function test__MultiTokenVaulTest__RedeemOverMaxSharesReverts() public {
+        MultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
+
+        TestParam memory testParam = TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: 3 });
+
+        uint256 sharesToRedeem = 1;
+
+        _warpToPeriod(vault, testParam.redeemPeriod);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MultiTokenVault.MultiTokenVault__ExceededMaxRedeem.selector,
+                _alice,
+                testParam.depositPeriod,
+                sharesToRedeem,
+                0
+            )
+        );
+        vault.redeemForDepositPeriod(sharesToRedeem, _alice, _alice, testParam.depositPeriod, testParam.redeemPeriod);
+    }
+
+    function test__MultiTokenVaulTest__MultipleDepositsAndRedeem() public {
         uint256 assetToSharesRatio = 2;
 
         // setup
-        MultiTokenVaultDailyPeriods vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
         // verify deposit - period 1
         uint256 deposit1Shares = _testDepositOnly(_alice, vault, _testParams1);
@@ -129,8 +188,6 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         uint256 assetToSharesRatio = 2;
         uint256 redeemPeriod = 2001;
 
-        MultiTokenVaultDailyPeriods vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-
         IMTVTestParamArray testParamsArray = new IMTVTestParamArray();
         testParamsArray.addTestParam(
             TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: redeemPeriod })
@@ -142,10 +199,12 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
             TestParam({ principal: 3003 * _scale, depositPeriod: 303, redeemPeriod: redeemPeriod })
         );
 
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
         uint256[] memory shares = _testDepositOnly(_alice, vault, testParamsArray.getAll());
         uint256[] memory depositPeriods = testParamsArray.getAllDepositPeriods();
 
-        // check the sharesAtDepositPeriods match
+        // ------------------------ batch convert to assets ------------------------
         uint256[] memory assets = vault.convertToAssetsForDepositPeriods(shares, depositPeriods, redeemPeriod);
 
         assertEq(3, assets.length, "assets are wrong length");
@@ -164,6 +223,36 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
             vault.convertToAssetsForDepositPeriod(shares[2], depositPeriods[2], redeemPeriod),
             "asset mismatch period 2"
         );
+
+        // ------------------------ batch approvalForAll safeBatchTransferFrom balance ------------------------
+        uint256[] memory aliceBalances = _testBalanceOfBatch(_alice, vault, testParamsArray, assetToSharesRatio);
+
+        // have alice approve bob for all
+        vm.prank(_alice);
+        vault.setApprovalForAll(_bob, true);
+
+        // now bob can transfer on behalf of alice to charlie
+        vm.prank(_bob);
+        vault.safeBatchTransferFrom(_alice, _charlie, depositPeriods, aliceBalances, "");
+
+        _testBalanceOfBatch(_charlie, vault, testParamsArray, assetToSharesRatio); // verify bob
+    }
+
+    function _testBalanceOfBatch(
+        address account,
+        IMultiTokenVault vault,
+        IMTVTestParamArray testParamsArray,
+        uint256 assetToSharesRatio
+    ) internal view returns (uint256[] memory balances_) {
+        address[] memory accounts = testParamsArray.accountArray(account, testParamsArray.length());
+        uint256[] memory balances = vault.balanceOfBatch(accounts, testParamsArray.getAllDepositPeriods());
+        assertEq(3, balances.length, "balances size incorrect");
+
+        assertEq(testParamsArray.get(0).principal / assetToSharesRatio, balances[0], "balance mismatch period 0");
+        assertEq(testParamsArray.get(1).principal / assetToSharesRatio, balances[1], "balance mismatch period 1");
+        assertEq(testParamsArray.get(2).principal / assetToSharesRatio, balances[2], "balance mismatch period 2");
+
+        return balances;
     }
 
     function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParam memory testParam)
