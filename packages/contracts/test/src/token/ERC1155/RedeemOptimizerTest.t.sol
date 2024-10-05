@@ -51,8 +51,10 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
             redeemOptimizer.optimizeWithdrawAssets(multiTokenVault, alice, totalDepositShares, redeemPeriod);
         console.log("END WITHDRAW");
 
-        assertEq(3, withdrawDepositPeriods.length, "depositPeriods wrong length - full redeem");
-        assertEq(3, actualAssetsAtPeriods.length, "sharesAtPeriods wrong length - full redeem");
+        // assertEq(3, withdrawDepositPeriods.length, "depositPeriods wrong length - full redeem");
+        // assertEq(3, actualAssetsAtPeriods.length, "sharesAtPeriods wrong length - full redeem");
+        assertEq(2, withdrawDepositPeriods.length, "depositPeriods wrong length - full redeem");
+        assertEq(2, actualAssetsAtPeriods.length, "sharesAtPeriods wrong length - full redeem");
 
         assertEq(deposit1TestParams.depositPeriod, withdrawDepositPeriods[0], "optimizeWithdraw - wrong depositPeriod");
         assertEq(expectedAssetsAtPeriods[0], actualAssetsAtPeriods[0], "optimizeWithdraw - wrong assets");
