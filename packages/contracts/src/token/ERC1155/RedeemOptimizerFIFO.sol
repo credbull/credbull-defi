@@ -67,52 +67,37 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
             revert RedeemOptimizer__InvalidDepositPeriodRange(fromDepositPeriod, toDepositPeriod);
         }
 
-        uint256 currentPeriod = vault.currentPeriodsElapsed();
-        if (toDepositPeriod > currentPeriod) {
-            revert RedeemOptimizer__FutureToDepositPeriod(toDepositPeriod, currentPeriod);
+        if (toDepositPeriod > vault.currentPeriodsElapsed()) {
+            revert RedeemOptimizer__FutureToDepositPeriod(toDepositPeriod, vault.currentPeriodsElapsed());
         }
 
-        // first loop: check for periods with balances.  needed to correctly size our array results
-        uint256 numPeriodsWithBalance = 0;
-        for (uint256 depositPeriod = fromDepositPeriod; depositPeriod <= toDepositPeriod; ++depositPeriod) {
-            uint256 sharesAtPeriod = vault.balanceOf(owner, depositPeriod);
-
-            uint256 amountAtPeriod = amountType == AmountType.Shares
-                ? sharesAtPeriod
-                : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, redeemPeriod);
-
-            if (amountAtPeriod > 0) {
-                numPeriodsWithBalance++;
-            }
-        }
-
-        // second loop - collect and return the periods and amounts
-        depositPeriods = new uint256[](numPeriodsWithBalance);
-        amountAtPeriods = new uint256[](numPeriodsWithBalance);
-
+        // Create local caching arrays that can contain the maximum number of results.
+        uint256[] memory cacheDepositPeriods = new uint256[]((toDepositPeriod - fromDepositPeriod) + 1);
+        uint256[] memory cacheAmountAtPeriods = new uint256[]((toDepositPeriod - fromDepositPeriod) + 1);
         uint256 arrayIndex = 0;
         uint256 amountFound = 0;
 
+        // Iterate over the from/to period range, inclusive of from and to.
         for (uint256 depositPeriod = fromDepositPeriod; depositPeriod <= toDepositPeriod; ++depositPeriod) {
             uint256 sharesAtPeriod = vault.balanceOf(owner, depositPeriod);
-
             uint256 amountAtPeriod = amountType == AmountType.Shares
                 ? sharesAtPeriod
                 : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, redeemPeriod);
 
+            // If there is an Amount, store the value.
             if (amountAtPeriod > 0) {
-                depositPeriods[arrayIndex] = depositPeriod;
+                cacheDepositPeriods[arrayIndex] = depositPeriod;
 
-                // check if we will go "over" the amountToFind
-                if ((amountFound + amountAtPeriod) > amountToFind) {
-                    amountAtPeriods[arrayIndex] = amountToFind - amountFound; // include only the amount up to amountToFind
-
-                    return (depositPeriods, amountAtPeriods); // we're done, no need to keep looping
+                // check if we will go "over" the Amount To Find.
+                if (amountFound + amountAtPeriod > amountToFind) {
+                    cacheAmountAtPeriods[arrayIndex] = amountToFind - amountFound; // include only the partial amount
+                    amountFound += cacheAmountAtPeriods[arrayIndex++];
+                    break;
                 } else {
-                    amountAtPeriods[arrayIndex] = amountAtPeriod;
+                    cacheAmountAtPeriods[arrayIndex] = amountAtPeriod;
                 }
 
-                amountFound += amountAtPeriods[arrayIndex];
+                amountFound += cacheAmountAtPeriods[arrayIndex];
                 arrayIndex++;
             }
         }
@@ -121,6 +106,30 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
             revert RedeemOptimizer__OptimizerFailed(amountFound, amountToFind);
         }
 
-        return (depositPeriods, amountAtPeriods);
+        return _trimToSize(arrayIndex, cacheDepositPeriods, cacheAmountAtPeriods);
+    }
+
+    /**
+     * @notice Utility function that trims the specified arrays to the specified size.
+     * @dev Allocates 2 arrays of size `toSize` and copies the `array1` and `array2` elements to their corresponding
+     *  trimmed version. Assumes that the parameter arrays are at least as large as `toSize`.
+     *
+     * @param toSize The size to trim the arrays to.
+     * @param toTrim1 The first array to trim.
+     * @param toTrim2 The second array to trim.
+     * @return trimmed1 The trimmed version of `array1`.
+     * @return trimmed2 The trimmed version of `array2`.
+     */
+    function _trimToSize(uint256 toSize, uint256[] memory toTrim1, uint256[] memory toTrim2)
+        private
+        pure
+        returns (uint256[] memory trimmed1, uint256[] memory trimmed2)
+    {
+        trimmed1 = new uint256[](toSize);
+        trimmed2 = new uint256[](toSize);
+        for (uint256 i = 0; i < toSize; i++) {
+            trimmed1[i] = toTrim1[i];
+            trimmed2[i] = toTrim2[i];
+        }
     }
 }
