@@ -3,15 +3,13 @@ pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 import { Test } from "forge-std/Test.sol";
 
 abstract contract IMultiTokenVaultTestBase is Test {
     uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000010
-
-    address internal owner = makeAddr("owner");
-    address internal alice = makeAddr("alice");
-    address internal bob = makeAddr("bob");
 
     struct IMultiTokenVaultTestParams {
         uint256 principal;
@@ -19,7 +17,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         uint256 redeemPeriod;
     }
 
-    // harness to test Vault at specified redeemPeriod and other "interesting" redeem periods
+    /// @dev test Vault at specified redeemPeriod and other "interesting" redeem periods
     function testVaultAtPeriods(
         address account,
         IMultiTokenVault vault,
@@ -36,7 +34,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         return testVaultAtPeriods(account, vault, testParams);
     }
 
-    // harness to test Vault at specified redeemPeriod and other "interesting" redeem periods
+    /// @dev test Vault at specified redeemPeriod and other "interesting" redeem periods
     function testVaultAtPeriods(address account, IMultiTokenVault vault, IMultiTokenVaultTestParams memory testParams)
         internal
     {
@@ -56,6 +54,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         }
     }
 
+    /// @dev test the vault at the given test parameters
     function _testVaultAtPeriod(address account, IMultiTokenVault vault, IMultiTokenVaultTestParams memory testParams)
         internal
         returns (uint256 sharesAtPeriod, uint256 assetsAtPeriod)
@@ -65,11 +64,20 @@ abstract contract IMultiTokenVaultTestBase is Test {
         return testDepositAndRedeemAtPeriod(account, vault, testParams); // actual deposits/redeems
     }
 
-    // harness to load test Vault for deposits and then redeems
+    /// @dev performance / load test harness to execute a number of deposits first, and then redeem after
     function _loadTestVault(IMultiTokenVault vault, uint256 principal, uint256 fromPeriod, uint256 toPeriod) internal {
+        address charlie = makeAddr("charlie");
+        address david = makeAddr("david");
+
+        IERC20Metadata _asset = IERC20Metadata(vault.asset());
+        uint256 _scale = 10 ** _asset.decimals();
+
+        _transferFromTokenOwner(_asset, charlie, 1_000_000_000 * _scale);
+        _transferFromTokenOwner(_asset, david, 1_000_000_000 * _scale);
+
         // "wastes" storage from 0 -> fromPeriod.  but fine in test, and makes the depositPeriod clear
-        uint256[] memory aliceShares = new uint256[](toPeriod + 1);
-        uint256[] memory bobShares = new uint256[](toPeriod + 1);
+        uint256[] memory charlieShares = new uint256[](toPeriod + 1);
+        uint256[] memory davidShares = new uint256[](toPeriod + 1);
 
         // ----------------------- deposits -----------------------
         for (uint256 i = fromPeriod; i < toPeriod; ++i) {
@@ -78,8 +86,8 @@ abstract contract IMultiTokenVaultTestBase is Test {
                 depositPeriod: i,
                 redeemPeriod: 0 // not used in deposit flow
              });
-            aliceShares[i] = _testDepositOnly(alice, vault, depositTestParams);
-            bobShares[i] = _testDepositOnly(bob, vault, depositTestParams);
+            charlieShares[i] = _testDepositOnly(charlie, vault, depositTestParams);
+            davidShares[i] = _testDepositOnly(david, vault, depositTestParams);
         }
 
         // ----------------------- redeems -----------------------
@@ -87,12 +95,12 @@ abstract contract IMultiTokenVaultTestBase is Test {
             IMultiTokenVaultTestParams memory redeemTestParams =
                 IMultiTokenVaultTestParams({ principal: principal, depositPeriod: i, redeemPeriod: toPeriod });
 
-            _testRedeemOnly(alice, vault, redeemTestParams, aliceShares[i]);
-            _testRedeemOnly(bob, vault, redeemTestParams, bobShares[i]);
+            _testRedeemOnly(charlie, vault, redeemTestParams, charlieShares[i]);
+            _testRedeemOnly(david, vault, redeemTestParams, davidShares[i]);
         }
     }
 
-    // verify convertToAssets and convertToShares.  These are a "preview" and do NOT update vault assets or shares.
+    /// @dev verify convertToAssets and convertToShares.  These are a "preview" and do NOT update vault assets or shares.
     function testConvertToAssetAndSharesAtPeriod(IMultiTokenVault vault, IMultiTokenVaultTestParams memory testParams)
         internal
         virtual
@@ -133,7 +141,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         return (actualAssetsAtPeriod, actualAssetsAtPeriod);
     }
 
-    // verify previewDeposit and previewRedeem.  These are a "preview" and do NOT update vault assets or shares.
+    /// @dev verify previewDeposit and previewRedeem.  These are a "preview" and do NOT update vault assets or shares.
     function testPreviewDepositAndPreviewRedeem(IMultiTokenVault vault, IMultiTokenVaultTestParams memory testParams)
         internal
         virtual
@@ -168,7 +176,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         return (actualSharesAtPeriod, actualAssetsAtPeriod);
     }
 
-    // verify deposit and redeem.  These update vault assets and shares.
+    /// @dev verify deposit and redeem.  These update vault assets and shares.
     function testDepositAndRedeemAtPeriod(
         address account,
         IMultiTokenVault vault,
@@ -188,7 +196,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         return (actualSharesAtPeriod, actualAssetsAtPeriod);
     }
 
-    // verify deposit.  updates vault assets and shares.
+    /// @dev verify deposit.  updates vault assets and shares.
     function _testDepositOnly(address account, IMultiTokenVault vault, IMultiTokenVaultTestParams memory testParams)
         internal
         virtual
@@ -232,7 +240,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         return actualSharesAtPeriod;
     }
 
-    // verify redeem.  updates vault assets and shares.
+    /// @dev verify redeem.  updates vault assets and shares.
     function _testRedeemOnly(
         address account,
         IMultiTokenVault vault,
@@ -247,9 +255,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         uint256 assetBalanceBeforeRedeem = asset.balanceOf(account);
         uint256 expectedReturns = _expectedReturns(sharesToRedeemAtPeriod, vault, testParams);
 
-        vm.startPrank(owner);
-        _transferAndAssert(asset, owner, address(vault), expectedReturns); // fund the vault to cover redeem
-        vm.stopPrank();
+        _transferFromTokenOwner(asset, address(vault), expectedReturns);
 
         // ------------------- redeem -------------------
         _warpToPeriod(vault, testParams.redeemPeriod); // warp the vault to redeem period
@@ -292,6 +298,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         vm.warp(Timer.timestamp() + timePeriod * 24 hours);
     }
 
+    /// @dev - creates a IMultiTokenVaultTestParams for testing
     function _createTestParams(uint256 principal, uint256 depositPeriod, uint256 redeemPeriod)
         internal
         pure
@@ -304,6 +311,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         });
     }
 
+    /// @dev - creates a message string for assertions
     function _assertMsg(string memory prefix, IMultiTokenVault vault, uint256 numPeriods)
         internal
         pure
@@ -312,6 +320,15 @@ abstract contract IMultiTokenVaultTestBase is Test {
         return string.concat(prefix, " Vault= ", vm.toString(address(vault)), " timePeriod= ", vm.toString(numPeriods));
     }
 
+    /// @dev - transfer from the owner of the IERC20 `token` to the `toAddress`
+    function _transferFromTokenOwner(IERC20 token, address toAddress, uint256 amount) internal {
+        // only works with Ownable token - need to override otherwise
+        Ownable ownableToken = Ownable(address(token));
+
+        _transferAndAssert(token, ownableToken.owner(), toAddress, amount);
+    }
+
+    /// @dev - transfer from the `fromAddress` to the `toAddress`
     function _transferAndAssert(IERC20 _token, address fromAddress, address toAddress, uint256 amount) internal {
         uint256 beforeBalance = _token.balanceOf(toAddress);
 

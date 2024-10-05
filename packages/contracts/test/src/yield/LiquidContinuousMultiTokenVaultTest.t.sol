@@ -66,8 +66,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         // ---------------- sell (redeem) ----------------
         uint256 expectedYield = _expectedReturns(sharesAmount, liquidVault, testParams);
         assertEq(33_333333, expectedYield, "expected returns incorrect");
-        vm.prank(owner);
-        _transferAndAssert(_asset, owner, address(liquidVault), expectedYield); // fund the vault to cover redeem
+        _transferFromTokenOwner(_asset, address(liquidVault), expectedYield); // fund the vault to cover redeem
 
         _warpToPeriod(liquidVault, testParams.redeemPeriod);
 

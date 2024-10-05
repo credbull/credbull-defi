@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
-import { IMultiTokenVaultTestBase } from "@test/src/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
+import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
 import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriods.t.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -13,6 +13,9 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 
 contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     IERC20Metadata internal asset;
+
+    address private owner = makeAddr("owner");
+    address private alice = makeAddr("alice");
 
     IMultiTokenVaultTestParams internal deposit1TestParams;
     IMultiTokenVaultTestParams internal deposit2TestParams;
@@ -26,19 +29,10 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
         SCALE = 10 ** asset.decimals();
         _transferAndAssert(asset, owner, alice, 100_000 * SCALE);
-        _transferAndAssert(asset, owner, bob, 100_000 * SCALE);
 
         deposit1TestParams = IMultiTokenVaultTestParams({ principal: 500 * SCALE, depositPeriod: 10, redeemPeriod: 21 });
         deposit2TestParams = IMultiTokenVaultTestParams({ principal: 300 * SCALE, depositPeriod: 15, redeemPeriod: 17 });
         deposit3TestParams = IMultiTokenVaultTestParams({ principal: 700 * SCALE, depositPeriod: 30, redeemPeriod: 55 });
-    }
-
-    function test__MultiTokenVaulTest__Period10() public {
-        uint256 assetToSharesRatio = 1;
-
-        MultiTokenVault vault = _createMultiTokenVault(asset, assetToSharesRatio, 10);
-
-        _testVaultAtPeriod(bob, vault, deposit1TestParams);
     }
 
     function test__MultiTokenVaulTest__SimpleDeposit() public {
@@ -65,6 +59,17 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(0, asset.allowance(alice, vaultAddress), "vault shouldn't have an allowance after deposit");
 
         testVaultAtPeriods(alice, vault, deposit1TestParams);
+    }
+
+    function test__MultiTokenVaulTest__Period10() public {
+        uint256 assetToSharesRatio = 1;
+        address charlie = makeAddr("charlie");
+
+        _transferAndAssert(asset, owner, charlie, 100_000 * SCALE);
+
+        MultiTokenVault vault = _createMultiTokenVault(asset, assetToSharesRatio, 10);
+
+        _testVaultAtPeriod(charlie, vault, deposit1TestParams);
     }
 
     // Scenario: Calculating returns for a standard investment

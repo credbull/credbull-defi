@@ -8,6 +8,9 @@ import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVaultTest } from "@test/src/token/ERC1155/MultiTokenVaultTest.t.sol";
 
 contract RedeemOptimizerTest is MultiTokenVaultTest {
+    address private owner = makeAddr("owner");
+    address private alice = makeAddr("alice");
+
     function setUp() public override {
         super.setUp();
     }

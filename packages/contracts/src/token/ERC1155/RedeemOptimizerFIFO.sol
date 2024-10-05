@@ -18,7 +18,7 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
         AssetsWithReturns
     }
 
-    uint256 public immutable START_DEPOSIT_PERIOD = 0;
+    uint256 public immutable START_DEPOSIT_PERIOD;
 
     constructor(uint256 startDepositPeriod) {
         START_DEPOSIT_PERIOD = startDepositPeriod;
