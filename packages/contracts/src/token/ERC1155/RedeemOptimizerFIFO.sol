@@ -86,34 +86,36 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
             amountType == AmountType.Shares ? "Shares" : "AssetWithReturns"
         );
 
-        // Query the vault to locate ...
-        // NOTE (JL,2024-10-04): The number of periods is inclusive.
+        // Create local caching arrays that can contain the maximum number of results.
         uint256[] memory cacheDepositPeriods = new uint256[]((toDepositPeriod - fromDepositPeriod) + 1);
         uint256[] memory cacheAmountAtPeriods = new uint256[]((toDepositPeriod - fromDepositPeriod) + 1);
         uint256 arrayIndex = 0;
         uint256 amountFound = 0;
 
+        // Iterate over the from/to period range, inclusive of from and to.
         for (uint256 depositPeriod = fromDepositPeriod; depositPeriod <= toDepositPeriod; ++depositPeriod) {
             uint256 sharesAtPeriod = vault.balanceOf(owner, depositPeriod);
             uint256 amountAtPeriod = amountType == AmountType.Shares
                 ? sharesAtPeriod
                 : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, redeemPeriod);
 
+            // If there is an Amount, store the value.
             if (amountAtPeriod > 0) {
+                cacheDepositPeriods[arrayIndex] = depositPeriod;
+
                 console.log(
                     "_amountsAtPeriods(): Period= %d, Shares= %d, Amount= %d",
                     depositPeriod,
                     sharesAtPeriod,
                     amountAtPeriod
                 );
-                cacheDepositPeriods[arrayIndex] = depositPeriod;
 
                 // check if we will go "over" the max amount
                 if ((amountFound + amountAtPeriod) > amountToFind) {
                     cacheAmountAtPeriods[arrayIndex] = amountToFind - amountFound; // include only the partial amount
                     console.log("_amountsAtPeriods(): Partial= %d", cacheAmountAtPeriods[arrayIndex]);
                     amountFound += cacheAmountAtPeriods[arrayIndex++];
-                    break; // we're done, no need to keep looping
+                    break;
                 } else {
                     cacheAmountAtPeriods[arrayIndex] = amountAtPeriod;
                 }
@@ -130,6 +132,17 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
         return _trimToSize(arrayIndex, cacheDepositPeriods, cacheAmountAtPeriods);
     }
 
+    /**
+     * @notice Utility function that trims the specified arrays to the specified size.
+     * @dev Allocates 2 arrays of size `toSize` and copies the `array1` and `array2` elements to their corresponding
+     *  trimmed version.
+     *
+     * @param toSize The size to trim the arrays to.
+     * @param toTrim1 The first array to trim.
+     * @param toTrim2 The second array to trim.
+     * @return trimmed1 The trimmed version of `array1`.
+     * @return trimmed2 The trimmed version of `array2`.
+     */
     function _trimToSize(uint256 toSize, uint256[] memory toTrim1, uint256[] memory toTrim2)
         private
         pure
