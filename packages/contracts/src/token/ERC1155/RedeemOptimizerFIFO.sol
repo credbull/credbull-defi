@@ -73,14 +73,12 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
         }
 
         console.log("_amountsAtPeriods(): Current Period= %d", vault.currentPeriodsElapsed());
-
-        uint256 currentPeriod = vault.currentPeriodsElapsed();
-        if (toDepositPeriod > currentPeriod) {
-            revert RedeemOptimizer__FutureToDepositPeriod(toDepositPeriod, currentPeriod);
+        if (toDepositPeriod > vault.currentPeriodsElapsed()) {
+            revert RedeemOptimizer__FutureToDepositPeriod(toDepositPeriod, vault.currentPeriodsElapsed());
         }
 
         console.log(
-            "_amountsAtPeriods(): MaxAmount= %d, From= %d, To= %d", maxAmount, fromDepositPeriod, toDepositPeriod
+            "_amountsAtPeriods(): To Find= %d, From= %d, To= %d", amountToFind, fromDepositPeriod, toDepositPeriod
         );
         console.log(
             "_amountsAtPeriods(): No Of Periods= %d, Amount Type= ",
@@ -112,8 +110,9 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
 
                 // check if we will go "over" the max amount
                 if ((amountFound + amountAtPeriod) > amountToFind) {
-                    cacheAmountAtPeriods[arrayIndex++] = maxAmount - amountFound; // include only the partial amount
-                    console.log("_amountsAtPeriods(): Partial= %d", cacheAmountAtPeriods[arrayIndex - 1]);
+                    cacheAmountAtPeriods[arrayIndex] = amountToFind - amountFound; // include only the partial amount
+                    console.log("_amountsAtPeriods(): Partial= %d", cacheAmountAtPeriods[arrayIndex]);
+                    amountFound += cacheAmountAtPeriods[arrayIndex++];
                     break; // we're done, no need to keep looping
                 } else {
                     cacheAmountAtPeriods[arrayIndex] = amountAtPeriod;
