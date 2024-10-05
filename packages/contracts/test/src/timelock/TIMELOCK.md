@@ -57,39 +57,3 @@ function unlock(address account, uint256 lockReleasePeriod, uint256 value) publi
     _burn(account, lockReleasePeriod, value);
 }
 ```
-----
-## Rolling Over Investments
-
-Rolling over your investment means that instead of withdrawing your Principal and Interest at Maturity, you automatically reinvest them into the 
-same Product for an additional "tenor" period of time.
-
-### Rollover Example
-Alice invests $1,000 with a 30-day Tenor. After 30 days, her investment matures, giving her 1 day to redeem. If she doesn't redeem within that 
-window, her $1,000 plus the Interest automatically rolls over into a new 30-day Tenor.
-
-### Rollover Implementation
-The `rolloverUnlocked` function reinvests unlocked tokens by rolling them over into a new lock period. In the TimelockIERC1155 implementation, 
-this function burns the unlocked tokens and mints new tokens for the new lock period.
-```Solidity
-/**
- * @notice Rolls over a specified amount of unlocked tokens for a new lock period.
- * @param account The address of the account whose tokens are to be rolled over.
- * @param lockReleasePeriod The period during which these tokens will be released.
- * @param value The amount of tokens to be rolled over.
- */
-function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 value) public virtual override onlyOwner
-{
-    uint256 unlockableAmount = previewUnlock(account, lockReleasePeriod);
-
-    if (value > unlockableAmount) {
-        revert InsufficientLockedBalance(unlockableAmount, value);
-    }
-
-    _burn(account, lockReleasePeriod, value);
-
-    uint256 rolloverLockReleasePeriod = lockReleasePeriod + lockDuration;
-
-    _mint(account, rolloverLockReleasePeriod, value, "");
-}
-
-```

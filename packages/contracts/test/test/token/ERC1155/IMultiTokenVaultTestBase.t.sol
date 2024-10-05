@@ -229,7 +229,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         );
         assertEq(
             prevReceiverVaultBalance + actualSharesAtPeriod,
-            vault.balanceOf(account, testParams.depositPeriod),
+            vault.sharesAtPeriod(account, testParams.depositPeriod),
             _assertMsg(
                 "receiver did not receive the correct vault shares - balanceOf ", vault, testParams.depositPeriod
             )

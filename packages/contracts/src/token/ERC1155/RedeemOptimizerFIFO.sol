@@ -79,7 +79,7 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
 
         // Iterate over the from/to period range, inclusive of from and to.
         for (uint256 depositPeriod = fromDepositPeriod; depositPeriod <= toDepositPeriod; ++depositPeriod) {
-            uint256 sharesAtPeriod = vault.balanceOf(owner, depositPeriod);
+            uint256 sharesAtPeriod = vault.sharesAtPeriod(owner, depositPeriod);
             uint256 amountAtPeriod = amountType == AmountType.Shares
                 ? sharesAtPeriod
                 : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, redeemPeriod);
