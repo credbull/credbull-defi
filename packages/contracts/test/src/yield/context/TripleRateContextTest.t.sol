@@ -26,6 +26,8 @@ contract TripleRateContextTest is Test {
 
     TestTripleRateContext internal toTest;
 
+    uint256 private previousFuzzyPeriod;
+
     function setUp() public {
         toTest = new TestTripleRateContext();
         toTest = TestTripleRateContext(
@@ -73,6 +75,25 @@ contract TripleRateContextTest is Test {
         ITripleRateContext.PeriodRate memory previousPeriodRate = toTest.previousPeriodRate();
         assertEq(EFFECTIVE_FROM_PERIOD, previousPeriodRate.effectiveFromPeriod, "Incorrect Previous Period");
         assertEq(PERCENT_5_5_SCALED, previousPeriodRate.interestRate, "Incorrect Previous Reduced Rate");
+    }
+
+    function test_TripleRateContext_SetCurrentPeriodRate_FuzzyRate(uint256 fuzzyRate) public {
+        // Ensure that the rate is greater than the SCALE, thus representing a scaled percentage.
+        vm.assume(fuzzyRate > SCALE);
+
+        vm.expectEmit();
+        emit TripleRateContext.CurrentPeriodRateChanged(fuzzyRate, 3);
+        toTest.setReducedRate(fuzzyRate, 3);
+    }
+
+    function test_TripleRateContext_SetCurrentPeriodRate_FuzzyPeriod(uint256 fuzzyPeriod) public {
+        // Ensure that the period is greater than the previous period.
+        vm.assume(fuzzyPeriod > previousFuzzyPeriod);
+        previousFuzzyPeriod = fuzzyPeriod;
+
+        vm.expectEmit();
+        emit TripleRateContext.CurrentPeriodRateChanged(PERCENT_10_SCALED, fuzzyPeriod);
+        toTest.setReducedRate(PERCENT_10_SCALED, fuzzyPeriod);
     }
 
     function test_TripleRateContext_RevertSetCurrentPeriodRate_WhenPeriodIsAtOrBeforeCurrent() public {
