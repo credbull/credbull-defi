@@ -38,21 +38,21 @@ contract IMTVTestParamArray {
         return _allTestParams[index];
     }
 
-    function getAll() public view returns (IMultiTokenVaultTestBase.TestParam[] memory testParamArr) {
+    function all() public view returns (IMultiTokenVaultTestBase.TestParam[] memory testParamArr) {
         return _allTestParams;
     }
 
-    function getAllDepositPeriods() public view returns (uint256[] memory depositPeriods_) {
-        uint256[] memory depositPeriods = new uint256[](_allTestParams.length);
+    function depositPeriods() public view returns (uint256[] memory depositPeriods_) {
+        uint256[] memory _depositPeriods = new uint256[](_allTestParams.length);
 
         for (uint256 i = 0; i < _allTestParams.length; i++) {
-            depositPeriods[i] = _allTestParams[i].depositPeriod;
+            _depositPeriods[i] = _allTestParams[i].depositPeriod;
         }
 
-        return depositPeriods;
+        return _depositPeriods;
     }
 
-    function accountArray(address account, uint256 size) public pure returns (address[] memory accounts_) {
+    function createAccountArray(address account, uint256 size) public pure returns (address[] memory accounts_) {
         address[] memory accounts = new address[](size);
 
         for (uint256 i = 0; i < size; i++) {

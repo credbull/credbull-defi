@@ -201,8 +201,8 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
-        uint256[] memory shares = _testDepositOnly(_alice, vault, testParamsArray.getAll());
-        uint256[] memory depositPeriods = testParamsArray.getAllDepositPeriods();
+        uint256[] memory shares = _testDepositOnly(_alice, vault, testParamsArray.all());
+        uint256[] memory depositPeriods = testParamsArray.depositPeriods();
 
         // ------------------------ batch convert to assets ------------------------
         uint256[] memory assets = vault.convertToAssetsForDepositPeriods(shares, depositPeriods, redeemPeriod);
@@ -244,8 +244,8 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         IMTVTestParamArray testParamsArray,
         uint256 assetToSharesRatio
     ) internal view returns (uint256[] memory balances_) {
-        address[] memory accounts = testParamsArray.accountArray(account, testParamsArray.length());
-        uint256[] memory balances = vault.balanceOfBatch(accounts, testParamsArray.getAllDepositPeriods());
+        address[] memory accounts = testParamsArray.createAccountArray(account, testParamsArray.length());
+        uint256[] memory balances = vault.balanceOfBatch(accounts, testParamsArray.depositPeriods());
         assertEq(3, balances.length, "balances size incorrect");
 
         assertEq(testParamsArray.get(0).principal / assetToSharesRatio, balances[0], "balance mismatch period 0");

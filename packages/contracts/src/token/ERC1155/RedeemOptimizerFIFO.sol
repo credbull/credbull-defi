@@ -3,12 +3,15 @@ pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  * @title RedeemOptimizerFIFO
  * @dev Optimizes the redemption of shares using a FIFO strategy.
  */
 contract RedeemOptimizerFIFO is IRedeemOptimizer {
+    using Math for uint256;
+
     error RedeemOptimizer__InvalidDepositPeriodRange(uint256 fromPeriod, uint256 toPeriod);
     error RedeemOptimizer__FutureToDepositPeriod(uint256 toPeriod, uint256 currentPeriod);
     error RedeemOptimizer__OptimizerFailed(uint256 amountFound, uint256 amountToFind);
@@ -59,50 +62,63 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
     }
 
     /// @notice Returns deposit periods and corresponding amounts (shares or assets) within the specified range.
-    function _findAmount(IMultiTokenVault vault, OptimizerParams memory params)
+    function _findAmount(IMultiTokenVault vault, OptimizerParams memory optimizerParams)
         internal
         view
         returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
     {
-        if (params.fromDepositPeriod > params.toDepositPeriod) {
-            revert RedeemOptimizer__InvalidDepositPeriodRange(params.fromDepositPeriod, params.toDepositPeriod);
+        if (optimizerParams.fromDepositPeriod > optimizerParams.toDepositPeriod) {
+            revert RedeemOptimizer__InvalidDepositPeriodRange(
+                optimizerParams.fromDepositPeriod, optimizerParams.toDepositPeriod
+            );
         }
 
-        if (params.toDepositPeriod > vault.currentPeriodsElapsed()) {
-            revert RedeemOptimizer__FutureToDepositPeriod(params.toDepositPeriod, vault.currentPeriodsElapsed());
+        if (optimizerParams.toDepositPeriod > vault.currentPeriodsElapsed()) {
+            revert RedeemOptimizer__FutureToDepositPeriod(
+                optimizerParams.toDepositPeriod, vault.currentPeriodsElapsed()
+            );
         }
 
         // Create local caching arrays that can contain the maximum number of results.
-        uint256[] memory cacheDepositPeriods = new uint256[]((params.toDepositPeriod - params.fromDepositPeriod) + 1);
-        uint256[] memory cacheSharesAtPeriods = new uint256[]((params.toDepositPeriod - params.fromDepositPeriod) + 1);
+        uint256[] memory cacheDepositPeriods =
+            new uint256[]((optimizerParams.toDepositPeriod - optimizerParams.fromDepositPeriod) + 1);
+        uint256[] memory cacheSharesAtPeriods =
+            new uint256[]((optimizerParams.toDepositPeriod - optimizerParams.fromDepositPeriod) + 1);
 
         uint256 arrayIndex = 0;
         uint256 amountFound = 0;
 
         // Iterate over the from/to period range, inclusive of from and to.
-        for (uint256 depositPeriod = params.fromDepositPeriod; depositPeriod <= params.toDepositPeriod; ++depositPeriod)
-        {
-            uint256 sharesAtPeriod = vault.sharesAtPeriod(params.owner, depositPeriod);
+        for (
+            uint256 depositPeriod = optimizerParams.fromDepositPeriod;
+            depositPeriod <= optimizerParams.toDepositPeriod;
+            ++depositPeriod
+        ) {
+            uint256 sharesAtPeriod = vault.sharesAtPeriod(optimizerParams.owner, depositPeriod);
 
-            uint256 amountAtPeriod = params.amountType == AmountType.Shares
+            uint256 amountAtPeriod = optimizerParams.amountType == AmountType.Shares
                 ? sharesAtPeriod
-                : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, params.redeemPeriod);
+                : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, optimizerParams.redeemPeriod);
 
             // If there is an Amount, store the value.
             if (amountAtPeriod > 0) {
                 cacheDepositPeriods[arrayIndex] = depositPeriod;
 
                 // check if we will go "over" the Amount To Find.
-                if (amountFound + amountAtPeriod > params.amountToFind) {
-                    uint256 amountToInclude = params.amountToFind - amountFound; // we only need the amount that brings us to amountToFind
+                if (amountFound + amountAtPeriod > optimizerParams.amountToFind) {
+                    uint256 amountToInclude = optimizerParams.amountToFind - amountFound; // we only need the amount that brings us to amountToFind
+
+                    // the assets here include principal + interest.  to utilize convertToShares() we want principal amount only
+                    // the following ratio holds: partialShares/totalShares = partialReturns/totalReturns
+                    // so, partialShares = ((partialReturns * totalShares) / totalReturns)
+                    uint256 sharesToInclude = sharesAtPeriod.mulDiv(amountToInclude, amountAtPeriod); // also works for shares, when shares = amounts, sharesAtPeriod / sharesAtPeriod = 1
 
                     // only include equivalent amount of shares for the amountToInclude assets
-                    cacheSharesAtPeriods[arrayIndex] = params.amountType == AmountType.Shares
-                        ? amountToInclude
-                        : vault.convertToAssetsForDepositPeriod(amountToInclude, depositPeriod, params.redeemPeriod);
+                    cacheSharesAtPeriods[arrayIndex] =
+                        optimizerParams.amountType == AmountType.Shares ? amountToInclude : sharesToInclude;
 
                     // optimization succeeded - return here to be explicit we exit the function at this point
-                    return _trimToSize(arrayIndex, cacheDepositPeriods, cacheSharesAtPeriods);
+                    return _trimToSize(arrayIndex + 1, cacheDepositPeriods, cacheSharesAtPeriods);
                 } else {
                     cacheSharesAtPeriods[arrayIndex] = sharesAtPeriod;
                 }
@@ -112,8 +128,8 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
             }
         }
 
-        if (amountFound < params.amountToFind) {
-            revert RedeemOptimizer__OptimizerFailed(amountFound, params.amountToFind);
+        if (amountFound < optimizerParams.amountToFind) {
+            revert RedeemOptimizer__OptimizerFailed(amountFound, optimizerParams.amountToFind);
         }
 
         return _trimToSize(arrayIndex, cacheDepositPeriods, cacheSharesAtPeriods);

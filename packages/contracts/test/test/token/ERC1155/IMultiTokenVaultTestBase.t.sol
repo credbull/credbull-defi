@@ -23,7 +23,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
     function testVaultAtOffsets(address account, IMultiTokenVault vault, TestParam memory testParam) internal {
         IMTVTestParamArray testParamsArr = new IMTVTestParamArray();
         testParamsArr.initUsingOffsets(testParam);
-        testVaultAtAllPeriods(account, vault, testParamsArr.getAll());
+        testVaultAtAllPeriods(account, vault, testParamsArr.all());
     }
 
     /// @dev test Vault at specified redeemPeriod and other "interesting" redeem periods
