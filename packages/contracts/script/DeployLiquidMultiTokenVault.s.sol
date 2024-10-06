@@ -72,20 +72,20 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
             )
         );
 
-        ERC1967Proxy liquidVault = new ERC1967Proxy(
+        ERC1967Proxy liquidVaultProxy = new ERC1967Proxy(
             address(liquidVaultImpl), abi.encodeWithSelector(liquidVaultImpl.initialize.selector, vaultParams)
         );
         console2.log(
             string.concat(
                 "!!!!! Deploying LiquidContinuousMultiTokenVault Proxy [",
-                vm.toString(address(liquidVaultImpl)),
+                vm.toString(address(liquidVaultProxy)),
                 "] !!!!!"
             )
         );
 
         vm.stopBroadcast();
 
-        return LiquidContinuousMultiTokenVault(address(liquidVault));
+        return LiquidContinuousMultiTokenVault(address(liquidVaultProxy));
     }
 
     function _createVaultParams(
