@@ -46,7 +46,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
     {
         IERC20Metadata usdc = _usdcOrDeployMock(vaultAuth.owner);
 
-        vm.startBroadcast(vaultAuth.owner);
+        vm.startBroadcast();
 
         IYieldStrategy yieldStrategy = new TripleRateYieldStrategy();
         console2.log(string.concat("!!!!! Deploying IYieldStrategy [", vm.toString(address(yieldStrategy)), "] !!!!!"));
@@ -61,7 +61,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams =
             _createVaultParams(vaultAuth, usdc, yieldStrategy, redeemOptimizer);
 
-        vm.startBroadcast(vaultAuth.owner);
+        vm.startBroadcast();
 
         LiquidContinuousMultiTokenVault liquidVaultImpl = new LiquidContinuousMultiTokenVault();
         console2.log(
@@ -130,9 +130,9 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         bool shouldDeployMocks = _readBoolWithDefault(_tomlConfig, ".evm.deploy_mocks", false);
 
         if (shouldDeployMocks) {
-            vm.startBroadcast(contractOwner);
+            vm.startBroadcast();
 
-            SimpleUSDC simpleUSDC = new SimpleUSDC(type(uint128).max);
+            SimpleUSDC simpleUSDC = new SimpleUSDC(contractOwner, type(uint128).max);
             console2.log(string.concat("!!!!! Deploying SimpleUSDC [", vm.toString(address(simpleUSDC)), "] !!!!!"));
 
             vm.stopBroadcast();

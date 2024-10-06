@@ -72,9 +72,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     {
         DeployLiquidMultiTokenVault deployVault = new DeployLiquidMultiTokenVault();
 
-        vm.prank(vaultAuth.owner); // prank as owner so asset has correct ownership
-        IERC20Metadata asset = new SimpleUSDC(type(uint128).max);
-
+        IERC20Metadata asset = new SimpleUSDC(vaultAuth.owner, type(uint128).max);
         IYieldStrategy yieldStrategy = new TripleRateYieldStrategy();
         IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(0);
 

@@ -27,7 +27,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
     function setUp() public virtual {
         vm.prank(_owner);
-        _asset = new SimpleUSDC(1_000_000 ether);
+        _asset = new SimpleUSDC(_owner, 1_000_000 ether);
 
         _scale = 10 ** _asset.decimals();
         _transferAndAssert(_asset, _owner, _alice, 100_000 * _scale);
