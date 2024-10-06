@@ -14,19 +14,29 @@ interface IRedeemOptimizer {
         uint256 fromDepositPeriod;
         uint256 toDepositPeriod;
         uint256 redeemPeriod;
-        AmountType amountType;
+        OptimizerBasis optimizerBasis;
     }
 
-    enum AmountType {
+    enum OptimizerBasis {
         Shares,
         AssetsWithReturns
     }
+
+    /**
+     * @notice Finds optimal deposit periods and shares to redeem.  Optimizer chooses shares or asset basis.
+     * @return depositPeriods Array of deposit periods to redeem from.
+     * @return sharesAtPeriods Array of share amounts to redeem for each deposit period.
+     */
+    function optimize(IMultiTokenVault vault, address owner, uint256 shares, uint256 assets, uint256 redeemPeriod)
+        external
+        view
+        returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods);
+
     /**
      * @notice Finds optimal deposit periods and shares to redeem for a given share amount and redeemPeriod
      * @return depositPeriods Array of deposit periods to redeem from.
      * @return sharesAtPeriods Array of share amounts to redeem for each deposit period.
      */
-
     function optimizeRedeemShares(IMultiTokenVault vault, address owner, uint256 shares, uint256 redeemPeriod)
         external
         view

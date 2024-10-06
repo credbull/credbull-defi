@@ -16,10 +16,23 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
     error RedeemOptimizer__FutureToDepositPeriod(uint256 toPeriod, uint256 currentPeriod);
     error RedeemOptimizer__OptimizerFailed(uint256 amountFound, uint256 amountToFind);
 
+    OptimizerBasis public immutable DEFAULT_BASIS;
     uint256 public immutable START_DEPOSIT_PERIOD;
 
-    constructor(uint256 startDepositPeriod) {
+    constructor(OptimizerBasis defaultBasis, uint256 startDepositPeriod) {
+        DEFAULT_BASIS = defaultBasis;
         START_DEPOSIT_PERIOD = startDepositPeriod;
+    }
+
+    /// @inheritdoc IRedeemOptimizer
+    function optimize(IMultiTokenVault vault, address owner, uint256 shares, uint256 assets, uint256 redeemPeriod)
+        public
+        view
+        returns (uint256[] memory depositPeriods_, uint256[] memory sharesAtPeriods_)
+    {
+        return OptimizerBasis.AssetsWithReturns == DEFAULT_BASIS
+            ? optimizeWithdrawAssets(vault, owner, assets, redeemPeriod)
+            : optimizeRedeemShares(vault, owner, shares, redeemPeriod);
     }
 
     /// @inheritdoc IRedeemOptimizer
@@ -36,7 +49,7 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
                 fromDepositPeriod: START_DEPOSIT_PERIOD,
                 toDepositPeriod: vault.currentPeriodsElapsed(),
                 redeemPeriod: redeemPeriod,
-                amountType: AmountType.Shares
+                optimizerBasis: OptimizerBasis.Shares
             })
         );
     }
@@ -56,7 +69,7 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
                 fromDepositPeriod: START_DEPOSIT_PERIOD,
                 toDepositPeriod: vault.currentPeriodsElapsed(),
                 redeemPeriod: redeemPeriod,
-                amountType: AmountType.AssetsWithReturns
+                optimizerBasis: OptimizerBasis.AssetsWithReturns
             })
         );
     }
@@ -96,7 +109,7 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
         ) {
             uint256 sharesAtPeriod = vault.sharesAtPeriod(optimizerParams.owner, depositPeriod);
 
-            uint256 amountAtPeriod = optimizerParams.amountType == AmountType.Shares
+            uint256 amountAtPeriod = optimizerParams.optimizerBasis == OptimizerBasis.Shares
                 ? sharesAtPeriod
                 : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, optimizerParams.redeemPeriod);
 
@@ -115,7 +128,7 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
 
                     // only include equivalent amount of shares for the amountToInclude assets
                     cacheSharesAtPeriods[arrayIndex] =
-                        optimizerParams.amountType == AmountType.Shares ? amountToInclude : sharesToInclude;
+                        optimizerParams.optimizerBasis == OptimizerBasis.Shares ? amountToInclude : sharesToInclude;
 
                     // optimization succeeded - return here to be explicit we exit the function at this point
                     return _trimToSize(arrayIndex + 1, cacheDepositPeriods, cacheSharesAtPeriods);

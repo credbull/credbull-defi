@@ -51,7 +51,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         IYieldStrategy yieldStrategy = new TripleRateYieldStrategy();
         console2.log(string.concat("!!!!! Deploying IYieldStrategy [", vm.toString(address(yieldStrategy)), "] !!!!!"));
 
-        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(0);
+        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, 0);
         console2.log(
             string.concat("!!!!! Deploying IRedeemOptimizer [", vm.toString(address(redeemOptimizer)), "] !!!!!")
         );

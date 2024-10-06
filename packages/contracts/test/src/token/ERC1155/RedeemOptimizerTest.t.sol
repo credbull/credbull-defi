@@ -28,7 +28,8 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
 
         // setup
         IMultiTokenVault multiTokenVault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(multiTokenVault.currentPeriodsElapsed());
+        IRedeemOptimizer redeemOptimizer =
+            new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, multiTokenVault.currentPeriodsElapsed());
 
         uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParamsArr.all());
         uint256 totalDepositShares = depositShares[0] + depositShares[1] + depositShares[2];
@@ -39,7 +40,7 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
 
         // check full redeem
         (uint256[] memory redeemDepositPeriods, uint256[] memory sharesAtPeriods) =
-            redeemOptimizer.optimizeRedeemShares(multiTokenVault, _alice, totalDepositShares, redeemPeriod);
+            redeemOptimizer.optimize(multiTokenVault, _alice, totalDepositShares, 0, redeemPeriod); // optimize using share basis.  assets not used
 
         assertEq(testParamsArr.depositPeriods(), redeemDepositPeriods, "optimizeRedeem - depositPeriods not correct");
         assertEq(depositShares, sharesAtPeriods, "optimizeRedeem - shares not correct");
@@ -51,7 +52,9 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
 
         // setup
         IMultiTokenVault multiTokenVault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(multiTokenVault.currentPeriodsElapsed());
+        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(
+            IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
+        );
 
         uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParamsArr.all());
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriods(
@@ -65,7 +68,7 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
 
         // check full withdraw
         (uint256[] memory withdrawDepositPeriods, uint256[] memory sharesAtPeriods) =
-            redeemOptimizer.optimizeWithdrawAssets(multiTokenVault, _alice, totalAssets, redeemPeriod);
+            redeemOptimizer.optimize(multiTokenVault, _alice, 0, totalAssets, redeemPeriod); // optimize using asset basis.  shares not used
 
         assertEq(testParamsArr.depositPeriods(), withdrawDepositPeriods, "optimizeRedeem - depositPeriods not correct");
         assertEq(depositShares, sharesAtPeriods, "optimizeRedeem - shares not correct");
@@ -77,7 +80,9 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
 
         // ---------------------- setup ----------------------
         IMultiTokenVault multiTokenVault = _createMultiTokenVault(_asset, 2, 10);
-        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(multiTokenVault.currentPeriodsElapsed());
+        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(
+            IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
+        );
 
         uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParamsArr.all());
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriods(
@@ -124,7 +129,8 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
 
         // no deposits - should fail
         uint256 oneShare = 1;
-        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(vaultCurrentPeriod);
+        IRedeemOptimizer redeemOptimizer =
+            new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, vaultCurrentPeriod);
         vm.expectRevert(
             abi.encodeWithSelector(RedeemOptimizerFIFO.RedeemOptimizer__OptimizerFailed.selector, 0, oneShare)
         );
@@ -150,7 +156,8 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         uint256 vaultCurrentPeriod = multiTokenVault.currentPeriodsElapsed();
         uint256 invalidFromDepositPeriod = vaultCurrentPeriod + 1; // from greater than to period is not allowed
 
-        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(invalidFromDepositPeriod);
+        IRedeemOptimizer redeemOptimizer =
+            new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, invalidFromDepositPeriod);
         vm.expectRevert(
             abi.encodeWithSelector(
                 RedeemOptimizerFIFO.RedeemOptimizer__InvalidDepositPeriodRange.selector,
@@ -167,7 +174,8 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         uint256 vaultCurrentPeriod = multiTokenVault.currentPeriodsElapsed();
         uint256 invalidToDepositPeriod = vaultCurrentPeriod + 1; // future to period is not allowed
 
-        RedeemOptimizerFIFOMock redeemOptimizerMock = new RedeemOptimizerFIFOMock(vaultCurrentPeriod);
+        RedeemOptimizerFIFOMock redeemOptimizerMock =
+            new RedeemOptimizerFIFOMock(IRedeemOptimizer.OptimizerBasis.Shares, vaultCurrentPeriod);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -184,14 +192,16 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
                 fromDepositPeriod: vaultCurrentPeriod,
                 toDepositPeriod: invalidToDepositPeriod,
                 redeemPeriod: vaultCurrentPeriod,
-                amountType: IRedeemOptimizer.AmountType.Shares
+                optimizerBasis: IRedeemOptimizer.OptimizerBasis.Shares
             })
         );
     }
 }
 
 contract RedeemOptimizerFIFOMock is RedeemOptimizerFIFO {
-    constructor(uint256 startDepositPeriod) RedeemOptimizerFIFO(startDepositPeriod) { }
+    constructor(OptimizerBasis preferredOptimizationBasis, uint256 startDepositPeriod)
+        RedeemOptimizerFIFO(preferredOptimizationBasis, startDepositPeriod)
+    { }
 
     function findAmount(IMultiTokenVault vault, OptimizerParams memory params)
         public

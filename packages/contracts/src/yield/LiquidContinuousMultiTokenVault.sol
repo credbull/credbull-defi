@@ -165,7 +165,8 @@ contract LiquidContinuousMultiTokenVault is
     function requestSell(uint256 componentTokenAmount) public virtual override returns (uint256 requestId) {
         // TODO - do we *always* want to optimizingRedeemShares?  perhaps we can configure to optimizeByAShares or optimizeByAssets?
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
-            optimizeRedeemShares(_msgSender(), componentTokenAmount, minUnlockPeriod());
+            _redeemOptimizer.optimize(this, _msgSender(), componentTokenAmount, componentTokenAmount, minUnlockPeriod());
+
         return requestSell(depositPeriods, sharesAtPeriods);
     }
 
@@ -207,12 +208,13 @@ contract LiquidContinuousMultiTokenVault is
     function executeSell(
         address requestor,
         uint256, /* requestId */
-        uint256, /* currencyTokenAmount */
+        uint256 currencyTokenAmount,
         uint256 componentTokenAmount
     ) public override {
         // TODO - we should go through the locks rather than having to figure out the periods again
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
-            optimizeRedeemShares(requestor, componentTokenAmount, currentPeriod());
+            _redeemOptimizer.optimize(this, requestor, componentTokenAmount, currencyTokenAmount, currentPeriod());
+
         return executeSell(requestor, depositPeriods, sharesAtPeriods);
     }
 
@@ -228,15 +230,6 @@ contract LiquidContinuousMultiTokenVault is
     /// @dev set the IRedeemOptimizer
     function setRedeemOptimizer(IRedeemOptimizer redeemOptimizer) public onlyRole(OPERATOR_ROLE) {
         _redeemOptimizer = redeemOptimizer;
-    }
-
-    // TODO - do we *always* want to optimizingRedeemShares?  perhaps we can configure to optimizeByAShares or optimizeByAssets?
-    function optimizeRedeemShares(address requestor, uint256 shares, uint256 redeemPeriod)
-        public
-        virtual
-        returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
-    {
-        return _redeemOptimizer.optimizeRedeemShares(this, requestor, shares, redeemPeriod);
     }
 
     // ===================== Yield / YieldStrategy =====================
