@@ -13,9 +13,10 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC6372 } from "@openzeppelin/contracts/interfaces/IERC6372.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { AccessControlEnumerableUpgradeable } from
+    "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlEnumerableUpgradeable.sol";
 
 /**
  * @title LiquidContinuousMultiTokenVault
@@ -38,7 +39,7 @@ contract LiquidContinuousMultiTokenVault is
     IComponentToken,
     TimelockAsyncUnlock,
     TripleRateContext,
-    AccessControlUpgradeable,
+    AccessControlEnumerableUpgradeable,
     IERC6372
 {
     using SafeERC20 for IERC20;
@@ -81,7 +82,9 @@ contract LiquidContinuousMultiTokenVault is
         __TimelockAsyncUnlock_init(vaultParams.redeemNoticePeriod);
         __TripleRateContext_init(vaultParams.contextParams);
 
-        _initVaultAuth(vaultParams.vaultAuth);
+        _initRole("owner", DEFAULT_ADMIN_ROLE, vaultParams.vaultAuth.owner);
+        _initRole("operator", OPERATOR_ROLE, vaultParams.vaultAuth.operator);
+        _initRole("upgrader", UPGRADER_ROLE, vaultParams.vaultAuth.upgrader);
 
         _yieldStrategy = vaultParams.yieldStrategy;
         _redeemOptimizer = vaultParams.redeemOptimizer;
@@ -92,20 +95,12 @@ contract LiquidContinuousMultiTokenVault is
         }
     }
 
-    function _initVaultAuth(VaultAuth memory vaultAuth) private {
-        if (vaultAuth.owner == address(0)) {
-            revert LiquidContinuousMultiTokenVault__InvalidAuthAddress("owner", vaultAuth.owner);
-        }
-        if (vaultAuth.operator == address(0)) {
-            revert LiquidContinuousMultiTokenVault__InvalidAuthAddress("operator", vaultAuth.operator);
-        }
-        if (vaultAuth.upgrader == address(0)) {
-            revert LiquidContinuousMultiTokenVault__InvalidAuthAddress("upgrader", vaultAuth.upgrader);
+    function _initRole(string memory roleName, bytes32 role, address account) private {
+        if (account == address(0)) {
+            revert LiquidContinuousMultiTokenVault__InvalidAuthAddress(roleName, account);
         }
 
-        _grantRole(DEFAULT_ADMIN_ROLE, vaultAuth.owner);
-        _grantRole(OPERATOR_ROLE, vaultAuth.operator);
-        _grantRole(UPGRADER_ROLE, vaultAuth.upgrader);
+        _grantRole(role, account);
     }
 
     // solhint-disable-next-line no-empty-blocks
@@ -168,9 +163,18 @@ contract LiquidContinuousMultiTokenVault is
 
     /// @inheritdoc IComponentToken
     function requestSell(uint256 componentTokenAmount) public virtual override returns (uint256 requestId) {
+        // TODO - do we *always* want to optimizingRedeemShares?  perhaps we can configure to optimizeByAShares or optimizeByAssets?
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
-            _redeemOptimizer.optimizeRedeemShares(this, _msgSender(), componentTokenAmount, minUnlockPeriod());
+            _redeemOptimizer.optimize(this, _msgSender(), componentTokenAmount, componentTokenAmount, minUnlockPeriod());
 
+        return requestSell(depositPeriods, sharesAtPeriods);
+    }
+
+    function requestSell(uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
+        public
+        virtual
+        returns (uint256 requestId)
+    {
         uint256 unlockPeriod = 0;
         uint256[] memory unlockPeriods = new uint256[](depositPeriods.length);
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
@@ -204,13 +208,20 @@ contract LiquidContinuousMultiTokenVault is
     function executeSell(
         address requestor,
         uint256, /* requestId */
-        uint256, /* currencyTokenAmount */
+        uint256 currencyTokenAmount,
         uint256 componentTokenAmount
     ) public override {
         // TODO - we should go through the locks rather than having to figure out the periods again
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
-            _redeemOptimizer.optimizeRedeemShares(this, _msgSender(), componentTokenAmount, currentPeriod());
+            _redeemOptimizer.optimize(this, requestor, componentTokenAmount, currencyTokenAmount, currentPeriod());
 
+        return executeSell(requestor, depositPeriods, sharesAtPeriods);
+    }
+
+    function executeSell(address requestor, uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
+        public
+        virtual
+    {
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
             redeemForDepositPeriod(sharesAtPeriods[i], requestor, requestor, depositPeriods[i], currentPeriod());
         }
@@ -321,7 +332,7 @@ contract LiquidContinuousMultiTokenVault is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(MultiTokenVault, AccessControlUpgradeable)
+        override(MultiTokenVault, AccessControlEnumerableUpgradeable)
         returns (bool)
     {
         return MultiTokenVault.supportsInterface(interfaceId);

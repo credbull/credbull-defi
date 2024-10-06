@@ -46,12 +46,12 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
     {
         IERC20Metadata usdc = _usdcOrDeployMock(vaultAuth.owner);
 
-        vm.startBroadcast(vaultAuth.owner);
+        vm.startBroadcast();
 
         IYieldStrategy yieldStrategy = new TripleRateYieldStrategy();
         console2.log(string.concat("!!!!! Deploying IYieldStrategy [", vm.toString(address(yieldStrategy)), "] !!!!!"));
 
-        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(0);
+        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, 0);
         console2.log(
             string.concat("!!!!! Deploying IRedeemOptimizer [", vm.toString(address(redeemOptimizer)), "] !!!!!")
         );
@@ -61,7 +61,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams =
             _createVaultParams(vaultAuth, usdc, yieldStrategy, redeemOptimizer);
 
-        vm.startBroadcast(vaultAuth.owner);
+        vm.startBroadcast();
 
         LiquidContinuousMultiTokenVault liquidVaultImpl = new LiquidContinuousMultiTokenVault();
         console2.log(
@@ -72,20 +72,20 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
             )
         );
 
-        ERC1967Proxy liquidVault = new ERC1967Proxy(
+        ERC1967Proxy liquidVaultProxy = new ERC1967Proxy(
             address(liquidVaultImpl), abi.encodeWithSelector(liquidVaultImpl.initialize.selector, vaultParams)
         );
         console2.log(
             string.concat(
                 "!!!!! Deploying LiquidContinuousMultiTokenVault Proxy [",
-                vm.toString(address(liquidVaultImpl)),
+                vm.toString(address(liquidVaultProxy)),
                 "] !!!!!"
             )
         );
 
         vm.stopBroadcast();
 
-        return LiquidContinuousMultiTokenVault(address(liquidVault));
+        return LiquidContinuousMultiTokenVault(address(liquidVaultProxy));
     }
 
     function _createVaultParams(
@@ -130,9 +130,9 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         bool shouldDeployMocks = _readBoolWithDefault(_tomlConfig, ".evm.deploy_mocks", false);
 
         if (shouldDeployMocks) {
-            vm.startBroadcast(contractOwner);
+            vm.startBroadcast();
 
-            SimpleUSDC simpleUSDC = new SimpleUSDC(type(uint128).max);
+            SimpleUSDC simpleUSDC = new SimpleUSDC(contractOwner, type(uint128).max);
             console2.log(string.concat("!!!!! Deploying SimpleUSDC [", vm.toString(address(simpleUSDC)), "] !!!!!"));
 
             vm.stopBroadcast();

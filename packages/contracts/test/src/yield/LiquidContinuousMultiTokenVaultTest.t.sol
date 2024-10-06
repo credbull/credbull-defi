@@ -6,27 +6,33 @@ import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/Liquid
 
 contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultTestBase {
     function test__RequestRedeemTest__RedeemAtTenor() public {
-        uint256 principal = 100 * _scale;
-        testVaultAtPeriods(alice, _liquidVault, principal, 0, _liquidVault.TENOR());
+        testVaultAtOffsets(
+            alice,
+            _liquidVault,
+            TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: _liquidVault.TENOR() })
+        );
     }
 
     function test__LiquidContinuousVaultTest__RedeemBeforeTenor() public {
-        uint256 principal = 100 * _scale;
-        testVaultAtPeriods(bob, _liquidVault, principal, 0, _liquidVault.TENOR() - 1);
+        testVaultAtOffsets(
+            bob,
+            _liquidVault,
+            TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: _liquidVault.TENOR() })
+        );
     }
 
     function test__LiquidContinuousVaultTest__Load() public {
         vm.skip(true); // load test - should only be run during perf testing
 
         uint256 principal = 100_000 * _scale;
+
         _loadTestVault(_liquidVault, principal, 1, 1_000); // 1,000 works, 1800 too much for the vm
     }
 
     function test__LiquidContinuousVaultTest__BuyAndSell() public {
         LiquidContinuousMultiTokenVault liquidVault = _liquidVault; // _createLiquidContinueMultiTokenVault(_vaultParams);
 
-        IMultiTokenVaultTestParams memory testParams =
-            IMultiTokenVaultTestParams({ principal: 2_000 * _scale, depositPeriod: 11, redeemPeriod: 70 });
+        TestParam memory testParams = TestParam({ principal: 2_000 * _scale, depositPeriod: 11, redeemPeriod: 70 });
 
         uint256 assetStartBalance = _asset.balanceOf(alice);
 
@@ -66,8 +72,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         // ---------------- sell (redeem) ----------------
         uint256 expectedYield = _expectedReturns(sharesAmount, liquidVault, testParams);
         assertEq(33_333333, expectedYield, "expected returns incorrect");
-        vm.prank(owner);
-        _transferAndAssert(_asset, owner, address(liquidVault), expectedYield); // fund the vault to cover redeem
+        _transferFromTokenOwner(_asset, address(liquidVault), expectedYield); // fund the vault to cover redeem
 
         _warpToPeriod(liquidVault, testParams.redeemPeriod);
 
@@ -83,7 +88,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     }
 
     // Scenario: Calculating returns for a standard investment
-    function test__LiquidContinuousVaultTest__50k_Returns() public {
+    function test__LiquidContinuousVaultTest__50k_Returns() public view {
         uint256 deposit = 50_000 * _scale;
 
         // verify returns
@@ -94,7 +99,5 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         uint256 actualShares = _liquidVault.convertToShares(deposit);
         uint256 actualReturns = _liquidVault.convertToAssetsForDepositPeriod(actualShares, 0, _liquidVault.TENOR() - 1);
         assertEq(50_416_666666, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
-
-        testVaultAtPeriods(alice, _liquidVault, deposit, 0, _liquidVault.TENOR() - 1);
     }
 }

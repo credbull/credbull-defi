@@ -43,19 +43,10 @@ forge test
 ## Advanced Testing
 
 ### Code Coverage Summary
-   ```bash
-   forge coverage
-   ```
-   
-### Code Coverage Report
-Pre-requisite: install [genhtml](https://manpages.ubuntu.com/manpages/focal/man1/genhtml.1.html) 
-
-```bash
-forge coverage --report lcov
-
-# to ignore errors, add flags "--ignore-errors inconsistent" or "--ignore-errors corrupt"
-genhtml lcov.info -o out/coverage --ignore-errors inconsistent
-```
+Pre-requisite: install [genhtml](https://manpages.ubuntu.com/manpages/focal/man1/genhtml.1.html)
+ ```bash
+yarn coverage
+ ```
 
 ## Reset Submodules 
 

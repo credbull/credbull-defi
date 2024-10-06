@@ -123,10 +123,6 @@ abstract contract MultiTokenVault is
         return address(ASSET);
     }
 
-    function assetIERC20() public view virtual returns (IERC20 assetIERC20_) {
-        return ASSET;
-    }
-
     /**
      * @inheritdoc IMultiTokenVault
      */
@@ -311,14 +307,21 @@ abstract contract MultiTokenVault is
         emit Withdraw(caller, receiver, owner, depositPeriod, assets, shares);
     }
 
+    /**
+     * @inheritdoc ERC1155SupplyUpgradeable
+     */
     function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
         internal
         virtual
         override(ERC1155SupplyUpgradeable, ERC1155PausableUpgradeable)
+        whenNotPaused
     {
-        super._update(from, to, ids, values);
+        ERC1155SupplyUpgradeable._update(from, to, ids, values);
     }
 
+    /**
+     * @inheritdoc ERC1155Upgradeable
+     */
     function balanceOf(address account, uint256 id)
         public
         view
@@ -326,9 +329,12 @@ abstract contract MultiTokenVault is
         override(ERC1155Upgradeable, IERC1155)
         returns (uint256)
     {
-        return super.balanceOf(account, id);
+        return ERC1155Upgradeable.balanceOf(account, id);
     }
 
+    /**
+     * @inheritdoc ERC1155Upgradeable
+     */
     function balanceOfBatch(address[] memory accounts, uint256[] memory ids)
         public
         view
@@ -336,9 +342,12 @@ abstract contract MultiTokenVault is
         override(ERC1155Upgradeable, IERC1155)
         returns (uint256[] memory)
     {
-        return super.balanceOfBatch(accounts, ids);
+        return ERC1155Upgradeable.balanceOfBatch(accounts, ids);
     }
 
+    /**
+     * @inheritdoc ERC1155Upgradeable
+     */
     function isApprovedForAll(address account, address operator)
         public
         view
@@ -346,21 +355,30 @@ abstract contract MultiTokenVault is
         override(ERC1155Upgradeable, IERC1155)
         returns (bool)
     {
-        return super.isApprovedForAll(account, operator);
+        return ERC1155Upgradeable.isApprovedForAll(account, operator);
     }
 
+    /**
+     * @inheritdoc ERC1155Upgradeable
+     */
     function setApprovalForAll(address operator, bool approved) public virtual override(ERC1155Upgradeable, IERC1155) {
-        super.setApprovalForAll(operator, approved);
+        ERC1155Upgradeable.setApprovalForAll(operator, approved);
     }
 
+    /**
+     * @inheritdoc ERC1155Upgradeable
+     */
     function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
         public
         virtual
         override(ERC1155Upgradeable, IERC1155)
     {
-        super.safeTransferFrom(from, to, id, amount, data);
+        ERC1155Upgradeable.safeTransferFrom(from, to, id, amount, data);
     }
 
+    /**
+     * @inheritdoc ERC1155Upgradeable
+     */
     function safeBatchTransferFrom(
         address from,
         address to,
@@ -368,7 +386,7 @@ abstract contract MultiTokenVault is
         uint256[] memory amounts,
         bytes memory data
     ) public virtual override(ERC1155Upgradeable, IERC1155) {
-        super.safeBatchTransferFrom(from, to, ids, amounts, data);
+        ERC1155Upgradeable.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
     /**
