@@ -3,8 +3,8 @@ pragma solidity ^0.8.19;
 
 import "./DeployHelpers.s.sol";
 import "../contracts/SimpleUSDC.sol";
-import "../contracts/yield/LiquidContinuousMultiTokenVault.sol";
-import "../contracts/yield/strategy/TripleRateYieldStrategy.sol";
+import "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
+import "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";

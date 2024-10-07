@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     "SimpleUSDC#0": {
-      address: "0x67d269191c92caf3cd7723f116c85e6e9bf55933",
+      address: "0x49149a233de6e4cd6835971506f47ee5862289c1",
       abi: [
         {
           type: "constructor",
@@ -438,7 +438,7 @@ const deployedContracts = {
       },
     },
     "TripleRateYieldStrategy#0": {
-      address: "0xe6e340d132b5f46d1e472debcd681b2abc16e57e",
+      address: "0xae2563b4315469bf6bdd41a6ea26157de57ed94e",
       abi: [
         {
           type: "function",
@@ -526,12 +526,14 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {
-        calcPrice: "contracts/yield/strategy/AbstractYieldStrategy.sol",
-        calcYield: "contracts/yield/strategy/AbstractYieldStrategy.sol",
+        calcPrice:
+          "../../../../packages/contracts/src/yield/strategy/AbstractYieldStrategy.sol",
+        calcYield:
+          "../../../../packages/contracts/src/yield/strategy/AbstractYieldStrategy.sol",
       },
     },
     "RedeemOptimizerFIFO#0": {
-      address: "0xc3e53f4d16ae77db1c982e75a937b9f60fe63690",
+      address: "0x30426d33a78afdb8788597d5bfabdadc3be95698",
       abi: [
         {
           type: "constructor",
@@ -752,13 +754,16 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {
-        optimize: "contracts/token/ERC1155/IRedeemOptimizer.sol",
-        optimizeRedeemShares: "contracts/token/ERC1155/IRedeemOptimizer.sol",
-        optimizeWithdrawAssets: "contracts/token/ERC1155/IRedeemOptimizer.sol",
+        optimize:
+          "../../../../packages/contracts/src/token/ERC1155/IRedeemOptimizer.sol",
+        optimizeRedeemShares:
+          "../../../../packages/contracts/src/token/ERC1155/IRedeemOptimizer.sol",
+        optimizeWithdrawAssets:
+          "../../../../packages/contracts/src/token/ERC1155/IRedeemOptimizer.sol",
       },
     },
     "LiquidContinuousMultiTokenVault#0": {
-      address: "0x84ea74d481ee0a5332c457a4d796187f6ba67feb",
+      address: "0x85495222fd7069b987ca38c2142732ebbfb7175d",
       abi: [
         {
           type: "function",
@@ -3404,83 +3409,126 @@ const deployedContracts = {
       ],
       inheritedFunctions: {
         UPGRADE_INTERFACE_VERSION:
-          "lib/openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol",
         proxiableUUID:
-          "lib/openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol",
         upgradeToAndCall:
-          "lib/openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol",
-        asset: "contracts/token/ERC1155/MultiTokenVault.sol",
-        balanceOf: "contracts/token/ERC1155/MultiTokenVault.sol",
-        balanceOfBatch: "contracts/token/ERC1155/MultiTokenVault.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol",
+        asset:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        balanceOf:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        balanceOfBatch:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
         convertToAssetsForDepositPeriod:
-          "contracts/token/ERC1155/MultiTokenVault.sol",
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
         convertToAssetsForDepositPeriods:
-          "contracts/token/ERC1155/MultiTokenVault.sol",
-        convertToShares: "contracts/token/ERC1155/MultiTokenVault.sol",
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        convertToShares:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
         convertToSharesForDepositPeriod:
-          "contracts/token/ERC1155/MultiTokenVault.sol",
-        currentPeriodsElapsed: "contracts/token/ERC1155/MultiTokenVault.sol",
-        deposit: "contracts/token/ERC1155/MultiTokenVault.sol",
-        exists: "contracts/token/ERC1155/MultiTokenVault.sol",
-        isApprovedForAll: "contracts/token/ERC1155/MultiTokenVault.sol",
-        maxDeposit: "contracts/token/ERC1155/MultiTokenVault.sol",
-        maxRedeemAtPeriod: "contracts/token/ERC1155/MultiTokenVault.sol",
-        paused: "contracts/token/ERC1155/MultiTokenVault.sol",
-        previewDeposit: "contracts/token/ERC1155/MultiTokenVault.sol",
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        currentPeriodsElapsed:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        deposit:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        exists:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        isApprovedForAll:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        maxDeposit:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        maxRedeemAtPeriod:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        paused:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        previewDeposit:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
         previewRedeemForDepositPeriod:
-          "contracts/token/ERC1155/MultiTokenVault.sol",
-        redeemForDepositPeriod: "contracts/token/ERC1155/MultiTokenVault.sol",
-        safeBatchTransferFrom: "contracts/token/ERC1155/MultiTokenVault.sol",
-        safeTransferFrom: "contracts/token/ERC1155/MultiTokenVault.sol",
-        setApprovalForAll: "contracts/token/ERC1155/MultiTokenVault.sol",
-        sharesAtPeriod: "contracts/token/ERC1155/MultiTokenVault.sol",
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        redeemForDepositPeriod:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        safeBatchTransferFrom:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        safeTransferFrom:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        setApprovalForAll:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        sharesAtPeriod:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
         supportsInterface:
-          "lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
-        totalSupply: "contracts/token/ERC1155/MultiTokenVault.sol",
-        uri: "contracts/token/ERC1155/MultiTokenVault.sol",
-        executeBuy: "contracts/token/component/IComponentToken.sol",
-        executeSell: "contracts/token/component/IComponentToken.sol",
-        getVersion: "contracts/token/component/IComponentToken.sol",
-        requestBuy: "contracts/token/component/IComponentToken.sol",
-        requestSell: "contracts/token/component/IComponentToken.sol",
-        currentPeriod: "contracts/timelock/TimelockAsyncUnlock.sol",
-        lockedAmount: "contracts/timelock/TimelockAsyncUnlock.sol",
-        maxRequestUnlock: "contracts/timelock/TimelockAsyncUnlock.sol",
-        minUnlockPeriod: "contracts/timelock/TimelockAsyncUnlock.sol",
-        noticePeriod: "contracts/timelock/TimelockAsyncUnlock.sol",
-        requestUnlock: "contracts/timelock/TimelockAsyncUnlock.sol",
-        unlock: "contracts/timelock/TimelockAsyncUnlock.sol",
-        unlockRequested: "contracts/timelock/TimelockAsyncUnlock.sol",
-        FREQUENCY: "contracts/yield/context/TripleRateContext.sol",
-        RATE_PERCENT_SCALED: "contracts/yield/context/TripleRateContext.sol",
-        SCALE: "contracts/yield/context/TripleRateContext.sol",
-        TENOR: "contracts/yield/context/TripleRateContext.sol",
-        currentPeriodRate: "contracts/yield/context/TripleRateContext.sol",
-        frequency: "contracts/yield/context/TripleRateContext.sol",
-        numPeriodsForFullRate: "contracts/yield/context/TripleRateContext.sol",
-        previousPeriodRate: "contracts/yield/context/TripleRateContext.sol",
-        rateScaled: "contracts/yield/context/TripleRateContext.sol",
-        scale: "contracts/yield/context/TripleRateContext.sol",
-        setReducedRate: "contracts/yield/context/TripleRateContext.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
+        totalSupply:
+          "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        uri: "../../../../packages/contracts/src/token/ERC1155/MultiTokenVault.sol",
+        executeBuy:
+          "../../../../packages/contracts/src/token/component/IComponentToken.sol",
+        executeSell:
+          "../../../../packages/contracts/src/token/component/IComponentToken.sol",
+        getVersion:
+          "../../../../packages/contracts/src/token/component/IComponentToken.sol",
+        requestBuy:
+          "../../../../packages/contracts/src/token/component/IComponentToken.sol",
+        requestSell:
+          "../../../../packages/contracts/src/token/component/IComponentToken.sol",
+        currentPeriod:
+          "../../../../packages/contracts/src/timelock/TimelockAsyncUnlock.sol",
+        lockedAmount:
+          "../../../../packages/contracts/src/timelock/TimelockAsyncUnlock.sol",
+        maxRequestUnlock:
+          "../../../../packages/contracts/src/timelock/TimelockAsyncUnlock.sol",
+        minUnlockPeriod:
+          "../../../../packages/contracts/src/timelock/TimelockAsyncUnlock.sol",
+        noticePeriod:
+          "../../../../packages/contracts/src/timelock/TimelockAsyncUnlock.sol",
+        requestUnlock:
+          "../../../../packages/contracts/src/timelock/TimelockAsyncUnlock.sol",
+        unlock:
+          "../../../../packages/contracts/src/timelock/TimelockAsyncUnlock.sol",
+        unlockRequested:
+          "../../../../packages/contracts/src/timelock/TimelockAsyncUnlock.sol",
+        FREQUENCY:
+          "../../../../packages/contracts/src/yield/context/TripleRateContext.sol",
+        RATE_PERCENT_SCALED:
+          "../../../../packages/contracts/src/yield/context/TripleRateContext.sol",
+        SCALE:
+          "../../../../packages/contracts/src/yield/context/TripleRateContext.sol",
+        TENOR:
+          "../../../../packages/contracts/src/yield/context/TripleRateContext.sol",
+        currentPeriodRate:
+          "../../../../packages/contracts/src/yield/context/TripleRateContext.sol",
+        frequency:
+          "../../../../packages/contracts/src/yield/context/TripleRateContext.sol",
+        numPeriodsForFullRate:
+          "../../../../packages/contracts/src/yield/context/TripleRateContext.sol",
+        previousPeriodRate:
+          "../../../../packages/contracts/src/yield/context/TripleRateContext.sol",
+        rateScaled:
+          "../../../../packages/contracts/src/yield/context/TripleRateContext.sol",
+        scale:
+          "../../../../packages/contracts/src/yield/context/TripleRateContext.sol",
+        setReducedRate:
+          "../../../../packages/contracts/src/yield/context/TripleRateContext.sol",
         DEFAULT_ADMIN_ROLE:
-          "lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
         getRoleAdmin:
-          "lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
         getRoleMember:
-          "lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
         getRoleMemberCount:
-          "lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
         grantRole:
-          "lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
         hasRole:
-          "lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
         renounceRole:
-          "lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
         revokeRole:
-          "lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/access/extensions/AccessControlEnumerableUpgradeable.sol",
         CLOCK_MODE:
-          "lib/openzeppelin-contracts/contracts/interfaces/IERC6372.sol",
-        clock: "lib/openzeppelin-contracts/contracts/interfaces/IERC6372.sol",
+          "../../../../packages/contracts/lib/openzeppelin-contracts/contracts/interfaces/IERC6372.sol",
+        clock:
+          "../../../../packages/contracts/lib/openzeppelin-contracts/contracts/interfaces/IERC6372.sol",
       },
     },
   },
