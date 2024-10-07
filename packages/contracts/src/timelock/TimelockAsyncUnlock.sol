@@ -11,6 +11,7 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, ContextUpgradeable {
     struct UnlockRequest {
         uint256[] depositPeriods;
+        uint256 amount;
     }
 
     /**
@@ -67,6 +68,12 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         return _unlockRequestByDepositPeriod[depositPeriod][owner];
     }
 
+    function unlockRequestedByRequestId(address owner, uint256 requestId) public view virtual returns (uint256) {
+        uint256 unlockPeriod = requestId;
+
+        return _unlockRequests[unlockPeriod][owner].amount;
+    }
+
     function maxRequestUnlock(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
         return lockedAmount(owner, depositPeriod) - unlockRequested(owner, depositPeriod);
     }
@@ -83,6 +90,7 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         _authorizeCaller(_msgSender(), owner);
 
         uint256 unlockPeriod = minUnlockPeriod();
+        uint256 amountForUnlockPeriod = _unlockRequests[unlockPeriod][owner].amount;
 
         for (uint256 i = 0; i < depositPeriods.length;) {
             uint256 depositPeriod = depositPeriods[i];
@@ -103,6 +111,7 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
             }
 
             unlockRequestedAmount += amount;
+            amountForUnlockPeriod += amount;
 
             _unlockRequestByUnlockPeriod[depositPeriod][owner][unlockPeriod] = unlockRequestedAmount;
 
@@ -110,6 +119,8 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
                 ++i;
             }
         }
+
+        _unlockRequests[unlockPeriod][owner].amount = amountForUnlockPeriod;
 
         return unlockPeriod;
     }

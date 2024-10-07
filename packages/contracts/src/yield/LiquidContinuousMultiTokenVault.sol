@@ -168,31 +168,8 @@ contract LiquidContinuousMultiTokenVault is
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
             _redeemOptimizer.optimize(this, _msgSender(), componentTokenAmount, componentTokenAmount, minUnlockPeriod());
 
-        // return requestSell(depositPeriods, sharesAtPeriods);
-
         return requestUnlock(_msgSender(), depositPeriods, sharesAtPeriods);
     }
-
-    /*
-    function requestSell(uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
-        public
-        virtual
-        returns (uint256 requestId)
-    {
-        uint256 unlockPeriod = 0;
-        uint256[] memory unlockPeriods = new uint256[](depositPeriods.length);
-        for (uint256 i = 0; i < depositPeriods.length; ++i) {
-            unlockPeriods[i] = requestUnlock(_msgSender(), depositPeriods[i], sharesAtPeriods[i]);
-
-            if (i == 0) {
-                unlockPeriod = unlockPeriods[i]; // initialize the unlock period
-            } else if (unlockPeriod != unlockPeriods[i]) {
-                revert LiquidContinuousMultiTokenVault__UnlockPeriodMismatch(unlockPeriod, unlockPeriods[i]); // ensure unlockPeriod is consistent
-            }
-        }
-
-        return unlockPeriods[0];
-    } */
 
     /// @inheritdoc IComponentToken
     function executeBuy(
@@ -225,16 +202,6 @@ contract LiquidContinuousMultiTokenVault is
             redeemForDepositPeriod(sharesAtPeriods[i], requestor, requestor, depositPeriods[i], currentPeriod());
         }
     }
-
-    /*
-    function executeSell(address requestor, uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
-        public
-        virtual
-    {
-        for (uint256 i = 0; i < depositPeriods.length; ++i) {
-            redeemForDepositPeriod(sharesAtPeriods[i], requestor, requestor, depositPeriods[i], currentPeriod());
-        }
-    } */
 
     /// @dev set the IRedeemOptimizer
     function setRedeemOptimizer(IRedeemOptimizer redeemOptimizer) public onlyRole(OPERATOR_ROLE) {
