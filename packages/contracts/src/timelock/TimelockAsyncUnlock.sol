@@ -40,32 +40,56 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         _noticePeriod = noticePeriod_;
     }
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function noticePeriod() public view virtual returns (uint256) {
         return _noticePeriod;
     }
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function currentPeriod() public view virtual returns (uint256 currentPeriod_);
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function minUnlockPeriod() public view virtual returns (uint256) {
         return currentPeriod() + noticePeriod();
     }
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function lockedAmount(address owner, uint256 depositPeriod) public view virtual returns (uint256 lockedAmount_);
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function unlockRequested(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
         return _unlockRequestByDepositPeriod[depositPeriod][owner];
     }
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function unlockRequestedByRequestId(address owner, uint256 requestId) public view virtual returns (uint256) {
         uint256 unlockPeriod = requestId;
 
         return _unlockRequests[unlockPeriod][owner].amount;
     }
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function maxRequestUnlock(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
         return lockedAmount(owner, depositPeriod) - unlockRequested(owner, depositPeriod);
     }
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
     function requestUnlock(address owner, uint256[] memory depositPeriods, uint256[] memory amounts)
         public
         virtual
@@ -89,7 +113,6 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
                 );
             }
 
-            //
             _unlockRequestByDepositPeriod[depositPeriod][owner] += amount;
 
             uint256 unlockRequestedAmount = _unlockRequestByUnlockPeriod[depositPeriod][owner][unlockPeriod];
@@ -113,6 +136,10 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         return unlockPeriod;
     }
 
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     * @notice every one can call this unlock function
+     */
     function unlock(address owner, uint256 requestId)
         public
         virtual
@@ -144,12 +171,19 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         delete _unlockRequests[unlockPeriod][owner];
     }
 
+    /**
+     * @dev An internal function to check if the caller is eligible to manage the unlocks of the owner
+     * It can be overridden and new authorization logic can be written in child contracts
+     */
     function _authorizeCaller(address caller, address owner) internal virtual {
         if (caller != owner) {
             revert TimelockAsyncUnlock__AuthorizeCallerFailed(caller, owner);
         }
     }
 
+    /**
+     * @dev An internal function to check if unlock can be performed
+     */
     function _performUnlockValidation(address owner, uint256[] memory depositPeriods, uint256 unlockPeriod)
         internal
         virtual
