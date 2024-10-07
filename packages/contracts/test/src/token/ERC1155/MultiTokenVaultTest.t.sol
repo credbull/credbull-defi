@@ -205,7 +205,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         uint256[] memory depositPeriods = testParamsArray.depositPeriods();
 
         // ------------------------ batch convert to assets ------------------------
-        uint256[] memory assets = vault.convertToAssetsForDepositPeriods(shares, depositPeriods, redeemPeriod);
+        uint256[] memory assets = vault.convertToAssetsForDepositPeriodBatch(shares, depositPeriods, redeemPeriod);
 
         assertEq(3, assets.length, "assets are wrong length");
         assertEq(

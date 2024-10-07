@@ -43,12 +43,8 @@ contract SimpleTimelockAsyncUnlock is Initializable, UUPSUpgradeable, TimelockAs
     {
         (depositPeriods, amounts) = super.unlock(owner, unlockPeriod);
 
-        for (uint256 i = 0; i < depositPeriods.length;) {
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
             _deposits.burn(owner, depositPeriods[i], amounts[i], _emptyBytesArray());
-
-            unchecked {
-                ++i;
-            }
         }
     }
 

@@ -79,6 +79,17 @@ abstract contract MultiTokenVault is
     /**
      * @inheritdoc IMultiTokenVault
      */
+    function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
+        public
+        virtual
+        returns (uint256)
+    {
+        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentPeriodsElapsed());
+    }
+
+    /**
+     * @inheritdoc IMultiTokenVault
+     */
     function redeemForDepositPeriod(
         uint256 shares,
         address receiver,
@@ -108,12 +119,24 @@ abstract contract MultiTokenVault is
     /**
      * @inheritdoc IMultiTokenVault
      */
-    function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
-        public
-        virtual
-        returns (uint256)
-    {
-        return redeemForDepositPeriod(shares, receiver, owner, depositPeriod, currentPeriodsElapsed());
+    function redeemForDepositPeriodBatch(
+        address receiver,
+        address owner,
+        uint256[] memory shares,
+        uint256[] memory depositPeriods,
+        uint256 redeemPeriod
+    ) public virtual returns (uint256[] memory assets_) {
+        if (shares.length != depositPeriods.length) {
+            revert MultiTokenVault__InvalidArrayLength(depositPeriods.length, shares.length);
+        }
+
+        uint256[] memory assets = new uint256[](depositPeriods.length);
+
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            assets[i] = redeemForDepositPeriod(shares[i], receiver, owner, depositPeriods[i], redeemPeriod);
+        }
+
+        return assets;
     }
 
     /**
@@ -179,7 +202,7 @@ abstract contract MultiTokenVault is
     /**
      * @inheritdoc IMultiTokenVault
      */
-    function convertToAssetsForDepositPeriods(
+    function convertToAssetsForDepositPeriodBatch(
         uint256[] memory shares,
         uint256[] memory depositPeriods,
         uint256 redeemPeriod
