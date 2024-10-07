@@ -14,23 +14,11 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         uint256 amount;
     }
 
-    /**
-     * Must necessary?
-     * Yes, it must be; to implement maxRequestUnlock for depositPeriod
-     */
     mapping(uint256 depositPeriod => mapping(address account => uint256 amount)) private _unlockRequestByDepositPeriod;
 
-    /**
-     * Must necessary?
-     * Yes, it can prevent 2 depth loop iteration
-     */
     mapping(uint256 depositPeriod => mapping(address account => mapping(uint256 unlockPeriod => uint256 amount)))
         private _unlockRequestByUnlockPeriod;
 
-    /**
-     * Must necessary?
-     * Yes, it must be; need to get depositPeriods
-     */
     mapping(uint256 unlockPeriod => mapping(address account => UnlockRequest)) private _unlockRequests;
 
     uint256 private _noticePeriod;
