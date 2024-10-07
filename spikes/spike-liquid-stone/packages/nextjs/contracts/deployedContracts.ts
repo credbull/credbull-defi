@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     "SimpleUSDC#0": {
-      address: "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+      address: "0xc6e7df5e7b4f2a278906862b61205850344d4e7d",
       abi: [
         {
           type: "constructor",
@@ -437,73 +437,234 @@ const deployedContracts = {
         transferOwnership: "contracts/OwnableToken.sol",
       },
     },
-    "LiquidContinuousMultiTokenVault#0": {
-      address: "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+    "TripleRateYieldStrategy#0": {
+      address: "0x59b670e9fa9d0a427751af201d676719a970857b",
       abi: [
         {
-          type: "constructor",
+          type: "function",
+          name: "calcPrice",
           inputs: [
             {
-              name: "params",
-              type: "tuple",
-              internalType:
-                "struct LiquidContinuousMultiTokenVault.VaultParams",
-              components: [
-                {
-                  name: "contractOwner",
-                  type: "address",
-                  internalType: "address",
-                },
-                {
-                  name: "contractOperator",
-                  type: "address",
-                  internalType: "address",
-                },
-                {
-                  name: "asset",
-                  type: "address",
-                  internalType: "contract IERC20Metadata",
-                },
-                {
-                  name: "yieldStrategy",
-                  type: "address",
-                  internalType: "contract IYieldStrategy",
-                },
-                {
-                  name: "vaultStartTimestamp",
-                  type: "uint256",
-                  internalType: "uint256",
-                },
-                {
-                  name: "redeemNoticePeriod",
-                  type: "uint256",
-                  internalType: "uint256",
-                },
-                {
-                  name: "fullRateScaled",
-                  type: "uint256",
-                  internalType: "uint256",
-                },
-                {
-                  name: "reducedRateScaled",
-                  type: "uint256",
-                  internalType: "uint256",
-                },
-                {
-                  name: "frequency",
-                  type: "uint256",
-                  internalType: "uint256",
-                },
-                {
-                  name: "tenor",
-                  type: "uint256",
-                  internalType: "uint256",
-                },
-              ],
+              name: "contextContract",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "numPeriodsElapsed",
+              type: "uint256",
+              internalType: "uint256",
             },
           ],
-          stateMutability: "nonpayable",
+          outputs: [
+            {
+              name: "price",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
         },
+        {
+          type: "function",
+          name: "calcYield",
+          inputs: [
+            {
+              name: "contextContract",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "principal",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "fromPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "toPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "yield",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "error",
+          name: "IYieldStrategy_InvalidContextAddress",
+          inputs: [],
+        },
+        {
+          type: "error",
+          name: "IYieldStrategy_InvalidPeriodRange",
+          inputs: [
+            {
+              name: "from",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "to",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "MathOverflowedMulDiv",
+          inputs: [],
+        },
+      ],
+      inheritedFunctions: {
+        calcPrice: "contracts/yield/strategy/AbstractYieldStrategy.sol",
+        calcYield: "contracts/yield/strategy/AbstractYieldStrategy.sol",
+      },
+    },
+    "RedeemOptimizerFIFO#0": {
+      address: "0x4ed7c70f96b99c776995fb64377f0d4ab3b0e1c1",
+      abi: [
+        {
+          type: "function",
+          name: "_fromDepositPeriod",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "optimizeRedeemShares",
+          inputs: [
+            {
+              name: "vault",
+              type: "address",
+              internalType: "contract IMultiTokenVault",
+            },
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "shares",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "redeemPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "depositPeriods_",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+            {
+              name: "sharesAtPeriods_",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "optimizeWithdrawAssets",
+          inputs: [
+            {
+              name: "vault",
+              type: "address",
+              internalType: "contract IMultiTokenVault",
+            },
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "assets",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "redeemPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "depositPeriods_",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+            {
+              name: "sharesAtPeriods_",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "error",
+          name: "RedeemOptimizer__FuturePeriodNotAllowed",
+          inputs: [
+            {
+              name: "toPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "currentPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "RedeemOptimizer__InvalidPeriodRange",
+          inputs: [
+            {
+              name: "fromPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "toPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+      ],
+      inheritedFunctions: {
+        optimizeRedeemShares: "contracts/token/ERC1155/IRedeemOptimizer.sol",
+        optimizeWithdrawAssets: "contracts/token/ERC1155/IRedeemOptimizer.sol",
+      },
+    },
+    "LiquidContinuousMultiTokenVault#0": {
+      address: "0x322813fd9a801c5507c9de605d63cea4f2ce6c44",
+      abi: [
         {
           type: "function",
           name: "CLOCK_MODE",
@@ -533,19 +694,6 @@ const deployedContracts = {
         {
           type: "function",
           name: "FREQUENCY",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "NOTICE_PERIOD",
           inputs: [],
           outputs: [
             {
@@ -610,13 +758,13 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "YIELD_STRATEGY",
+          name: "UPGRADER_ROLE",
           inputs: [],
           outputs: [
             {
               name: "",
-              type: "address",
-              internalType: "contract IYieldStrategy",
+              type: "bytes32",
+              internalType: "bytes32",
             },
           ],
           stateMutability: "view",
@@ -811,6 +959,35 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "convertToAssetsForDepositPeriods",
+          inputs: [
+            {
+              name: "shares",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+            {
+              name: "depositPeriods",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+            {
+              name: "redeemPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "assets_",
+              type: "uint256[]",
+              internalType: "uint256[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
           name: "convertToShares",
           inputs: [
             {
@@ -929,24 +1106,6 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "distributeYield",
-          inputs: [
-            {
-              name: "user",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
           name: "elapsed24Hours",
           inputs: [],
           outputs: [
@@ -1004,7 +1163,7 @@ const deployedContracts = {
               internalType: "uint256",
             },
             {
-              name: "",
+              name: "componentTokenAmount",
               type: "uint256",
               internalType: "uint256",
             },
@@ -1022,12 +1181,12 @@ const deployedContracts = {
               internalType: "address",
             },
             {
-              name: "requestId",
+              name: "",
               type: "uint256",
               internalType: "uint256",
             },
             {
-              name: "currencyTokenAmount",
+              name: "",
               type: "uint256",
               internalType: "uint256",
             },
@@ -1093,6 +1252,19 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "getVersion",
+          inputs: [],
+          outputs: [
+            {
+              name: "version",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "pure",
+        },
+        {
+          type: "function",
           name: "grantRole",
           inputs: [
             {
@@ -1132,6 +1304,101 @@ const deployedContracts = {
             },
           ],
           stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "initialize",
+          inputs: [
+            {
+              name: "vaultParams",
+              type: "tuple",
+              internalType:
+                "struct LiquidContinuousMultiTokenVault.VaultParams",
+              components: [
+                {
+                  name: "contractOwner",
+                  type: "address",
+                  internalType: "address",
+                },
+                {
+                  name: "contractOperator",
+                  type: "address",
+                  internalType: "address",
+                },
+                {
+                  name: "asset",
+                  type: "address",
+                  internalType: "contract IERC20Metadata",
+                },
+                {
+                  name: "yieldStrategy",
+                  type: "address",
+                  internalType: "contract IYieldStrategy",
+                },
+                {
+                  name: "redeemOptimizer",
+                  type: "address",
+                  internalType: "contract IRedeemOptimizer",
+                },
+                {
+                  name: "vaultStartTimestamp",
+                  type: "uint256",
+                  internalType: "uint256",
+                },
+                {
+                  name: "redeemNoticePeriod",
+                  type: "uint256",
+                  internalType: "uint256",
+                },
+                {
+                  name: "contextParams",
+                  type: "tuple",
+                  internalType: "struct TripleRateContext.ContextParams",
+                  components: [
+                    {
+                      name: "fullRateScaled",
+                      type: "uint256",
+                      internalType: "uint256",
+                    },
+                    {
+                      name: "initialReducedRate",
+                      type: "tuple",
+                      internalType: "struct ITripleRateContext.PeriodRate",
+                      components: [
+                        {
+                          name: "interestRate",
+                          type: "uint256",
+                          internalType: "uint256",
+                        },
+                        {
+                          name: "effectiveFromPeriod",
+                          type: "uint256",
+                          internalType: "uint256",
+                        },
+                      ],
+                    },
+                    {
+                      name: "frequency",
+                      type: "uint256",
+                      internalType: "uint256",
+                    },
+                    {
+                      name: "tenor",
+                      type: "uint256",
+                      internalType: "uint256",
+                    },
+                    {
+                      name: "decimals",
+                      type: "uint256",
+                      internalType: "uint256",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
         },
         {
           type: "function",
@@ -1252,7 +1519,7 @@ const deployedContracts = {
           name: "maxRequestUnlock",
           inputs: [
             {
-              name: "tokenOwner",
+              name: "owner",
               type: "address",
               internalType: "address",
             },
@@ -1264,7 +1531,7 @@ const deployedContracts = {
           ],
           outputs: [
             {
-              name: "maxRequestUnlockAmount",
+              name: "",
               type: "uint256",
               internalType: "uint256",
             },
@@ -1273,22 +1540,11 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "maxUnlock",
-          inputs: [
-            {
-              name: "tokenOwner",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "depositPeriod",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
+          name: "minUnlockPeriod",
+          inputs: [],
           outputs: [
             {
-              name: "maxUnlockAmount",
+              name: "",
               type: "uint256",
               internalType: "uint256",
             },
@@ -1301,7 +1557,7 @@ const deployedContracts = {
           inputs: [],
           outputs: [
             {
-              name: "noticePeriod_",
+              name: "",
               type: "uint256",
               internalType: "uint256",
             },
@@ -1440,6 +1696,19 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "proxiableUUID",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "bytes32",
+              internalType: "bytes32",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
           name: "rateScaled",
           inputs: [],
           outputs: [
@@ -1526,6 +1795,19 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "redeemOptimizer",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "contract IRedeemOptimizer",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
           name: "renounceRole",
           inputs: [
             {
@@ -1534,7 +1816,7 @@ const deployedContracts = {
               internalType: "bytes32",
             },
             {
-              name: "callerConfirmation",
+              name: "account",
               type: "address",
               internalType: "address",
             },
@@ -1547,7 +1829,7 @@ const deployedContracts = {
           name: "requestBuy",
           inputs: [
             {
-              name: "",
+              name: "currencyTokenAmount",
               type: "uint256",
               internalType: "uint256",
             },
@@ -1559,7 +1841,7 @@ const deployedContracts = {
               internalType: "uint256",
             },
           ],
-          stateMutability: "view",
+          stateMutability: "nonpayable",
         },
         {
           type: "function",
@@ -1585,7 +1867,7 @@ const deployedContracts = {
           name: "requestUnlock",
           inputs: [
             {
-              name: "tokenOwner",
+              name: "owner",
               type: "address",
               internalType: "address",
             },
@@ -1595,17 +1877,18 @@ const deployedContracts = {
               internalType: "uint256",
             },
             {
-              name: "unlockPeriod",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
               name: "amount",
               type: "uint256",
               internalType: "uint256",
             },
           ],
-          outputs: [],
+          outputs: [
+            {
+              name: "unlockPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
           stateMutability: "nonpayable",
         },
         {
@@ -1646,7 +1929,7 @@ const deployedContracts = {
               internalType: "uint256[]",
             },
             {
-              name: "values",
+              name: "amounts",
               type: "uint256[]",
               internalType: "uint256[]",
             },
@@ -1679,7 +1962,7 @@ const deployedContracts = {
               internalType: "uint256",
             },
             {
-              name: "value",
+              name: "amount",
               type: "uint256",
               internalType: "uint256",
             },
@@ -1826,19 +2109,6 @@ const deployedContracts = {
         {
           type: "function",
           name: "totalSupply",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "totalSupply",
           inputs: [
             {
               name: "id",
@@ -1860,30 +2130,7 @@ const deployedContracts = {
           name: "unlock",
           inputs: [
             {
-              name: "tokenOwner",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "depositPeriod",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "amount",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "unlock",
-          inputs: [
-            {
-              name: "tokenOwner",
+              name: "owner",
               type: "address",
               internalType: "address",
             },
@@ -1911,7 +2158,36 @@ const deployedContracts = {
           name: "unlockRequested",
           inputs: [
             {
-              name: "tokenOwner",
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "depositPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "unlockPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "unlockRequested",
+          inputs: [
+            {
+              name: "owner",
               type: "address",
               internalType: "address",
             },
@@ -1923,53 +2199,7 @@ const deployedContracts = {
           ],
           outputs: [
             {
-              name: "requestUnlockItem_",
-              type: "tuple",
-              internalType: "struct TimelockAsyncUnlock.UnlockItem",
-              components: [
-                {
-                  name: "account",
-                  type: "address",
-                  internalType: "address",
-                },
-                {
-                  name: "depositPeriod",
-                  type: "uint256",
-                  internalType: "uint256",
-                },
-                {
-                  name: "unlockPeriod",
-                  type: "uint256",
-                  internalType: "uint256",
-                },
-                {
-                  name: "amount",
-                  type: "uint256",
-                  internalType: "uint256",
-                },
-              ],
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "unlockedAmount",
-          inputs: [
-            {
               name: "",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "unlockedAmount_",
               type: "uint256",
               internalType: "uint256",
             },
@@ -1982,6 +2212,37 @@ const deployedContracts = {
           inputs: [],
           outputs: [],
           stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "upgradeTo",
+          inputs: [
+            {
+              name: "newImplementation",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "upgradeToAndCall",
+          inputs: [
+            {
+              name: "newImplementation",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "data",
+              type: "bytes",
+              internalType: "bytes",
+            },
+          ],
+          outputs: [],
+          stateMutability: "payable",
         },
         {
           type: "function",
@@ -2004,16 +2265,35 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "yieldGenerated",
+          name: "yieldStrategy",
           inputs: [],
           outputs: [
             {
-              name: "yield",
-              type: "uint256",
-              internalType: "uint256",
+              name: "",
+              type: "address",
+              internalType: "contract IYieldStrategy",
             },
           ],
-          stateMutability: "pure",
+          stateMutability: "view",
+        },
+        {
+          type: "event",
+          name: "AdminChanged",
+          inputs: [
+            {
+              name: "previousAdmin",
+              type: "address",
+              indexed: false,
+              internalType: "address",
+            },
+            {
+              name: "newAdmin",
+              type: "address",
+              indexed: false,
+              internalType: "address",
+            },
+          ],
+          anonymous: false,
         },
         {
           type: "event",
@@ -2042,6 +2322,19 @@ const deployedContracts = {
         },
         {
           type: "event",
+          name: "BeaconUpgraded",
+          inputs: [
+            {
+              name: "beacon",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
           name: "CurrentPeriodRateChanged",
           inputs: [
             {
@@ -2052,6 +2345,25 @@ const deployedContracts = {
             },
             {
               name: "effectiveFromPeriod",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "CurrentTenorPeriodAndRateChanged",
+          inputs: [
+            {
+              name: "tenorPeriod",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+            {
+              name: "reducedRate",
               type: "uint256",
               indexed: false,
               internalType: "uint256",
@@ -2092,6 +2404,19 @@ const deployedContracts = {
               type: "uint256",
               indexed: false,
               internalType: "uint256",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "Initialized",
+          inputs: [
+            {
+              name: "version",
+              type: "uint8",
+              indexed: false,
+              internalType: "uint8",
             },
           ],
           anonymous: false,
@@ -2292,6 +2617,19 @@ const deployedContracts = {
         },
         {
           type: "event",
+          name: "Upgraded",
+          inputs: [
+            {
+              name: "implementation",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
           name: "Withdraw",
           inputs: [
             {
@@ -2335,27 +2673,6 @@ const deployedContracts = {
         },
         {
           type: "error",
-          name: "AccessControlBadConfirmation",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "AccessControlUnauthorizedAccount",
-          inputs: [
-            {
-              name: "account",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "neededRole",
-              type: "bytes32",
-              internalType: "bytes32",
-            },
-          ],
-        },
-        {
-          type: "error",
           name: "AddressEmptyCode",
           inputs: [
             {
@@ -2378,137 +2695,20 @@ const deployedContracts = {
         },
         {
           type: "error",
-          name: "ERC1155InsufficientBalance",
-          inputs: [
-            {
-              name: "sender",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "balance",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "needed",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "tokenId",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "ERC1155InvalidApprover",
-          inputs: [
-            {
-              name: "approver",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "ERC1155InvalidArrayLength",
-          inputs: [
-            {
-              name: "idsLength",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "valuesLength",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "ERC1155InvalidOperator",
-          inputs: [
-            {
-              name: "operator",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "ERC1155InvalidReceiver",
-          inputs: [
-            {
-              name: "receiver",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "ERC1155InvalidSender",
-          inputs: [
-            {
-              name: "sender",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "ERC1155MissingApprovalForAll",
-          inputs: [
-            {
-              name: "operator",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "owner",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "EnforcedPause",
-          inputs: [],
-        },
-        {
-          type: "error",
-          name: "ExpectedPause",
-          inputs: [],
-        },
-        {
-          type: "error",
           name: "FailedInnerCall",
           inputs: [],
         },
         {
           type: "error",
-          name: "ITimelockOpenEnded__ExceededMaxUnlock",
+          name: "LiquidContinuousMultiTokenVault__AmountMismatch",
           inputs: [
             {
-              name: "account",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "amount",
+              name: "amount1",
               type: "uint256",
               internalType: "uint256",
             },
             {
-              name: "maxUnlock",
+              name: "amount2",
               type: "uint256",
               internalType: "uint256",
             },
@@ -2544,6 +2744,22 @@ const deployedContracts = {
               name: "ownerAddress",
               type: "address",
               internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "LiquidContinuousMultiTokenVault__UnlockPeriodMismatch",
+          inputs: [
+            {
+              name: "unlockPeriod1",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "unlockPeriod2",
+              type: "uint256",
+              internalType: "uint256",
             },
           ],
         },
@@ -2617,6 +2833,22 @@ const deployedContracts = {
         },
         {
           type: "error",
+          name: "MultiTokenVault__InvalidArrayLength",
+          inputs: [
+            {
+              name: "depositPeriodsLength",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "sharesLength",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
           name: "MultiTokenVault__RedeemBeforeDeposit",
           inputs: [
             {
@@ -2659,11 +2891,6 @@ const deployedContracts = {
         },
         {
           type: "error",
-          name: "ReentrancyGuardReentrantCall",
-          inputs: [],
-        },
-        {
-          type: "error",
           name: "SafeCastOverflowedUintDowncast",
           inputs: [
             {
@@ -2691,57 +2918,15 @@ const deployedContracts = {
         },
         {
           type: "error",
-          name: "TimelockAsyncUnlock__RequestBeforeCurrentWithNoticePeriod",
+          name: "TimelockAsyncUnlock__AuthorizeCallerFailed",
           inputs: [
             {
-              name: "account",
+              name: "caller",
               type: "address",
               internalType: "address",
             },
             {
-              name: "period",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "currentWithNoticePeriod",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "TimelockAsyncUnlock__RequestBeforeDepositWithNoticePeriod",
-          inputs: [
-            {
-              name: "account",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "period",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "depositWithNoticePeriod",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "TimelockAsyncUnlock__RequesterNotOwner",
-          inputs: [
-            {
-              name: "requester",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "tokenOwner",
+              name: "owner",
               type: "address",
               internalType: "address",
             },
@@ -2749,20 +2934,41 @@ const deployedContracts = {
         },
         {
           type: "error",
-          name: "TimelockAsyncUnlock__UnlockBeforeCurrentPeriod",
+          name: "TimelockAsyncUnlock__ExceededMaxRequestUnlock",
           inputs: [
             {
-              name: "account",
+              name: "owner",
               type: "address",
               internalType: "address",
             },
             {
-              name: "period",
+              name: "amount",
               type: "uint256",
               internalType: "uint256",
             },
             {
-              name: "currentPeriod",
+              name: "maxRequestUnlockAmount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "TimelockAsyncUnlock__ExceededMaxUnlock",
+          inputs: [
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "unlockRequestedAmount",
               type: "uint256",
               internalType: "uint256",
             },
@@ -2773,17 +2979,22 @@ const deployedContracts = {
           name: "TimelockAsyncUnlock__UnlockBeforeDepositPeriod",
           inputs: [
             {
-              name: "account",
+              name: "caller",
               type: "address",
               internalType: "address",
             },
             {
-              name: "period",
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "depositPeriod",
               type: "uint256",
               internalType: "uint256",
             },
             {
-              name: "depositPeriod",
+              name: "unlockPeriod",
               type: "uint256",
               internalType: "uint256",
             },
@@ -2791,20 +3002,25 @@ const deployedContracts = {
         },
         {
           type: "error",
-          name: "TimelockAsyncUnlock__UnlockPeriodMismatch",
+          name: "TimelockAsyncUnlock__UnlockBeforeUnlockPeriod",
           inputs: [
             {
-              name: "account",
+              name: "caller",
               type: "address",
               internalType: "address",
             },
             {
-              name: "unlockPeriod",
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "currentPeriod",
               type: "uint256",
               internalType: "uint256",
             },
             {
-              name: "requestedUnlockPeriod",
+              name: "unlockPeriod",
               type: "uint256",
               internalType: "uint256",
             },
@@ -2858,56 +3074,73 @@ const deployedContracts = {
             },
           ],
         },
+        {
+          type: "error",
+          name: "TripleRateContext_TenorPeriodRegressionNotAllowed",
+          inputs: [
+            {
+              name: "tenorPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "newTenorPeriod",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
       ],
       inheritedFunctions: {
+        proxiableUUID:
+          "lib/openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol",
+        upgradeTo:
+          "lib/openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol",
+        upgradeToAndCall:
+          "lib/openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol",
         asset: "contracts/token/ERC1155/MultiTokenVault.sol",
         assetIERC20: "contracts/token/ERC1155/MultiTokenVault.sol",
-        balanceOf:
-          "lib/openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Supply.sol",
-        balanceOfBatch:
-          "lib/openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Supply.sol",
+        balanceOf: "contracts/token/ERC1155/MultiTokenVault.sol",
+        balanceOfBatch: "contracts/token/ERC1155/MultiTokenVault.sol",
         convertToAssetsForDepositPeriod:
+          "contracts/token/ERC1155/MultiTokenVault.sol",
+        convertToAssetsForDepositPeriods:
           "contracts/token/ERC1155/MultiTokenVault.sol",
         convertToShares: "contracts/token/ERC1155/MultiTokenVault.sol",
         convertToSharesForDepositPeriod:
           "contracts/token/ERC1155/MultiTokenVault.sol",
         currentPeriodsElapsed: "contracts/token/ERC1155/MultiTokenVault.sol",
         deposit: "contracts/token/ERC1155/MultiTokenVault.sol",
-        isApprovedForAll:
-          "lib/openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Supply.sol",
+        exists: "contracts/token/ERC1155/MultiTokenVault.sol",
+        isApprovedForAll: "contracts/token/ERC1155/MultiTokenVault.sol",
         maxDeposit: "contracts/token/ERC1155/MultiTokenVault.sol",
         maxRedeemAtPeriod: "contracts/token/ERC1155/MultiTokenVault.sol",
+        paused: "contracts/token/ERC1155/MultiTokenVault.sol",
         previewDeposit: "contracts/token/ERC1155/MultiTokenVault.sol",
         previewRedeemForDepositPeriod:
           "contracts/token/ERC1155/MultiTokenVault.sol",
         redeemForDepositPeriod: "contracts/token/ERC1155/MultiTokenVault.sol",
-        safeBatchTransferFrom:
-          "lib/openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Supply.sol",
-        safeTransferFrom:
-          "lib/openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Supply.sol",
-        setApprovalForAll:
-          "lib/openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Supply.sol",
+        safeBatchTransferFrom: "contracts/token/ERC1155/MultiTokenVault.sol",
+        safeTransferFrom: "contracts/token/ERC1155/MultiTokenVault.sol",
+        setApprovalForAll: "contracts/token/ERC1155/MultiTokenVault.sol",
         sharesAtPeriod: "contracts/token/ERC1155/MultiTokenVault.sol",
         supportsInterface:
-          "lib/openzeppelin-contracts/contracts/access/AccessControl.sol",
-        uri: "lib/openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Supply.sol",
-        distributeYield: "contracts/yield/ITradeable.sol",
-        executeBuy: "contracts/yield/ITradeable.sol",
-        executeSell: "contracts/yield/ITradeable.sol",
-        requestBuy: "contracts/yield/ITradeable.sol",
-        requestSell: "contracts/yield/ITradeable.sol",
-        yieldGenerated: "contracts/yield/ITradeable.sol",
-        NOTICE_PERIOD: "contracts/timelock/TimelockAsyncUnlock.sol",
+          "lib/openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol",
+        totalSupply: "contracts/token/ERC1155/MultiTokenVault.sol",
+        uri: "contracts/token/ERC1155/MultiTokenVault.sol",
+        executeBuy: "contracts/token/component/IComponentToken.sol",
+        executeSell: "contracts/token/component/IComponentToken.sol",
+        getVersion: "contracts/token/component/IComponentToken.sol",
+        requestBuy: "contracts/token/component/IComponentToken.sol",
+        requestSell: "contracts/token/component/IComponentToken.sol",
         currentPeriod: "contracts/timelock/TimelockAsyncUnlock.sol",
-        lock: "contracts/timelock/TimelockAsyncUnlock.sol",
         lockedAmount: "contracts/timelock/TimelockAsyncUnlock.sol",
         maxRequestUnlock: "contracts/timelock/TimelockAsyncUnlock.sol",
-        maxUnlock: "contracts/timelock/TimelockAsyncUnlock.sol",
+        minUnlockPeriod: "contracts/timelock/TimelockAsyncUnlock.sol",
         noticePeriod: "contracts/timelock/TimelockAsyncUnlock.sol",
         requestUnlock: "contracts/timelock/TimelockAsyncUnlock.sol",
         unlock: "contracts/timelock/TimelockAsyncUnlock.sol",
         unlockRequested: "contracts/timelock/TimelockAsyncUnlock.sol",
-        unlockedAmount: "contracts/timelock/TimelockAsyncUnlock.sol",
         CLOCK_MODE: "contracts/timelock/Timer.sol",
         clock: "contracts/timelock/Timer.sol",
         elapsed24Hours: "contracts/timelock/Timer.sol",
@@ -2926,24 +3159,18 @@ const deployedContracts = {
         rateScaled: "contracts/yield/context/TripleRateContext.sol",
         scale: "contracts/yield/context/TripleRateContext.sol",
         setReducedRate: "contracts/yield/context/TripleRateContext.sol",
-        paused:
-          "lib/openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Pausable.sol",
-        exists:
-          "lib/openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Supply.sol",
-        totalSupply:
-          "lib/openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Supply.sol",
         DEFAULT_ADMIN_ROLE:
-          "lib/openzeppelin-contracts/contracts/access/AccessControl.sol",
+          "lib/openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol",
         getRoleAdmin:
-          "lib/openzeppelin-contracts/contracts/access/AccessControl.sol",
+          "lib/openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol",
         grantRole:
-          "lib/openzeppelin-contracts/contracts/access/AccessControl.sol",
+          "lib/openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol",
         hasRole:
-          "lib/openzeppelin-contracts/contracts/access/AccessControl.sol",
+          "lib/openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol",
         renounceRole:
-          "lib/openzeppelin-contracts/contracts/access/AccessControl.sol",
+          "lib/openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol",
         revokeRole:
-          "lib/openzeppelin-contracts/contracts/access/AccessControl.sol",
+          "lib/openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol",
       },
     },
   },

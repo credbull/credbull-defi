@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { OwnedNft } from "alchemy-sdk";
 import { ethers } from "ethers";
 import { useTheme } from "next-themes";
-import { useChainId, useReadContract } from "wagmi";
-import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
+import { useChainId, useReadContract, useWriteContract } from "wagmi";
+import { useDeployedContractInfo, useTransactor } from "~~/hooks/scaffold-eth";
 import { Contract, ContractName } from "~~/utils/scaffold-eth/contract";
 import { formatTimestamp } from "~~/utils/vault/general";
-import { formatUnits, getNFTsForOwner } from "~~/utils/vault/web3";
+import { getNFTsForOwner } from "~~/utils/vault/web3";
 
 type PeriodRate = {
   interestRate: number;
@@ -30,11 +30,12 @@ const ViewSection = ({
 
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [refetch, setRefetch] = useState(false);
 
   const [userDepositIds, setUserDepositIds] = useState<OwnedNft[]>([]);
-  const [pools, setPools] = useState<{ depositId: OwnedNft; balance: string; yield: string }[]>([]);
+  const [pools, setPools] = useState<{ depositId: OwnedNft; balance: string; shares: string; yield: string }[]>([]);
 
-  const [sharesAmount, setSharesAmount] = useState("");
+  const [currentPeriod, setCurrentPeriod] = useState(0);
   const [assetAmount, setAssetAmount] = useState("");
   const [startTime, setStartTime] = useState("");
   const [noticePeriod, setNoticePeriod] = useState(0);
@@ -44,7 +45,6 @@ const ViewSection = ({
   const [fullRate, setFullRate] = useState(0);
   const [reducedRate, setReducedRate] = useState(0);
 
-  const [buyAmount, setBuyAmount] = useState("");
   const [sellAmount, setSellAmount] = useState("");
   const [currencyTokenAmount, setCurrencyTokenAmount] = useState("");
   const [componentTokenAmount, setComponentTokenAmount] = useState("");
@@ -65,7 +65,7 @@ const ViewSection = ({
     }
 
     fetchUserDepositIds();
-  }, []);
+  }, [address, chainId, deployedContractData?.address]);
 
   useEffect(() => {
     async function fetchBalances() {
@@ -77,14 +77,20 @@ const ViewSection = ({
       const balancePromises = userDepositIds.map(async depositId => {
         try {
           const balanceBigInt = await contract.balanceOf(address, depositId);
-          const balance = formatUnits(balanceBigInt);
+          const balance = ethers.formatUnits(balanceBigInt, 6);
+
+          const sharesBigInt = await contract.sharesAtPeriod(address, depositId);
+          const shares = ethers.formatUnits(sharesBigInt, 6);
 
           if (balanceBigInt > 0) {
-            const yieldAmount = (Number(balance) * 0.05).toFixed(2);
+            const yieldAmount =
+              currentPeriod > Number(depositId) ? await contract.calcYield(balanceBigInt, depositId, currentPeriod) : 0;
+
             return {
               depositId,
               balance,
-              yield: yieldAmount,
+              shares,
+              yield: yieldAmount > 0 ? ethers.formatUnits(yieldAmount, 6) : yieldAmount,
             };
           }
 
@@ -99,6 +105,7 @@ const ViewSection = ({
       const validPools = results.filter(pool => pool !== null) as {
         depositId: OwnedNft;
         balance: string;
+        shares: string;
         yield: string;
       }[];
 
@@ -108,11 +115,11 @@ const ViewSection = ({
     if (userDepositIds.length > 0 && deployedContractData) {
       fetchBalances();
     }
-  }, [userDepositIds, deployedContractData, address]);
+  }, [refetch, userDepositIds, deployedContractData, address, currentPeriod]);
 
-  const { refetch: refetchSharesAmount } = useReadContract({
+  const { refetch: refetchCurrentPeriod } = useReadContract({
     address: deployedContractData?.address,
-    functionName: "totalSupply",
+    functionName: "currentPeriodsElapsed",
     abi: deployedContractData?.abi,
     args: [],
   });
@@ -174,55 +181,46 @@ const ViewSection = ({
   });
 
   useEffect(() => {
-    refetchSharesAmount().then(data => {
-      console.log("refetchSharesAmount", data?.data);
-      const sharesAmountBigInt = BigInt(data?.data as bigint);
-      setSharesAmount(formatUnits(sharesAmountBigInt));
+    refetchCurrentPeriod().then(data => {
+      setCurrentPeriod(Number(data?.data));
     });
 
     refetchAssetAmount().then(data => {
-      console.log("refetchAssetAmount", data?.data);
       const assetAmountBigInt = BigInt(data?.data as bigint);
-      setAssetAmount(formatUnits(assetAmountBigInt));
+      setAssetAmount(ethers.formatUnits(assetAmountBigInt, 6));
     });
 
     refetchStartTime().then(data => {
-      console.log("refetchStartTime", formatTimestamp(Number(data?.data)));
       setStartTime(formatTimestamp(Number(data?.data)));
     });
 
     refetchNoticePeriod().then(data => {
-      console.log("refetchNoticePeriod", Number(data?.data) / (60 * 60));
-      setNoticePeriod(Number(data?.data) / (60 * 60));
+      setNoticePeriod(Number(data?.data));
     });
 
     refetchFrequency().then(data => {
-      console.log("refetchFrequency", Number(data?.data));
       setFrequency(Number(data?.data));
     });
 
     refetchTenor().then(data => {
-      console.log("refetchTenor", Number(data?.data));
       setTenor(Number(data?.data));
     });
 
     refetchScale().then(data => {
-      console.log("refetchScale", Number(data?.data));
       setScale(Number(data?.data));
     });
 
     refetchFullRate().then(data => {
-      console.log("refetchFullRate", Number(data?.data) / (scale * 100));
-      setFullRate(Number(data?.data) / (scale * 100));
+      setFullRate(Number(data?.data) / scale);
     });
 
     refetchReducedRate().then(data => {
-      console.log("refetchReducedRate", Number((data?.data as PeriodRate)?.interestRate) / (scale * 100));
-      setReducedRate(Number((data?.data as PeriodRate)?.interestRate) / (scale * 100));
+      setReducedRate(Number((data?.data as PeriodRate)?.interestRate) / scale);
     });
   }, [
+    refetch,
     scale,
-    refetchSharesAmount,
+    refetchCurrentPeriod,
     refetchAssetAmount,
     refetchStartTime,
     refetchNoticePeriod,
@@ -233,10 +231,51 @@ const ViewSection = ({
     refetchReducedRate,
   ]);
 
-  const handleBuy = () => {
+  const writeTxn = useTransactor();
+  const { writeContractAsync } = useWriteContract();
+
+  const handleBuy = async () => {
     // const message = `Bought ${currencyTokenAmount} currency tokens.`;
     // setLog([...log, message]);
-    setCurrencyTokenAmount("");
+    console.log("currencyTokenAmount", currencyTokenAmount);
+    console.log("componentTokenAmount", componentTokenAmount);
+    if (!address || !currencyTokenAmount) {
+      console.log("Missing required fields");
+      return;
+    }
+
+    try {
+      if (writeContractAsync) {
+        try {
+          const makeWriteWithParams = () =>
+            writeContractAsync({
+              address: deployedContractData?.address || "",
+              functionName: "executeBuy",
+              abi: deployedContractData?.abi || [],
+              args: [
+                address,
+                BigInt(0),
+                ethers.parseUnits(currencyTokenAmount, 6),
+                ethers.parseUnits(currencyTokenAmount, 6),
+              ],
+            });
+          writeTxn(makeWriteWithParams).then(data => {
+            console.log("setting refresh", data);
+            setRefetch(prev => !prev);
+          });
+        } catch (e: any) {
+          console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:redeem  ~ error", e);
+        }
+      }
+
+      // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
+
+      setCurrencyTokenAmount("");
+      setComponentTokenAmount("");
+    } catch (error) {
+      console.error("Error executing buy:", error);
+      // setLog(prevLog => [...prevLog, "Error executing buy"]);
+    }
   };
 
   const handleRequestSell = () => {
@@ -272,56 +311,151 @@ const ViewSection = ({
           </div>
         ) : (
           <div className="flex flex-wrap gap-4">
-            <span className={`${resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-200"} px-3 py-1 rounded-full`}>
-              Shares: {sharesAmount}
+            <span
+              className={`relative cursor-pointer transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out px-3 py-1 rounded-full shadow-lg ${
+                resolvedTheme === "dark" ? "bg-gray-700 text-white" : "bg-gray-200 text-black"
+              }`}
+            >
+              Current Period: {currentPeriod}
+              <div
+                className="absolute inset-0 transition-opacity duration-700 opacity-0 hover:opacity-100"
+                style={{
+                  background: "radial-gradient(circle, rgba(255,255,255,0.1) 10%, transparent 80%)",
+                  pointerEvents: "none",
+                }}
+              ></div>
             </span>
-            <span className={`${resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-200"} px-3 py-1 rounded-full`}>
+
+            <span
+              className={`relative cursor-pointer transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out px-3 py-1 rounded-full shadow-lg ${
+                resolvedTheme === "dark" ? "bg-gray-700 text-white" : "bg-gray-200 text-black"
+              }`}
+            >
               Asset Amount: {assetAmount} USDC
+              <div
+                className="absolute inset-0 transition-opacity duration-700 opacity-0 hover:opacity-100"
+                style={{
+                  background: "radial-gradient(circle, rgba(255,255,255,0.1) 10%, transparent 80%)",
+                  pointerEvents: "none",
+                }}
+              ></div>
             </span>
-            <span className={`${resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-200"} px-3 py-1 rounded-full`}>
+
+            <span
+              className={`relative cursor-pointer transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out px-3 py-1 rounded-full shadow-lg ${
+                resolvedTheme === "dark" ? "bg-gray-700 text-white" : "bg-gray-200 text-black"
+              }`}
+            >
               Start Time: {startTime}
+              <div
+                className="absolute inset-0 transition-opacity duration-700 opacity-0 hover:opacity-100"
+                style={{
+                  background: "radial-gradient(circle, rgba(255,255,255,0.1) 10%, transparent 80%)",
+                  pointerEvents: "none",
+                }}
+              ></div>
             </span>
-            <span className={`${resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-200"} px-3 py-1 rounded-full`}>
+
+            <span
+              className={`relative cursor-pointer transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out px-3 py-1 rounded-full shadow-lg ${
+                resolvedTheme === "dark" ? "bg-gray-700 text-white" : "bg-gray-200 text-black"
+              }`}
+            >
               Notice Period: {noticePeriod} hours
+              <div
+                className="absolute inset-0 transition-opacity duration-700 opacity-0 hover:opacity-100"
+                style={{
+                  background: "radial-gradient(circle, rgba(255,255,255,0.1) 10%, transparent 80%)",
+                  pointerEvents: "none",
+                }}
+              ></div>
             </span>
-            <span className={`${resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-200"} px-3 py-1 rounded-full`}>
+
+            <span
+              className={`relative cursor-pointer transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out px-3 py-1 rounded-full shadow-lg ${
+                resolvedTheme === "dark" ? "bg-gray-700 text-white" : "bg-gray-200 text-black"
+              }`}
+            >
               Frequency: {frequency} days
+              <div
+                className="absolute inset-0 transition-opacity duration-700 opacity-0 hover:opacity-100"
+                style={{
+                  background: "radial-gradient(circle, rgba(255,255,255,0.1) 10%, transparent 80%)",
+                  pointerEvents: "none",
+                }}
+              ></div>
             </span>
-            <span className={`${resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-200"} px-3 py-1 rounded-full`}>
+
+            <span
+              className={`relative cursor-pointer transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out px-3 py-1 rounded-full shadow-lg ${
+                resolvedTheme === "dark" ? "bg-gray-700 text-white" : "bg-gray-200 text-black"
+              }`}
+            >
               Tenor: {tenor} days
+              <div
+                className="absolute inset-0 transition-opacity duration-700 opacity-0 hover:opacity-100"
+                style={{
+                  background: "radial-gradient(circle, rgba(255,255,255,0.1) 10%, transparent 80%)",
+                  pointerEvents: "none",
+                }}
+              ></div>
             </span>
-            <span className={`${resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-200"} px-3 py-1 rounded-full`}>
+
+            <span
+              className={`relative cursor-pointer transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out px-3 py-1 rounded-full shadow-lg ${
+                resolvedTheme === "dark" ? "bg-gray-700 text-white" : "bg-gray-200 text-black"
+              }`}
+            >
               Full Rate: {fullRate}%
+              <div
+                className="absolute inset-0 transition-opacity duration-700 opacity-0 hover:opacity-100"
+                style={{
+                  background: "radial-gradient(circle, rgba(255,255,255,0.1) 10%, transparent 80%)",
+                  pointerEvents: "none",
+                }}
+              ></div>
             </span>
-            <span className={`${resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-200"} px-3 py-1 rounded-full`}>
+
+            <span
+              className={`relative cursor-pointer transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out px-3 py-1 rounded-full shadow-lg ${
+                resolvedTheme === "dark" ? "bg-gray-700 text-white" : "bg-gray-200 text-black"
+              }`}
+            >
               Reduced Rate: {reducedRate}%
+              <div
+                className="absolute inset-0 transition-opacity duration-700 opacity-0 hover:opacity-100"
+                style={{
+                  background: "radial-gradient(circle, rgba(255,255,255,0.1) 10%, transparent 80%)",
+                  pointerEvents: "none",
+                }}
+              ></div>
             </span>
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {/* Pools section */}
         {pools.map((pool, index) => (
           <div
             key={index}
-            className={`relative cursor-pointer overflow-hidden transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out rounded-full shadow-xl p-6 ${
+            className={`relative cursor-pointer overflow-hidden transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out rounded-lg shadow-xl p-6 ${
               resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
             }`}
             style={{
-              borderRadius: "50% / 35%", // Oval shape
+              borderRadius: "16px", // Rounded rectangle shape
               boxShadow:
                 resolvedTheme === "dark"
-                  ? "0 4px 8px rgba(255, 255, 255, 0.1), 0 6px 20px rgba(255, 255, 255, 0.1)"
-                  : "0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px rgba(0, 0, 0, 0.1)",
+                  ? "0 4px 12px rgba(255, 255, 255, 0.1), 0 6px 20px rgba(255, 255, 255, 0.1)"
+                  : "0 4px 12px rgba(0, 0, 0, 0.1), 0 6px 20px rgba(0, 0, 0, 0.1)",
               transformStyle: "preserve-3d",
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-2xl rounded-full"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-lg rounded-lg"></div>
 
-            {/* <h2 className="relative z-10 text-xl font-bold mb-4 text-center">Pool {index + 1}</h2> */}
             <p className="relative z-10 text-center">Deposit period: {Number(pool.depositId)}</p>
             <p className="relative z-10 text-center">Balance: {pool.balance} USDC</p>
+            <p className="relative z-10 text-center">Shares: {pool.shares}</p>
             <p className="relative z-10 text-center">Yield: {pool.yield} USDC</p>
 
             <div
@@ -342,7 +476,7 @@ const ViewSection = ({
             resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
           } shadow-md p-4 rounded-lg`}
         >
-          <h2 className="text-xl font-bold mb-4">Execute Buy</h2>
+          <h2 className="text-xl font-bold mb-4">Buy</h2>
           <input
             type="text"
             value={currencyTokenAmount}
@@ -384,7 +518,7 @@ const ViewSection = ({
             resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
           } shadow-md p-4 rounded-lg`}
         >
-          <h2 className="text-xl font-bold mb-4">Execute Sell</h2>
+          <h2 className="text-xl font-bold mb-4">Sell</h2>
           <input
             type="text"
             value={componentTokenAmount}
