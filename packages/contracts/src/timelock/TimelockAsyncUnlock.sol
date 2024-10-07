@@ -80,8 +80,8 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         uint256 totalAmount = 0;
         uint256 length = depositPeriodsMap.length();
 
-        for (uint256 i = 0; i < length; i++) {
-            (, uint256 amount) = depositPeriodsMap.at(i); // Get the amount at the current index
+        for (uint256 i = 0; i < length; ++i) {
+            (, uint256 amount) = depositPeriodsMap.at(i);
             totalAmount += amount;
         }
 
@@ -112,39 +112,10 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         uint256 unlockPeriod = minUnlockPeriod();
 
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
-            requestUnlock(owner, depositPeriods[i], unlockPeriod, amounts[i]);
+            _handleSingleUnlockRequest(owner, depositPeriods[i], unlockPeriod, amounts[i]);
         }
 
         return unlockPeriod;
-    }
-
-    /// @notice Request unlock of `amount` for the `tokenOwner` at the specified `unlockPeriod`.
-    function requestUnlock(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount) public {
-        _authorizeCaller(_msgSender(), owner);
-
-        if (amount > maxRequestUnlock(owner, depositPeriod)) {
-            revert TimelockAsyncUnlock__ExceededMaxRequestUnlock(
-                owner, depositPeriod, amount, maxRequestUnlock(owner, depositPeriod)
-            );
-        }
-
-        // TODO - validate the periods here
-
-        EnumerableMap.UintToUintMap storage depositPeriodsMap = _unlockRequests[owner][unlockPeriod];
-        EnumerableMap.UintToUintMap storage depositsMap = _unlocksAtDepositPeriod[owner];
-
-        // TODO - add check for maxRequestUnlock() here
-
-        if (depositPeriodsMap.contains(depositPeriod)) {
-            uint256 currentUnlockAmount = depositPeriodsMap.get(depositPeriod);
-            uint256 currentDepositAmount = depositsMap.get(depositPeriod);
-
-            depositPeriodsMap.set(depositPeriod, currentUnlockAmount + amount);
-            depositsMap.set(depositPeriod, currentDepositAmount + amount);
-        } else {
-            depositPeriodsMap.set(depositPeriod, amount);
-            depositsMap.set(depositPeriod, amount);
-        }
     }
 
     /**
@@ -159,39 +130,68 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         // requestId is considered unlockPeriod in TimelockAsyncUnlock
         uint256 unlockPeriod = requestId;
 
-        EnumerableMap.UintToUintMap storage depositPeriodsMap = _unlockRequests[owner][unlockPeriod];
-        EnumerableMap.UintToUintMap storage depositsMap = _unlocksAtDepositPeriod[owner];
+        EnumerableMap.UintToUintMap storage unlockRequestsByUnlockPeriod = _unlockRequests[owner][unlockPeriod];
+        EnumerableMap.UintToUintMap storage unlockRequestsByOwner = _unlocksAtDepositPeriod[owner];
 
-        uint256 length = depositPeriodsMap.length();
+        uint256 length = unlockRequestsByUnlockPeriod.length();
         depositPeriods = new uint256[](length);
         amounts = new uint256[](length);
 
+        // Get depositPeriods, amounts from storage using requestId
         for (uint256 i = 0; i < length; ++i) {
-            (uint256 depositPeriod, uint256 amount) = depositPeriodsMap.at(i);
+            (uint256 depositPeriod, uint256 amount) = unlockRequestsByUnlockPeriod.at(i);
             depositPeriods[i] = depositPeriod;
             amounts[i] = amount;
         }
 
-        _performUnlockValidation(owner, depositPeriods, unlockPeriod);
+        _handleUnlockValidation(owner, depositPeriods, unlockPeriod);
 
         // After processing, remove all entries from the EnumerableMap for this owner and unlockPeriod
         for (uint256 i = 0; i < length; ++i) {
             uint256 depositPeriod = depositPeriods[i];
             uint256 unlockAmount = amounts[i];
 
-            depositPeriodsMap.remove(depositPeriods[i]);
+            unlockRequestsByUnlockPeriod.remove(depositPeriod);
 
-            if (depositsMap.contains(depositPeriod)) {
-                uint256 currentDepositAmount = depositsMap.get(depositPeriod);
+            if (unlockRequestsByOwner.contains(depositPeriod)) {
+                uint256 unlockAmountByOwner = unlockRequestsByOwner.get(depositPeriod);
 
                 // If the unlocked amount equals the deposit amount, remove the entry
-                if (unlockAmount >= currentDepositAmount) {
-                    depositsMap.remove(depositPeriod);
+                if (unlockAmount >= unlockAmountByOwner) {
+                    unlockRequestsByOwner.remove(depositPeriod);
                 } else {
                     // Otherwise, reduce the deposit amount
-                    depositsMap.set(depositPeriod, currentDepositAmount - unlockAmount);
+                    unlockRequestsByOwner.set(depositPeriod, unlockAmountByOwner - unlockAmount);
                 }
             }
+        }
+    }
+
+    /**
+     * @dev An internal function to reuqest unlock for single deposit period
+     */
+    function _handleSingleUnlockRequest(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount)
+        internal
+        virtual
+    {
+        if (amount > maxRequestUnlock(owner, depositPeriod)) {
+            revert TimelockAsyncUnlock__ExceededMaxRequestUnlock(
+                owner, depositPeriod, amount, maxRequestUnlock(owner, depositPeriod)
+            );
+        }
+
+        EnumerableMap.UintToUintMap storage unlockRequestsByUnlockPeriod = _unlockRequests[owner][unlockPeriod];
+        EnumerableMap.UintToUintMap storage unlockRequestsByOwner = _unlocksAtDepositPeriod[owner];
+
+        if (unlockRequestsByUnlockPeriod.contains(depositPeriod)) {
+            uint256 unlockAmountByUnlockPeriod = unlockRequestsByUnlockPeriod.get(depositPeriod);
+            uint256 unlockAmountByOwner = unlockRequestsByOwner.get(depositPeriod);
+
+            unlockRequestsByUnlockPeriod.set(depositPeriod, unlockAmountByUnlockPeriod + amount);
+            unlockRequestsByOwner.set(depositPeriod, unlockAmountByOwner + amount);
+        } else {
+            unlockRequestsByUnlockPeriod.set(depositPeriod, amount);
+            unlockRequestsByOwner.set(depositPeriod, amount);
         }
     }
 
@@ -208,7 +208,7 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
     /**
      * @dev An internal function to check if unlock can be performed
      */
-    function _performUnlockValidation(address owner, uint256[] memory depositPeriods, uint256 unlockPeriod)
+    function _handleUnlockValidation(address owner, uint256[] memory depositPeriods, uint256 unlockPeriod)
         internal
         virtual
     {
@@ -216,15 +216,11 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
             revert TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(_msgSender(), owner, currentPeriod(), unlockPeriod);
         }
 
-        for (uint256 i = 0; i < depositPeriods.length;) {
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
             uint256 depositPeriod = depositPeriods[i];
 
             if (unlockPeriod < depositPeriod) {
                 revert TimelockAsyncUnlock__UnlockBeforeDepositPeriod(_msgSender(), owner, depositPeriod, unlockPeriod);
-            }
-
-            unchecked {
-                ++i;
             }
         }
     }
