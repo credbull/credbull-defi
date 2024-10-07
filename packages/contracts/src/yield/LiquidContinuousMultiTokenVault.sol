@@ -74,6 +74,9 @@ contract LiquidContinuousMultiTokenVault is
     error LiquidContinuousMultiTokenVault__InvalidAuthAddress(string authName, address authAddress);
     error LiquidContinuousMultiTokenVault__AmountMismatch(uint256 amount1, uint256 amount2);
     error LiquidContinuousMultiTokenVault__UnlockPeriodMismatch(uint256 unlockPeriod1, uint256 unlockPeriod2);
+    error LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(
+        uint256 componentTokenAmount, uint256 unlockRequestedAmount
+    );
 
     function initialize(VaultParams memory vaultParams) public initializer {
         __UUPSUpgradeable_init();
@@ -189,12 +192,15 @@ contract LiquidContinuousMultiTokenVault is
     function executeSell(
         address requestor,
         uint256 requestId,
-        uint256 currencyTokenAmount,
+        uint256, /*currencyTokenAmount*/
         uint256 componentTokenAmount
     ) public override {
         // TODO - we should go through the locks rather than having to figure out the periods again
-        /* (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
-            _redeemOptimizer.optimize(this, requestor, componentTokenAmount, currencyTokenAmount, currentPeriod()); */
+        if (componentTokenAmount != unlockRequestedByRequestId(requestor, requestId)) {
+            revert LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(
+                componentTokenAmount, unlockRequestedByRequestId(requestor, requestId)
+            );
+        }
 
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) = unlock(requestor, requestId);
 
