@@ -96,7 +96,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
         vm.prank(receiver);
 
-        uint256 requestId = liquidVault.requestUnlock(
+        liquidVault.requestUnlock(
             receiver, _asSingletonArray(testParam.depositPeriod), _asSingletonArray(testParam.principal)
         );
 
@@ -105,11 +105,6 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
             liquidVault.unlockRequested(receiver, testParam.depositPeriod),
             "unlockRequest should be created"
         );
-
-        // Change current period for unlock
-        _warpToPeriod(liquidVault, testParam.redeemPeriod);
-        vm.prank(receiver);
-        liquidVault.unlock(receiver, requestId);
 
         uint256 actualAssetsAtPeriod = super._testRedeemOnly(receiver, vault, testParam, sharesToRedeemAtPeriod);
 
