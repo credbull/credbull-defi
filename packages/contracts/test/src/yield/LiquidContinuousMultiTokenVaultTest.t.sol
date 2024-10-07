@@ -65,7 +65,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         uint256 requestId = liquidVault.requestSell(sharesAmount);
         assertEq(
             sharesAmount,
-            liquidVault.unlockRequested(alice, testParams.depositPeriod),
+            liquidVault.unlockRequestedAmountForDepositPeriod(alice, testParams.depositPeriod),
             "unlockRequest should be created"
         );
 
