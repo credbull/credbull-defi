@@ -320,6 +320,19 @@ abstract contract MultiTokenVault is
     }
 
     /**
+     * @inheritdoc ERC1155SupplyUpgradeable
+     */
+    function exists(uint256 id)
+        public
+        view
+        virtual
+        override(IMultiTokenVault, ERC1155SupplyUpgradeable)
+        returns (bool)
+    {
+        return ERC1155SupplyUpgradeable.exists(id);
+    }
+
+    /**
      * @inheritdoc ERC1155Upgradeable
      */
     function balanceOf(address account, uint256 id)
