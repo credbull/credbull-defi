@@ -4,12 +4,12 @@ pragma solidity ^0.8.23;
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IERC165Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeable.sol";
-import { IERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import { ERC1155SupplyUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { ERC1155PausableUpgradeable } from
     "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155PausableUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -121,10 +121,6 @@ abstract contract MultiTokenVault is
      */
     function asset() public view virtual returns (address asset_) {
         return address(ASSET);
-    }
-
-    function assetIERC20() public view virtual returns (IERC20 assetIERC20_) {
-        return ASSET;
     }
 
     /**
@@ -254,7 +250,7 @@ abstract contract MultiTokenVault is
         public
         view
         virtual
-        override(IERC165Upgradeable, ERC1155Upgradeable)
+        override(IERC165, ERC1155Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IMultiTokenVault).interfaceId || super.supportsInterface(interfaceId);
@@ -311,6 +307,18 @@ abstract contract MultiTokenVault is
         emit Withdraw(caller, receiver, owner, depositPeriod, assets, shares);
     }
 
+    /**
+     * @inheritdoc ERC1155SupplyUpgradeable
+     */
+    // function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
+    //     internal
+    //     virtual
+    //     override(ERC1155SupplyUpgradeable, ERC1155PausableUpgradeable)
+    //     whenNotPaused
+    // {
+    //     ERC1155SupplyUpgradeable._update(from, to, ids, values);
+    // }
+
     function _beforeTokenTransfer(
         address operator,
         address from,
@@ -318,64 +326,80 @@ abstract contract MultiTokenVault is
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) internal virtual override(ERC1155SupplyUpgradeable, ERC1155PausableUpgradeable) {
+    ) internal override(ERC1155PausableUpgradeable, ERC1155SupplyUpgradeable) {
+        // Call both parent implementations
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
+
+    /**
+     * @inheritdoc ERC1155Upgradeable
+     */
     function balanceOf(address account, uint256 id)
         public
         view
         virtual
-        override(ERC1155Upgradeable, IERC1155Upgradeable)
+        override(ERC1155Upgradeable, IERC1155)
         returns (uint256)
     {
-        return super.balanceOf(account, id);
+        return ERC1155Upgradeable.balanceOf(account, id);
     }
 
+    /**
+     * @inheritdoc ERC1155Upgradeable
+     */
     function balanceOfBatch(address[] memory accounts, uint256[] memory ids)
         public
         view
         virtual
-        override(ERC1155Upgradeable, IERC1155Upgradeable)
+        override(ERC1155Upgradeable, IERC1155)
         returns (uint256[] memory)
     {
-        return super.balanceOfBatch(accounts, ids);
+        return ERC1155Upgradeable.balanceOfBatch(accounts, ids);
     }
 
+    /**
+     * @inheritdoc ERC1155Upgradeable
+     */
     function isApprovedForAll(address account, address operator)
         public
         view
         virtual
-        override(ERC1155Upgradeable, IERC1155Upgradeable)
+        override(ERC1155Upgradeable, IERC1155)
         returns (bool)
     {
-        return super.isApprovedForAll(account, operator);
+        return ERC1155Upgradeable.isApprovedForAll(account, operator);
     }
 
-    function setApprovalForAll(address operator, bool approved)
-        public
-        virtual
-        override(ERC1155Upgradeable, IERC1155Upgradeable)
-    {
-        super.setApprovalForAll(operator, approved);
+    /**
+     * @inheritdoc ERC1155Upgradeable
+     */
+    function setApprovalForAll(address operator, bool approved) public virtual override(ERC1155Upgradeable, IERC1155) {
+        ERC1155Upgradeable.setApprovalForAll(operator, approved);
     }
 
+    /**
+     * @inheritdoc ERC1155Upgradeable
+     */
     function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
         public
         virtual
-        override(ERC1155Upgradeable, IERC1155Upgradeable)
+        override(ERC1155Upgradeable, IERC1155)
     {
-        super.safeTransferFrom(from, to, id, amount, data);
+        ERC1155Upgradeable.safeTransferFrom(from, to, id, amount, data);
     }
 
+    /**
+     * @inheritdoc ERC1155Upgradeable
+     */
     function safeBatchTransferFrom(
         address from,
         address to,
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) public virtual override(ERC1155Upgradeable, IERC1155Upgradeable) {
-        super.safeBatchTransferFrom(from, to, ids, amounts, data);
+    ) public virtual override(ERC1155Upgradeable, IERC1155) {
+        ERC1155Upgradeable.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
     /**

@@ -81,9 +81,14 @@ contract DeployScript is ScaffoldETHDeploy, TomlConfig {
 
         uint256 startTimestamp = _readUintWithDefault(tomlConfig, ".vault_start_timestamp", block.timestamp);
 
+        LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth = LiquidContinuousMultiTokenVault.VaultAuth({
+            owner: owner,
+            operator: operator,
+            upgrader: owner
+        });
+
         LiquidContinuousMultiTokenVault.VaultParams memory params = LiquidContinuousMultiTokenVault.VaultParams({
-            contractOwner: owner,
-            contractOperator: operator,
+            vaultAuth: vaultAuth,
             asset: simpleUSDC,
             yieldStrategy: _deployYieldStrategy(),
             redeemOptimizer: _deployRedeemOptimizer(),
@@ -102,7 +107,7 @@ contract DeployScript is ScaffoldETHDeploy, TomlConfig {
     }
 
     function _deployRedeemOptimizer() internal returns (IRedeemOptimizer) {
-        return new RedeemOptimizerFIFO();
+        return new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, 0);
     }
 
     function _mintUserTokens(SimpleUSDC simpleUSDC, address _owner) internal {

@@ -8,7 +8,6 @@ pragma solidity ^0.8.20;
  * Similar to ERC-4626 Tokenized Vault standard, here:
  * - currencyToken is the "asset" ERC20 token.  e.g. USDC or another stablecoin
  * - componentToken is the "share" ERC20 token.  i.e. the Vault token
- * // TODO - add proposed "deposit-aware" interface
  * //
  */
 interface IComponentToken {
