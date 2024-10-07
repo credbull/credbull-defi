@@ -131,7 +131,7 @@ contract LiquidContinuousMultiTokenVault is
         uint256 depositPeriod,
         uint256 redeemPeriod
     ) public virtual override returns (uint256 assets) {
-        // unlock(owner, depositPeriod, redeemPeriod, shares);
+        unlock(owner, redeemPeriod);
         return super.redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemPeriod);
     }
 
