@@ -121,14 +121,13 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
                 if (amountFound + amountAtPeriod > optimizerParams.amountToFind) {
                     uint256 amountToInclude = optimizerParams.amountToFind - amountFound; // we only need the amount that brings us to amountToFind
 
+                    // only include equivalent amount of shares for the amountToInclude assets
                     // in the assets case, the amounts include principal AND returns.  we want the shares on deposit, which is the principal only.
                     // use this ratio: partialShares / totalShares = partialAssets / totalAssets
                     //                 partialShares = (partialAssets * totalShares) / totalAssets
-                    uint256 sharesToInclude = sharesAtPeriod.mulDiv(amountToInclude, amountAtPeriod);
-
-                    // only include equivalent amount of shares for the amountToInclude assets
-                    cacheSharesAtPeriods[arrayIndex] =
-                        optimizerParams.optimizerBasis == OptimizerBasis.Shares ? amountToInclude : sharesToInclude;
+                    cacheSharesAtPeriods[arrayIndex] = optimizerParams.optimizerBasis == OptimizerBasis.Shares
+                        ? amountToInclude // amount is shares, amountToInclude already correct
+                        : amountToInclude.mulDiv(sharesAtPeriod, amountAtPeriod); // amount is assets, calc the correct shares
 
                     // optimization succeeded - return here to be explicit we exit the function at this point
                     return _trimToSize(arrayIndex + 1, cacheDepositPeriods, cacheSharesAtPeriods);

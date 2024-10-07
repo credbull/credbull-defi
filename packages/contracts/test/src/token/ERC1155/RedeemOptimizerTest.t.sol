@@ -74,6 +74,36 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         assertEq(depositShares, sharesAtPeriods, "optimizeRedeem - shares not correct");
     }
 
+    function test__RedeemOptimizerTest__PartialRedeem() public {
+        uint256 residualShareAmount = 1 * _scale; // leave 1 share after redeem
+        uint256 redeemPeriod = _testParams3.redeemPeriod;
+
+        // ---------------------- setup ----------------------
+        IMultiTokenVault multiTokenVault = _createMultiTokenVault(_asset, 2, 10);
+        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(
+            IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
+        );
+        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParamsArr.all());
+
+        uint256 sharesToWithdraw = depositShares[0] + depositShares[1] + depositShares[2] - residualShareAmount;
+
+        // ---------------------- redeem ----------------------
+        _warpToPeriod(multiTokenVault, redeemPeriod); // warp vault ahead to redeemPeriod
+
+        (uint256[] memory redeemDepositPeriods, uint256[] memory redeemSharesAtPeriods) =
+            redeemOptimizer.optimizeRedeemShares(multiTokenVault, _alice, sharesToWithdraw, redeemPeriod);
+        // verify using shares
+        assertEq(depositShares[0], redeemSharesAtPeriods[0], "optimizeRedeem partial - wrong shares period 0");
+        assertEq(depositShares[1], redeemSharesAtPeriods[1], "optimizeRedeem partial - wrong shares period 1");
+        assertEq(
+            depositShares[2] - residualShareAmount,
+            redeemSharesAtPeriods[2],
+            "optimizeRedeem partial - wrong shares period 2"
+        ); // reduced by 1 share
+
+        assertEq(testParamsArr.depositPeriods(), redeemDepositPeriods, "optimizeRedeem - depositPeriods not correct");
+    }
+
     function test__RedeemOptimizerTest__PartialWithdraw() public {
         uint256 residualShareAmount = 1 * _scale; // leave 1 share after redeem
         uint256 redeemPeriod = _testParams3.redeemPeriod;
@@ -101,10 +131,12 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
             redeemOptimizer.optimizeWithdrawAssets(multiTokenVault, _alice, assetsToWithdraw, redeemPeriod);
 
         // verify using shares
-        assertEq(depositShares[0], actualSharesAtPeriods[0], "optimizeWithdraw - wrong shares period 0");
-        assertEq(depositShares[1], actualSharesAtPeriods[1], "optimizeWithdraw - wrong shares period 1");
+        assertEq(depositShares[0], actualSharesAtPeriods[0], "optimizeWithdraw partial - wrong shares period 0");
+        assertEq(depositShares[1], actualSharesAtPeriods[1], "optimizeWithdraw partial - wrong shares period 1");
         assertEq(
-            depositShares[2] - residualShareAmount, actualSharesAtPeriods[2], "optimizeWithdraw - wrong shares period 2"
+            depositShares[2] - residualShareAmount,
+            actualSharesAtPeriods[2],
+            "optimizeWithdraw partial - wrong shares period 2"
         ); // reduced by 1 share with returns
 
         // // verify using assets
@@ -114,12 +146,12 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         assertEq(
             testParamsArr.depositPeriods().length,
             actualAssetsAtPeriods.length,
-            "convertToAssetsForDepositPeriods (partial)  - length incorrect"
+            "convertToAssetsForDepositPeriods partial - length incorrect"
         );
         assertEq(
             assetsToWithdraw,
             actualAssetsAtPeriods[0] + actualAssetsAtPeriods[1] + actualAssetsAtPeriods[2],
-            "convertToAssetsForDepositPeriods (partial)  - total incorrect"
+            "convertToAssetsForDepositPeriods partial - total incorrect"
         );
     }
 
