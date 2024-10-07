@@ -95,7 +95,11 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         _warpToPeriod(liquidVault, testParam.redeemPeriod - liquidVault.noticePeriod());
 
         vm.prank(receiver);
-        liquidVault.requestUnlock(receiver, testParam.depositPeriod, testParam.principal);
+
+        liquidVault.requestUnlock(
+            receiver, _asSingletonArray(testParam.depositPeriod), _asSingletonArray(testParam.principal)
+        );
+
         assertEq(
             testParam.principal,
             liquidVault.unlockRequested(receiver, testParam.depositPeriod),
@@ -132,6 +136,20 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         uint256 warpToTimeInSeconds = liquidVault._vaultStartTimestamp() + timePeriod * 24 hours;
 
         vm.warp(warpToTimeInSeconds);
+    }
+
+    function _asSingletonArray(uint256 element) internal pure returns (uint256[] memory array) {
+        assembly {
+            // Load the free memory pointer
+            array := mload(0x40)
+            // Set array length to 1
+            mstore(array, 1)
+            // Store the single element at the next word after the length (where content starts)
+            mstore(add(array, 0x20), element)
+
+            // Update the free memory pointer by pointing after the array
+            mstore(0x40, add(array, 0x40))
+        }
     }
 }
 

@@ -16,13 +16,11 @@ contract TimelockAsyncUnlockTest is Test {
 
     uint256 private constant NOTICE_PERIOD = 1;
 
-    address internal owner = makeAddr("owner");
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
-    Deposit private depositDay1 = Deposit({ depositPeriod: 1, amount: 101 });
-    Deposit private depositDay2 = Deposit({ depositPeriod: 2, amount: 202 });
-    Deposit private depositDay3 = Deposit({ depositPeriod: 3, amount: 303 });
+    uint256[] public lockAmounts;
+    uint256[] public depositPeriods;
 
     function setUp() public {
         deposits = new ERC1155MintableBurnable();
@@ -35,29 +33,51 @@ contract TimelockAsyncUnlockTest is Test {
                 )
             )
         );
+
+        _lockInMultipleDepositPeriods();
+    }
+
+    function test__TimelockAsyncUnlock__LocksInMultipleDepositPeriods() public view {
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            assertEq(
+                lockAmounts[i],
+                asyncUnlock.lockedAmount(alice, depositPeriods[i]),
+                "lockAmount is not locked in depositPeriod"
+            );
+        }
     }
 
     /**
      * S1
-     * Scenario: Alice locks [amount]
-     * Alice requests unlock for [amount]
-     * Alice unlocks [amount] at unlockPeriod
+     * Scenario: Alice requests unlock for 2 deposit periods
+     * Alice unlocks using requestId
      */
     function test__TimelockAsyncUnlock__RequestAndUnlockSucceeds() public {
-        vm.prank(alice);
-        asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
-        assertEq(depositDay1.amount, asyncUnlock.lockedAmount(alice, depositDay1.depositPeriod), "deposit not locked");
-
         uint256 unlockPeriod = asyncUnlock.currentPeriod() + NOTICE_PERIOD;
 
         // request unlock
+        uint256[] memory depositPeriodsForUnlock = new uint256[](2);
+        uint256[] memory amountsForUnlock = new uint256[](2);
+        depositPeriodsForUnlock[0] = 1;
+        depositPeriodsForUnlock[1] = 4;
+        amountsForUnlock[0] = 1800;
+        amountsForUnlock[1] = 1200;
+
         vm.prank(alice);
-        asyncUnlock.requestUnlock(alice, depositDay1.depositPeriod, depositDay1.amount);
+        uint256 requestId = asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
+
+        for (uint256 i = 0; i < depositPeriodsForUnlock.length; ++i) {
+            assertEq(
+                amountsForUnlock[i],
+                asyncUnlock.unlockRequested(alice, depositPeriodsForUnlock[i]),
+                "unlockRequest should be created"
+            );
+        }
 
         assertEq(
-            depositDay1.amount,
-            asyncUnlock.unlockRequested(alice, depositDay1.depositPeriod),
-            "unlockRequest should be created"
+            amountsForUnlock[0] + amountsForUnlock[1],
+            asyncUnlock.unlockRequestedByRequestId(alice, requestId),
+            "unlockRequest amount by requestId is wrong"
         );
 
         // warp to unlock period
@@ -65,11 +85,39 @@ contract TimelockAsyncUnlockTest is Test {
 
         // now unlock
         vm.prank(alice);
-        asyncUnlock.unlock(alice, depositDay1.depositPeriod, unlockPeriod, depositDay1.amount);
+        (uint256[] memory unlockedDepositPeriods, uint256[] memory unlockedAmounts) =
+            asyncUnlock.unlock(alice, requestId);
 
-        assertEq(0, asyncUnlock.unlockRequested(alice, depositDay1.depositPeriod), "unlockRequest should be released");
-        assertEq(0, asyncUnlock.lockedAmount(alice, depositDay1.depositPeriod), "deposit lock not released");
-        assertEq(0, asyncUnlock._deposits().balanceOf(alice, depositDay1.depositPeriod), "deposits should be redeemed");
+        assertEq(
+            unlockedDepositPeriods.length,
+            2,
+            "unlockedDepositPeriods should be same as depsoitPeriods requested for unlock"
+        );
+        assertEq(unlockedAmounts.length, 2, "unlockedAmounts should be same as amounts requested for unlock");
+
+        assertEq(
+            0,
+            asyncUnlock.unlockRequested(alice, depositPeriodsForUnlock[0]),
+            "unlockRequest should be released(index=0)"
+        );
+        assertEq(
+            lockAmounts[0] - amountsForUnlock[0],
+            asyncUnlock.lockedAmount(alice, depositPeriodsForUnlock[0]),
+            "deposit lock not released(index=0)"
+        );
+
+        assertEq(
+            0,
+            asyncUnlock.unlockRequested(alice, depositPeriodsForUnlock[1]),
+            "unlockRequest should be released(index=1)"
+        );
+        assertEq(
+            lockAmounts[1] - amountsForUnlock[1],
+            asyncUnlock.lockedAmount(alice, depositPeriodsForUnlock[1]),
+            "deposit lock not released(index=1)"
+        );
+
+        assertEq(0, asyncUnlock.unlockRequestedByRequestId(alice, requestId), "unlockRequest amount should be 0");
     }
 
     /**
@@ -78,21 +126,55 @@ contract TimelockAsyncUnlockTest is Test {
      * and expect it fails
      */
     function test__TimelockAsyncUnlock__UnlockPriorToDepositPeriodFails() public {
-        uint256 requestedUnlockPeriod = depositDay1.depositPeriod - 1;
+        asyncUnlock.setCurrentPeriod(depositPeriods[0]);
+        {
+            (uint256[] memory depositPeriodsForUnlock, uint256[] memory amountsForUnlock) = _asSingletonArrays(8, 1800);
 
-        vm.prank(alice);
+            vm.prank(alice);
+            uint256 requestId = asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeDepositPeriod.selector,
-                alice,
-                alice,
-                depositDay1.depositPeriod,
-                requestedUnlockPeriod
-            )
-        );
+            // move current period to unlock Period
+            asyncUnlock.setCurrentPeriod(asyncUnlock.minUnlockPeriod());
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeDepositPeriod.selector,
+                    alice,
+                    alice,
+                    depositPeriodsForUnlock[0],
+                    requestId
+                )
+            );
+            vm.prank(alice);
+            asyncUnlock.unlock(alice, requestId);
+        }
 
-        asyncUnlock.unlock(alice, depositDay1.depositPeriod, requestedUnlockPeriod, depositDay1.amount);
+        {
+            // test when depositPeriodsForUnlock length is bigger than 1
+            uint256[] memory depositPeriodsForUnlock = new uint256[](2);
+            uint256[] memory amountsForUnlock = new uint256[](2);
+            depositPeriodsForUnlock[0] = 1;
+            depositPeriodsForUnlock[1] = 4;
+            amountsForUnlock[0] = 1800;
+            amountsForUnlock[1] = 1200;
+
+            vm.prank(alice);
+            uint256 requestId = asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
+
+            // move current period to unlock Period
+            asyncUnlock.setCurrentPeriod(asyncUnlock.minUnlockPeriod());
+
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeDepositPeriod.selector,
+                    alice,
+                    alice,
+                    depositPeriodsForUnlock[1],
+                    requestId
+                )
+            );
+            vm.prank(alice);
+            asyncUnlock.unlock(alice, requestId);
+        }
     }
 
     /**
@@ -101,271 +183,255 @@ contract TimelockAsyncUnlockTest is Test {
      * We expect it to fail; Alice should unlock when current period is same as or later than unlock period
      */
     function test__TimelockAsyncUnlock__UnlockPriorToUnlockPeriodFails() public {
-        uint256 currentPeriod = 5;
-        uint256 unlockPeriod = currentPeriod + 1;
-
-        asyncUnlock.setCurrentPeriod(currentPeriod);
-
-        vm.prank(alice);
+        uint256 unlockPeriod = asyncUnlock.currentPeriod() + 1;
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeUnlockPeriod.selector,
                 alice,
                 alice,
-                currentPeriod,
+                asyncUnlock.currentPeriod(),
                 unlockPeriod
             )
         );
-
-        asyncUnlock.unlock(alice, depositDay1.depositPeriod, unlockPeriod, depositDay1.amount);
+        vm.prank(alice);
+        asyncUnlock.unlock(alice, unlockPeriod);
     }
 
     /**
      * S4
-     * Scenario: Alice requests unlock multiple times
-     * Alice unlocks multiple times
-     */
-    function test__TimelockAsyncUnlock__MultipleRequestsAndUnlocks() public {
-        uint256 depositPeriod = 11;
-        uint256 depositAmount1 = 34;
-        uint256 depositAmount2 = 56;
-
-        vm.startPrank(alice);
-        asyncUnlock.lock(alice, depositPeriod, depositAmount1);
-        asyncUnlock.lock(alice, depositPeriod, depositAmount2);
-        vm.stopPrank();
-
-        uint256 totalDeposits = depositAmount1 + depositAmount2;
-
-        assertEq(totalDeposits, asyncUnlock.lockedAmount(alice, depositPeriod), "deposit not locked");
-        assertEq(totalDeposits, asyncUnlock.maxRequestUnlock(alice, depositPeriod), "maxRequestUnlock should be total");
-
-        // request unlock at exactly depositPeriod + noticePeriod
-        uint256 unlockPeriod1 = depositPeriod + NOTICE_PERIOD;
-        uint256 partialUnlockAmount1 = 10;
-        asyncUnlock.setCurrentPeriod(depositPeriod);
-        vm.prank(alice);
-        asyncUnlock.requestUnlock(alice, depositPeriod, partialUnlockAmount1);
-
-        assertEq(
-            partialUnlockAmount1,
-            asyncUnlock.unlockRequested(alice, depositPeriod),
-            "unlockRequest should have partial amount 1"
-        );
-        assertEq(totalDeposits, asyncUnlock.lockedAmount(alice, depositPeriod), "deposit not locked");
-        assertEq(
-            totalDeposits - partialUnlockAmount1,
-            asyncUnlock.maxRequestUnlock(alice, depositPeriod),
-            "maxRequestUnlock incorrect - unlockPeriod1"
-        );
-
-        // request to unlock another partial amount
-        uint256 partialUnlockAmount2 = 30;
-        vm.prank(alice);
-        asyncUnlock.requestUnlock(alice, depositPeriod, partialUnlockAmount2);
-        assertEq(
-            partialUnlockAmount1 + partialUnlockAmount2,
-            asyncUnlock.unlockRequested(alice, depositPeriod),
-            "unlockRequest should have sum of 2 partial amounts"
-        );
-
-        // now create a request for a different unlockPeriod
-        uint256 unlockPeriod2 = depositPeriod + 5 + NOTICE_PERIOD;
-        asyncUnlock.setCurrentPeriod(depositPeriod + 5);
-
-        assertEq(
-            totalDeposits - partialUnlockAmount1 - partialUnlockAmount2,
-            asyncUnlock.maxRequestUnlock(alice, depositPeriod),
-            "maxRequestUnlock incorrect in second unlockPeriod"
-        );
-        vm.prank(alice);
-        asyncUnlock.requestUnlock(alice, depositPeriod, totalDeposits - partialUnlockAmount1 - partialUnlockAmount2);
-        assertEq(
-            totalDeposits, asyncUnlock.unlockRequested(alice, depositPeriod), "unlockRequest should have total amount"
-        );
-
-        // now unlock
-        asyncUnlock.setCurrentPeriod(unlockPeriod1);
-        vm.prank(alice);
-        asyncUnlock.unlock(alice, depositPeriod, unlockPeriod1, partialUnlockAmount1);
-
-        assertEq(
-            totalDeposits - partialUnlockAmount1,
-            asyncUnlock.unlockRequested(alice, depositPeriod),
-            "unlockRequested should exclude partialUnlockAmount1"
-        );
-
-        assertEq(
-            partialUnlockAmount2,
-            asyncUnlock.unlockRequested(alice, depositPeriod, unlockPeriod1),
-            "unlockRequested for unlockPeriod1 should return partialUnlockAmount2"
-        );
-
-        assertEq(
-            totalDeposits - partialUnlockAmount1,
-            asyncUnlock.lockedAmount(alice, depositPeriod),
-            "lockedAmount should exclude partialUnlockAmount1"
-        );
-
-        vm.prank(alice);
-        asyncUnlock.unlock(alice, depositPeriod, unlockPeriod1, partialUnlockAmount2);
-
-        assertEq(
-            totalDeposits - partialUnlockAmount1 - partialUnlockAmount2,
-            asyncUnlock.unlockRequested(alice, depositPeriod),
-            "unlockRequested should exclude partialUnlockAmount1+partialUnlockAmount2"
-        );
-
-        assertEq(
-            0,
-            asyncUnlock.unlockRequested(alice, depositPeriod, unlockPeriod1),
-            "unlockRequested for unlockPeriod1 should return 0 after 2 unlocks"
-        );
-
-        assertEq(
-            totalDeposits - partialUnlockAmount1 - partialUnlockAmount2,
-            asyncUnlock.lockedAmount(alice, depositPeriod),
-            "lockedAmount should exclude partialUnlockAmount1+partialUnlockAmount2"
-        );
-
-        asyncUnlock.setCurrentPeriod(unlockPeriod2);
-        vm.prank(alice);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__ExceededMaxUnlock.selector,
-                alice,
-                totalDeposits - partialUnlockAmount1 - partialUnlockAmount2 + 1,
-                totalDeposits - partialUnlockAmount1 - partialUnlockAmount2
-            )
-        );
-        asyncUnlock.unlock(
-            alice, depositPeriod, unlockPeriod2, totalDeposits - partialUnlockAmount1 - partialUnlockAmount2 + 1
-        );
-
-        vm.prank(alice);
-        asyncUnlock.unlock(
-            alice, depositPeriod, unlockPeriod2, totalDeposits - partialUnlockAmount1 - partialUnlockAmount2
-        );
-
-        assertEq(
-            0,
-            asyncUnlock.unlockRequested(alice, depositPeriod),
-            "unlockRequested should return 0 after unlock in unlockPeriod2"
-        );
-
-        assertEq(
-            0,
-            asyncUnlock.unlockRequested(alice, depositPeriod, unlockPeriod2),
-            "unlockRequested by unlockPeriod2 should return 0 after unlock in unlockPeriod2"
-        );
-
-        assertEq(0, asyncUnlock.lockedAmount(alice, depositPeriod), "lockedAmount should return 0 after all unlocks");
-    }
-
-    /**
-     * S5
      * Scenario: Bob requests unlock for Alice's lockedAmount
      * We expect it to fail
      */
     function test__TimelockAsyncUnlock__OnlyDepositorCanRequestUnlock() public {
-        vm.prank(alice);
-        asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
+        (uint256[] memory depositPeriodsForUnlock, uint256[] memory amountsForUnlock) = _asSingletonArrays(1, 1800);
 
-        vm.prank(bob);
         vm.expectRevert(
             abi.encodeWithSelector(TimelockAsyncUnlock.TimelockAsyncUnlock__AuthorizeCallerFailed.selector, bob, alice)
         );
-        asyncUnlock.requestUnlock(alice, depositDay1.depositPeriod, depositDay1.amount);
+        vm.prank(bob);
+        asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
     }
 
     /**
-     * S6
+     * S5
      * Scenario: Alice locks and requests unlock
      * Bob can unlock Alice's requested unlock amount
      */
     function test__TimelockAsyncUnlock__AnyoneCanUnlock() public {
-        vm.prank(alice);
-        asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
-
-        asyncUnlock.setCurrentPeriod(depositDay1.depositPeriod);
+        (uint256[] memory depositPeriodsForUnlock, uint256[] memory amountsForUnlock) = _asSingletonArrays(1, 1800);
 
         vm.prank(alice);
-        asyncUnlock.requestUnlock(alice, depositDay1.depositPeriod, depositDay1.amount);
+        uint256 requestId = asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
 
-        uint256 unlockPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
-
-        asyncUnlock.setCurrentPeriod(unlockPeriod);
+        asyncUnlock.setCurrentPeriod(asyncUnlock.minUnlockPeriod());
 
         vm.prank(bob);
-        asyncUnlock.unlock(alice, depositDay1.depositPeriod, unlockPeriod, depositDay1.amount);
+        asyncUnlock.unlock(alice, requestId);
 
         assertEq(
-            0,
-            asyncUnlock.lockedAmount(alice, depositDay1.depositPeriod),
-            "lockedAmount should return 0 after bob unlocks"
+            lockAmounts[0] - amountsForUnlock[0],
+            asyncUnlock.lockedAmount(alice, depositPeriodsForUnlock[0]),
+            "lockedAmount should be decreased by the amountsForUnlock"
         );
 
         assertEq(
             0,
-            asyncUnlock.unlockRequested(alice, depositDay1.depositPeriod),
+            asyncUnlock.unlockRequested(alice, depositPeriodsForUnlock[0]),
             "unlockRequested should return 0 after bob unlocks"
         );
     }
 
     /**
-     * S7
-     * Scenario: Alice locks and requests unlock amount
-     * Alice tries to unlock the amount which is bigger than one he requests
-     * We expect it to fail
-     */
-    function test__TimelockAsyncUnlock__ExceededMaxUnlock() public {
-        vm.prank(alice);
-        asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
-
-        asyncUnlock.setCurrentPeriod(depositDay1.depositPeriod);
-
-        vm.prank(alice);
-        asyncUnlock.requestUnlock(alice, depositDay1.depositPeriod, depositDay1.amount);
-
-        uint256 unlockAmount = depositDay1.amount + 10;
-        uint256 unlockPeriod = depositDay1.depositPeriod + NOTICE_PERIOD;
-
-        asyncUnlock.setCurrentPeriod(unlockPeriod);
-        vm.prank(alice);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__ExceededMaxUnlock.selector,
-                alice,
-                unlockAmount,
-                depositDay1.amount
-            )
-        );
-        asyncUnlock.unlock(alice, depositDay1.depositPeriod, unlockPeriod, unlockAmount);
-    }
-
-    /**
-     * S8
-     * Scenario: Alice locks and requests unlock amount bigger than locked amount
+     * S6
+     * Scenario: Alice locks and requests unlock amount bigger than locked amount for specific deposit period
      * We expect it to fail
      */
     function test__TimelockAsyncUnlock__ExceededMaxRequestUnlock() public {
+        uint256[] memory depositPeriodsForUnlock = new uint256[](2);
+        uint256[] memory amountsForUnlock = new uint256[](2);
+        depositPeriodsForUnlock[0] = 1;
+        depositPeriodsForUnlock[1] = 4;
+        amountsForUnlock[0] = 1800;
+        amountsForUnlock[1] = 1200;
+
         vm.prank(alice);
-        asyncUnlock.lock(alice, depositDay1.depositPeriod, depositDay1.amount);
+        asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
 
-        asyncUnlock.setCurrentPeriod(depositDay1.depositPeriod);
+        asyncUnlock.setCurrentPeriod(asyncUnlock.currentPeriod() + 2);
 
-        uint256 requestUnlockAmount = depositDay1.amount + 10;
+        (uint256[] memory depositPeriodsForUnlock2, uint256[] memory amountsForUnlock2) = _asSingletonArrays(4, 500);
 
-        vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
                 TimelockAsyncUnlock.TimelockAsyncUnlock__ExceededMaxRequestUnlock.selector,
                 alice,
-                requestUnlockAmount,
-                depositDay1.amount
+                depositPeriodsForUnlock2[0],
+                amountsForUnlock2[0],
+                lockAmounts[1] - amountsForUnlock[1]
             )
         );
-        asyncUnlock.requestUnlock(alice, depositDay1.depositPeriod, requestUnlockAmount);
+        vm.prank(alice);
+        asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock2, amountsForUnlock2);
+    }
+
+    function test__TimelockAsyncUnlock__MultipleRequestsAndUnlocks() public {
+        assertEq(
+            lockAmounts[0],
+            asyncUnlock.maxRequestUnlock(alice, depositPeriods[0]),
+            "maxRequestUnlock should be locked amount"
+        );
+
+        // first unlock request
+        uint256[] memory depositPeriodsForUnlock = new uint256[](2);
+        uint256[] memory amountsForUnlock = new uint256[](2);
+
+        depositPeriodsForUnlock[0] = 1;
+        depositPeriodsForUnlock[1] = 4;
+        amountsForUnlock[0] = 1800;
+        amountsForUnlock[1] = 1200;
+
+        vm.prank(alice);
+        uint256 requestId = asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
+
+        assertEq(
+            amountsForUnlock[0],
+            asyncUnlock.unlockRequested(alice, depositPeriodsForUnlock[0]),
+            "unlockRequested should be created (index=0)"
+        );
+
+        assertEq(
+            amountsForUnlock[1],
+            asyncUnlock.unlockRequested(alice, depositPeriodsForUnlock[1]),
+            "unlockRequested should be created (index=1)"
+        );
+
+        assertEq(
+            amountsForUnlock[0] + amountsForUnlock[1],
+            asyncUnlock.unlockRequestedByRequestId(alice, requestId),
+            "unlockRequested by requestId should be created"
+        );
+
+        // second unlock request
+        uint256[] memory depositPeriodsForUnlock2 = new uint256[](2);
+        uint256[] memory amountsForUnlock2 = new uint256[](2);
+
+        depositPeriodsForUnlock2[0] = 4;
+        depositPeriodsForUnlock2[1] = 8;
+        amountsForUnlock2[0] = 200;
+        amountsForUnlock2[1] = 2000;
+
+        vm.prank(alice);
+        uint256 requestId2 = asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock2, amountsForUnlock2);
+
+        assertEq(requestId, requestId2, "RequestIds should be same");
+
+        assertEq(
+            amountsForUnlock[0],
+            asyncUnlock.unlockRequested(alice, depositPeriods[0]),
+            "unlockRequested should be created after second unlock requests (index=0)"
+        );
+
+        assertEq(
+            amountsForUnlock[1] + amountsForUnlock2[0],
+            asyncUnlock.unlockRequested(alice, depositPeriods[1]),
+            "unlockRequested should be created after second unlock requests (index=1)"
+        );
+
+        assertEq(
+            amountsForUnlock2[1],
+            asyncUnlock.unlockRequested(alice, depositPeriods[2]),
+            "unlockRequested should be created after second unlock requests (index=2)"
+        );
+
+        assertEq(
+            amountsForUnlock[0] + amountsForUnlock[1] + amountsForUnlock2[0] + amountsForUnlock2[1],
+            asyncUnlock.unlockRequestedByRequestId(alice, requestId),
+            "unlockRequested by requestId should be created after second unlock requests"
+        );
+
+        // unlock
+        asyncUnlock.setCurrentPeriod(asyncUnlock.minUnlockPeriod());
+
+        vm.prank(alice);
+        (uint256[] memory unlockedDepositPeriods, uint256[] memory unlockedAmounts) =
+            asyncUnlock.unlock(alice, requestId);
+
+        assertEq(unlockedDepositPeriods.length, 3);
+
+        for (uint256 i = 0; i < unlockedDepositPeriods.length; ++i) {
+            assertEq(unlockedDepositPeriods[i], depositPeriods[i]);
+
+            assertEq(0, asyncUnlock.unlockRequested(alice, depositPeriods[1]));
+        }
+
+        assertEq(amountsForUnlock[0], unlockedAmounts[0], "Unlocked amount should be amount for unlock (index=0)");
+
+        assertEq(
+            amountsForUnlock[1] + amountsForUnlock2[0],
+            unlockedAmounts[1],
+            "Unlocked amount should be amount for unlock (index=1)"
+        );
+
+        assertEq(amountsForUnlock2[1], unlockedAmounts[2], "Unlocked amount should be amount for unlock (index=2)");
+
+        assertEq(
+            lockAmounts[0] - amountsForUnlock[0],
+            asyncUnlock.lockedAmount(alice, depositPeriods[0]),
+            "Locked amount should be updated after unlock (index=0)"
+        );
+        assertEq(
+            lockAmounts[1] - amountsForUnlock[1] - amountsForUnlock2[0],
+            asyncUnlock.lockedAmount(alice, depositPeriods[1]),
+            "Locked amount should be updated after unlock (index=1)"
+        );
+        assertEq(
+            lockAmounts[2] - amountsForUnlock2[1],
+            asyncUnlock.lockedAmount(alice, depositPeriods[2]),
+            "Locked amount should be updated after unlock (index=2)"
+        );
+    }
+
+    function _asSingletonArrays(uint256 element1, uint256 element2)
+        private
+        pure
+        returns (uint256[] memory array1, uint256[] memory array2)
+    {
+        assembly ("memory-safe") {
+            // Load the free memory pointer
+            array1 := mload(0x40)
+            // Set array length to 1
+            mstore(array1, 1)
+            // Store the single element at the next word after the length (where content starts)
+            mstore(add(array1, 0x20), element1)
+
+            // Repeat for next array locating it right after the first array
+            array2 := add(array1, 0x40)
+            mstore(array2, 1)
+            mstore(add(array2, 0x20), element2)
+
+            // Update the free memory pointer by pointing after the second array
+            mstore(0x40, add(array2, 0x40))
+        }
+    }
+
+    function _lockInMultipleDepositPeriods() private {
+        depositPeriods.push(1);
+        lockAmounts.push(2000);
+
+        depositPeriods.push(4);
+        lockAmounts.push(1500);
+
+        depositPeriods.push(8);
+        lockAmounts.push(3200);
+
+        vm.startPrank(alice);
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            asyncUnlock.lock(alice, depositPeriods[i], lockAmounts[i]);
+        }
+        vm.stopPrank();
+
+        // Set current period greater than the depositPeriod
+        asyncUnlock.setCurrentPeriod(depositPeriods[depositPeriods.length - 1] + 1);
     }
 }
