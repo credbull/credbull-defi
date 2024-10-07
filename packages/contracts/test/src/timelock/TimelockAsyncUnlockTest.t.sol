@@ -226,6 +226,39 @@ contract TimelockAsyncUnlockTest is Test {
         );
     }
 
+    /**
+     * S6
+     * Scenario: Alice locks and requests unlock amount bigger than locked amount for specific deposit period
+     * We expect it to fail
+     */
+    function test__TimelockAsyncUnlock__ExceededMaxRequestUnlock() public {
+        uint256[] memory depositPeriodsForUnlock = new uint256[](2);
+        uint256[] memory amountsForUnlock = new uint256[](2);
+        depositPeriodsForUnlock[0] = 1;
+        depositPeriodsForUnlock[1] = 4;
+        amountsForUnlock[0] = 1800;
+        amountsForUnlock[1] = 1200;
+
+        vm.prank(alice);
+        asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
+
+        asyncUnlock.setCurrentPeriod(asyncUnlock.currentPeriod() + 2);
+
+        (uint256[] memory depositPeriodsForUnlock2, uint256[] memory amountsForUnlock2) = _asSingletonArrays(4, 500);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__ExceededMaxRequestUnlock.selector,
+                alice,
+                depositPeriodsForUnlock2[0],
+                amountsForUnlock2[0],
+                lockAmounts[1] - amountsForUnlock[1]
+            )
+        );
+        vm.prank(alice);
+        asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock2, amountsForUnlock2);
+    }
+
     function _asSingletonArrays(uint256 element1, uint256 element2)
         private
         pure
