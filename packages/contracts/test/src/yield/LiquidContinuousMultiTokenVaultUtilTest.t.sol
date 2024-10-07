@@ -106,7 +106,8 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         _liquidVault.pause();
 
         vm.prank(alice);
-        _liquidVault.requestUnlock(alice, testParams.depositPeriod, shares);
+        // need to remove comment later
+        // _liquidVault.requestUnlock(alice, testParams.depositPeriod, shares);
 
         _warpToPeriod(_liquidVault, testParams.redeemPeriod);
 

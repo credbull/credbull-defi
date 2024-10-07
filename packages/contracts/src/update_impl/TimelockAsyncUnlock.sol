@@ -12,31 +12,30 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
     struct UnlockRequest {
         uint256[] depositPeriods;
     }
-    // uint256[] amounts;
 
     /**
      * Must necessary?
      * Yes, it must be; to implement maxRequestUnlock for depositPeriod
      */
-    mapping(uint256 depositPeriod => mapping(address account => uint256 amount)) private _unlockRequests1;
+    mapping(uint256 depositPeriod => mapping(address account => uint256 amount)) private _unlockRequestByDepositPeriod;
 
     /**
      * Must necessary?
      * Yes, it can prevent 2 depth loop iteration
      */
     mapping(uint256 depositPeriod => mapping(address account => mapping(uint256 unlockPeriod => uint256 amount)))
-        private _unlockRequestsByUnlockPeriod;
+        private _unlockRequestByUnlockPeriod;
 
     /**
      * Must necessary?
      * Yes, it must be; need to get depositPeriods
      */
-    mapping(uint256 unlockPeriod => mapping(address account => UnlockRequest)) private _unlockRequests2;
+    mapping(uint256 unlockPeriod => mapping(address account => UnlockRequest)) private _unlockRequests;
 
     uint256 private _noticePeriod;
 
     error TimelockAsyncUnlock__AuthorizeCallerFailed(address caller, address owner);
-    error TimelockAsyncUnlock__InvalidArrayLength();
+    error TimelockAsyncUnlock__InvalidArrayLength(uint256 depositPeriodsLength, uint256 amountsLength);
     error TimelockAsyncUnlock__ExceededMaxRequestUnlock(
         address owner, uint256 depositPeriod, uint256 amount, uint256 maxRequestUnlockAmount
     );
@@ -60,7 +59,7 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
     function lockedAmount(address owner, uint256 depositPeriod) public view virtual returns (uint256 lockedAmount_);
 
     function unlockRequested(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
-        return _unlockRequests1[depositPeriod][owner];
+        return _unlockRequestByDepositPeriod[depositPeriod][owner];
     }
 
     function maxRequestUnlock(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
@@ -73,7 +72,7 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         returns (uint256)
     {
         if (depositPeriods.length != amounts.length) {
-            revert TimelockAsyncUnlock__InvalidArrayLength();
+            revert TimelockAsyncUnlock__InvalidArrayLength(depositPeriods.length, amounts.length);
         }
 
         _authorizeCaller(_msgSender(), owner);
@@ -90,23 +89,17 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
             }
 
             //
-            _unlockRequests1[depositPeriod][owner] += amount;
+            _unlockRequestByDepositPeriod[depositPeriod][owner] += amount;
 
-            uint256 unlockRequestedAmount = _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod];
+            uint256 unlockRequestedAmount = _unlockRequestByUnlockPeriod[depositPeriod][owner][unlockPeriod];
 
-            //_unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod] += amount;
-
-            //
             if (unlockRequestedAmount == 0) {
-                _unlockRequests2[unlockPeriod][owner].depositPeriods.push(depositPeriod);
-                // _unlockRequests2[unlockPeriod][owner].amounts.push(amount);
-            } else { // It means depositPeriod already exists
-                    // No action
+                _unlockRequests[unlockPeriod][owner].depositPeriods.push(depositPeriod);
             }
 
             unlockRequestedAmount += amount;
 
-            _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod] = unlockRequestedAmount;
+            _unlockRequestByUnlockPeriod[depositPeriod][owner][unlockPeriod] = unlockRequestedAmount;
 
             unchecked {
                 ++i;
@@ -117,30 +110,27 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
     }
 
     function unlock(address owner, uint256 requestId) public virtual {
+        // requestId is considered unlockPeriod in TimelockAsyncUnlock
         uint256 unlockPeriod = requestId;
 
-        uint256[] memory depositPeriods = _unlockRequests2[unlockPeriod][owner].depositPeriods;
+        uint256[] memory depositPeriods = _unlockRequests[unlockPeriod][owner].depositPeriods;
 
         _performUnlockValidation(owner, depositPeriods, unlockPeriod);
 
         for (uint256 i = 0; i < depositPeriods.length;) {
             uint256 depositPeriod = depositPeriods[i];
-            /*
-            if (amount > unlockRequestedAmount) {
-                revert TimelockAsyncUnlock__ExceededMaxUnlock(owner, amount, unlockRequestedAmount);
-            } */
-            uint256 unlockRequestedAmount = _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod];
+            uint256 unlockRequestedAmount = _unlockRequestByUnlockPeriod[depositPeriod][owner][unlockPeriod];
 
-            _unlockRequestsByUnlockPeriod[depositPeriod][owner][unlockPeriod] = 0;
+            _unlockRequestByUnlockPeriod[depositPeriod][owner][unlockPeriod] = 0;
 
-            _unlockRequests1[depositPeriod][owner] -= unlockRequestedAmount;
+            _unlockRequestByDepositPeriod[depositPeriod][owner] -= unlockRequestedAmount;
 
             unchecked {
                 ++i;
             }
         }
 
-        delete _unlockRequests2[unlockPeriod][owner];
+        delete _unlockRequests[unlockPeriod][owner];
     }
 
     function _authorizeCaller(address caller, address owner) internal virtual {
@@ -171,4 +161,11 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
             }
         }
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }
