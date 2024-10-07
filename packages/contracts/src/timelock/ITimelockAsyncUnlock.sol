@@ -5,6 +5,15 @@ pragma solidity ^0.8.20;
  * @title ITimelockAsyncUnlock
  */
 interface ITimelockAsyncUnlock {
+    /**
+     * @dev Requests unlock for multiple deposit periods and amounts
+     *
+     * @param owner The address of the token owner requesting the unlock
+     * @param depositPeriods The IDs of the deposit periods for which tokens are being requested to unlock
+     * @param amounts The amounts of tokens to unlock for each respective deposit period.
+     *
+     * @return requestId The ID of the unlock request and it can be used in unlock
+     */
     function requestUnlock(address owner, uint256[] memory depositPeriods, uint256[] memory amounts)
         external
         returns (uint256 requestId);
