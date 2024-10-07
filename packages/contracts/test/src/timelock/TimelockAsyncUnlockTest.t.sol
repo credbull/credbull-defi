@@ -119,7 +119,6 @@ contract TimelockAsyncUnlockTest is Test {
 
             // move current period to unlock Period
             asyncUnlock.setCurrentPeriod(asyncUnlock.minUnlockPeriod());
-            vm.prank(alice);
             vm.expectRevert(
                 abi.encodeWithSelector(
                     TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeDepositPeriod.selector,
@@ -129,6 +128,7 @@ contract TimelockAsyncUnlockTest is Test {
                     requestId
                 )
             );
+            vm.prank(alice);
             asyncUnlock.unlock(alice, requestId);
         }
 
@@ -147,7 +147,6 @@ contract TimelockAsyncUnlockTest is Test {
             // move current period to unlock Period
             asyncUnlock.setCurrentPeriod(asyncUnlock.minUnlockPeriod());
 
-            vm.prank(alice);
             vm.expectRevert(
                 abi.encodeWithSelector(
                     TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeDepositPeriod.selector,
@@ -157,8 +156,74 @@ contract TimelockAsyncUnlockTest is Test {
                     requestId
                 )
             );
+            vm.prank(alice);
             asyncUnlock.unlock(alice, requestId);
         }
+    }
+
+    /**
+     * S3
+     * Scenario: Alice tries to unlock prior to unlock period
+     * We expect it to fail; Alice should unlock when current period is same as or later than unlock period
+     */
+    function test__TimelockAsyncUnlock__UnlockPriorToUnlockPeriodFails() public {
+        uint256 unlockPeriod = asyncUnlock.currentPeriod() + 1;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeUnlockPeriod.selector,
+                alice,
+                alice,
+                asyncUnlock.currentPeriod(),
+                unlockPeriod
+            )
+        );
+        vm.prank(alice);
+        asyncUnlock.unlock(alice, unlockPeriod);
+    }
+
+    /**
+     * S4
+     * Scenario: Bob requests unlock for Alice's lockedAmount
+     * We expect it to fail
+     */
+    function test__TimelockAsyncUnlock__OnlyDepositorCanRequestUnlock() public {
+        (uint256[] memory depositPeriodsForUnlock, uint256[] memory amountsForUnlock) = _asSingletonArrays(1, 1800);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(TimelockAsyncUnlock.TimelockAsyncUnlock__AuthorizeCallerFailed.selector, bob, alice)
+        );
+        vm.prank(bob);
+        asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
+    }
+
+    /**
+     * S5
+     * Scenario: Alice locks and requests unlock
+     * Bob can unlock Alice's requested unlock amount
+     */
+    function test__TimelockAsyncUnlock__AnyoneCanUnlock() public {
+        (uint256[] memory depositPeriodsForUnlock, uint256[] memory amountsForUnlock) = _asSingletonArrays(1, 1800);
+
+        vm.prank(alice);
+        uint256 requestId = asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
+
+        asyncUnlock.setCurrentPeriod(asyncUnlock.minUnlockPeriod());
+
+        vm.prank(bob);
+        asyncUnlock.unlock(alice, requestId);
+
+        assertEq(
+            lockAmounts[0] - amountsForUnlock[0],
+            asyncUnlock.lockedAmount(alice, depositPeriodsForUnlock[0]),
+            "lockedAmount should be decreased by the amountsForUnlock"
+        );
+
+        assertEq(
+            0,
+            asyncUnlock.unlockRequested(alice, depositPeriodsForUnlock[0]),
+            "unlockRequested should return 0 after bob unlocks"
+        );
     }
 
     function _asSingletonArrays(uint256 element1, uint256 element2)
