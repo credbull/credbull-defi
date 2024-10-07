@@ -34,42 +34,54 @@ interface ITimelockAsyncUnlock {
     /**
      * @dev Return notice period
      */
-    function noticePeriod() external view returns (uint256);
+    function noticePeriod() external view returns (uint256 noticePeriod_);
 
     /**
      * @dev Return current time period and it should be implemented in child implementation
      */
-    function currentPeriod() external view returns (uint256);
+    function currentPeriod() external view returns (uint256 currentPeriod_);
 
     /**
      * @dev Return the unlock period based on current time
      */
-    function minUnlockPeriod() external view returns (uint256);
+    function minUnlockPeriod() external view returns (uint256 minUnlockPeriod_);
 
     /**
      * @dev Return the owner's locked token amount
      * It is same as owner's multi token balance at depositPeriod by default
      */
-    function lockedAmount(address owner, uint256 depositPeriod) external view returns (uint256);
+    function lockedAmount(address owner, uint256 depositPeriod) external view returns (uint256 lockedAmount_);
 
     /**
-     * @dev Return the amount of owner that was already requested to be unlocked for depositPeriod
+     * @dev Return the token amount that was already requested to be unlocked for depositPeriod
      */
-    function unlockRequested(address owner, uint256 depositPeriod) external view returns (uint256);
+    function unlockRequestedAmount(address owner, uint256 requestId) external view returns (uint256 amount_);
 
     /**
-     * @dev Returns the amount of tokens requested for unlocking by a specific request ID.
+     * @dev Return the token amount that was already requested to be unlocked for depositPeriod
+     */
+    function unlockRequestedAmountForDepositPeriod(address owner, uint256 depositPeriod)
+        external
+        view
+        returns (uint256 amount);
+
+    /**
+     * @dev Returns the deposit periods and amount requested for unlocking by a specific request ID.
      *
      * @param owner The address of the token owner who made the unlock request.
      * @param requestId The ID of the unlock request.
      *
-     * @return The amount of tokens that were requested to be unlocked in the specific request.
+     * @return depositPeriods The depositPeriods that were requested to be unlocked
+     * @return amounts The amounts that were requested to be unlocked
      */
-    function unlockRequestedByRequestId(address owner, uint256 requestId) external view returns (uint256);
+    function unlockRequested(address owner, uint256 requestId)
+        external
+        view
+        returns (uint256[] memory depositPeriods, uint256[] memory amounts);
 
     /**
      * @dev Return the amount of owner that can be requested to be unlocked for depositPeriod
      * This can be calculated simply by lockedAmount - unlockRequested
      */
-    function maxRequestUnlock(address owner, uint256 depositPeriod) external view returns (uint256);
+    function maxRequestUnlock(address owner, uint256 depositPeriod) external view returns (uint256 maxRequestUnlock_);
 }

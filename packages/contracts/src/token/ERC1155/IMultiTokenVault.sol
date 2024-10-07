@@ -35,6 +35,18 @@ interface IMultiTokenVault is IERC1155 {
     function deposit(uint256 assets, address receiver) external returns (uint256 shares);
 
     /**
+     * @notice Redeems shares for assets based on a specific deposit period.
+     * @param shares The amount of shares to redeem.
+     * @param receiver The address to receive the assets.
+     * @param owner The address of the owner of the shares.
+     * @param depositPeriod The deposit period in which the shares were issued.
+     * @return assets The equivalent amount of assets returned.
+     */
+    function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
+        external
+        returns (uint256 assets);
+
+    /**
      * @notice Redeems shares for assets based on a specific deposit and redeem period.
      * @param shares The amount of shares to redeem.
      * @param receiver The address to receive the assets.
@@ -52,16 +64,20 @@ interface IMultiTokenVault is IERC1155 {
     ) external returns (uint256 assets);
 
     /**
-     * @notice Redeems shares for assets based on a specific deposit period.
-     * @param shares The amount of shares to redeem.
+     * @notice Redeems shares for assets based on batch of deposit periods.
      * @param receiver The address to receive the assets.
      * @param owner The address of the owner of the shares.
-     * @param depositPeriod The deposit period in which the shares were issued.
+     * @param shares The shares per depositPeriods to redeem.
+     * @param depositPeriods The deposit periods in which the shares were issued.
      * @return assets The equivalent amount of assets returned.
      */
-    function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
-        external
-        returns (uint256 assets);
+    function redeemForDepositPeriodBatch(
+        address receiver,
+        address owner,
+        uint256[] memory shares,
+        uint256[] memory depositPeriods,
+        uint256 redeemPeriod
+    ) external returns (uint256[] memory assets);
 
     /**
      * @notice Returns the underlying asset used by the vault.
@@ -118,6 +134,17 @@ interface IMultiTokenVault is IERC1155 {
     function maxRedeemAtPeriod(address owner, uint256 depositPeriod) external view returns (uint256 maxShares);
 
     /**
+     * @notice Converts shares to assets for a specific deposit period at the current redeem period.
+     * @param shares The amount of shares to convert.
+     * @param depositPeriod The period during which the shares were issued.
+     * @return assets The equivalent amount of assets.
+     */
+    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
+        external
+        view
+        returns (uint256 assets);
+
+    /**
      * @notice Converts shares to assets for a specific deposit and redeem period.
      * @param shares The amount of shares to convert.
      * @param depositPeriod The period during which the shares were issued.
@@ -130,28 +157,17 @@ interface IMultiTokenVault is IERC1155 {
         returns (uint256 assets);
 
     /**
-     * @notice Converts shares to assets for the given deposit periods at the redeem period.
+     * @notice Converts shares to assets for the deposit periods at the redeem period.
      * @param shares The amount of shares to convert.
      * @param depositPeriods The periods during which the shares were issued.
      * @param redeemPeriod The period during which the shares are redeemed.
      * @return assets The equivalent amount of assets.
      */
-    function convertToAssetsForDepositPeriods(
+    function convertToAssetsForDepositPeriodBatch(
         uint256[] memory shares,
         uint256[] memory depositPeriods,
         uint256 redeemPeriod
     ) external view returns (uint256[] memory assets);
-
-    /**
-     * @notice Converts shares to assets for a specific deposit period at the current redeem period.
-     * @param shares The amount of shares to convert.
-     * @param depositPeriod The period during which the shares were issued.
-     * @return assets The equivalent amount of assets.
-     */
-    function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod)
-        external
-        view
-        returns (uint256 assets);
 
     /**
      * @notice Simulates the redemption of shares and returns the equivalent assets.

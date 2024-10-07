@@ -39,7 +39,7 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
     /**
      * @inheritdoc ITimelockAsyncUnlock
      */
-    function noticePeriod() public view virtual returns (uint256) {
+    function noticePeriod() public view virtual returns (uint256 noticePeriod_) {
         return _noticePeriod;
     }
 
@@ -51,7 +51,7 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
     /**
      * @inheritdoc ITimelockAsyncUnlock
      */
-    function minUnlockPeriod() public view virtual returns (uint256) {
+    function minUnlockPeriod() public view virtual returns (uint256 minUnlockPeriod_) {
         return currentPeriod() + noticePeriod();
     }
 
@@ -63,7 +63,12 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
     /**
      * @inheritdoc ITimelockAsyncUnlock
      */
-    function unlockRequested(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
+    function unlockRequestedAmountForDepositPeriod(address owner, uint256 depositPeriod)
+        public
+        view
+        virtual
+        returns (uint256 amount)
+    {
         return _unlocksAtDepositPeriod[owner].contains(depositPeriod)
             ? _unlocksAtDepositPeriod[owner].get(depositPeriod)
             : 0;
@@ -72,27 +77,64 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
     /**
      * @inheritdoc ITimelockAsyncUnlock
      */
-    function unlockRequestedByRequestId(address owner, uint256 requestId) public view virtual returns (uint256) {
-        uint256 unlockPeriod = requestId;
+    function unlockRequested(address owner, uint256 requestId)
+        public
+        view
+        virtual
+        returns (uint256[] memory depositPeriods, uint256[] memory amounts)
+    {
+        EnumerableMap.UintToUintMap storage depositPeriodsMap = _unlockRequests[owner][requestId];
 
-        EnumerableMap.UintToUintMap storage depositPeriodsMap = _unlockRequests[owner][unlockPeriod];
-
-        uint256 totalAmount = 0;
         uint256 length = depositPeriodsMap.length();
+        depositPeriods = new uint256[](length);
+        amounts = new uint256[](length);
 
         for (uint256 i = 0; i < length; ++i) {
-            (, uint256 amount) = depositPeriodsMap.at(i);
-            totalAmount += amount;
+            (uint256 depositPeriod, uint256 amount) = depositPeriodsMap.at(i);
+            depositPeriods[i] = depositPeriod;
+            amounts[i] = amount;
+        }
+
+        return (depositPeriods, amounts);
+    }
+
+    /**
+     * @inheritdoc ITimelockAsyncUnlock
+     */
+    function unlockRequestedAmount(address owner, uint256 requestId) public view virtual returns (uint256 amount_) {
+        (, uint256[] memory amounts) = unlockRequested(owner, requestId);
+
+        uint256 totalAmount = 0;
+
+        for (uint256 i = 0; i < amounts.length; ++i) {
+            totalAmount += amounts[i];
         }
 
         return totalAmount;
     }
 
     /**
+     * @dev Return the an array containing all the depositPeriods
+     *
+     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed
+     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that
+     * this function has an unbounded cost, and using it as part of a state-changing function may render the function
+     * uncallable if the map grows to a point where copying to memory consumes too much gas to fit in a block.
+     */
+    function unlockRequestedDepositPeriods(address owner, uint256 requestId)
+        public
+        view
+        virtual
+        returns (uint256[] memory depositPeriods_)
+    {
+        return _unlockRequests[owner][requestId].keys();
+    }
+
+    /**
      * @inheritdoc ITimelockAsyncUnlock
      */
     function maxRequestUnlock(address owner, uint256 depositPeriod) public view virtual returns (uint256) {
-        return lockedAmount(owner, depositPeriod) - unlockRequested(owner, depositPeriod);
+        return lockedAmount(owner, depositPeriod) - unlockRequestedAmountForDepositPeriod(owner, depositPeriod);
     }
 
     /**

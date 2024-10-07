@@ -194,17 +194,17 @@ contract LiquidContinuousMultiTokenVault is
         uint256 componentTokenAmount
     ) public override {
         // TODO - we should go through the locks rather than having to figure out the periods again
-        if (componentTokenAmount != unlockRequestedByRequestId(requestor, requestId)) {
+        uint256 unlockRequestedAmount = unlockRequestedAmount(requestor, requestId);
+
+        if (componentTokenAmount != unlockRequestedAmount) {
             revert LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(
-                componentTokenAmount, unlockRequestedByRequestId(requestor, requestId)
+                componentTokenAmount, unlockRequestedAmount
             );
         }
 
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) = unlock(requestor, requestId);
 
-        for (uint256 i = 0; i < depositPeriods.length; ++i) {
-            redeemForDepositPeriod(sharesAtPeriods[i], requestor, requestor, depositPeriods[i], currentPeriod());
-        }
+        redeemForDepositPeriodBatch(requestor, requestor, sharesAtPeriods, depositPeriods, currentPeriod());
     }
 
     /// @dev set the IRedeemOptimizer
@@ -235,6 +235,18 @@ contract LiquidContinuousMultiTokenVault is
     /// @dev - users should call deposit() instead that returns shares
     function lock(address account, uint256 depositPeriod, uint256 amount) public onlyRole(OPERATOR_ROLE) {
         _depositForDepositPeriod(amount, account, depositPeriod);
+    }
+
+    /// @notice Releases the lock for the `account` at the given `unlockPeriod`.
+    /// TODO - unlock calling redeem or redeem calling unlock ?
+    function unlock(address owner, uint256 unlockPeriod)
+        public
+        override
+        returns (uint256[] memory depositPeriods, uint256[] memory amounts)
+    {
+        (depositPeriods, amounts) = super.unlock(owner, unlockPeriod);
+
+        // TODO - call batch redeem
     }
 
     /// @inheritdoc TimelockAsyncUnlock

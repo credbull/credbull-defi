@@ -57,7 +57,7 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         );
 
         uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParamsArr.all());
-        uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriods(
+        uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
             depositShares, testParamsArr.depositPeriods(), redeemPeriod
         );
         assertEq(depositShares.length, depositAssets.length, "mismatch in convertToAssets");
@@ -115,7 +115,7 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         );
 
         uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParamsArr.all());
-        uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriods(
+        uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
             depositShares, testParamsArr.depositPeriods(), redeemPeriod
         );
 
@@ -140,8 +140,9 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         ); // reduced by 1 share with returns
 
         // // verify using assets
-        uint256[] memory actualAssetsAtPeriods =
-            multiTokenVault.convertToAssetsForDepositPeriods(actualSharesAtPeriods, actualDepositPeriods, redeemPeriod);
+        uint256[] memory actualAssetsAtPeriods = multiTokenVault.convertToAssetsForDepositPeriodBatch(
+            actualSharesAtPeriods, actualDepositPeriods, redeemPeriod
+        );
 
         assertEq(
             testParamsArr.depositPeriods().length,
