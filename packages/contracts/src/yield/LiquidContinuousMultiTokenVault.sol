@@ -124,6 +124,7 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     /// @inheritdoc MultiTokenVault
+    /// @dev protected by only owner - use the batch version to align with locking/unlocking paradigm
     function redeemForDepositPeriod(
         uint256 shares,
         address receiver,
@@ -133,6 +134,24 @@ contract LiquidContinuousMultiTokenVault is
     ) public virtual override returns (uint256 assets) {
         unlock(owner, redeemPeriod);
         return super.redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemPeriod);
+    }
+
+    /**
+     * @notice Redeems the shares that were requested to be unlocked at the redeemPeriod
+     * @param receiver The address to receive the assets.
+     * @param owner The address of the owner of the shares.
+     * @param redeemPeriod The period in which the shares are redeemed.
+     * @return assets The equivalent amount of assets returned.
+     * @dev - redeemPeriod = unlockPeriod = requestId
+     */
+    function redeemUnlockable(address receiver, address owner, uint256 redeemPeriod)
+        internal
+        virtual
+        returns (uint256[] memory assets)
+    {
+        (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) = unlock(receiver, redeemPeriod); // unlockPeriod = redeemPeriod
+
+        return redeemForDepositPeriodBatch(receiver, owner, sharesAtPeriods, depositPeriods, redeemPeriod);
     }
 
     /// @inheritdoc MultiTokenVault
@@ -194,7 +213,7 @@ contract LiquidContinuousMultiTokenVault is
         uint256 componentTokenAmount
     ) public override {
         // TODO - we should go through the locks rather than having to figure out the periods again
-        uint256 unlockRequestedAmount = unlockRequestedAmount(requestor, requestId);
+        uint256 unlockRequestedAmount = unlockRequestAmount(requestor, requestId);
 
         if (componentTokenAmount != unlockRequestedAmount) {
             revert LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(
@@ -202,9 +221,7 @@ contract LiquidContinuousMultiTokenVault is
             );
         }
 
-        (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) = unlock(requestor, requestId);
-
-        redeemForDepositPeriodBatch(requestor, requestor, sharesAtPeriods, depositPeriods, currentPeriod());
+        redeemUnlockable(requestor, requestor, requestId);
     }
 
     /// @dev set the IRedeemOptimizer
@@ -235,18 +252,6 @@ contract LiquidContinuousMultiTokenVault is
     /// @dev - users should call deposit() instead that returns shares
     function lock(address account, uint256 depositPeriod, uint256 amount) public onlyRole(OPERATOR_ROLE) {
         _depositForDepositPeriod(amount, account, depositPeriod);
-    }
-
-    /// @notice Releases the lock for the `account` at the given `unlockPeriod`.
-    /// TODO - unlock calling redeem or redeem calling unlock ?
-    function unlock(address owner, uint256 unlockPeriod)
-        public
-        override
-        returns (uint256[] memory depositPeriods, uint256[] memory amounts)
-    {
-        (depositPeriods, amounts) = super.unlock(owner, unlockPeriod);
-
-        // TODO - call batch redeem
     }
 
     /// @inheritdoc TimelockAsyncUnlock

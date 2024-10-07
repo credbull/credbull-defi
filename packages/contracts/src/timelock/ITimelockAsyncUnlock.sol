@@ -55,18 +55,18 @@ interface ITimelockAsyncUnlock {
     /**
      * @dev Return the token amount that was already requested to be unlocked for depositPeriod
      */
-    function unlockRequestedAmount(address owner, uint256 requestId) external view returns (uint256 amount_);
+    function unlockRequestAmount(address owner, uint256 requestId) external view returns (uint256 amount_);
 
     /**
      * @dev Return the token amount that was already requested to be unlocked for depositPeriod
      */
-    function unlockRequestedAmountForDepositPeriod(address owner, uint256 depositPeriod)
+    function unlockRequestAmountByDepositPeriod(address owner, uint256 depositPeriod)
         external
         view
         returns (uint256 amount);
 
     /**
-     * @dev Returns the deposit periods and amount requested for unlocking by a specific request ID.
+     * @dev Returns the unlock requests by owner and request id
      *
      * @param owner The address of the token owner who made the unlock request.
      * @param requestId The ID of the unlock request.
@@ -74,7 +74,7 @@ interface ITimelockAsyncUnlock {
      * @return depositPeriods The depositPeriods that were requested to be unlocked
      * @return amounts The amounts that were requested to be unlocked
      */
-    function unlockRequested(address owner, uint256 requestId)
+    function unlockRequests(address owner, uint256 requestId)
         external
         view
         returns (uint256[] memory depositPeriods, uint256[] memory amounts);
