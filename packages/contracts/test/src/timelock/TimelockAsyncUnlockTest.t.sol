@@ -65,19 +65,11 @@ contract TimelockAsyncUnlockTest is Test {
         vm.prank(alice);
         uint256 requestId = asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
 
-        for (uint256 i = 0; i < depositPeriodsForUnlock.length; ++i) {
-            assertEq(
-                amountsForUnlock[i],
-                asyncUnlock.unlockRequestedAmountForDepositPeriod(alice, depositPeriodsForUnlock[i]),
-                "unlockRequest should be created"
-            );
-        }
+        (uint256[] memory actualUnlockDepositPeriods, uint256[] memory actualUnlockAmounts) =
+            asyncUnlock.unlockRequests(alice, requestId);
 
-        assertEq(
-            amountsForUnlock[0] + amountsForUnlock[1],
-            asyncUnlock.unlockRequestedAmount(alice, requestId),
-            "unlockRequest amount by requestId is wrong"
-        );
+        assertEq(depositPeriodsForUnlock, actualUnlockDepositPeriods, "deposit periods don't match");
+        assertEq(amountsForUnlock, actualUnlockAmounts, "amounts don't match");
 
         // warp to unlock period
         asyncUnlock.setCurrentPeriod(unlockPeriod);
@@ -96,7 +88,7 @@ contract TimelockAsyncUnlockTest is Test {
 
         assertEq(
             0,
-            asyncUnlock.unlockRequestedAmountForDepositPeriod(alice, depositPeriodsForUnlock[0]),
+            asyncUnlock.unlockRequestAmountByDepositPeriod(alice, depositPeriodsForUnlock[0]),
             "unlockRequest should be released(index=0)"
         );
         assertEq(
@@ -107,7 +99,7 @@ contract TimelockAsyncUnlockTest is Test {
 
         assertEq(
             0,
-            asyncUnlock.unlockRequestedAmountForDepositPeriod(alice, depositPeriodsForUnlock[1]),
+            asyncUnlock.unlockRequestAmountByDepositPeriod(alice, depositPeriodsForUnlock[1]),
             "unlockRequest should be released(index=1)"
         );
         assertEq(
@@ -116,7 +108,7 @@ contract TimelockAsyncUnlockTest is Test {
             "deposit lock not released(index=1)"
         );
 
-        assertEq(0, asyncUnlock.unlockRequestedAmount(alice, requestId), "unlockRequest amount should be 0");
+        assertEq(0, asyncUnlock.unlockRequestAmount(alice, requestId), "unlockRequest amount should be 0");
     }
 
     /**
@@ -182,6 +174,7 @@ contract TimelockAsyncUnlockTest is Test {
      * We expect it to fail; Alice should unlock when current period is same as or later than unlock period
      */
     function test__TimelockAsyncUnlock__UnlockPriorToUnlockPeriodFails() public {
+        uint256 depositPeriod = 0;
         uint256 unlockPeriod = asyncUnlock.currentPeriod() + 1;
 
         vm.expectRevert(
@@ -194,7 +187,7 @@ contract TimelockAsyncUnlockTest is Test {
             )
         );
         vm.prank(alice);
-        asyncUnlock.unlock(alice, unlockPeriod);
+        asyncUnlock.unlock(alice, depositPeriod, unlockPeriod, 1);
     }
 
     /**
@@ -236,7 +229,7 @@ contract TimelockAsyncUnlockTest is Test {
 
         assertEq(
             0,
-            asyncUnlock.unlockRequestedAmountForDepositPeriod(alice, depositPeriodsForUnlock[0]),
+            asyncUnlock.unlockRequestAmountByDepositPeriod(alice, depositPeriodsForUnlock[0]),
             "unlockRequested should return 0 after bob unlocks"
         );
     }
@@ -295,19 +288,19 @@ contract TimelockAsyncUnlockTest is Test {
 
         assertEq(
             amountsForUnlock[0],
-            asyncUnlock.unlockRequestedAmountForDepositPeriod(alice, depositPeriodsForUnlock[0]),
+            asyncUnlock.unlockRequestAmountByDepositPeriod(alice, depositPeriodsForUnlock[0]),
             "unlockRequested should be created (index=0)"
         );
 
         assertEq(
             amountsForUnlock[1],
-            asyncUnlock.unlockRequestedAmountForDepositPeriod(alice, depositPeriodsForUnlock[1]),
+            asyncUnlock.unlockRequestAmountByDepositPeriod(alice, depositPeriodsForUnlock[1]),
             "unlockRequested should be created (index=1)"
         );
 
         assertEq(
             amountsForUnlock[0] + amountsForUnlock[1],
-            asyncUnlock.unlockRequestedAmount(alice, requestId),
+            asyncUnlock.unlockRequestAmount(alice, requestId),
             "unlockRequested by requestId should be created"
         );
 
@@ -327,25 +320,25 @@ contract TimelockAsyncUnlockTest is Test {
 
         assertEq(
             amountsForUnlock[0],
-            asyncUnlock.unlockRequestedAmountForDepositPeriod(alice, depositPeriods[0]),
+            asyncUnlock.unlockRequestAmountByDepositPeriod(alice, depositPeriods[0]),
             "unlockRequested should be created after second unlock requests (index=0)"
         );
 
         assertEq(
             amountsForUnlock[1] + amountsForUnlock2[0],
-            asyncUnlock.unlockRequestedAmountForDepositPeriod(alice, depositPeriods[1]),
+            asyncUnlock.unlockRequestAmountByDepositPeriod(alice, depositPeriods[1]),
             "unlockRequested should be created after second unlock requests (index=1)"
         );
 
         assertEq(
             amountsForUnlock2[1],
-            asyncUnlock.unlockRequestedAmountForDepositPeriod(alice, depositPeriods[2]),
+            asyncUnlock.unlockRequestAmountByDepositPeriod(alice, depositPeriods[2]),
             "unlockRequested should be created after second unlock requests (index=2)"
         );
 
         assertEq(
             amountsForUnlock[0] + amountsForUnlock[1] + amountsForUnlock2[0] + amountsForUnlock2[1],
-            asyncUnlock.unlockRequestedAmount(alice, requestId),
+            asyncUnlock.unlockRequestAmount(alice, requestId),
             "unlockRequested by requestId should be created after second unlock requests"
         );
 
@@ -361,7 +354,7 @@ contract TimelockAsyncUnlockTest is Test {
         for (uint256 i = 0; i < unlockedDepositPeriods.length; ++i) {
             assertEq(unlockedDepositPeriods[i], depositPeriods[i]);
 
-            assertEq(0, asyncUnlock.unlockRequestedAmountForDepositPeriod(alice, depositPeriods[1]));
+            assertEq(0, asyncUnlock.unlockRequestAmountByDepositPeriod(alice, depositPeriods[1]));
         }
 
         assertEq(amountsForUnlock[0], unlockedAmounts[0], "Unlocked amount should be amount for unlock (index=0)");

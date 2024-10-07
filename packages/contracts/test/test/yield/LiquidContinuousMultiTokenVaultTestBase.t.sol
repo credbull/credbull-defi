@@ -102,7 +102,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
         assertEq(
             testParam.principal,
-            liquidVault.unlockRequestedAmountForDepositPeriod(receiver, testParam.depositPeriod),
+            liquidVault.unlockRequestAmountByDepositPeriod(receiver, testParam.depositPeriod),
             "unlockRequest should be created"
         );
 
@@ -113,7 +113,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         assertEq(0, liquidVault.balanceOf(receiver, testParam.depositPeriod), "deposits should be redeemed");
         assertEq(
             0,
-            liquidVault.unlockRequestedAmountForDepositPeriod(receiver, testParam.depositPeriod),
+            liquidVault.unlockRequestAmountByDepositPeriod(receiver, testParam.depositPeriod),
             "unlockRequest should be released"
         );
 
