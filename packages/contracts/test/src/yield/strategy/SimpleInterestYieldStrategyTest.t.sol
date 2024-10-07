@@ -71,6 +71,31 @@ contract SimpleInterestYieldStrategyTest is Test {
         assertEq((101 * SCALE / 100), yieldStrategy.calcPrice(interestContractAddress, 30), "price wrong at period 30"); // 1 + (0.12 * 30) / 360 = 1.01
     }
 
+    function test__SimpleInterestYieldStrategy__InvalidContextReverts() public {
+        IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy();
+
+        vm.expectRevert(abi.encodeWithSelector(IYieldStrategy.IYieldStrategy_InvalidContextAddress.selector));
+        yieldStrategy.calcYield(address(0), 1, 1, 1);
+
+        vm.expectRevert(abi.encodeWithSelector(IYieldStrategy.IYieldStrategy_InvalidContextAddress.selector));
+        yieldStrategy.calcPrice(address(0), 1);
+    }
+
+    function test__SimpleInterestYieldStrategy__InvalidPeriodReverts() public {
+        uint256 fromPeriod = 10;
+        uint256 invalidToPeriod = 0;
+
+        IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy();
+        address interestContractAddress = address(_createInterestMetadata(12, 360));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IYieldStrategy.IYieldStrategy_InvalidPeriodRange.selector, fromPeriod, invalidToPeriod
+            )
+        );
+        yieldStrategy.calcYield(interestContractAddress, 1, fromPeriod, invalidToPeriod);
+    }
+
     function _createInterestMetadata(uint256 interestRatePercentage, uint256 frequency)
         private
         returns (CalcInterestMetadataMock interestMetadata)

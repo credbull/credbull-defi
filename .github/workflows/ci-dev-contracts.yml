@@ -74,6 +74,16 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
+      - name: Deploy LiquidMultiTokenVault
+        run: yarn deploy:ci
+        env:
+          ENVIRONMENT: "testnet"
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
+          ALCHEMY_API_KEY: ${{ secrets.TESTNET_ALCHEMY_API_KEY }}
+          BASE_SEPOLIA_ETHERSCAN_API_KEY: ${{ secrets.BASE_SEPOLIA_ETHERSCAN_API_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ""  # don't update supabase here
+          DEPLOY_SCRIPT: "script/DeployLiquidMultiTokenVault.s.sol:DeployLiquidMultiTokenVault"
+
       - name: Deploy contracts and export to Test supabase
         run: yarn deploy:ci
         env:
@@ -82,3 +92,4 @@ jobs:
           ALCHEMY_API_KEY: ${{ secrets.TESTNET_ALCHEMY_API_KEY }}
           BASE_SEPOLIA_ETHERSCAN_API_KEY: ${{ secrets.BASE_SEPOLIA_ETHERSCAN_API_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+

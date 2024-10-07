@@ -25,3 +25,4 @@
 [submodule "spikes/spike-short-term-fixed/packages/foundry/lib/openzeppelin-contracts"]
 	path = spikes/spike-short-term-fixed/packages/foundry/lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
+	branch = release-v5.0

@@ -69,7 +69,7 @@ contract TimelockAsyncUnlockTest is Test {
 
         assertEq(0, asyncUnlock.unlockRequested(alice, depositDay1.depositPeriod), "unlockRequest should be released");
         assertEq(0, asyncUnlock.lockedAmount(alice, depositDay1.depositPeriod), "deposit lock not released");
-        assertEq(0, asyncUnlock.DEPOSITS().balanceOf(alice, depositDay1.depositPeriod), "deposits should be redeemed");
+        assertEq(0, asyncUnlock._deposits().balanceOf(alice, depositDay1.depositPeriod), "deposits should be redeemed");
     }
 
     /**

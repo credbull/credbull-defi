@@ -11,8 +11,9 @@ import { OwnableToken } from "./OwnableToken.t.sol";
  * @dev The Symbol and Name computed based on `_decimals`.
  */
 contract DecimalToken is OwnableToken {
-    constructor(uint256 initialSupply, uint8 _decimals)
+    constructor(address owner, uint256 initialSupply, uint8 _decimals)
         OwnableToken(
+            owner,
             string.concat("Decimal ", Strings.toString(_decimals), " Token"),
             string.concat("DT", Strings.toString(_decimals)),
             _decimals,

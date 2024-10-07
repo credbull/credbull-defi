@@ -15,6 +15,8 @@ owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # devops custodian (wallet 3) - public address, okay to share
 custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
+# devops upgrader (wallet 4) - public address, okay to share
+upgrader = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 
 [evm.contracts.liquid_continuous_multi_token_vault]
 # rate in basis points, e.g.  10% = 1000 bps
