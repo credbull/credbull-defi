@@ -124,7 +124,6 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     /// @inheritdoc MultiTokenVault
-    /* 
     function redeemForDepositPeriod(
         uint256 shares,
         address receiver,
@@ -132,10 +131,9 @@ contract LiquidContinuousMultiTokenVault is
         uint256 depositPeriod,
         uint256 redeemPeriod
     ) public virtual override returns (uint256 assets) {
-        unlock(owner, depositPeriod, redeemPeriod, shares);
-
+        // unlock(owner, depositPeriod, redeemPeriod, shares);
         return super.redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemPeriod);
-    } */
+    }
 
     /// @inheritdoc MultiTokenVault
     function convertToAssetsForDepositPeriod(uint256 shares, uint256 depositPeriod, uint256 redeemPeriod)
