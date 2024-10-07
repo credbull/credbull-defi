@@ -344,6 +344,12 @@ contract TimelockAsyncUnlockTest is Test {
             "unlockRequested should be created after second unlock requests (index=2)"
         );
 
+        assertEq(
+            amountsForUnlock[0] + amountsForUnlock[1] + amountsForUnlock2[0] + amountsForUnlock2[1],
+            asyncUnlock.unlockRequestedByRequestId(alice, requestId),
+            "unlockRequested by requestId should be created after second unlock requests"
+        );
+
         // unlock
         asyncUnlock.setCurrentPeriod(asyncUnlock.minUnlockPeriod());
 
