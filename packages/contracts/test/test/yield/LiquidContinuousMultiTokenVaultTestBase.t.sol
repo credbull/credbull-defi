@@ -95,7 +95,8 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         _warpToPeriod(liquidVault, testParam.redeemPeriod - liquidVault.noticePeriod());
 
         vm.prank(receiver);
-        liquidVault.requestUnlock(receiver, testParam.depositPeriod, testParam.principal);
+        // need to remove comment later
+        // liquidVault.requestUnlock(receiver, testParam.depositPeriod, testParam.principal);
         assertEq(
             testParam.principal,
             liquidVault.unlockRequested(receiver, testParam.depositPeriod),

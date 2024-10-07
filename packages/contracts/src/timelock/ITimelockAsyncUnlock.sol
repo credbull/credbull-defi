@@ -5,28 +5,13 @@ pragma solidity ^0.8.20;
  * @title ITimelockAsyncUnlock
  */
 interface ITimelockAsyncUnlock {
-    /**
-     * @dev Requests unlock amount for depositPeriod
-     *
-     * @param owner The address that owns tokens to be unlocked
-     * @param depositPeriod the id of multi token
-     * @param amount the amount of token to be requested for unlock
-     *
-     * @return unlockPeriod the time period when owner can unlock
-     */
-    function requestUnlock(address owner, uint256 depositPeriod, uint256 amount)
+    function requestUnlock(address owner, uint256[] memory depositPeriods, uint256[] memory amounts)
         external
-        returns (uint256 unlockPeriod);
+        returns (uint256 requestId);
 
-    /**
-     * @dev Unlocks amount for depositPeriod and unlockPeriod
-     *
-     * @param owner The address that owns tokens to be unlocked
-     * @param depositPeriod the id of multi token
-     * @param unlockPeriod the time period when owner can unlock
-     * @param amount the amount of token to be unlocked
-     */
-    function unlock(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amount) external;
+    function unlock(address owner, uint256 requestId)
+        external
+        returns (uint256[] memory depositPeriods, uint256[] memory amounts);
 
     /**
      * @dev Return notice period
@@ -53,14 +38,6 @@ interface ITimelockAsyncUnlock {
      * @dev Return the amount of owner that was already requested to be unlocked for depositPeriod
      */
     function unlockRequested(address owner, uint256 depositPeriod) external view returns (uint256);
-
-    /**
-     * @dev Return the amount of owner that was already requested to be unlocked for depositPeriod and unlockPeriod
-     */
-    function unlockRequested(address owner, uint256 depositPeriod, uint256 unlockPeriod)
-        external
-        view
-        returns (uint256);
 
     /**
      * @dev Return the amount of owner that can be requested to be unlocked for depositPeriod
