@@ -30,7 +30,8 @@ contract DeployVaultFactory is Script {
             CredbullFixedYieldVaultFactory factory,
             CredbullUpsideVaultFactory upsideFactory,
             CredbullWhiteListProvider whiteListProvider,
-            HelperConfig helperConfig
+            HelperConfig helperConfig,
+            LiquidContinuousMultiTokenVault vault
         )
     {
         isTestMode = true;
@@ -43,7 +44,8 @@ contract DeployVaultFactory is Script {
             CredbullFixedYieldVaultFactory factory,
             CredbullUpsideVaultFactory upsideFactory,
             CredbullWhiteListProvider whiteListProvider,
-            HelperConfig helperConfig
+            HelperConfig helperConfig,
+            LiquidContinuousMultiTokenVault vault
         )
     {
         helperConfig = new HelperConfig(isTestMode);
@@ -73,11 +75,11 @@ contract DeployVaultFactory is Script {
             console2.log("!!!!! Deploying CredbullWhiteListProvider !!!!!");
         }
 
-        _deployVaultContracts(config, owner, operator);
+        LiquidContinuousMultiTokenVault _vault = _deployVaultContracts(config, owner, operator);
 
         vm.stopBroadcast();
 
-        return (factory, upsideFactory, whiteListProvider, helperConfig);
+        return (factory, upsideFactory, whiteListProvider, helperConfig, _vault);
     }
 
     function _deployVaultContracts(NetworkConfig memory config, address owner, address operator)

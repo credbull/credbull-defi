@@ -23,7 +23,6 @@ function getFiles(path) {
 }
 function getArtifactOfContract(contractName) {
   let artifactJson;
-  console.log('=========>', contractName);
   if (['SimpleToken', 'SimpleUSDC', 'SimpleVault'].includes(contractName)) {
     const current_path_to_artifacts = path.join(__dirname, '..', `out/${contractName}.t.sol`);
     artifactJson = JSON.parse(fs.readFileSync(`${current_path_to_artifacts}/${contractName}.json`));
@@ -104,8 +103,6 @@ function main() {
         address: transaction.contractAddress,
       };
     });
-
-    console.log(mapContractNames);
 
     Object.values(mapContracts).forEach((contract) => {
       const artifact = getArtifactOfContract(contract.name);
