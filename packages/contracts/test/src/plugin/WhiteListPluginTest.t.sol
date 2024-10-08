@@ -32,7 +32,7 @@ contract WhiteListPluginTest is Test {
 
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (,, whiteListProvider, helperConfig) = deployer.runTest();
+        (,, whiteListProvider, helperConfig,) = deployer.runTest();
         ParamsFactory pf = new ParamsFactory(helperConfig.getNetworkConfig());
         vaultParams = pf.createVaultParams();
         whiteListParams = pf.createWhiteListPluginParams();
