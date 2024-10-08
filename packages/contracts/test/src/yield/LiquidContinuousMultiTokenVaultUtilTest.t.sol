@@ -64,10 +64,14 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__Clock() public {
-        LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = _createVaultParams(_vaultAuth);
-
         LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault();
-        vault.initialize(vaultParams);
+        vault = LiquidContinuousMultiTokenVaultMock(
+            address(
+                new ERC1967Proxy(
+                    address(vault), abi.encodeWithSelector(vault.initialize.selector, _createVaultParams(_vaultAuth))
+                )
+            )
+        );
 
         assertEq(Timer.CLOCK_MODE(), vault.CLOCK_MODE());
         assertEq(Timer.clock(), vault.clock());
@@ -192,6 +196,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
                 upgrader: makeAddr("upgrader")
             })
         );
+
         vm.expectRevert(
             abi.encodeWithSelector(
                 LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector,
@@ -199,7 +204,10 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
                 zeroAddress
             )
         );
-        liquidVault.initialize(paramsZeroOperator);
+
+        new ERC1967Proxy(
+            address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, paramsZeroOperator)
+        );
 
         LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroUpgrader = _createVaultParams(
             LiquidContinuousMultiTokenVault.VaultAuth({
@@ -215,14 +223,20 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
                 zeroAddress
             )
         );
-        liquidVault.initialize(paramsZeroUpgrader);
+        new ERC1967Proxy(
+            address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, paramsZeroUpgrader)
+        );
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__Metadata() public {
-        LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = _createVaultParams(_vaultAuth);
-
         LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault();
-        vault.initialize(vaultParams);
+        vault = LiquidContinuousMultiTokenVaultMock(
+            address(
+                new ERC1967Proxy(
+                    address(vault), abi.encodeWithSelector(vault.initialize.selector, _createVaultParams(_vaultAuth))
+                )
+            )
+        );
 
         assertTrue(vault.getVersion() > 0, "version should be nonzero");
         assertTrue(vault.supportsInterface(type(IMultiTokenVault).interfaceId), "should support interface");
