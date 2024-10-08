@@ -12,13 +12,12 @@ const contractsData = getAllContracts();
 const VaultInterface: NextPage = () => {
   const { address } = useAccount();
   const contractNames = Object.keys(contractsData) as ContractName[];
-  const { data, isLoading } = useDeployedContractInfo(contractNames[0]);
-  contractNames.splice(0, 1);
+  const { data, isLoading } = useDeployedContractInfo(contractNames[1]);
+  contractNames.splice(0, 2);
 
   return (
     <>
       <div className="main-container mt-8 p-2">
-        {/* <h1 className="text-2xl">Vault Interface</h1> */}
         {contractNames.map((contractName: ContractName, i: number) => {
           return contractName.includes("LiquidContinuousMultiTokenVault") ? (
             <ViewSection

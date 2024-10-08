@@ -48,6 +48,7 @@ const ViewSection = ({
   const [sellAmount, setSellAmount] = useState("");
   const [currencyTokenAmount, setCurrencyTokenAmount] = useState("");
   const [componentTokenAmount, setComponentTokenAmount] = useState("");
+  const [currencyTokenAmountToSell, setCurrencyTokenAmountToSell] = useState("");
   const [log, setLog] = useState([]);
 
   const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractName);
@@ -285,7 +286,6 @@ const ViewSection = ({
       // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
 
       setCurrencyTokenAmount("");
-      setComponentTokenAmount("");
     } catch (error) {
       console.error("Error executing buy:", error);
       // setLog(prevLog => [...prevLog, "Error executing buy"]);
@@ -321,8 +321,7 @@ const ViewSection = ({
 
       // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
 
-      setCurrencyTokenAmount("");
-      setComponentTokenAmount("");
+      setSellAmount("");
     } catch (error) {
       console.error("Error executing buy:", error);
       // setLog(prevLog => [...prevLog, "Error executing buy"]);
@@ -332,8 +331,46 @@ const ViewSection = ({
   const handleExecuteSell = () => {
     // const message = `Executed sell of ${componentTokenAmount} component tokens for ${currencyTokenAmount} currency tokens.`;
     // setLog([...log, message]);
+    if (!address || !componentTokenAmount || !currencyTokenAmountToSell) {
+      console.log(currencyTokenAmountToSell, componentTokenAmount);
+      console.log("Missing required fields");
+      return;
+    }
+
+    try {
+      if (writeContractAsync) {
+        try {
+          const makeRequestSellWithParams = () =>
+            writeContractAsync({
+              address: deployedContractData?.address || "",
+              functionName: "executeSell",
+              abi: deployedContractData?.abi || [],
+              args: [
+                address,
+                BigInt(0),
+                ethers.parseUnits(currencyTokenAmountToSell, 6),
+                ethers.parseUnits(componentTokenAmount, 6),
+              ],
+            });
+          writeTxn(makeRequestSellWithParams).then(data => {
+            console.log("setting refresh", data);
+            setRefetch(prev => !prev);
+          });
+        } catch (e: any) {
+          console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:redeem  ~ error", e);
+        }
+      }
+
+      // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
+
+      setSellAmount("");
+    } catch (error) {
+      console.error("Error executing buy:", error);
+      // setLog(prevLog => [...prevLog, "Error executing buy"]);
+    }
+
     setComponentTokenAmount("");
-    setCurrencyTokenAmount("");
+    setCurrencyTokenAmountToSell("");
   };
 
   if (!mounted) {
@@ -575,8 +612,8 @@ const ViewSection = ({
           />
           <input
             type="text"
-            value={currencyTokenAmount}
-            onChange={e => setCurrencyTokenAmount(e.target.value)}
+            value={currencyTokenAmountToSell}
+            onChange={e => setCurrencyTokenAmountToSell(e.target.value)}
             placeholder="Enter Currency Token Amount"
             className={`border ${
               resolvedTheme === "dark" ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300"
@@ -589,7 +626,7 @@ const ViewSection = ({
       </div>
 
       {/* Activity Log */}
-      <div
+      {/* <div
         className={`mt-8 ${resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"} p-4 rounded-lg`}
       >
         <h2 className="text-xl font-bold mb-4">Activity Log</h2>
@@ -600,7 +637,7 @@ const ViewSection = ({
             </li>
           ))}
         </ul>
-      </div>
+      </div> */}
     </div>
   );
 };
