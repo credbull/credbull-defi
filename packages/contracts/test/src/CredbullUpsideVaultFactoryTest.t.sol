@@ -23,7 +23,7 @@ contract CredbullUpsideVaultFactoryTest is Test {
 
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (, factory, whiteListProvider, helperConfig) = deployer.runTest();
+        (, factory, whiteListProvider, helperConfig,) = deployer.runTest();
     }
 
     function test__CredbullUpsideVaultFactory__ShouldSuccessfullyCreateFactoryUpside() public {

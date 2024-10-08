@@ -49,7 +49,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (,, whiteListProvider, helperConfig) = deployer.runTest();
+        (,, whiteListProvider, helperConfig,) = deployer.runTest();
         (upsideVaultParams) = new ParamsFactory(helperConfig.getNetworkConfig()).createUpsideVaultParams();
         vaultParams = upsideVaultParams.fixedYieldVault;
         upsideVaultParams.fixedYieldVault.whiteListPlugin.whiteListProvider = address(whiteListProvider);

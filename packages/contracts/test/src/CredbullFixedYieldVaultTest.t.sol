@@ -36,7 +36,7 @@ contract CredbullFixedYieldVaultTest is Test {
 
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (,, whiteListProvider, helperConfig) = deployer.runTest();
+        (,, whiteListProvider, helperConfig,) = deployer.runTest();
         params = new ParamsFactory(helperConfig.getNetworkConfig()).createFixedYieldVaultParams();
         params.whiteListPlugin.whiteListProvider = address(whiteListProvider);
 

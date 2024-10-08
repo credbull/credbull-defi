@@ -28,7 +28,7 @@ contract CredbullFixedYieldVaultFactoryTest is Test {
 
     function setUp() public {
         deployer = new DeployVaultFactory();
-        (factory,, whiteListProvider, helperConfig) = deployer.runTest();
+        (factory,, whiteListProvider, helperConfig,) = deployer.runTest();
         config = helperConfig.getNetworkConfig();
         params = new ParamsFactory(config).createFixedYieldVaultParams();
 
