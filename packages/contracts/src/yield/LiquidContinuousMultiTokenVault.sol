@@ -131,7 +131,19 @@ contract LiquidContinuousMultiTokenVault is
         uint256 depositPeriod,
         uint256 redeemPeriod
     ) public virtual override returns (uint256 assets) {
-        unlock(owner, redeemPeriod);
+        _unlock(owner, depositPeriod, redeemPeriod, shares);
+
+        return _redeemForDepositPeriodAfterUnlock(shares, receiver, owner, depositPeriod, redeemPeriod);
+    }
+
+    /// redeemForDepositPeriod after unlocking.  calling function MUST call unlock() prior.
+    function _redeemForDepositPeriodAfterUnlock(
+        uint256 shares,
+        address receiver,
+        address owner,
+        uint256 depositPeriod,
+        uint256 redeemPeriod
+    ) internal virtual returns (uint256 assets) {
         return super.redeemForDepositPeriod(shares, receiver, owner, depositPeriod, redeemPeriod);
     }
 
@@ -158,14 +170,15 @@ contract LiquidContinuousMultiTokenVault is
     function requestBuy(uint256 currencyTokenAmount) public virtual override returns (uint256 requestId) {
         uint256 componentTokenAmount = currencyTokenAmount; // 1 asset = 1 share
 
-        executeBuy(_msgSender(), ZERO_REQUEST_ID, currencyTokenAmount, componentTokenAmount);
+        uint256 requestId = ZERO_REQUEST_ID; // requests and requestIds not used in buys.
 
-        return ZERO_REQUEST_ID;
+        executeBuy(_msgSender(), requestId, currencyTokenAmount, componentTokenAmount);
+
+        return requestId;
     }
 
     /// @inheritdoc IComponentToken
     function requestSell(uint256 componentTokenAmount) public virtual override returns (uint256 requestId) {
-        // TODO - do we *always* want to optimizingRedeemShares?  perhaps we can configure to optimizeByAShares or optimizeByAssets?
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
             _redeemOptimizer.optimize(this, _msgSender(), componentTokenAmount, componentTokenAmount, minUnlockPeriod());
 
@@ -193,18 +206,18 @@ contract LiquidContinuousMultiTokenVault is
         uint256, /*currencyTokenAmount*/
         uint256 componentTokenAmount
     ) public override {
-        // TODO - we should go through the locks rather than having to figure out the periods again
-        uint256 unlockRequestedAmount = unlockRequestedAmount(requestor, requestId);
-
+        uint256 unlockRequestedAmount = unlockRequestAmount(requestor, requestId);
         if (componentTokenAmount != unlockRequestedAmount) {
             revert LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(
                 componentTokenAmount, unlockRequestedAmount
             );
         }
 
-        (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) = unlock(requestor, requestId);
+        (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) = unlock(requestor, requestId); // unlockPeriod = redeemPeriod
 
-        redeemForDepositPeriodBatch(requestor, requestor, sharesAtPeriods, depositPeriods, currentPeriod());
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            _redeemForDepositPeriodAfterUnlock(sharesAtPeriods[i], requestor, requestor, depositPeriods[i], requestId);
+        }
     }
 
     /// @dev set the IRedeemOptimizer
@@ -235,18 +248,6 @@ contract LiquidContinuousMultiTokenVault is
     /// @dev - users should call deposit() instead that returns shares
     function lock(address account, uint256 depositPeriod, uint256 amount) public onlyRole(OPERATOR_ROLE) {
         _depositForDepositPeriod(amount, account, depositPeriod);
-    }
-
-    /// @notice Releases the lock for the `account` at the given `unlockPeriod`.
-    /// TODO - unlock calling redeem or redeem calling unlock ?
-    function unlock(address owner, uint256 unlockPeriod)
-        public
-        override
-        returns (uint256[] memory depositPeriods, uint256[] memory amounts)
-    {
-        (depositPeriods, amounts) = super.unlock(owner, unlockPeriod);
-
-        // TODO - call batch redeem
     }
 
     /// @inheritdoc TimelockAsyncUnlock

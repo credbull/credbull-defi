@@ -102,7 +102,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
         assertEq(
             testParam.principal,
-            liquidVault.unlockRequestedAmountForDepositPeriod(receiver, testParam.depositPeriod),
+            liquidVault.unlockRequestAmountByDepositPeriod(receiver, testParam.depositPeriod),
             "unlockRequest should be created"
         );
 
@@ -113,7 +113,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         assertEq(0, liquidVault.balanceOf(receiver, testParam.depositPeriod), "deposits should be redeemed");
         assertEq(
             0,
-            liquidVault.unlockRequestedAmountForDepositPeriod(receiver, testParam.depositPeriod),
+            liquidVault.unlockRequestAmountByDepositPeriod(receiver, testParam.depositPeriod),
             "unlockRequest should be released"
         );
 
@@ -143,17 +143,8 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     }
 
     function _asSingletonArray(uint256 element) internal pure returns (uint256[] memory array) {
-        assembly {
-            // Load the free memory pointer
-            array := mload(0x40)
-            // Set array length to 1
-            mstore(array, 1)
-            // Store the single element at the next word after the length (where content starts)
-            mstore(add(array, 0x20), element)
-
-            // Update the free memory pointer by pointing after the array
-            mstore(0x40, add(array, 0x40))
-        }
+        array = new uint256[](1);
+        array[0] = element;
     }
 }
 
