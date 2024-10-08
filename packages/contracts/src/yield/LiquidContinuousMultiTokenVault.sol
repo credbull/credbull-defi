@@ -170,14 +170,15 @@ contract LiquidContinuousMultiTokenVault is
     function requestBuy(uint256 currencyTokenAmount) public virtual override returns (uint256 requestId) {
         uint256 componentTokenAmount = currencyTokenAmount; // 1 asset = 1 share
 
-        executeBuy(_msgSender(), ZERO_REQUEST_ID, currencyTokenAmount, componentTokenAmount);
+        uint256 requestId = ZERO_REQUEST_ID; // requests and requestIds not used in buys.
 
-        return ZERO_REQUEST_ID;
+        executeBuy(_msgSender(), requestId, currencyTokenAmount, componentTokenAmount);
+
+        return requestId;
     }
 
     /// @inheritdoc IComponentToken
     function requestSell(uint256 componentTokenAmount) public virtual override returns (uint256 requestId) {
-        // TODO - do we *always* want to optimizingRedeemShares?  perhaps we can configure to optimizeByAShares or optimizeByAssets?
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
             _redeemOptimizer.optimize(this, _msgSender(), componentTokenAmount, componentTokenAmount, minUnlockPeriod());
 
