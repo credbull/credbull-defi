@@ -16,10 +16,10 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
 
     uint256 private _noticePeriod;
 
-    // user requested unlocks by requestId.  maps account => requestId => map(depositPeriod, unlockAmount)
+    // user requested unlocks by requestId.  maps account => requestId => map(depositPeriod -> unlockAmount)
     mapping(address account => mapping(uint256 requestId => EnumerableMap.UintToUintMap)) private _unlockRequests;
 
-    // cache of user requested unlocks by depositPeriod across ALL requests.  maps account => map(depositPeriod, unlockAmount)
+    // cache of user requested unlocks by depositPeriod across ALL requests.  maps account => map(depositPeriod -> unlockAmount)
     mapping(address account => EnumerableMap.UintToUintMap) private _depositPeriodAmountCache;
 
     error TimelockAsyncUnlock__AuthorizeCallerFailed(address caller, address owner);
