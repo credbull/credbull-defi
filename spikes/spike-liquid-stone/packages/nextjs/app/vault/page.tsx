@@ -19,7 +19,7 @@ const VaultInterface: NextPage = () => {
     <>
       <div className="main-container mt-8 p-2">
         {contractNames.map((contractName: ContractName, i: number) => {
-          return contractName.includes("LiquidContinuousMultiTokenVault") ? (
+          return contractName.includes("ERC1967Proxy") ? (
             <ViewSection
               key={i}
               address={address}

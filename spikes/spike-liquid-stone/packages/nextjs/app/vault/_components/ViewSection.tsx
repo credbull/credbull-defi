@@ -54,11 +54,6 @@ const ViewSection = ({
   const [currencyTokenAmountToSell, setCurrencyTokenAmountToSell] = useState("");
   const [log, setLog] = useState([]);
 
-  // const roleBytes = ethers.utils.formatBytes32String(role);
-
-  // Compute the keccak256 hash of the role
-  // const keccak256Hash = ethers.utils.keccak256(roleBytes);
-
   const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractName);
 
   useEffect(() => {
