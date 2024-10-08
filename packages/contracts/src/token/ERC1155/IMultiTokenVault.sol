@@ -64,22 +64,6 @@ interface IMultiTokenVault is IERC1155 {
     ) external returns (uint256 assets);
 
     /**
-     * @notice Redeems shares for assets based on batch of deposit periods.
-     * @param receiver The address to receive the assets.
-     * @param owner The address of the owner of the shares.
-     * @param shares The shares per depositPeriods to redeem.
-     * @param depositPeriods The deposit periods in which the shares were issued.
-     * @return assets The equivalent amount of assets returned.
-     */
-    function redeemForDepositPeriodBatch(
-        address receiver,
-        address owner,
-        uint256[] memory shares,
-        uint256[] memory depositPeriods,
-        uint256 redeemPeriod
-    ) external returns (uint256[] memory assets);
-
-    /**
      * @notice Returns the underlying asset used by the vault.
      * @return asset_ The address of the underlying asset.
      */
