@@ -5,8 +5,6 @@ import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import { console } from "forge-std/console.sol";
-
 /**
  * @title The redemption optimizer utilising a combined FIFO/LIFO strategy.
  * @notice Optimizes the redemption of shares using a FIFO strategy with a LIFO component.
@@ -27,6 +25,7 @@ contract RedeemOptimizerFIFOLIFO is IRedeemOptimizer {
 
     uint256 private _startDepositPeriod;
 
+    // NOTE (JL,2024-10-08): Instead of Tenor, could pass in the `IYieldStrategy` to do calculations?
     constructor(OptimizerBasis defaultBasis, uint256 startDepositPeriod, uint256 tenor) {
         DEFAULT_BASIS = defaultBasis;
         START_DEPOSIT_PERIOD = startDepositPeriod;
@@ -85,20 +84,38 @@ contract RedeemOptimizerFIFOLIFO is IRedeemOptimizer {
         );
     }
 
-    /// @dev Queries the `vault` to find the earliest Deposit Day at which there are still deposits. Sets this value as
+    /// @dev Queries the `vault` to find the earliest Deposit Period at which there are deposits. Sets this value as
     /// `_startDepositPeriod`, the starting point for the optimizer and returns the same value.
-    /// @return
-    function _earliestPeriodWithDeposit(IMultiTokenVault vault) private returns (uint256) {
-        for (
-            uint256 depositPeriod = _startDepositPeriod; depositPeriod <= vault.currentPeriodsElapsed(); depositPeriod++
-        ) {
-            if (vault.exists(depositPeriod)) {
-                _startDepositPeriod = depositPeriod;
-                console.log("_earliestPeriodWithDeposit(): Set To= %s", depositPeriod);
+    /// @return _startDepositPeriod The earliest Deposit Period at which there are deposits.
+    function _earliestPeriodWithDeposit(IMultiTokenVault vault) internal returns (uint256) {
+        for (uint256 period = _startDepositPeriod; period <= vault.currentPeriodsElapsed(); ++period) {
+            if (vault.exists(period)) {
+                _startDepositPeriod = period;
                 break;
             }
         }
         return _startDepositPeriod;
+    }
+
+    /// @dev Calculates the effective Period Span between a From and a To date.
+    // TODO (JL,2024-10-08): Could we expose this on the IYieldStrategy? As effective span is a yield concept.
+    function _inclusivePeriodSpan(OptimizerParams memory optimizerParams) internal pure returns (uint256) {
+        return (optimizerParams.toDepositPeriod - optimizerParams.fromDepositPeriod) + 1;
+    }
+
+    /// @dev Calculates the latest Deposit Period that can be mature. Only invoke from a context where it is known that
+    ///  the period span is greater than the tenor. So, the subtraction is safe.
+    function _lastMatureDepositPeriod(OptimizerParams memory optimizerParams) internal view returns (uint256) {
+        return (optimizerParams.toDepositPeriod - TENOR) + 1;
+    }
+
+    /// @dev Calculates the first Deposit Period that cannot be mature.
+    function _firstImmatureDepositPeriod(OptimizerParams memory optimizerParams) internal view returns (uint256) {
+        if (_inclusivePeriodSpan(optimizerParams) >= TENOR) {
+            return _lastMatureDepositPeriod(optimizerParams) + 1;
+        } else {
+            return optimizerParams.fromDepositPeriod;
+        }
     }
 
     function _findAmount(IMultiTokenVault vault, OptimizerParams memory optimizerParams)
@@ -117,86 +134,63 @@ contract RedeemOptimizerFIFOLIFO is IRedeemOptimizer {
                 optimizerParams.toDepositPeriod, vault.currentPeriodsElapsed()
             );
         }
-
-        console.log(
-            "_findAmount(): From= %d, To= %d, Current= %d",
-            optimizerParams.fromDepositPeriod,
-            optimizerParams.toDepositPeriod,
-            vault.currentPeriodsElapsed()
-        );
-        console.log(
-            "_findAmount(): Redeem Period= %d, To Find= %d, Amount Type= %s",
-            optimizerParams.redeemPeriod,
-            optimizerParams.amountToFind,
-            optimizerParams.optimizerBasis == OptimizerBasis.Shares ? "Shares" : "AssetWithReturns"
-        );
-
-        // The latest Deposit Period for which the deposits can be mature on redeemPeriod.
         IterationData memory i = IterationData({
             vault: vault,
             optimizerParams: optimizerParams,
             arrayIndex: 0,
             depositPeriod: 0,
             amountFound: 0,
-            depositPeriods: new uint256[]((optimizerParams.toDepositPeriod - optimizerParams.fromDepositPeriod) + 1),
-            sharesAtPeriods: new uint256[]((optimizerParams.toDepositPeriod - optimizerParams.fromDepositPeriod) + 1),
+            depositPeriods: new uint256[](_inclusivePeriodSpan(optimizerParams)),
+            sharesAtPeriods: new uint256[](_inclusivePeriodSpan(optimizerParams)),
             isDone: false
         });
 
-        console.log("_findAmount(): Finding Mature returns");
-
-        // Iterate over the from -> last mature period range, inclusive of both.
-        uint256 lastMaturePeriod = optimizerParams.redeemPeriod - (TENOR - 1);
-        for (
-            uint256 depositPeriod = optimizerParams.fromDepositPeriod;
-            depositPeriod <= lastMaturePeriod && !i.isDone;
-            ++depositPeriod
-        ) {
-            i.depositPeriod = depositPeriod;
-            i = _iteration(i);
-            iLog(i);
+        // If there are mature deposits.
+        if (_inclusivePeriodSpan(optimizerParams) >= TENOR) {
+            // Iterate over the from -> last mature period range, inclusive of both.
+            uint256 lastMatureDepositPeriod = _lastMatureDepositPeriod(optimizerParams);
+            for (
+                uint256 depositPeriod = optimizerParams.fromDepositPeriod;
+                depositPeriod <= lastMatureDepositPeriod && !i.isDone;
+                ++depositPeriod
+            ) {
+                i.depositPeriod = depositPeriod;
+                i = _iteration(i);
+            }
         }
 
+        // If the Amount Found is not satisfied, search for value in the immature deposits.
         if (i.amountFound < optimizerParams.amountToFind && !i.isDone) {
-            return _findMostRecentFirst(lastMaturePeriod + 1, i);
+            // Search in the range of the first immature deposit period -> to period.
+            return _findMostRecentFirst(_firstImmatureDepositPeriod(optimizerParams), i);
         }
 
         return _trimToSize(i.arrayIndex, i.depositPeriods, i.sharesAtPeriods);
     }
 
-    function iLog(IterationData memory i) private pure {
-        console.log("Iteration Data:");
-        console.log(" Index= %d, Deposit Period= %s, Amount Found= %d", i.arrayIndex, i.depositPeriod, i.amountFound);
-        console.log(" Done?= %s, Found So Far:", i.isDone);
-        for (uint256 j = 0; j < i.arrayIndex; j++) {
-            console.log("  %d, Deposit Period= %d, Amount= %d", j, i.depositPeriods[j], i.sharesAtPeriods[j]);
-        }
-    }
-
     /**
-     * @dev Reverse iterates from the `to` period to the `firstNonMaturePeriod` finding the most recent deposits that
+     * @dev Reverse iterates from the `to` period to the `firstImmaturePeriod` finding the most recent deposits that
      *  can be added to the redeem amount. This gives the older, not yet mature deposits more time to mature.
      *
-     * @param firstNonMaturePeriod The initial period in the redeem range that cannot be a mature deposit.
+     * @param firstImmaturePeriod The initial period in the redeem range that cannot be a mature deposit.
      * @param i The [IterationData] that encapsulates the processing to this point.
      * @return depositPeriods The result array of Deposit Periods to harvest.
      * @return sharesAtPeriods The result array of Share Amounts At Periods to harvest.
      */
-    function _findMostRecentFirst(uint256 firstNonMaturePeriod, IterationData memory i)
+    function _findMostRecentFirst(uint256 firstImmaturePeriod, IterationData memory i)
         internal
         view
         returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
     {
-        console.log("_findMostRecentFirst(): Finding Most Recent First returns ");
         // Reverse iterate over the to -> first non-mature period range, inclusive of both.
         for (
             uint256 depositPeriod = i.optimizerParams.toDepositPeriod;
-            depositPeriod >= firstNonMaturePeriod && !i.isDone;
-            depositPeriod--
+            depositPeriod >= firstImmaturePeriod && !i.isDone;
+            --depositPeriod
         ) {
             i.depositPeriod = depositPeriod;
             i = _iteration(i);
-            iLog(i);
+            if (depositPeriod == 0) break; // Prevent underflow by exiting loop before final decrement.
         }
 
         if (i.amountFound < i.optimizerParams.amountToFind) {
@@ -256,15 +250,15 @@ contract RedeemOptimizerFIFOLIFO is IRedeemOptimizer {
                 i.sharesAtPeriods[i.arrayIndex] =
                     i.optimizerParams.optimizerBasis == OptimizerBasis.Shares ? amountToInclude : sharesToInclude;
 
+                i.amountFound += amountToInclude;
                 i.isDone = true;
             } else {
                 i.sharesAtPeriods[i.arrayIndex] = sharesAtPeriod;
+                i.amountFound += amountAtPeriod;
             }
-
-            i.amountFound += amountAtPeriod;
             i.arrayIndex++;
 
-            if (i.amountFound == i.optimizerParams.amountToFind) {
+            if (i.amountFound == i.optimizerParams.amountToFind && !i.isDone) {
                 i.isDone = true;
             }
         }
@@ -283,15 +277,13 @@ contract RedeemOptimizerFIFOLIFO is IRedeemOptimizer {
      * @return trimmed2 The trimmed version of `array2`.
      */
     function _trimToSize(uint256 toSize, uint256[] memory toTrim1, uint256[] memory toTrim2)
-        private
+        internal
         pure
         returns (uint256[] memory trimmed1, uint256[] memory trimmed2)
     {
         trimmed1 = new uint256[](toSize);
         trimmed2 = new uint256[](toSize);
-        console.log("_trimToSize(): Size= %d", toSize);
         for (uint256 i = 0; i < toSize; i++) {
-            console.log("_trimToSize(): %d, Deposit Period= %d, Amount= %d", i, toTrim1[i], toTrim2[i]);
             trimmed1[i] = toTrim1[i];
             trimmed2[i] = toTrim2[i];
         }
