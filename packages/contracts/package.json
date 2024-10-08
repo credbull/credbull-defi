@@ -15,7 +15,7 @@
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint './*(test|src)/**/*.sol'",
     "db-check": "tsc && node ./script/utils/checkDb.js",
     "db-export": "tsc && node ./script/utils/exporter.js",
-    "deploy": "make deploy-local",
+    "deploy": "make deploy-local && node script/generateTsAbis.js",
     "deploy:ci": "yarn db-export && make deploy-baseSepolia",
     "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
     "postinstall": "yarn build && yarn gen-types"
