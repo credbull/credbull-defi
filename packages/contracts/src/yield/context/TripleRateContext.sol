@@ -72,6 +72,10 @@ abstract contract TripleRateContext is Initializable, CalcInterestMetadata, ITri
      */
     event CurrentPeriodRateChanged(uint256 interestRate, uint256 effectiveFromPeriod);
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function __TripleRateContext_init(ContextParams memory params) internal onlyInitializing {
         __CalcInterestMetadata_init(params.fullRateScaled, params.frequency, params.decimals);
         TENOR = params.tenor;
