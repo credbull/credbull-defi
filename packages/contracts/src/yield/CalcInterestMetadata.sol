@@ -13,6 +13,10 @@ abstract contract CalcInterestMetadata is Initializable, ICalcInterestMetadata {
     uint256 public FREQUENCY;
     uint256 public SCALE;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function __CalcInterestMetadata_init(uint256 ratePercentageScaled_, uint256 frequency_, uint256 decimals_)
         internal
         onlyInitializing

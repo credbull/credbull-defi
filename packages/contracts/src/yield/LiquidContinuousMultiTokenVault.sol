@@ -77,6 +77,10 @@ contract LiquidContinuousMultiTokenVault is
         uint256 componentTokenAmount, uint256 unlockRequestedAmount
     );
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(VaultParams memory vaultParams) public initializer {
         __UUPSUpgradeable_init();
         __AccessControl_init();

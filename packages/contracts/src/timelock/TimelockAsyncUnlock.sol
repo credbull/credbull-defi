@@ -37,6 +37,10 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         address caller, address owner, uint256 currentPeriod, uint256 unlockPeriod
     );
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function __TimelockAsyncUnlock_init(uint256 noticePeriod_) internal virtual onlyInitializing {
         __Context_init();
         _noticePeriod = noticePeriod_;

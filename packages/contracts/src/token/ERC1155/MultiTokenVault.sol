@@ -42,6 +42,10 @@ abstract contract MultiTokenVault is
     error MultiTokenVault__RedeemBeforeDeposit(address owner, uint256 depositPeriod, uint256 redeemPeriod);
     error MultiTokenVault__InvalidArrayLength(uint256 depositPeriodsLength, uint256 sharesLength);
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initializes the vault with the asset, treasury, and token URI for ERC1155 tokens.
      * @param asset_ The ERC20 token representing the underlying asset.
