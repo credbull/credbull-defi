@@ -12,8 +12,8 @@ const contractsData = getAllContracts();
 const VaultInterface: NextPage = () => {
   const { address } = useAccount();
   const contractNames = Object.keys(contractsData) as ContractName[];
-  const { data, isLoading } = useDeployedContractInfo(contractNames[1]);
-  contractNames.splice(0, 2);
+  const { data, isLoading } = useDeployedContractInfo(contractNames[0]);
+  contractNames.splice(0, 1);
 
   return (
     <>
