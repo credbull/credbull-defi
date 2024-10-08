@@ -119,7 +119,8 @@ contract TimelockAsyncUnlockTest is Test {
     function test__TimelockAsyncUnlock__UnlockPriorToDepositPeriodFails() public {
         asyncUnlock.setCurrentPeriod(depositPeriods[0]);
         {
-            (uint256[] memory depositPeriodsForUnlock, uint256[] memory amountsForUnlock) = _asSingletonArrays(8, 1800);
+            (uint256[] memory depositPeriodsForUnlock, uint256[] memory amountsForUnlock) =
+                (_asSingletonArray(8), _asSingletonArray(1800));
 
             vm.prank(alice);
             uint256 requestId = asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
@@ -196,7 +197,8 @@ contract TimelockAsyncUnlockTest is Test {
      * We expect it to fail
      */
     function test__TimelockAsyncUnlock__OnlyDepositorCanRequestUnlock() public {
-        (uint256[] memory depositPeriodsForUnlock, uint256[] memory amountsForUnlock) = _asSingletonArrays(1, 1800);
+        (uint256[] memory depositPeriodsForUnlock, uint256[] memory amountsForUnlock) =
+            (_asSingletonArray(1), _asSingletonArray(1800));
 
         vm.expectRevert(
             abi.encodeWithSelector(TimelockAsyncUnlock.TimelockAsyncUnlock__AuthorizeCallerFailed.selector, bob, alice)
@@ -211,7 +213,8 @@ contract TimelockAsyncUnlockTest is Test {
      * Bob can unlock Alice's requested unlock amount
      */
     function test__TimelockAsyncUnlock__AnyoneCanUnlock() public {
-        (uint256[] memory depositPeriodsForUnlock, uint256[] memory amountsForUnlock) = _asSingletonArrays(1, 1800);
+        (uint256[] memory depositPeriodsForUnlock, uint256[] memory amountsForUnlock) =
+            (_asSingletonArray(1), _asSingletonArray(1800));
 
         vm.prank(alice);
         uint256 requestId = asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock, amountsForUnlock);
@@ -252,7 +255,8 @@ contract TimelockAsyncUnlockTest is Test {
 
         asyncUnlock.setCurrentPeriod(asyncUnlock.currentPeriod() + 2);
 
-        (uint256[] memory depositPeriodsForUnlock2, uint256[] memory amountsForUnlock2) = _asSingletonArrays(4, 500);
+        (uint256[] memory depositPeriodsForUnlock2, uint256[] memory amountsForUnlock2) =
+            (_asSingletonArray(4), _asSingletonArray(500));
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -384,27 +388,9 @@ contract TimelockAsyncUnlockTest is Test {
         );
     }
 
-    function _asSingletonArrays(uint256 element1, uint256 element2)
-        private
-        pure
-        returns (uint256[] memory array1, uint256[] memory array2)
-    {
-        assembly ("memory-safe") {
-            // Load the free memory pointer
-            array1 := mload(0x40)
-            // Set array length to 1
-            mstore(array1, 1)
-            // Store the single element at the next word after the length (where content starts)
-            mstore(add(array1, 0x20), element1)
-
-            // Repeat for next array locating it right after the first array
-            array2 := add(array1, 0x40)
-            mstore(array2, 1)
-            mstore(add(array2, 0x20), element2)
-
-            // Update the free memory pointer by pointing after the second array
-            mstore(0x40, add(array2, 0x40))
-        }
+    function _asSingletonArray(uint256 element) internal pure returns (uint256[] memory array) {
+        array = new uint256[](1);
+        array[0] = element;
     }
 
     function _lockInMultipleDepositPeriods() private {

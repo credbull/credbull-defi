@@ -175,7 +175,7 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         virtual
         returns (uint256[] memory depositPeriods, uint256[] memory amounts)
     {
-        // use copy of the depositPeriods and amounts.  we will be altering the storage in _unlock
+        // use copy of the depositPeriods and amounts.  we will be altering the storage in _unlock()
         (depositPeriods, amounts) = unlockRequests(owner, requestId);
 
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
