@@ -25,25 +25,29 @@ import { DeployedContracts } from "./DeployedContracts.s.sol";
 contract DeployVaultFactory is Script {
     bool private isTestMode;
 
-    CredbullFixedYieldVaultFactory public factory;
-    CredbullUpsideVaultFactory public upsideFactory;
-    CredbullWhiteListProvider public whiteListProvider;
-
-    struct VaultDeploymentResult {
-        CredbullFixedYieldVaultFactory factory;
-        CredbullUpsideVaultFactory upsideFactory;
-        CredbullWhiteListProvider whiteListProvider;
-        HelperConfig helperConfig;
-        LiquidContinuousMultiTokenVault vault;
-    }
-
-    function runTest() public returns (VaultDeploymentResult memory) {
+    function runTest()
+        public
+        returns (
+            CredbullFixedYieldVaultFactory factory,
+            CredbullUpsideVaultFactory upsideFactory,
+            CredbullWhiteListProvider whiteListProvider,
+            HelperConfig helperConfig
+        )
+    {
         isTestMode = true;
         return run();
     }
 
-    function run() public returns (VaultDeploymentResult memory) {
-        HelperConfig helperConfig = new HelperConfig(isTestMode);
+    function run()
+        public
+        returns (
+            CredbullFixedYieldVaultFactory factory,
+            CredbullUpsideVaultFactory upsideFactory,
+            CredbullWhiteListProvider whiteListProvider,
+            HelperConfig helperConfig
+        )
+    {
+        helperConfig = new HelperConfig(isTestMode);
         NetworkConfig memory config = helperConfig.getNetworkConfig();
 
         address owner = config.factoryParams.owner;
@@ -70,27 +74,17 @@ contract DeployVaultFactory is Script {
             console2.log("!!!!! Deploying CredbullWhiteListProvider !!!!!");
         }
 
-        LiquidContinuousMultiTokenVault vault = _deployVaultContracts(owner, operator);
+        _deployVaultContracts(config, owner, operator);
 
         vm.stopBroadcast();
 
-        return VaultDeploymentResult({
-            factory: factory,
-            upsideFactory: upsideFactory,
-            whiteListProvider: whiteListProvider,
-            helperConfig: helperConfig,
-            vault: vault
-        });
+        return (factory, upsideFactory, whiteListProvider, helperConfig);
     }
 
-    // New function to handle the vault contracts deployment
-    function _deployVaultContracts(address owner, address operator)
+    function _deployVaultContracts(NetworkConfig memory config, address owner, address operator)
         internal
         returns (LiquidContinuousMultiTokenVault)
     {
-        SimpleUSDC simpleUSDC = new SimpleUSDC(owner, type(uint128).max);
-        console2.log(string.concat("!!!!! Deploying SimpleUSDC [", vm.toString(address(simpleUSDC)), "] !!!!!"));
-
         IYieldStrategy yieldStrategy = new TripleRateYieldStrategy();
         console2.log(string.concat("!!!!! Deploying IYieldStrategy [", vm.toString(address(yieldStrategy)), "] !!!!!"));
 
@@ -103,7 +97,7 @@ contract DeployVaultFactory is Script {
             LiquidContinuousMultiTokenVault.VaultAuth({ owner: owner, operator: operator, upgrader: owner });
 
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams =
-            _createVaultParams(vaultAuth, simpleUSDC, yieldStrategy, redeemOptimizer);
+            _createVaultParams(vaultAuth, IERC20Metadata(address(config.usdcToken)), yieldStrategy, redeemOptimizer);
 
         LiquidContinuousMultiTokenVault liquidVaultImpl = new LiquidContinuousMultiTokenVault();
         console2.log(
