@@ -60,7 +60,6 @@ contract LiquidContinuousMultiTokenVault is
         TripleRateContext.ContextParams contextParams;
     }
 
-    // add setters for these...
     IYieldStrategy public _yieldStrategy;
     IRedeemOptimizer public _redeemOptimizer;
     uint256 public _vaultStartTimestamp;
@@ -167,7 +166,7 @@ contract LiquidContinuousMultiTokenVault is
 
     /// @inheritdoc IComponentToken
     /// @dev - buys can be directly executed.
-    function requestBuy(uint256 currencyTokenAmount) public virtual override returns (uint256 requestId) {
+    function requestBuy(uint256 currencyTokenAmount) public virtual override returns (uint256 requestId_) {
         uint256 componentTokenAmount = currencyTokenAmount; // 1 asset = 1 share
 
         uint256 requestId = ZERO_REQUEST_ID; // requests and requestIds not used in buys.
