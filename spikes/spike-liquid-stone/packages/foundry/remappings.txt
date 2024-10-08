@@ -1,9 +1,0 @@
-@openzeppelin/contracts-upgradeable/=../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/contracts/
-@openzeppelin/contracts/=../../../../packages/contracts/lib/openzeppelin-contracts/contracts/
-openzeppelin-contracts-upgradeable/=../../../../packages/contracts/lib/openzeppelin-contracts-upgradeable/
-forge-std/=../../../../packages/contracts/lib/forge-std/src/
-openzeppelin-contracts/=../../../../packages/contracts/lib/openzeppelin-contracts/
-solidity-bytes-utils/=../../../../lib/solidity-bytes-utils/contracts/
-@credbull/=../../../../packages/contracts/src/
-@script/=script/
-@test/=test/
