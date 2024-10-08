@@ -170,7 +170,7 @@ contract LiquidContinuousMultiTokenVault is
     function requestBuy(uint256 currencyTokenAmount) public virtual override returns (uint256 requestId) {
         uint256 componentTokenAmount = currencyTokenAmount; // 1 asset = 1 share
 
-        uint256 requestId = ZERO_REQUEST_ID; // requests and requestIds not used in buys.
+        requestId = ZERO_REQUEST_ID; // requests and requestIds not used in buys.
 
         executeBuy(_msgSender(), requestId, currencyTokenAmount, componentTokenAmount);
 
