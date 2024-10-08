@@ -33,7 +33,9 @@ const ViewSection = ({
   const [refetch, setRefetch] = useState(false);
 
   const [userDepositIds, setUserDepositIds] = useState<OwnedNft[]>([]);
-  const [pools, setPools] = useState<{ depositId: OwnedNft; balance: string; shares: string; yield: string }[]>([]);
+  const [pools, setPools] = useState<
+    { depositId: OwnedNft; balance: string; shares: string; unlockRequestAmount: string; yield: string }[]
+  >([]);
 
   const [currentPeriod, setCurrentPeriod] = useState(0);
   const [assetAmount, setAssetAmount] = useState("");
@@ -47,9 +49,15 @@ const ViewSection = ({
 
   const [sellAmount, setSellAmount] = useState("");
   const [currencyTokenAmount, setCurrencyTokenAmount] = useState("");
+  const [requestId, setRequestId] = useState("");
   const [componentTokenAmount, setComponentTokenAmount] = useState("");
   const [currencyTokenAmountToSell, setCurrencyTokenAmountToSell] = useState("");
   const [log, setLog] = useState([]);
+
+  // const roleBytes = ethers.utils.formatBytes32String(role);
+
+  // Compute the keccak256 hash of the role
+  // const keccak256Hash = ethers.utils.keccak256(roleBytes);
 
   const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractName);
 
@@ -83,6 +91,12 @@ const ViewSection = ({
           const sharesBigInt = await contract.sharesAtPeriod(address, depositId);
           const shares = ethers.formatUnits(sharesBigInt, 6);
 
+          const unlockRequestAmountBigInt = await contract.unlockRequestAmountByDepositPeriod(
+            address,
+            Number(depositId),
+          );
+          const unlockRequestAmount = ethers.formatUnits(unlockRequestAmountBigInt, 6);
+
           if (balanceBigInt > 0) {
             const yieldAmount =
               currentPeriod > Number(depositId) ? await contract.calcYield(balanceBigInt, depositId, currentPeriod) : 0;
@@ -91,6 +105,7 @@ const ViewSection = ({
               depositId,
               balance,
               shares,
+              unlockRequestAmount,
               yield: yieldAmount > 0 ? ethers.formatUnits(yieldAmount, 6) : yieldAmount,
             };
           }
@@ -107,6 +122,7 @@ const ViewSection = ({
         depositId: OwnedNft;
         balance: string;
         shares: string;
+        unlockRequestAmount: string;
         yield: string;
       }[];
 
@@ -332,7 +348,6 @@ const ViewSection = ({
     // const message = `Executed sell of ${componentTokenAmount} component tokens for ${currencyTokenAmount} currency tokens.`;
     // setLog([...log, message]);
     if (!address || !componentTokenAmount || !currencyTokenAmountToSell) {
-      console.log(currencyTokenAmountToSell, componentTokenAmount);
       console.log("Missing required fields");
       return;
     }
@@ -347,7 +362,7 @@ const ViewSection = ({
               abi: deployedContractData?.abi || [],
               args: [
                 address,
-                BigInt(0),
+                BigInt(requestId),
                 ethers.parseUnits(currencyTokenAmountToSell, 6),
                 ethers.parseUnits(componentTokenAmount, 6),
               ],
@@ -380,6 +395,18 @@ const ViewSection = ({
       </div>
     );
   }
+
+  const setRequestAmountToSell = (pool: {
+    depositId: OwnedNft;
+    balance: string;
+    shares: string;
+    unlockRequestAmount: string;
+    yield: string;
+  }) => {
+    setRequestId((Number(pool.depositId) + 1).toString());
+    setCurrencyTokenAmountToSell(pool.unlockRequestAmount.toString());
+    setComponentTokenAmount(pool.unlockRequestAmount.toString());
+  };
 
   return (
     <div className={`container mx-auto p-6 ${resolvedTheme === "dark" ? "text-white" : "text-black"}`}>
@@ -443,7 +470,7 @@ const ViewSection = ({
                 resolvedTheme === "dark" ? "bg-gray-700 text-white" : "bg-gray-200 text-black"
               }`}
             >
-              Notice Period: {noticePeriod} hours
+              Notice Period: {noticePeriod} days
               <div
                 className="absolute inset-0 transition-opacity duration-700 opacity-0 hover:opacity-100"
                 style={{
@@ -521,6 +548,7 @@ const ViewSection = ({
         {pools.map((pool, index) => (
           <div
             key={index}
+            onClick={() => setRequestAmountToSell(pool)}
             className={`relative cursor-pointer overflow-hidden transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out rounded-lg shadow-xl p-6 ${
               resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
             }`}
@@ -538,6 +566,7 @@ const ViewSection = ({
             <p className="relative z-10 text-center">Deposit period: {Number(pool.depositId)}</p>
             <p className="relative z-10 text-center">Balance: {pool.balance} USDC</p>
             <p className="relative z-10 text-center">Shares: {pool.shares}</p>
+            <p className="relative z-10 text-center">Requested Amount: {pool.unlockRequestAmount}</p>
             <p className="relative z-10 text-center">Yield: {pool.yield} USDC</p>
 
             <div
@@ -600,12 +629,15 @@ const ViewSection = ({
             resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
           } shadow-md p-4 rounded-lg`}
         >
-          <h2 className="text-xl font-bold mb-4">Sell</h2>
+          <h2 className="text-xl font-bold mb-4">
+            Sell (<small>Click on the desired period to sell</small>)
+          </h2>
           <input
             type="text"
             value={componentTokenAmount}
             onChange={e => setComponentTokenAmount(e.target.value)}
             placeholder="Enter Component Token Amount"
+            disabled
             className={`border ${
               resolvedTheme === "dark" ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300"
             } p-2 w-full mb-4 outline-none focus:ring-0`}
@@ -615,6 +647,7 @@ const ViewSection = ({
             value={currencyTokenAmountToSell}
             onChange={e => setCurrencyTokenAmountToSell(e.target.value)}
             placeholder="Enter Currency Token Amount"
+            disabled
             className={`border ${
               resolvedTheme === "dark" ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300"
             } p-2 w-full mb-4 outline-none focus:ring-0`}
