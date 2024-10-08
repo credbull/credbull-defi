@@ -3,25 +3,36 @@ pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  * @title RedeemOptimizerFIFO
  * @dev Optimizes the redemption of shares using a FIFO strategy.
  */
 contract RedeemOptimizerFIFO is IRedeemOptimizer {
+    using Math for uint256;
+
     error RedeemOptimizer__InvalidDepositPeriodRange(uint256 fromPeriod, uint256 toPeriod);
     error RedeemOptimizer__FutureToDepositPeriod(uint256 toPeriod, uint256 currentPeriod);
     error RedeemOptimizer__OptimizerFailed(uint256 amountFound, uint256 amountToFind);
 
-    enum AmountType {
-        Shares,
-        AssetsWithReturns
+    OptimizerBasis public immutable DEFAULT_BASIS;
+    uint256 public immutable START_DEPOSIT_PERIOD;
+
+    constructor(OptimizerBasis defaultBasis, uint256 startDepositPeriod) {
+        DEFAULT_BASIS = defaultBasis;
+        START_DEPOSIT_PERIOD = startDepositPeriod;
     }
 
-    uint256 public immutable START_DEPOSIT_PERIOD = 0;
-
-    constructor(uint256 startDepositPeriod) {
-        START_DEPOSIT_PERIOD = startDepositPeriod;
+    /// @inheritdoc IRedeemOptimizer
+    function optimize(IMultiTokenVault vault, address owner, uint256 shares, uint256 assets, uint256 redeemPeriod)
+        public
+        view
+        returns (uint256[] memory depositPeriods_, uint256[] memory sharesAtPeriods_)
+    {
+        return OptimizerBasis.AssetsWithReturns == DEFAULT_BASIS
+            ? optimizeWithdrawAssets(vault, owner, assets, redeemPeriod)
+            : optimizeRedeemShares(vault, owner, shares, redeemPeriod);
     }
 
     /// @inheritdoc IRedeemOptimizer
@@ -31,7 +42,15 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
         returns (uint256[] memory depositPeriods_, uint256[] memory sharesAtPeriods_)
     {
         return _findAmount(
-            vault, owner, shares, START_DEPOSIT_PERIOD, vault.currentPeriodsElapsed(), redeemPeriod, AmountType.Shares
+            vault,
+            OptimizerParams({
+                owner: owner,
+                amountToFind: shares,
+                fromDepositPeriod: START_DEPOSIT_PERIOD,
+                toDepositPeriod: vault.currentPeriodsElapsed(),
+                redeemPeriod: redeemPeriod,
+                optimizerBasis: OptimizerBasis.Shares
+            })
         );
     }
 
@@ -40,87 +59,115 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
     function optimizeWithdrawAssets(IMultiTokenVault vault, address owner, uint256 assets, uint256 redeemPeriod)
         public
         view
-        returns (uint256[] memory depositPeriods_, uint256[] memory sharesAtPeriods_)
+        returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
     {
         return _findAmount(
             vault,
-            owner,
-            assets,
-            START_DEPOSIT_PERIOD,
-            vault.currentPeriodsElapsed(),
-            redeemPeriod,
-            AmountType.AssetsWithReturns
+            OptimizerParams({
+                owner: owner,
+                amountToFind: assets,
+                fromDepositPeriod: START_DEPOSIT_PERIOD,
+                toDepositPeriod: vault.currentPeriodsElapsed(),
+                redeemPeriod: redeemPeriod,
+                optimizerBasis: OptimizerBasis.AssetsWithReturns
+            })
         );
     }
 
     /// @notice Returns deposit periods and corresponding amounts (shares or assets) within the specified range.
-    function _findAmount(
-        IMultiTokenVault vault,
-        address owner,
-        uint256 amountToFind,
-        uint256 fromDepositPeriod,
-        uint256 toDepositPeriod,
-        uint256 redeemPeriod,
-        AmountType amountType
-    ) internal view returns (uint256[] memory depositPeriods, uint256[] memory amountAtPeriods) {
-        if (fromDepositPeriod > toDepositPeriod) {
-            revert RedeemOptimizer__InvalidDepositPeriodRange(fromDepositPeriod, toDepositPeriod);
+    function _findAmount(IMultiTokenVault vault, OptimizerParams memory optimizerParams)
+        internal
+        view
+        returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
+    {
+        if (optimizerParams.fromDepositPeriod > optimizerParams.toDepositPeriod) {
+            revert RedeemOptimizer__InvalidDepositPeriodRange(
+                optimizerParams.fromDepositPeriod, optimizerParams.toDepositPeriod
+            );
         }
 
-        uint256 currentPeriod = vault.currentPeriodsElapsed();
-        if (toDepositPeriod > currentPeriod) {
-            revert RedeemOptimizer__FutureToDepositPeriod(toDepositPeriod, currentPeriod);
+        if (optimizerParams.toDepositPeriod > vault.currentPeriodsElapsed()) {
+            revert RedeemOptimizer__FutureToDepositPeriod(
+                optimizerParams.toDepositPeriod, vault.currentPeriodsElapsed()
+            );
         }
 
-        // first loop: check for periods with balances.  needed to correctly size our array results
-        uint256 numPeriodsWithBalance = 0;
-        for (uint256 depositPeriod = fromDepositPeriod; depositPeriod <= toDepositPeriod; ++depositPeriod) {
-            uint256 sharesAtPeriod = vault.balanceOf(owner, depositPeriod);
-
-            uint256 amountAtPeriod = amountType == AmountType.Shares
-                ? sharesAtPeriod
-                : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, redeemPeriod);
-
-            if (amountAtPeriod > 0) {
-                numPeriodsWithBalance++;
-            }
-        }
-
-        // second loop - collect and return the periods and amounts
-        depositPeriods = new uint256[](numPeriodsWithBalance);
-        amountAtPeriods = new uint256[](numPeriodsWithBalance);
+        // Create local caching arrays that can contain the maximum number of results.
+        uint256[] memory cacheDepositPeriods =
+            new uint256[]((optimizerParams.toDepositPeriod - optimizerParams.fromDepositPeriod) + 1);
+        uint256[] memory cacheSharesAtPeriods =
+            new uint256[]((optimizerParams.toDepositPeriod - optimizerParams.fromDepositPeriod) + 1);
 
         uint256 arrayIndex = 0;
         uint256 amountFound = 0;
 
-        for (uint256 depositPeriod = fromDepositPeriod; depositPeriod <= toDepositPeriod; ++depositPeriod) {
-            uint256 sharesAtPeriod = vault.balanceOf(owner, depositPeriod);
+        // Iterate over the from/to period range, inclusive of from and to.
+        for (
+            uint256 depositPeriod = optimizerParams.fromDepositPeriod;
+            depositPeriod <= optimizerParams.toDepositPeriod;
+            ++depositPeriod
+        ) {
+            uint256 sharesAtPeriod = vault.sharesAtPeriod(optimizerParams.owner, depositPeriod);
 
-            uint256 amountAtPeriod = amountType == AmountType.Shares
+            uint256 amountAtPeriod = optimizerParams.optimizerBasis == OptimizerBasis.Shares
                 ? sharesAtPeriod
-                : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, redeemPeriod);
+                : vault.convertToAssetsForDepositPeriod(sharesAtPeriod, depositPeriod, optimizerParams.redeemPeriod);
 
+            // If there is an Amount, store the value.
             if (amountAtPeriod > 0) {
-                depositPeriods[arrayIndex] = depositPeriod;
+                cacheDepositPeriods[arrayIndex] = depositPeriod;
 
-                // check if we will go "over" the amountToFind
-                if ((amountFound + amountAtPeriod) > amountToFind) {
-                    amountAtPeriods[arrayIndex] = amountToFind - amountFound; // include only the amount up to amountToFind
+                // check if we will go "over" the Amount To Find.
+                if (amountFound + amountAtPeriod > optimizerParams.amountToFind) {
+                    uint256 amountToInclude = optimizerParams.amountToFind - amountFound; // we only need the amount that brings us to amountToFind
 
-                    return (depositPeriods, amountAtPeriods); // we're done, no need to keep looping
+                    // only include equivalent amount of shares for the amountToInclude assets
+                    // in the assets case, the amounts include principal AND returns.  we want the shares on deposit, which is the principal only.
+                    // use this ratio: partialShares / totalShares = partialAssets / totalAssets
+                    //                 partialShares = (partialAssets * totalShares) / totalAssets
+                    cacheSharesAtPeriods[arrayIndex] = optimizerParams.optimizerBasis == OptimizerBasis.Shares
+                        ? amountToInclude // amount is shares, amountToInclude already correct
+                        : amountToInclude.mulDiv(sharesAtPeriod, amountAtPeriod); // amount is assets, calc the correct shares
+
+                    // optimization succeeded - return here to be explicit we exit the function at this point
+                    return _trimToSize(arrayIndex + 1, cacheDepositPeriods, cacheSharesAtPeriods);
                 } else {
-                    amountAtPeriods[arrayIndex] = amountAtPeriod;
+                    cacheSharesAtPeriods[arrayIndex] = sharesAtPeriod;
                 }
 
-                amountFound += amountAtPeriods[arrayIndex];
+                amountFound += amountAtPeriod;
                 arrayIndex++;
             }
         }
 
-        if (amountFound < amountToFind) {
-            revert RedeemOptimizer__OptimizerFailed(amountFound, amountToFind);
+        if (amountFound < optimizerParams.amountToFind) {
+            revert RedeemOptimizer__OptimizerFailed(amountFound, optimizerParams.amountToFind);
         }
 
-        return (depositPeriods, amountAtPeriods);
+        return _trimToSize(arrayIndex, cacheDepositPeriods, cacheSharesAtPeriods);
+    }
+
+    /**
+     * @notice Utility function that trims the specified arrays to the specified size.
+     * @dev Allocates 2 arrays of size `toSize` and copies the `array1` and `array2` elements to their corresponding
+     *  trimmed version. Assumes that the parameter arrays are at least as large as `toSize`.
+     *
+     * @param toSize The size to trim the arrays to.
+     * @param toTrim1 The first array to trim.
+     * @param toTrim2 The second array to trim.
+     * @return trimmed1 The trimmed version of `array1`.
+     * @return trimmed2 The trimmed version of `array2`.
+     */
+    function _trimToSize(uint256 toSize, uint256[] memory toTrim1, uint256[] memory toTrim2)
+        private
+        pure
+        returns (uint256[] memory trimmed1, uint256[] memory trimmed2)
+    {
+        trimmed1 = new uint256[](toSize);
+        trimmed2 = new uint256[](toSize);
+        for (uint256 i = 0; i < toSize; i++) {
+            trimmed1[i] = toTrim1[i];
+            trimmed2[i] = toTrim2[i];
+        }
     }
 }

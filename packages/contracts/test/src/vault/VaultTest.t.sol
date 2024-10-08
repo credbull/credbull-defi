@@ -24,6 +24,7 @@ contract VaultTest is Test {
 
     Vault.VaultParams private vaultParams;
 
+    address private owner = makeAddr("owner");
     address private alice = makeAddr("alice");
     address private bob = makeAddr("bob");
 
@@ -320,8 +321,8 @@ contract VaultTest is Test {
     }
 
     function test__Vault__WithdrawERC20() public {
-        SimpleUSDC mock1 = new SimpleUSDC(100 * precision);
-        SimpleUSDC mock2 = new SimpleUSDC(100 * precision);
+        SimpleUSDC mock1 = new SimpleUSDC(owner, 100 * precision);
+        SimpleUSDC mock2 = new SimpleUSDC(owner, 100 * precision);
 
         mock1.mint(address(vault), 100 * precision);
         mock2.mint(address(vault), 100 * precision);

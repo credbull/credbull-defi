@@ -23,33 +23,35 @@ import { console2 } from "forge-std/console2.sol";
 contract DeployLiquidMultiTokenVault is TomlConfig {
     using stdToml for string;
 
-    string private tomlConfig;
-
-    address private owner;
-    address private operator;
-    address private upgrader;
+    string private _tomlConfig;
+    LiquidContinuousMultiTokenVault.VaultAuth public _vaultAuth;
 
     constructor() {
-        tomlConfig = loadTomlConfiguration();
+        _tomlConfig = loadTomlConfiguration();
 
-        owner = tomlConfig.readAddress(".evm.address.owner");
-        operator = tomlConfig.readAddress(".evm.address.operator");
-        upgrader = tomlConfig.readAddress(".evm.address.upgrader");
+        _vaultAuth = LiquidContinuousMultiTokenVault.VaultAuth({
+            owner: _tomlConfig.readAddress(".evm.address.owner"),
+            operator: _tomlConfig.readAddress(".evm.address.operator"),
+            upgrader: _tomlConfig.readAddress(".evm.address.upgrader")
+        });
     }
 
     function run() public returns (LiquidContinuousMultiTokenVault vault) {
-        return run(owner);
+        return run(_vaultAuth);
     }
 
-    function run(address contractOwner) public returns (LiquidContinuousMultiTokenVault vault) {
-        IERC20Metadata usdc = _usdcOrDeployMock(contractOwner);
+    function run(LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth)
+        public
+        returns (LiquidContinuousMultiTokenVault vault)
+    {
+        IERC20Metadata usdc = _usdcOrDeployMock(vaultAuth.owner);
 
-        vm.startBroadcast(contractOwner);
+        vm.startBroadcast();
 
         IYieldStrategy yieldStrategy = new TripleRateYieldStrategy();
         console2.log(string.concat("!!!!! Deploying IYieldStrategy [", vm.toString(address(yieldStrategy)), "] !!!!!"));
 
-        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(0);
+        IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, 0);
         console2.log(
             string.concat("!!!!! Deploying IRedeemOptimizer [", vm.toString(address(redeemOptimizer)), "] !!!!!")
         );
@@ -57,9 +59,9 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         vm.stopBroadcast();
 
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams =
-            _createVaultParams(contractOwner, usdc, yieldStrategy, redeemOptimizer);
+            _createVaultParams(vaultAuth, usdc, yieldStrategy, redeemOptimizer);
 
-        vm.startBroadcast(contractOwner);
+        vm.startBroadcast();
 
         LiquidContinuousMultiTokenVault liquidVaultImpl = new LiquidContinuousMultiTokenVault();
         console2.log(
@@ -70,33 +72,33 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
             )
         );
 
-        ERC1967Proxy liquidVault = new ERC1967Proxy(
+        ERC1967Proxy liquidVaultProxy = new ERC1967Proxy(
             address(liquidVaultImpl), abi.encodeWithSelector(liquidVaultImpl.initialize.selector, vaultParams)
         );
         console2.log(
             string.concat(
                 "!!!!! Deploying LiquidContinuousMultiTokenVault Proxy [",
-                vm.toString(address(liquidVaultImpl)),
+                vm.toString(address(liquidVaultProxy)),
                 "] !!!!!"
             )
         );
 
         vm.stopBroadcast();
 
-        return LiquidContinuousMultiTokenVault(address(liquidVault));
+        return LiquidContinuousMultiTokenVault(address(liquidVaultProxy));
     }
 
     function _createVaultParams(
-        address contractOwner,
+        LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth,
         IERC20Metadata asset,
         IYieldStrategy yieldStrategy,
         IRedeemOptimizer redeemOptimizer
     ) public view returns (LiquidContinuousMultiTokenVault.VaultParams memory vaultParams_) {
         string memory contractKey = ".evm.contracts.liquid_continuous_multi_token_vault";
-        uint256 fullRateBasisPoints = tomlConfig.readUint(string.concat(contractKey, ".full_rate_bps"));
-        uint256 reducedRateBasisPoints = tomlConfig.readUint(string.concat(contractKey, ".reduced_rate_bps"));
+        uint256 fullRateBasisPoints = _tomlConfig.readUint(string.concat(contractKey, ".full_rate_bps"));
+        uint256 reducedRateBasisPoints = _tomlConfig.readUint(string.concat(contractKey, ".reduced_rate_bps"));
         uint256 startTimestamp =
-            _readUintWithDefault(tomlConfig, string.concat(contractKey, ".vault_start_timestamp"), block.timestamp);
+            _readUintWithDefault(_tomlConfig, string.concat(contractKey, ".vault_start_timestamp"), block.timestamp);
 
         uint256 scale = 10 ** asset.decimals();
 
@@ -112,9 +114,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         });
 
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = LiquidContinuousMultiTokenVault.VaultParams({
-            contractOwner: contractOwner,
-            contractOperator: operator,
-            contractUpgrader: upgrader,
+            vaultAuth: vaultAuth,
             asset: asset,
             yieldStrategy: yieldStrategy,
             redeemOptimizer: redeemOptimizer,
@@ -127,19 +127,19 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
     }
 
     function _usdcOrDeployMock(address contractOwner) internal returns (IERC20Metadata asset) {
-        bool shouldDeployMocks = _readBoolWithDefault(tomlConfig, ".evm.deploy_mocks", false);
+        bool shouldDeployMocks = _readBoolWithDefault(_tomlConfig, ".evm.deploy_mocks", false);
 
         if (shouldDeployMocks) {
-            vm.startBroadcast(contractOwner);
+            vm.startBroadcast();
 
-            SimpleUSDC simpleUSDC = new SimpleUSDC(type(uint128).max);
+            SimpleUSDC simpleUSDC = new SimpleUSDC(contractOwner, type(uint128).max);
             console2.log(string.concat("!!!!! Deploying SimpleUSDC [", vm.toString(address(simpleUSDC)), "] !!!!!"));
 
             vm.stopBroadcast();
 
             return simpleUSDC;
         } else {
-            return IERC20Metadata(tomlConfig.readAddress(".evm.address.usdc_token"));
+            return IERC20Metadata(_tomlConfig.readAddress(".evm.address.usdc_token"));
         }
     }
 }
