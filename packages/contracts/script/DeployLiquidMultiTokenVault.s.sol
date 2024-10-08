@@ -72,8 +72,6 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
             )
         );
 
-        liquidVaultImpl.initialize(vaultParams);
-
         ERC1967Proxy liquidVaultProxy = new ERC1967Proxy(
             address(liquidVaultImpl), abi.encodeWithSelector(liquidVaultImpl.initialize.selector, vaultParams)
         );
