@@ -6,7 +6,6 @@ import { Script } from "forge-std/Script.sol";
 import { console2 } from "forge-std/console2.sol";
 
 import { HelperConfig, NetworkConfig } from "@script/HelperConfig.s.sol";
-import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { CredbullFixedYieldVaultFactory } from "@credbull/CredbullFixedYieldVaultFactory.sol";
 import { CredbullUpsideVaultFactory } from "@credbull/CredbullUpsideVaultFactory.sol";
 import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
