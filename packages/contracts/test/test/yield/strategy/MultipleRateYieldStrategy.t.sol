@@ -11,17 +11,25 @@ import { IMultipleRateContext } from "@test/test/yield/context/IMultipleRateCont
  * @dev Calculates returns using different rates depending on the holding period.
  */
 contract MultipleRateYieldStrategy is AbstractYieldStrategy {
+    /**
+     * @inheritdoc AbstractYieldStrategy
+     */
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
-        virtual
+        override
         returns (uint256 yield)
     {
         if (address(0) == contextContract) {
             revert IYieldStrategy_InvalidContextAddress();
         }
-        if (fromPeriod >= toPeriod) {
+        if (fromPeriod > toPeriod) {
             revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod);
+        }
+
+        // On deposit day, when not inclusive, there is no yield.
+        if (fromPeriod == toPeriod) {
+            return 0;
         }
 
         IMultipleRateContext context = IMultipleRateContext(contextContract);
@@ -47,10 +55,13 @@ contract MultipleRateYieldStrategy is AbstractYieldStrategy {
         }
     }
 
+    /**
+     * @inheritdoc AbstractYieldStrategy
+     */
     function calcPrice(address contextContract, uint256 numPeriodsElapsed)
         public
         view
-        virtual
+        override
         returns (uint256 price)
     {
         if (address(0) == contextContract) {
@@ -88,19 +99,16 @@ contract MultipleRateYieldStrategy is AbstractYieldStrategy {
         uint256 _periods;
         uint256 _rate;
 
-        // NOTE (JL,2024-10-03): The From Period is inclusive for Yield Calculation purposes. This manifests as some
-        //  '+ 1' operations when calculating period spans for yield calculation.
-
-        // A singluar Reduced Rate applies to the Period Range.
+        // A singular Reduced Rate applies to the Period Range.
         if (reducedRateScaled.length == 1) {
-            _periods = (toPeriod - firstReducedRatePeriod) + 1;
+            _periods = toPeriod - firstReducedRatePeriod;
             _rate = reducedRateScaled[0][1];
             reducedRateInterest += CalcSimpleInterest.calcInterest(principal, _rate, _periods, frequency, scale);
         }
         // Two Reduced Rates apply to the Period Range.
         else if (reducedRateScaled.length == 2) {
             // Apply each rate in series.
-            _periods = reducedRateScaled[1][0] - firstReducedRatePeriod;
+            _periods = ((reducedRateScaled[1][0] - 1) - (firstReducedRatePeriod + 1)) + 1;
             _rate = reducedRateScaled[0][1];
             reducedRateInterest += CalcSimpleInterest.calcInterest(principal, _rate, _periods, frequency, scale);
 
@@ -122,7 +130,7 @@ contract MultipleRateYieldStrategy is AbstractYieldStrategy {
                 // The last rate
                 else if (i == reducedRateScaled.length - 1) {
                     // Period is from this rates effectve period to the terminal `to` period.
-                    _periods = (toPeriod - reducedRateScaled[i][0]) + 1;
+                    _periods = toPeriod - reducedRateScaled[i][0];
                     // Rate is this rate.
                     _rate = reducedRateScaled[i][1];
                 }
@@ -150,6 +158,7 @@ contract MultipleRateYieldStrategy is AbstractYieldStrategy {
     function _noOfFullRatePeriods(uint256 noOfPeriodsForFullRate_, uint256 from_, uint256 to_)
         internal
         pure
+        virtual
         returns (uint256)
     {
         uint256 _periods = _noOfPeriods(from_, to_);
@@ -158,16 +167,20 @@ contract MultipleRateYieldStrategy is AbstractYieldStrategy {
 
     /**
      * @notice Calculates the first 'reduced' Interest Rate Period after the `_from` period.
-     * @dev Encapsulates the algorithm that determines the first 'reduced' Interest Rate Period. Given that `from_`
-     *  period is INCLUSIVE, this means the calculation, IFF there are 'full' Interest Rate periods, is:
-     *      `from_` + `noOfFullRatePeriods_`
+     * @dev Encapsulates the algorithm that determines the first 'reduced' Interest Rate Period. The calculation,
+     *  IFF there are 'full' Interest Rate periods, is: `from_` + `noOfFullRatePeriods_`
      *  Otherwise, it is simply the `from_` value.
      *
      * @param noOfFullRatePeriods_  The number of Full Rate Periods
      * @param from_  The from period.
      * @return The calculated first Reduced Rate Period.
      */
-    function _firstReducedRatePeriod(uint256 noOfFullRatePeriods_, uint256 from_) internal pure returns (uint256) {
+    function _firstReducedRatePeriod(uint256 noOfFullRatePeriods_, uint256 from_)
+        internal
+        pure
+        virtual
+        returns (uint256)
+    {
         return noOfFullRatePeriods_ != 0 ? from_ + noOfFullRatePeriods_ : from_;
     }
 }
