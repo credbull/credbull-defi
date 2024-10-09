@@ -2,7 +2,15 @@
 
 import { useTheme } from "next-themes";
 
-const ContractValueBadge = ({ name, value }: { name: string; value: any }) => {
+const ContractValueBadge = ({
+  name,
+  value,
+  onClickHandler,
+}: {
+  name: string;
+  value: any;
+  onClickHandler?: (params: any) => void;
+}) => {
   const { resolvedTheme } = useTheme();
 
   return (
@@ -10,6 +18,7 @@ const ContractValueBadge = ({ name, value }: { name: string; value: any }) => {
       className={`relative cursor-pointer transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out px-3 py-1 rounded-full shadow-lg ${
         resolvedTheme === "dark" ? "bg-gray-700 text-white" : "bg-gray-200 text-black"
       }`}
+      onClick={onClickHandler}
     >
       {name}: {value}
       <div

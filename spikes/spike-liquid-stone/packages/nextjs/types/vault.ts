@@ -12,3 +12,8 @@ export type DepositPool = {
   unlockRequestAmount: string;
   yield: string;
 };
+
+export type SellRequest = {
+  id: number;
+  amount: bigint;
+};
