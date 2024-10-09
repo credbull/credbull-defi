@@ -19,13 +19,13 @@ export const useFetchSellRequests = ({
 
   useEffect(() => {
     async function getRequestIds() {
-      if (!deployedContractAddress || !deployedContractAbi) return;
+      if (!address || !deployedContractAddress) return;
 
       const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
       const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
       const requests: SellRequest[] = [];
 
-      for (let i = 0; i <= currentPeriod; i++) {
+      for (let i = 0; i <= currentPeriod + 1; i++) {
         const unlockAmount = await contract.unlockRequestAmount(address, i);
 
         if (unlockAmount > 0) {
@@ -38,7 +38,7 @@ export const useFetchSellRequests = ({
     }
 
     getRequestIds();
-  }, [currentPeriod, refetch]);
+  }, [address, deployedContractAddress, deployedContractAbi, currentPeriod, refetch]);
 
   return { sellRequests };
 };

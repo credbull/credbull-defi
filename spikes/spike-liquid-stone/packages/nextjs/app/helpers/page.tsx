@@ -37,14 +37,8 @@ const HelpersInterface: NextPage = () => {
   const adminPrivateKey = process.env.NEXT_PUBLIC_ADMIN_PRIVATE_KEY || "";
   const adminAccount = process.env.NEXT_PUBLIC_ADMIN_ACCOUNT || "";
 
-  //   const [provider, setProvider] = useState<ethers.JsonRpcProvider>();
-  //   const [signer, setSigner] = useState<ethers.Wallet>();
-  //   const [contract, setContract] = useState<ethers.Contract>();
-
   const provider = new ethers.JsonRpcProvider("http://localhost:8545");
   const signer = new ethers.Wallet(adminPrivateKey, provider);
-
-  //   const contract = new ethers.Contract(proxyContractData?.address || "", implementationContractData?.abi || [], signer);
 
   const [contract, setContract] = useState<ethers.Contract>();
 
@@ -119,10 +113,12 @@ const HelpersInterface: NextPage = () => {
       setPeriodTrxLoading(true);
       const operatorRole = await contract?.OPERATOR_ROLE();
       const hasOperatorRole = await contract?.hasRole(operatorRole, adminAccount);
+
       if (!hasOperatorRole) {
-        const tx = await contract?.grantRole(operatorRole, userAccount);
+        const tx = await contract?.grantRole(operatorRole, adminAccount);
         await tx.wait();
       }
+
       const startTime: bigint = await contract?._vaultStartTimestamp();
       let updatedTime;
       const secondsInADay = BigInt(86400);

@@ -10,16 +10,15 @@ const DepositPoolCard = ({ pool, onClickHandler }: { pool: DepositPool; onClickH
   return (
     <div
       onClick={onClickHandler}
-      className={`relative cursor-pointer overflow-hidden transition-transform transform-gpu hover:scale-105 duration-500 ease-in-out rounded-lg shadow-xl p-6 ${
+      className={`relative cursor-pointer overflow-hidden rounded-lg shadow-xl p-6 ${
         resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
       } flex flex-wrap gap-4`}
       style={{
         borderRadius: "16px",
         boxShadow:
           resolvedTheme === "dark"
-            ? "0 4px 12px rgba(255, 255, 255, 0.1), 0 6px 20px rgba(255, 255, 255, 0.1)"
-            : "0 4px 12px rgba(0, 0, 0, 0.1), 0 6px 20px rgba(0, 0, 0, 0.1)",
-        transformStyle: "preserve-3d",
+            ? "0 1px 10px rgba(255, 255, 255, 0.1), 0 6px 20px rgba(255, 255, 255, 0.1)"
+            : "0 1px 10px rgba(0, 0, 0, 0.1), 0 6px 20px rgba(0, 0, 0, 0.1)",
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-lg rounded-lg"></div>

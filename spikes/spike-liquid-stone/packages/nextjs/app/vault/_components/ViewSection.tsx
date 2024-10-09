@@ -244,7 +244,12 @@ const ViewSection = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="grid gap-3">
+        <div
+          className={`${
+            resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
+          } p-4 rounded-lg grid gap-3`}
+        >
+          <h2 className="text-xl font-bold mb-4">Deposit Pools</h2>
           {pools.map((pool, index) => (
             <DepositPoolCard key={index} pool={pool} onClickHandler={() => {}} />
           ))}
@@ -322,6 +327,7 @@ const ViewSection = ({
       </div>
 
       {/* Activity Log */}
+      {/* <ActionLogSection log={log} /> */}
       {/* <ActionLogSection log={log} /> */}
     </div>
   );
