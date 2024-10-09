@@ -16,7 +16,7 @@ contract DualRateYieldStrategy is IYieldStrategy {
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
-        virtual
+        override
         returns (uint256 yield)
     {
         if (address(0) == contextContract) {
@@ -24,6 +24,11 @@ contract DualRateYieldStrategy is IYieldStrategy {
         }
         if (fromPeriod >= toPeriod) {
             revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod);
+        }
+
+        // On deposit day, when not inclusive, there is no yield.
+        if (fromPeriod == toPeriod) {
+            return 0;
         }
 
         IDualRateContext context = IDualRateContext(contextContract);
@@ -51,7 +56,7 @@ contract DualRateYieldStrategy is IYieldStrategy {
     function calcPrice(address contextContract, uint256 numPeriodsElapsed)
         public
         view
-        virtual
+        override
         returns (uint256 price)
     {
         if (address(0) == contextContract) {

@@ -66,9 +66,6 @@ contract TripleRateYieldStrategyTest is Test {
     }
 
     function test_TripleRateYieldStrategy_RevertCalcYield_WhenInvalidPeriodRange() public {
-        vm.expectRevert(abi.encodeWithSelector(IYieldStrategy.IYieldStrategy_InvalidPeriodRange.selector, 1, 1));
-        yieldStrategy.calcYield(contextAddress, principal, 1, 1);
-
         vm.expectRevert(abi.encodeWithSelector(IYieldStrategy.IYieldStrategy_InvalidPeriodRange.selector, 5, 3));
         yieldStrategy.calcYield(contextAddress, principal, 5, 3);
     }
@@ -78,7 +75,7 @@ contract TripleRateYieldStrategyTest is Test {
         // $1,000 * ((5% / 365) * 21) = 2.876712
         assertApproxEqAbs(
             2_876_712,
-            yieldStrategy.calcYield(contextAddress, principal, 1, 21),
+            yieldStrategy.calcYield(contextAddress, principal, 1, 22),
             TOLERANCE,
             "incorrect 21 day reduced rate yield"
         );
@@ -87,7 +84,7 @@ contract TripleRateYieldStrategyTest is Test {
         // $1,000 * ((5% / 365) * 29) = 3.972603
         assertApproxEqAbs(
             3_972_603,
-            yieldStrategy.calcYield(contextAddress, principal, 1, 29),
+            yieldStrategy.calcYield(contextAddress, principal, 1, 30),
             TOLERANCE,
             "incorrect 29 day reduced rate yield"
         );
@@ -96,39 +93,39 @@ contract TripleRateYieldStrategyTest is Test {
         // $1,000 * ((10% / 365) * 30) = 8.219178
         assertApproxEqAbs(
             8_219_178,
-            yieldStrategy.calcYield(contextAddress, principal, 1, 30),
+            yieldStrategy.calcYield(contextAddress, principal, 1, 31),
             TOLERANCE,
             "incorrect 30 day full rate yield"
         );
 
-        // 32 Days, no current tenor update:
-        // ($1,000 * ((10% / 365) * 30) + ($1,000 * ((5% / 365) * 2))) = 8.493151
+        // 32 Days, no current Period Rate update:
+        // $1,000 * ((10% / 365) * 30) + $1,000 * ((5% / 365) * 2) = 8.493151
         assertApproxEqAbs(
             8_493_151,
-            yieldStrategy.calcYield(contextAddress, principal, 1, 32),
+            yieldStrategy.calcYield(contextAddress, principal, 1, 33),
             TOLERANCE,
             "incorrect 32 day combined rate yield"
         );
 
-        // Update current tenor at Day 31:
+        // Update current Period Rate at Day 31:
         context.setReducedRate(PERCENT_5_5_SCALED, 31);
 
         // 37 Days:
-        // ($1,000 * ((10% / 365) * 30) + ($1,000 * ((5.5% / 365) * 7))) = 9.273973
+        // $1,000 * ((10% / 365) * 30) + $1,000 * ((5.5% / 365) * 7) = 9.273973
         assertApproxEqAbs(
             9_273_973,
-            yieldStrategy.calcYield(contextAddress, principal, 1, 37),
+            yieldStrategy.calcYield(contextAddress, principal, 1, 38),
             TOLERANCE,
             "incorrect 37 day combined rate yield"
         );
 
-        // 22 Days, across Current Tenor Period:
-        // ($1,000 * ((5% / 365) * 11) + ($1,000 * ((5.5% / 365) * 11))) = 3.164384
+        // 22 Days, across Current Period Rate:
+        // $1,000 * ((5% / 365) * 10) + $1,000 * ((5.5% / 365) * 12) = 3.178082
         assertApproxEqAbs(
-            3_164_384,
-            yieldStrategy.calcYield(contextAddress, principal, 20, 41),
+            3_178_082,
+            yieldStrategy.calcYield(contextAddress, principal, 20, 42),
             TOLERANCE,
-            "incorrect 22 day across tenor periods rate yield"
+            "incorrect 22 day across current period rate yield"
         );
     }
 

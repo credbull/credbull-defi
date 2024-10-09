@@ -14,7 +14,7 @@ contract SimpleInterestYieldStrategy is AbstractYieldStrategy {
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
-        virtual
+        override
         returns (uint256 yield)
     {
         if (address(0) == contextContract) {
@@ -36,7 +36,7 @@ contract SimpleInterestYieldStrategy is AbstractYieldStrategy {
     function calcPrice(address contextContract, uint256 numPeriodsElapsed)
         public
         view
-        virtual
+        override
         returns (uint256 price)
     {
         if (address(0) == contextContract) {
