@@ -77,7 +77,7 @@ contract ExposeAssertionRedeemOptimizer is RedeemOptimizer {
 
     function _findAmount(IMultiTokenVault, /*vault*/ OptimizerParams memory /*optimizerParams*/ )
         internal
-        view
+        pure
         override
         returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods)
     {
