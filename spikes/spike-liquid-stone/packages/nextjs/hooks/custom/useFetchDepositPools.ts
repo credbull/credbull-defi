@@ -60,7 +60,7 @@ export const useFetchDepositPools = ({
           );
           const unlockRequestAmount = ethers.formatUnits(unlockRequestAmountBigInt, 6);
 
-          if (balanceBigInt > 0) {
+          if (balanceBigInt > 0 && Number(depositId) <= currentPeriod) {
             const yieldAmount =
               currentPeriod > Number(depositId) ? await contract.calcYield(balanceBigInt, depositId, currentPeriod) : 0;
 

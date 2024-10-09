@@ -2,19 +2,22 @@
 
 import { useEffect, useState } from "react";
 // import ActionLogSection from "./ActionLogSection";
-import Button from "./Button";
-import ContractValueBadge from "./ContractValueBadge";
+import Button from "../../../components/general/Button";
+import ContractValueBadge from "../../../components/general/ContractValueBadge";
+import Input from "../../../components/general/Input";
+import LoadingSpinner from "../../../components/general/LoadingSpinner";
 import DepositPoolCard from "./DepositPoolCard";
-import Input from "./Input";
-import LoadingSpinner from "./LoadingSpinner";
 import { OwnedNft } from "alchemy-sdk";
 import { ethers } from "ethers";
 import { useTheme } from "next-themes";
 import { useChainId, useWriteContract } from "wagmi";
-import ActionCard from "~~/app/vault/_components/ActionCard";
+import ActionCard from "~~/components/general/ActionCard";
 import { useFetchContractData } from "~~/hooks/custom/useFetchContractData";
 import { useFetchDepositPools } from "~~/hooks/custom/useFetchDepositPools";
+import { useFetchSellRequests } from "~~/hooks/custom/useFetchSellRequests";
 import { useTransactor } from "~~/hooks/scaffold-eth";
+import { DepositPool, SellRequest } from "~~/types/vault";
+import { notification } from "~~/utils/scaffold-eth";
 import { Contract, ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
 
 const ViewSection = ({
@@ -41,7 +44,6 @@ const ViewSection = ({
   const [requestId, setRequestId] = useState("");
   const [componentTokenAmount, setComponentTokenAmount] = useState("");
   const [currencyTokenAmountToSell, setCurrencyTokenAmountToSell] = useState("");
-  // const [log, setLog] = useState([]);
 
   useEffect(() => {
     setMounted(true);
@@ -64,6 +66,14 @@ const ViewSection = ({
     refetch,
   });
 
+  const { sellRequests } = useFetchSellRequests({
+    address: address || "",
+    deployedContractAddress,
+    deployedContractAbi,
+    currentPeriod,
+    refetch,
+  });
+
   const writeTxn = useTransactor();
   const { writeContractAsync } = useWriteContract();
 
@@ -71,7 +81,7 @@ const ViewSection = ({
     // const message = `Bought ${currencyTokenAmount} currency tokens.`;
     // setLog([...log, message]);
     if (!address || !currencyTokenAmount) {
-      console.log("Missing required fields");
+      notification.error("Missing required fields");
       return;
     }
 
@@ -123,7 +133,7 @@ const ViewSection = ({
     // const message = `Requested to sell ${sellAmount} component tokens.`;
     // setLog([...log, message]);
     if (!address || !sellAmount) {
-      console.log("Missing required fields");
+      notification.error("Missing required fields");
       return;
     }
 
@@ -150,7 +160,7 @@ const ViewSection = ({
 
       setSellAmount("");
     } catch (error) {
-      console.error("Error executing buy:", error);
+      notification.error(`Error executing buy: ${error?.toString()}`);
       // setLog(prevLog => [...prevLog, "Error executing buy"]);
     }
   };
@@ -159,7 +169,7 @@ const ViewSection = ({
     // const message = `Executed sell of ${componentTokenAmount} component tokens for ${currencyTokenAmount} currency tokens.`;
     // setLog([...log, message]);
     if (!address || !componentTokenAmount || !currencyTokenAmountToSell) {
-      console.log("Missing required fields");
+      notification.error("Missing required fields");
       return;
     }
 
@@ -199,16 +209,12 @@ const ViewSection = ({
     setCurrencyTokenAmountToSell("");
   };
 
-  const setRequestAmountToSell = (pool: {
-    depositId: OwnedNft;
-    balance: string;
-    shares: string;
-    unlockRequestAmount: string;
-    yield: string;
-  }) => {
-    setRequestId((Number(pool.depositId) + 1).toString());
-    setCurrencyTokenAmountToSell(pool.unlockRequestAmount.toString());
-    setComponentTokenAmount(pool.unlockRequestAmount.toString());
+  const setRequestAmountToSell = (request: SellRequest) => {
+    const requestId = request?.id?.toString();
+    const amount = request?.amount?.toString();
+    setRequestId(requestId);
+    setCurrencyTokenAmountToSell(amount?.toString());
+    setComponentTokenAmount(amount?.toString());
   };
 
   if (!mounted) {
@@ -237,10 +243,36 @@ const ViewSection = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        {pools.map((pool, index) => (
-          <DepositPoolCard key={index} pool={pool} onClickHandler={() => setRequestAmountToSell(pool)} />
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div
+          className={`${
+            resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
+          } p-4 rounded-lg grid gap-3`}
+        >
+          <h2 className="text-xl font-bold mb-4">Deposit Pools</h2>
+          {pools.map((pool, index) => (
+            <DepositPoolCard key={index} pool={pool} onClickHandler={() => {}} />
+          ))}
+        </div>
+        <div
+          className={`${resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"} p-4 rounded-lg`}
+        >
+          <h2 className="text-xl font-bold mb-4">Requests</h2>
+          {deployedContractLoading ? (
+            <LoadingSpinner />
+          ) : (
+            <div className="flex flex-wrap gap-4">
+              {sellRequests?.map((request, index) => (
+                <ContractValueBadge
+                  key={index}
+                  name={`Request ${request?.id}`}
+                  value={`${request?.amount?.toString()} USDC`}
+                  onClickHandler={() => setRequestAmountToSell(request)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -273,7 +305,7 @@ const ViewSection = ({
         {/* Execute Sell */}
         <ActionCard>
           <h2 className="text-xl font-bold mb-4">
-            Sell (<small>Click on the desired period to sell</small>)
+            Sell (<small>Click on the desired request</small>)
           </h2>
           <Input
             type="text"
@@ -295,6 +327,7 @@ const ViewSection = ({
       </div>
 
       {/* Activity Log */}
+      {/* <ActionLogSection log={log} /> */}
       {/* <ActionLogSection log={log} /> */}
     </div>
   );

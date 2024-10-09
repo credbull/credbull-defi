@@ -26,7 +26,6 @@ export const useFetchContractData = ({
   const [fullRate, setFullRate] = useState<number>(0);
   const [reducedRate, setReducedRate] = useState<number>(0);
 
-  // Define all refetch hooks
   const { refetch: refetchCurrentPeriod } = useReadContract({
     address: deployedContractAddress,
     functionName: "currentPeriodsElapsed",
