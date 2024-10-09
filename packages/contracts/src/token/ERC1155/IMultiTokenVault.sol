@@ -181,4 +181,10 @@ interface IMultiTokenVault is IERC1155 {
      * @return currentPeriodsElapsed_ The number of elapsed time periods.
      */
     function currentPeriodsElapsed() external view returns (uint256 currentPeriodsElapsed_);
+
+    /**
+     * @notice Indicates whether any token exist with a given `depositPeriod`, or not.
+     * @return [true] if there is supply at `depositPeriod`, [false] otherwise.
+     */
+    function exists(uint256 depositPeriod) external view returns (bool);
 }

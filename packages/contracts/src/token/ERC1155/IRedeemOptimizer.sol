@@ -29,7 +29,6 @@ interface IRedeemOptimizer {
      */
     function optimize(IMultiTokenVault vault, address owner, uint256 shares, uint256 assets, uint256 redeemPeriod)
         external
-        view
         returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods);
 
     /**
@@ -39,7 +38,6 @@ interface IRedeemOptimizer {
      */
     function optimizeRedeemShares(IMultiTokenVault vault, address owner, uint256 shares, uint256 redeemPeriod)
         external
-        view
         returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods);
 
     /**
@@ -49,6 +47,5 @@ interface IRedeemOptimizer {
      */
     function optimizeWithdrawAssets(IMultiTokenVault vault, address owner, uint256 assets, uint256 redeemPeriod)
         external
-        view
         returns (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods);
 }
