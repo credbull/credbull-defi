@@ -5,8 +5,6 @@ import { ITripleRateContext } from "@credbull/yield/context/ITripleRateContext.s
 import { CalcSimpleInterest } from "@credbull/yield/CalcSimpleInterest.sol";
 import { AbstractYieldStrategy } from "@credbull/yield/strategy/AbstractYieldStrategy.sol";
 
-import { console } from "forge-std/console.sol";
-
 /**
  * @title TripleRateYieldStrategy
  * @dev Calculates returns using 1 'full' rate and 2 'reduced' rates, applied according to the Tenor Period, and
@@ -60,16 +58,8 @@ contract TripleRateYieldStrategy is AbstractYieldStrategy {
         // Calculate interest for reduced-rate periods
         if (_noOfPeriods(fromPeriod, toPeriod) - noOfFullRatePeriods > 0) {
             uint256 firstReducedRatePeriod = _firstReducedRatePeriod(noOfFullRatePeriods, fromPeriod);
-            console.log("calcYield(): From= %s, To= %s, FRRP= %s", fromPeriod, toPeriod, firstReducedRatePeriod);
-
             ITripleRateContext.PeriodRate memory currentPeriodRate = context.currentPeriodRate();
             ITripleRateContext.PeriodRate memory previousPeriodRate = context.previousPeriodRate();
-
-            console.log(
-                "calcYield(): Previous= %s, Current= %s",
-                previousPeriodRate.effectiveFromPeriod,
-                currentPeriodRate.effectiveFromPeriod
-            );
 
             // Timeline: Previous Period Rate -> Current Period Rate -> 1st Reduced Rate Period -> To Period
             // If the first 'reduced' interest rate period (FRRP) is on or after the current Period Rate, then the
@@ -83,12 +73,6 @@ contract TripleRateYieldStrategy is AbstractYieldStrategy {
                     toPeriod - firstReducedRatePeriod,
                     context.frequency(),
                     context.scale()
-                );
-                console.log(
-                    "Rate= %s, No Of Periods= %s, Yield= %s",
-                    currentPeriodRate.interestRate,
-                    toPeriod - firstReducedRatePeriod,
-                    yield
                 );
             }
             // Timeline: Previous Period Rate -> 1st Reduced Rate Period -> Current Period Rate -> To Period
@@ -105,13 +89,6 @@ contract TripleRateYieldStrategy is AbstractYieldStrategy {
                     context.frequency(),
                     context.scale()
                 );
-                uint256 tmp = yield;
-                console.log(
-                    "Rate= %s, No Of Periods= %s, Yield= %s",
-                    previousPeriodRate.interestRate,
-                    (currentPeriodRate.effectiveFromPeriod - firstReducedRatePeriod) - 1,
-                    yield
-                );
 
                 //  Current Period -> To Period @ Current Rate.
                 yield += CalcSimpleInterest.calcInterest(
@@ -120,12 +97,6 @@ contract TripleRateYieldStrategy is AbstractYieldStrategy {
                     (toPeriod - currentPeriodRate.effectiveFromPeriod) + 1,
                     context.frequency(),
                     context.scale()
-                );
-                console.log(
-                    "Rate= %s, No Of Periods= %s, Yield= %s",
-                    currentPeriodRate.interestRate,
-                    (toPeriod - currentPeriodRate.effectiveFromPeriod) + 1,
-                    yield - tmp
                 );
             }
             // Timeline: 1st Reduced Rate Period -> Previous Period Rate -> Current Period Rate -> To Period
