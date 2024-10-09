@@ -1,0 +1,26 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "Create2",
+  "sourceName": "contracts/deploy/Create2.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "AlreadyDeployed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "DeployFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EmptyBytecode",
+      "type": "error"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220bed49bb79707a8927c6c010d8e92bf6c27b254ea47c9dba59fdc9618e72d7e4f64736f6c63430008170033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220bed49bb79707a8927c6c010d8e92bf6c27b254ea47c9dba59fdc9618e72d7e4f64736f6c63430008170033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

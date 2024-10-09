@@ -1,0 +1,49 @@
+{
+  "name": "se-2",
+  "version": "0.0.1",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  },
+  "scripts": {
+    "account": "yarn workspace @se-2/foundry account",
+    "chain": "yarn workspace @se-2/foundry chain",
+    "fork": "yarn workspace @se-2/foundry fork",
+    "deploy": "yarn workspace @se-2/foundry deploy",
+    "verify": "yarn workspace @se-2/foundry verify",
+    "deploy:verify": "yarn workspace @se-2/foundry deploy:verify",
+    "compile": "yarn workspace @se-2/foundry compile",
+    "generate": "yarn account:generate",
+    "account:generate": "yarn workspace @se-2/foundry account:generate",
+    "account:import": "yarn workspace @se-2/foundry account:import",
+    "flatten": "yarn workspace @se-2/foundry flatten",
+    "foundry:format": "yarn workspace @se-2/foundry format",
+    "foundry:lint": "yarn workspace @se-2/foundry lint",
+    "foundry:test": "yarn workspace @se-2/foundry test",
+    "test": "yarn foundry:test",
+    "format": "yarn next:format && yarn foundry:format",
+    "start": "yarn workspace @se-2/nextjs dev",
+    "next:lint": "yarn workspace @se-2/nextjs lint",
+    "next:format": "yarn workspace @se-2/nextjs format",
+    "next:check-types": "yarn workspace @se-2/nextjs check-types",
+    "next:build": "yarn workspace @se-2/nextjs build",
+    "next:serve": "yarn workspace @se-2/nextjs serve",
+    "precommit": "lint-staged",
+    "vercel": "yarn workspace @se-2/nextjs vercel",
+    "vercel:yolo": "yarn workspace @se-2/nextjs vercel:yolo"
+  },
+  "packageManager": "yarn@3.2.3",
+  "devDependencies": {
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.3"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "dependencies": {
+    "@axelar-network/axelar-cgp-solidity": "^6.3.1",
+    "forge-std": "^1.1.2"
+  }
+}

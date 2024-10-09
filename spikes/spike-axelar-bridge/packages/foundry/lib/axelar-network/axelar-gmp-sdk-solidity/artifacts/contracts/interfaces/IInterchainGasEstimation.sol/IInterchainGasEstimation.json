@@ -1,0 +1,163 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IInterchainGasEstimation",
+  "sourceName": "contracts/interfaces/IInterchainGasEstimation.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "enum GasEstimationType",
+          "name": "gasEstimationType",
+          "type": "uint8"
+        }
+      ],
+      "name": "UnsupportedEstimationType",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "chain",
+          "type": "string"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "gasEstimationType",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "l1FeeScalar",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint128",
+              "name": "axelarBaseFee",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "relativeGasPrice",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "relativeBlobBaseFee",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "expressFee",
+              "type": "uint128"
+            }
+          ],
+          "indexed": false,
+          "internalType": "struct GasInfo",
+          "name": "info",
+          "type": "tuple"
+        }
+      ],
+      "name": "GasInfoUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "destinationChain",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "destinationAddress",
+          "type": "string"
+        },
+        {
+          "internalType": "bytes",
+          "name": "payload",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "executionGasLimit",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "params",
+          "type": "bytes"
+        }
+      ],
+      "name": "estimateGasFee",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "gasEstimate",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "chain",
+          "type": "string"
+        }
+      ],
+      "name": "getGasInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "gasEstimationType",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "l1FeeScalar",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint128",
+              "name": "axelarBaseFee",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "relativeGasPrice",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "relativeBlobBaseFee",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "expressFee",
+              "type": "uint128"
+            }
+          ],
+          "internalType": "struct GasInfo",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
