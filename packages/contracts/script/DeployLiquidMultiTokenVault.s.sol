@@ -42,6 +42,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
 
     function run(LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth)
         public
+        virtual
         returns (LiquidContinuousMultiTokenVault vault)
     {
         IERC20Metadata usdc = _usdcOrDeployMock(vaultAuth.owner);

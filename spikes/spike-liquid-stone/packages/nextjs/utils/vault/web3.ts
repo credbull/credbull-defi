@@ -2,7 +2,7 @@ import { Alchemy, AlchemySettings, Network } from "alchemy-sdk";
 
 export async function getNFTsForOwner(chain: number, owner: string, contract: string) {
   if (chain === 31337) {
-    return [0, 1, 2, 3];
+    return Array.from({ length: 101 }, (_, index) => index);
   } else {
     const settings: AlchemySettings = {
       apiKey: process.env.ALCHEMY_API_KEY,

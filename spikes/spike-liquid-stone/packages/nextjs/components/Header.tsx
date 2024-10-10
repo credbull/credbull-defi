@@ -29,6 +29,11 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/vault",
     icon: <CurrencyDollarIcon className="h-4 w-4" />,
   },
+  {
+    label: "Admin / Operator",
+    href: "/helpers",
+    icon: <BoltIcon className="h-4 w-4" />,
+  },
 ];
 
 export const HeaderMenuLinks = () => {

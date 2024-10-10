@@ -27,32 +27,32 @@ contract SimpleInterestYieldStrategyTest is Test {
 
         uint256 principal = 500 * SCALE;
 
-        // 500 * (6% / 360) * 2
+        // 500 * (6% / 360) * 1
         assertApproxEqAbs(
-            166_666,
+            83_333,
             yieldStrategy.calcYield(interestContractAddress, principal, 0, 1),
             TOLERANCE,
             "yield wrong at period 0 to 1"
         );
-        // 500 * (6% / 360) * 3
+        // 500 * (6% / 360) * 2
         assertApproxEqAbs(
-            250_000,
+            166_667,
             yieldStrategy.calcYield(interestContractAddress, principal, 1, 3),
             TOLERANCE,
             "yield wrong at period 1 to 3"
         );
-        // 500 * (6% / 360) * 31
+        // 500 * (6% / 360) * 30
         assertApproxEqAbs(
-            2_583_333,
+            2_500_000,
             yieldStrategy.calcYield(interestContractAddress, principal, 1, 31),
             TOLERANCE,
             "yield wrong at period 1 to 31"
         );
 
         address interest2Addr = address(_createInterestMetadata(apy * 2, frequency)); // double the interest rate
-        // 500 * (12% / 360) * 31
+        // 500 * (12% / 360) * 30
         assertApproxEqAbs(
-            5_166_667, // yield should also double
+            5_000_000, // yield should also double
             yieldStrategy.calcYield(interest2Addr, principal, 1, 31),
             TOLERANCE,
             "yield wrong at period 1 to 31 - double APY"

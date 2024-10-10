@@ -103,6 +103,7 @@ contract MultipleRateContext is Initializable, CalcInterestMetadata, IMultipleRa
                         cache[cacheIndex++] = tupleOf(i, rate);
                         break;
                     }
+                    if (i == 0) break; // Prevent underflow.
                 }
 
                 // If still none found, then the default rate applies.

@@ -32,7 +32,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     function test__LiquidContinuousVaultTest__BuyAndSell() public {
         LiquidContinuousMultiTokenVault liquidVault = _liquidVault; // _createLiquidContinueMultiTokenVault(_vaultParams);
 
-        TestParam memory testParams = TestParam({ principal: 2_000 * _scale, depositPeriod: 11, redeemPeriod: 70 });
+        TestParam memory testParams = TestParam({ principal: 2_000 * _scale, depositPeriod: 10, redeemPeriod: 70 });
 
         uint256 assetStartBalance = _asset.balanceOf(alice);
 
@@ -92,12 +92,12 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         uint256 deposit = 50_000 * _scale;
 
         // verify returns
-        uint256 actualYield = _liquidVault.calcYield(deposit, 0, _liquidVault.TENOR() - 1);
+        uint256 actualYield = _liquidVault.calcYield(deposit, 0, _liquidVault.TENOR());
         assertEq(416_666666, actualYield, "interest not correct for $50k deposit after 30 days");
 
         // verify principal + returns
         uint256 actualShares = _liquidVault.convertToShares(deposit);
-        uint256 actualReturns = _liquidVault.convertToAssetsForDepositPeriod(actualShares, 0, _liquidVault.TENOR() - 1);
+        uint256 actualReturns = _liquidVault.convertToAssetsForDepositPeriod(actualShares, 0, _liquidVault.TENOR());
         assertEq(50_416_666666, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
     }
 }

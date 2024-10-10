@@ -7,8 +7,9 @@ import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYiel
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
-import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault.s.sol";
+import { Timer } from "@credbull/timelock/Timer.sol";
 
+import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault.s.sol";
 import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
@@ -140,6 +141,17 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         uint256 warpToTimeInSeconds = liquidVault._vaultStartTimestamp() + timePeriod * 24 hours;
 
         vm.warp(warpToTimeInSeconds);
+    }
+
+    function _setPeriod(LiquidContinuousMultiTokenVault vault, uint256 newPeriod) public {
+        uint256 newPeriodInSeconds = newPeriod * 1 days;
+        uint256 currentTime = Timer.timestamp();
+
+        uint256 newStartTime =
+            currentTime > newPeriodInSeconds ? (currentTime - newPeriodInSeconds) : (newPeriodInSeconds - currentTime);
+
+        vm.prank(_vaultAuth.operator);
+        vault.setVaultStartTimestamp(newStartTime);
     }
 
     function _asSingletonArray(uint256 element) internal pure returns (uint256[] memory array) {
