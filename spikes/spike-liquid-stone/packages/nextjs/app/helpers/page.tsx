@@ -31,7 +31,7 @@ const HelpersInterface: NextPage = () => {
   const [numOfPeriods, setNumOfPeriods] = useState("");
   const [funds, setFunds] = useState("");
 
-  const [simpleUsdcContract, setSimpleUsdcContract] = useState<ethers.Contract>();
+  //   const [simpleUsdcContract, setSimpleUsdcContract] = useState<ethers.Contract>();
 
   const contractNames = Object.keys(contractsData) as ContractName[];
   const { data: simpleUsdcContractData } = useDeployedContractInfo(contractNames[0]);
@@ -55,17 +55,17 @@ const HelpersInterface: NextPage = () => {
     dependencies: [refetch],
   });
 
-  useEffect(() => {
-    if (!simpleUsdcContractData || !adminSigner) return;
+  //   useEffect(() => {
+  //     if (!simpleUsdcContractData || !adminSigner) return;
 
-    const _simpleUsdcContract = new ethers.Contract(
-      simpleUsdcContractData?.address || "",
-      simpleUsdcContractData?.abi || [],
-      adminSigner,
-    );
+  //     const _simpleUsdcContract = new ethers.Contract(
+  //       simpleUsdcContractData?.address || "",
+  //       simpleUsdcContractData?.abi || [],
+  //       adminSigner,
+  //     );
 
-    setSimpleUsdcContract(_simpleUsdcContract);
-  }, [adminSigner, simpleUsdcContractData]);
+  //     setSimpleUsdcContract(_simpleUsdcContract);
+  //   }, []);
 
   useEffect(() => {
     setMounted(true);
