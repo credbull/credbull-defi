@@ -30,7 +30,7 @@ export const menuLinks: HeaderMenuLink[] = [
     icon: <CurrencyDollarIcon className="h-4 w-4" />,
   },
   {
-    label: "Admin / Operator",
+    label: "Admin | Operator",
     href: "/helpers",
     icon: <BoltIcon className="h-4 w-4" />,
   },

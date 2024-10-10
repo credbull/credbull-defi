@@ -25,22 +25,28 @@ const HelpersInterface: NextPage = () => {
 
   const [grantRoleTrxLoading, setGrantRoleTrxLoading] = useState(false);
   const [periodTrxLoading, setPeriodTrxLoading] = useState(false);
+  const [withdrawTrxLoading, setWithdrawTrxLoading] = useState(false);
+
+  const [userAccount, setUserAccount] = useState("");
+  const [numOfPeriods, setNumOfPeriods] = useState("");
+  const [funds, setFunds] = useState("");
+
+  //   const [simpleUsdcContract, setSimpleUsdcContract] = useState<ethers.Contract>();
 
   const contractNames = Object.keys(contractsData) as ContractName[];
   const { data: simpleUsdcContractData } = useDeployedContractInfo(contractNames[0]);
 
-  const { data: implementationContractData, isLoading: implementationContractLoading } = useDeployedContractInfo(
-    contractNames[3],
-  );
-  const { data: proxyContractData, isLoading: proxyContractLoading } = useDeployedContractInfo(contractNames[4]);
+  const { data: implementationContractData } = useDeployedContractInfo(contractNames[3]);
+  const { data: proxyContractData } = useDeployedContractInfo(contractNames[4]);
 
   const adminPrivateKey = process.env.NEXT_PUBLIC_ADMIN_PRIVATE_KEY || "";
   const adminAccount = process.env.NEXT_PUBLIC_ADMIN_ACCOUNT || "";
+  const operatorPrivateKey = process.env.NEXT_PUBLIC_OPERATOR_PRIVATE_KEY || "";
+  const custodian = process.env.NEXT_PUBLIC_CUSTODIAN || "";
 
   const provider = new ethers.JsonRpcProvider("http://localhost:8545");
-  const signer = new ethers.Wallet(adminPrivateKey, provider);
-
-  const [contract, setContract] = useState<ethers.Contract>();
+  const adminSigner = new ethers.Wallet(adminPrivateKey, provider);
+  const operatorSigner = new ethers.Wallet(operatorPrivateKey, provider);
 
   const { currentPeriod } = useFetchContractData({
     deployedContractAddress: proxyContractData?.address || "",
@@ -49,45 +55,50 @@ const HelpersInterface: NextPage = () => {
     dependencies: [refetch],
   });
 
-  const [userAccount, setUserAccount] = useState("");
-  const [numOfPeriods, setNumOfPeriods] = useState("");
+  //   useEffect(() => {
+  //     if (!simpleUsdcContractData || !adminSigner) return;
 
-  useEffect(() => {
-    if (!adminPrivateKey || !proxyContractData?.address || !implementationContractData?.abi || !signer) return;
+  //     const _simpleUsdcContract = new ethers.Contract(
+  //       simpleUsdcContractData?.address || "",
+  //       simpleUsdcContractData?.abi || [],
+  //       adminSigner,
+  //     );
 
-    const _contract = new ethers.Contract(
-      proxyContractData?.address || "",
-      implementationContractData?.abi || [],
-      signer,
-    );
-
-    setContract(_contract);
-  }, [adminPrivateKey, proxyContractData, implementationContractData, adminPrivateKey]);
+  //     setSimpleUsdcContract(_simpleUsdcContract);
+  //   }, []);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleGrantRole = async (roleIndex: number) => {
-    if (!userAccount || !contract) {
+    if (!userAccount || !adminSigner) {
       notification.error("Missing required fields");
       return;
     }
+
     try {
       setGrantRoleTrxLoading(true);
+
+      const deployedContract = new ethers.Contract(
+        proxyContractData?.address || "",
+        implementationContractData?.abi || [],
+        adminSigner,
+      );
+
       let role;
       switch (roleIndex) {
         case 0:
-          role = await contract?.OPERATOR_ROLE();
+          role = await deployedContract?.OPERATOR_ROLE();
           break;
         case 1:
-          role = await contract?.UPGRADER_ROLE();
+          role = await deployedContract?.UPGRADER_ROLE();
           break;
         default:
-          role = await contract?.OPERATOR_ROLE();
+          role = await deployedContract?.OPERATOR_ROLE();
           break;
       }
-      const tx = await contract?.grantRole(role, userAccount);
+      const tx = await deployedContract?.grantRole(role, userAccount);
       notification.info(`Transaction submitted`);
       const receipt = await tx.wait();
       if (receipt) {
@@ -104,48 +115,105 @@ const HelpersInterface: NextPage = () => {
   };
 
   const handleSetPeriod = async (directionIndex: number) => {
-    if (!numOfPeriods || !adminAccount || !contract) {
+    if (!numOfPeriods || !adminAccount || !operatorSigner) {
       notification.error("Missing required fields");
       return;
     }
 
     try {
       setPeriodTrxLoading(true);
-      const operatorRole = await contract?.OPERATOR_ROLE();
-      const hasOperatorRole = await contract?.hasRole(operatorRole, adminAccount);
+      const deployedContract = new ethers.Contract(
+        proxyContractData?.address || "",
+        implementationContractData?.abi || [],
+        operatorSigner,
+      );
 
-      if (!hasOperatorRole) {
-        const tx = await contract?.grantRole(operatorRole, adminAccount);
-        await tx.wait();
-      }
-
-      const startTime: bigint = await contract?._vaultStartTimestamp();
+      const startTime: bigint = await deployedContract?._vaultStartTimestamp();
       let updatedTime;
       const secondsInADay = BigInt(86400);
       switch (directionIndex) {
-        case 0:
+        case 0: // Going backward
           updatedTime = startTime + BigInt(numOfPeriods) * secondsInADay;
+          const currentTimeStamp = Math.floor(Date.now() / 1000);
+
+          if (updatedTime > currentTimeStamp) {
+            notification.error("Cannot move backward beyond the vault's start time.");
+            setPeriodTrxLoading(false);
+            return;
+          }
           break;
-        case 1:
+        case 1: // Going forward
           updatedTime = startTime - BigInt(numOfPeriods) * secondsInADay;
           break;
         default:
           updatedTime = startTime + BigInt(numOfPeriods) * secondsInADay;
           break;
       }
-      const tx = await contract?.setVaultStartTimestamp(updatedTime);
+
+      const tx = await deployedContract?.setVaultStartTimestamp(updatedTime);
       notification.info(`Transaction submitted`);
       const receipt = await tx.wait();
       if (receipt) {
         notification.success("Transaction confirmed");
         setPeriodTrxLoading(false);
       }
+
       setNumOfPeriods("");
       setRefetch(prev => !prev);
     } catch (error) {
       notification.error(`Error: ${error}`);
       setPeriodTrxLoading(false);
     }
+  };
+
+  const handleWithdraw = async (withdrawType: number) => {
+    if (true) {
+      notification.info("Coming soon.. A new function must be added");
+      return;
+    }
+
+    // if (!custodian || !proxyContractData || !simpleUsdcContract) {
+    //   notification.error("Missing required fields");
+    //   return;
+    // }
+
+    // if (!withdrawType && !funds) {
+    //   notification.error("Missing required fields");
+    //   return;
+    // }
+
+    // try {
+    //   const vaultBalance = await simpleUsdcContract.balanceOf(proxyContractData?.address);
+    //   if (!vaultBalance) {
+    //     notification.error("No funds to withdraw");
+    //     return;
+    //   }
+
+    //   const amountToWithdraw = !withdrawType ? ethers.parseUnits(funds?.toString(), 6) : vaultBalance;
+
+    //   if (vaultBalance < amountToWithdraw) {
+    //     notification.error("Insufficient funds to withdraw");
+    //     return;
+    //   }
+
+    //   setWithdrawTrxLoading(true);
+
+    //   const tx = await deployedContract?.transferFunds(custodian, amountToWithdraw); // A new functionality needed to be added to our implementation
+    //   notification.info(`Transaction submitted`);
+
+    //   const receipt = await tx.wait();
+    //   if (receipt) {
+    //     notification.success("Transaction confirmed");
+    //     setWithdrawTrxLoading(false);
+    //   }
+
+    //   setFunds("");
+    //   setRefetch(prev => !prev);
+    // } catch (error) {
+    //   notification.error(`Error: ${error}`);
+    //   console.log(error);
+    //   setWithdrawTrxLoading(false);
+    // }
   };
 
   if (!mounted) {
@@ -165,25 +233,28 @@ const HelpersInterface: NextPage = () => {
                 placeholder="Enter User Account"
                 onChangeHandler={value => setUserAccount(value)}
               />
-
-              {grantRoleTrxLoading ? (
-                <LoadingSpinner />
-              ) : (
-                <>
-                  <Button
-                    text="Operator"
-                    bgColor="blue"
-                    tooltipData="Grant operator role"
-                    onClickHandler={() => handleGrantRole(0)}
-                  />
-                  <Button
-                    text="Upgrader"
-                    bgColor="blue"
-                    tooltipData="Grant upgrader role"
-                    onClickHandler={() => handleGrantRole(1)}
-                  />
-                </>
-              )}
+              <div className="flex flex-row gap-2 justify-between">
+                {grantRoleTrxLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <Button
+                      text="Operator"
+                      bgColor="blue"
+                      tooltipData="Grant operator role"
+                      flex="flex-1"
+                      onClickHandler={() => handleGrantRole(0)}
+                    />
+                    <Button
+                      text="Upgrader"
+                      bgColor="blue"
+                      tooltipData="Grant upgrader role"
+                      flex="flex-1"
+                      onClickHandler={() => handleGrantRole(1)}
+                    />
+                  </>
+                )}
+              </div>
             </ActionCard>
             <ActionCard>
               <h2 className="text-xl font-bold mb-4">
@@ -199,24 +270,60 @@ const HelpersInterface: NextPage = () => {
                 onChangeHandler={value => setNumOfPeriods(value)}
               />
 
-              {periodTrxLoading ? (
-                <LoadingSpinner />
-              ) : (
-                <>
-                  <Button
-                    text="Go Backward"
-                    bgColor="blue"
-                    tooltipData="Go backwards by a number of periods"
-                    onClickHandler={() => handleSetPeriod(0)}
-                  />
-                  <Button
-                    text="Go Forward"
-                    bgColor="blue"
-                    tooltipData="Go forward by a number of periods"
-                    onClickHandler={() => handleSetPeriod(1)}
-                  />
-                </>
-              )}
+              <div className="flex flex-row gap-2 justify-between">
+                {periodTrxLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <Button
+                      text="Go Backward"
+                      bgColor="blue"
+                      tooltipData="Go backwards by a number of periods"
+                      flex="flex-1"
+                      onClickHandler={() => handleSetPeriod(0)}
+                    />
+                    <Button
+                      text="Go Forward"
+                      bgColor="blue"
+                      tooltipData="Go forward by a number of periods"
+                      flex="flex-1"
+                      onClickHandler={() => handleSetPeriod(1)}
+                    />
+                  </>
+                )}
+              </div>
+            </ActionCard>
+            <ActionCard>
+              <h2 className="text-xl font-bold mb-4">Withdraw Funds</h2>
+              <Input
+                type="text"
+                value={funds}
+                placeholder="Enter Amount Of Funds"
+                onChangeHandler={value => setFunds(value)}
+              />
+
+              <div className="flex flex-row gap-2 justify-between">
+                {withdrawTrxLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <Button
+                      text="Withdraw"
+                      bgColor="blue"
+                      tooltipData="Withdraw the amount of funds you entered"
+                      flex="flex-1"
+                      onClickHandler={() => handleWithdraw(0)}
+                    />
+                    <Button
+                      text="Withdraw All"
+                      bgColor="blue"
+                      tooltipData="Withdraw all funds"
+                      flex="flex-1"
+                      onClickHandler={() => handleWithdraw(1)}
+                    />
+                  </>
+                )}
+              </div>
             </ActionCard>
           </div>
         </div>
