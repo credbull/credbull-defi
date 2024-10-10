@@ -25,6 +25,14 @@ const HelpersInterface: NextPage = () => {
 
   const [grantRoleTrxLoading, setGrantRoleTrxLoading] = useState(false);
   const [periodTrxLoading, setPeriodTrxLoading] = useState(false);
+  const [withdrawTrxLoading, setWithdrawTrxLoading] = useState(false);
+
+  const [userAccount, setUserAccount] = useState("");
+  const [numOfPeriods, setNumOfPeriods] = useState("");
+  const [funds, setFunds] = useState("");
+
+  const [deployedContract, setDeployedContract] = useState<ethers.Contract>();
+  const [simpleUsdcContract, setSimpleUsdcContract] = useState<ethers.Contract>();
 
   const contractNames = Object.keys(contractsData) as ContractName[];
   const { data: simpleUsdcContractData } = useDeployedContractInfo(contractNames[0]);
@@ -34,11 +42,10 @@ const HelpersInterface: NextPage = () => {
 
   const adminPrivateKey = process.env.NEXT_PUBLIC_ADMIN_PRIVATE_KEY || "";
   const adminAccount = process.env.NEXT_PUBLIC_ADMIN_ACCOUNT || "";
+  const custodian = process.env.NEXT_PUBLIC_CUSTODIAN || "";
 
   const provider = new ethers.JsonRpcProvider("http://localhost:8545");
   const signer = new ethers.Wallet(adminPrivateKey, provider);
-
-  const [contract, setContract] = useState<ethers.Contract>();
 
   const { currentPeriod } = useFetchContractData({
     deployedContractAddress: proxyContractData?.address || "",
@@ -47,19 +54,23 @@ const HelpersInterface: NextPage = () => {
     dependencies: [refetch],
   });
 
-  const [userAccount, setUserAccount] = useState("");
-  const [numOfPeriods, setNumOfPeriods] = useState("");
-
   useEffect(() => {
     if (!adminPrivateKey || !proxyContractData?.address || !implementationContractData?.abi || !signer) return;
 
-    const _contract = new ethers.Contract(
+    const _deployedContract = new ethers.Contract(
       proxyContractData?.address || "",
       implementationContractData?.abi || [],
       signer,
     );
 
-    setContract(_contract);
+    const _simpleUsdcContract = new ethers.Contract(
+      simpleUsdcContractData?.address || "",
+      simpleUsdcContractData?.abi || [],
+      signer,
+    );
+
+    setDeployedContract(_deployedContract);
+    setSimpleUsdcContract(_simpleUsdcContract);
   }, [adminPrivateKey, proxyContractData, implementationContractData, adminPrivateKey]);
 
   useEffect(() => {
@@ -67,7 +78,7 @@ const HelpersInterface: NextPage = () => {
   }, []);
 
   const handleGrantRole = async (roleIndex: number) => {
-    if (!userAccount || !contract) {
+    if (!userAccount || !deployedContract) {
       notification.error("Missing required fields");
       return;
     }
@@ -76,16 +87,16 @@ const HelpersInterface: NextPage = () => {
       let role;
       switch (roleIndex) {
         case 0:
-          role = await contract?.OPERATOR_ROLE();
+          role = await deployedContract?.OPERATOR_ROLE();
           break;
         case 1:
-          role = await contract?.UPGRADER_ROLE();
+          role = await deployedContract?.UPGRADER_ROLE();
           break;
         default:
-          role = await contract?.OPERATOR_ROLE();
+          role = await deployedContract?.OPERATOR_ROLE();
           break;
       }
-      const tx = await contract?.grantRole(role, userAccount);
+      const tx = await deployedContract?.grantRole(role, userAccount);
       notification.info(`Transaction submitted`);
       const receipt = await tx.wait();
       if (receipt) {
@@ -102,48 +113,107 @@ const HelpersInterface: NextPage = () => {
   };
 
   const handleSetPeriod = async (directionIndex: number) => {
-    if (!numOfPeriods || !adminAccount || !contract) {
+    if (!numOfPeriods || !adminAccount || !deployedContract) {
       notification.error("Missing required fields");
       return;
     }
 
     try {
       setPeriodTrxLoading(true);
-      const operatorRole = await contract?.OPERATOR_ROLE();
-      const hasOperatorRole = await contract?.hasRole(operatorRole, adminAccount);
+      const operatorRole = await deployedContract?.OPERATOR_ROLE();
+      const hasOperatorRole = await deployedContract?.hasRole(operatorRole, adminAccount);
 
       if (!hasOperatorRole) {
-        const tx = await contract?.grantRole(operatorRole, adminAccount);
+        const tx = await deployedContract?.grantRole(operatorRole, adminAccount);
         await tx.wait();
       }
 
-      const startTime: bigint = await contract?._vaultStartTimestamp();
+      const startTime: bigint = await deployedContract?._vaultStartTimestamp();
       let updatedTime;
       const secondsInADay = BigInt(86400);
       switch (directionIndex) {
-        case 0:
+        case 0: // Going backward
           updatedTime = startTime + BigInt(numOfPeriods) * secondsInADay;
+          const currentTimeStamp = Math.floor(Date.now() / 1000);
+
+          if (updatedTime > currentTimeStamp) {
+            notification.error("Cannot move backward beyond the vault's start time.");
+            setPeriodTrxLoading(false);
+            return;
+          }
           break;
-        case 1:
+        case 1: // Going forward
           updatedTime = startTime - BigInt(numOfPeriods) * secondsInADay;
           break;
         default:
           updatedTime = startTime + BigInt(numOfPeriods) * secondsInADay;
           break;
       }
-      const tx = await contract?.setVaultStartTimestamp(updatedTime);
+
+      const tx = await deployedContract?.setVaultStartTimestamp(updatedTime);
       notification.info(`Transaction submitted`);
       const receipt = await tx.wait();
       if (receipt) {
         notification.success("Transaction confirmed");
         setPeriodTrxLoading(false);
       }
+
       setNumOfPeriods("");
       setRefetch(prev => !prev);
     } catch (error) {
       notification.error(`Error: ${error}`);
       setPeriodTrxLoading(false);
     }
+  };
+
+  const handleWithdraw = async (withdrawType: number) => {
+    if (true) {
+      notification.info("Coming soon.. A new function must be added");
+      return;
+    }
+
+    // if (!custodian || !proxyContractData || !simpleUsdcContract) {
+    //   notification.error("Missing required fields");
+    //   return;
+    // }
+
+    // if (!withdrawType && !funds) {
+    //   notification.error("Missing required fields");
+    //   return;
+    // }
+
+    // try {
+    //   const vaultBalance = await simpleUsdcContract.balanceOf(proxyContractData?.address);
+    //   if (!vaultBalance) {
+    //     notification.error("No funds to withdraw");
+    //     return;
+    //   }
+
+    //   const amountToWithdraw = !withdrawType ? ethers.parseUnits(funds?.toString(), 6) : vaultBalance;
+
+    //   if (vaultBalance < amountToWithdraw) {
+    //     notification.error("Insufficient funds to withdraw");
+    //     return;
+    //   }
+
+    //   setWithdrawTrxLoading(true);
+
+    //   const tx = await deployedContract?.transferFunds(custodian, amountToWithdraw); // A new functionality needed to be added to our implementation
+    //   notification.info(`Transaction submitted`);
+
+    //   const receipt = await tx.wait();
+    //   if (receipt) {
+    //     notification.success("Transaction confirmed");
+    //     setWithdrawTrxLoading(false);
+    //   }
+
+    //   setFunds("");
+    //   setRefetch(prev => !prev);
+    // } catch (error) {
+    //   notification.error(`Error: ${error}`);
+    //   console.log(error);
+    //   setWithdrawTrxLoading(false);
+    // }
   };
 
   if (!mounted) {
@@ -218,6 +288,38 @@ const HelpersInterface: NextPage = () => {
                       tooltipData="Go forward by a number of periods"
                       flex="flex-1"
                       onClickHandler={() => handleSetPeriod(1)}
+                    />
+                  </>
+                )}
+              </div>
+            </ActionCard>
+            <ActionCard>
+              <h2 className="text-xl font-bold mb-4">Withdraw Funds</h2>
+              <Input
+                type="text"
+                value={funds}
+                placeholder="Enter Amount Of Funds"
+                onChangeHandler={value => setFunds(value)}
+              />
+
+              <div className="flex flex-row justify-between">
+                {withdrawTrxLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <Button
+                      text="Withdraw"
+                      bgColor="blue"
+                      tooltipData="Withdraw the amount of funds you entered"
+                      flex="flex-1"
+                      onClickHandler={() => handleWithdraw(0)}
+                    />
+                    <Button
+                      text="Withdraw All"
+                      bgColor="blue"
+                      tooltipData="Withdraw all funds"
+                      flex="flex-1"
+                      onClickHandler={() => handleWithdraw(1)}
                     />
                   </>
                 )}

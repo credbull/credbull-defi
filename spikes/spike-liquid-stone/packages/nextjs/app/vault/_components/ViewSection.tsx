@@ -7,7 +7,6 @@ import ContractValueBadge from "../../../components/general/ContractValueBadge";
 import Input from "../../../components/general/Input";
 import LoadingSpinner from "../../../components/general/LoadingSpinner";
 import DepositPoolCard from "./DepositPoolCard";
-import { OwnedNft } from "alchemy-sdk";
 import { ethers } from "ethers";
 import { useTheme } from "next-themes";
 import { useChainId, useWriteContract } from "wagmi";
@@ -16,7 +15,7 @@ import { useFetchContractData } from "~~/hooks/custom/useFetchContractData";
 import { useFetchDepositPools } from "~~/hooks/custom/useFetchDepositPools";
 import { useFetchSellRequests } from "~~/hooks/custom/useFetchSellRequests";
 import { useTransactor } from "~~/hooks/scaffold-eth";
-import { DepositPool, SellRequest } from "~~/types/vault";
+import { SellRequest } from "~~/types/vault";
 import { notification } from "~~/utils/scaffold-eth";
 import { Contract, ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
 
