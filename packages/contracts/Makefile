@@ -32,7 +32,7 @@ deploy:
 	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	@rm -rf out && \
 	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) --non-interactive -vvvv && \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) --non-interactive -vvv && \
 	yarn gen-types && \
 	yarn db-export
 
@@ -40,6 +40,6 @@ verify:
 	@echo "Running verify '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	rm -rf out && \
 	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume --non-interactive -vvvv && \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume --non-interactive -vvv && \
 	yarn gen-types && \
 	yarn db-export

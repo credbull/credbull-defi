@@ -185,6 +185,31 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         assertEq(newReducedRateAtCurrent, _liquidVault.currentPeriodRate().interestRate, "rate not set");
     }
 
+    /// @dev - this SHOULD work, but will have knock-off effects to yield/returns and pending requests
+    function test__LiquidContinuousMultiTokenVaultUtil__SetPeriod() public {
+        // block.timestamp starts at "1" in tests.  warp ahead so we can set time in the past relative to that.
+        vm.warp(201441601000); // 201441601000 = May 20, 1976 12:00:01 GMT (a great day!)
+
+        _setPeriodAndAssert(_liquidVault, 0);
+        _setPeriodAndAssert(_liquidVault, 30);
+        _setPeriodAndAssert(_liquidVault, 100);
+        _setPeriodAndAssert(_liquidVault, 50);
+        _setPeriodAndAssert(_liquidVault, 10);
+    }
+
+    //         vm.startPrank(_vaultAuth.operator);
+    function _setPeriodAndAssert(LiquidContinuousMultiTokenVault vault, uint256 newPeriod) internal {
+        assertTrue(
+            Timer.timestamp() >= (vault._vaultStartTimestamp() - newPeriod * 24 hours),
+            "trying to set period before block.timestamp"
+        );
+
+        _setPeriod(vault, newPeriod);
+
+        assertEq(newPeriod, (block.timestamp - vault._vaultStartTimestamp()) / 24 hours, "timestamp not set correctly");
+        assertEq(newPeriod, vault.currentPeriod(), "period not set correctly");
+    }
+
     function test__LiquidContinuousMultiTokenVaultUtil__ZeroAddressAuthReverts() public {
         address zeroAddress = address(0);
 
