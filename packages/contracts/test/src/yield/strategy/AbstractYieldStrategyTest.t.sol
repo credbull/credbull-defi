@@ -16,7 +16,7 @@ contract AbstractYieldStrategyTest is AbstractYieldStrategy, Test {
         vm.assume(to_ < type(uint256).max);
 
         assertEq(
-            (to_ - from_) + 1,
+            to_ - from_,
             _noOfPeriods(from_, to_),
             string.concat(
                 "Incorrect No Of Periods: From: ",
@@ -31,13 +31,13 @@ contract AbstractYieldStrategyTest is AbstractYieldStrategy, Test {
         uint256, /* principal */
         uint256, /* fromTimePeriod */
         uint256 /* toTimePeriod */
-    ) external pure override returns (uint256 yield) {
+    ) public pure override returns (uint256 yield) {
         return 0;
     }
 
     /// @dev No impl stub.
     function calcPrice(address, /* contextContract */ uint256 /* numTimePeriodsElapsed */ )
-        external
+        public
         pure
         override
         returns (uint256 price)
