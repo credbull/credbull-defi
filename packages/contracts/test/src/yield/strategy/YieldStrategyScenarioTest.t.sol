@@ -55,7 +55,7 @@ abstract contract YieldStrategyScenarioTest is Test {
         // $1,000 * ((5% / 365) * 15) =  2.054794
         assertEq(
             2_054_794,
-            _yieldStrategy().calcYield(_contextAddress(), principal, 1, 15),
+            _yieldStrategy().calcYield(_contextAddress(), principal, 1, 16),
             "reduced rate yield wrong at deposit + 15 days"
         );
     }
@@ -78,7 +78,7 @@ abstract contract YieldStrategyScenarioTest is Test {
         // $1,000 * ((5% / 365) * 20) =  2.739726
         assertEq(
             2_739_726,
-            _yieldStrategy().calcYield(_contextAddress(), principal, 1, 20),
+            _yieldStrategy().calcYield(_contextAddress(), principal, 1, 21),
             "reduced rate yield wrong at deposit + 20 days"
         );
     }
@@ -113,7 +113,7 @@ abstract contract YieldStrategyScenarioTest is Test {
         // $1,000 * ((10% / 365) * 30) = 8.219178
         assertEq(
             8_219_178,
-            _yieldStrategy().calcYield(_contextAddress(), principal, 1, MATURITY_PERIOD),
+            _yieldStrategy().calcYield(_contextAddress(), principal, 1, MATURITY_PERIOD + 1),
             "fully rate yield wrong at deposit + maturity days"
         );
     }
@@ -167,7 +167,7 @@ abstract contract YieldStrategyScenarioTest is Test {
         // $1,000 * ((10% / 365) * 30) + $1,000 * ((5.5% / 365) * 15) = 10.479452
         assertApproxEqAbs(
             10_479_452,
-            _yieldStrategy().calcYield(_contextAddress(), principal, 1, 45),
+            _yieldStrategy().calcYield(_contextAddress(), principal, 1, 46),
             TOLERANCE,
             "full + reduced rate yield wrong at deposit + 45 days"
         );
@@ -196,7 +196,7 @@ abstract contract YieldStrategyScenarioTest is Test {
         // $1,000 * ((10% / 365) * 30) + $1,000 * ((5.5% / 365) * 20) = 11.232876
         assertApproxEqAbs(
             11_232_876,
-            _yieldStrategy().calcYield(_contextAddress(), principal, 1, 50),
+            _yieldStrategy().calcYield(_contextAddress(), principal, 1, 51),
             TOLERANCE,
             "full + reduced rate yield wrong at deposit + 50 days"
         );
@@ -241,7 +241,7 @@ abstract contract YieldStrategyScenarioTest is Test {
         // $1,000 * ((10% / 365) * 60) = 16.438356
         assertApproxEqAbs(
             16_438_356,
-            _yieldStrategy().calcYield(_contextAddress(), principal, 1, (2 * MATURITY_PERIOD)),
+            _yieldStrategy().calcYield(_contextAddress(), principal, 1, (2 * MATURITY_PERIOD) + 1),
             TOLERANCE,
             "full rate yield wrong at deposit + 2x maturity"
         );
@@ -272,7 +272,7 @@ abstract contract YieldStrategyScenarioTest is Test {
         // $1,000 * ((10% / 365) * 30) = 8.219718
         assertApproxEqAbs(
             8_219_178,
-            _yieldStrategy().calcYield(_contextAddress(), principal, 1, MATURITY_PERIOD),
+            _yieldStrategy().calcYield(_contextAddress(), principal, 1, MATURITY_PERIOD + 1),
             TOLERANCE,
             "full rate yield wrong at deposit + maturity"
         );
@@ -282,7 +282,7 @@ abstract contract YieldStrategyScenarioTest is Test {
         // $1,000 * ((5% / 365) * 16) = 2.191780
         assertApproxEqAbs(
             2_191_780,
-            _yieldStrategy().calcYield(_contextAddress(), principal, 15, MATURITY_PERIOD),
+            _yieldStrategy().calcYield(_contextAddress(), principal, 15, MATURITY_PERIOD + 1),
             TOLERANCE,
             "reduced rate yield wrong at deposit + 15 days"
         );
@@ -313,10 +313,10 @@ abstract contract YieldStrategyScenarioTest is Test {
         _setReducedRate(PERCENT_5_5_SCALED, 31);
 
         // User A
-        // Deposit on Day 1, Redeem Day 46 = 30 days at full rate and 16 days at reduced rate.
-        // $1,000 * ((10% / 365) * 30) + 1,000 * ((5.5% / 365) * 16) = 10.630137
+        // Deposit on Day 1, Redeem Day 46 = 30 days at full rate and 15 days at reduced rate.
+        // $1,000 * ((10% / 365) * 30) + 1,000 * ((5.5% / 365) * 15) = 10.479452
         assertApproxEqAbs(
-            10_630_137,
+            10_479_452,
             _yieldStrategy().calcYield(_contextAddress(), principal, 1, 46),
             TOLERANCE,
             "full + reduced rate yield wrong at deposit + maturity + 15"
@@ -324,9 +324,9 @@ abstract contract YieldStrategyScenarioTest is Test {
 
         // User B
         // Deposit on Day 15, Redeem Day 46 = 1 full rate and 2 days at reduced rate.
-        // $1,000 * ((10% / 365) * 30) + 1,000 * ((5.5% / 365) * 2) = 8.520548
+        // $1,000 * ((10% / 365) * 30) + 1,000 * ((5.5% / 365) * 1) = 8.369863
         assertApproxEqAbs(
-            8_520_548,
+            8_369_863,
             _yieldStrategy().calcYield(_contextAddress(), principal, 15, 46),
             TOLERANCE,
             "full rate yield wrong at deposit + maturity"
@@ -365,21 +365,21 @@ abstract contract YieldStrategyScenarioTest is Test {
         _setReducedRate(PERCENT_5_5_SCALED, 20);
 
         // User A
-        // Deposit on Day 1, Redeem Day 45 = 30 days at full rate and 15 days at 5.5% APY.
-        // $1,000 * ((10% / 365) * 30) + 1,000 * ((5.5% / 365) * 15) = 10.479452
+        // Deposit on Day 1, Redeem Day 45 = 30 days at full rate and 14 days at 5.5% APY.
+        // $1,000 * ((10% / 365) * 30) + 1,000 * ((5.5% / 365) * 14) = 10.328767
         assertApproxEqAbs(
-            10_479_452,
+            10_328_767,
             _yieldStrategy().calcYield(_contextAddress(), principal, 1, 45),
             TOLERANCE,
-            "full + reduced rate yield wrong at deposit + maturity + 15"
+            "full + reduced rate yield wrong at deposit + maturity + 14"
         );
 
         // User B
-        // Deposit on Day 17, Redeem Day 45 = 29 days at reduced rates.
+        // Deposit on Day 16, Redeem Day 45 = 29 days at reduced rates.
         // $1,000 * ((5% / 365) * 3) + $1,000 * ((5.5% / 365) * 26) = 4.328767
         assertApproxEqAbs(
             4_328_767,
-            _yieldStrategy().calcYield(_contextAddress(), principal, 17, 45),
+            _yieldStrategy().calcYield(_contextAddress(), principal, 16, 45),
             TOLERANCE,
             "reduced rate yield wrong at deposit + 29"
         );
