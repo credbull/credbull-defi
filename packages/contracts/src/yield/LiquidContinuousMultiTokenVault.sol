@@ -123,10 +123,6 @@ contract LiquidContinuousMultiTokenVault is
     {
         if (assets < SCALE) return 0; // no shares for fractional principal
 
-        // TODO - this only holds when currentPeriod = depositPeriod
-        // in other cases, assets = principal + yield ... // therefore
-        // shares = assets - yield
-
         return assets; // 1 asset = 1 share
     }
 
@@ -249,15 +245,23 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     /// @notice Total amount of `asset` held in the vault
-    // TODO - need to convert all - heavy operation but possible
-    function totalAssets() public pure returns (uint256 totalManagedAssets) {
-        return 0;
+    // @dev - this is a heavy operation as the period of the vault increases
+    function totalAssets() public view returns (uint256 totalManagedAssets) {
+        uint256 totalAssets_ = 0;
+        uint256 currentPeriod_ = currentPeriod();
+
+        for (uint256 depositPeriod = 0; depositPeriod <= currentPeriod_; ++depositPeriod) {
+            totalAssets_ += convertToAssetsForDepositPeriod(totalSupply(depositPeriod), depositPeriod);
+        }
+
+        return totalAssets_;
     }
 
     /**
      * @notice Equivalent amount of shares for the given amount of assets
      * @param assets Amount of `asset` to convert
      * @return shares Amount of shares that would be received in exchange
+     * @dev - used for deposits, assumes depositPeriod == currentPeriod()
      */
     function convertToShares(uint256 assets)
         public
@@ -265,24 +269,29 @@ contract LiquidContinuousMultiTokenVault is
         override(IComponentToken, MultiTokenVault)
         returns (uint256 shares)
     {
-        // TODO - this will be User specific.  Run optimizer and get preview of what a redeem would be.
-
         return MultiTokenVault.convertToShares(assets);
     }
 
     /**
      * @notice Equivalent amount of assets for the given amount of shares
      * @param shares Amount of shares to convert
-     * @return assets Amount of `asset` that would be received in exchange
+     * @return assets_ Amount of `asset` that would be received in exchange
+     * @dev - WARNING convertToAssets(shares) is User-specific as no depositPeriod is specified
+     *  for User-agnostic, use convertToAssetsForDepositPeriod(shares, depositPeriod)
      */
-    function convertToAssets(uint256 shares) public view returns (uint256 assets) {
-        // fine - used from deposits, excludes returns
-        return convertToSharesForDepositPeriod(shares, currentPeriod());
+    function convertToAssets(uint256 shares) public view returns (uint256 assets_) {
+        uint256 assets = 0;
+
+        (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
+            _redeemOptimizer.optimizeRedeemShares(this, _msgSender(), shares, minUnlockPeriod());
+
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            assets += convertToAssetsForDepositPeriod(sharesAtPeriods[i], depositPeriods[i]);
+        }
+
+        return assets;
     }
 
-    /*
-
-    */
     /**
      * @notice Total amount of assets sent to the vault as part of pending deposit requests
      * @return assets Amount of pending deposit assets for the given requestId and controller
