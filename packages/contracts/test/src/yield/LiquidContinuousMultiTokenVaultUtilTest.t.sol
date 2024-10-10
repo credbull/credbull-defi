@@ -34,12 +34,12 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
 
         TestParam memory testParams = TestParam({ principal: 2_000 * scale, depositPeriod: 11, redeemPeriod: 71 });
 
-        uint256 sharesAmount = testParams.principal; // 1 principal = 1 share
+        //uint256 sharesAmount = testParams.principal; // 1 principal = 1 share
         _warpToPeriod(vaultProxy, testParams.depositPeriod);
 
         vm.startPrank(alice);
         asset.approve(address(vaultProxy), testParams.principal); // grant the vault allowance
-        vaultProxy.executeBuy(alice, 0, testParams.principal, sharesAmount);
+        vaultProxy.deposit(testParams.principal, alice);
         vm.stopPrank();
 
         assertEq(
