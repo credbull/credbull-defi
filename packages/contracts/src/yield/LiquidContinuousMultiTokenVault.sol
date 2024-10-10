@@ -249,8 +249,8 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     /// @notice Total amount of `asset` held in the vault
-    function totalAssets() public view returns (uint256 totalManagedAssets) {
-        // need to convert all - heavy operation but possible
+    // TODO - need to convert all - heavy operation but possible
+    function totalAssets() public pure returns (uint256 totalManagedAssets) {
         return 0;
     }
 
@@ -289,7 +289,7 @@ contract LiquidContinuousMultiTokenVault is
      */
     function pendingDepositRequest(uint256, /* requestId */ address /* controller */ )
         public
-        view
+        pure
         returns (uint256 assets)
     {
         // fine - we don't use async buy
@@ -302,7 +302,7 @@ contract LiquidContinuousMultiTokenVault is
      */
     function claimableDepositRequest(uint256, /* requestId */ address /* controller */ )
         public
-        view
+        pure
         returns (uint256 assets)
     {
         // fine - we don't use async buy
@@ -329,37 +329,7 @@ contract LiquidContinuousMultiTokenVault is
         return (currentPeriod() == requestId) ? pendingRedeemRequest(requestId, controller) : 0;
     }
 
-    // ===================== Buyable/Sellable =====================
-
-    // TODO deprecated - remove this function and call requestDeposit
-    function requestBuy(uint256 currencyTokenAmount) public virtual returns (uint256 requestId_) {
-        return requestDeposit(currencyTokenAmount, address(0), _msgSender());
-    }
-
-    // TODO deprecated - remove this function and call requestRedeem
-    function requestSell(uint256 componentTokenAmount) public virtual returns (uint256 requestId) {
-        return requestRedeem(componentTokenAmount, address(0), _msgSender());
-    }
-
-    // TODO deprecated - remove this function and call redeem deposit
-    function executeBuy(
-        address requestor,
-        uint256, /* requestId */
-        uint256 currencyTokenAmount,
-        uint256 /* componentTokenAmount */
-    ) public {
-        deposit(currencyTokenAmount, requestor);
-    }
-
-    // TODO deprecated - remove this function and call redeem directly
-    function executeSell(
-        address requestor,
-        uint256, /* requestId */
-        uint256, /*currencyTokenAmount*/
-        uint256 componentTokenAmount
-    ) public {
-        redeem(componentTokenAmount, requestor, address(0));
-    }
+    // ===================== RedeemOptimizer =====================
 
     /// @dev set the IRedeemOptimizer
     function setRedeemOptimizer(IRedeemOptimizer redeemOptimizer) public onlyRole(OPERATOR_ROLE) {
