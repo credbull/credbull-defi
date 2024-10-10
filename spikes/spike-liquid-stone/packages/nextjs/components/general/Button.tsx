@@ -6,19 +6,25 @@ const Button = ({
   bgColor = "black",
   textColor = "white",
   tooltipData = "",
+  flex = "",
   onClickHandler,
 }: {
   text: string;
   size?: "small" | "medium" | "large";
-  bgColor?: "black" | "yellow" | "blue" | "green";
+  bgColor?: "black" | "gray" | "yellow" | "blue" | "green";
   textColor?: "white";
   tooltipData?: string;
+  flex?: string;
   onClickHandler: () => void;
 }) => {
   const buttonConfig = {
     bg: {
       black: {
         bgColor: "bg-black-500",
+        color: "text-white",
+      },
+      gray: {
+        bgColor: "bg-gray-500",
         color: "text-white",
       },
       yellow: {
@@ -50,7 +56,7 @@ const Button = ({
     <button
       onClick={onClickHandler}
       data-tip={tooltipData}
-      className={`tooltip tooltip-bottom tooltip-accent ${buttonConfig.bg[bgColor].bgColor} ${buttonConfig.text[textColor].color} ${buttonConfig.size[size]} rounded`}
+      className={`${flex} tooltip tooltip-bottom tooltip-accent ${buttonConfig.bg[bgColor].bgColor} ${buttonConfig.text[textColor].color} ${buttonConfig.size[size]} rounded`}
     >
       {text}
     </button>

@@ -286,7 +286,7 @@ const ViewSection = ({
             onChangeHandler={value => setCurrencyTokenAmount(value)}
           />
 
-          <Button text="Execute Buy" bgColor="blue" onClickHandler={handleBuy} />
+          <Button text="Execute Buy" bgColor="green" onClickHandler={handleBuy} />
         </ActionCard>
 
         {/* Request Sell */}
@@ -299,7 +299,7 @@ const ViewSection = ({
             onChangeHandler={value => setSellAmount(value)}
           />
 
-          <Button text="Request Sell" bgColor="yellow" onClickHandler={handleRequestSell} />
+          <Button text="Request Sell" bgColor="gray" onClickHandler={handleRequestSell} />
         </ActionCard>
 
         {/* Execute Sell */}

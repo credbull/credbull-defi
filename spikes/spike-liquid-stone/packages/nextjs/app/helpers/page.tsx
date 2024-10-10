@@ -29,10 +29,8 @@ const HelpersInterface: NextPage = () => {
   const contractNames = Object.keys(contractsData) as ContractName[];
   const { data: simpleUsdcContractData } = useDeployedContractInfo(contractNames[0]);
 
-  const { data: implementationContractData, isLoading: implementationContractLoading } = useDeployedContractInfo(
-    contractNames[3],
-  );
-  const { data: proxyContractData, isLoading: proxyContractLoading } = useDeployedContractInfo(contractNames[4]);
+  const { data: implementationContractData } = useDeployedContractInfo(contractNames[3]);
+  const { data: proxyContractData } = useDeployedContractInfo(contractNames[4]);
 
   const adminPrivateKey = process.env.NEXT_PUBLIC_ADMIN_PRIVATE_KEY || "";
   const adminAccount = process.env.NEXT_PUBLIC_ADMIN_ACCOUNT || "";
@@ -165,25 +163,28 @@ const HelpersInterface: NextPage = () => {
                 placeholder="Enter User Account"
                 onChangeHandler={value => setUserAccount(value)}
               />
-
-              {grantRoleTrxLoading ? (
-                <LoadingSpinner />
-              ) : (
-                <>
-                  <Button
-                    text="Operator"
-                    bgColor="blue"
-                    tooltipData="Grant operator role"
-                    onClickHandler={() => handleGrantRole(0)}
-                  />
-                  <Button
-                    text="Upgrader"
-                    bgColor="blue"
-                    tooltipData="Grant upgrader role"
-                    onClickHandler={() => handleGrantRole(1)}
-                  />
-                </>
-              )}
+              <div className="flex flex-row justify-between">
+                {grantRoleTrxLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <Button
+                      text="Operator"
+                      bgColor="blue"
+                      tooltipData="Grant operator role"
+                      flex="flex-1"
+                      onClickHandler={() => handleGrantRole(0)}
+                    />
+                    <Button
+                      text="Upgrader"
+                      bgColor="blue"
+                      tooltipData="Grant upgrader role"
+                      flex="flex-1"
+                      onClickHandler={() => handleGrantRole(1)}
+                    />
+                  </>
+                )}
+              </div>
             </ActionCard>
             <ActionCard>
               <h2 className="text-xl font-bold mb-4">
@@ -199,24 +200,28 @@ const HelpersInterface: NextPage = () => {
                 onChangeHandler={value => setNumOfPeriods(value)}
               />
 
-              {periodTrxLoading ? (
-                <LoadingSpinner />
-              ) : (
-                <>
-                  <Button
-                    text="Go Backward"
-                    bgColor="blue"
-                    tooltipData="Go backwards by a number of periods"
-                    onClickHandler={() => handleSetPeriod(0)}
-                  />
-                  <Button
-                    text="Go Forward"
-                    bgColor="blue"
-                    tooltipData="Go forward by a number of periods"
-                    onClickHandler={() => handleSetPeriod(1)}
-                  />
-                </>
-              )}
+              <div className="flex flex-row justify-between">
+                {periodTrxLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <Button
+                      text="Go Backward"
+                      bgColor="blue"
+                      tooltipData="Go backwards by a number of periods"
+                      flex="flex-1"
+                      onClickHandler={() => handleSetPeriod(0)}
+                    />
+                    <Button
+                      text="Go Forward"
+                      bgColor="blue"
+                      tooltipData="Go forward by a number of periods"
+                      flex="flex-1"
+                      onClickHandler={() => handleSetPeriod(1)}
+                    />
+                  </>
+                )}
+              </div>
             </ActionCard>
           </div>
         </div>
