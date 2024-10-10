@@ -31,7 +31,6 @@ const HelpersInterface: NextPage = () => {
   const [numOfPeriods, setNumOfPeriods] = useState("");
   const [funds, setFunds] = useState("");
 
-  const [deployedContract, setDeployedContract] = useState<ethers.Contract>();
   const [simpleUsdcContract, setSimpleUsdcContract] = useState<ethers.Contract>();
 
   const contractNames = Object.keys(contractsData) as ContractName[];
@@ -42,10 +41,12 @@ const HelpersInterface: NextPage = () => {
 
   const adminPrivateKey = process.env.NEXT_PUBLIC_ADMIN_PRIVATE_KEY || "";
   const adminAccount = process.env.NEXT_PUBLIC_ADMIN_ACCOUNT || "";
+  const operatorPrivateKey = process.env.NEXT_PUBLIC_OPERATOR_PRIVATE_KEY || "";
   const custodian = process.env.NEXT_PUBLIC_CUSTODIAN || "";
 
   const provider = new ethers.JsonRpcProvider("http://localhost:8545");
-  const signer = new ethers.Wallet(adminPrivateKey, provider);
+  const adminSigner = new ethers.Wallet(adminPrivateKey, provider);
+  const operatorSigner = new ethers.Wallet(operatorPrivateKey, provider);
 
   const { currentPeriod } = useFetchContractData({
     deployedContractAddress: proxyContractData?.address || "",
@@ -55,35 +56,36 @@ const HelpersInterface: NextPage = () => {
   });
 
   useEffect(() => {
-    if (!adminPrivateKey || !proxyContractData?.address || !implementationContractData?.abi || !signer) return;
-
-    const _deployedContract = new ethers.Contract(
-      proxyContractData?.address || "",
-      implementationContractData?.abi || [],
-      signer,
-    );
+    if (!simpleUsdcContractData || !adminSigner) return;
 
     const _simpleUsdcContract = new ethers.Contract(
       simpleUsdcContractData?.address || "",
       simpleUsdcContractData?.abi || [],
-      signer,
+      adminSigner,
     );
 
-    setDeployedContract(_deployedContract);
     setSimpleUsdcContract(_simpleUsdcContract);
-  }, [adminPrivateKey, proxyContractData, implementationContractData, adminPrivateKey]);
+  }, [adminSigner, simpleUsdcContractData]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleGrantRole = async (roleIndex: number) => {
-    if (!userAccount || !deployedContract) {
+    if (!userAccount || !adminSigner) {
       notification.error("Missing required fields");
       return;
     }
+
     try {
       setGrantRoleTrxLoading(true);
+
+      const deployedContract = new ethers.Contract(
+        proxyContractData?.address || "",
+        implementationContractData?.abi || [],
+        adminSigner,
+      );
+
       let role;
       switch (roleIndex) {
         case 0:
@@ -113,20 +115,18 @@ const HelpersInterface: NextPage = () => {
   };
 
   const handleSetPeriod = async (directionIndex: number) => {
-    if (!numOfPeriods || !adminAccount || !deployedContract) {
+    if (!numOfPeriods || !adminAccount || !operatorSigner) {
       notification.error("Missing required fields");
       return;
     }
 
     try {
       setPeriodTrxLoading(true);
-      const operatorRole = await deployedContract?.OPERATOR_ROLE();
-      const hasOperatorRole = await deployedContract?.hasRole(operatorRole, adminAccount);
-
-      if (!hasOperatorRole) {
-        const tx = await deployedContract?.grantRole(operatorRole, adminAccount);
-        await tx.wait();
-      }
+      const deployedContract = new ethers.Contract(
+        proxyContractData?.address || "",
+        implementationContractData?.abi || [],
+        operatorSigner,
+      );
 
       const startTime: bigint = await deployedContract?._vaultStartTimestamp();
       let updatedTime;
@@ -233,7 +233,7 @@ const HelpersInterface: NextPage = () => {
                 placeholder="Enter User Account"
                 onChangeHandler={value => setUserAccount(value)}
               />
-              <div className="flex flex-row justify-between">
+              <div className="flex flex-row gap-2 justify-between">
                 {grantRoleTrxLoading ? (
                   <LoadingSpinner />
                 ) : (
@@ -270,7 +270,7 @@ const HelpersInterface: NextPage = () => {
                 onChangeHandler={value => setNumOfPeriods(value)}
               />
 
-              <div className="flex flex-row justify-between">
+              <div className="flex flex-row gap-2 justify-between">
                 {periodTrxLoading ? (
                   <LoadingSpinner />
                 ) : (
@@ -302,7 +302,7 @@ const HelpersInterface: NextPage = () => {
                 onChangeHandler={value => setFunds(value)}
               />
 
-              <div className="flex flex-row justify-between">
+              <div className="flex flex-row gap-2 justify-between">
                 {withdrawTrxLoading ? (
                   <LoadingSpinner />
                 ) : (
