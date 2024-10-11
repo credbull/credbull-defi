@@ -280,6 +280,17 @@ const HelpersInterface: NextPage = () => {
     }
   };
 
+  const handleCopyToClipboard = (member: string) => {
+    navigator.clipboard
+      .writeText(member)
+      .then(() => {
+        notification.info("Copied to clipboard!");
+      })
+      .catch(error => {
+        notification.error(`Failed to copy: ${error}`);
+      });
+  };
+
   if (!mounted) {
     return <LoadingSpinner />;
   }
@@ -455,7 +466,12 @@ const HelpersInterface: NextPage = () => {
                       <ul className="list-disc list-inside space-y-2">
                         {adminRoleMembers.length > 0 ? (
                           adminRoleMembers.map((member, index) => (
-                            <li key={index} className="text-gray-700">
+                            <li
+                              key={index}
+                              className="text-gray-700 cursor-pointer tooltip tooltip-bottom tooltip-accent"
+                              data-tip={`${member} (Copy)`}
+                              onClick={() => handleCopyToClipboard(member)}
+                            >
                               {formatAddress(member)}
                             </li>
                           ))
@@ -480,7 +496,12 @@ const HelpersInterface: NextPage = () => {
                       <ul className="list-disc list-inside space-y-2">
                         {operatorRoleMembers.length > 0 ? (
                           operatorRoleMembers.map((member, index) => (
-                            <li key={index} className="text-gray-700">
+                            <li
+                              key={index}
+                              className="text-gray-700 cursor-pointer tooltip tooltip-bottom tooltip-accent"
+                              data-tip={`${member} (Copy)`}
+                              onClick={() => handleCopyToClipboard(member)}
+                            >
                               {formatAddress(member)}
                             </li>
                           ))
@@ -505,7 +526,12 @@ const HelpersInterface: NextPage = () => {
                       <ul className="list-disc list-inside space-y-2">
                         {upgraderRoleMembers.length > 0 ? (
                           upgraderRoleMembers.map((member, index) => (
-                            <li key={index} className="text-gray-700">
+                            <li
+                              key={index}
+                              className="text-gray-700 cursor-pointer tooltip tooltip-bottom tooltip-accent"
+                              data-tip={`${member} (Copy)`}
+                              onClick={() => handleCopyToClipboard(member)}
+                            >
                               {formatAddress(member)}
                             </li>
                           ))
@@ -515,20 +541,6 @@ const HelpersInterface: NextPage = () => {
                       </ul>
                     )}
                   </div>
-                </div>
-
-                <div className="flex flex-wrap gap-4">
-                  {/* <ContractValueBadge name="Current Period" value={currentPeriod} />
-                  <ContractValueBadge name="Asset Amount" value={`${assetAmount} USDC`} />
-                  <ContractValueBadge name="Start Time" value={startTime} />
-                  <ContractValueBadge
-                    name="Notice Period"
-                    value={`${noticePeriod} ${noticePeriod > 1 ? "days" : "day"}`}
-                  />
-                  <ContractValueBadge name="Frequency" value={`${frequency} days`} />
-                  <ContractValueBadge name="Tenor" value={`${tenor} days`} />
-                  <ContractValueBadge name="Full Rate" value={`${fullRate}%`} />
-                  <ContractValueBadge name="Reduced Rate" value={`${reducedRate}%`} /> */}
                 </div>
               </>
             )}
