@@ -73,7 +73,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         DeployLiquidMultiTokenVault deployVault = new DeployLiquidMultiTokenVault();
 
         IERC20Metadata asset = new SimpleUSDC(vaultAuth.owner, type(uint128).max);
-        IYieldStrategy yieldStrategy = new TripleRateYieldStrategy();
+        IYieldStrategy yieldStrategy = new TripleRateYieldStrategy(IYieldStrategy.RangeInclusion.To);
         IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, 0);
 
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams =
