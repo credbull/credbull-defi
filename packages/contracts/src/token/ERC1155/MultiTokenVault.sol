@@ -312,6 +312,16 @@ abstract contract MultiTokenVault is
     }
 
     /**
+     * @dev Withdraws the assets from the vault.
+     *
+     * @param to The address that will receive the assets.
+     * @param amount The amount of the ERC-20 underlying assets to be withdrawn from the vault.
+     */
+    function _withdrawAssest(address to, uint256 amount) internal virtual {
+        ASSET.safeTransfer(to, amount);
+    }
+
+    /**
      * @inheritdoc ERC1155SupplyUpgradeable
      */
     function _update(address from, address to, uint256[] memory ids, uint256[] memory values)

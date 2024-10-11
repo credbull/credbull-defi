@@ -275,6 +275,17 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     /**
+     * @dev Withdraws the assets from the vault to the custodian.
+     * Only the Operator can call this function.
+     *
+     * @param to The address that will receive the assets. Custodian wallet.
+     * @param amount The amount of the ERC-20 underlying assets to be withdrawn from the vault.
+     */
+    function withdrawAsset(address to, uint256 amount) public onlyRole(OPERATOR_ROLE) {
+        _withdrawAssest(to, amount);
+    }
+
+    /**
      * @notice Sets the `reducedRateScaled_` against the Current Period.
      * @dev Convenience method for setting the Reduced Rate agains the current Period.
      *  Reverts with [TripleRateContext_PeriodRegressionNotAllowed] if current Period is before the
