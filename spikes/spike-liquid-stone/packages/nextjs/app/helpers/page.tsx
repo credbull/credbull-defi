@@ -9,11 +9,13 @@ import Button from "~~/components/general/Button";
 import ContractValueBadge from "~~/components/general/ContractValueBadge";
 import Input from "~~/components/general/Input";
 import LoadingSpinner from "~~/components/general/LoadingSpinner";
+import { useFetchAdminData } from "~~/hooks/custom/useFetchAdminData";
 import { useFetchContractData } from "~~/hooks/custom/useFetchContractData";
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 import { ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
 import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
+import { formatAddress } from "~~/utils/vault/general";
 
 const contractsData = getAllContracts();
 
@@ -29,15 +31,15 @@ const HelpersInterface: NextPage = () => {
 
   const [userAccount, setUserAccount] = useState("");
   const [numOfPeriods, setNumOfPeriods] = useState("");
-  const [funds, setFunds] = useState("");
-
-  //   const [simpleUsdcContract, setSimpleUsdcContract] = useState<ethers.Contract>();
+  const [assets, setAssets] = useState("");
 
   const contractNames = Object.keys(contractsData) as ContractName[];
   const { data: simpleUsdcContractData } = useDeployedContractInfo(contractNames[0]);
 
-  const { data: implementationContractData } = useDeployedContractInfo(contractNames[3]);
-  const { data: proxyContractData } = useDeployedContractInfo(contractNames[4]);
+  const { data: implementationContractData, isLoading: implementationContractLoading } = useDeployedContractInfo(
+    contractNames[3],
+  );
+  const { data: proxyContractData, isLoading: proxyContractLoading } = useDeployedContractInfo(contractNames[4]);
 
   const adminPrivateKey = process.env.NEXT_PUBLIC_ADMIN_PRIVATE_KEY || "";
   const adminAccount = process.env.NEXT_PUBLIC_ADMIN_ACCOUNT || "";
@@ -55,17 +57,25 @@ const HelpersInterface: NextPage = () => {
     dependencies: [refetch],
   });
 
-  //   useEffect(() => {
-  //     if (!simpleUsdcContractData || !adminSigner) return;
-
-  //     const _simpleUsdcContract = new ethers.Contract(
-  //       simpleUsdcContractData?.address || "",
-  //       simpleUsdcContractData?.abi || [],
-  //       adminSigner,
-  //     );
-
-  //     setSimpleUsdcContract(_simpleUsdcContract);
-  //   }, []);
+  const {
+    vaultBalance,
+    custodianBalance,
+    adminRoleCount,
+    adminRoleMembers,
+    operatorRoleCount,
+    operatorRoleMembers,
+    upgraderRoleCount,
+    upgraderRoleMembers,
+    fetchingAdmins,
+    fetchingOperators,
+    fetchingUpgraders,
+  } = useFetchAdminData({
+    custodian: custodian,
+    deployedContractAddress: proxyContractData?.address || "",
+    deployedContractAbi: implementationContractData?.abi as ContractAbi,
+    simpleUsdcContractData: simpleUsdcContractData,
+    dependencies: [refetch],
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -167,53 +177,61 @@ const HelpersInterface: NextPage = () => {
   };
 
   const handleWithdraw = async (withdrawType: number) => {
-    if (true) {
-      notification.info("Coming soon.. A new function must be added");
+    if (!custodian || !proxyContractData || !simpleUsdcContractData || !operatorSigner) {
+      notification.error("Missing required fields");
       return;
     }
 
-    // if (!custodian || !proxyContractData || !simpleUsdcContract) {
-    //   notification.error("Missing required fields");
-    //   return;
-    // }
+    if (!withdrawType && !assets) {
+      notification.error("Missing required fields");
+      return;
+    }
 
-    // if (!withdrawType && !funds) {
-    //   notification.error("Missing required fields");
-    //   return;
-    // }
+    try {
+      setWithdrawTrxLoading(true);
 
-    // try {
-    //   const vaultBalance = await simpleUsdcContract.balanceOf(proxyContractData?.address);
-    //   if (!vaultBalance) {
-    //     notification.error("No funds to withdraw");
-    //     return;
-    //   }
+      const deployedContract = new ethers.Contract(
+        proxyContractData?.address || "",
+        implementationContractData?.abi || [],
+        operatorSigner,
+      );
 
-    //   const amountToWithdraw = !withdrawType ? ethers.parseUnits(funds?.toString(), 6) : vaultBalance;
+      const simpleUsdcContract = new ethers.Contract(
+        simpleUsdcContractData?.address || "",
+        simpleUsdcContractData?.abi || [],
+        operatorSigner,
+      );
 
-    //   if (vaultBalance < amountToWithdraw) {
-    //     notification.error("Insufficient funds to withdraw");
-    //     return;
-    //   }
+      const vaultBalance = await simpleUsdcContract.balanceOf(proxyContractData?.address);
+      if (!vaultBalance) {
+        notification.error("No assets to withdraw");
+        return;
+      }
 
-    //   setWithdrawTrxLoading(true);
+      const custodianBalance = await simpleUsdcContract.balanceOf(custodian);
 
-    //   const tx = await deployedContract?.transferFunds(custodian, amountToWithdraw); // A new functionality needed to be added to our implementation
-    //   notification.info(`Transaction submitted`);
+      const amountToWithdraw = !withdrawType ? ethers.parseUnits(assets?.toString(), 6) : vaultBalance;
 
-    //   const receipt = await tx.wait();
-    //   if (receipt) {
-    //     notification.success("Transaction confirmed");
-    //     setWithdrawTrxLoading(false);
-    //   }
+      if (vaultBalance < amountToWithdraw) {
+        notification.error("Insufficient assets to withdraw");
+        return;
+      }
 
-    //   setFunds("");
-    //   setRefetch(prev => !prev);
-    // } catch (error) {
-    //   notification.error(`Error: ${error}`);
-    //   console.log(error);
-    //   setWithdrawTrxLoading(false);
-    // }
+      const tx = await deployedContract?.withdrawAsset(custodian, amountToWithdraw);
+      notification.info(`Transaction submitted`);
+
+      const receipt = await tx.wait();
+      if (receipt) {
+        notification.success("Transaction confirmed");
+        setWithdrawTrxLoading(false);
+      }
+
+      setAssets("");
+      setRefetch(prev => !prev);
+    } catch (error) {
+      notification.error(`Error: ${error}`);
+      setWithdrawTrxLoading(false);
+    }
   };
 
   if (!mounted) {
@@ -257,12 +275,7 @@ const HelpersInterface: NextPage = () => {
               </div>
             </ActionCard>
             <ActionCard>
-              <h2 className="text-xl font-bold mb-4">
-                Set Period{" "}
-                <small>
-                  <ContractValueBadge name="Current Period" value={currentPeriod} />
-                </small>
-              </h2>
+              <h2 className="text-xl font-bold mb-4">Set Period</h2>
               <Input
                 type="text"
                 value={numOfPeriods}
@@ -297,9 +310,9 @@ const HelpersInterface: NextPage = () => {
               <h2 className="text-xl font-bold mb-4">Withdraw Funds</h2>
               <Input
                 type="text"
-                value={funds}
+                value={assets}
                 placeholder="Enter Amount Of Funds"
-                onChangeHandler={value => setFunds(value)}
+                onChangeHandler={value => setAssets(value)}
               />
 
               <div className="flex flex-row gap-2 justify-between">
@@ -310,14 +323,14 @@ const HelpersInterface: NextPage = () => {
                     <Button
                       text="Withdraw"
                       bgColor="blue"
-                      tooltipData="Withdraw the amount of funds you entered"
+                      tooltipData="Withdraw the amount of assets you entered"
                       flex="flex-1"
                       onClickHandler={() => handleWithdraw(0)}
                     />
                     <Button
                       text="Withdraw All"
                       bgColor="blue"
-                      tooltipData="Withdraw all funds"
+                      tooltipData="Withdraw all assets"
                       flex="flex-1"
                       onClickHandler={() => handleWithdraw(1)}
                     />
@@ -325,6 +338,123 @@ const HelpersInterface: NextPage = () => {
                 )}
               </div>
             </ActionCard>
+          </div>
+
+          <div
+            className={`${
+              resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
+            } p-4 rounded-lg mt-6`}
+          >
+            <h2 className="text-xl font-bold mb-4">
+              Administration Details &nbsp;&nbsp;
+              <small>
+                <ContractValueBadge name="Current Period" value={currentPeriod} />
+              </small>{" "}
+              &nbsp;&nbsp;
+              <small>
+                <ContractValueBadge name="Vault Balance" value={`${vaultBalance} USDC`} />
+              </small>
+              &nbsp;&nbsp;
+              <small>
+                <ContractValueBadge name="Custodian Balance" value={`${custodianBalance} USDC`} />
+              </small>
+            </h2>
+            {implementationContractLoading || proxyContractLoading ? (
+              <LoadingSpinner />
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 rounded-lg ">
+                  {/* Admins Section */}
+                  <div className="flex-1 bg-green p-4 rounded-lg shadow-sm">
+                    <h1 className="text-xl font-bold mb-4 text-blue-600">
+                      Admins &nbsp;&nbsp;{" "}
+                      <small>
+                        <ContractValueBadge name="Count" value={adminRoleCount} />
+                      </small>
+                    </h1>
+                    {fetchingAdmins ? (
+                      <LoadingSpinner />
+                    ) : (
+                      <ul className="list-disc list-inside space-y-2">
+                        {adminRoleMembers.length > 0 ? (
+                          adminRoleMembers.map((member, index) => (
+                            <li key={index} className="text-gray-700">
+                              {formatAddress(member)}
+                            </li>
+                          ))
+                        ) : (
+                          <p className="text-gray-500">No Admins found.</p>
+                        )}
+                      </ul>
+                    )}
+                  </div>
+
+                  {/* Operators Section */}
+                  <div className="flex-1 bg-green p-4 rounded-lg shadow-sm">
+                    <h1 className="text-xl font-bold mb-4 text-blue-600">
+                      Operators &nbsp;&nbsp;{" "}
+                      <small>
+                        <ContractValueBadge name="Count" value={operatorRoleCount} />
+                      </small>
+                    </h1>
+                    {fetchingOperators ? (
+                      <LoadingSpinner />
+                    ) : (
+                      <ul className="list-disc list-inside space-y-2">
+                        {operatorRoleMembers.length > 0 ? (
+                          operatorRoleMembers.map((member, index) => (
+                            <li key={index} className="text-gray-700">
+                              {formatAddress(member)}
+                            </li>
+                          ))
+                        ) : (
+                          <p className="text-gray-500">No Operators found.</p>
+                        )}
+                      </ul>
+                    )}
+                  </div>
+
+                  {/* Upgrader Section */}
+                  <div className="flex-1 bg-green p-4 rounded-lg shadow-sm">
+                    <h1 className="text-xl font-bold mb-4 text-blue-600">
+                      Upgraders &nbsp;&nbsp;{" "}
+                      <small>
+                        <ContractValueBadge name="Count" value={upgraderRoleCount} />
+                      </small>
+                    </h1>
+                    {fetchingUpgraders ? (
+                      <LoadingSpinner />
+                    ) : (
+                      <ul className="list-disc list-inside space-y-2">
+                        {upgraderRoleMembers.length > 0 ? (
+                          upgraderRoleMembers.map((member, index) => (
+                            <li key={index} className="text-gray-700">
+                              {formatAddress(member)}
+                            </li>
+                          ))
+                        ) : (
+                          <p className="text-gray-500">No Upgraders found.</p>
+                        )}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-4">
+                  {/* <ContractValueBadge name="Current Period" value={currentPeriod} />
+                  <ContractValueBadge name="Asset Amount" value={`${assetAmount} USDC`} />
+                  <ContractValueBadge name="Start Time" value={startTime} />
+                  <ContractValueBadge
+                    name="Notice Period"
+                    value={`${noticePeriod} ${noticePeriod > 1 ? "days" : "day"}`}
+                  />
+                  <ContractValueBadge name="Frequency" value={`${frequency} days`} />
+                  <ContractValueBadge name="Tenor" value={`${tenor} days`} />
+                  <ContractValueBadge name="Full Rate" value={`${fullRate}%`} />
+                  <ContractValueBadge name="Reduced Rate" value={`${reducedRate}%`} /> */}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
