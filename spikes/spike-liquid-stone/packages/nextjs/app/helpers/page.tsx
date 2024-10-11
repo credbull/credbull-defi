@@ -422,8 +422,8 @@ const HelpersInterface: NextPage = () => {
               resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
             } p-4 rounded-lg mt-6`}
           >
-            <h2 className="text-xl font-bold mb-4">
-              Administration Details &nbsp;&nbsp;
+            <h2 className="text-xl font-bold mb-4">Administration Details</h2>
+            <h2>
               <small>
                 <ContractValueBadge name="Current Period" value={currentPeriod} />
               </small>{" "}
@@ -443,8 +443,8 @@ const HelpersInterface: NextPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 rounded-lg ">
                   {/* Admins Section */}
                   <div className="flex-1 bg-green p-4 rounded-lg shadow-sm">
-                    <h1 className="text-xl font-bold mb-4 text-blue-600">
-                      Admins &nbsp;&nbsp;{" "}
+                    <h1 className="mb-4">
+                      <span className="text-xl font-bold text-blue-600">Admins</span> &nbsp;&nbsp;{" "}
                       <small>
                         <ContractValueBadge name="Count" value={adminRoleCount} />
                       </small>
@@ -468,8 +468,8 @@ const HelpersInterface: NextPage = () => {
 
                   {/* Operators Section */}
                   <div className="flex-1 bg-green p-4 rounded-lg shadow-sm">
-                    <h1 className="text-xl font-bold mb-4 text-blue-600">
-                      Operators &nbsp;&nbsp;{" "}
+                    <h1 className="mb-4">
+                      <span className="text-xl font-bold text-blue-600">Operators</span> &nbsp;&nbsp;{" "}
                       <small>
                         <ContractValueBadge name="Count" value={operatorRoleCount} />
                       </small>
@@ -493,8 +493,8 @@ const HelpersInterface: NextPage = () => {
 
                   {/* Upgrader Section */}
                   <div className="flex-1 bg-green p-4 rounded-lg shadow-sm">
-                    <h1 className="text-xl font-bold mb-4 text-blue-600">
-                      Upgraders &nbsp;&nbsp;{" "}
+                    <h1 className="mb-4">
+                      <span className="text-xl font-bold text-blue-600">Upgraders</span> &nbsp;&nbsp;{" "}
                       <small>
                         <ContractValueBadge name="Count" value={upgraderRoleCount} />
                       </small>

@@ -303,8 +303,8 @@ const ViewSection = ({
 
         {/* Execute Sell */}
         <ActionCard>
-          <h2 className="text-xl font-bold mb-4">
-            Sell (<small>Click on the desired request</small>)
+          <h2 className="mb-4">
+            <span className="text-xl font-bold ">Sell</span> (<small>Click on the desired request</small>)
           </h2>
           <Input
             type="text"
