@@ -27,7 +27,7 @@ contract DualRateYieldStrategyTest is Test {
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
         uint256 tenor = 30;
 
-        IYieldStrategy yieldStrategy = new DualRateYieldStrategy();
+        IYieldStrategy yieldStrategy = new DualRateYieldStrategy(IYieldStrategy.RangeInclusion.To);
         IDualRateContext multiRateContext = _createDualRateContext(fullRate, reducedRate, frequency, tenor, DECIMALS);
         address contextAddress = address(multiRateContext);
 
@@ -59,7 +59,7 @@ contract DualRateYieldStrategyTest is Test {
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
         uint256 tenor = 30;
 
-        IYieldStrategy yieldStrategy = new DualRateYieldStrategy();
+        IYieldStrategy yieldStrategy = new DualRateYieldStrategy(IYieldStrategy.RangeInclusion.To);
         DualRateContextMock dualRateContext =
             _createDualRateContext(fullRate, reducedRateTenor1, frequency, tenor, DECIMALS);
         address contextAddress = address(dualRateContext);
@@ -127,7 +127,7 @@ contract DualRateYieldStrategyTest is Test {
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_365);
         uint256 tenor = 30;
 
-        IYieldStrategy yieldStrategy = new DualRateYieldStrategy();
+        IYieldStrategy yieldStrategy = new DualRateYieldStrategy(IYieldStrategy.RangeInclusion.To);
         DualRateContextMock dualRateContext =
             _createDualRateContext(fullRate, reducedRateTenor1, frequency, tenor, DECIMALS);
         address contextAddress = address(dualRateContext);

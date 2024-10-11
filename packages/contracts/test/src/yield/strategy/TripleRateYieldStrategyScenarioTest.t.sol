@@ -14,7 +14,7 @@ contract TripleRateYieldStrategyScenarioTest is YieldStrategyScenarioTest {
     TestTripleRateContext internal context;
 
     function setUp() public override {
-        yieldStrategy = new TripleRateYieldStrategy();
+        yieldStrategy = new TripleRateYieldStrategy(IYieldStrategy.RangeInclusion.To);
         context = new TestTripleRateContext();
         context = TestTripleRateContext(
             address(
