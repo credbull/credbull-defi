@@ -26,10 +26,12 @@ const HelpersInterface: NextPage = () => {
   const [refetch, setRefetch] = useState(false);
 
   const [grantRoleTrxLoading, setGrantRoleTrxLoading] = useState(false);
+  const [revokeRoleTrxLoading, setRevokeRoleTrxLoading] = useState(false);
   const [periodTrxLoading, setPeriodTrxLoading] = useState(false);
   const [withdrawTrxLoading, setWithdrawTrxLoading] = useState(false);
 
-  const [userAccount, setUserAccount] = useState("");
+  const [userAccountToGrant, setUserAccountToGrant] = useState("");
+  const [userAccountToRevoke, setUserAccountToRevoke] = useState("");
   const [numOfPeriods, setNumOfPeriods] = useState("");
   const [assets, setAssets] = useState("");
 
@@ -82,7 +84,7 @@ const HelpersInterface: NextPage = () => {
   }, []);
 
   const handleGrantRole = async (roleIndex: number) => {
-    if (!userAccount || !adminSigner) {
+    if (!userAccountToGrant || !adminSigner) {
       notification.error("Missing required fields");
       return;
     }
@@ -108,19 +110,63 @@ const HelpersInterface: NextPage = () => {
           role = await deployedContract?.OPERATOR_ROLE();
           break;
       }
-      const tx = await deployedContract?.grantRole(role, userAccount);
+      const tx = await deployedContract?.grantRole(role, userAccountToGrant);
       notification.info(`Transaction submitted`);
       const receipt = await tx.wait();
       if (receipt) {
         notification.success("Transaction confirmed");
         setGrantRoleTrxLoading(false);
       }
-      setUserAccount("");
+      setUserAccountToGrant("");
       setRefetch(prev => !prev);
-      setUserAccount("");
+      setUserAccountToGrant("");
     } catch (error) {
       notification.error(`Error: ${error}`);
       setGrantRoleTrxLoading(false);
+    }
+  };
+
+  const handleRevokeRole = async (roleIndex: number) => {
+    if (!userAccountToRevoke || !adminSigner) {
+      notification.error("Missing required fields");
+      return;
+    }
+
+    try {
+      setRevokeRoleTrxLoading(true);
+
+      const deployedContract = new ethers.Contract(
+        proxyContractData?.address || "",
+        implementationContractData?.abi || [],
+        adminSigner,
+      );
+
+      let role;
+      switch (roleIndex) {
+        case 0:
+          role = await deployedContract?.OPERATOR_ROLE();
+          break;
+        case 1:
+          role = await deployedContract?.UPGRADER_ROLE();
+          break;
+        default:
+          role = await deployedContract?.OPERATOR_ROLE();
+          break;
+      }
+
+      const tx = await deployedContract?.revokeRole(role, userAccountToRevoke);
+      notification.info(`Transaction submitted`);
+      const receipt = await tx.wait();
+      if (receipt) {
+        notification.success("Transaction confirmed");
+        setRevokeRoleTrxLoading(false);
+      }
+      setUserAccountToRevoke("");
+      setRefetch(prev => !prev);
+      setUserAccountToRevoke("");
+    } catch (error) {
+      notification.error(`Error: ${error}`);
+      setRevokeRoleTrxLoading(false);
     }
   };
 
@@ -242,14 +288,14 @@ const HelpersInterface: NextPage = () => {
     <>
       <div className="main-container mt-8 p-2">
         <div className={`container mx-auto p-6 ${resolvedTheme === "dark" ? "text-white" : "text-black"}`}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ActionCard>
               <h2 className="text-xl font-bold mb-4">Grant Roles</h2>
               <Input
                 type="text"
-                value={userAccount}
+                value={userAccountToGrant}
                 placeholder="Enter User Account"
-                onChangeHandler={value => setUserAccount(value)}
+                onChangeHandler={value => setUserAccountToGrant(value)}
               />
               <div className="flex flex-row gap-2 justify-between">
                 {grantRoleTrxLoading ? (
@@ -269,6 +315,37 @@ const HelpersInterface: NextPage = () => {
                       tooltipData="Grant upgrader role"
                       flex="flex-1"
                       onClickHandler={() => handleGrantRole(1)}
+                    />
+                  </>
+                )}
+              </div>
+            </ActionCard>
+            <ActionCard>
+              <h2 className="text-xl font-bold mb-4">Revoke Roles</h2>
+              <Input
+                type="text"
+                value={userAccountToRevoke}
+                placeholder="Enter User Account"
+                onChangeHandler={value => setUserAccountToRevoke(value)}
+              />
+              <div className="flex flex-row gap-2 justify-between">
+                {revokeRoleTrxLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <Button
+                      text="Operator"
+                      bgColor="blue"
+                      tooltipData="Revoke operator role"
+                      flex="flex-1"
+                      onClickHandler={() => handleRevokeRole(0)}
+                    />
+                    <Button
+                      text="Upgrader"
+                      bgColor="blue"
+                      tooltipData="Revoke upgrader role"
+                      flex="flex-1"
+                      onClickHandler={() => handleRevokeRole(1)}
                     />
                   </>
                 )}

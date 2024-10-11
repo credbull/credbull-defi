@@ -181,7 +181,7 @@ export const useFetchAdminData = ({
     };
 
     fetchData();
-  }, [deployedContractAddress, simpleUsdcContractData, custodianBalance, ...dependencies]);
+  }, [deployedContractAddress, simpleUsdcContractData, vaultBalance, custodianBalance, ...dependencies]);
 
   return {
     vaultBalance,
