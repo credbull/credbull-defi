@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { CalcSimpleInterest } from "@credbull/yield/CalcSimpleInterest.sol";
-import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
+import { YieldStrategy } from "@credbull/yield/strategy/YieldStrategy.sol";
 
 import { IDualRateContext } from "@test/test/yield/context/IDualRateContext.t.sol";
 
@@ -10,7 +10,9 @@ import { IDualRateContext } from "@test/test/yield/context/IDualRateContext.t.so
  * @title DualRateYieldStrategy
  * @dev Calculates returns using different rates depending on the holding period.
  */
-contract DualRateYieldStrategy is IYieldStrategy {
+contract DualRateYieldStrategy is YieldStrategy {
+    constructor(RangeInclusion rangeInclusion_) YieldStrategy(rangeInclusion_) { }
+
     /// @notice Returns the yield for `principal` from `fromPeriod` to `toPeriod` using full and reduced rates.
     /// @param contextContract The contract with the data calculating the yield
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
@@ -22,28 +24,18 @@ contract DualRateYieldStrategy is IYieldStrategy {
         if (address(0) == contextContract) {
             revert IYieldStrategy_InvalidContextAddress();
         }
-        if (fromPeriod >= toPeriod) {
-            revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod);
-        }
 
-        // On deposit day, when not inclusive, there is no yield.
-        if (fromPeriod == toPeriod) {
-            return 0;
-        }
-
+        (uint256 periodsElapsed,,) = periodRangeFor(fromPeriod, toPeriod);
         IDualRateContext context = IDualRateContext(contextContract);
 
-        uint256 numPeriodsElapsed = toPeriod - fromPeriod;
-
         // Calculate interest for full-rate periods
-        uint256 numFullRatePeriodsElapsed =
-            _numFullRatePeriodsElapsed(context.numPeriodsForFullRate(), numPeriodsElapsed);
+        uint256 numFullRatePeriodsElapsed = _numFullRatePeriodsElapsed(context.numPeriodsForFullRate(), periodsElapsed);
         uint256 fullRateInterest = CalcSimpleInterest.calcInterest(
             principal, context.rateScaled(), numFullRatePeriodsElapsed, context.frequency(), context.scale()
         );
 
         // Calculate interest for reduced-rate periods
-        uint256 numReducedRatePeriodsElapsed = numPeriodsElapsed - numFullRatePeriodsElapsed;
+        uint256 numReducedRatePeriodsElapsed = periodsElapsed - numFullRatePeriodsElapsed;
         uint256 reducedRateInterest = CalcSimpleInterest.calcInterest(
             principal, context.reducedRateScaled(), numReducedRatePeriodsElapsed, context.frequency(), context.scale()
         );
@@ -76,7 +68,6 @@ contract DualRateYieldStrategy is IYieldStrategy {
         returns (uint256 numFullRatePeriodsElapsed)
     {
         uint256 numFullRatePeriods = numPeriodsElapsed / tenor; // integer division returns whole full periods
-
         return numFullRatePeriods * tenor;
     }
 }

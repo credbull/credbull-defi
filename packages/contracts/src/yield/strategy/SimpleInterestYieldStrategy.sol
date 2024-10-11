@@ -3,13 +3,15 @@ pragma solidity ^0.8.20;
 
 import { ICalcInterestMetadata } from "@credbull/yield/ICalcInterestMetadata.sol";
 import { CalcSimpleInterest } from "@credbull/yield/CalcSimpleInterest.sol";
-import { AbstractYieldStrategy } from "@credbull/yield/strategy/AbstractYieldStrategy.sol";
+import { YieldStrategy } from "@credbull/yield/strategy/YieldStrategy.sol";
 
 /**
  * @title SimpleInterestYieldStrategy
  * @dev Strategy where returns are calculated using SimpleInterest
  */
-contract SimpleInterestYieldStrategy is AbstractYieldStrategy {
+contract SimpleInterestYieldStrategy is YieldStrategy {
+    constructor(RangeInclusion rangeInclusion_) YieldStrategy(rangeInclusion_) { }
+
     /// @dev See {CalcSimpleInterest-calcInterest}
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
@@ -20,32 +22,23 @@ contract SimpleInterestYieldStrategy is AbstractYieldStrategy {
         if (address(0) == contextContract) {
             revert IYieldStrategy_InvalidContextAddress();
         }
-        if (fromPeriod >= toPeriod) {
-            revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod);
-        }
+        (uint256 periodsElapsed,,) = periodRangeFor(fromPeriod, toPeriod);
         ICalcInterestMetadata interestData = ICalcInterestMetadata(contextContract);
 
-        uint256 numPeriodsElapsed = _noOfPeriods(fromPeriod, toPeriod);
-
         return CalcSimpleInterest.calcInterest(
-            principal, interestData.rateScaled(), numPeriodsElapsed, interestData.frequency(), interestData.scale()
+            principal, interestData.rateScaled(), periodsElapsed, interestData.frequency(), interestData.scale()
         );
     }
 
     /// @dev See {CalcSimpleInterest-calcPriceFromInterest}
-    function calcPrice(address contextContract, uint256 numPeriodsElapsed)
-        public
-        view
-        override
-        returns (uint256 price)
-    {
+    function calcPrice(address contextContract, uint256 periodsElapsed) public view override returns (uint256 price) {
         if (address(0) == contextContract) {
             revert IYieldStrategy_InvalidContextAddress();
         }
         ICalcInterestMetadata interestData = ICalcInterestMetadata(contextContract);
 
         return CalcSimpleInterest.calcPriceFromInterest(
-            interestData.rateScaled(), numPeriodsElapsed, interestData.frequency(), interestData.scale()
+            interestData.rateScaled(), periodsElapsed, interestData.frequency(), interestData.scale()
         );
     }
 }

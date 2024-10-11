@@ -3,14 +3,16 @@ pragma solidity ^0.8.20;
 
 import { ITripleRateContext } from "@credbull/yield/context/ITripleRateContext.sol";
 import { CalcSimpleInterest } from "@credbull/yield/CalcSimpleInterest.sol";
-import { AbstractYieldStrategy } from "@credbull/yield/strategy/AbstractYieldStrategy.sol";
+import { YieldStrategy } from "@credbull/yield/strategy/YieldStrategy.sol";
 
 /**
  * @title TripleRateYieldStrategy
  * @dev Calculates returns using 1 'full' rate and 2 'reduced' rates, applied according to the Tenor Period, and
  *  depending on the holding period.
  */
-contract TripleRateYieldStrategy is AbstractYieldStrategy {
+contract TripleRateYieldStrategy is YieldStrategy {
+    constructor(RangeInclusion rangeInclusion_) YieldStrategy(rangeInclusion_) { }
+
     /**
      * @notice Reverts when the `depositPeriod` falls outside the period range of 'reduced' Interest Rate data.
      * @dev This should never happen, as it indicates an operational failure, where the 'reduced' Interest Rate has not
@@ -25,7 +27,7 @@ contract TripleRateYieldStrategy is AbstractYieldStrategy {
     );
 
     /**
-     * @inheritdoc AbstractYieldStrategy
+     * @inheritdoc YieldStrategy
      */
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
@@ -36,15 +38,7 @@ contract TripleRateYieldStrategy is AbstractYieldStrategy {
         if (address(0) == contextContract) {
             revert IYieldStrategy_InvalidContextAddress();
         }
-        if (fromPeriod > toPeriod) {
-            revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod);
-        }
-
-        // On deposit day, when not inclusive, there is no yield.
-        if (fromPeriod == toPeriod) {
-            return 0;
-        }
-
+        (uint256 noOfPeriods,,) = periodRangeFor(fromPeriod, toPeriod);
         ITripleRateContext context = ITripleRateContext(contextContract);
 
         // Calculate interest for full-rate periods
@@ -56,7 +50,7 @@ contract TripleRateYieldStrategy is AbstractYieldStrategy {
         }
 
         // Calculate interest for reduced-rate periods
-        if (_noOfPeriods(fromPeriod, toPeriod) - noOfFullRatePeriods > 0) {
+        if (noOfPeriods - noOfFullRatePeriods > 0) {
             uint256 firstReducedRatePeriod = _firstReducedRatePeriod(noOfFullRatePeriods, fromPeriod);
             ITripleRateContext.PeriodRate memory currentPeriodRate = context.currentPeriodRate();
             ITripleRateContext.PeriodRate memory previousPeriodRate = context.previousPeriodRate();
@@ -114,21 +108,16 @@ contract TripleRateYieldStrategy is AbstractYieldStrategy {
     }
 
     /**
-     * @inheritdoc AbstractYieldStrategy
+     * @inheritdoc YieldStrategy
      */
-    function calcPrice(address contextContract, uint256 numPeriodsElapsed)
-        public
-        view
-        override
-        returns (uint256 price)
-    {
+    function calcPrice(address contextContract, uint256 periodsElapsed) public view override returns (uint256 price) {
         if (address(0) == contextContract) {
             revert IYieldStrategy_InvalidContextAddress();
         }
         ITripleRateContext context = ITripleRateContext(contextContract);
 
         return CalcSimpleInterest.calcPriceFromInterest(
-            numPeriodsElapsed, context.rateScaled(), context.frequency(), context.scale()
+            periodsElapsed, context.rateScaled(), context.frequency(), context.scale()
         );
     }
 
@@ -142,12 +131,12 @@ contract TripleRateYieldStrategy is AbstractYieldStrategy {
      */
     function _noOfFullRatePeriods(uint256 noOfPeriodsForFullRate_, uint256 from_, uint256 to_)
         internal
-        pure
+        view
         virtual
         returns (uint256)
     {
-        uint256 _periods = _noOfPeriods(from_, to_);
-        return _periods - (_periods % noOfPeriodsForFullRate_);
+        (uint256 noOfPeriods,,) = periodRangeFor(from_, to_);
+        return noOfPeriods - (noOfPeriods % noOfPeriodsForFullRate_);
     }
 
     /**
