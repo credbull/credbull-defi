@@ -468,11 +468,12 @@ const HelpersInterface: NextPage = () => {
                           adminRoleMembers.map((member, index) => (
                             <li
                               key={index}
-                              className="text-gray-700 cursor-pointer tooltip tooltip-bottom tooltip-accent"
-                              data-tip={`${member} (Copy)`}
+                              className="text-gray-700 cursor-pointer"
                               onClick={() => handleCopyToClipboard(member)}
                             >
-                              {formatAddress(member)}
+                              <p className="m-0 tooltip tooltip-bottom tooltip-accent" data-tip={`${member} (Copy)`}>
+                                {formatAddress(member)}
+                              </p>
                             </li>
                           ))
                         ) : (
@@ -498,11 +499,12 @@ const HelpersInterface: NextPage = () => {
                           operatorRoleMembers.map((member, index) => (
                             <li
                               key={index}
-                              className="text-gray-700 cursor-pointer tooltip tooltip-bottom tooltip-accent"
-                              data-tip={`${member} (Copy)`}
+                              className="text-gray-700 cursor-pointer"
                               onClick={() => handleCopyToClipboard(member)}
                             >
-                              {formatAddress(member)}
+                              <p className="m-0 tooltip tooltip-bottom tooltip-accent" data-tip={`${member} (Copy)`}>
+                                {formatAddress(member)}
+                              </p>
                             </li>
                           ))
                         ) : (
@@ -528,11 +530,12 @@ const HelpersInterface: NextPage = () => {
                           upgraderRoleMembers.map((member, index) => (
                             <li
                               key={index}
-                              className="text-gray-700 cursor-pointer tooltip tooltip-bottom tooltip-accent"
-                              data-tip={`${member} (Copy)`}
+                              className="text-gray-700 cursor-pointer"
                               onClick={() => handleCopyToClipboard(member)}
                             >
-                              {formatAddress(member)}
+                              <p className="m-0 tooltip tooltip-bottom tooltip-accent" data-tip={`${member} (Copy)`}>
+                                {formatAddress(member)}
+                              </p>
                             </li>
                           ))
                         ) : (
