@@ -16,7 +16,7 @@ contract MultipleRateYieldStrategyScenarioTest is YieldStrategyScenarioTest {
     MultipleRateContext internal context;
 
     function setUp() public override {
-        yieldStrategy = new MultipleRateYieldStrategy();
+        yieldStrategy = new MultipleRateYieldStrategy(IYieldStrategy.RangeInclusion.To);
         context = _createMultiRateContext(
             DEFAULT_FULL_RATE,
             DEFAULT_REDUCED_RATE,

@@ -33,7 +33,7 @@ contract TripleRateYieldStrategyTest is Test {
     uint256 internal principal;
 
     function setUp() public {
-        yieldStrategy = new TripleRateYieldStrategy();
+        yieldStrategy = new TripleRateYieldStrategy(IYieldStrategy.RangeInclusion.To);
         context = new TestTripleRateContext();
         context = TestTripleRateContext(
             address(
@@ -66,7 +66,11 @@ contract TripleRateYieldStrategyTest is Test {
     }
 
     function test_TripleRateYieldStrategy_RevertCalcYield_WhenInvalidPeriodRange() public {
-        vm.expectRevert(abi.encodeWithSelector(IYieldStrategy.IYieldStrategy_InvalidPeriodRange.selector, 5, 3));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IYieldStrategy.IYieldStrategy_InvalidPeriodRange.selector, 5, 3, yieldStrategy.rangeInclusion()
+            )
+        );
         yieldStrategy.calcYield(contextAddress, principal, 5, 3);
     }
 
