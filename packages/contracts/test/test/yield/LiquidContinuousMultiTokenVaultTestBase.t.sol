@@ -158,6 +158,18 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         array = new uint256[](1);
         array[0] = element;
     }
+
+    function getOwner() public view returns (address) {
+        return _vaultAuth.owner;
+    }
+
+    function getOperator() public view returns (address) {
+        return _vaultAuth.operator;
+    }
+
+    function getUpgrader() public view returns (address) {
+        return _vaultAuth.upgrader;
+    }
 }
 
 contract LiquidContinuousMultiTokenVaultMock is LiquidContinuousMultiTokenVault {

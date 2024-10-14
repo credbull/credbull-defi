@@ -281,7 +281,7 @@ contract LiquidContinuousMultiTokenVault is
      * @param to The address that will receive the assets. Custodian wallet.
      * @param amount The amount of the ERC-20 underlying assets to be withdrawn from the vault.
      */
-    function withdrawAsset(address to, uint256 amount) public onlyRole(OPERATOR_ROLE) {
+    function withdrawAsset(address to, uint256 amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _withdrawAssest(to, amount);
     }
 
