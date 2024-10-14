@@ -4,6 +4,10 @@ out = "out"
 libs = ["lib"]
 fs_permissions = [{ access = "read-write", path = "./" }]
 solc_version="0.8.23"
+ffi = true
+ast = true
+build_info = true
+extra_output = ["storageLayout"]
 
 [fmt]
 bracket_spacing = true
