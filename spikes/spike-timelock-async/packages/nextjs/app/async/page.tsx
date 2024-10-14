@@ -11,6 +11,8 @@ import PeriodButtons from './_components/PeriodButtons';
 import SetCurrentPeriod from './_components/SetCurrentPeriod';
 import LockAmount from "./_components/LockAmount";
 import RequestUnlock from "./_components/RequestUnlock";
+import LockedAmountTable from "./_components/LockedAmountTable";
+
 
 const contractsData = getAllContracts();
 
@@ -35,17 +37,23 @@ const Async: NextPage = () => {
     <>
       <div className="main-container mt-8 p-4">
         {/* Display the notice period */}
-        <div className="mb-4">
+        <div className="">
           <h2 className="text-lg font-bold">Notice Period: {noticePeriod} Days</h2>
           <h2 className="text-lg font-bold">Current Period: {currentPeriod}</h2>
         </div>
 
-        {/* Render period buttons */}
-        <PeriodButtons />
-
         {/* Render SetCurrentPeriod component with proxyAddress and ABI props */}
         <SetCurrentPeriod proxyAddress={proxyAddress} abi={implAbi} refetchCurrentPeriod={refetchCurrentPeriod} />
 
+        {/* Render period buttons */}
+        <PeriodButtons />
+
+        <LockedAmountTable
+          proxyAddress={proxyAddress}
+          abi={implAbi}
+          userAddress={connectedAddress || ""}
+          maxPeriod={30}
+        />
         <LockAmount
           proxyAddress={proxyAddress}
           abi={implAbi}
