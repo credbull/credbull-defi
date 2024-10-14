@@ -94,10 +94,6 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         TestParam memory testParams = TestParam({ principal: 2_000 * _scale, depositPeriod: 10, redeemPeriod: 70 });
         address owner = getOwner();
 
-        uint256 aliceStartBalance = _asset.balanceOf(alice);
-
-        uint256 sharesAmount = testParams.principal; // 1 principal = 1 share
-
         // ---------------- buy (deposit) ----------------
         _warpToPeriod(liquidVault, testParams.depositPeriod);
 
