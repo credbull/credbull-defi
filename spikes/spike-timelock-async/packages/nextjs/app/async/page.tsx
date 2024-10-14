@@ -1,6 +1,7 @@
 "use client";
 
 import type { NextPage } from "next";
+import React from "react";
 import { useAccount } from "wagmi";
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
@@ -25,8 +26,6 @@ const Async: NextPage = () => {
 
   const proxyAddress = proxyContractData?.address || "";
   const implAbi = implContractData?.abi as ContractAbi;
-
-
   const { noticePeriod, currentPeriod, refetchCurrentPeriod } =
     useFetchContractData({
       deployedContractAddress: proxyAddress,
@@ -48,16 +47,23 @@ const Async: NextPage = () => {
         {/* Render period buttons */}
         <PeriodButtons />
         <div className="flex gap-8">
-            <LockedAmountTable
+
+          <div className="w-1/3">
+            <LockedAmountTable 
               proxyAddress={proxyAddress}
               abi={implAbi}
               userAddress={connectedAddress || ""}
             />
+          </div>
+
+          {/* Request ID Table */}
+          <div className="w-2/3">
             <RequestIdTable
               proxyAddress={proxyAddress}
               abi={implAbi}
               userAddress={connectedAddress || ""}
             />
+          </div>
         </div>
         <LockAmount
           proxyAddress={proxyAddress}
