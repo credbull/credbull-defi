@@ -12,7 +12,7 @@ import SetCurrentPeriod from './_components/SetCurrentPeriod';
 import LockAmount from "./_components/LockAmount";
 import RequestUnlock from "./_components/RequestUnlock";
 import LockedAmountTable from "./_components/LockedAmountTable";
-
+import RequestIdTable from "./_components/RequestIdTable";
 
 const contractsData = getAllContracts();
 
@@ -47,13 +47,20 @@ const Async: NextPage = () => {
 
         {/* Render period buttons */}
         <PeriodButtons />
-
-        <LockedAmountTable
-          proxyAddress={proxyAddress}
-          abi={implAbi}
-          userAddress={connectedAddress || ""}
-          maxPeriod={30}
-        />
+        <div className="flex gap-8">
+            <LockedAmountTable
+              proxyAddress={proxyAddress}
+              abi={implAbi}
+              userAddress={connectedAddress || ""}
+              maxPeriod={30}
+            />
+            <RequestIdTable
+              proxyAddress={proxyAddress}
+              abi={implAbi}
+              userAddress={connectedAddress || ""}
+              maxRequestId={30}
+            />
+        </div>
         <LockAmount
           proxyAddress={proxyAddress}
           abi={implAbi}
