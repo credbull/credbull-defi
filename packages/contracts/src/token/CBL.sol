@@ -10,7 +10,7 @@ import { ERC20Capped } from "@openzeppelin/contracts/token/ERC20/extensions/ERC2
 
 /**
  * @title CBL (Credbull) Token Contract
- * @dev ERC20 token with additional features: permit, burnable, capped supply, pausability, and access control.
+ * @dev ERC20 token with additional features: permit, burnable, capped supply and access control.
  */
 contract CBL is ERC20, ERC20Permit, ERC20Burnable, ERC20Capped, AccessControl {
     /// @dev Error to indicate that the provided owner address is invalid.
