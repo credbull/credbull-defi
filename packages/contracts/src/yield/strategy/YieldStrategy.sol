@@ -63,22 +63,25 @@ abstract contract YieldStrategy is IYieldStrategy {
         if (fromPeriod > toPeriod) {
             revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod, RANGE_INCLUSION);
         }
+        if (fromPeriod == toPeriod && RANGE_INCLUSION != RangeInclusion.Neither) {
+            return (1, fromPeriod, toPeriod);
+        }
         if (RANGE_INCLUSION == RangeInclusion.To) {
-            if (fromPeriod == toPeriod) {
-                return (1, fromPeriod, toPeriod);
-            }
             return (toPeriod - fromPeriod, fromPeriod + 1, toPeriod);
         } else if (RANGE_INCLUSION == RangeInclusion.From) {
-            if (fromPeriod == toPeriod) {
-                return (1, fromPeriod, toPeriod);
-            }
             return (toPeriod - fromPeriod, fromPeriod, toPeriod - 1);
         } else if (RANGE_INCLUSION == RangeInclusion.Both) {
+            // Fail if the math is going to overflow.
+            if (toPeriod == type(uint256).max && fromPeriod == 0) {
+                revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod, RANGE_INCLUSION);
+            }
             return ((toPeriod - fromPeriod) + 1, fromPeriod, toPeriod);
         } else if (RANGE_INCLUSION == RangeInclusion.Neither) {
             if (fromPeriod == toPeriod) {
                 revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod, RANGE_INCLUSION);
             }
+            // Cannot overflow here. If 'from' is uint256.max and not greater than 'to', then it is equal to 'to' and
+            // will revert in above if.
             if (fromPeriod + 1 == toPeriod) {
                 revert IYieldStrategy_InvalidPeriodRange(fromPeriod + 1, toPeriod, RANGE_INCLUSION);
             }
