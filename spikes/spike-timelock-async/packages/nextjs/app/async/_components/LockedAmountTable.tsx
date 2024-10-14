@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from "react";
 import { useReadContract } from "wagmi";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
+import { MAX_PERIOD } from '~~/lib/constants';
 
 interface LockedAmountTableProps {
   proxyAddress: string;
   abi: ContractAbi;
   userAddress: string;
-  maxPeriod: number;
 }
 
 interface TableRow {
@@ -22,58 +22,50 @@ const LockedAmountTable: React.FC<LockedAmountTableProps> = ({
   proxyAddress,
   abi,
   userAddress,
-  maxPeriod,
 }) => {
   const [rows, setRows] = useState<TableRow[]>([]);
 
-  // Create one hook per deposit period for lockedAmount
-  const lockedAmountHooks = Array.from({ length: maxPeriod + 1 }, (_, period) =>
+  const lockedAmountHooks = Array.from({ length: MAX_PERIOD + 1 }, (_, period) =>
     useReadContract({
       address: proxyAddress,
       abi,
       functionName: "lockedAmount",
-      args: [userAddress, BigInt(period)],
+      args: [userAddress, BigInt(period)]
     })
   );
 
-  // Create one hook per deposit period for maxRequestUnlock
-  const maxRequestUnlockHooks = Array.from(
-    { length: maxPeriod + 1 },
-    (_, period) =>
-      useReadContract({
-        address: proxyAddress,
-        abi,
-        functionName: "maxRequestUnlock",
-        args: [userAddress, BigInt(period)],
-      })
+  const maxRequestUnlockHooks = Array.from({ length: MAX_PERIOD + 1 }, (_, period) =>
+    useReadContract({
+      address: proxyAddress,
+      abi,
+      functionName: "maxRequestUnlock",
+      args: [userAddress, BigInt(period)]
+    })
   );
 
-  // Create one hook per deposit period for unlockRequestAmount
-  const unlockRequestAmountHooks = Array.from(
-    { length: maxPeriod + 1 },
-    (_, period) =>
-      useReadContract({
-        address: proxyAddress,
-        abi,
-        functionName: "unlockRequestAmountByDepositPeriod",
-        args: [userAddress, BigInt(period)],
-      })
+  const unlockRequestAmountHooks = Array.from({ length: MAX_PERIOD + 1 }, (_, period) =>
+    useReadContract({
+      address: proxyAddress,
+      abi,
+      functionName: "unlockRequestAmountByDepositPeriod",
+      args: [userAddress, BigInt(period)]
+    })
   );
 
   useEffect(() => {
     const fetchData = async () => {
-      const newRows: TableRow[] = [];
+      try {
+        const newRows: TableRow[] = [];
 
-      for (let period = 0; period <= maxPeriod; period++) {
-        try {
-          const { data: locked } = lockedAmountHooks[period];
+        const promises = Array.from({ length: MAX_PERIOD + 1 }, async (_, period) => {
+          const { data: locked } = await lockedAmountHooks[period].refetch();
           const lockedAmount = BigInt(locked || 0);
 
           if (lockedAmount > 0) {
-            const { data: maxUnlock } = maxRequestUnlockHooks[period];
-            const maxRequestUnlock = BigInt(maxUnlock || 0);
+            const { data: maxUnlock } = await maxRequestUnlockHooks[period].refetch();
+            const { data: unlockRequest } = await unlockRequestAmountHooks[period].refetch();
 
-            const { data: unlockRequest } = unlockRequestAmountHooks[period];
+            const maxRequestUnlock = BigInt(maxUnlock || 0);
             const unlockRequestAmount = BigInt(unlockRequest || 0);
 
             newRows.push({
@@ -83,12 +75,13 @@ const LockedAmountTable: React.FC<LockedAmountTableProps> = ({
               unlockRequestAmount,
             });
           }
-        } catch (error) {
-          console.error(`Error fetching data for period ${period}:`, error);
-        }
-      }
+        });
 
-      setRows(newRows);
+        await Promise.all(promises);
+        setRows(newRows);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
 
     fetchData();
@@ -96,6 +89,7 @@ const LockedAmountTable: React.FC<LockedAmountTableProps> = ({
 
   return (
     <div className="overflow-x-auto">
+      <h2 className="text-lg font-bold mb-4">Locked Amount Table</h2>
       <table className="table w-full">
         <thead>
           <tr>

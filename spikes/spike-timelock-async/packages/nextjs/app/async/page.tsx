@@ -52,13 +52,11 @@ const Async: NextPage = () => {
               proxyAddress={proxyAddress}
               abi={implAbi}
               userAddress={connectedAddress || ""}
-              maxPeriod={30}
             />
             <RequestIdTable
               proxyAddress={proxyAddress}
               abi={implAbi}
               userAddress={connectedAddress || ""}
-              maxRequestId={30}
             />
         </div>
         <LockAmount

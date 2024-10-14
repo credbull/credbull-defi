@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from "react";
 import { useReadContract } from "wagmi";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
+import { MAX_PERIOD } from '~~/lib/constants';
 
 interface RequestIdTableProps {
   proxyAddress: string;
   abi: ContractAbi;
   userAddress: string;
-  maxRequestId: number;
 }
 
 interface TableRow {
@@ -19,30 +19,27 @@ interface TableRow {
 const RequestIdTable: React.FC<RequestIdTableProps> = ({
   proxyAddress,
   abi,
-  userAddress,
-  maxRequestId,
+  userAddress
 }) => {
   const [rows, setRows] = useState<TableRow[]>([]);
 
-  const unlockAmountHooks = Array.from(
-    { length: maxRequestId + 1 },
-    (_, requestId) =>
-      useReadContract({
-        address: proxyAddress,
-        abi,
-        functionName: "unlockRequestAmount",
-        args: [userAddress, BigInt(requestId)],
-      })
+  const unlockRequestAmountHooks = Array.from({ length: MAX_PERIOD + 1 }, (_, requestId) =>
+    useReadContract({
+      address: proxyAddress,
+      abi,
+      functionName: "unlockRequestAmount",
+      args: [userAddress, BigInt(requestId)]
+    })
   );
 
   useEffect(() => {
     const fetchData = async () => {
-      const newRows: TableRow[] = [];
+      try {
+        const newRows: TableRow[] = [];
 
-      for (let requestId = 0; requestId <= maxRequestId; requestId++) {
-        try {
-          const { data: unlockAmount } = unlockAmountHooks[requestId];
-          const amount = BigInt(unlockAmount || 0);
+        const promises = Array.from({ length: MAX_PERIOD + 1 }, async (_, requestId) => {
+          const { data } = await unlockRequestAmountHooks[requestId].refetch();
+          const amount = BigInt(data || 0);
 
           if (amount > 0) {
             newRows.push({
@@ -50,19 +47,21 @@ const RequestIdTable: React.FC<RequestIdTableProps> = ({
               unlockAmount: amount,
             });
           }
-        } catch (error) {
-          console.error(`Error fetching data for requestId ${requestId}:`, error);
-        }
-      }
+        });
 
-      setRows(newRows);
+        await Promise.all(promises);
+        setRows(newRows);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
 
     fetchData();
-  }, [unlockAmountHooks]);
+  }, [unlockRequestAmountHooks]);
 
   return (
     <div className="overflow-x-auto">
+      <h2 className="text-lg font-bold mb-4">Request ID Table</h2>
       <table className="table w-full">
         <thead>
           <tr>
