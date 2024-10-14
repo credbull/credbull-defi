@@ -2,17 +2,15 @@
 
 ## Overview
 
-The CBL token is an ERC20-compliant token with additional features such as permit, burnable, capped supply, pausability,
-and access control. 
+The CBL token is an ERC20-compliant token with additional features such as permit, burnable, capped supply and access control. 
 
-The CBL token extends OpenZeppelin 5.0 contracts: ERC20, ERC20Permit, ERC20Burnable, ERC20Capped, ERC20Pausable, and AccessControl.
+The CBL token extends OpenZeppelin 5.0 contracts: ERC20, ERC20Permit, ERC20Burnable, ERC20Capped and AccessControl.
 
 ## Features
 
 - **Permit:** Allows approvals to be made via signatures, following the ERC20Permit standard.
 - **Burnable:** Tokens can be burned, reducing the total supply.
 - **Capped Supply:** The total supply of tokens is capped.
-- **Pausability:** Token transfers, minting, and burning can be paused and unpaused.
 - **Access Control:** Roles are used to manage permissions for minting and administrative functions.
 
 ## Roles
@@ -21,7 +19,6 @@ The CBL token extends OpenZeppelin 5.0 contracts: ERC20, ERC20Permit, ERC20Burna
 
 The Admin role is assigned to the owner of the contract and has the highest level of control. Admins can:
 
-- Pause and unpause token operations such as transfers, minting, and burning.
 - Manage role assignments, including granting and revoking roles.
 
 ### Minter
@@ -57,17 +54,6 @@ Constructor to initialize the token contract.
 | `_minter`    | `address` | The address of the minter who will have the minter role. |
 | `_maxSupply` | `uint256` | The maximum supply of the token.                         |
 
-### pause
-
-Pauses token transfers, minting and burning.
-
-*Can only be called by an account with the admin role.*
-
-### unpause
-
-Unpauses token transfers, minting and burning.
-
-*Can only be called by an account with the admin role.*
 
 ### mint
 
