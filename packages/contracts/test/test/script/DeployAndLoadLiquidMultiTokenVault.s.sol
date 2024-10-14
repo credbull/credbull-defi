@@ -154,11 +154,11 @@ contract AnvilWallet is Script {
         index = index_;
     }
 
-    function addr() public returns (address) {
+    function addr() public view returns (address) {
         return vm.addr(key());
     }
 
-    function key() public returns (uint256 privateKey) {
+    function key() public view returns (uint256 privateKey) {
         string memory mnemonic = "test test test test test test test test test test test junk";
 
         return vm.deriveKey(mnemonic, index);
