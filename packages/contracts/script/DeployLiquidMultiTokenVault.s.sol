@@ -17,6 +17,10 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
+import { SimpleTimelockAsyncUnlock } from "@test/test/timelock/SimpleTimelockAsyncUnlock.t.sol";
+import { ERC1155MintableBurnable } from "@test/test/token/ERC1155/ERC1155MintableBurnable.t.sol";
+import { IERC5679Ext1155 } from "@credbull/token/ERC1155/IERC5679Ext1155.sol";
+
 import { stdToml } from "forge-std/StdToml.sol";
 import { console2 } from "forge-std/console2.sol";
 
@@ -25,6 +29,8 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
 
     string private _tomlConfig;
     LiquidContinuousMultiTokenVault.VaultAuth public _vaultAuth;
+
+    uint256 public constant NOTICE_PERIOD = 1;
 
     constructor() {
         _tomlConfig = loadTomlConfiguration();
@@ -81,6 +87,21 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
                 "!!!!! Deploying LiquidContinuousMultiTokenVault Proxy [",
                 vm.toString(address(liquidVaultProxy)),
                 "] !!!!!"
+            )
+        );
+
+        IERC5679Ext1155 deposits = new ERC1155MintableBurnable();
+
+        SimpleTimelockAsyncUnlock asyncUnlockImpl = new SimpleTimelockAsyncUnlock();
+
+        ERC1967Proxy asyncUnlockProxy = new ERC1967Proxy(
+            address(asyncUnlockImpl),
+            abi.encodeWithSelector(asyncUnlockImpl.initialize.selector, NOTICE_PERIOD, deposits)
+        );
+
+        console2.log(
+            string.concat(
+                "!!!!! Deploying SimpleTimelockAsyncUnlock Proxy [", vm.toString(address(asyncUnlockProxy)), "] !!!!!"
             )
         );
 
