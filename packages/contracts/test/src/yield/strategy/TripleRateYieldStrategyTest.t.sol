@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
+import { CalcSimpleInterest } from "@credbull/yield/CalcSimpleInterest.sol";
 
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
 import { TestTripleRateContext } from "@test/test/yield/context/TestTripleRateContext.t.sol";
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { Test } from "forge-std/Test.sol";
 
@@ -74,7 +76,7 @@ contract TripleRateYieldStrategyTest is Test {
         yieldStrategy.calcYield(contextAddress, principal, 5, 3);
     }
 
-    function test_TripleRateYieldStrategy_CalcYield_AsExpected() public {
+    function test_TripleRateYieldStrategy_CalcYield_Static() public {
         // 21 Days:
         // $1,000 * ((5% / 365) * 21) = 2.876712
         assertApproxEqAbs(
@@ -133,12 +135,88 @@ contract TripleRateYieldStrategyTest is Test {
         );
     }
 
-    function test_TripleRateYieldStrategy_CalcPrice_AsExpected() public view {
-        // 1 + ((10% / 365) * 0) = 1
-        assertEq(1 * SCALE, yieldStrategy.calcPrice(contextAddress, 0), "price wrong at period 0");
-        // 1 + ((10% / 365) * 1) ≈ 1.000273
-        assertEq(1_000_273, yieldStrategy.calcPrice(contextAddress, 1), "price wrong at period 1");
-        // 1 + ((10% / 365) * 30) = 1.008219
-        assertEq(1_008_219, yieldStrategy.calcPrice(contextAddress, 30), "price wrong at period 30");
+    /**
+     * @notice Fuzz tests Yield Calculation where the Yield is always mature.
+     * @dev This avoids having to deal with the Current and Previous Period Rates. To ease the fuzzing, we get a 'to'
+     *  and calculate a 'from' (`noOfCycles` in the past) that ensures only mature yield.
+     *
+     * @param rawPrincipal The unscaled Principal, must be > 1 and < 1e19 (to prevent test overflow).
+     * @param to The To Period, must be less than 1m and allow for the 'from' calculation.
+     * @param noOfCycles The Number of Maturity Cycles to use to calculate the 'from'. Must be > 0.
+     */
+    function test_TripleRateYieldStrategy_CalcYield_AlwaysMature(uint256 rawPrincipal, uint256 to, uint8 noOfCycles)
+        public
+        view
+    {
+        // Very large principal allowed to push overflow boundary
+        vm.assume(rawPrincipal > 1 && rawPrincipal < 10 ether);
+        vm.assume(noOfCycles > 0);
+        vm.assume(to >= noOfCycles * context.numPeriodsForFullRate() && to < 1_000_000);
+
+        uint256 from = to - (noOfCycles * context.numPeriodsForFullRate());
+        uint256 scaledPrincipal = rawPrincipal * SCALE;
+        // This is also the No Of Full Rate Periods.
+        (uint256 noOfPeriods,,) = yieldStrategy.periodRangeFor(from, to);
+
+        string memory label = string.concat("Principal= ", vm.toString(scaledPrincipal));
+        label = string.concat(label, string.concat(", From= ", vm.toString(from)));
+        label = string.concat(label, string.concat(", To= ", vm.toString(to)));
+
+        uint256 expectedYield = CalcSimpleInterest.calcInterest(
+            scaledPrincipal, context.rateScaled(), noOfPeriods, context.frequency(), context.scale()
+        );
+        assertApproxEqAbs(
+            expectedYield,
+            yieldStrategy.calcYield(contextAddress, scaledPrincipal, from, to),
+            TOLERANCE,
+            string.concat(label, ": Incorrect Mature Yield")
+        );
+    }
+
+    /**
+     * If we attempt to Calculate a Yield where the first 'reduced' Interest Rate Period falls before the Previous
+     * Period Rate Effective From Period, then we do not have a record of the Interest Rate to apply.
+     *
+     * How could this happen? Technically, highly unlikely I think, as time advances (the periods) doing a Yield
+     * Calculation with a long-ago 'from' period and a 'to' period that does not include any maturity is the only way.
+     * In practice, the 'to' period will almost always be 'today', meaning that avoiding maturity is highly unlikely.
+     * Basically, historical calculations are disallowed.  Also, IF Operations fails to set a 'reduced' Interest Rate
+     * for a long period, that may also be an issue.
+     *
+     * In any case, this test proves that the `TripleRateYieldStrategy` will revert any such attempts, causing no state
+     * change.
+     */
+    function test_TripleRateYieldStrategy_CalcYield_RevertWhen_FRRPEarlierThanPerviousPeriodRate() public {
+        // We set 2 Period Rates, so any 'from' earlier than the Previous Period Rate Effective Period (at Period 31)
+        // will fail.
+        context.setReducedRate(PERCENT_5_5_SCALED, 31); // Previous Period Rate
+        context.setReducedRate(PERCENT_10_SCALED, 61); // Current Period Rate
+
+        // Then we attempt a yield calculation for a period range where the 'from' falls before the Previous Period Rate
+        // Effective Period. This is only possible if historical Yield Calculations are possible. If the
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TripleRateYieldStrategy.TripleRateYieldStrategy_DepositPeriodOutsideInterestRatePeriodRange.selector,
+                0,
+                31,
+                61
+            )
+        );
+        // 0-26 means no 'full' Interest Rate and 0 is the first 'reduced' Interest Rate Period.
+        yieldStrategy.calcYield(contextAddress, principal, 0, 26);
+    }
+
+    function test_TripleRateYieldStrategy_CalcPrice_WorksConsistently(uint256 periodsElapsed) public view {
+        // Limit Periods Elapsed to a conservative maximum of 274,000 years(!).
+        vm.assume(periodsElapsed < 100_000_000);
+
+        uint256 expectedPrice = CalcSimpleInterest.calcPriceFromInterest(
+            periodsElapsed, context.rateScaled(), context.frequency(), context.scale()
+        );
+        assertEq(
+            expectedPrice,
+            yieldStrategy.calcPrice(contextAddress, periodsElapsed),
+            string.concat("Incorrect Price for Elapsed Periods= ", vm.toString(periodsElapsed))
+        );
     }
 }
