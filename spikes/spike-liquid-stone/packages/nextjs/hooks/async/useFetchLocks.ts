@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { useReadContract } from "wagmi";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
 import { LockRow } from "~~/types/async";
 import { ethers } from "ethers";
 
-export const useFetchLockDatas = ({
+export const useFetchLocks = ({
     address,
     deployedContractAddress,
     deployedContractAbi,

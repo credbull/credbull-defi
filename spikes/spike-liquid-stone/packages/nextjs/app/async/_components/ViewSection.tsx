@@ -3,8 +3,11 @@
 import { useEffect, useState } from "react";
 import { Contract, ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
 import { useTheme } from "next-themes";
+
 import { useFetchContractData } from "~~/hooks/async/useFetchContractData";
-import { useFetchLockDatas } from "~~/hooks/async/useFetchLockDatas";
+import { useFetchLocks } from "~~/hooks/async/useFetchLocks";
+import { useFetchUnlockRequests } from "~~/hooks/async/useFetchUnlockRequests";
+
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 import { useChainId, useWriteContract } from "wagmi";
@@ -68,11 +71,20 @@ const ViewSection = ({
       dependencies: [refetch]
     });
 
-    const { lockDatas } = useFetchLockDatas({
+    const { lockDatas } = useFetchLocks({
         address: address || "",
         deployedContractAddress,
         deployedContractAbi,
         refetch,
+    });
+
+    const { unlockRequests } = useFetchUnlockRequests({
+        address: address || "",
+        deployedContractAddress,
+        deployedContractAbi,
+        currentPeriod,
+        noticePeriod,
+        refetch
     });
 
     const writeTxn = useTransactor();
@@ -149,7 +161,7 @@ const ViewSection = ({
                     <LoadingSpinner />
                     ) : (
                     <div className="flex flex-wrap gap-4">
-                        <ContractValueBadge name="Frequency" value={`${noticePeriod} days`} />
+                        <ContractValueBadge name="Notice Period" value={`${noticePeriod} days`} />
                         <ContractValueBadge name="Current Period" value={currentPeriod} />
                     </div>
                     )}
@@ -178,6 +190,30 @@ const ViewSection = ({
                             <td>{row.lockedAmount.toString()}</td>
                             <td>{row.maxRequestUnlock.toString()}</td>
                             <td>{row.unlockRequestAmount.toString()}</td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div
+                className={`${
+                    resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
+                } p-4 rounded-lg grid gap-3`}
+                >
+                    <h2 className="text-xl font-bold mb-4">Request ID Table</h2>
+                    <table className="table w-full">
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>Unlock Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {unlockRequests.map((row) => (
+                            <tr key={row.requestId}>
+                            <td>{row.requestId}</td>
+                            <td>{row.unlockAmount.toString()}</td>
                             </tr>
                         ))}
                         </tbody>

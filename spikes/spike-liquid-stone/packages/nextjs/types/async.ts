@@ -4,3 +4,8 @@ export type LockRow = {
     maxRequestUnlock: bigint;
     unlockRequestAmount: bigint;   
 };
+
+export type UnlockRequest = {
+    requestId: number;
+    unlockAmount: bigint;
+}
