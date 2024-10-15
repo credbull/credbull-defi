@@ -250,7 +250,7 @@ const ViewSection = ({
         >
           <h2 className="text-xl font-bold mb-4">Deposit Pools</h2>
           {pools.map((pool, index) => (
-            <DepositPoolCard key={index} pool={pool} onClickHandler={() => {}} />
+            <DepositPoolCard key={index} pool={pool} />
           ))}
         </div>
         <div

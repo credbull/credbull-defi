@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import ActionCard from "~~/components/general/ActionCard";
 import Button from "~~/components/general/Button";
 import ContractValueBadge from "~~/components/general/ContractValueBadge";
+import DateTimePicker from "~~/components/general/DateTimePicker";
 import Input from "~~/components/general/Input";
 import LoadingSpinner from "~~/components/general/LoadingSpinner";
 import { useFetchAdminData } from "~~/hooks/custom/useFetchAdminData";
@@ -28,12 +29,20 @@ const HelpersInterface: NextPage = () => {
   const [grantRoleTrxLoading, setGrantRoleTrxLoading] = useState(false);
   const [revokeRoleTrxLoading, setRevokeRoleTrxLoading] = useState(false);
   const [periodTrxLoading, setPeriodTrxLoading] = useState(false);
+  const [timestampTrxLoading, setTimestampTrxLoading] = useState(false);
+  const [reducedRateTrxLoading, setReducedRateTrxLoading] = useState(false);
   const [withdrawTrxLoading, setWithdrawTrxLoading] = useState(false);
 
   const [userAccountToGrant, setUserAccountToGrant] = useState("");
   const [userAccountToRevoke, setUserAccountToRevoke] = useState("");
   const [numOfPeriods, setNumOfPeriods] = useState("");
   const [assets, setAssets] = useState("");
+  const [reducedRate, setReducedRate] = useState("");
+  const [effectivePeriod, setEffectivePeriod] = useState("");
+
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null);
+  const [useCurrentPeriod, setUseCurrentPeriod] = useState(false);
 
   const contractNames = Object.keys(contractsData) as ContractName[];
   const { data: simpleUsdcContractData } = useDeployedContractInfo(contractNames[0]);
@@ -44,7 +53,6 @@ const HelpersInterface: NextPage = () => {
   const { data: proxyContractData, isLoading: proxyContractLoading } = useDeployedContractInfo(contractNames[4]);
 
   const adminPrivateKey = process.env.NEXT_PUBLIC_ADMIN_PRIVATE_KEY || "";
-  const adminAccount = process.env.NEXT_PUBLIC_ADMIN_ACCOUNT || "";
   const operatorPrivateKey = process.env.NEXT_PUBLIC_OPERATOR_PRIVATE_KEY || "";
   const custodian = process.env.NEXT_PUBLIC_CUSTODIAN || "";
 
@@ -171,7 +179,7 @@ const HelpersInterface: NextPage = () => {
   };
 
   const handleSetPeriod = async (directionIndex: number) => {
-    if (!numOfPeriods || !adminAccount || !operatorSigner) {
+    if (!numOfPeriods || !operatorSigner) {
       notification.error("Missing required fields");
       return;
     }
@@ -222,6 +230,74 @@ const HelpersInterface: NextPage = () => {
     }
   };
 
+  const handleSetTimestamp = async () => {
+    if (!selectedTimestamp || !operatorSigner) {
+      notification.error("Missing required fields");
+      return;
+    }
+
+    const currentTimeStamp = Math.floor(Date.now() / 1000);
+
+    if (selectedTimestamp > currentTimeStamp) {
+      notification.error("Cannot move backward beyond the vault's start time.");
+      setTimestampTrxLoading(false);
+      return;
+    }
+
+    try {
+      setTimestampTrxLoading(true);
+      const deployedContract = new ethers.Contract(
+        proxyContractData?.address || "",
+        implementationContractData?.abi || [],
+        operatorSigner,
+      );
+
+      const tx = await deployedContract?.setVaultStartTimestamp(selectedTimestamp);
+      notification.info(`Transaction submitted`);
+      const receipt = await tx.wait();
+      if (receipt) {
+        notification.success("Transaction confirmed");
+        setTimestampTrxLoading(false);
+      }
+
+      setRefetch(prev => !prev);
+    } catch (error) {
+      notification.error(`Error: ${error}`);
+      setTimestampTrxLoading(false);
+    }
+  };
+
+  const handleSetReducedRate = async () => {
+    if (!reducedRate || !effectivePeriod || !operatorSigner) {
+      notification.error("Missing required fields");
+      return;
+    }
+
+    try {
+      setReducedRateTrxLoading(true);
+      const deployedContract = new ethers.Contract(
+        proxyContractData?.address || "",
+        implementationContractData?.abi || [],
+        operatorSigner,
+      );
+
+      const tx = await deployedContract?.setReducedRate(ethers.parseUnits(reducedRate, 6), effectivePeriod);
+      notification.info(`Transaction submitted`);
+      const receipt = await tx.wait();
+      if (receipt) {
+        notification.success("Transaction confirmed");
+        setReducedRateTrxLoading(false);
+      }
+
+      setReducedRate("");
+      setEffectivePeriod("");
+      setRefetch(prev => !prev);
+    } catch (error) {
+      notification.error(`Error: ${error}`);
+      setReducedRateTrxLoading(false);
+    }
+  };
+
   const handleWithdraw = async (withdrawType: number) => {
     if (!custodian || !proxyContractData || !simpleUsdcContractData || !operatorSigner) {
       notification.error("Missing required fields");
@@ -253,8 +329,6 @@ const HelpersInterface: NextPage = () => {
         notification.error("No assets to withdraw");
         return;
       }
-
-      const custodianBalance = await simpleUsdcContract.balanceOf(custodian);
 
       const amountToWithdraw = !withdrawType ? ethers.parseUnits(assets?.toString(), 6) : vaultBalance;
 
@@ -294,6 +368,16 @@ const HelpersInterface: NextPage = () => {
   if (!mounted) {
     return <LoadingSpinner />;
   }
+
+  // Toggling between using the current period or enabling input
+  const handleToggle = () => {
+    setUseCurrentPeriod(!useCurrentPeriod);
+    if (!useCurrentPeriod) {
+      setEffectivePeriod(currentPeriod.toString()); // Set effectivePeriod to currentPeriod
+    } else {
+      setEffectivePeriod(""); // Reset effectivePeriod
+    }
+  };
 
   return (
     <>
@@ -389,6 +473,77 @@ const HelpersInterface: NextPage = () => {
                       tooltipData="Go forward by a number of periods"
                       flex="flex-1"
                       onClickHandler={() => handleSetPeriod(1)}
+                    />
+                  </>
+                )}
+              </div>
+            </ActionCard>
+            <ActionCard>
+              <h2 className="text-xl font-bold mb-4">Set Timestamp</h2>
+
+              <DateTimePicker
+                selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
+                setSelectedTimestamp={setSelectedTimestamp}
+                resolvedTheme={resolvedTheme || ""}
+              />
+
+              <div className="flex flex-row gap-2 justify-between">
+                {timestampTrxLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <Button
+                      text="Set Timestamp"
+                      bgColor="blue"
+                      tooltipData="Set the start timestamp for the vault"
+                      flex="flex-1"
+                      onClickHandler={handleSetTimestamp}
+                    />
+                  </>
+                )}
+              </div>
+            </ActionCard>
+            <ActionCard>
+              <div className="flex justify-between mb-4">
+                <h2 className="text-xl font-bold">Set Reduced Rate</h2>
+
+                <div className="flex justify-between gap-2">
+                  <small className="m-0">Use Current Period</small>
+                  <input
+                    id="theme-toggle"
+                    type="checkbox"
+                    className="toggle toggle-primary bg-primary hover:bg-primary border-primary"
+                    onChange={handleToggle}
+                    checked={useCurrentPeriod}
+                  />
+                </div>
+              </div>
+              <Input
+                type="text"
+                value={reducedRate}
+                placeholder="Enter Reduced Rate"
+                onChangeHandler={value => setReducedRate(value)}
+              />
+              <Input
+                type="text"
+                value={effectivePeriod}
+                placeholder="Enter Period Effective"
+                disabled={useCurrentPeriod}
+                onChangeHandler={value => setEffectivePeriod(value)}
+              />
+
+              <div className="flex flex-row gap-2 justify-between">
+                {reducedRateTrxLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <Button
+                      text="Set Reduced Rate"
+                      bgColor="blue"
+                      tooltipData="Set the reduced rate with the effective period"
+                      flex="flex-1"
+                      onClickHandler={handleSetReducedRate}
                     />
                   </>
                 )}
