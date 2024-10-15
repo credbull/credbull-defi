@@ -300,7 +300,7 @@ abstract contract MultiTokenVault is
         uint256 assets,
         uint256 shares
     ) internal virtual nonReentrant {
-        if (caller != owner && isApprovedForAll(owner, caller)) {
+        if (caller != owner && !isApprovedForAll(owner, caller)) {
             revert MultiTokenVault__CallerMissingApprovalForAll(caller, owner);
         }
 
