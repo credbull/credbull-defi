@@ -11,12 +11,14 @@ import { useFetchRequestDetails } from "~~/hooks/async/useFetchRequestDetails";
 
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
-import { useChainId, useWriteContract } from "wagmi";
+import { useWriteContract } from "wagmi";
 import LoadingSpinner from "../../../components/general/LoadingSpinner";
 import ContractValueBadge from "../../../components/general/ContractValueBadge";
 import ActionCard from "~~/components/general/ActionCard";
 import Input from "../../../components/general/Input";
 import Button from "../../../components/general/Button";
+
+import LockAction from "./LockAction";
 
 const ViewSection = ({
     address,
@@ -34,9 +36,6 @@ const ViewSection = ({
     const [refetch, setRefetch] = useState(false);
 
     // Action Values
-    // LockedAmount State Variables
-    const [lockAmount, setLockAmount] = useState("");
-    const [lockDepositPeriod, setLockDepositPeriod] = useState("");
     // RequestUnlock State Variables
     const [inputPairs, setInputPairs] = useState([{ period: "", amount: "" }]);
 
@@ -104,32 +103,6 @@ const ViewSection = ({
     const writeTxn = useTransactor();
     const { writeContractAsync } = useWriteContract();
 
-    const handleLock = async () => {
-        if (!address || !lockAmount || !lockDepositPeriod) {
-            notification.error("Missing required fields");
-            return;
-        }
-
-        try {
-            const makeLockWithParams = () => writeContractAsync({
-                address: deployedContractAddress,
-                abi: deployedContractAbi,
-                functionName: "lock",
-                args: [
-                  address,
-                  BigInt(lockDepositPeriod),
-                  BigInt(lockAmount),
-                ],
-            });
-
-            writeTxn(makeLockWithParams).then(data => {
-                console.log("setting refresh", data);
-                setRefetch(prev => !prev);
-            });
-        } catch (error) {
-            console.error("Error handleLock:", error);    
-        }
-    }
 
     const handleUnlockRequest = async () => {
         try {
@@ -293,26 +266,12 @@ const ViewSection = ({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Lock */}
-                <ActionCard key="0">
-                    <h2 className="text-xl font-bold mb-4">Lock</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <Input
-                            type="text"
-                            value={lockDepositPeriod}
-                            placeholder="Enter Deposit Period"
-                            onChangeHandler={value => setLockDepositPeriod(value)}
-                        />
-                        <Input
-                            type="text"
-                            value={lockAmount}
-                            placeholder="Enter Lock Amount"
-                            onChangeHandler={value => setLockAmount(value)}
-                        />
-                    </div>
-
-                    <Button text="Lock" bgColor="blue" onClickHandler={handleLock} />
-
-                </ActionCard>
+                <LockAction
+                    address={address}
+                    deployedContractAddress={deployedContractAddress}
+                    deployedContractAbi={deployedContractAbi}
+                    onRefetch={() => setRefetch((prev) => !prev)}
+                />
                 {/* Request Unlock */}
                 <ActionCard key="1">
                     <h2 className="text-xl font-bold mb-4">Request Unlock</h2>
