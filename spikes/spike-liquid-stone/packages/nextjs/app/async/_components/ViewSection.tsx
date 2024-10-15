@@ -19,6 +19,7 @@ import Input from "../../../components/general/Input";
 import Button from "../../../components/general/Button";
 
 import LockAction from "./LockAction";
+import RequestUnlockAction from "./RequestUnlockAction";
 
 const ViewSection = ({
     address,
@@ -36,34 +37,10 @@ const ViewSection = ({
     const [refetch, setRefetch] = useState(false);
 
     // Action Values
-    // RequestUnlock State Variables
-    const [inputPairs, setInputPairs] = useState([{ period: "", amount: "" }]);
-
-    const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
-
     // Unlock State Variables
     const [requestId, setRequestId] = useState("");
 
-    // Action events for request unlock
-    const handleInputChange = (
-        index: number,
-        field: "period" | "amount", // Union type for field
-        value: string
-    ) => {
-        const updatedPairs = [...inputPairs];
-        updatedPairs[index][field] = value;
-        setInputPairs(updatedPairs);
-    };
-
-    const handleAddInput = () => {
-        setInputPairs([...inputPairs, { period: "", amount: "" }]);
-    };
-    
-    const handleRemoveInput = () => {
-    if (inputPairs.length > 1) {
-        setInputPairs(inputPairs.slice(0, -1));
-    }
-    };
+    const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -102,37 +79,6 @@ const ViewSection = ({
 
     const writeTxn = useTransactor();
     const { writeContractAsync } = useWriteContract();
-
-
-    const handleUnlockRequest = async () => {
-        try {
-            if (!address) {
-                notification.error("Missing required fields");
-                return;
-            }
-
-            const depositPeriodsForUnlockRequest = inputPairs.map((pair) => BigInt(pair.period));
-            const amountsForUnlockRequest = inputPairs.map((pair) => BigInt(pair.amount));
-
-            const makeUnlockRequestWithParams = () => writeContractAsync({
-                address: deployedContractAddress,
-                abi: deployedContractAbi,
-                functionName: "requestUnlock",
-                args: [
-                  address,
-                  depositPeriodsForUnlockRequest,
-                  amountsForUnlockRequest,
-                ],
-            });
-
-            writeTxn(makeUnlockRequestWithParams).then(data => {
-                console.log("setting refresh", data);
-                setRefetch(prev => !prev);
-            });
-        } catch (error) {
-            console.error("Error handleUnlockRequest:", error);    
-        }
-    }
 
     const handleUnlock = async () => {
         try {
@@ -273,32 +219,12 @@ const ViewSection = ({
                     onRefetch={() => setRefetch((prev) => !prev)}
                 />
                 {/* Request Unlock */}
-                <ActionCard key="1">
-                    <h2 className="text-xl font-bold mb-4">Request Unlock</h2>
-                    {inputPairs.map((pair, index) => (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3" key={index}>
-                            <Input
-                                type="text"
-                                value={pair.period}
-                                placeholder="Enter Deposit Period"
-                                onChangeHandler={value => handleInputChange(index, "period", value)}
-                            />
-                            <Input
-                                type="text"
-                                value={pair.amount}
-                                placeholder="Enter Amount"
-                                onChangeHandler={value => handleInputChange(index, "amount", value)}
-                            />
-                        </div>
-                    ))}
-
-                    <div className="flex items-center gap-4 mb-4">
-                        <Button text="+ Add Input" bgColor="green" onClickHandler={handleAddInput} />
-                        <Button text="- Remove Input" bgColor="yellow" onClickHandler={handleRemoveInput} />
-                    </div>
-
-                    <Button text="Request Unlock" bgColor="blue" onClickHandler={handleUnlockRequest} />
-                </ActionCard>
+                <RequestUnlockAction
+                    address={address}
+                    deployedContractAddress={deployedContractAddress}
+                    deployedContractAbi={deployedContractAbi}
+                    onRefetch={() => setRefetch((prev) => !prev)}
+                />
                 {/* Unlock */}
                 <ActionCard key="2">
                     <h2 className="text-xl font-bold mb-4">Unlock</h2>

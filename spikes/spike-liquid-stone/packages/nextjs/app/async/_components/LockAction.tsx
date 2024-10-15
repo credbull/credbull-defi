@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useWriteContract } from "wagmi";
