@@ -30,7 +30,7 @@ jobs:
           version: nightly
 
       - name: Run tests
-        run: forge clean && forge test -vvv
+        run: forge test -vvv
         env:
           ENVIRONMENT: local
 
