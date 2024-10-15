@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SectionHeader from "./_components/SectionHeader";
 import { ethers } from "ethers";
 import type { NextPage } from "next";
 import { useTheme } from "next-themes";
@@ -54,11 +55,13 @@ const HelpersInterface: NextPage = () => {
 
   const adminPrivateKey = process.env.NEXT_PUBLIC_ADMIN_PRIVATE_KEY || "";
   const operatorPrivateKey = process.env.NEXT_PUBLIC_OPERATOR_PRIVATE_KEY || "";
+  const assetManagerPrivateKey = process.env.NEXT_PUBLIC_ASSET_MANAGER_PRIVATE_KEY || "";
   const custodian = process.env.NEXT_PUBLIC_CUSTODIAN || "";
 
   const provider = new ethers.JsonRpcProvider("http://localhost:8545");
   const adminSigner = new ethers.Wallet(adminPrivateKey, provider);
   const operatorSigner = new ethers.Wallet(operatorPrivateKey, provider);
+  const assetManagerSigner = new ethers.Wallet(assetManagerPrivateKey, provider);
 
   const { currentPeriod } = useFetchContractData({
     deployedContractAddress: proxyContractData?.address || "",
@@ -76,9 +79,12 @@ const HelpersInterface: NextPage = () => {
     operatorRoleMembers,
     upgraderRoleCount,
     upgraderRoleMembers,
+    assetManagerRoleCount,
+    assetManagerRoleMembers,
     fetchingAdmins,
     fetchingOperators,
     fetchingUpgraders,
+    fetchingAssetManagers,
   } = useFetchAdminData({
     custodian: custodian,
     deployedContractAddress: proxyContractData?.address || "",
@@ -113,6 +119,9 @@ const HelpersInterface: NextPage = () => {
           break;
         case 1:
           role = await deployedContract?.UPGRADER_ROLE();
+          break;
+        case 2:
+          role = await deployedContract?.ASSET_MANAGER_ROLE();
           break;
         default:
           role = await deployedContract?.OPERATOR_ROLE();
@@ -156,6 +165,9 @@ const HelpersInterface: NextPage = () => {
           break;
         case 1:
           role = await deployedContract?.UPGRADER_ROLE();
+          break;
+        case 2:
+          role = await deployedContract?.ASSET_MANAGER_ROLE();
           break;
         default:
           role = await deployedContract?.OPERATOR_ROLE();
@@ -299,7 +311,7 @@ const HelpersInterface: NextPage = () => {
   };
 
   const handleWithdraw = async (withdrawType: number) => {
-    if (!custodian || !proxyContractData || !simpleUsdcContractData || !operatorSigner) {
+    if (!custodian || !proxyContractData || !simpleUsdcContractData || !assetManagerSigner) {
       notification.error("Missing required fields");
       return;
     }
@@ -315,13 +327,13 @@ const HelpersInterface: NextPage = () => {
       const deployedContract = new ethers.Contract(
         proxyContractData?.address || "",
         implementationContractData?.abi || [],
-        operatorSigner,
+        assetManagerSigner,
       );
 
       const simpleUsdcContract = new ethers.Contract(
         simpleUsdcContractData?.address || "",
         simpleUsdcContractData?.abi || [],
-        operatorSigner,
+        assetManagerSigner,
       );
 
       const vaultBalance = await simpleUsdcContract.balanceOf(proxyContractData?.address);
@@ -383,7 +395,9 @@ const HelpersInterface: NextPage = () => {
     <>
       <div className="main-container mt-8 p-2">
         <div className={`container mx-auto p-6 ${resolvedTheme === "dark" ? "text-white" : "text-black"}`}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Admin Actions */}
+          <SectionHeader title="Admin Section" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             <ActionCard>
               <h2 className="text-xl font-bold mb-4">Grant Roles</h2>
               <Input
@@ -410,6 +424,13 @@ const HelpersInterface: NextPage = () => {
                       tooltipData="Grant upgrader role"
                       flex="flex-1"
                       onClickHandler={() => handleGrantRole(1)}
+                    />
+                    <Button
+                      text="Asset Manager"
+                      bgColor="blue"
+                      tooltipData="Grant asset manager role"
+                      flex="flex-1"
+                      onClickHandler={() => handleGrantRole(2)}
                     />
                   </>
                 )}
@@ -442,10 +463,22 @@ const HelpersInterface: NextPage = () => {
                       flex="flex-1"
                       onClickHandler={() => handleRevokeRole(1)}
                     />
+                    <Button
+                      text="Asset Manager"
+                      bgColor="blue"
+                      tooltipData="Revoke asset manager role"
+                      flex="flex-1"
+                      onClickHandler={() => handleRevokeRole(2)}
+                    />
                   </>
                 )}
               </div>
             </ActionCard>
+          </div>
+
+          {/* Operator Actions */}
+          <SectionHeader title="Operator Section" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             <ActionCard>
               <h2 className="text-xl font-bold mb-4">Set Period</h2>
               <Input
@@ -549,6 +582,11 @@ const HelpersInterface: NextPage = () => {
                 )}
               </div>
             </ActionCard>
+          </div>
+
+          {/* AssetManager Actions */}
+          <SectionHeader title="Asset Manager Section" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             <ActionCard>
               <h2 className="text-xl font-bold mb-4">Withdraw Funds</h2>
               <Input
@@ -583,6 +621,7 @@ const HelpersInterface: NextPage = () => {
             </ActionCard>
           </div>
 
+          <SectionHeader title="Data Section" />
           <div
             className={`${
               resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
@@ -683,6 +722,37 @@ const HelpersInterface: NextPage = () => {
                       <ul className="list-disc list-inside space-y-2">
                         {upgraderRoleMembers.length > 0 ? (
                           upgraderRoleMembers.map((member, index) => (
+                            <li
+                              key={index}
+                              className="text-gray-700 cursor-pointer"
+                              onClick={() => handleCopyToClipboard(member)}
+                            >
+                              <p className="m-0 tooltip tooltip-bottom tooltip-accent" data-tip={`${member} (Copy)`}>
+                                {formatAddress(member)}
+                              </p>
+                            </li>
+                          ))
+                        ) : (
+                          <p className="text-gray-500">No Upgraders found.</p>
+                        )}
+                      </ul>
+                    )}
+                  </div>
+
+                  {/* AssetManagers Section */}
+                  <div className="flex-1 bg-green p-4 rounded-lg shadow-sm">
+                    <h1 className="mb-4">
+                      <span className="text-xl font-bold text-blue-600">Asset Managers</span> &nbsp;&nbsp;{" "}
+                      <small>
+                        <ContractValueBadge name="Count" value={assetManagerRoleCount} />
+                      </small>
+                    </h1>
+                    {fetchingAssetManagers ? (
+                      <LoadingSpinner />
+                    ) : (
+                      <ul className="list-disc list-inside space-y-2">
+                        {assetManagerRoleMembers.length > 0 ? (
+                          assetManagerRoleMembers.map((member, index) => (
                             <li
                               key={index}
                               className="text-gray-700 cursor-pointer"
