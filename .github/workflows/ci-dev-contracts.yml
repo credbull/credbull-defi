@@ -28,6 +28,19 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+      - name: Install yarn
+        run: |
+          corepack prepare yarn@stable --activate
+          npm install -g yarn
+  
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "yarn"
+  
+      - name: Install dependencies
+        run: yarn install
 
       - name: Run tests
         run: forge test -vvv
