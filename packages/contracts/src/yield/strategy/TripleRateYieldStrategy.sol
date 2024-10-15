@@ -95,8 +95,9 @@ contract TripleRateYieldStrategy is YieldStrategy {
             }
             // Timeline: 1st Reduced Rate Period -> Previous Period Rate -> Current Period Rate -> To Period
             // If the FRRP is before the previous Period Rate, then we have what should be an impossible operational
-            // scenario. We cannot determine what Rate to apply, because we would have to track the Period Rate before
-            // the Previous Period Rate, which is not within the scope of this realisation.
+            // scenario. We cannot determine what Interest Rate to apply, because we would have to track the Period Rate
+            // before the Previous Period Rate, which is not within the scope of this realisation. Also, historical
+            // calculations are not supported.
             else {
                 revert TripleRateYieldStrategy_DepositPeriodOutsideInterestRatePeriodRange(
                     firstReducedRatePeriod,
