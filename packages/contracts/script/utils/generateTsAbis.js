@@ -20,7 +20,11 @@ function getFiles(path) {
 }
 function getArtifactOfContract(contractName) {
   let artifactJson;
-  if (['SimpleToken', 'SimpleUSDC', 'SimpleVault', 'ERC1155MintableBurnable', 'SimpleTimelockAsyncUnlock'].includes(contractName)) {
+  if (
+    ['SimpleToken', 'SimpleUSDC', 'SimpleVault', 'ERC1155MintableBurnable', 'SimpleTimelockAsyncUnlock'].includes(
+      contractName,
+    )
+  ) {
     const current_path_to_artifacts = path.join(__dirname, '../..', `out/${contractName}.t.sol`);
     artifactJson = JSON.parse(fs.readFileSync(`${current_path_to_artifacts}/${contractName}.json`));
   } else {
@@ -104,8 +108,8 @@ function main() {
         name: contractName,
         address: transaction.contractAddress,
       };
-      
-      mapContractNames[contractName] += 1; 
+
+      mapContractNames[contractName] += 1;
     });
 
     Object.values(mapContracts).forEach((contract) => {
