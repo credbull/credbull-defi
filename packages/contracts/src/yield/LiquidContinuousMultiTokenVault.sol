@@ -342,10 +342,10 @@ contract LiquidContinuousMultiTokenVault is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(MultiTokenVault, AccessControlEnumerableUpgradeable)
+        override(MultiTokenVault, AccessControlEnumerableUpgradeable, TimelockAsyncUnlock)
         returns (bool)
     {
-        return MultiTokenVault.supportsInterface(interfaceId);
+        return TimelockAsyncUnlock.supportsInterface(interfaceId) || MultiTokenVault.supportsInterface(interfaceId);
     }
 
     function getVersion() public pure returns (uint256 version) {
