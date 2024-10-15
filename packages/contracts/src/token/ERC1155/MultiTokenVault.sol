@@ -319,6 +319,8 @@ abstract contract MultiTokenVault is
      */
     function _withdrawAssest(address to, uint256 amount) internal virtual {
         ASSET.safeTransfer(to, amount);
+
+        emit AssetTransfer(_msgSender(), to, asset(), amount);
     }
 
     /**

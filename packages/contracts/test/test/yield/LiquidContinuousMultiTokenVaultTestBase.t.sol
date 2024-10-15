@@ -21,7 +21,8 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     LiquidContinuousMultiTokenVault.VaultAuth internal _vaultAuth = LiquidContinuousMultiTokenVault.VaultAuth({
         owner: makeAddr("owner"),
         operator: makeAddr("operator"),
-        upgrader: makeAddr("upgrader")
+        upgrader: makeAddr("upgrader"),
+        assetManager: makeAddr("assetManager")
     });
 
     IERC20Metadata internal _asset;
@@ -169,6 +170,10 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
     function getUpgrader() public view returns (address) {
         return _vaultAuth.upgrader;
+    }
+
+    function getAssetManager() public view returns (address) {
+        return _vaultAuth.assetManager;
     }
 }
 

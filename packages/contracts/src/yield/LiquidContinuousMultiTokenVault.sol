@@ -48,6 +48,7 @@ contract LiquidContinuousMultiTokenVault is
         address owner;
         address operator;
         address upgrader;
+        address assetManager;
     }
 
     struct VaultParams {
@@ -68,6 +69,7 @@ contract LiquidContinuousMultiTokenVault is
 
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+    bytes32 public constant ASSET_MANAGER_ROLE = keccak256("ASSET_MANAGER_ROLE");
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidAuthAddress(string authName, address authAddress);
@@ -91,6 +93,7 @@ contract LiquidContinuousMultiTokenVault is
         _initRole("owner", DEFAULT_ADMIN_ROLE, vaultParams.vaultAuth.owner);
         _initRole("operator", OPERATOR_ROLE, vaultParams.vaultAuth.operator);
         _initRole("upgrader", UPGRADER_ROLE, vaultParams.vaultAuth.upgrader);
+        _initRole("assetManager", ASSET_MANAGER_ROLE, vaultParams.vaultAuth.assetManager);
 
         _yieldStrategy = vaultParams.yieldStrategy;
         _redeemOptimizer = vaultParams.redeemOptimizer;
@@ -275,13 +278,13 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     /**
-     * @dev Withdraws the assets from the vault to the custodian.
-     * Only the Operator can call this function.
+     * @dev Withdraws the assets from out of vault for investment, i.e. in RWA.
+     * Only the Asset Manager can call this function.
      *
-     * @param to The address that will receive the assets. Custodian wallet.
+     * @param to The trusted address that will receive the assets, e.g. custodian
      * @param amount The amount of the ERC-20 underlying assets to be withdrawn from the vault.
      */
-    function withdrawAsset(address to, uint256 amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function withdrawAsset(address to, uint256 amount) public onlyRole(ASSET_MANAGER_ROLE) {
         _withdrawAssest(to, amount);
     }
 

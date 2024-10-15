@@ -92,7 +92,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         LiquidContinuousMultiTokenVault liquidVault = _liquidVault; // _createLiquidContinueMultiTokenVault(_vaultParams);
 
         TestParam memory testParams = TestParam({ principal: 2_000 * _scale, depositPeriod: 10, redeemPeriod: 70 });
-        address owner = getOwner();
+        address assetManager = getAssetManager();
 
         // ---------------- buy (deposit) ----------------
         _warpToPeriod(liquidVault, testParams.depositPeriod);
@@ -118,27 +118,27 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             "vault should have the principal worth of assets"
         );
 
-        uint256 ownerStartBalance = _asset.balanceOf(owner);
+        uint256 assetManagerStartBalance = _asset.balanceOf(assetManager);
         uint256 vaultStartBalance = _asset.balanceOf(address(liquidVault));
 
         // ---------------- WithdrawAssetFrom Vault ----------------
-        vm.prank(owner);
-        liquidVault.withdrawAsset(owner, vaultStartBalance);
+        vm.prank(assetManager);
+        liquidVault.withdrawAsset(assetManager, vaultStartBalance);
 
-        //Assert balance of owner
-        assertEq(ownerStartBalance + vaultStartBalance, _asset.balanceOf(getOwner()));
+        //assert balance
+        assertEq(assetManagerStartBalance + vaultStartBalance, _asset.balanceOf(assetManager));
     }
 
     function test__LiquidContinuousVaultTest__ShouldRevertWithdrawAssetIfNotOwner() public {
         LiquidContinuousMultiTokenVault liquidVault = _liquidVault;
-        address operator = getOperator();
-        vm.startPrank(operator);
+        address randomWallet = makeAddr("randomWallet");
+        vm.startPrank(randomWallet);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector, operator, liquidVault.DEFAULT_ADMIN_ROLE()
+                IAccessControl.AccessControlUnauthorizedAccount.selector, randomWallet, liquidVault.ASSET_MANAGER_ROLE()
             )
         );
-        liquidVault.withdrawAsset(operator, 1000);
+        liquidVault.withdrawAsset(randomWallet, 1000);
         vm.stopPrank();
     }
 
