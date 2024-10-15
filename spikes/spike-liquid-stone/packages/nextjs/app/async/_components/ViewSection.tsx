@@ -38,6 +38,8 @@ const ViewSection = ({
     const [lockDepositPeriod, setLockDepositPeriod] = useState("");
     // RequestUnlock State Variables
     const [inputPairs, setInputPairs] = useState([{ period: "", amount: "" }]);
+    // Unlock State Variables
+    const [requestId, setRequestId] = useState("");
 
     // Action events for request unlock
     const handleInputChange = (
@@ -223,7 +225,7 @@ const ViewSection = ({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Lock */}
-                <ActionCard>
+                <ActionCard key="0">
                     <h2 className="text-xl font-bold mb-4">Lock</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <Input
@@ -244,10 +246,10 @@ const ViewSection = ({
 
                 </ActionCard>
                 {/* Request Unlock */}
-                <ActionCard>
+                <ActionCard key="1">
                     <h2 className="text-xl font-bold mb-4">Request Unlock</h2>
                     {inputPairs.map((pair, index) => (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3" key={index}>
                             <Input
                                 type="text"
                                 value={pair.period}
@@ -271,8 +273,15 @@ const ViewSection = ({
                     <Button text="Request Unlock" bgColor="blue" onClickHandler={handleUnlockRequest} />
                 </ActionCard>
                 {/* Unlock */}
-                <ActionCard>
+                <ActionCard key="2">
                     <h2 className="text-xl font-bold mb-4">Unlock</h2>
+                    <Input
+                        type="text"
+                        value={requestId}
+                        placeholder="Enter Request ID"
+                        onChangeHandler={value => setRequestId(value)}  
+                    />
+                    <Button text="Unlock" bgColor="blue" onClickHandler={handleUnlockRequest} />
                 </ActionCard>
             </div>
         </div>
