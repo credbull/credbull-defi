@@ -117,8 +117,8 @@ const ViewSection = ({
                 functionName: "lock",
                 args: [
                   address,
-                  BigInt(lockDepositPeriod), // Convert to BigInt
-                  BigInt(lockAmount), // Convert to BigInt
+                  BigInt(lockDepositPeriod),
+                  BigInt(lockAmount),
                 ],
             });
 
@@ -141,23 +141,49 @@ const ViewSection = ({
             const depositPeriodsForUnlockRequest = inputPairs.map((pair) => BigInt(pair.period));
             const amountsForUnlockRequest = inputPairs.map((pair) => BigInt(pair.amount));
 
-            const makeLockWithParams = () => writeContractAsync({
+            const makeUnlockRequestWithParams = () => writeContractAsync({
                 address: deployedContractAddress,
                 abi: deployedContractAbi,
                 functionName: "requestUnlock",
                 args: [
                   address,
-                  depositPeriodsForUnlockRequest, // Convert to BigInt
-                  amountsForUnlockRequest, // Convert to BigInt
+                  depositPeriodsForUnlockRequest,
+                  amountsForUnlockRequest,
                 ],
             });
 
-            writeTxn(makeLockWithParams).then(data => {
+            writeTxn(makeUnlockRequestWithParams).then(data => {
                 console.log("setting refresh", data);
                 setRefetch(prev => !prev);
             });
         } catch (error) {
             console.error("Error handleUnlockRequest:", error);    
+        }
+    }
+
+    const handleUnlock = async () => {
+        try {
+            if (!address || !requestId) {
+                notification.error("Missing required fields");
+                return;
+            }
+
+            const makeUnlockWithParams = () => writeContractAsync({
+                address: deployedContractAddress,
+                abi: deployedContractAbi,
+                functionName: "unlock",
+                args: [
+                    address,
+                    BigInt(requestId)
+                ],
+            });
+
+            writeTxn(makeUnlockWithParams).then(data => {
+                console.log("setting refresh", data);
+                setRefetch(prev => !prev);
+            });
+        } catch (error) {
+            console.error("Error handleUnlock:", error);    
         }
     }
 
@@ -323,7 +349,7 @@ const ViewSection = ({
                         placeholder="Enter Request ID"
                         onChangeHandler={value => setRequestId(value)}  
                     />
-                    <Button text="Unlock" bgColor="blue" onClickHandler={handleUnlockRequest} />
+                    <Button text="Unlock" bgColor="blue" onClickHandler={handleUnlock} />
                 </ActionCard>
             </div>
         </div>
