@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Contract, ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
+import { ContractAbi } from "~~/utils/scaffold-eth/contract";
 import { useTheme } from "next-themes";
 
 import { useFetchContractData } from "~~/hooks/async/useFetchContractData";
@@ -9,17 +9,12 @@ import { useFetchLocks } from "~~/hooks/async/useFetchLocks";
 import { useFetchUnlockRequests } from "~~/hooks/async/useFetchUnlockRequests";
 import { useFetchRequestDetails } from "~~/hooks/async/useFetchRequestDetails";
 
-import { useTransactor } from "~~/hooks/scaffold-eth";
-import { notification } from "~~/utils/scaffold-eth";
-import { useWriteContract } from "wagmi";
 import LoadingSpinner from "../../../components/general/LoadingSpinner";
 import ContractValueBadge from "../../../components/general/ContractValueBadge";
-import ActionCard from "~~/components/general/ActionCard";
-import Input from "../../../components/general/Input";
-import Button from "../../../components/general/Button";
 
 import LockAction from "./LockAction";
 import RequestUnlockAction from "./RequestUnlockAction";
+import UnlockAction from "./UnlockAction";
 
 const ViewSection = ({
     address,
@@ -37,9 +32,6 @@ const ViewSection = ({
     const [refetch, setRefetch] = useState(false);
 
     // Action Values
-    // Unlock State Variables
-    const [requestId, setRequestId] = useState("");
-
     const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
 
     useEffect(() => {
@@ -76,35 +68,6 @@ const ViewSection = ({
         requestId: selectedRequestId,
         refetch
     });
-
-    const writeTxn = useTransactor();
-    const { writeContractAsync } = useWriteContract();
-
-    const handleUnlock = async () => {
-        try {
-            if (!address || !requestId) {
-                notification.error("Missing required fields");
-                return;
-            }
-
-            const makeUnlockWithParams = () => writeContractAsync({
-                address: deployedContractAddress,
-                abi: deployedContractAbi,
-                functionName: "unlock",
-                args: [
-                    address,
-                    BigInt(requestId)
-                ],
-            });
-
-            writeTxn(makeUnlockWithParams).then(data => {
-                console.log("setting refresh", data);
-                setRefetch(prev => !prev);
-            });
-        } catch (error) {
-            console.error("Error handleUnlock:", error);    
-        }
-    }
 
     if (!mounted) {
         return <LoadingSpinner />;
@@ -226,16 +189,12 @@ const ViewSection = ({
                     onRefetch={() => setRefetch((prev) => !prev)}
                 />
                 {/* Unlock */}
-                <ActionCard key="2">
-                    <h2 className="text-xl font-bold mb-4">Unlock</h2>
-                    <Input
-                        type="text"
-                        value={requestId}
-                        placeholder="Enter Request ID"
-                        onChangeHandler={value => setRequestId(value)}  
-                    />
-                    <Button text="Unlock" bgColor="blue" onClickHandler={handleUnlock} />
-                </ActionCard>
+                <UnlockAction
+                    address={address}
+                    deployedContractAddress={deployedContractAddress}
+                    deployedContractAbi={deployedContractAbi}
+                    onRefetch={() => setRefetch((prev) => !prev)}
+                />
             </div>
         </div>
     );
