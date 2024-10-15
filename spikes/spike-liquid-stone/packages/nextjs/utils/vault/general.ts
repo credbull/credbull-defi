@@ -10,3 +10,10 @@ export const formatTimestamp = (timestamp: number) => {
 
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
+
+export const formatAddress = (address: string, chars = 6) => {
+  if (!address) return "";
+  const start = address.slice(0, chars);
+  const end = address.slice(-chars);
+  return `${start}...${end}`;
+};

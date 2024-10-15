@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
+import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultTestBase {
     function test__RequestRedeemTest__RedeemAtTenor() public {
@@ -85,6 +86,60 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             _asset.balanceOf(alice),
             "user should have received principal + yield back"
         );
+    }
+
+    function test__LiquidContinuousVaultTest__WithdrawAssetFromVault() public {
+        LiquidContinuousMultiTokenVault liquidVault = _liquidVault; // _createLiquidContinueMultiTokenVault(_vaultParams);
+
+        TestParam memory testParams = TestParam({ principal: 2_000 * _scale, depositPeriod: 10, redeemPeriod: 70 });
+        address assetManager = getAssetManager();
+
+        // ---------------- buy (deposit) ----------------
+        _warpToPeriod(liquidVault, testParams.depositPeriod);
+
+        vm.startPrank(alice);
+        _asset.approve(address(liquidVault), testParams.principal); // grant the vault allowance
+        liquidVault.requestBuy(testParams.principal);
+        vm.stopPrank();
+
+        assertEq(
+            testParams.principal,
+            _asset.balanceOf(address(liquidVault)),
+            "vault should have the principal worth of assets"
+        );
+        assertEq(
+            testParams.principal,
+            liquidVault.balanceOf(alice, testParams.depositPeriod),
+            "user should have principal worth of vault shares"
+        );
+        assertEq(
+            testParams.principal,
+            _asset.balanceOf(address(liquidVault)),
+            "vault should have the principal worth of assets"
+        );
+
+        uint256 assetManagerStartBalance = _asset.balanceOf(assetManager);
+        uint256 vaultStartBalance = _asset.balanceOf(address(liquidVault));
+
+        // ---------------- WithdrawAssetFrom Vault ----------------
+        vm.prank(assetManager);
+        liquidVault.withdrawAsset(assetManager, vaultStartBalance);
+
+        //assert balance
+        assertEq(assetManagerStartBalance + vaultStartBalance, _asset.balanceOf(assetManager));
+    }
+
+    function test__LiquidContinuousVaultTest__ShouldRevertWithdrawAssetIfNotOwner() public {
+        LiquidContinuousMultiTokenVault liquidVault = _liquidVault;
+        address randomWallet = makeAddr("randomWallet");
+        vm.startPrank(randomWallet);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, randomWallet, liquidVault.ASSET_MANAGER_ROLE()
+            )
+        );
+        liquidVault.withdrawAsset(randomWallet, 1000);
+        vm.stopPrank();
     }
 
     // Scenario: Calculating returns for a standard investment

@@ -218,7 +218,8 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
             LiquidContinuousMultiTokenVault.VaultAuth({
                 owner: makeAddr("owner"),
                 operator: zeroAddress,
-                upgrader: makeAddr("upgrader")
+                upgrader: makeAddr("upgrader"),
+                assetManager: makeAddr("assetManager")
             })
         );
 
@@ -238,7 +239,8 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
             LiquidContinuousMultiTokenVault.VaultAuth({
                 owner: makeAddr("owner"),
                 operator: makeAddr("operator"),
-                upgrader: zeroAddress
+                upgrader: zeroAddress,
+                assetManager: makeAddr("assetManager")
             })
         );
         vm.expectRevert(
@@ -250,6 +252,25 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         );
         new ERC1967Proxy(
             address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, paramsZeroUpgrader)
+        );
+
+        LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroAssetManager = _createVaultParams(
+            LiquidContinuousMultiTokenVault.VaultAuth({
+                owner: makeAddr("owner"),
+                operator: makeAddr("operator"),
+                upgrader: makeAddr("upgrader"),
+                assetManager: zeroAddress
+            })
+        );
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector,
+                "assetManager",
+                zeroAddress
+            )
+        );
+        new ERC1967Proxy(
+            address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, paramsZeroAssetManager)
         );
     }
 
