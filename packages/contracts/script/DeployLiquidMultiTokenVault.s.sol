@@ -20,6 +20,7 @@ import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { stdToml } from "forge-std/StdToml.sol";
 import { console2 } from "forge-std/console2.sol";
 import { Upgrades } from "@openzeppelin-foundry-upgrades/Upgrades.sol";
+import { Options } from "@openzeppelin-foundry-upgrades/Options.sol";
 
 contract DeployLiquidMultiTokenVault is TomlConfig {
     using stdToml for string;
@@ -65,23 +66,24 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
 
         vm.startBroadcast();
 
+        Options memory options;
+        /// @dev - Constrctors are added in the implementation contract to call _disableInitializer() method.
+        options.unsafeAllow = "constructor";
+
         address liquidVaultProxy = Upgrades.deployUUPSProxy(
             "LiquidContinuousMultiTokenVault.sol",
-            abi.encodeCall(LiquidContinuousMultiTokenVault.initialize, (vaultParams))
+            abi.encodeCall(LiquidContinuousMultiTokenVault.initialize, (vaultParams)),
+            options
         );
 
-        // LiquidContinuousMultiTokenVault liquidVaultImpl = new LiquidContinuousMultiTokenVault();
-        // console2.log(
-        //     string.concat(
-        //         "!!!!! Deploying LiquidContinuousMultiTokenVault Implementation [",
-        //         vm.toString(address(liquidVaultImpl)),
-        //         "] !!!!!"
-        //     )
-        // );
+        console2.log(
+            string.concat(
+                "!!!!! Deploying LiquidContinuousMultiTokenVault Implementation [",
+                vm.toString(Upgrades.getImplementationAddress(liquidVaultProxy)),
+                "] !!!!!"
+            )
+        );
 
-        // ERC1967Proxy liquidVaultProxy = new ERC1967Proxy(
-        //     address(liquidVaultImpl), abi.encodeWithSelector(liquidVaultImpl.initialize.selector, vaultParams)
-        // );
         console2.log(
             string.concat(
                 "!!!!! Deploying LiquidContinuousMultiTokenVault Proxy [",

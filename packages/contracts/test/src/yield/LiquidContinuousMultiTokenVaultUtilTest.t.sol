@@ -14,19 +14,13 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import { Upgrades } from "@openzeppelin-foundry-upgrades/Upgrades.sol";
+import { Options } from "openzeppelin-foundry-upgrades/Options.sol";
 
 // Tets relation to the Utility / operational aspects of the LiquidContinuousMultiTokenVault
 contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVaultTestBase {
     function test__LiquidContinuousMultiTokenVaultUtil__Upgradeability() public {
-        LiquidContinuousMultiTokenVaultMock vaultImpl = new LiquidContinuousMultiTokenVaultMock();
-        LiquidContinuousMultiTokenVaultMock vaultProxy = LiquidContinuousMultiTokenVaultMock(
-            address(
-                new ERC1967Proxy(
-                    address(vaultImpl),
-                    abi.encodeWithSelector(vaultImpl.mockInitialize.selector, _createVaultParams(_vaultAuth))
-                )
-            )
-        );
+        LiquidContinuousMultiTokenVaultMock vaultProxy = _deployProxyContract();
 
         IERC20Metadata asset = IERC20Metadata(vaultProxy.asset());
         uint256 scale = 10 ** asset.decimals();
@@ -48,13 +42,21 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
             "user should have principal worth of vault shares"
         );
 
-        //Upgrade contract
-        LiquidContinuousMultiTokenVaultMockV2 mockVaultV2 = new LiquidContinuousMultiTokenVaultMockV2();
+        Options memory upgradeOptions = _defaultOptions();
+        upgradeOptions.referenceContract =
+            "LiquidContinuousMultiTokenVaultUtilTest.t.sol:LiquidContinuousMultiTokenVaultMock";
+        vm.startPrank(_vaultAuth.upgrader);
+        Upgrades.upgradeProxy(
+            address(vaultProxy),
+            "LiquidContinuousMultiTokenVaultUtilTest.t.sol:LiquidContinuousMultiTokenVaultMockV2",
+            "",
+            upgradeOptions
+        );
+        vm.stopPrank();
 
-        vm.prank(_vaultAuth.upgrader);
-        vaultProxy.upgradeToAndCall(address(mockVaultV2), "");
+        LiquidContinuousMultiTokenVaultMockV2 vaultV2 = LiquidContinuousMultiTokenVaultMockV2(address(vaultProxy));
 
-        assertEq("2.0.0", mockVaultV2.version(), "version should be 2.0.0");
+        assertEq("2.0.0", vaultV2.version(), "version should be 2.0.0");
 
         assertEq(
             testParams.principal,
@@ -64,14 +66,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__Clock() public {
-        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault();
-        vault = LiquidContinuousMultiTokenVaultMock(
-            address(
-                new ERC1967Proxy(
-                    address(vault), abi.encodeWithSelector(vault.initialize.selector, _createVaultParams(_vaultAuth))
-                )
-            )
-        );
+        LiquidContinuousMultiTokenVaultMock vault = _deployProxyContract();
 
         assertEq(Timer.CLOCK_MODE(), vault.CLOCK_MODE());
         assertEq(Timer.clock(), vault.clock());
@@ -210,6 +205,16 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         assertEq(newPeriod, vault.currentPeriod(), "period not set correctly");
     }
 
+    function _deployProxyContract() internal returns (LiquidContinuousMultiTokenVaultMock) {
+        return LiquidContinuousMultiTokenVaultMock(
+            Upgrades.deployUUPSProxy(
+                "LiquidContinuousMultiTokenVaultUtilTest.t.sol:LiquidContinuousMultiTokenVaultMock",
+                abi.encodeCall(LiquidContinuousMultiTokenVaultMock.mockInitialize, _createVaultParams(_vaultAuth)),
+                _defaultOptions()
+            )
+        );
+    }
+
     function test__LiquidContinuousMultiTokenVaultUtil__ZeroAddressAuthReverts() public {
         address zeroAddress = address(0);
 
@@ -229,7 +234,6 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
                 zeroAddress
             )
         );
-
         new ERC1967Proxy(
             address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, paramsZeroOperator)
         );
@@ -254,14 +258,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__Metadata() public {
-        LiquidContinuousMultiTokenVault vault = new LiquidContinuousMultiTokenVault();
-        vault = LiquidContinuousMultiTokenVaultMock(
-            address(
-                new ERC1967Proxy(
-                    address(vault), abi.encodeWithSelector(vault.initialize.selector, _createVaultParams(_vaultAuth))
-                )
-            )
-        );
+        LiquidContinuousMultiTokenVaultMock vault = _deployProxyContract();
 
         assertTrue(vault.getVersion() > 0, "version should be nonzero");
         assertTrue(vault.supportsInterface(type(IMultiTokenVault).interfaceId), "should support interface");

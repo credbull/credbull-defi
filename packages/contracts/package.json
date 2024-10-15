@@ -9,7 +9,7 @@
     "clean": "forge clean && rm -rf broadcast cache deployments types localhost.json index.js",
     "dev": "yarn rm-dbdata && anvil --config-out localhost.json & make deploy-local",
     "build": "forge build && yarn gen-types",
-    "test": "forge test",
+    "test": "forge clean && forge test",
     "coverage": "forge coverage --report lcov && genhtml lcov.info -o out/test-reports/coverage --ignore-errors inconsistent",
     "format": "forge fmt && prettier './script/**/*.js' --write",
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint './*(test|src)/**/*.sol'",
@@ -37,6 +37,7 @@
   "dependencies": {
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
+    "@openzeppelin/upgrades-core": "^1.40.0",
     "@supabase/supabase-js": "^2.39.3",
     "dotenv": "^16.4.5",
     "ethers": "^5.7.2",

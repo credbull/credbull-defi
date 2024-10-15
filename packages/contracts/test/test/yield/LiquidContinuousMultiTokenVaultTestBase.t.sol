@@ -14,6 +14,7 @@ import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVa
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { Options } from "openzeppelin-foundry-upgrades/Options.sol";
 
 abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTestBase {
     LiquidContinuousMultiTokenVault internal _liquidVault;
@@ -158,6 +159,10 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         array = new uint256[](1);
         array[0] = element;
     }
+
+    function _defaultOptions() internal pure returns (Options memory opts) {
+        opts.unsafeAllow = "constructor";
+    }
 }
 
 contract LiquidContinuousMultiTokenVaultMock is LiquidContinuousMultiTokenVault {
@@ -169,6 +174,7 @@ contract LiquidContinuousMultiTokenVaultMock is LiquidContinuousMultiTokenVault 
         super.initialize(params);
     }
 }
+/// @custom:oz-upgrades-from LiquidContinuousMultiTokenVaultMock
 
 contract LiquidContinuousMultiTokenVaultMockV2 is LiquidContinuousMultiTokenVaultMock {
     function version() public pure returns (string memory) {
