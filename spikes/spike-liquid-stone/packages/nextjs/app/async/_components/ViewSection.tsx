@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { useFetchContractData } from "~~/hooks/async/useFetchContractData";
 import { useFetchLocks } from "~~/hooks/async/useFetchLocks";
 import { useFetchUnlockRequests } from "~~/hooks/async/useFetchUnlockRequests";
+import { useFetchRequestDetails } from "~~/hooks/async/useFetchRequestDetails";
 
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
@@ -38,6 +39,9 @@ const ViewSection = ({
     const [lockDepositPeriod, setLockDepositPeriod] = useState("");
     // RequestUnlock State Variables
     const [inputPairs, setInputPairs] = useState([{ period: "", amount: "" }]);
+
+    const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
+
     // Unlock State Variables
     const [requestId, setRequestId] = useState("");
 
@@ -86,6 +90,14 @@ const ViewSection = ({
         deployedContractAbi,
         currentPeriod,
         noticePeriod,
+        refetch
+    });
+
+    const { requestDetails } = useFetchRequestDetails({
+        address: address || "",
+        deployedContractAddress,
+        deployedContractAbi,
+        requestId: selectedRequestId,
         refetch
     });
 
@@ -188,10 +200,10 @@ const ViewSection = ({
                         <tbody>
                         {lockDatas.map((row) => (
                             <tr key={row.depositPeriod}>
-                            <td>{row.depositPeriod}</td>
-                            <td>{row.lockedAmount.toString()}</td>
-                            <td>{row.maxRequestUnlock.toString()}</td>
-                            <td>{row.unlockRequestAmount.toString()}</td>
+                                <td>{row.depositPeriod}</td>
+                                <td>{row.lockedAmount.toString()}</td>
+                                <td>{row.maxRequestUnlock.toString()}</td>
+                                <td>{row.unlockRequestAmount.toString()}</td>
                             </tr>
                         ))}
                         </tbody>
@@ -213,9 +225,39 @@ const ViewSection = ({
                         </thead>
                         <tbody>
                         {unlockRequests.map((row) => (
-                            <tr key={row.requestId}>
-                            <td>{row.requestId}</td>
-                            <td>{row.unlockAmount.toString()}</td>
+                            <tr key={row.requestId}
+                            onClick={() => setSelectedRequestId(row.requestId)}
+                            className="cursor-pointer hover:bg-gray-200"
+                            >
+                                <td>{row.requestId}</td>
+                                <td>{row.unlockAmount.toString()}</td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div
+                    className={`${
+                        resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
+                    } p-4 rounded-lg grid gap-3`}
+                >
+                    <h2 className="text-xl font-bold mb-4">Request Details</h2>
+
+                    <table className="table w-full">
+                        <thead>
+                            <tr>
+                                <th>Deposit Period</th>
+                                <th>Unlock Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        { requestDetails.map((row) => (
+                            <tr key={row.depositPeriod}>
+                                <td>{row.depositPeriod}</td>
+                                <td>{row.unlockAmount.toString()}</td>
                             </tr>
                         ))}
                         </tbody>

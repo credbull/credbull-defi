@@ -9,3 +9,8 @@ export type UnlockRequest = {
     requestId: number;
     unlockAmount: bigint;
 }
+
+export type RequestDetail = {
+    depositPeriod: number;
+    unlockAmount: bigint;
+}
