@@ -1,1 +1,0 @@
-export const MAX_PERIOD: number = 30;
