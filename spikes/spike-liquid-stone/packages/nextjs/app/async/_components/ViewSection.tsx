@@ -29,9 +29,33 @@ const ViewSection = ({
     const [mounted, setMounted] = useState(false);
     const [refetch, setRefetch] = useState(false);
 
-    //Action Values
+    // Action Values
+    // LockedAmount State Variables
     const [lockAmount, setLockAmount] = useState("");
     const [lockDepositPeriod, setLockDepositPeriod] = useState("");
+    // RequestUnlock State Variables
+    const [inputPairs, setInputPairs] = useState([{ period: "", amount: "" }]);
+
+    // Action events for request unlock
+    const handleInputChange = (
+        index: number,
+        field: "period" | "amount", // Union type for field
+        value: string
+    ) => {
+        const updatedPairs = [...inputPairs];
+        updatedPairs[index][field] = value;
+        setInputPairs(updatedPairs);
+    };
+
+    const handleAddInput = () => {
+        setInputPairs([...inputPairs, { period: "", amount: "" }]);
+    };
+    
+    const handleRemoveInput = () => {
+    if (inputPairs.length > 1) {
+        setInputPairs(inputPairs.slice(0, -1));
+    }
+    };
 
     useEffect(() => {
         setMounted(true);
@@ -55,7 +79,7 @@ const ViewSection = ({
     const { writeContractAsync } = useWriteContract();
 
     const handleLock = async () => {
-        if (!address || !lockAmount) {
+        if (!address || !lockAmount || !lockDepositPeriod) {
             notification.error("Missing required fields");
             return;
         }
@@ -78,6 +102,36 @@ const ViewSection = ({
             });
         } catch (error) {
             console.error("Error handleLock:", error);    
+        }
+    }
+
+    const handleUnlockRequest = async () => {
+        try {
+            if (!address) {
+                notification.error("Missing required fields");
+                return;
+            }
+
+            const depositPeriodsForUnlockRequest = inputPairs.map((pair) => BigInt(pair.period));
+            const amountsForUnlockRequest = inputPairs.map((pair) => BigInt(pair.amount));
+
+            const makeLockWithParams = () => writeContractAsync({
+                address: deployedContractAddress,
+                abi: deployedContractAbi,
+                functionName: "requestUnlock",
+                args: [
+                  address,
+                  depositPeriodsForUnlockRequest, // Convert to BigInt
+                  amountsForUnlockRequest, // Convert to BigInt
+                ],
+            });
+
+            writeTxn(makeLockWithParams).then(data => {
+                console.log("setting refresh", data);
+                setRefetch(prev => !prev);
+            });
+        } catch (error) {
+            console.error("Error handleUnlockRequest:", error);    
         }
     }
 
@@ -107,7 +161,7 @@ const ViewSection = ({
                     resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
                 } p-4 rounded-lg grid gap-3`}
                 >
-                    <h2 className="text-xl font-bold mb-4">Deposit Pools</h2>
+                    <h2 className="text-xl font-bold mb-4">Locked Amount Table</h2>
                     <table className="table w-full">
                         <thead>
                         <tr>
@@ -156,6 +210,29 @@ const ViewSection = ({
                 {/* Request Unlock */}
                 <ActionCard>
                     <h2 className="text-xl font-bold mb-4">Request Unlock</h2>
+                    {inputPairs.map((pair, index) => (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <Input
+                                type="text"
+                                value={pair.period}
+                                placeholder="Enter Deposit Period"
+                                onChangeHandler={value => handleInputChange(index, "period", value)}
+                            />
+                            <Input
+                                type="text"
+                                value={pair.amount}
+                                placeholder="Enter Amount"
+                                onChangeHandler={value => handleInputChange(index, "amount", value)}
+                            />
+                        </div>
+                    ))}
+
+                    <div className="flex items-center gap-4 mb-4">
+                        <Button text="+ Add Input" bgColor="green" onClickHandler={handleAddInput} />
+                        <Button text="- Remove Input" bgColor="yellow" onClickHandler={handleRemoveInput} />
+                    </div>
+
+                    <Button text="Request Unlock" bgColor="blue" onClickHandler={handleUnlockRequest} />
                 </ActionCard>
                 {/* Unlock */}
                 <ActionCard>
