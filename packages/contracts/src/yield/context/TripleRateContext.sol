@@ -24,30 +24,6 @@ abstract contract TripleRateContext is Initializable, CalcInterestMetadata, ITri
         uint256 decimals;
     }
 
-    /**
-     * @notice Reverts when the Tenor Period is before the currently set Tenor Period.
-     *
-     * @param tenorPeriod The current Tenor Period.
-     * @param newTenorPeriod The attempted update Tenor Period.
-     */
-    error TripleRateContext_TenorPeriodRegressionNotAllowed(uint256 tenorPeriod, uint256 newTenorPeriod);
-
-    /**
-     * @notice Emits when the current Tenor Period is set, with its associated Reduced Rate.
-     *
-     * @param tenorPeriod The updated current Tenor Period.
-     * @param reducedRate The updated Reduced Rate for the Tenor Period.
-     */
-    event CurrentTenorPeriodAndRateChanged(uint256 tenorPeriod, uint256 reducedRate);
-
-    /**
-     * @notice Reverts when the Period is before the currently set Period.
-     *
-     * @param currentPeriod The current Period.
-     * @param updatePeriod The attempted update Period.
-     */
-    error TripleRateContext_PeriodRegressionNotAllowed(uint256 currentPeriod, uint256 updatePeriod);
-
     /// @notice The Tenor, or Maturity Period, of this context.
     uint256 public TENOR;
 
@@ -65,12 +41,20 @@ abstract contract TripleRateContext is Initializable, CalcInterestMetadata, ITri
     PeriodRate internal _previous;
 
     /**
-     * @notice Emits when the current [TenorPeriodRate] is set.
+     * @notice Emits when the current [PeriodRate] is set.
      *
      * @param interestRate The updated reduced Interest Rate.
      * @param effectiveFromPeriod The updated period.
      */
     event CurrentPeriodRateChanged(uint256 interestRate, uint256 effectiveFromPeriod);
+
+    /**
+     * @notice Reverts when the Period is before the currently set Period.
+     *
+     * @param currentPeriod The current Period.
+     * @param updatePeriod The attempted update Period.
+     */
+    error TripleRateContext_PeriodRegressionNotAllowed(uint256 currentPeriod, uint256 updatePeriod);
 
     constructor() {
         _disableInitializers();
