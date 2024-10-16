@@ -48,13 +48,6 @@ contract SimpleTimelockAsyncUnlock is Initializable, UUPSUpgradeable, TimelockAs
         }
     }
 
-    function unlock(address owner, uint256 depositPeriod, uint256 unlockPeriod, uint256 amountToUnlock)
-        public
-        override
-    {
-        super.unlock(owner, depositPeriod, unlockPeriod, amountToUnlock);
-    }
-
     function _emptyBytesArray() internal pure returns (bytes[] memory) {
         return new bytes[](0);
     }
