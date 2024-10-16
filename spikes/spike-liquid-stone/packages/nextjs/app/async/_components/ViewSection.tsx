@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
 import { useTheme } from "next-themes";
 
@@ -34,6 +34,7 @@ const ViewSection = ({
 
     // Action Values
     const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+    const [selectedRequestId, setSelectedRequestId] = useState<string>("");
 
     useEffect(() => {
         setMounted(true);
@@ -140,10 +141,13 @@ const ViewSection = ({
                         </thead>
                         <tbody>
                         {unlockRequests.map((row) => (
-                            <>
+                            <React.Fragment key={`request-${row.requestId}`}>
                                 <tr
-                                    key={row.requestId}
-                                    onClick={() => setExpandedRowId(expandedRowId === row.requestId ? null : row.requestId)}
+                                    onClick={() => {
+                                        setExpandedRowId(expandedRowId === row.requestId ? null : row.requestId);
+                                        setSelectedRequestId(row.requestId.toString());
+                                    }}
+
                                     className="cursor-pointer hover:bg-gray-200"
                                 >
                                     <td>{row.requestId}</td>
@@ -151,7 +155,7 @@ const ViewSection = ({
                                 </tr>
 
                                 {expandedRowId === row.requestId && (
-                                    <tr>
+                                    <tr key={`detail-${row.requestId}`}>
                                         <td colSpan={2}>
                                             <div className="p-4 bg-gray-100 rounded-lg">
                                                 <table className="table w-full">
@@ -163,9 +167,9 @@ const ViewSection = ({
                                                     </thead>
                                                     <tbody>
                                                     {requestDetails.map((detail) => (
-                                                        <tr key={detail.depositPeriod}>
-                                                        <td>{detail.depositPeriod}</td>
-                                                        <td>{detail.unlockAmount.toString()}</td>
+                                                        <tr key={`requestDetail-${detail.depositPeriod}`}>
+                                                            <td>{detail.depositPeriod}</td>
+                                                            <td>{detail.unlockAmount.toString()}</td>
                                                         </tr>
                                                     ))}
                                                     </tbody>
@@ -174,7 +178,7 @@ const ViewSection = ({
                                         </td>
                                     </tr>
                                 )}
-                            </>
+                            </React.Fragment>
                         ))}
                         </tbody>
                     </table>
@@ -202,6 +206,7 @@ const ViewSection = ({
                     address={address}
                     deployedContractAddress={deployedContractAddress}
                     deployedContractAbi={deployedContractAbi}
+                    requestId={selectedRequestId}
                     onRefetch={() => setRefetch((prev) => !prev)}
                 />
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useWriteContract } from "wagmi";
@@ -14,22 +14,28 @@ const UnlockAction = ({
     address,
     deployedContractAddress,
     deployedContractAbi,
+    requestId,
     onRefetch
   }: {
     address: string | undefined;
     deployedContractAddress: string;
     deployedContractAbi: ContractAbi;
+    requestId: string;
     onRefetch: () => void;
   }) => {
 
-    const [requestId, setRequestId] = useState("");
+    const [localRequestId, setLocalRequestId] = useState(requestId);
 
     const writeTxn = useTransactor();
     const { writeContractAsync } = useWriteContract();
 
+    useEffect(() => {
+        setLocalRequestId(requestId);
+    }, [requestId]);
+
     const handleUnlock = async () => {
         try {
-            if (!address || !requestId) {
+            if (!address || !localRequestId) {
                 notification.error("Missing required fields");
                 return;
             }
@@ -40,13 +46,13 @@ const UnlockAction = ({
                 functionName: "unlock",
                 args: [
                     address,
-                    BigInt(requestId)
+                    BigInt(localRequestId)
                 ],
             });
 
             await writeTxn(makeUnlockWithParams);
             
-            setRequestId("");
+            setLocalRequestId("");
 
             onRefetch();
         } catch (error) {
@@ -62,7 +68,7 @@ const UnlockAction = ({
                     type="number"
                     value={requestId}
                     placeholder="Enter Request ID"
-                    onChangeHandler={value => setRequestId(value)}  
+                    onChangeHandler={value => setLocalRequestId(value)}  
                 />
                 <Button text="Unlock" bgColor="blue" onClickHandler={handleUnlock} />
             </ActionCard>
