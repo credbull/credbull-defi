@@ -26,6 +26,9 @@ interface IMultiTokenVault is IERC1155 {
         uint256 shares
     );
 
+    /// @notice Emitted when assets are transferred out of the vault
+    event AssetTransfer(address indexed sender, address indexed receiver, address asset, uint256 amount);
+
     /**
      * @notice Deposits assets into the vault for the current deposit period.
      * @param assets The amount of assets to be deposited.

@@ -7,7 +7,6 @@ import ContractValueBadge from "../../../components/general/ContractValueBadge";
 import Input from "../../../components/general/Input";
 import LoadingSpinner from "../../../components/general/LoadingSpinner";
 import DepositPoolCard from "./DepositPoolCard";
-import { OwnedNft } from "alchemy-sdk";
 import { ethers } from "ethers";
 import { useTheme } from "next-themes";
 import { useChainId, useWriteContract } from "wagmi";
@@ -16,7 +15,7 @@ import { useFetchContractData } from "~~/hooks/custom/useFetchContractData";
 import { useFetchDepositPools } from "~~/hooks/custom/useFetchDepositPools";
 import { useFetchSellRequests } from "~~/hooks/custom/useFetchSellRequests";
 import { useTransactor } from "~~/hooks/scaffold-eth";
-import { DepositPool, SellRequest } from "~~/types/vault";
+import { SellRequest } from "~~/types/vault";
 import { notification } from "~~/utils/scaffold-eth";
 import { Contract, ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
 
@@ -251,7 +250,7 @@ const ViewSection = ({
         >
           <h2 className="text-xl font-bold mb-4">Deposit Pools</h2>
           {pools.map((pool, index) => (
-            <DepositPoolCard key={index} pool={pool} onClickHandler={() => {}} />
+            <DepositPoolCard key={index} pool={pool} />
           ))}
         </div>
         <div
@@ -286,7 +285,7 @@ const ViewSection = ({
             onChangeHandler={value => setCurrencyTokenAmount(value)}
           />
 
-          <Button text="Execute Buy" bgColor="blue" onClickHandler={handleBuy} />
+          <Button text="Execute Buy" bgColor="green" onClickHandler={handleBuy} />
         </ActionCard>
 
         {/* Request Sell */}
@@ -299,13 +298,13 @@ const ViewSection = ({
             onChangeHandler={value => setSellAmount(value)}
           />
 
-          <Button text="Request Sell" bgColor="yellow" onClickHandler={handleRequestSell} />
+          <Button text="Request Sell" bgColor="gray" onClickHandler={handleRequestSell} />
         </ActionCard>
 
         {/* Execute Sell */}
         <ActionCard>
-          <h2 className="text-xl font-bold mb-4">
-            Sell (<small>Click on the desired request</small>)
+          <h2 className="mb-4">
+            <span className="text-xl font-bold ">Sell</span> (<small>Click on the desired request</small>)
           </h2>
           <Input
             type="text"

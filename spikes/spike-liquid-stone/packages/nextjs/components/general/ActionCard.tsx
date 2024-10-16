@@ -10,7 +10,7 @@ const ActionCard = ({ children }: { children: ReactNode }) => {
     <div
       className={`${
         resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
-      } shadow-md p-4 rounded-lg`}
+      } shadow-md p-4 rounded-lg flex flex-col justify-between`}
     >
       {children}
     </div>

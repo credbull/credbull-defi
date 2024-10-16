@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
+import { ITimelockAsyncUnlock } from "@credbull/timelock/ITimelockAsyncUnlock.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
@@ -107,7 +108,7 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
             depositPeriod <= optimizerParams.toDepositPeriod;
             ++depositPeriod
         ) {
-            uint256 sharesAtPeriod = vault.sharesAtPeriod(optimizerParams.owner, depositPeriod);
+            uint256 sharesAtPeriod = _sharesAvailableAtPeriod(vault, optimizerParams, depositPeriod);
 
             uint256 amountAtPeriod = optimizerParams.optimizerBasis == OptimizerBasis.Shares
                 ? sharesAtPeriod
@@ -145,6 +146,22 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
         }
 
         return _trimToSize(arrayIndex, cacheDepositPeriods, cacheSharesAtPeriods);
+    }
+
+    /// @notice Returns shares available for redemption at the given `depositPeriod`
+    function _sharesAvailableAtPeriod(
+        IMultiTokenVault vault,
+        OptimizerParams memory optimizerParams,
+        uint256 depositPeriod
+    ) internal view returns (uint256 sharesAvailable_) {
+        bytes4 timelockInterfaceId = type(ITimelockAsyncUnlock).interfaceId;
+
+        if (vault.supportsInterface(timelockInterfaceId)) {
+            ITimelockAsyncUnlock timelockVault = ITimelockAsyncUnlock(address(vault));
+            return timelockVault.maxRequestUnlock(optimizerParams.owner, depositPeriod);
+        } else {
+            return vault.sharesAtPeriod(optimizerParams.owner, depositPeriod);
+        }
     }
 
     /**
