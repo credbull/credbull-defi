@@ -114,24 +114,75 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         assertEq(assetManagerStartBalance + vaultStartBalance, _asset.balanceOf(assetManager));
     }
 
-    function test__LiquidContinuousVaultTest__RequestRedeemTwiceMultipleDepositsFullShares() public {
-        IMTVTestParamArray testParams = new IMTVTestParamArray();
+    function test__LiquidContinuousVaultTest__RedeemMultiPeriodsAllShares() public {
+        IMTVTestParamArray depositTestParams = new IMTVTestParamArray();
 
         // run in some deposits
         uint256 baseDepositAmount = 100 * _scale;
         for (uint256 i = 0; i <= 10; ++i) {
-            testParams.addTestParam(
+            depositTestParams.addTestParam(
                 TestParam({ principal: (baseDepositAmount * i) + 1 * _scale, depositPeriod: i, redeemPeriod: 1000 })
             );
         }
 
-        _testDepositOnly(alice, _liquidVault, testParams.all());
+        _testDepositOnly(alice, _liquidVault, depositTestParams.all());
 
-        // ------------ requestRedeem #1 ------------
-        _testRequestRedeem(alice, _liquidVault, _split(testParams, 0, 1), 31);
+        // ------------ requestRedeem #1 -----------
+        uint256 redeemPeriod1 = 31;
+        IMTVTestParamArray redeemParams1 = _split(depositTestParams, 0, 2);
+        _testRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams1, 31);
 
         // ------------ requestRedeem #2 ------------
-        _testRequestRedeem(alice, _liquidVault, _split(testParams, 2, 3), 41);
+        uint256 redeemPeriod2 = 41;
+        IMTVTestParamArray redeemParams2 = _split(depositTestParams, 3, 4);
+        _testRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams2, 41);
+
+        // ------------ redeems ------------
+        // NB - call the requestRedeems BEFORE redeem.  make sure multiple requests works.
+
+        _testRedeemMultiDeposit(alice, _liquidVault, redeemParams1, redeemPeriod1);
+
+        _testRedeemMultiDeposit(alice, _liquidVault, redeemParams2, redeemPeriod2);
+    }
+
+    function test__LiquidContinuousVaultTest__RedeemMultiPeriodsPartialShares() public {
+        IMTVTestParamArray depositTestParams = new IMTVTestParamArray();
+
+        // run in some deposits
+        uint256 baseDepositAmount = 100 * _scale;
+        for (uint256 i = 0; i <= 10; ++i) {
+            depositTestParams.addTestParam(
+                TestParam({ principal: (baseDepositAmount * i) + 1 * _scale, depositPeriod: i, redeemPeriod: 1000 })
+            );
+        }
+
+        _testDepositOnly(alice, _liquidVault, depositTestParams.all());
+
+        uint256 partialShares = 1 * _scale;
+
+        // ------------ requestRedeem #1 ------------
+        uint256 redeemPeriod1 = 30;
+
+        IMTVTestParamArray redeemParams1 = _split(depositTestParams, 0, 2);
+        redeemParams1.set(2, partialShares);
+
+        _testRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams1, redeemPeriod1);
+
+        // ------------ requestRedeem #2 ------------
+        uint256 redeemPeriod2 = 50;
+
+        IMTVTestParamArray redeemParams2 = _split(depositTestParams, 2, 4);
+        redeemParams2.set(0, depositTestParams.get(2).principal - partialShares);
+        redeemParams2.set(2, partialShares);
+
+        _testRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams2, redeemPeriod2);
+
+        // ------------ redeems ------------
+        // NB - call the requestRedeems BEFORE redeem.  make sure multiple requests works.
+
+        _testRedeemMultiDeposit(alice, _liquidVault, redeemParams1, redeemPeriod1);
+
+        _testRedeemMultiDeposit(alice, _liquidVault, redeemParams2, redeemPeriod2);
     }
 
     function test__LiquidContinuousVaultTest__ShouldRevertWithdrawAssetIfNotOwner() public {

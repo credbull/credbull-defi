@@ -15,6 +15,7 @@ import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { IMTVTestParamArray } from "@test/test/token/ERC1155/IMTVTestParamArray.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTestBase {
     LiquidContinuousMultiTokenVault internal _liquidVault;
@@ -124,25 +125,63 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     }
 
     /// @dev - requestRedeem over multiple deposit and principals into one requestRedeemPeriod
-    function _testRequestRedeem(
+    function _testRequestRedeemMultiDeposit(
         address account,
         LiquidContinuousMultiTokenVault liquidVault,
-        IMTVTestParamArray testParams,
-        uint256 requestRedeemPeriod // we are testing multiple deposits into one redeemPeriod
+        IMTVTestParamArray depositTestParams,
+        uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
     ) internal virtual {
-        _warpToPeriod(_liquidVault, requestRedeemPeriod);
+        _warpToPeriod(_liquidVault, redeemPeriod - liquidVault.noticePeriod());
 
-        uint256 sharesToRedeem = testParams.totalPrincipal();
+        uint256 sharesToRedeem = depositTestParams.totalPrincipal();
 
         vm.prank(account);
         uint256 requestId = liquidVault.requestRedeem(sharesToRedeem, account, account);
         (uint256[] memory unlockDepositPeriods, uint256[] memory unlockShares) =
             liquidVault.unlockRequests(account, requestId);
 
-        (uint256[] memory expectedDepositPeriods, uint256[] memory expectedShares) = testParams.deposits();
+        (uint256[] memory expectedDepositPeriods, uint256[] memory expectedShares) = depositTestParams.deposits();
 
         assertEq(expectedDepositPeriods, unlockDepositPeriods, "deposit periods mismatch for requestRedeem");
         assertEq(expectedShares, unlockShares, "shares mismatch for requestRedeem");
+    }
+
+    /// @dev - requestRedeem over multiple deposit and principals into one requestRedeemPeriod
+    function _testRedeemMultiDeposit(
+        address account,
+        LiquidContinuousMultiTokenVault liquidVault,
+        IMTVTestParamArray depositTestParams,
+        uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
+    ) internal virtual {
+        _warpToPeriod(_liquidVault, redeemPeriod);
+
+        uint256 sharesToRedeem = depositTestParams.totalPrincipal();
+
+        IERC20 asset = IERC20(liquidVault.asset());
+
+        uint256 prevAssetBalance = asset.balanceOf(account);
+        uint256[] memory prevSharesBalance =
+            _liquidVault.balanceOfBatch(depositTestParams.accountArray(account), depositTestParams.depositPeriods());
+
+        vm.prank(account);
+        uint256 assets = liquidVault.redeem(sharesToRedeem, account, account);
+
+        assertEq(prevAssetBalance + assets, asset.balanceOf(account), "did not receive assets");
+
+        // check unlocks are released
+        (uint256[] memory unlockDepositPeriods, uint256[] memory unlockAmounts) =
+            _liquidVault.unlockRequests(account, redeemPeriod);
+        assertEq(0, unlockDepositPeriods.length, "unlock should be released");
+        assertEq(0, unlockAmounts.length, "unlock should be released");
+
+        // check share balances reduced
+        uint256[] memory sharesBalance =
+            _liquidVault.balanceOfBatch(depositTestParams.accountArray(account), depositTestParams.depositPeriods());
+        for (uint256 i = 0; i < prevSharesBalance.length; ++i) {
+            assertEq(
+                prevSharesBalance[i] - depositTestParams.get(i).principal, sharesBalance[i], "shares balance incorrect"
+            );
+        }
     }
 
     function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParam memory testParam)
