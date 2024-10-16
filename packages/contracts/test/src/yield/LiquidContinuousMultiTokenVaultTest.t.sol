@@ -63,7 +63,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         // requestSell
         vm.prank(alice);
-        liquidVault.requestRedeem(sharesAmount, address(0), alice);
+        liquidVault.requestRedeem(sharesAmount, alice, alice);
         assertEq(
             sharesAmount,
             liquidVault.unlockRequestAmountByDepositPeriod(alice, testParams.depositPeriod),
@@ -78,7 +78,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         _warpToPeriod(liquidVault, testParams.redeemPeriod);
 
         vm.prank(alice);
-        liquidVault.redeem(testParams.principal, alice, address(0));
+        liquidVault.redeem(testParams.principal, alice, alice);
 
         assertEq(0, liquidVault.balanceOf(alice, testParams.depositPeriod), "user should have no shares remaining");
         assertEq(

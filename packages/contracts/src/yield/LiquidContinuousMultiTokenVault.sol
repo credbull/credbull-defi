@@ -212,13 +212,16 @@ contract LiquidContinuousMultiTokenVault is
      * @param owner Source of the shares to redeem
      * @return requestId_ Discriminator between non-fungible requests
      */
-    function requestRedeem(uint256 shares, address controller, address owner) public returns (uint256 requestId_) {
+    function requestRedeem(uint256 shares, address, /* controller */ address owner)
+        public
+        returns (uint256 requestId_)
+    {
         // using optimize() variant in case "shares" represents the IComponent "principal + yield" which is our "assets".
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
             _redeemOptimizer.optimize(this, owner, shares, shares, minUnlockPeriod());
 
         uint256 requestId = requestUnlock(_msgSender(), depositPeriods, sharesAtPeriods);
-        emit RedeemRequest(controller, owner, requestId, _msgSender(), shares);
+        emit RedeemRequest(_msgSender(), owner, requestId, _msgSender(), shares);
         return requestId;
     }
 
@@ -227,7 +230,7 @@ contract LiquidContinuousMultiTokenVault is
      * @param shares Amount of shares that was redeemed by `requestRedeem`
      * @param receiver Address to receive the assets
      */
-    function redeem(uint256 shares, address receiver, address controller) public returns (uint256 assets) {
+    function redeem(uint256 shares, address receiver, address /* controller */ ) public returns (uint256 assets) {
         uint256 requestId = currentPeriod(); // requestId = redeemPeriod, and redeem can only be called  where redeemPeriod = currentPeriod()
 
         uint256 unlockRequestedAmount = unlockRequestAmount(receiver, requestId);
@@ -244,7 +247,7 @@ contract LiquidContinuousMultiTokenVault is
                 sharesAtPeriods[i], receiver, _msgSender(), depositPeriods[i], requestId
             );
         }
-        emit Withdraw(controller, receiver, _msgSender(), totalAssetsRedeemed, shares);
+        emit Withdraw(_msgSender(), receiver, _msgSender(), totalAssetsRedeemed, shares);
         return totalAssetsRedeemed;
     }
 
