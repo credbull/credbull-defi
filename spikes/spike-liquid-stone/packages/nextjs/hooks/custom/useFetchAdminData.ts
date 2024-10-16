@@ -4,12 +4,14 @@ import { useReadContract } from "wagmi";
 import { Contract, ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
 
 export const useFetchAdminData = ({
+  userAccount,
   custodian,
   deployedContractAddress,
   deployedContractAbi,
   simpleUsdcContractData,
   dependencies = [],
 }: {
+  userAccount: string;
   custodian: string;
   deployedContractAddress: string;
   deployedContractAbi: ContractAbi;
@@ -23,25 +25,27 @@ export const useFetchAdminData = ({
   const [adminRole, setAdminRole] = useState<`0x${string}` | undefined>("0x");
   const [adminRoleCount, setAdminRoleCount] = useState<number>(0);
   const [adminRoleMembers, setAdminRoleMembers] = useState<string[]>([]);
+  const [userHasAdminRole, setUserHasAdminRole] = useState<boolean>(false);
 
   const [fetchingOperators, setFetchingOperators] = useState<boolean>(false);
   const [operatorRole, setOperatorRole] = useState<`0x${string}` | undefined>("0x");
   const [operatorRoleCount, setOperatorRoleCount] = useState<number>(0);
   const [operatorRoleMembers, setOperatorRoleMembers] = useState<string[]>([]);
+  const [userHasOperatorRole, setUserHasOperatorRole] = useState<boolean>(false);
 
   const [fetchingUpgraders, setFetchingUpgraders] = useState<boolean>(false);
   const [upgraderRole, setUpgraderRole] = useState<`0x${string}` | undefined>("0x");
   const [upgraderRoleCount, setUpgraderRoleCount] = useState<number>(0);
   const [upgraderRoleMembers, setUpgraderRoleMembers] = useState<string[]>([]);
+  const [userHasUpgraderRole, setUserHasUpgraderRole] = useState<boolean>(false);
 
   const [fetchingAssetManagers, setFetchingAssetManagers] = useState<boolean>(false);
   const [assetManagerRole, setAssetManagerRole] = useState<`0x${string}` | undefined>("0x");
   const [assetManagerRoleCount, setAssetManagerRoleCount] = useState<number>(0);
   const [assetManagerRoleMembers, setAssetManagerRoleMembers] = useState<string[]>([]);
+  const [userHasAssetManagerRole, setUserHasAssetManagerRole] = useState<boolean>(false);
 
-  const adminPrivateKey = process.env.NEXT_PUBLIC_ADMIN_PRIVATE_KEY || "";
   const provider = new ethers.JsonRpcProvider("http://localhost:8545");
-  const adminSigner = new ethers.Wallet(adminPrivateKey, provider);
 
   const { refetch: refetchVaultBalance } = useReadContract({
     address: simpleUsdcContractData?.address,
@@ -55,6 +59,34 @@ export const useFetchAdminData = ({
     functionName: "balanceOf",
     abi: simpleUsdcContractData?.abi,
     args: [custodian],
+  });
+
+  const { refetch: refetchUserHasAdminRole } = useReadContract({
+    address: deployedContractAddress,
+    functionName: "hasRole",
+    abi: deployedContractAbi,
+    args: [adminRole?.toString() || "", userAccount],
+  });
+
+  const { refetch: refetchUserHasOperatorRole } = useReadContract({
+    address: deployedContractAddress,
+    functionName: "hasRole",
+    abi: deployedContractAbi,
+    args: [operatorRole?.toString() || "", userAccount],
+  });
+
+  const { refetch: refetchUserHasUpgraderRole } = useReadContract({
+    address: deployedContractAddress,
+    functionName: "hasRole",
+    abi: deployedContractAbi,
+    args: [upgraderRole?.toString() || "", userAccount],
+  });
+
+  const { refetch: refetchUserHasAssetManagerRole } = useReadContract({
+    address: deployedContractAddress,
+    functionName: "hasRole",
+    abi: deployedContractAbi,
+    args: [assetManagerRole?.toString() || "", userAccount],
   });
 
   const { refetch: refetchAdminRole } = useReadContract({
@@ -116,9 +148,11 @@ export const useFetchAdminData = ({
   // Fetch data and set state
   useEffect(() => {
     const fetchData = async () => {
-      if (!deployedContractAddress || !deployedContractAbi || !simpleUsdcContractData) {
+      if (!deployedContractAddress || !deployedContractAbi || !provider || !simpleUsdcContractData) {
         return;
       }
+
+      const deployedContract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
 
       setFetchingAdmins(true);
       setFetchingOperators(true);
@@ -141,6 +175,10 @@ export const useFetchAdminData = ({
 
       setAdminRoleCount(Number(adminRoleCountData?.data));
 
+      const userHasAdminRoleData = await refetchUserHasAdminRole();
+
+      setUserHasAdminRole(userHasAdminRoleData?.data || false);
+
       const operatorRoleData = await refetchOperatorRole();
 
       setOperatorRole(operatorRoleData?.data);
@@ -151,6 +189,10 @@ export const useFetchAdminData = ({
 
       const upgraderRoleData = await refetchUpgraderRole();
 
+      const userHasOperatorRoleData = await refetchUserHasOperatorRole();
+
+      setUserHasOperatorRole(userHasOperatorRoleData?.data || false);
+
       setUpgraderRole(upgraderRoleData?.data);
 
       const upgraderRoleCountData = await refetchUpgraderRoleCount();
@@ -159,15 +201,22 @@ export const useFetchAdminData = ({
 
       const assetManagerRoleData = await refetchAssetManagerRole();
 
+      const userHasUpgraderRoleData = await refetchUserHasUpgraderRole();
+
+      setUserHasUpgraderRole(userHasUpgraderRoleData?.data || false);
+
       setAssetManagerRole(assetManagerRoleData?.data);
 
       const assetManagerRoleCountData = await refetchAssetManagerRoleCount();
 
       setAssetManagerRoleCount(Number(assetManagerRoleCountData?.data));
 
-      if (adminSigner && adminRoleData && adminRoleCountData) {
+      const userHasAssetManagerRoleData = await refetchUserHasAssetManagerRole();
+
+      setUserHasAssetManagerRole(userHasAssetManagerRoleData?.data || false);
+
+      if (deployedContract && adminRoleData && adminRoleCountData) {
         const _adminRoleMembers: string[] = [];
-        const deployedContract = new ethers.Contract(deployedContractAddress, deployedContractAbi, adminSigner);
 
         for (let i = 0; i < Number(adminRoleCountData?.data); i++) {
           const adminRoleMember = await deployedContract.getRoleMember(adminRoleData?.data, BigInt(i));
@@ -179,9 +228,8 @@ export const useFetchAdminData = ({
       }
       setFetchingAdmins(false);
 
-      if (adminSigner && operatorRoleData && operatorRoleCountData) {
+      if (deployedContract && operatorRoleData && operatorRoleCountData) {
         const _operatorRoleMembers: string[] = [];
-        const deployedContract = new ethers.Contract(deployedContractAddress, deployedContractAbi, adminSigner);
 
         for (let i = 0; i < Number(operatorRoleCountData?.data); i++) {
           const operatorRoleMember = await deployedContract.getRoleMember(operatorRoleData?.data, BigInt(i));
@@ -193,9 +241,8 @@ export const useFetchAdminData = ({
       }
       setFetchingOperators(false);
 
-      if (adminSigner && upgraderRoleData && upgraderRoleCountData) {
+      if (deployedContract && upgraderRoleData && upgraderRoleCountData) {
         const _upgraderRoleMembers: string[] = [];
-        const deployedContract = new ethers.Contract(deployedContractAddress, deployedContractAbi, adminSigner);
 
         for (let i = 0; i < Number(upgraderRoleCountData?.data); i++) {
           const upgraderRoleMember = await deployedContract.getRoleMember(upgraderRoleData?.data, BigInt(i));
@@ -207,9 +254,8 @@ export const useFetchAdminData = ({
       }
       setFetchingUpgraders(false);
 
-      if (adminSigner && assetManagerRoleData && assetManagerRoleCountData) {
+      if (deployedContract && assetManagerRoleData && assetManagerRoleCountData) {
         const _assetManagerRoleMembers: string[] = [];
-        const deployedContract = new ethers.Contract(deployedContractAddress, deployedContractAbi, adminSigner);
 
         for (let i = 0; i < Number(assetManagerRoleCountData?.data); i++) {
           const assetManagerRoleMember = await deployedContract.getRoleMember(assetManagerRoleData?.data, BigInt(i));
@@ -228,14 +274,22 @@ export const useFetchAdminData = ({
   return {
     vaultBalance,
     custodianBalance,
+    adminRole,
     adminRoleCount,
     adminRoleMembers,
+    userHasAdminRole,
+    operatorRole,
     operatorRoleCount,
     operatorRoleMembers,
+    userHasOperatorRole,
+    upgraderRole,
     upgraderRoleCount,
     upgraderRoleMembers,
+    userHasUpgraderRole,
+    assetManagerRole,
     assetManagerRoleCount,
     assetManagerRoleMembers,
+    userHasAssetManagerRole,
     fetchingAdmins,
     fetchingOperators,
     fetchingUpgraders,

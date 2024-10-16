@@ -88,19 +88,19 @@ const ViewSection = () => {
       return;
     }
 
-    try {
-      if (writeContractAsync) {
-        try {
-          const makeApproveWithParams = () =>
-            writeContractAsync({
-              address: simpleUsdcContractData?.address || "",
-              functionName: "approve",
-              abi: simpleUsdcContractData?.abi || [],
-              args: [deployedContractAddress || "", ethers.parseUnits(currencyTokenAmount, 6)],
-            });
-          writeTxn(makeApproveWithParams).then(data => {
-            console.log("setting refresh", data);
+    if (writeContractAsync) {
+      try {
+        const makeApproveWithParams = () =>
+          writeContractAsync({
+            address: simpleUsdcContractData?.address || "",
+            functionName: "approve",
+            abi: simpleUsdcContractData?.abi || [],
+            args: [deployedContractAddress || "", ethers.parseUnits(currencyTokenAmount, 6)],
+          });
+        writeTxn(makeApproveWithParams).then(data => {
+          console.log("setting refresh", data);
 
+          try {
             const makeExecuteBuyWithParams = () =>
               writeContractAsync({
                 address: deployedContractAddress || "",
@@ -117,19 +117,18 @@ const ViewSection = () => {
               console.log("setting refresh", data);
               setRefetch(prev => !prev);
             });
-          });
-        } catch (e: any) {
-          console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:redeem  ~ error", e);
-        }
+          } catch (error) {
+            console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:buy  ~ error", error);
+          }
+        });
+      } catch (error: any) {
+        console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:approve  ~ error", error);
       }
-
-      // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
-
-      setCurrencyTokenAmount("");
-    } catch (error) {
-      console.error("Error executing buy:", error);
-      // setLog(prevLog => [...prevLog, "Error executing buy"]);
     }
+
+    // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
+
+    setCurrencyTokenAmount("");
   };
 
   const handleRequestSell = () => {
@@ -140,32 +139,27 @@ const ViewSection = () => {
       return;
     }
 
-    try {
-      if (writeContractAsync) {
-        try {
-          const makeRequestSellWithParams = () =>
-            writeContractAsync({
-              address: deployedContractAddress || "",
-              functionName: "requestSell",
-              abi: deployedContractAbi || [],
-              args: [ethers.parseUnits(sellAmount, 6)],
-            });
-          writeTxn(makeRequestSellWithParams).then(data => {
-            console.log("setting refresh", data);
-            setRefetch(prev => !prev);
+    if (writeContractAsync) {
+      try {
+        const makeRequestSellWithParams = () =>
+          writeContractAsync({
+            address: deployedContractAddress || "",
+            functionName: "requestSell",
+            abi: deployedContractAbi || [],
+            args: [ethers.parseUnits(sellAmount, 6)],
           });
-        } catch (e: any) {
-          console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:redeem  ~ error", e);
-        }
+        writeTxn(makeRequestSellWithParams).then(data => {
+          console.log("setting refresh", data);
+          setRefetch(prev => !prev);
+        });
+      } catch (error: any) {
+        console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:requestSell  ~ error", error);
       }
-
-      // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
-
-      setSellAmount("");
-    } catch (error) {
-      notification.error(`Error executing buy: ${error?.toString()}`);
-      // setLog(prevLog => [...prevLog, "Error executing buy"]);
     }
+
+    // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
+
+    setSellAmount("");
   };
 
   const handleExecuteSell = () => {
@@ -176,40 +170,33 @@ const ViewSection = () => {
       return;
     }
 
-    try {
-      if (writeContractAsync) {
-        try {
-          const makeRequestSellWithParams = () =>
-            writeContractAsync({
-              address: deployedContractAddress || "",
-              functionName: "executeSell",
-              abi: deployedContractAbi || [],
-              args: [
-                address,
-                BigInt(requestId),
-                ethers.parseUnits(currencyTokenAmountToSell, 6),
-                ethers.parseUnits(componentTokenAmount, 6),
-              ],
-            });
-          writeTxn(makeRequestSellWithParams).then(data => {
-            console.log("setting refresh", data);
-            setRefetch(prev => !prev);
+    if (writeContractAsync) {
+      try {
+        const makeRequestSellWithParams = () =>
+          writeContractAsync({
+            address: deployedContractAddress || "",
+            functionName: "executeSell",
+            abi: deployedContractAbi || [],
+            args: [
+              address,
+              BigInt(requestId),
+              ethers.parseUnits(currencyTokenAmountToSell, 6),
+              ethers.parseUnits(componentTokenAmount, 6),
+            ],
           });
-        } catch (e: any) {
-          console.error("⚡️ ~ file: WriteOnlyFunctionForm.tsx:redeem  ~ error", e);
-        }
+        writeTxn(makeRequestSellWithParams).then(data => {
+          console.log("setting refresh", data);
+          setRefetch(prev => !prev);
+        });
+      } catch (error: any) {
+        console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:executeSell  ~ error", error);
       }
-
-      // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
-
-      setSellAmount("");
-    } catch (error) {
-      console.error("Error executing buy:", error);
-      // setLog(prevLog => [...prevLog, "Error executing buy"]);
     }
 
-    setComponentTokenAmount("");
+    // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
+
     setCurrencyTokenAmountToSell("");
+    setComponentTokenAmount("");
   };
 
   const setRequestAmountToSell = (request: SellRequest) => {

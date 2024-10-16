@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import SectionHeader from "./SectionHeader";
 import { ethers } from "ethers";
 import { useTheme } from "next-themes";
+import { waitForTransactionReceipt } from "viem/actions";
+import { useAccount, useWalletClient, useWriteContract } from "wagmi";
 import ActionCard from "~~/components/general/ActionCard";
 import Button from "~~/components/general/Button";
 import ContractValueBadge from "~~/components/general/ContractValueBadge";
@@ -12,7 +14,7 @@ import Input from "~~/components/general/Input";
 import LoadingSpinner from "~~/components/general/LoadingSpinner";
 import { useFetchAdminData } from "~~/hooks/custom/useFetchAdminData";
 import { useFetchContractData } from "~~/hooks/custom/useFetchContractData";
-import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo, useTransactor } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 import { ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
 import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
@@ -22,6 +24,8 @@ const contractsData = getAllContracts();
 
 const ViewSection = () => {
   const { resolvedTheme } = useTheme();
+  const { data: client } = useWalletClient();
+  const { address } = useAccount();
 
   const [mounted, setMounted] = useState(false);
   const [refetch, setRefetch] = useState(false);
@@ -52,17 +56,9 @@ const ViewSection = () => {
   );
   const { data: proxyContractData, isLoading: proxyContractLoading } = useDeployedContractInfo(contractNames[4]);
 
-  const adminPrivateKey = process.env.NEXT_PUBLIC_ADMIN_PRIVATE_KEY || "";
-  const operatorPrivateKey = process.env.NEXT_PUBLIC_OPERATOR_PRIVATE_KEY || "";
-  const assetManagerPrivateKey = process.env.NEXT_PUBLIC_ASSET_MANAGER_PRIVATE_KEY || "";
   const custodian = process.env.NEXT_PUBLIC_CUSTODIAN || "";
 
-  const provider = new ethers.JsonRpcProvider("http://localhost:8545");
-  const adminSigner = new ethers.Wallet(adminPrivateKey, provider);
-  const operatorSigner = new ethers.Wallet(operatorPrivateKey, provider);
-  const assetManagerSigner = new ethers.Wallet(assetManagerPrivateKey, provider);
-
-  const { currentPeriod } = useFetchContractData({
+  const { currentPeriod, startTimeNumber } = useFetchContractData({
     deployedContractAddress: proxyContractData?.address || "",
     deployedContractAbi: implementationContractData?.abi as ContractAbi,
     simpleUsdcContractData,
@@ -72,19 +68,27 @@ const ViewSection = () => {
   const {
     vaultBalance,
     custodianBalance,
+    adminRole,
     adminRoleCount,
     adminRoleMembers,
+    userHasAdminRole,
+    operatorRole,
     operatorRoleCount,
     operatorRoleMembers,
+    userHasOperatorRole,
+    upgraderRole,
     upgraderRoleCount,
     upgraderRoleMembers,
+    assetManagerRole,
     assetManagerRoleCount,
     assetManagerRoleMembers,
+    userHasAssetManagerRole,
     fetchingAdmins,
     fetchingOperators,
     fetchingUpgraders,
     fetchingAssetManagers,
   } = useFetchAdminData({
+    userAccount: address || "",
     custodian: custodian,
     deployedContractAddress: proxyContractData?.address || "",
     deployedContractAbi: implementationContractData?.abi as ContractAbi,
@@ -96,119 +100,148 @@ const ViewSection = () => {
     setMounted(true);
   }, []);
 
+  const writeTxn = useTransactor();
+  const { writeContractAsync } = useWriteContract();
+
   const handleGrantRole = async (roleIndex: number) => {
-    if (!userAccountToGrant || !adminSigner) {
+    if (!userAccountToGrant) {
       notification.error("Missing required fields");
       return;
     }
 
-    try {
-      setGrantRoleTrxLoading(true);
+    if (adminRole === "0x" || operatorRole === "0x" || upgraderRole === "0x" || assetManagerRole === "0x") {
+      notification.warning("Initializing");
+      return;
+    }
 
-      const deployedContract = new ethers.Contract(
-        proxyContractData?.address || "",
-        implementationContractData?.abi || [],
-        adminSigner,
-      );
+    if (!userHasAdminRole) {
+      notification.error("Not allowed");
+      return;
+    }
+
+    if (writeContractAsync) {
+      setGrantRoleTrxLoading(true);
 
       let role;
       switch (roleIndex) {
         case 0:
-          role = await deployedContract?.OPERATOR_ROLE();
+          role = operatorRole;
           break;
         case 1:
-          role = await deployedContract?.UPGRADER_ROLE();
+          role = upgraderRole;
           break;
         case 2:
-          role = await deployedContract?.ASSET_MANAGER_ROLE();
+          role = assetManagerRole;
           break;
         default:
-          role = await deployedContract?.OPERATOR_ROLE();
+          role = operatorRole;
           break;
       }
-      const tx = await deployedContract?.grantRole(role, userAccountToGrant);
-      notification.info(`Transaction submitted`);
-      const receipt = await tx.wait();
-      if (receipt) {
-        notification.success("Transaction confirmed");
+
+      try {
+        const makeGrantRoleTrx = () =>
+          writeContractAsync({
+            address: proxyContractData?.address || "",
+            functionName: "grantRole",
+            abi: implementationContractData?.abi || [],
+            args: [role?.toString() || "", userAccountToGrant],
+          });
+
+        const trx = await writeTxn(makeGrantRoleTrx);
+        if (trx) {
+          const transactionReceipt = await waitForTransactionReceipt(client!, { hash: trx });
+          if (transactionReceipt.status === "success") {
+            setRefetch(prev => !prev);
+            setUserAccountToGrant("");
+            setGrantRoleTrxLoading(false);
+          }
+        }
+      } catch (error: any) {
         setGrantRoleTrxLoading(false);
+        notification.error("⚡️ ~ file: vault/_components/ViewSection.tsx:handleGrantRole  ~ error", error);
       }
-      setUserAccountToGrant("");
-      setRefetch(prev => !prev);
-      setUserAccountToGrant("");
-    } catch (error) {
-      notification.error(`Error: ${error}`);
-      setGrantRoleTrxLoading(false);
     }
   };
 
   const handleRevokeRole = async (roleIndex: number) => {
-    if (!userAccountToRevoke || !adminSigner) {
+    if (!userAccountToRevoke) {
       notification.error("Missing required fields");
       return;
     }
 
-    try {
-      setRevokeRoleTrxLoading(true);
+    if (adminRole === "0x" || operatorRole === "0x" || upgraderRole === "0x" || assetManagerRole === "0x") {
+      notification.warning("Initializing");
+      return;
+    }
 
-      const deployedContract = new ethers.Contract(
-        proxyContractData?.address || "",
-        implementationContractData?.abi || [],
-        adminSigner,
-      );
+    if (!userHasAdminRole) {
+      notification.error("Not allowed");
+      return;
+    }
+
+    if (writeContractAsync) {
+      setRevokeRoleTrxLoading(true);
 
       let role;
       switch (roleIndex) {
         case 0:
-          role = await deployedContract?.OPERATOR_ROLE();
+          role = operatorRole;
           break;
         case 1:
-          role = await deployedContract?.UPGRADER_ROLE();
+          role = upgraderRole;
           break;
         case 2:
-          role = await deployedContract?.ASSET_MANAGER_ROLE();
+          role = assetManagerRole;
           break;
         default:
-          role = await deployedContract?.OPERATOR_ROLE();
+          role = operatorRole;
           break;
       }
 
-      const tx = await deployedContract?.revokeRole(role, userAccountToRevoke);
-      notification.info(`Transaction submitted`);
-      const receipt = await tx.wait();
-      if (receipt) {
-        notification.success("Transaction confirmed");
+      try {
+        const makeRevokeRoleTrx = () =>
+          writeContractAsync({
+            address: proxyContractData?.address || "",
+            functionName: "revokeRole",
+            abi: implementationContractData?.abi || [],
+            args: [role?.toString() || "", userAccountToRevoke],
+          });
+
+        const trx = await writeTxn(makeRevokeRoleTrx);
+        if (trx) {
+          const transactionReceipt = await waitForTransactionReceipt(client!, { hash: trx });
+          if (transactionReceipt.status === "success") {
+            setRefetch(prev => !prev);
+            setUserAccountToRevoke("");
+            setRevokeRoleTrxLoading(false);
+          }
+        }
+      } catch (error: any) {
         setRevokeRoleTrxLoading(false);
+        notification.error("⚡️ ~ file: vault/_components/ViewSection.tsx:handleRevokeRole  ~ error", error);
       }
-      setUserAccountToRevoke("");
-      setRefetch(prev => !prev);
-      setUserAccountToRevoke("");
-    } catch (error) {
-      notification.error(`Error: ${error}`);
-      setRevokeRoleTrxLoading(false);
     }
   };
 
   const handleSetPeriod = async (directionIndex: number) => {
-    if (!numOfPeriods || !operatorSigner) {
+    if (!numOfPeriods) {
       notification.error("Missing required fields");
       return;
     }
 
-    try {
-      setPeriodTrxLoading(true);
-      const deployedContract = new ethers.Contract(
-        proxyContractData?.address || "",
-        implementationContractData?.abi || [],
-        operatorSigner,
-      );
+    if (!userHasOperatorRole) {
+      notification.error("Not allowed");
+      return;
+    }
 
-      const startTime: bigint = await deployedContract?._vaultStartTimestamp();
+    if (writeContractAsync) {
+      setPeriodTrxLoading(true);
+
       let updatedTime;
       const secondsInADay = BigInt(86400);
       switch (directionIndex) {
         case 0: // Going backward
-          updatedTime = startTime + BigInt(numOfPeriods) * secondsInADay;
+          updatedTime = startTimeNumber + BigInt(numOfPeriods) * secondsInADay;
           const currentTimeStamp = Math.floor(Date.now() / 1000);
 
           if (updatedTime > currentTimeStamp) {
@@ -218,32 +251,46 @@ const ViewSection = () => {
           }
           break;
         case 1: // Going forward
-          updatedTime = startTime - BigInt(numOfPeriods) * secondsInADay;
+          updatedTime = startTimeNumber - BigInt(numOfPeriods) * secondsInADay;
           break;
         default:
-          updatedTime = startTime + BigInt(numOfPeriods) * secondsInADay;
+          updatedTime = startTimeNumber + BigInt(numOfPeriods) * secondsInADay;
           break;
       }
 
-      const tx = await deployedContract?.setVaultStartTimestamp(updatedTime);
-      notification.info(`Transaction submitted`);
-      const receipt = await tx.wait();
-      if (receipt) {
-        notification.success("Transaction confirmed");
-        setPeriodTrxLoading(false);
-      }
+      try {
+        const makeSetPeriodTrx = () =>
+          writeContractAsync({
+            address: proxyContractData?.address || "",
+            functionName: "setVaultStartTimestamp",
+            abi: implementationContractData?.abi || [],
+            args: [updatedTime],
+          });
 
-      setNumOfPeriods("");
-      setRefetch(prev => !prev);
-    } catch (error) {
-      notification.error(`Error: ${error}`);
-      setPeriodTrxLoading(false);
+        const trx = await writeTxn(makeSetPeriodTrx);
+        if (trx) {
+          const transactionReceipt = await waitForTransactionReceipt(client!, { hash: trx });
+          if (transactionReceipt.status === "success") {
+            setRefetch(prev => !prev);
+            setNumOfPeriods("");
+            setPeriodTrxLoading(false);
+          }
+        }
+      } catch (error: any) {
+        setPeriodTrxLoading(false);
+        notification.error("⚡️ ~ file: vault/_components/ViewSection.tsx:handleSetPeriod  ~ error", error);
+      }
     }
   };
 
   const handleSetTimestamp = async () => {
-    if (!selectedTimestamp || !operatorSigner) {
+    if (!selectedTimestamp) {
       notification.error("Missing required fields");
+      return;
+    }
+
+    if (!userHasOperatorRole) {
+      notification.error("Not allowed");
       return;
     }
 
@@ -255,62 +302,75 @@ const ViewSection = () => {
       return;
     }
 
-    try {
+    if (writeContractAsync) {
       setTimestampTrxLoading(true);
-      const deployedContract = new ethers.Contract(
-        proxyContractData?.address || "",
-        implementationContractData?.abi || [],
-        operatorSigner,
-      );
 
-      const tx = await deployedContract?.setVaultStartTimestamp(selectedTimestamp);
-      notification.info(`Transaction submitted`);
-      const receipt = await tx.wait();
-      if (receipt) {
-        notification.success("Transaction confirmed");
+      try {
+        const makeSetTimestampTrx = () =>
+          writeContractAsync({
+            address: proxyContractData?.address || "",
+            functionName: "setVaultStartTimestamp",
+            abi: implementationContractData?.abi || [],
+            args: [BigInt(selectedTimestamp)],
+          });
+
+        const trx = await writeTxn(makeSetTimestampTrx);
+        if (trx) {
+          const transactionReceipt = await waitForTransactionReceipt(client!, { hash: trx });
+          if (transactionReceipt.status === "success") {
+            setRefetch(prev => !prev);
+            setTimestampTrxLoading(false);
+          }
+        }
+      } catch (error: any) {
         setTimestampTrxLoading(false);
+        notification.error("⚡️ ~ file: vault/_components/ViewSection.tsx:handleSetTimestamp  ~ error", error);
       }
-
-      setRefetch(prev => !prev);
-    } catch (error) {
-      notification.error(`Error: ${error}`);
-      setTimestampTrxLoading(false);
     }
   };
 
   const handleSetReducedRate = async () => {
-    if (!reducedRate || !effectivePeriod || !operatorSigner) {
+    if (!reducedRate || !effectivePeriod) {
       notification.error("Missing required fields");
       return;
     }
 
-    try {
+    if (!userHasOperatorRole) {
+      notification.error("Not allowed");
+      return;
+    }
+
+    if (writeContractAsync) {
       setReducedRateTrxLoading(true);
-      const deployedContract = new ethers.Contract(
-        proxyContractData?.address || "",
-        implementationContractData?.abi || [],
-        operatorSigner,
-      );
 
-      const tx = await deployedContract?.setReducedRate(ethers.parseUnits(reducedRate, 6), effectivePeriod);
-      notification.info(`Transaction submitted`);
-      const receipt = await tx.wait();
-      if (receipt) {
-        notification.success("Transaction confirmed");
+      try {
+        const makeSetReducedRateTrx = () =>
+          writeContractAsync({
+            address: proxyContractData?.address || "",
+            functionName: "setReducedRate",
+            abi: implementationContractData?.abi || [],
+            args: [ethers.parseUnits(reducedRate, 6), BigInt(effectivePeriod)],
+          });
+
+        const trx = await writeTxn(makeSetReducedRateTrx);
+        if (trx) {
+          const transactionReceipt = await waitForTransactionReceipt(client!, { hash: trx });
+          if (transactionReceipt.status === "success") {
+            setRefetch(prev => !prev);
+            setReducedRate("");
+            setEffectivePeriod("");
+            setReducedRateTrxLoading(false);
+          }
+        }
+      } catch (error: any) {
         setReducedRateTrxLoading(false);
+        notification.error("⚡️ ~ file: vault/_components/ViewSection.tsx:handleSetReducedRate  ~ error", error);
       }
-
-      setReducedRate("");
-      setEffectivePeriod("");
-      setRefetch(prev => !prev);
-    } catch (error) {
-      notification.error(`Error: ${error}`);
-      setReducedRateTrxLoading(false);
     }
   };
 
   const handleWithdraw = async (withdrawType: number) => {
-    if (!custodian || !proxyContractData || !simpleUsdcContractData || !assetManagerSigner) {
+    if (!custodian || !proxyContractData || !simpleUsdcContractData) {
       notification.error("Missing required fields");
       return;
     }
@@ -320,22 +380,14 @@ const ViewSection = () => {
       return;
     }
 
-    try {
+    if (!userHasAssetManagerRole) {
+      notification.error("Not allowed");
+      return;
+    }
+
+    if (writeContractAsync) {
       setWithdrawTrxLoading(true);
 
-      const deployedContract = new ethers.Contract(
-        proxyContractData?.address || "",
-        implementationContractData?.abi || [],
-        assetManagerSigner,
-      );
-
-      const simpleUsdcContract = new ethers.Contract(
-        simpleUsdcContractData?.address || "",
-        simpleUsdcContractData?.abi || [],
-        assetManagerSigner,
-      );
-
-      const vaultBalance = await simpleUsdcContract.balanceOf(proxyContractData?.address);
       if (!vaultBalance) {
         notification.error("No assets to withdraw");
         return;
@@ -348,20 +400,28 @@ const ViewSection = () => {
         return;
       }
 
-      const tx = await deployedContract?.withdrawAsset(custodian, amountToWithdraw);
-      notification.info(`Transaction submitted`);
+      try {
+        const makeWithdrawTrx = () =>
+          writeContractAsync({
+            address: proxyContractData?.address || "",
+            functionName: "withdrawAsset",
+            abi: implementationContractData?.abi || [],
+            args: [custodian, BigInt(amountToWithdraw)],
+          });
 
-      const receipt = await tx.wait();
-      if (receipt) {
-        notification.success("Transaction confirmed");
+        const trx = await writeTxn(makeWithdrawTrx);
+        if (trx) {
+          const transactionReceipt = await waitForTransactionReceipt(client!, { hash: trx });
+          if (transactionReceipt.status === "success") {
+            setRefetch(prev => !prev);
+            setAssets("");
+            setWithdrawTrxLoading(false);
+          }
+        }
+      } catch (error: any) {
         setWithdrawTrxLoading(false);
+        notification.error("⚡️ ~ file: vault/_components/ViewSection.tsx:handleWithdraw  ~ error", error);
       }
-
-      setAssets("");
-      setRefetch(prev => !prev);
-    } catch (error) {
-      notification.error(`Error: ${error}`);
-      setWithdrawTrxLoading(false);
     }
   };
 
