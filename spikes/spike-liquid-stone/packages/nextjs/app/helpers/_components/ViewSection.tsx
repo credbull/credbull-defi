@@ -115,7 +115,7 @@ const ViewSection = () => {
     }
 
     if (!userHasAdminRole) {
-      notification.error("Not allowed");
+      notification.error("Not allowed: Admin role missed");
       return;
     }
 
@@ -175,7 +175,7 @@ const ViewSection = () => {
     }
 
     if (!userHasAdminRole) {
-      notification.error("Not allowed");
+      notification.error("Not allowed: Admin role missed");
       return;
     }
 
@@ -230,7 +230,7 @@ const ViewSection = () => {
     }
 
     if (!userHasOperatorRole) {
-      notification.error("Not allowed");
+      notification.error("Not allowed: Operator role missed");
       return;
     }
 
@@ -290,7 +290,7 @@ const ViewSection = () => {
     }
 
     if (!userHasOperatorRole) {
-      notification.error("Not allowed");
+      notification.error("Not allowed: Operator role missed");
       return;
     }
 
@@ -336,7 +336,7 @@ const ViewSection = () => {
     }
 
     if (!userHasOperatorRole) {
-      notification.error("Not allowed");
+      notification.error("Not allowed: Operator role missed");
       return;
     }
 
@@ -381,7 +381,7 @@ const ViewSection = () => {
     }
 
     if (!userHasAssetManagerRole) {
-      notification.error("Not allowed");
+      notification.error("Not allowed: Asset Manager role missed");
       return;
     }
 
