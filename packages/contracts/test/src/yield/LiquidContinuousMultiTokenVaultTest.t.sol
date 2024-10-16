@@ -141,7 +141,8 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         uint256 oneShare = 1 * _scale; // a little over the first deposit shares
         uint256 sharesToRedeem1 = testParamsArray.get(0).principal + oneShare; // a little over the first deposit shares
         vm.prank(alice);
-        uint256 requestId1 = _liquidVault.requestSell(sharesToRedeem1);
+        // uint256 requestId1 = _liquidVault.requestSell(sharesToRedeem1);
+        uint256 requestId1 = _liquidVault.requestRedeem(sharesToRedeem1, alice, alice);
         (uint256[] memory unlockDepositPeriods1, uint256[] memory unlockShares1) =
             _liquidVault.unlockRequests(alice, requestId1);
 
@@ -160,7 +161,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         uint256 sharesToRedeem2 = testParamsArray.get(1).principal; // a little over the second deposit shares
         vm.prank(alice);
-        uint256 requestId2 = _liquidVault.requestSell(sharesToRedeem2);
+        uint256 requestId2 = _liquidVault.requestRedeem(sharesToRedeem2, alice, alice);
         (uint256[] memory unlockDepositPeriods2, uint256[] memory unlockShares2) =
             _liquidVault.unlockRequests(alice, requestId2);
 
