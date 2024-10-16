@@ -9,29 +9,33 @@ import LoadingSpinner from "../../../components/general/LoadingSpinner";
 import DepositPoolCard from "./DepositPoolCard";
 import { ethers } from "ethers";
 import { useTheme } from "next-themes";
-import { useChainId, useWriteContract } from "wagmi";
+import { useAccount, useChainId, useWriteContract } from "wagmi";
 import ActionCard from "~~/components/general/ActionCard";
 import { useFetchContractData } from "~~/hooks/custom/useFetchContractData";
 import { useFetchDepositPools } from "~~/hooks/custom/useFetchDepositPools";
 import { useFetchSellRequests } from "~~/hooks/custom/useFetchSellRequests";
-import { useTransactor } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo, useTransactor } from "~~/hooks/scaffold-eth";
 import { SellRequest } from "~~/types/vault";
 import { notification } from "~~/utils/scaffold-eth";
-import { Contract, ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
+import { ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
+import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
 
-const ViewSection = ({
-  address,
-  deployedContractAddress,
-  deployedContractAbi,
-  deployedContractLoading,
-  simpleUsdcContractData,
-}: {
-  address: string | undefined;
-  deployedContractAddress: string;
-  deployedContractAbi: ContractAbi;
-  deployedContractLoading: boolean;
-  simpleUsdcContractData: Contract<ContractName> | undefined;
-}) => {
+const contractsData = getAllContracts();
+
+const ViewSection = () => {
+  const { address } = useAccount();
+  const contractNames = Object.keys(contractsData) as ContractName[];
+  const { data: simpleUsdcContractData } = useDeployedContractInfo(contractNames[0]);
+
+  const { data: implementationContractData, isLoading: implementationContractLoading } = useDeployedContractInfo(
+    contractNames[3],
+  );
+  const { data: proxyContractData, isLoading: proxyContractLoading } = useDeployedContractInfo(contractNames[4]);
+
+  const deployedContractAddress = proxyContractData?.address || "";
+  const deployedContractAbi = implementationContractData?.abi as ContractAbi;
+  const deployedContractLoading = implementationContractLoading || proxyContractLoading;
+
   const chainId = useChainId();
 
   const { resolvedTheme } = useTheme();
