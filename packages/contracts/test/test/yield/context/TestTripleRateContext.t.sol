@@ -9,7 +9,7 @@ contract TestTripleRateContext is Initializable, UUPSUpgradeable, TripleRateCont
     // solhint-disable-next-line no-empty-blocks
     function _authorizeUpgrade(address newImplementation) internal virtual override { }
 
-    function __TestTripeRateContext_init(
+    function __TestTripleRateContext_init(
         uint256 fullRateScaled_,
         uint256 initialReducedRateScaled_,
         uint256 initialEffectiveFromPeriod_,

@@ -33,7 +33,7 @@ contract TripleRateContextTest is Test {
                 new ERC1967Proxy(
                     address(toTest),
                     abi.encodeWithSelector(
-                        toTest.__TestTripeRateContext_init.selector,
+                        toTest.__TestTripleRateContext_init.selector,
                         PERCENT_5_SCALED,
                         PERCENT_5_5_SCALED,
                         EFFECTIVE_FROM_PERIOD,

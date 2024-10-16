@@ -21,7 +21,7 @@ contract TripleRateYieldStrategyScenarioTest is YieldStrategyScenarioTest {
                 new ERC1967Proxy(
                     address(context),
                     abi.encodeWithSelector(
-                        context.__TestTripeRateContext_init.selector,
+                        context.__TestTripleRateContext_init.selector,
                         DEFAULT_FULL_RATE,
                         DEFAULT_REDUCED_RATE,
                         EFFECTIVE_FROM_PERIOD,
