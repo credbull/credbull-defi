@@ -79,6 +79,7 @@ const ViewSection = () => {
     upgraderRole,
     upgraderRoleCount,
     upgraderRoleMembers,
+    userHasUpgraderRole,
     assetManagerRole,
     assetManagerRoleCount,
     assetManagerRoleMembers,
@@ -453,6 +454,21 @@ const ViewSection = () => {
   return (
     <>
       <div className="main-container mt-8 p-2">
+        <div className={`container mx-auto p-6 ${resolvedTheme === "dark" ? "text-white" : "text-black"}`}>
+          <div className="flex items-center justify-between p-4 bg-gray-200 rounded-lg shadow-md">
+            <div className="flex items-center gap-4">
+              <ContractValueBadge
+                name="Connected Wallet"
+                value={address ? formatAddress(address) : "No address found"}
+              />
+              {userHasAdminRole && <ContractValueBadge value="Admin" />}
+              {userHasOperatorRole && <ContractValueBadge value="Operator" />}
+              {userHasUpgraderRole && <ContractValueBadge value="Upgrader" />}
+              {userHasAssetManagerRole && <ContractValueBadge value="Asset Manager" />}
+            </div>
+          </div>
+        </div>
+
         <div className={`container mx-auto p-6 ${resolvedTheme === "dark" ? "text-white" : "text-black"}`}>
           {/* Admin Actions */}
           <SectionHeader title="Admin Section" />

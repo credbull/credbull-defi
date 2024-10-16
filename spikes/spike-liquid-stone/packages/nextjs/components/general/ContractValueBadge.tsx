@@ -7,7 +7,7 @@ const ContractValueBadge = ({
   value,
   onClickHandler,
 }: {
-  name: string;
+  name?: string;
   value: any;
   onClickHandler?: (params: any) => void;
 }) => {
@@ -20,7 +20,7 @@ const ContractValueBadge = ({
       }`}
       onClick={onClickHandler}
     >
-      {name}: {value}
+      {name ? `${name} :` : ""} {value}
       <div
         className="absolute inset-0 transition-opacity duration-700 opacity-0 hover:opacity-100"
         style={{
