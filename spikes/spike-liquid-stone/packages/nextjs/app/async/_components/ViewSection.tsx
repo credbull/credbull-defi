@@ -33,7 +33,7 @@ const ViewSection = ({
     const [refetch, setRefetch] = useState(false);
 
     // Action Values
-    const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
+    const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -66,7 +66,7 @@ const ViewSection = ({
         address: address || "",
         deployedContractAddress,
         deployedContractAbi,
-        requestId: selectedRequestId,
+        requestId: expandedRowId,
         refetch
     });
 
@@ -77,30 +77,27 @@ const ViewSection = ({
     return (
         <div className={`container mx-auto p-6 ${resolvedTheme === "dark" ? "text-white" : "text-black"}`}>
             <div
-            className={`${resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"} p-4 rounded-lg mb-6`}
-            >     
-                <h2 className="text-xl font-bold mb-4">Contract Details</h2>
-                {deployedContractLoading ? (
-                    <LoadingSpinner />
-                    ) : (
-                    <div className="flex flex-wrap gap-4">
-                        <ContractValueBadge name="Notice Period" value={`${noticePeriod} days`} />
-                        <ContractValueBadge name="Current Period" value={currentPeriod} />
-                    </div>
+            className={`${resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"} p-4 rounded-lg mb-6 flex`}
+            >   
+                <div>
+                    <h2 className="text-xl font-bold mb-4">Contract Details</h2>
+                    {deployedContractLoading ? (
+                        <LoadingSpinner />
+                        ) : (
+                        <div className="flex flex-wrap gap-4">
+                            <ContractValueBadge name="Notice Period" value={`${noticePeriod} days`} />
+                            <ContractValueBadge name="Current Period" value={currentPeriod} />
+                        </div>
                     )}
+                </div>
             </div>
-                
-            <SetCurrentPeriod
-                deployedContractAddress={deployedContractAddress}
-                deployedContractAbi={deployedContractAbi}
-                onRefetch={() => setRefetch((prev) => !prev)}
-            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 mt-6">
                 <div
                 className={`${
                     resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
-                } p-4 rounded-lg grid gap-3`}
+                } p-4 rounded-lg`}
+                    style={{ maxHeight: "400px", overflowY: "auto" }} 
                 >
                     <h2 className="text-xl font-bold mb-4">Locked Amount Table</h2>
                     <table className="table w-full">
@@ -125,10 +122,12 @@ const ViewSection = ({
                     </table>
                 </div>
 
+                {/* Request ID Table with Expandable Rows */}
                 <div
                 className={`${
                     resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
-                } p-4 rounded-lg grid gap-3`}
+                } p-4 rounded-lg`}
+                style={{ maxHeight: "400px", overflowY: "auto" }}
                 >
                     <h2 className="text-xl font-bold mb-4">Request ID Table</h2>
                     <table className="table w-full">
@@ -140,47 +139,48 @@ const ViewSection = ({
                         </thead>
                         <tbody>
                         {unlockRequests.map((row) => (
-                            <tr key={row.requestId}
-                            onClick={() => setSelectedRequestId(row.requestId)}
-                            className="cursor-pointer hover:bg-gray-200"
-                            >
-                                <td>{row.requestId}</td>
-                                <td>{row.unlockAmount.toString()}</td>
-                            </tr>
+                            <>
+                                <tr
+                                    key={row.requestId}
+                                    onClick={() => setExpandedRowId(expandedRowId === row.requestId ? null : row.requestId)}
+                                    className="cursor-pointer hover:bg-gray-200"
+                                >
+                                    <td>{row.requestId}</td>
+                                    <td>{row.unlockAmount.toString()}</td>
+                                </tr>
+
+                                {expandedRowId === row.requestId && (
+                                    <tr>
+                                        <td colSpan={2}>
+                                            <div className="p-4 bg-gray-100 rounded-lg">
+                                                <table className="table w-full">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Deposit Period</th>
+                                                        <th>Unlock Amount</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {requestDetails.map((detail) => (
+                                                        <tr key={detail.depositPeriod}>
+                                                        <td>{detail.depositPeriod}</td>
+                                                        <td>{detail.unlockAmount.toString()}</td>
+                                                        </tr>
+                                                    ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </>
                         ))}
                         </tbody>
                     </table>
                 </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div
-                    className={`${
-                        resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
-                    } p-4 rounded-lg grid gap-3`}
-                >
-                    <h2 className="text-xl font-bold mb-4">Request Details</h2>
-
-                    <table className="table w-full">
-                        <thead>
-                            <tr>
-                                <th>Deposit Period</th>
-                                <th>Unlock Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        { requestDetails.map((row) => (
-                            <tr key={row.depositPeriod}>
-                                <td>{row.depositPeriod}</td>
-                                <td>{row.unlockAmount.toString()}</td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 {/* Lock */}
                 <LockAction
                     address={address}
@@ -198,6 +198,14 @@ const ViewSection = ({
                 {/* Unlock */}
                 <UnlockAction
                     address={address}
+                    deployedContractAddress={deployedContractAddress}
+                    deployedContractAbi={deployedContractAbi}
+                    onRefetch={() => setRefetch((prev) => !prev)}
+                />
+            </div>
+
+            <div>
+                <SetCurrentPeriod
                     deployedContractAddress={deployedContractAddress}
                     deployedContractAbi={deployedContractAbi}
                     onRefetch={() => setRefetch((prev) => !prev)}
