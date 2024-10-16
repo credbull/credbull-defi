@@ -15,6 +15,7 @@ import ContractValueBadge from "../../../components/general/ContractValueBadge";
 import LockAction from "./LockAction";
 import RequestUnlockAction from "./RequestUnlockAction";
 import UnlockAction from "./UnlockAction";
+import SetCurrentPeriod from "./SetCurrentPeriod";
 
 const ViewSection = ({
     address,
@@ -88,8 +89,14 @@ const ViewSection = ({
                     </div>
                     )}
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                
+            <SetCurrentPeriod
+                deployedContractAddress={deployedContractAddress}
+                deployedContractAbi={deployedContractAbi}
+                onRefetch={() => setRefetch((prev) => !prev)}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 mt-6">
                 <div
                 className={`${
                     resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"

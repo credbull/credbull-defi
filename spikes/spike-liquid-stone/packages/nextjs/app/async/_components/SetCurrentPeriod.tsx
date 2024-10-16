@@ -10,61 +10,57 @@ import ActionCard from "~~/components/general/ActionCard";
 import Input from "../../../components/general/Input";
 import Button from "../../../components/general/Button";
 
-const UnlockAction = ({
-    address,
+const SetCurrentPeriod = ({
     deployedContractAddress,
     deployedContractAbi,
     onRefetch
   }: {
-    address: string | undefined;
     deployedContractAddress: string;
     deployedContractAbi: ContractAbi;
     onRefetch: () => void;
   }) => {
-
-    const [requestId, setRequestId] = useState("");
+    const [currentPeriod, setCurrentPeriod] = useState("");
 
     const writeTxn = useTransactor();
     const { writeContractAsync } = useWriteContract();
 
-    const handleUnlock = async () => {
+    const handleCurrentPeriod = async () => {
         try {
-            if (!address || !requestId) {
+            if (!currentPeriod) {
                 notification.error("Missing required fields");
                 return;
             }
 
-            const makeUnlockWithParams = () => writeContractAsync({
+            const makeSetCurrentPeriodWithParams = () => writeContractAsync({
                 address: deployedContractAddress,
                 abi: deployedContractAbi,
-                functionName: "unlock",
+                functionName: "setCurrentPeriod",
                 args: [
-                    address,
-                    BigInt(requestId)
+                    BigInt(currentPeriod)
                 ],
             });
 
-            await writeTxn(makeUnlockWithParams);
+            await writeTxn(makeSetCurrentPeriodWithParams);
             onRefetch();
         } catch (error) {
-            console.error("Error handleUnlock:", error);    
+            console.error("Error handleCurrentPeriod:", error);    
         }
     }
 
     return (
         <>
-            <ActionCard key="2">
-                <h2 className="text-xl font-bold mb-4">Unlock</h2>
+            <ActionCard>
+                <h2 className="text-xl font-bold mb-4">Set CurrentPeriod</h2>
                 <Input
                     type="text"
-                    value={requestId}
-                    placeholder="Enter Request ID"
-                    onChangeHandler={value => setRequestId(value)}  
+                    value={currentPeriod}
+                    placeholder="Enter Time Period"
+                    onChangeHandler={value => setCurrentPeriod(value)}  
                 />
-                <Button text="Unlock" bgColor="blue" onClickHandler={handleUnlock} />
+                <Button text="SetCurrentPeriod" bgColor="blue" onClickHandler={handleCurrentPeriod} />
             </ActionCard>
         </>
     )
-};
+}
 
-export default UnlockAction;
+export default SetCurrentPeriod;
