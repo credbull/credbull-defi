@@ -38,6 +38,7 @@ const ViewSection = ({
   const [mounted, setMounted] = useState(false);
   const [refetch, setRefetch] = useState(false);
 
+  // TODO - update the naming of the state variables as per IComponentToken names
   const [sellAmount, setSellAmount] = useState("");
   const [currencyTokenAmount, setCurrencyTokenAmount] = useState("");
   const [requestId, setRequestId] = useState("");
@@ -100,13 +101,12 @@ const ViewSection = ({
             const makeExecuteBuyWithParams = () =>
               writeContractAsync({
                 address: deployedContractAddress || "",
-                functionName: "executeBuy",
+                functionName: "requestDeposit",
                 abi: deployedContractAbi || [],
                 args: [
+                  ethers.parseUnits(currencyTokenAmount, 6),
                   address,
-                  BigInt(0),
-                  ethers.parseUnits(currencyTokenAmount, 6),
-                  ethers.parseUnits(currencyTokenAmount, 6),
+                  address,
                 ],
               });
             writeTxn(makeExecuteBuyWithParams).then(data => {
@@ -142,9 +142,9 @@ const ViewSection = ({
           const makeRequestSellWithParams = () =>
             writeContractAsync({
               address: deployedContractAddress || "",
-              functionName: "requestSell",
+              functionName: "requestRedeem",
               abi: deployedContractAbi || [],
-              args: [ethers.parseUnits(sellAmount, 6)],
+              args: [ethers.parseUnits(sellAmount, 6), address, address,],
             });
           writeTxn(makeRequestSellWithParams).then(data => {
             console.log("setting refresh", data);
@@ -178,13 +178,12 @@ const ViewSection = ({
           const makeRequestSellWithParams = () =>
             writeContractAsync({
               address: deployedContractAddress || "",
-              functionName: "executeSell",
+              functionName: "redeem",
               abi: deployedContractAbi || [],
               args: [
-                address,
-                BigInt(requestId),
-                ethers.parseUnits(currencyTokenAmountToSell, 6),
                 ethers.parseUnits(componentTokenAmount, 6),
+                address,
+                address,
               ],
             });
           writeTxn(makeRequestSellWithParams).then(data => {
