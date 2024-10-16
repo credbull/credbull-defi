@@ -6,8 +6,6 @@ import { YieldStrategy } from "@credbull/yield/strategy/YieldStrategy.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-import { console } from "forge-std/console.sol";
-
 contract YieldStrategyTest is Test {
     uint256 public constant TOLERANCE = 1; // with 6 decimals, diff of 0.000001
     uint256 public constant DECIMALS = 6;
@@ -113,6 +111,8 @@ contract YieldStrategyTest is Test {
     }
 
     function test_YieldStrategy_RangeInclusionBoth_PeriodRange_WorksConsistently(uint256 from, uint256 to) public {
+        vm.assume(from > 0 || to < UINT256_MAX);
+
         (string memory label, uint256 actualNoOfPeriods, uint256 actualFrom, uint256 actualTo) =
             periodRangeWorksConsistently(IYieldStrategy.RangeInclusion.Both, from, to);
         assertEq((to - from) + 1, actualNoOfPeriods, string.concat("Incorrect No Of Periods: ", label));
