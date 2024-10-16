@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
 import { LockRow } from "~~/types/async";
 import { ethers } from "ethers";
+import { MAX_PERIODS } from "~~/utils/async/config";
 
 export const useFetchLocks = ({
     address,
@@ -15,7 +16,7 @@ export const useFetchLocks = ({
     refetch: any;
   }) => {
 
-    const userDepositPeriods = Array.from({ length: 101 }, (_, index) => index);
+    const userDepositPeriods = Array.from({ length: MAX_PERIODS + 1 }, (_, index) => index);
 
     const [lockDatas, setLockDatas] = useState<LockRow[]>([]);
 

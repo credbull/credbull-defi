@@ -41,7 +41,7 @@ const Button = ({
     },
     size: {
       small: "px-3 py-2",
-      medium: "px-4 py-2 mr-2",
+      medium: "px-4 py-2",
       large: "px-5 py-2",
     },
   };

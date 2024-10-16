@@ -14,11 +14,13 @@ const RequestUnlockAction = ({
     address,
     deployedContractAddress,
     deployedContractAbi,
+    currentPeriod,
     onRefetch
 }: {
     address: string | undefined;
     deployedContractAddress: string;
     deployedContractAbi: ContractAbi;
+    currentPeriod: number;
     onRefetch: () => void;
 }) => {
 
@@ -53,6 +55,24 @@ const RequestUnlockAction = ({
                 notification.error("Missing required fields");
                 return;
             }
+            // Check first if all pair is valid
+            const isValidInput = inputPairs.every(
+                (pair) => pair.period.trim() !== "" && pair.amount.trim() !== ""
+            );
+
+            if (!isValidInput) {
+                notification.error("All fields must be filled.");
+                return;
+            }
+
+            // Check if all pair's deposit periods are less than currentPeriod
+            const isValidPeriod = inputPairs.every(
+                (pair) => Number(pair.period) <= currentPeriod
+            );
+            if (!isValidPeriod) {
+                notification.error(`All deposit periods must be less than or equal to ${currentPeriod}(Current Period).`);
+                return;
+            }
 
             const depositPeriodsForUnlockRequest = inputPairs.map((pair) => BigInt(pair.period));
             const amountsForUnlockRequest = inputPairs.map((pair) => BigInt(pair.amount));
@@ -69,6 +89,9 @@ const RequestUnlockAction = ({
             });
             
             await writeTxn(makeUnlockRequestWithParams);
+
+            setInputPairs([{ period: "", amount: "" }]);
+
             onRefetch();
         } catch (error) {
             console.error("Error handleUnlockRequest:", error);    
@@ -82,13 +105,13 @@ const RequestUnlockAction = ({
         {inputPairs.map((pair, index) => (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3" key={index}>
                 <Input
-                    type="text"
+                    type="number"
                     value={pair.period}
                     placeholder="Enter Deposit Period"
                     onChangeHandler={value => handleInputChange(index, "period", value)}
                 />
                 <Input
-                    type="text"
+                    type="number"
                     value={pair.amount}
                     placeholder="Enter Amount"
                     onChangeHandler={value => handleInputChange(index, "amount", value)}
@@ -96,9 +119,9 @@ const RequestUnlockAction = ({
             </div>
         ))}
 
-        <div className="flex items-center gap-4 mb-4">
-            <Button text="+ Add Input" bgColor="green" onClickHandler={handleAddInput} />
-            <Button text="- Remove Input" bgColor="yellow" onClickHandler={handleRemoveInput} />
+        <div className="grid grid-cols-2 gap-3 mb-4">
+            <Button text="+ Add" bgColor="green" onClickHandler={handleAddInput} />
+            <Button text="- Remove" bgColor="yellow" onClickHandler={handleRemoveInput} />
         </div>
 
         <Button text="Request Unlock" bgColor="blue" onClickHandler={handleUnlockRequest} />

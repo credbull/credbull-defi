@@ -39,7 +39,7 @@ const ViewSection = ({
         setMounted(true);
     }, []);
 
-    const { noticePeriod, currentPeriod } =
+    const { noticePeriod, currentPeriod, minUnlockPeriod } =
     useFetchContractData({
       deployedContractAddress,
       deployedContractAbi,
@@ -87,12 +87,13 @@ const ViewSection = ({
                         <div className="flex flex-wrap gap-4">
                             <ContractValueBadge name="Notice Period" value={`${noticePeriod} days`} />
                             <ContractValueBadge name="Current Period" value={currentPeriod} />
+                            <ContractValueBadge name="Min Unlock Period" value={minUnlockPeriod} />
                         </div>
                     )}
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 mt-6">
                 <div
                 className={`${
                     resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"
@@ -133,7 +134,7 @@ const ViewSection = ({
                     <table className="table w-full">
                         <thead>
                             <tr>
-                                <th>Request ID</th>
+                                <th>Request ID (Unlock Period)</th>
                                 <th>Unlock Amount</th>
                             </tr>
                         </thead>
@@ -180,7 +181,7 @@ const ViewSection = ({
                 </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Lock */}
                 <LockAction
                     address={address}
@@ -193,6 +194,7 @@ const ViewSection = ({
                     address={address}
                     deployedContractAddress={deployedContractAddress}
                     deployedContractAbi={deployedContractAbi}
+                    currentPeriod={currentPeriod}
                     onRefetch={() => setRefetch((prev) => !prev)}
                 />
                 {/* Unlock */}
@@ -202,10 +204,10 @@ const ViewSection = ({
                     deployedContractAbi={deployedContractAbi}
                     onRefetch={() => setRefetch((prev) => !prev)}
                 />
-            </div>
 
-            <div>
+                {/* SetCurrentPeriod */}
                 <SetCurrentPeriod
+                    address={address}
                     deployedContractAddress={deployedContractAddress}
                     deployedContractAbi={deployedContractAbi}
                     onRefetch={() => setRefetch((prev) => !prev)}

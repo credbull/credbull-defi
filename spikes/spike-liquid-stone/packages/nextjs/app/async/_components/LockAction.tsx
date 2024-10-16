@@ -5,6 +5,7 @@ import { ContractAbi } from "~~/utils/scaffold-eth/contract";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useWriteContract } from "wagmi";
 import { notification } from "~~/utils/scaffold-eth";
+import { MAX_PERIODS } from "~~/utils/async/config";
 
 import ActionCard from "~~/components/general/ActionCard";
 import Input from "../../../components/general/Input";
@@ -32,6 +33,11 @@ const LockAction = ({
             notification.error("Missing required fields");
             return;
         }
+        
+        if (Number(lockDepositPeriod) > MAX_PERIODS) {
+            notification.error(`Deposit period must be less than or equal to ${MAX_PERIODS}(MAX_PERIODS).`);
+            return;
+        }
 
         try {
             const makeLockWithParams = () =>
@@ -41,12 +47,16 @@ const LockAction = ({
                     functionName: "lock",
                     args: [
                         address,
-                        BigInt(lockDepositPeriod), // Convert input to BigInt
-                        BigInt(lockAmount), // Convert input to BigInt
+                        BigInt(lockDepositPeriod),
+                        BigInt(lockAmount),
                     ],
                 });
 
             await writeTxn(makeLockWithParams);
+
+            setLockAmount("");
+            setLockDepositPeriod("");
+
             onRefetch();
         } catch (error) {
             console.error("Error during lock:", error);
@@ -59,13 +69,13 @@ const LockAction = ({
                 <h2 className="text-xl font-bold mb-4">Lock</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <Input
-                        type="text"
+                        type="number"
                         value={lockDepositPeriod}
                         placeholder="Enter Deposit Period"
                         onChangeHandler={value => setLockDepositPeriod(value)}
                     />
                     <Input
-                        type="text"
+                        type="number"
                         value={lockAmount}
                         placeholder="Enter Lock Amount"
                         onChangeHandler={value => setLockAmount(value)}

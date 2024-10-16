@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
 import { UnlockRequest } from "~~/types/async";
 import { ethers } from "ethers";
+import { MAX_PERIODS } from "~~/utils/async/config";
 
 export const useFetchUnlockRequests = ({
     address,
@@ -29,7 +30,7 @@ export const useFetchUnlockRequests = ({
                 const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
                 const requests: UnlockRequest[] = [];
 
-                for (let i = 0; i <= currentPeriod + noticePeriod; i ++) {
+                for (let i = 0; i <= MAX_PERIODS + noticePeriod; i ++) {
                     const unlock = await contract.unlockRequestAmount(address, BigInt(i));
 
                     const unlockAmount = BigInt(unlock || 0);

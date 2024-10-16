@@ -13,6 +13,7 @@ export const useFetchContractData = ({
 }) => {
     const [noticePeriod, setNoticePeriod] = useState<number>(0);
     const [currentPeriod, setCurrentPeriod] = useState<number>(0);
+    const [minUnlockPeriod, setMinUnlockPeriod] = useState<number>(0);
 
     const { refetch: refetchNoticePeriod } = useReadContract({
         address: deployedContractAddress,
@@ -28,6 +29,13 @@ export const useFetchContractData = ({
         args: [],
     });
 
+    const { refetch: refetchMinUnlockPeriod } = useReadContract({
+        address: deployedContractAddress,
+        functionName: "minUnlockPeriod",
+        abi: deployedContractAbi,
+        args: [],
+    });
+
     const fetchData = async() => {
         try {
             const noticePeriodData = await refetchNoticePeriod();
@@ -35,6 +43,9 @@ export const useFetchContractData = ({
 
             const currentPeriodData = await refetchCurrentPeriod();
             setCurrentPeriod(Number(currentPeriodData?.data));
+
+            const minUnlockPeriodData = await refetchMinUnlockPeriod();
+            setMinUnlockPeriod(Number(minUnlockPeriodData?.data));
         } catch (error) {
             console.error("Error fetching contract data:", error);
         }
@@ -42,10 +53,11 @@ export const useFetchContractData = ({
 
     useEffect(() => {
         fetchData();
-    }, [refetchNoticePeriod, refetchCurrentPeriod, ...dependencies]);
+    }, [refetchNoticePeriod, refetchCurrentPeriod, refetchMinUnlockPeriod, ...dependencies]);
 
     return {
         noticePeriod,
         currentPeriod,
+        minUnlockPeriod,
     };
 }

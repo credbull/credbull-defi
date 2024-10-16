@@ -45,6 +45,9 @@ const UnlockAction = ({
             });
 
             await writeTxn(makeUnlockWithParams);
+            
+            setRequestId("");
+
             onRefetch();
         } catch (error) {
             console.error("Error handleUnlock:", error);    
@@ -56,7 +59,7 @@ const UnlockAction = ({
             <ActionCard key="2">
                 <h2 className="text-xl font-bold mb-4">Unlock</h2>
                 <Input
-                    type="text"
+                    type="number"
                     value={requestId}
                     placeholder="Enter Request ID"
                     onChangeHandler={value => setRequestId(value)}  
