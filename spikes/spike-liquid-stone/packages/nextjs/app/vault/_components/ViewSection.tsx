@@ -42,7 +42,6 @@ const ViewSection = () => {
   const [mounted, setMounted] = useState(false);
   const [refetch, setRefetch] = useState(false);
 
-  // TODO - update the naming of the state variables as per IComponentToken names
   const [sharesToRequest, setSharesToRequest] = useState("");
   const [assets, setAssets] = useState("");
   const [sharesToRedeem, setSharesToRedeem] = useState("");
