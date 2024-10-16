@@ -271,6 +271,116 @@ contract TimelockAsyncUnlockTest is Test {
         asyncUnlock.requestUnlock(alice, depositPeriodsForUnlock2, amountsForUnlock2);
     }
 
+    /**
+     * Try multiple locks, multiple requestUnlocks using duplicate depositPeriods
+     * Feat: UserInterface Testing
+     * Test Scenario:
+     * Bob locks amount [7400, 6800, 8200, 16000] at depositPeriods [0,2,3,12]
+     * Bob requests Unlock DepositPeriods [0,2,3] UnlockAmounts [3000, 6200, 4000] at period 8
+     * Bob requests Unlock DepositPeriods [0,3] UnlockAmounts [1000, 2000] at period 12
+     * Check Bob's Max Request Unlock, Unlock Request Amount according to depositPeriod
+     */
+    function test__TimelockAsyncUnlock__MultipleRequestUnlocks__UsingDuplicateDepositPeriods() public {
+        // Add a separate lock testcase; feat: UserInterface test
+        uint256[] memory lDepositPeriods = new uint256[](4);
+        lDepositPeriods[0] = 0;
+        lDepositPeriods[1] = 2;
+        lDepositPeriods[2] = 3;
+        lDepositPeriods[3] = 12;
+
+        uint256[] memory lAmounts = new uint256[](4);
+        lAmounts[0] = 7400;
+        lAmounts[1] = 6800;
+        lAmounts[2] = 8200;
+        lAmounts[3] = 16000;
+
+        vm.startPrank(bob);
+        for (uint256 i = 0; i < lDepositPeriods.length; ++i) {
+            asyncUnlock.lock(bob, lDepositPeriods[i], lAmounts[i]);
+        }
+        vm.stopPrank();
+
+        for (uint256 i = 0; i < lDepositPeriods.length; ++i) {
+            assertEq(lAmounts[i], asyncUnlock.lockedAmount(bob, lDepositPeriods[i]));
+            assertEq(lAmounts[i], asyncUnlock.maxRequestUnlock(bob, lDepositPeriods[i]));
+            assertEq(0, asyncUnlock.unlockRequestAmountByDepositPeriod(bob, lDepositPeriods[i]));
+        }
+
+        // Set Current Period to 8 (this value is constant and static currently)
+        asyncUnlock.setCurrentPeriod(8);
+
+        // request For unlock at Period 8
+        uint256[] memory depositPeriodsForUnlock = new uint256[](3);
+        uint256[] memory amountsForUnlock = new uint256[](3);
+
+        depositPeriodsForUnlock[0] = 0;
+        depositPeriodsForUnlock[1] = 2;
+        depositPeriodsForUnlock[2] = 3;
+
+        amountsForUnlock[0] = 3000;
+        amountsForUnlock[1] = 6200;
+        amountsForUnlock[2] = 4000;
+
+        vm.prank(bob);
+        asyncUnlock.requestUnlock(bob, depositPeriodsForUnlock, amountsForUnlock);
+
+        for (uint256 i = 0; i < depositPeriodsForUnlock.length; ++i) {
+            assertEq(lAmounts[i], asyncUnlock.lockedAmount(bob, depositPeriodsForUnlock[i]));
+            assertEq(lAmounts[i] - amountsForUnlock[i], asyncUnlock.maxRequestUnlock(bob, depositPeriodsForUnlock[i]));
+            assertEq(
+                amountsForUnlock[i], asyncUnlock.unlockRequestAmountByDepositPeriod(bob, depositPeriodsForUnlock[i])
+            );
+        }
+
+        // Set Current Period to 12 (this value is constant and static currently)
+        asyncUnlock.setCurrentPeriod(12);
+
+        // request For unlock at Period 12
+        uint256[] memory depositPeriodsForUnlock2 = new uint256[](2);
+        uint256[] memory amountsForUnlock2 = new uint256[](2);
+
+        depositPeriodsForUnlock2[0] = 0;
+        depositPeriodsForUnlock2[1] = 3;
+
+        amountsForUnlock2[0] = 1000;
+        amountsForUnlock2[1] = 2000;
+
+        vm.prank(bob);
+        uint256 requestId2 = asyncUnlock.requestUnlock(bob, depositPeriodsForUnlock2, amountsForUnlock2);
+
+        assertEq(
+            amountsForUnlock2[0] + amountsForUnlock[0],
+            asyncUnlock.unlockRequestAmountByDepositPeriod(bob, depositPeriodsForUnlock[0]),
+            "DepositPeriod:0 UnlockRequestAmount is wrong"
+        );
+
+        assertEq(
+            amountsForUnlock2[1] + amountsForUnlock[2],
+            asyncUnlock.unlockRequestAmountByDepositPeriod(bob, depositPeriodsForUnlock[2]),
+            "DepositPeriod:3 UnlockRequestAmount is wrong"
+        );
+
+        // Proceed with Unlock for UnlockPeriod 13
+        asyncUnlock.setCurrentPeriod(requestId2);
+        vm.prank(bob);
+        asyncUnlock.unlock(bob, requestId2);
+
+        assertEq(lAmounts[0] - amountsForUnlock2[0], asyncUnlock.lockedAmount(bob, depositPeriodsForUnlock[0]));
+        assertEq(lAmounts[2] - amountsForUnlock2[1], asyncUnlock.lockedAmount(bob, depositPeriodsForUnlock[2]));
+
+        assertEq(
+            lAmounts[0] - amountsForUnlock[0] - amountsForUnlock2[0],
+            asyncUnlock.maxRequestUnlock(bob, depositPeriodsForUnlock[0])
+        );
+        assertEq(
+            lAmounts[2] - amountsForUnlock[2] - amountsForUnlock2[1],
+            asyncUnlock.maxRequestUnlock(bob, depositPeriodsForUnlock[2])
+        );
+
+        assertEq(amountsForUnlock[0], asyncUnlock.unlockRequestAmountByDepositPeriod(bob, depositPeriodsForUnlock[0]));
+        assertEq(amountsForUnlock[2], asyncUnlock.unlockRequestAmountByDepositPeriod(bob, depositPeriodsForUnlock[2]));
+    }
+
     function test__TimelockAsyncUnlock__MultipleRequestsAndUnlocks() public {
         assertEq(
             lockAmounts[0],
