@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import SectionHeader from "./SectionHeader";
+import UserDataSection from "./UserDataSection";
 import { ethers } from "ethers";
 import { useTheme } from "next-themes";
 import { waitForTransactionReceipt } from "viem/actions";
@@ -66,6 +67,7 @@ const ViewSection = () => {
   });
 
   const {
+    allDataFetched,
     vaultBalance,
     custodianBalance,
     adminRole,
@@ -455,19 +457,13 @@ const ViewSection = () => {
     <>
       <div className="main-container mt-8 p-2">
         <div className={`container mx-auto p-6 ${resolvedTheme === "dark" ? "text-white" : "text-black"}`}>
-          <div className="flex items-center justify-between p-4 bg-gray-200 rounded-lg shadow-md">
-            <div className="flex items-center gap-4">
-              <ContractValueBadge
-                name="Connected Wallet"
-                value={address ? formatAddress(address) : "No address found"}
-              />
-              <span className="text-black">|</span>
-              {userHasAdminRole && <ContractValueBadge value="Admin" />}
-              {userHasOperatorRole && <ContractValueBadge value="Operator" />}
-              {userHasUpgraderRole && <ContractValueBadge value="Upgrader" />}
-              {userHasAssetManagerRole && <ContractValueBadge value="Asset Manager" />}
-            </div>
-          </div>
+          <UserDataSection
+            allDataFetched={allDataFetched}
+            userHasAdminRole={userHasAdminRole}
+            userHasOperatorRole={userHasOperatorRole}
+            userHasUpgraderRole={userHasUpgraderRole}
+            userHasAssetManagerRole={userHasAssetManagerRole}
+          />
         </div>
 
         <div className={`container mx-auto p-6 ${resolvedTheme === "dark" ? "text-white" : "text-black"}`}>

@@ -18,6 +18,8 @@ export const useFetchAdminData = ({
   simpleUsdcContractData: Contract<ContractName> | undefined;
   dependencies: [any] | [];
 }) => {
+  const [allDataFetched, setAllDataFetched] = useState<boolean>(false);
+
   const [vaultBalance, setVaultBalance] = useState<string>("");
   const [custodianBalance, setCustodianBalance] = useState<string>("");
 
@@ -266,12 +268,15 @@ export const useFetchAdminData = ({
         setAssetManagerRoleMembers(_assetManagerRoleMembers);
       }
       setFetchingAssetManagers(false);
+
+      setAllDataFetched(true);
     };
 
     fetchData();
-  }, [deployedContractAddress, simpleUsdcContractData, vaultBalance, custodianBalance, ...dependencies]);
+  }, [userAccount, deployedContractAddress, simpleUsdcContractData, vaultBalance, custodianBalance, ...dependencies]);
 
   return {
+    allDataFetched,
     vaultBalance,
     custodianBalance,
     adminRole,
