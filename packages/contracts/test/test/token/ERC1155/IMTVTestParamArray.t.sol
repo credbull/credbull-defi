@@ -42,14 +42,36 @@ contract IMTVTestParamArray {
         return _allTestParams;
     }
 
-    function depositPeriods() public view returns (uint256[] memory depositPeriods_) {
-        uint256[] memory _depositPeriods = new uint256[](_allTestParams.length);
-
+    function totalPrincipal() public view returns (uint256 totalPrincipal_) {
+        uint256 principal = 0;
         for (uint256 i = 0; i < _allTestParams.length; i++) {
+            principal += _allTestParams[i].principal;
+        }
+        return principal;
+    }
+
+    function deposits() public view returns (uint256[] memory depositPeriods_, uint256[] memory principals_) {
+        uint256 length_ = _allTestParams.length;
+
+        uint256[] memory _depositPeriods = new uint256[](length_);
+        uint256[] memory _principals = new uint256[](length_);
+
+        for (uint256 i = 0; i < length_; i++) {
             _depositPeriods[i] = _allTestParams[i].depositPeriod;
+            _principals[i] = _allTestParams[i].principal;
         }
 
-        return _depositPeriods;
+        return (_depositPeriods, _principals);
+    }
+
+    function depositPeriods() public view returns (uint256[] memory depositPeriods_) {
+        (depositPeriods_,) = deposits();
+        return depositPeriods_;
+    }
+
+    function principals() public view returns (uint256[] memory principals_) {
+        (, principals_) = deposits();
+        return principals_;
     }
 
     function createAccountArray(address account, uint256 size) public pure returns (address[] memory accounts_) {
