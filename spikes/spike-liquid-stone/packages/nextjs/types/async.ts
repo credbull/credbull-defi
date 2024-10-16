@@ -1,16 +1,16 @@
 export type LockRow = {
-    depositPeriod: number;
-    lockedAmount: bigint;
-    maxRequestUnlock: bigint;
-    unlockRequestAmount: bigint;   
+  depositPeriod: number;
+  lockedAmount: bigint;
+  maxRequestUnlock: bigint;
+  unlockRequestAmount: bigint;
 };
 
 export type UnlockRequest = {
-    requestId: number;
-    unlockAmount: bigint;
-}
+  requestId: number;
+  unlockAmount: bigint;
+};
 
 export type RequestDetail = {
-    depositPeriod: number;
-    unlockAmount: bigint;
-}
+  depositPeriod: number;
+  unlockAmount: bigint;
+};

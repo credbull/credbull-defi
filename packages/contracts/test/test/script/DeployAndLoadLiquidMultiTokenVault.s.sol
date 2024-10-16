@@ -104,13 +104,13 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
             // --------------------- deposits ---------------------
             uint256 depositAmount = baseDepositAmount * vault.currentPeriod();
             asset.approve(address(vault), depositAmount);
-            vault.executeBuy(userWallet.addr(), 0, depositAmount, depositAmount);
+            vault.deposit(depositAmount, userWallet.addr());
             totalUserDeposits += depositAmount;
 
             // --------------------- request sell ---------------------
             if (vault.currentPeriod() == vault.TENOR() - 1) {
                 // queue up one request only
-                vault.requestSell(totalUserDeposits / 10);
+                vault.requestRedeem(totalUserDeposits / 10, address(0), userWallet.addr()); // request to sell 10% of deposits so far
             }
 
             vm.stopBroadcast();
@@ -143,7 +143,7 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
 //(3) 0x90F79bf6EB2c4f870365E785982E1f101E93b906 (10000 ETH) - treasury
 //(4) 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65 (10000 ETH) - deployer
 //(5) 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc (10000 ETH) - rewards
-//(6) 0x976EA74026E726554dB657fA54763abd0C3a0aa9 (10000 ETH) - (available)
+//(6) 0x976EA74026E726554dB657fA54763abd0C3a0aa9 (10000 ETH) - asset manager
 //(7) 0x14dC79964da2C08b23698B3D3cc7Ca32193d9955 (10000 ETH) - alice
 //(8) 0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f (10000 ETH) - bob
 //(9) 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720 (10000 ETH) - charlie
@@ -154,11 +154,11 @@ contract AnvilWallet is Script {
         index = index_;
     }
 
-    function addr() public returns (address) {
+    function addr() public view returns (address) {
         return vm.addr(key());
     }
 
-    function key() public returns (uint256 privateKey) {
+    function key() public view returns (uint256 privateKey) {
         string memory mnemonic = "test test test test test test test test test test test junk";
 
         return vm.deriveKey(mnemonic, index);

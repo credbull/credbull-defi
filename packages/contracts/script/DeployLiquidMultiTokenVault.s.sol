@@ -38,7 +38,8 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         _vaultAuth = LiquidContinuousMultiTokenVault.VaultAuth({
             owner: _tomlConfig.readAddress(".evm.address.owner"),
             operator: _tomlConfig.readAddress(".evm.address.operator"),
-            upgrader: _tomlConfig.readAddress(".evm.address.upgrader")
+            upgrader: _tomlConfig.readAddress(".evm.address.upgrader"),
+            assetManager: _tomlConfig.readAddress(".evm.address.asset_manager")
         });
     }
 

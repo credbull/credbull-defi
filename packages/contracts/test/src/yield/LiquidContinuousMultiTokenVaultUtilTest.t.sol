@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
+import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
@@ -34,12 +35,11 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
 
         TestParam memory testParams = TestParam({ principal: 2_000 * scale, depositPeriod: 11, redeemPeriod: 71 });
 
-        uint256 sharesAmount = testParams.principal; // 1 principal = 1 share
         _warpToPeriod(vaultProxy, testParams.depositPeriod);
 
         vm.startPrank(alice);
         asset.approve(address(vaultProxy), testParams.principal); // grant the vault allowance
-        vaultProxy.executeBuy(alice, 0, testParams.principal, sharesAmount);
+        vaultProxy.deposit(testParams.principal, alice);
         vm.stopPrank();
 
         assertEq(
@@ -114,6 +114,16 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         _liquidVault.requestUnlock(alice, _asSingletonArray(testParams.depositPeriod), _asSingletonArray(shares));
 
         _warpToPeriod(_liquidVault, testParams.redeemPeriod);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MultiTokenVault.MultiTokenVault__CallerMissingApprovalForAll.selector, address(this), alice
+            )
+        );
+        _liquidVault.redeemForDepositPeriod(shares, alice, alice, testParams.depositPeriod, testParams.redeemPeriod);
+
+        vm.prank(alice);
+        _liquidVault.setApprovalForAll(address(this), true);
 
         vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
         _liquidVault.redeemForDepositPeriod(shares, alice, alice, testParams.depositPeriod, testParams.redeemPeriod);
@@ -218,7 +228,8 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
             LiquidContinuousMultiTokenVault.VaultAuth({
                 owner: makeAddr("owner"),
                 operator: zeroAddress,
-                upgrader: makeAddr("upgrader")
+                upgrader: makeAddr("upgrader"),
+                assetManager: makeAddr("assetManager")
             })
         );
 
@@ -238,7 +249,8 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
             LiquidContinuousMultiTokenVault.VaultAuth({
                 owner: makeAddr("owner"),
                 operator: makeAddr("operator"),
-                upgrader: zeroAddress
+                upgrader: zeroAddress,
+                assetManager: makeAddr("assetManager")
             })
         );
         vm.expectRevert(
@@ -250,6 +262,25 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         );
         new ERC1967Proxy(
             address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, paramsZeroUpgrader)
+        );
+
+        LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroAssetManager = _createVaultParams(
+            LiquidContinuousMultiTokenVault.VaultAuth({
+                owner: makeAddr("owner"),
+                operator: makeAddr("operator"),
+                upgrader: makeAddr("upgrader"),
+                assetManager: zeroAddress
+            })
+        );
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector,
+                "assetManager",
+                zeroAddress
+            )
+        );
+        new ERC1967Proxy(
+            address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, paramsZeroAssetManager)
         );
     }
 

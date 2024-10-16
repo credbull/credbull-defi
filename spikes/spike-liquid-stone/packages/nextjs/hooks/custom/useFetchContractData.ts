@@ -18,6 +18,7 @@ export const useFetchContractData = ({
 }) => {
   const [currentPeriod, setCurrentPeriod] = useState<number>(0);
   const [assetAmount, setAssetAmount] = useState<string>("");
+  const [startTimeNumber, setStartTimeNumber] = useState<bigint>(BigInt(0));
   const [startTime, setStartTime] = useState<string>("");
   const [noticePeriod, setNoticePeriod] = useState<number>(0);
   const [frequency, setFrequency] = useState<number>(0);
@@ -100,6 +101,7 @@ export const useFetchContractData = ({
       setAssetAmount(ethers.formatUnits(assetAmountBigInt, 6));
 
       const startTimeData = await refetchStartTime();
+      setStartTimeNumber(startTimeData?.data as bigint);
       setStartTime(formatTimestamp(Number(startTimeData?.data)));
 
       const noticePeriodData = await refetchNoticePeriod();
@@ -145,6 +147,7 @@ export const useFetchContractData = ({
   return {
     currentPeriod,
     assetAmount,
+    startTimeNumber,
     startTime,
     noticePeriod,
     frequency,

@@ -1,54 +1,53 @@
 import { useEffect, useState } from "react";
-import { ContractAbi } from "~~/utils/scaffold-eth/contract";
-import { UnlockRequest } from "~~/types/async";
 import { ethers } from "ethers";
+import { UnlockRequest } from "~~/types/async";
 import { MAX_PERIODS } from "~~/utils/async/config";
+import { ContractAbi } from "~~/utils/scaffold-eth/contract";
 
 export const useFetchUnlockRequests = ({
-    address,
-    deployedContractAddress,
-    deployedContractAbi,
-    currentPeriod,
-    noticePeriod,
-    refetch,
+  address,
+  deployedContractAddress,
+  deployedContractAbi,
+  currentPeriod,
+  noticePeriod,
+  refetch,
 }: {
-    address: string;
-    deployedContractAddress: string;
-    deployedContractAbi: ContractAbi;
-    currentPeriod: number;
-    noticePeriod: number;
-    refetch: any;   
+  address: string;
+  deployedContractAddress: string;
+  deployedContractAbi: ContractAbi;
+  currentPeriod: number;
+  noticePeriod: number;
+  refetch: any;
 }) => {
-    const [unlockRequests, setUnlockRequests] = useState<UnlockRequest[]>([]);
+  const [unlockRequests, setUnlockRequests] = useState<UnlockRequest[]>([]);
 
-    useEffect(() => {
-        async function getUnlockRequests() {
-            try {
-                if (!address || !deployedContractAddress || !noticePeriod) return;
-            
-                const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
-                const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
-                const requests: UnlockRequest[] = [];
+  useEffect(() => {
+    async function getUnlockRequests() {
+      try {
+        if (!address || !deployedContractAddress || !noticePeriod) return;
 
-                for (let i = 0; i <= MAX_PERIODS + noticePeriod; i ++) {
-                    const unlock = await contract.unlockRequestAmount(address, BigInt(i));
+        const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+        const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
+        const requests: UnlockRequest[] = [];
 
-                    const unlockAmount = BigInt(unlock || 0);
+        for (let i = 0; i <= MAX_PERIODS + noticePeriod; i++) {
+          const unlock = await contract.unlockRequestAmount(address, BigInt(i));
 
-                    if(unlockAmount > 0) {
-                        const unlockRequest: UnlockRequest = {requestId: i, unlockAmount: unlockAmount};
-                        requests.push(unlockRequest);
-                    }
-                }
-                setUnlockRequests(requests);
-            }
-            catch(error) {
-                console.error("Error getting unlock requests:", error);
-            }
+          const unlockAmount = BigInt(unlock || 0);
+
+          if (unlockAmount > 0) {
+            const unlockRequest: UnlockRequest = { requestId: i, unlockAmount: unlockAmount };
+            requests.push(unlockRequest);
+          }
         }
+        setUnlockRequests(requests);
+      } catch (error) {
+        console.error("Error getting unlock requests:", error);
+      }
+    }
 
-        getUnlockRequests();
-    }, [address, deployedContractAddress, deployedContractAbi, currentPeriod, noticePeriod, refetch]);
+    getUnlockRequests();
+  }, [address, deployedContractAddress, deployedContractAbi, currentPeriod, noticePeriod, refetch]);
 
-    return { unlockRequests };
-}
+  return { unlockRequests };
+};
