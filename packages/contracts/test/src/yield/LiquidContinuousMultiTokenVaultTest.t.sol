@@ -45,7 +45,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         vm.startPrank(alice);
         _asset.approve(address(liquidVault), testParams.principal); // grant the vault allowance
-        liquidVault.requestBuy(testParams.principal);
+        liquidVault.requestDeposit(testParams.principal, alice, alice);
         vm.stopPrank();
 
         assertEq(
@@ -64,7 +64,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         // requestSell
         vm.prank(alice);
-        uint256 requestId = liquidVault.requestSell(sharesAmount);
+        liquidVault.requestRedeem(sharesAmount, alice, alice);
         assertEq(
             sharesAmount,
             liquidVault.unlockRequestAmountByDepositPeriod(alice, testParams.depositPeriod),
@@ -79,7 +79,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         _warpToPeriod(liquidVault, testParams.redeemPeriod);
 
         vm.prank(alice);
-        liquidVault.executeSell(alice, requestId, testParams.principal + expectedYield, sharesAmount);
+        liquidVault.redeem(testParams.principal, alice, alice);
 
         assertEq(0, liquidVault.balanceOf(alice, testParams.depositPeriod), "user should have no shares remaining");
         assertEq(
@@ -100,7 +100,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         vm.startPrank(alice);
         _asset.approve(address(liquidVault), testParams.principal); // grant the vault allowance
-        liquidVault.requestBuy(testParams.principal);
+        liquidVault.requestDeposit(testParams.principal, alice, alice);
         vm.stopPrank();
 
         uint256 assetManagerStartBalance = _asset.balanceOf(assetManager);

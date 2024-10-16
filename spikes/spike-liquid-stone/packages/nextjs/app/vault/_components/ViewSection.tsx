@@ -13,9 +13,9 @@ import { useAccount, useChainId, useWriteContract } from "wagmi";
 import ActionCard from "~~/components/general/ActionCard";
 import { useFetchContractData } from "~~/hooks/custom/useFetchContractData";
 import { useFetchDepositPools } from "~~/hooks/custom/useFetchDepositPools";
-import { useFetchSellRequests } from "~~/hooks/custom/useFetchSellRequests";
+import { useFetchRedeemRequests } from "~~/hooks/custom/useFetchRedeemRequests";
 import { useDeployedContractInfo, useTransactor } from "~~/hooks/scaffold-eth";
-import { SellRequest } from "~~/types/vault";
+import { RedeemRequest } from "~~/types/vault";
 import { notification } from "~~/utils/scaffold-eth";
 import { ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
 import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
@@ -42,11 +42,10 @@ const ViewSection = () => {
   const [mounted, setMounted] = useState(false);
   const [refetch, setRefetch] = useState(false);
 
-  const [sellAmount, setSellAmount] = useState("");
-  const [currencyTokenAmount, setCurrencyTokenAmount] = useState("");
-  const [requestId, setRequestId] = useState("");
-  const [componentTokenAmount, setComponentTokenAmount] = useState("");
-  const [currencyTokenAmountToSell, setCurrencyTokenAmountToSell] = useState("");
+  // TODO - update the naming of the state variables as per IComponentToken names
+  const [sharesToRequest, setSharesToRequest] = useState("");
+  const [assets, setAssets] = useState("");
+  const [sharesToRedeem, setSharesToRedeem] = useState("");
 
   useEffect(() => {
     setMounted(true);
@@ -69,7 +68,7 @@ const ViewSection = () => {
     refetch,
   });
 
-  const { sellRequests } = useFetchSellRequests({
+  const { redeemRequests } = useFetchRedeemRequests({
     address: address || "",
     deployedContractAddress,
     deployedContractAbi,
@@ -80,131 +79,120 @@ const ViewSection = () => {
   const writeTxn = useTransactor();
   const { writeContractAsync } = useWriteContract();
 
-  const handleBuy = async () => {
-    // const message = `Bought ${currencyTokenAmount} currency tokens.`;
+  const handleRequestDeposit = async () => {
+    // const message = `Bought ${assets} currency tokens.`;
     // setLog([...log, message]);
-    if (!address || !currencyTokenAmount) {
+    if (!address || !assets) {
       notification.error("Missing required fields");
       return;
     }
 
     if (writeContractAsync) {
       try {
-        const makeApproveWithParams = () =>
+        const makeApprove = () =>
           writeContractAsync({
             address: simpleUsdcContractData?.address || "",
             functionName: "approve",
             abi: simpleUsdcContractData?.abi || [],
-            args: [deployedContractAddress || "", ethers.parseUnits(currencyTokenAmount, 6)],
+            args: [deployedContractAddress || "", ethers.parseUnits(assets, 6)],
           });
-        writeTxn(makeApproveWithParams).then(data => {
+        writeTxn(makeApprove).then(data => {
           console.log("setting refresh", data);
 
           try {
-            const makeExecuteBuyWithParams = () =>
+            const makeRequestDeposit = () =>
               writeContractAsync({
                 address: deployedContractAddress || "",
-                functionName: "executeBuy",
+                functionName: "requestDeposit",
                 abi: deployedContractAbi || [],
-                args: [
-                  address,
-                  BigInt(0),
-                  ethers.parseUnits(currencyTokenAmount, 6),
-                  ethers.parseUnits(currencyTokenAmount, 6),
-                ],
+                args: [ethers.parseUnits(assets, 6), address, address],
               });
-            writeTxn(makeExecuteBuyWithParams).then(data => {
+            writeTxn(makeRequestDeposit).then(data => {
               console.log("setting refresh", data);
               setRefetch(prev => !prev);
             });
           } catch (error) {
-            console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:buy  ~ error", error);
+            console.error(
+              "⚡️ ~ file: vault/_components/ViewSection.tsx:handleRequestDeposit:requestDeposit  ~ error",
+              error,
+            );
           }
         });
       } catch (error: any) {
-        console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:approve  ~ error", error);
+        console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:handleRequestDeposit:approve  ~ error", error);
       }
     }
 
-    // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
+    // setLog(prevLog => [...prevLog, `Bought ${assets} currency tokens.`]);
 
-    setCurrencyTokenAmount("");
+    setAssets("");
   };
 
-  const handleRequestSell = () => {
-    // const message = `Requested to sell ${sellAmount} component tokens.`;
+  const handleRequestRedeem = () => {
+    // const message = `Requested to redeem ${sharesToRequest} component tokens.`;
     // setLog([...log, message]);
-    if (!address || !sellAmount) {
+    if (!address || !sharesToRequest) {
       notification.error("Missing required fields");
       return;
     }
 
     if (writeContractAsync) {
       try {
-        const makeRequestSellWithParams = () =>
+        const makeRequestRedeem = () =>
           writeContractAsync({
             address: deployedContractAddress || "",
-            functionName: "requestSell",
+            functionName: "requestRedeem",
             abi: deployedContractAbi || [],
-            args: [ethers.parseUnits(sellAmount, 6)],
+            args: [ethers.parseUnits(sharesToRequest, 6), address, address],
           });
-        writeTxn(makeRequestSellWithParams).then(data => {
+        writeTxn(makeRequestRedeem).then(data => {
           console.log("setting refresh", data);
           setRefetch(prev => !prev);
         });
       } catch (error: any) {
-        console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:requestSell  ~ error", error);
+        console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:handleRequestRedeem  ~ error", error);
       }
     }
 
-    // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
+    // setLog(prevLog => [...prevLog, `Requested to redeem ${sharesToRequest} sharesToRequest.`]);
 
-    setSellAmount("");
+    setSharesToRequest("");
   };
 
-  const handleExecuteSell = () => {
-    // const message = `Executed sell of ${componentTokenAmount} component tokens for ${currencyTokenAmount} currency tokens.`;
+  const handleRedeem = () => {
+    // const message = `Redeemed of ${sharesToRedeem} shares.`;
     // setLog([...log, message]);
-    if (!address || !componentTokenAmount || !currencyTokenAmountToSell) {
+    if (!address || !sharesToRedeem) {
       notification.error("Missing required fields");
       return;
     }
 
     if (writeContractAsync) {
       try {
-        const makeRequestSellWithParams = () =>
+        const makeRedeem = () =>
           writeContractAsync({
             address: deployedContractAddress || "",
-            functionName: "executeSell",
+            functionName: "redeem",
             abi: deployedContractAbi || [],
-            args: [
-              address,
-              BigInt(requestId),
-              ethers.parseUnits(currencyTokenAmountToSell, 6),
-              ethers.parseUnits(componentTokenAmount, 6),
-            ],
+            args: [ethers.parseUnits(sharesToRedeem, 6), address, address],
           });
-        writeTxn(makeRequestSellWithParams).then(data => {
+        writeTxn(makeRedeem).then(data => {
           console.log("setting refresh", data);
           setRefetch(prev => !prev);
         });
       } catch (error: any) {
-        console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:executeSell  ~ error", error);
+        console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:handleRedeem  ~ error", error);
       }
     }
 
-    // setLog(prevLog => [...prevLog, `Bought ${currencyTokenAmount} currency tokens.`]);
+    // setLog(prevLog => [...prevLog, `Bought ${assets} currency tokens.`]);
 
-    setCurrencyTokenAmountToSell("");
-    setComponentTokenAmount("");
+    setSharesToRedeem("");
   };
 
-  const setRequestAmountToSell = (request: SellRequest) => {
-    const requestId = request?.id?.toString();
+  const setRequestAmountToRedeem = (request: RedeemRequest) => {
     const amount = request?.amount?.toString();
-    setRequestId(requestId);
-    setCurrencyTokenAmountToSell(amount?.toString());
-    setComponentTokenAmount(amount?.toString());
+    setSharesToRedeem(amount?.toString());
   };
 
   if (!mounted) {
@@ -252,12 +240,12 @@ const ViewSection = () => {
             <LoadingSpinner />
           ) : (
             <div className="flex flex-wrap gap-4">
-              {sellRequests?.map((request, index) => (
+              {redeemRequests?.map((request, index) => (
                 <ContractValueBadge
                   key={index}
                   name={`Request ${request?.id}`}
                   value={`${request?.amount?.toString()} USDC`}
-                  onClickHandler={() => setRequestAmountToSell(request)}
+                  onClickHandler={() => setRequestAmountToRedeem(request)}
                 />
               ))}
             </div>
@@ -266,53 +254,46 @@ const ViewSection = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Execute Buy */}
+        {/* Request Deposit */}
         <ActionCard>
-          <h2 className="text-xl font-bold mb-4">Buy</h2>
+          <h2 className="text-xl font-bold mb-4">Request Deposit</h2>
           <Input
             type="text"
-            value={currencyTokenAmount}
-            placeholder="Enter Currency Token Amount"
-            onChangeHandler={value => setCurrencyTokenAmount(value)}
+            value={assets}
+            placeholder="Enter Asset Amount"
+            onChangeHandler={value => setAssets(value)}
           />
 
-          <Button text="Execute Buy" bgColor="green" onClickHandler={handleBuy} />
+          <Button text="Request Deposit" bgColor="green" onClickHandler={handleRequestDeposit} />
         </ActionCard>
 
-        {/* Request Sell */}
+        {/* Request Redeem */}
         <ActionCard>
-          <h2 className="text-xl font-bold mb-4">Request Sell</h2>
+          <h2 className="text-xl font-bold mb-4">Request Redeem</h2>
           <Input
             type="text"
-            value={sellAmount}
-            placeholder="Enter Component Token Amount"
-            onChangeHandler={value => setSellAmount(value)}
+            value={sharesToRequest}
+            placeholder="Enter Shares Amount"
+            onChangeHandler={value => setSharesToRequest(value)}
           />
 
-          <Button text="Request Sell" bgColor="gray" onClickHandler={handleRequestSell} />
+          <Button text="Request Redeem" bgColor="gray" onClickHandler={handleRequestRedeem} />
         </ActionCard>
 
-        {/* Execute Sell */}
+        {/* Redeem */}
         <ActionCard>
           <h2 className="mb-4">
-            <span className="text-xl font-bold ">Sell</span> (<small>Click on the desired request</small>)
+            <span className="text-xl font-bold ">Redeem</span> (<small>Click on the desired request</small>)
           </h2>
           <Input
             type="text"
-            value={componentTokenAmount}
-            placeholder="Enter Component Token Amount"
+            value={sharesToRedeem}
+            placeholder="Enter Shares Amount"
             disabled
-            onChangeHandler={value => setComponentTokenAmount(value)}
-          />
-          <Input
-            type="text"
-            value={currencyTokenAmountToSell}
-            placeholder="Enter Component Token Amount"
-            disabled
-            onChangeHandler={value => setCurrencyTokenAmountToSell(value)}
+            onChangeHandler={value => setSharesToRedeem(value)}
           />
 
-          <Button text="Execute Sell" bgColor="green" onClickHandler={handleExecuteSell} />
+          <Button text="Redeem" bgColor="green" onClickHandler={handleRedeem} />
         </ActionCard>
       </div>
 
