@@ -3,8 +3,8 @@
 ##
 
 [evm]
-# blockchain id, e.g. baseSepolia=84532, arbSepolia=421614
-chain_id = 84532
+# blockchain id, e.g. plumeTestnet=98864, plumeTestnet_old=161221135, plumeDevnet=18230
+chain_id = 98864
 deploy_mocks = true
 
 [evm.address]
@@ -40,7 +40,7 @@ minter = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 max_supply = 10_000_000 # 10 million in wei
 
 [services.supabase]
-url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
+url = ""
 
 # Save the contract deployment details to the database.
-update_contract_addresses = true
+update_contract_addresses = false
