@@ -461,6 +461,7 @@ const ViewSection = () => {
                 name="Connected Wallet"
                 value={address ? formatAddress(address) : "No address found"}
               />
+              <span className="text-black">|</span>
               {userHasAdminRole && <ContractValueBadge value="Admin" />}
               {userHasOperatorRole && <ContractValueBadge value="Operator" />}
               {userHasUpgraderRole && <ContractValueBadge value="Upgrader" />}
