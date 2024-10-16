@@ -138,7 +138,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         _testRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams2, 41);
 
         // ------------ redeems ------------
-        // NB - call the requestRedeems BEFORE redeem.  make sure multiple requests works.
+        // NB - call the redeem AFTER the multiple requestRedeems.  verify multiple requestRedeems work.
 
         _testRedeemMultiDeposit(alice, _liquidVault, redeemParams1, redeemPeriod1);
 
@@ -178,7 +178,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         _testRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams2, redeemPeriod2);
 
         // ------------ redeems ------------
-        // NB - call the requestRedeems BEFORE redeem.  make sure multiple requests works.
+        // NB - call the redeem AFTER the multiple requestRedeems.  verify multiple requestRedeems work.
 
         _testRedeemMultiDeposit(alice, _liquidVault, redeemParams1, redeemPeriod1);
 

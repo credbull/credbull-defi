@@ -91,8 +91,6 @@ contract DualRateYieldStrategyTest is Test {
             "fullyAPY yield wrong at deposit + TENOR days"
         );
 
-        // TODO MultiToken Scenario S4: User deposits 1000 USDC and redeems the Principal after maturity
-
         // Scenario S7: User deposits 1000 USD, retains for extra cycle, redeems the APY before new cycle ends
         dualRateContext.setReducedRate(reducedRateTenor2);
         assertApproxEqAbs(
@@ -117,8 +115,6 @@ contract DualRateYieldStrategyTest is Test {
             TOLERANCE,
             "yield wrong at deposit + 2x tenor"
         );
-
-        // TODO MultiToken Scenario S10: User deposits 1000 USD, retains for extra cycle, redeems the Principal after new cycle ends
     }
 
     function test__DualRateYieldStrategyTest__MultipleUserScenarios() public {
@@ -134,7 +130,7 @@ contract DualRateYieldStrategyTest is Test {
 
         uint256 principal = 1000 * SCALE;
 
-        uint256 depositPeriodUserA = 0; // TODO: confirm if this should be 0 or 1
+        uint256 depositPeriodUserA = 0;
         uint256 depositPeriodUserB = 15;
 
         // Scenario MU-1: Two users deposit at different funding rounds, both redeem at day 30 (day 1 and day 15)
@@ -151,10 +147,6 @@ contract DualRateYieldStrategyTest is Test {
             TOLERANCE,
             "reducedAPY yield wrong at deposit + 15 days"
         );
-
-        // TODO DualYieldStrategy: Scenario MU-2: Two users deposit at different funding rounds, both redeem 15 days after day 30 (day 1 and day 15)
-
-        // TODO DualYieldStrategy: Scenario MU-3: Two users deposit at different funding round, with different T-Bill Rates, both redeem 14 days after day 30 (day 1 and day 15)
     }
 
     function _createDualRateContext(
