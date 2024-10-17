@@ -15,7 +15,8 @@ import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import { console2 } from "forge-std/console2.sol";
 
 abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTestBase {
     using TestParamSet for TestParamSet.TestParam[];
@@ -148,45 +149,57 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         assertEq(expectedShares, unlockShares, "shares mismatch for requestRedeem");
     }
 
-    /// @dev - requestRedeem over multiple deposit and principals into one requestRedeemPeriod
-    function _testRedeemMultiDeposit(
+    /// @dev - redeem ONLY (no requestRedeem) over multiple deposit and principals into one requestRedeemPeriod
+    function _testRedeemAfterRequestRedeemMultiDeposit(
         address account,
-        LiquidContinuousMultiTokenVault liquidVault,
+        IMultiTokenVault vault,
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
     ) internal virtual {
-        _warpToPeriod(_liquidVault, redeemPeriod);
+        LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
-        uint256 sharesToRedeem = depositTestParams.totalPrincipal();
+        super._testRedeemMultiDeposit(account, vault, depositTestParams, redeemPeriod);
 
-        IERC20 asset = IERC20(liquidVault.asset());
-
-        uint256 prevAssetBalance = asset.balanceOf(account);
-        uint256[] memory prevSharesBalance =
-            _liquidVault.balanceOfBatch(depositTestParams.accountArray(account), depositTestParams.depositPeriods());
-
-        // get the vault enough to cover redeems
-        _transferFromTokenOwner(asset, address(liquidVault), sharesToRedeem); // this will give the vault 2x principal
-
-        vm.prank(account);
-        uint256 assets = liquidVault.redeem(sharesToRedeem, account, account);
-
-        assertEq(prevAssetBalance + assets, asset.balanceOf(account), "did not receive assets");
-
-        // check unlocks are released
+        // verify the requestRedeems are released
         (uint256[] memory unlockDepositPeriods, uint256[] memory unlockAmounts) =
-            _liquidVault.unlockRequests(account, redeemPeriod);
+            liquidVault.unlockRequests(account, redeemPeriod);
         assertEq(0, unlockDepositPeriods.length, "unlock should be released");
         assertEq(0, unlockAmounts.length, "unlock should be released");
+    }
 
-        // check share balances reduced
-        uint256[] memory sharesBalance =
-            _liquidVault.balanceOfBatch(depositTestParams.accountArray(account), depositTestParams.depositPeriods());
-        for (uint256 i = 0; i < prevSharesBalance.length; ++i) {
-            assertEq(
-                prevSharesBalance[i] - depositTestParams[i].principal, sharesBalance[i], "shares balance incorrect"
-            );
-        }
+    /// @dev - requestRedeem AND redeem over multiple deposit and principals into one requestRedeemPeriod
+    function _testRedeemMultiDeposit(
+        address account,
+        IMultiTokenVault vault,
+        TestParamSet.TestParam[] memory depositTestParams,
+        uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
+    ) internal virtual override {
+        LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
+
+        // first requestRedeem
+        _testRequestRedeemMultiDeposit(account, liquidVault, depositTestParams, redeemPeriod);
+
+        // now redeem
+        _testRedeemAfterRequestRedeemMultiDeposit(account, vault, depositTestParams, redeemPeriod);
+    }
+
+    /// @dev execute a redeem on the vault across multiple deposit periods.~
+    function _vaultRedeemBatch(
+        address account,
+        IMultiTokenVault vault,
+        TestParamSet.TestParam[] memory depositTestParams,
+        uint256 redeemPeriod
+    ) internal virtual override returns (uint256 assets_) {
+        LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
+
+        _warpToPeriod(vault, redeemPeriod); // warp the vault to redeem period
+
+        console2.log("depositTestParams.totalPrincipal()", depositTestParams.totalPrincipal());
+        console2.log("liquidVault.totalSupply()", liquidVault.totalSupply());
+        console2.log("liquidVault.totalAssets()", liquidVault.totalAssets());
+
+        vm.prank(account);
+        return liquidVault.redeem(depositTestParams.totalPrincipal(), account, account);
     }
 
     function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParamSet.TestParam memory testParam)

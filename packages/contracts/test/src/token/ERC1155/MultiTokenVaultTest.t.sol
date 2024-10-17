@@ -9,7 +9,6 @@ import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiToken
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
-
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
@@ -261,6 +260,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParamSet.TestParam memory testParam)
         internal
         view
+        virtual
         override
         returns (uint256 expectedReturns_)
     {
@@ -275,6 +275,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
     function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)
         internal
+        virtual
         returns (MultiTokenVaultDailyPeriods)
     {
         MultiTokenVaultDailyPeriods _vault = new MultiTokenVaultDailyPeriods();
