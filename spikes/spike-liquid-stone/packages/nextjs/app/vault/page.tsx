@@ -1,34 +1,17 @@
-"use client";
-
 import ViewSection from "./_components/ViewSection";
 import type { NextPage } from "next";
-import { useAccount } from "wagmi";
-import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
-import { ContractName } from "~~/utils/scaffold-eth/contract";
-import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
+import { getMetadata } from "~~/utils/scaffold-eth/getMetadata";
 
-const contractsData = getAllContracts();
+export const metadata = getMetadata({
+  title: "Vault Interface",
+  description: "Test the vault functionality with a user-friendly interface",
+});
 
 const VaultInterface: NextPage = () => {
-  const { address } = useAccount();
-  const contractNames = Object.keys(contractsData) as ContractName[];
-  const { data, isLoading } = useDeployedContractInfo(contractNames[0]);
-  contractNames.splice(0, 1);
-
   return (
     <>
       <div className="main-container mt-8 p-2">
-        {contractNames.map((contractName: ContractName, i: number) => {
-          return contractName.includes("LiquidContinuousMultiTokenVault") ? (
-            <ViewSection
-              key={i}
-              address={address}
-              contractName={contractName}
-              deployedContractDataUSDC={data}
-              deployedContractLoadingUSDC={isLoading}
-            />
-          ) : null;
-        })}
+        <ViewSection />
       </div>
     </>
   );

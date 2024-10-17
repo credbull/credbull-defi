@@ -44,30 +44,25 @@ contract TripleRateYieldStrategy is AbstractYieldStrategy {
             uint256 firstReducedRatePeriod = _firstReducedRatePeriod(noOfFullRatePeriods, fromPeriod);
             ITripleRateContext.PeriodRate memory currentPeriodRate = context.currentPeriodRate();
 
-            // Previous Period Rate -> Current Period Rate -> 1st Reduced Rate Period -> To Period
+            // Timeline: Previous Period Rate -> Current Period Rate -> 1st Reduced Rate Period -> To Period
             // If the first 'reduced' interest rate period (FRRP) is on or after the current Period Rate, then the
             // 'reduced' Yield is:
-            //  (FRRP -> To Period) + 1 @ Current Rate.
-            // The '+ 1' is because the calculation is inclusive of the FRRP.
+            //  (FRRP -> To Period) @ Current Rate.
             if (firstReducedRatePeriod >= currentPeriodRate.effectiveFromPeriod) {
                 //  1st RR Period -> To Period @ Current Rate.
                 yield += CalcSimpleInterest.calcInterest(
                     principal,
                     currentPeriodRate.interestRate,
-                    (toPeriod - firstReducedRatePeriod) + 1,
+                    toPeriod - firstReducedRatePeriod,
                     context.frequency(),
                     context.scale()
                 );
             }
-            // Previous Period Rate -> 1st Reduced Rate Period -> Current Period Rate -> To Period
+            // Timeline: Previous Period Rate -> 1st Reduced Rate Period -> Current Period Rate -> To Period
             // If the FRRP is on or after the previous Period Rate, then the 'reduced' Yield is:
-            //  (FRRP -> Current Period Rate - 1) + 1 @ Previous Rate +
-            //  (Current Period -> To Period) + 1 @ Current Rate.
+            //  (FRRP -> Current Period Rate - 1) @ Previous Rate +
+            //  (Current Period Rate -> To Period) @ Current Rate.
             // The '- 1' is because the Previous Period Rate applies up to but exclusive of the Current Period Rate.
-            // The '+ 1' is because the calculation is inclusive of the first day of any period span.
-            // Of course, the `+/- 1`s cancel each other out and we are left with:
-            //  FRRP -> Current Period Rate @ Previous Rate +
-            //  (Current Period Rate -> To Period) + 1 @ Current Rate.
             else {
                 ITripleRateContext.PeriodRate memory previousPeriodRate = context.previousPeriodRate();
 
@@ -75,7 +70,7 @@ contract TripleRateYieldStrategy is AbstractYieldStrategy {
                 yield += CalcSimpleInterest.calcInterest(
                     principal,
                     previousPeriodRate.interestRate,
-                    currentPeriodRate.effectiveFromPeriod - firstReducedRatePeriod,
+                    (currentPeriodRate.effectiveFromPeriod - firstReducedRatePeriod) - 1,
                     context.frequency(),
                     context.scale()
                 );
@@ -130,9 +125,8 @@ contract TripleRateYieldStrategy is AbstractYieldStrategy {
 
     /**
      * @notice Calculates the first 'reduced' Interest Rate Period after the `_from` period.
-     * @dev Encapsulates the algorithm that determines the first 'reduced' Interest Rate Period. Given that `from_`
-     *  period is INCLUSIVE, this means the calculation, IFF there are 'full' Interest Rate periods, is:
-     *      `from_` + `noOfFullRatePeriods_`
+     * @dev Encapsulates the algorithm that determines the first 'reduced' Interest Rate Period. The calculation,
+     *  IFF there are 'full' Interest Rate periods, is: `from_` + `noOfFullRatePeriods_`
      *  Otherwise, it is simply the `from_` value.
      *
      * @param noOfFullRatePeriods_  The number of Full Rate Periods

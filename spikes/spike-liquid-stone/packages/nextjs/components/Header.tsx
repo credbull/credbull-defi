@@ -4,7 +4,7 @@ import React, { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bars3Icon, BoltIcon, BugAntIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, BoltIcon, BugAntIcon, ClockIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick } from "~~/hooks/scaffold-eth";
 
@@ -28,6 +28,16 @@ export const menuLinks: HeaderMenuLink[] = [
     label: "Vault interface",
     href: "/vault",
     icon: <CurrencyDollarIcon className="h-4 w-4" />,
+  },
+  {
+    label: "TimelockAsyncUnlock",
+    href: "/async",
+    icon: <ClockIcon className="h-4 w-4" />,
+  },
+  {
+    label: "Admin | Operator",
+    href: "/helpers",
+    icon: <BoltIcon className="h-4 w-4" />,
   },
 ];
 
@@ -104,8 +114,8 @@ export const Header = () => {
             />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold leading-tight">Scaffold-ETH</span>
-            <span className="text-xs">Ethereum dev stack</span>
+            <span className="font-bold leading-tight">CredBull</span>
+            <span className="text-xs">reDeFining Private Credit</span>
           </div>
         </Link>
         <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">

@@ -300,7 +300,7 @@ abstract contract MultiTokenVault is
         uint256 assets,
         uint256 shares
     ) internal virtual nonReentrant {
-        if (caller != owner && isApprovedForAll(owner, caller)) {
+        if (caller != owner && !isApprovedForAll(owner, caller)) {
             revert MultiTokenVault__CallerMissingApprovalForAll(caller, owner);
         }
 
@@ -309,6 +309,18 @@ abstract contract MultiTokenVault is
         ASSET.safeTransfer(receiver, assets);
 
         emit Withdraw(caller, receiver, owner, depositPeriod, assets, shares);
+    }
+
+    /**
+     * @dev Withdraws the assets from the vault.
+     *
+     * @param to The address that will receive the assets.
+     * @param amount The amount of the ERC-20 underlying assets to be withdrawn from the vault.
+     */
+    function _withdrawAssest(address to, uint256 amount) internal virtual {
+        ASSET.safeTransfer(to, amount);
+
+        emit AssetTransfer(_msgSender(), to, asset(), amount);
     }
 
     /**

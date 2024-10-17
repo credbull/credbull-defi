@@ -21,6 +21,16 @@ resume-arbSepolia:
 deploy-baseSepolia:
 	$(MAKE) deploy RPC_URL=baseSepolia EXTRA_FLAGS="--verify --slow"
 
+# From https://docs.plumenetwork.xyz/plume/deploying-on-plume/deploy-with-foundry
+# Foundry has a bug with gas estimation on L2s (https://github.com/foundry-rs/foundry/issues/6542).  To work-around:
+# in foundry.toml set the `evm_version = "cancun"`
+# forge script includes `--legacy --skip-simulation`
+deploy-plumeTestnet:
+	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://test-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow"
+
+resume-plumeTestnet:
+	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://test-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow --resume"
+
 deploy-arbitrum:
 	$(MAKE) deploy RPC_URL=arbitrum EXTRA_FLAGS="--verify --slow"
 
@@ -32,7 +42,7 @@ deploy:
 	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	@rm -rf out && \
 	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) --non-interactive -vvvv && \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) --non-interactive -vvv && \
 	yarn gen-types && \
 	yarn db-export
 
@@ -40,6 +50,6 @@ verify:
 	@echo "Running verify '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	rm -rf out && \
 	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume --non-interactive -vvvv && \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume --non-interactive -vvv && \
 	yarn gen-types && \
 	yarn db-export
