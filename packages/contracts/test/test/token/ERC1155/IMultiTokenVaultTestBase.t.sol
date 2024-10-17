@@ -43,8 +43,19 @@ abstract contract IMultiTokenVaultTestBase is Test {
         _testDepositOnly(account, vault, testParams);
 
         // NB - test all of the redeems AFTER deposits.  verifies no side-effects from deposits when redeeming.
-        uint256 finalRedeemPeriod = testParams[testParams.length - 1].redeemPeriod;
-        _testRedeemMultiDeposit(account, vault, testParams, finalRedeemPeriod);
+        uint256 finalRedeemPeriod = testParams.latestRedeemPeriod();
+
+        if (testParams.length > 2) {
+            // split into two batches
+            (TestParamSet.TestParam[] memory redeemParams1, TestParamSet.TestParam[] memory redeemParams2) =
+                testParams._splitBefore(2);
+
+            uint256 partialRedeemPeriod = finalRedeemPeriod - 2;
+            _testRedeemMultiDeposit(account, vault, redeemParams1, partialRedeemPeriod);
+            _testRedeemMultiDeposit(account, vault, redeemParams2, finalRedeemPeriod);
+        } else {
+            _testRedeemMultiDeposit(account, vault, testParams, finalRedeemPeriod);
+        }
 
         _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore previous period state
 

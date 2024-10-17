@@ -37,6 +37,18 @@ library TestParamSet {
     }
 
     // Calculate the total principal across all TestParams
+    function latestRedeemPeriod(TestParam[] memory self) internal pure returns (uint256 latestRedeemPeriod) {
+        uint256 _latestRedeemPeriod = 0;
+        for (uint256 i = 0; i < self.length; i++) {
+            uint256 redeemPeriod = self[i].redeemPeriod;
+            if (_latestRedeemPeriod == 0 || redeemPeriod > _latestRedeemPeriod) {
+                _latestRedeemPeriod = redeemPeriod;
+            }
+        }
+        return _latestRedeemPeriod;
+    }
+
+    // Calculate the total principal across all TestParams
     function totalPrincipal(TestParam[] memory self) internal pure returns (uint256 totalPrincipal_) {
         uint256 principal = 0;
         for (uint256 i = 0; i < self.length; i++) {
