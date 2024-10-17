@@ -90,23 +90,9 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
                 "] !!!!!"
             )
         );
-
-        IERC5679Ext1155 deposits = new ERC1155MintableBurnable();
-
-        SimpleTimelockAsyncUnlock asyncUnlockImpl = new SimpleTimelockAsyncUnlock();
-
-        ERC1967Proxy asyncUnlockProxy = new ERC1967Proxy(
-            address(asyncUnlockImpl),
-            abi.encodeWithSelector(asyncUnlockImpl.initialize.selector, NOTICE_PERIOD, deposits)
-        );
-
-        console2.log(
-            string.concat(
-                "!!!!! Deploying SimpleTimelockAsyncUnlock Proxy [", vm.toString(address(asyncUnlockProxy)), "] !!!!!"
-            )
-        );
-
         vm.stopBroadcast();
+
+        _deployTimelockAsyncUnlock();
 
         return LiquidContinuousMultiTokenVault(address(liquidVaultProxy));
     }
@@ -163,6 +149,31 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
             return simpleUSDC;
         } else {
             return IERC20Metadata(_tomlConfig.readAddress(".evm.address.usdc_token"));
+        }
+    }
+
+    function _deployTimelockAsyncUnlock() internal {
+        bool shouldDeployMocks = _readBoolWithDefault(_tomlConfig, ".evm.deploy_mocks", false);
+
+        if (shouldDeployMocks) {
+            vm.startBroadcast();
+            IERC5679Ext1155 deposits = new ERC1155MintableBurnable();
+
+            SimpleTimelockAsyncUnlock asyncUnlockImpl = new SimpleTimelockAsyncUnlock();
+
+            ERC1967Proxy asyncUnlockProxy = new ERC1967Proxy(
+                address(asyncUnlockImpl),
+                abi.encodeWithSelector(asyncUnlockImpl.initialize.selector, NOTICE_PERIOD, deposits)
+            );
+
+            console2.log(
+                string.concat(
+                    "!!!!! Deploying SimpleTimelockAsyncUnlock Proxy [",
+                    vm.toString(address(asyncUnlockProxy)),
+                    "] !!!!!"
+                )
+            );
+            vm.stopBroadcast();
         }
     }
 }

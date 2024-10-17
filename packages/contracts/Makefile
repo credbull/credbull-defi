@@ -4,14 +4,10 @@
 -include .env
 
 DEPLOY_SCRIPT ?= script/DeployVaultFactory.s.sol:DeployVaultFactory
-DEPLOY_SCRIPT_ASYNC = script/DeployTimelockAsyncUnlock.s.sol:DeployTimelockAsyncUnlock
 
 build:; forge build
 
 anvil: anvil
-
-deploy-async:
-	$(MAKE) deploy-timelock-async-unlock RPC_URL=localhost EXTRA_FLAGS=
 
 deploy-local:
 	$(MAKE) deploy RPC_URL=localhost EXTRA_FLAGS=
@@ -55,13 +51,5 @@ verify:
 	rm -rf out && \
 	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume --non-interactive -vvv && \
-	yarn gen-types && \
-	yarn db-export
-
-deploy-timelock-async-unlock:
-	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
-	@rm -rf out && \
-	forge script $(DEPLOY_SCRIPT_ASYNC) --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) --non-interactive -vvv && \
 	yarn gen-types && \
 	yarn db-export

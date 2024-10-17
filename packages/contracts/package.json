@@ -16,11 +16,8 @@
     "db-check": "tsc && node ./script/utils/checkDb.js",
     "db-export": "tsc && node ./script/utils/exporter.js",
     "deploy": "make deploy-local",
-    "deploy-async": "make deploy-async",
     "deploy:ci": "yarn db-export && make deploy-baseSepolia",
     "gen-abis": "node script/utils/generateTsAbis.js",
-    "gen-abis-async": "node script/utils/generateTsAbisForAsync.js",
-    "gen-abis-async1": "node script/utils/generateTsAbisForAsync1.js",
     "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
     "postinstall": "yarn build && yarn gen-types"
   },
