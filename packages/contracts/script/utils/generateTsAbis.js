@@ -121,26 +121,6 @@ function main() {
         inheritedFunctions: getInheritedFunctions(artifact),
       };
     });
-    /*
-    transactionsCreate.forEach((transaction) => {
-      mapContracts[transaction.contractName] = {
-        num: 0,
-        name: transaction.contractName,
-        address: transaction.contractAddress,
-      };
-    });
-
-    Object.values(mapContracts).forEach((contract) => {
-      const artifact = getArtifactOfContract(contract.name);
-
-      allGeneratedContracts[chain][`${contract.name}#${mapContractNames[contract.name]}`] = {
-        address: contract.address,
-        abi: artifact.abi,
-        inheritedFunctions: getInheritedFunctions(artifact),
-      };
-
-      mapContracts[contract.name].num += 1;
-    }); */
   });
 
   const TARGET_DIR = '../../spikes/spike-liquid-stone/packages/nextjs/contracts/';
