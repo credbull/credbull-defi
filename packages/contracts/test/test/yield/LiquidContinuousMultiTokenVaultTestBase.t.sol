@@ -12,7 +12,7 @@ import { Timer } from "@credbull/timelock/Timer.sol";
 import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault.s.sol";
 import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
-import { IMTVTestParamArray } from "@test/test/token/ERC1155/IMTVTestParamArray.t.sol";
+import { IMTVTestParams } from "@test/test/token/ERC1155/IMTVTestParams.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -128,7 +128,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     function _testRequestRedeemMultiDeposit(
         address account,
         LiquidContinuousMultiTokenVault liquidVault,
-        IMTVTestParamArray depositTestParams,
+        IMTVTestParams depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
     ) internal virtual {
         _warpToPeriod(_liquidVault, redeemPeriod - liquidVault.noticePeriod());
@@ -150,7 +150,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     function _testRedeemMultiDeposit(
         address account,
         LiquidContinuousMultiTokenVault liquidVault,
-        IMTVTestParamArray depositTestParams,
+        IMTVTestParams depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
     ) internal virtual {
         _warpToPeriod(_liquidVault, redeemPeriod);

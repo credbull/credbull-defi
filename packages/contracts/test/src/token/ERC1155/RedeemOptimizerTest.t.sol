@@ -6,21 +6,21 @@ import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 
 import { MultiTokenVaultTest } from "@test/src/token/ERC1155/MultiTokenVaultTest.t.sol";
-import { IMTVTestParamArray } from "@test/test/token/ERC1155/IMTVTestParamArray.t.sol";
+import { IMTVTestParams } from "@test/test/token/ERC1155/IMTVTestParams.t.sol";
 
 contract RedeemOptimizerTest is MultiTokenVaultTest {
     address private _owner = makeAddr("owner");
     address private _alice = makeAddr("alice");
 
-    IMTVTestParamArray private testParamsArr;
+    IMTVTestParams private testParams;
 
     function setUp() public override {
         super.setUp();
 
-        testParamsArr = new IMTVTestParamArray();
-        testParamsArr.addTestParam(_testParams1);
-        testParamsArr.addTestParam(_testParams2);
-        testParamsArr.addTestParam(_testParams3);
+        testParams = new IMTVTestParams();
+        testParams.add(_testParams1);
+        testParams.add(_testParams2);
+        testParams.add(_testParams3);
     }
 
     function test__RedeemOptimizerTest__RedeemAllShares() public {
@@ -31,7 +31,7 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         IRedeemOptimizer redeemOptimizer =
             new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, multiTokenVault.currentPeriodsElapsed());
 
-        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParamsArr.all());
+        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParams);
         uint256 totalDepositShares = depositShares[0] + depositShares[1] + depositShares[2];
 
         // warp vault ahead to redeemPeriod
@@ -42,7 +42,7 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         (uint256[] memory redeemDepositPeriods, uint256[] memory sharesAtPeriods) =
             redeemOptimizer.optimize(multiTokenVault, _alice, totalDepositShares, 0, redeemPeriod); // optimize using share basis.  assets not used
 
-        assertEq(testParamsArr.depositPeriods(), redeemDepositPeriods, "optimizeRedeem - depositPeriods not correct");
+        assertEq(testParams.depositPeriods(), redeemDepositPeriods, "optimizeRedeem - depositPeriods not correct");
         assertEq(depositShares, sharesAtPeriods, "optimizeRedeem - shares not correct");
     }
 
@@ -56,9 +56,9 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
 
-        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParamsArr.all());
+        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParams);
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
-            depositShares, testParamsArr.depositPeriods(), redeemPeriod
+            depositShares, testParams.depositPeriods(), redeemPeriod
         );
         assertEq(depositShares.length, depositAssets.length, "mismatch in convertToAssets");
         uint256 totalAssets = depositAssets[0] + depositAssets[1] + depositAssets[2];
@@ -70,7 +70,7 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         (uint256[] memory withdrawDepositPeriods, uint256[] memory sharesAtPeriods) =
             redeemOptimizer.optimize(multiTokenVault, _alice, 0, totalAssets, redeemPeriod); // optimize using asset basis.  shares not used
 
-        assertEq(testParamsArr.depositPeriods(), withdrawDepositPeriods, "optimizeRedeem - depositPeriods not correct");
+        assertEq(testParams.depositPeriods(), withdrawDepositPeriods, "optimizeRedeem - depositPeriods not correct");
         assertEq(depositShares, sharesAtPeriods, "optimizeRedeem - shares not correct");
     }
 
@@ -83,7 +83,7 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
-        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParamsArr.all());
+        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParams);
 
         uint256 sharesToWithdraw = depositShares[0] + depositShares[1] + depositShares[2] - residualShareAmount;
 
@@ -101,7 +101,7 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
             "optimizeRedeem partial - wrong shares period 2"
         ); // reduced by 1 share
 
-        assertEq(testParamsArr.depositPeriods(), redeemDepositPeriods, "optimizeRedeem - depositPeriods not correct");
+        assertEq(testParams.depositPeriods(), redeemDepositPeriods, "optimizeRedeem - depositPeriods not correct");
     }
 
     function test__RedeemOptimizerTest__PartialWithdraw() public {
@@ -114,9 +114,9 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
 
-        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParamsArr.all());
+        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParams);
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
-            depositShares, testParamsArr.depositPeriods(), redeemPeriod
+            depositShares, testParams.depositPeriods(), redeemPeriod
         );
 
         uint256 residualAssetAmount = multiTokenVault.convertToAssetsForDepositPeriod(
@@ -145,7 +145,7 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         );
 
         assertEq(
-            testParamsArr.depositPeriods().length,
+            testParams.depositPeriods().length,
             actualAssetsAtPeriods.length,
             "convertToAssetsForDepositPeriods partial - length incorrect"
         );

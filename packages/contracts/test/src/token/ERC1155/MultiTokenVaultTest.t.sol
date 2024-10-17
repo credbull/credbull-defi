@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
-import { IMTVTestParamArray } from "@test/test/token/ERC1155/IMTVTestParamArray.t.sol";
+import { IMTVTestParams } from "@test/test/token/ERC1155/IMTVTestParams.t.sol";
 import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriods.t.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -70,7 +70,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
         MultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
-        testVaultAtPeriod(_charlie, vault, _testParams1);
+        testVaultAtOffsets(_charlie, vault, _testParams1);
     }
 
     function test__MultiTokenVaulTest__RedeemBeforeDepositPeriodReverts() public {
@@ -188,21 +188,15 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         uint256 assetToSharesRatio = 2;
         uint256 redeemPeriod = 2001;
 
-        IMTVTestParamArray testParamsArray = new IMTVTestParamArray();
-        testParamsArray.addTestParam(
-            TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: redeemPeriod })
-        );
-        testParamsArray.addTestParam(
-            TestParam({ principal: 2002 * _scale, depositPeriod: 202, redeemPeriod: redeemPeriod })
-        );
-        testParamsArray.addTestParam(
-            TestParam({ principal: 3003 * _scale, depositPeriod: 303, redeemPeriod: redeemPeriod })
-        );
+        IMTVTestParams testParamss = new IMTVTestParams();
+        testParamss.add(TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: redeemPeriod }));
+        testParamss.add(TestParam({ principal: 2002 * _scale, depositPeriod: 202, redeemPeriod: redeemPeriod }));
+        testParamss.add(TestParam({ principal: 3003 * _scale, depositPeriod: 303, redeemPeriod: redeemPeriod }));
 
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
-        uint256[] memory shares = _testDepositOnly(_alice, vault, testParamsArray.all());
-        uint256[] memory depositPeriods = testParamsArray.depositPeriods();
+        uint256[] memory shares = _testDepositOnly(_alice, vault, testParamss);
+        uint256[] memory depositPeriods = testParamss.depositPeriods();
 
         // ------------------------ batch convert to assets ------------------------
         uint256[] memory assets = vault.convertToAssetsForDepositPeriodBatch(shares, depositPeriods, redeemPeriod);
@@ -225,7 +219,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         );
 
         // ------------------------ batch approvalForAll safeBatchTransferFrom balance ------------------------
-        uint256[] memory aliceBalances = _testBalanceOfBatch(_alice, vault, testParamsArray, assetToSharesRatio);
+        uint256[] memory aliceBalances = _testBalanceOfBatch(_alice, vault, testParamss, assetToSharesRatio);
 
         // have alice approve bob for all
         vm.prank(_alice);
@@ -235,22 +229,22 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         vm.prank(_bob);
         vault.safeBatchTransferFrom(_alice, _charlie, depositPeriods, aliceBalances, "");
 
-        _testBalanceOfBatch(_charlie, vault, testParamsArray, assetToSharesRatio); // verify bob
+        _testBalanceOfBatch(_charlie, vault, testParamss, assetToSharesRatio); // verify bob
     }
 
     function _testBalanceOfBatch(
         address account,
         IMultiTokenVault vault,
-        IMTVTestParamArray testParamsArray,
+        IMTVTestParams testParams,
         uint256 assetToSharesRatio
     ) internal view returns (uint256[] memory balances_) {
-        address[] memory accounts = testParamsArray.accountArray(account);
-        uint256[] memory balances = vault.balanceOfBatch(accounts, testParamsArray.depositPeriods());
+        address[] memory accounts = testParams.accountArray(account);
+        uint256[] memory balances = vault.balanceOfBatch(accounts, testParams.depositPeriods());
         assertEq(3, balances.length, "balances size incorrect");
 
-        assertEq(testParamsArray.get(0).principal / assetToSharesRatio, balances[0], "balance mismatch period 0");
-        assertEq(testParamsArray.get(1).principal / assetToSharesRatio, balances[1], "balance mismatch period 1");
-        assertEq(testParamsArray.get(2).principal / assetToSharesRatio, balances[2], "balance mismatch period 2");
+        assertEq(testParams.get(0).principal / assetToSharesRatio, balances[0], "balance mismatch period 0");
+        assertEq(testParams.get(1).principal / assetToSharesRatio, balances[1], "balance mismatch period 1");
+        assertEq(testParams.get(2).principal / assetToSharesRatio, balances[2], "balance mismatch period 2");
 
         return balances;
     }

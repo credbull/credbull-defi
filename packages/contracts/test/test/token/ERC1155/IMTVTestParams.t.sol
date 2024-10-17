@@ -3,11 +3,11 @@ pragma solidity ^0.8.20;
 
 import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
 
-contract IMTVTestParamArray {
+contract IMTVTestParams {
     IMultiTokenVaultTestBase.TestParam[] private _all;
 
     // Function to add testParams to the array
-    function addTestParam(IMultiTokenVaultTestBase.TestParam memory testParam) public {
+    function add(IMultiTokenVaultTestBase.TestParam memory testParam) public {
         _all.push(testParam);
     }
 
