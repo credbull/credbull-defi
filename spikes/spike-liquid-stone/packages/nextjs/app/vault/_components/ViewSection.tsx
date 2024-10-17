@@ -247,7 +247,7 @@ const ViewSection = () => {
                       <>
                         <br/>
                         shares: {request?.shareAmount?.toString()}<br/>
-                        assets: {request?.assetAmount?.toString()}
+                        assets: {request?.assetAmount?.toString()} USDC
                       </>
                   )}
                   onClickHandler={() => setRequestAmountToRedeem(request)}

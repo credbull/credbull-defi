@@ -40,11 +40,15 @@ export const useFetchRedeemRequests = ({
           const depositPeriod = depositPeriods[index];
           const share = shares[index];
 
-          // Call the contract function to convert shares to assets for each deposit period
-          const assetAmount = await contract.convertToAssetsForDepositPeriod(share, depositPeriod);
-
           totalShareAmount += ethers.toBigInt(share);
-          totalAssetAmount += ethers.toBigInt(assetAmount);
+
+          // only yield if the deposit was in the past
+          if (currentPeriod > depositPeriod) {
+            const assetAmount = await contract.convertToAssetsForDepositPeriod(share, depositPeriod);
+            totalAssetAmount += ethers.toBigInt(assetAmount);
+          } else {
+            totalAssetAmount += ethers.toBigInt(share); // yield is 0, assets = shares
+          }
         }
 
         if (totalShareAmount > 0) {
