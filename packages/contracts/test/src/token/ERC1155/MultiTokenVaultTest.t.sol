@@ -244,7 +244,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         IMTVTestParamArray testParamsArray,
         uint256 assetToSharesRatio
     ) internal view returns (uint256[] memory balances_) {
-        address[] memory accounts = testParamsArray.createAccountArray(account, testParamsArray.length());
+        address[] memory accounts = testParamsArray.accountArray(account);
         uint256[] memory balances = vault.balanceOfBatch(accounts, testParamsArray.depositPeriods());
         assertEq(3, balances.length, "balances size incorrect");
 

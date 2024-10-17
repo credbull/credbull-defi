@@ -295,6 +295,17 @@ abstract contract IMultiTokenVaultTestBase is Test {
         return TestParam({ principal: principal, depositPeriod: depositPeriod, redeemPeriod: redeemPeriod });
     }
 
+    function _split(IMTVTestParamArray origTestParams, uint256 from, uint256 to)
+        public
+        returns (IMTVTestParamArray newTestParams_)
+    {
+        IMTVTestParamArray newTestParams = new IMTVTestParamArray();
+        for (uint256 i = from; i <= to; i++) {
+            newTestParams.addTestParam(origTestParams.get(i));
+        }
+        return newTestParams;
+    }
+
     /// @dev - creates a message string for assertions
     function _assertMsg(string memory prefix, IMultiTokenVault vault, uint256 numPeriods)
         internal

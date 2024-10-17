@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
-import { SellRequest } from "~~/types/vault";
+import { RedeemRequest } from "~~/types/vault";
 
-export const useFetchSellRequests = ({
+export const useFetchRedeemRequests = ({
   address,
   deployedContractAddress,
   deployedContractAbi,
@@ -15,30 +15,33 @@ export const useFetchSellRequests = ({
   currentPeriod: number;
   refetch: any;
 }) => {
-  const [sellRequests, setSellRequests] = useState<SellRequest[]>([]);
+  const [redeemRequests, setRedeemRequests] = useState<RedeemRequest[]>([]);
 
   useEffect(() => {
     async function getRequestIds() {
-      if (!address || !deployedContractAddress) return;
+      if (!address || !deployedContractAddress || !deployedContractAbi) return;
 
       const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
       const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
-      const requests: SellRequest[] = [];
+      const requests: RedeemRequest[] = [];
 
       for (let i = 0; i <= currentPeriod + 1; i++) {
         const unlockAmount = await contract.unlockRequestAmount(address, i);
 
         if (unlockAmount > 0) {
-          const sellRequest: SellRequest = { id: i, amount: ethers.formatUnits(unlockAmount, 6) as unknown as bigint };
-          requests.push(sellRequest);
+          const redeemRequest: RedeemRequest = {
+            id: i,
+            amount: ethers.formatUnits(unlockAmount, 6) as unknown as bigint,
+          };
+          requests.push(redeemRequest);
         }
       }
 
-      setSellRequests(requests);
+      setRedeemRequests(requests);
     }
 
     getRequestIds();
   }, [address, deployedContractAddress, deployedContractAbi, currentPeriod, refetch]);
 
-  return { sellRequests };
+  return { redeemRequests };
 };

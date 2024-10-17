@@ -104,13 +104,13 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
             // --------------------- deposits ---------------------
             uint256 depositAmount = baseDepositAmount * vault.currentPeriod();
             asset.approve(address(vault), depositAmount);
-            vault.executeBuy(userWallet.addr(), 0, depositAmount, depositAmount);
+            vault.deposit(depositAmount, userWallet.addr());
             totalUserDeposits += depositAmount;
 
             // --------------------- request sell ---------------------
             if (vault.currentPeriod() == vault.TENOR() - 1) {
                 // queue up one request only
-                vault.requestSell(totalUserDeposits / 10);
+                vault.requestRedeem(totalUserDeposits / 10, address(0), userWallet.addr()); // request to sell 10% of deposits so far
             }
 
             vm.stopBroadcast();

@@ -118,8 +118,8 @@ contract RedeemOptimizerFIFO is IRedeemOptimizer {
             if (amountAtPeriod > 0) {
                 cacheDepositPeriods[arrayIndex] = depositPeriod;
 
-                // check if we will go "over" the Amount To Find.
-                if (amountFound + amountAtPeriod > optimizerParams.amountToFind) {
+                // check if we found the amount to find
+                if (amountFound + amountAtPeriod >= optimizerParams.amountToFind) {
                     uint256 amountToInclude = optimizerParams.amountToFind - amountFound; // we only need the amount that brings us to amountToFind
 
                     // only include equivalent amount of shares for the amountToInclude assets
