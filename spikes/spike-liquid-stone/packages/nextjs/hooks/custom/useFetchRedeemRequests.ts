@@ -26,12 +26,32 @@ export const useFetchRedeemRequests = ({
       const requests: RedeemRequest[] = [];
 
       for (let i = 0; i <= currentPeriod + 1; i++) {
-        const unlockAmount = await contract.unlockRequestAmount(address, i);
+        // Fetch the deposit periods and amounts (shares) from unlockRequests
+        const [depositPeriods, shares] = await contract.unlockRequests(address, i);
 
-        if (unlockAmount > 0) {
+        // If there are no shares, skip this request
+        if (shares.length === 0) continue;
+
+        let totalShareAmount = BigInt(0);
+        let totalAssetAmount = BigInt(0);
+
+        // Loop through each deposit period and calculate the corresponding asset value
+        for (let index = 0; index < depositPeriods.length; index++) {
+          const depositPeriod = depositPeriods[index];
+          const share = shares[index];
+
+          // Call the contract function to convert shares to assets for each deposit period
+          const assetAmount = await contract.convertToAssetsForDepositPeriod(share, depositPeriod);
+
+          totalShareAmount += ethers.toBigInt(share);
+          totalAssetAmount += ethers.toBigInt(assetAmount);
+        }
+
+        if (totalShareAmount > 0) {
           const redeemRequest: RedeemRequest = {
             id: i,
-            amount: ethers.formatUnits(unlockAmount, 6) as unknown as bigint,
+            shareAmount: ethers.formatUnits(totalShareAmount, 6) as unknown as bigint,
+            assetAmount: ethers.formatUnits(totalAssetAmount, 6) as unknown as bigint,
           };
           requests.push(redeemRequest);
         }

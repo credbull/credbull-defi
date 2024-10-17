@@ -190,7 +190,7 @@ const ViewSection = () => {
   };
 
   const setRequestAmountToRedeem = (request: RedeemRequest) => {
-    const amount = request?.amount?.toString();
+    const amount = request?.shareAmount?.toString();
     setSharesToRedeem(amount?.toString());
   };
 
@@ -243,7 +243,13 @@ const ViewSection = () => {
                 <ContractValueBadge
                   key={index}
                   name={`Request ${request?.id}`}
-                  value={`${request?.amount?.toString()} USDC`}
+                  value={(
+                      <>
+                        <br/>
+                        shares: {request?.shareAmount?.toString()}<br/>
+                        assets: {request?.assetAmount?.toString()}
+                      </>
+                  )}
                   onClickHandler={() => setRequestAmountToRedeem(request)}
                 />
               ))}

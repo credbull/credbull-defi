@@ -48,6 +48,11 @@ test.describe.skip('Test reading contracts', () => {
     );
     expect(liquidVault.TENOR()).resolves.toEqual(BigNumber.from(expectedTenor));
 
+    // output some balances
+    console.log('balanceOfVault=', (await usdc.balanceOf(vaultProxyAddress)).toNumber());
+    console.log('balanceOfAssetMgr', (await usdc.balanceOf(await testSigners.assetManager.getAddress())).toNumber());
+    console.log('balanceOfCustodian', (await usdc.balanceOf(await testSigners.custodian.getAddress())).toNumber());
+
     // output the timestamp
     const vaultStartTimestamp = (await liquidVault._vaultStartTimestamp()).toNumber();
     console.log('StarTime:', new Date(vaultStartTimestamp * 1000).toLocaleString());
