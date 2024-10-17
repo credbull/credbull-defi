@@ -22,7 +22,7 @@ contract SimpleInterestYieldStrategyTest is Test {
         uint256 apy = 6 * SCALE; // APY in percentage
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
-        IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy();
+        IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy(IYieldStrategy.RangeInclusion.To);
         address interestContractAddress = address(_createInterestMetadata(apy, frequency));
 
         uint256 principal = 500 * SCALE;
@@ -63,7 +63,7 @@ contract SimpleInterestYieldStrategyTest is Test {
         uint256 apy = 12 * SCALE;
         uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
-        IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy();
+        IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy(IYieldStrategy.RangeInclusion.To);
         address interestContractAddress = address(_createInterestMetadata(apy, frequency));
 
         assertEq(1 * SCALE, yieldStrategy.calcPrice(interestContractAddress, 0), "price wrong at period 0"); // 1 + (0.12 * 0) / 360 = 1
@@ -72,7 +72,7 @@ contract SimpleInterestYieldStrategyTest is Test {
     }
 
     function test__SimpleInterestYieldStrategy__InvalidContextReverts() public {
-        IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy();
+        IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy(IYieldStrategy.RangeInclusion.To);
 
         vm.expectRevert(abi.encodeWithSelector(IYieldStrategy.IYieldStrategy_InvalidContextAddress.selector));
         yieldStrategy.calcYield(address(0), 1, 1, 1);
@@ -85,12 +85,15 @@ contract SimpleInterestYieldStrategyTest is Test {
         uint256 fromPeriod = 10;
         uint256 invalidToPeriod = 0;
 
-        IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy();
+        IYieldStrategy yieldStrategy = new SimpleInterestYieldStrategy(IYieldStrategy.RangeInclusion.To);
         address interestContractAddress = address(_createInterestMetadata(12, 360));
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IYieldStrategy.IYieldStrategy_InvalidPeriodRange.selector, fromPeriod, invalidToPeriod
+                IYieldStrategy.IYieldStrategy_InvalidPeriodRange.selector,
+                fromPeriod,
+                invalidToPeriod,
+                yieldStrategy.rangeInclusion()
             )
         );
         yieldStrategy.calcYield(interestContractAddress, 1, fromPeriod, invalidToPeriod);

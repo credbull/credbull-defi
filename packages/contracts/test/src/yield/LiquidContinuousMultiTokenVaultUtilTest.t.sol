@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
+import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
@@ -136,7 +137,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__UpdateStateVariables() public {
-        TripleRateYieldStrategy newYieldStrategy = new TripleRateYieldStrategy();
+        TripleRateYieldStrategy newYieldStrategy = new TripleRateYieldStrategy(IYieldStrategy.RangeInclusion.To);
         RedeemOptimizerFIFO newRedeemOptimizer = new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, 0);
         uint256 newReducedRate = 50;
         uint256 newStartTimestamp = _liquidVault._vaultStartTimestamp() + 1;
