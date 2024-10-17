@@ -188,15 +188,15 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         uint256 assetToSharesRatio = 2;
         uint256 redeemPeriod = 2001;
 
-        IMTVTestParams testParamss = new IMTVTestParams();
-        testParamss.add(TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: redeemPeriod }));
-        testParamss.add(TestParam({ principal: 2002 * _scale, depositPeriod: 202, redeemPeriod: redeemPeriod }));
-        testParamss.add(TestParam({ principal: 3003 * _scale, depositPeriod: 303, redeemPeriod: redeemPeriod }));
+        IMTVTestParams testParams = new IMTVTestParams();
+        testParams.add(TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: redeemPeriod }));
+        testParams.add(TestParam({ principal: 2002 * _scale, depositPeriod: 202, redeemPeriod: redeemPeriod }));
+        testParams.add(TestParam({ principal: 3003 * _scale, depositPeriod: 303, redeemPeriod: redeemPeriod }));
 
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
-        uint256[] memory shares = _testDepositOnly(_alice, vault, testParamss);
-        uint256[] memory depositPeriods = testParamss.depositPeriods();
+        uint256[] memory shares = _testDepositOnly(_alice, vault, testParams);
+        uint256[] memory depositPeriods = testParams.depositPeriods();
 
         // ------------------------ batch convert to assets ------------------------
         uint256[] memory assets = vault.convertToAssetsForDepositPeriodBatch(shares, depositPeriods, redeemPeriod);
@@ -219,7 +219,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         );
 
         // ------------------------ batch approvalForAll safeBatchTransferFrom balance ------------------------
-        uint256[] memory aliceBalances = _testBalanceOfBatch(_alice, vault, testParamss, assetToSharesRatio);
+        uint256[] memory aliceBalances = _testBalanceOfBatch(_alice, vault, testParams, assetToSharesRatio);
 
         // have alice approve bob for all
         vm.prank(_alice);
@@ -229,7 +229,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         vm.prank(_bob);
         vault.safeBatchTransferFrom(_alice, _charlie, depositPeriods, aliceBalances, "");
 
-        _testBalanceOfBatch(_charlie, vault, testParamss, assetToSharesRatio); // verify bob
+        _testBalanceOfBatch(_charlie, vault, testParams, assetToSharesRatio); // verify bob
     }
 
     function _testBalanceOfBatch(
