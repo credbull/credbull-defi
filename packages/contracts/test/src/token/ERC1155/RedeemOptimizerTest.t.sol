@@ -6,21 +6,22 @@ import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 
 import { MultiTokenVaultTest } from "@test/src/token/ERC1155/MultiTokenVaultTest.t.sol";
-import { IMTVTestParams } from "@test/test/token/ERC1155/IMTVTestParams.t.sol";
+import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 contract RedeemOptimizerTest is MultiTokenVaultTest {
+    using TestParamSet for TestParamSet.TestParam[];
+
     address private _owner = makeAddr("owner");
     address private _alice = makeAddr("alice");
 
-    IMTVTestParams private testParams;
+    TestParamSet.TestParam[] private testParams;
 
     function setUp() public override {
         super.setUp();
 
-        testParams = new IMTVTestParams();
-        testParams.add(_testParams1);
-        testParams.add(_testParams2);
-        testParams.add(_testParams3);
+        testParams.push(_testParams1);
+        testParams.push(_testParams2);
+        testParams.push(_testParams3);
     }
 
     function test__RedeemOptimizerTest__RedeemAllShares() public {

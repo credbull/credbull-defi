@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
-import { IMTVTestParams } from "@test/test/token/ERC1155/IMTVTestParams.t.sol";
+import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriods.t.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -13,6 +13,8 @@ import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
+    using TestParamSet for TestParamSet.TestParam[];
+
     IERC20Metadata internal _asset;
     uint256 internal _scale;
 
@@ -21,9 +23,9 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     address private _bob = makeAddr("bob");
     address private _charlie = makeAddr("charlie");
 
-    TestParam internal _testParams1;
-    TestParam internal _testParams2;
-    TestParam internal _testParams3;
+    TestParamSet.TestParam internal _testParams1;
+    TestParamSet.TestParam internal _testParams2;
+    TestParamSet.TestParam internal _testParams3;
 
     function setUp() public virtual {
         vm.prank(_owner);
@@ -32,9 +34,9 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         _scale = 10 ** _asset.decimals();
         _transferAndAssert(_asset, _owner, _alice, 100_000 * _scale);
 
-        _testParams1 = TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 });
-        _testParams2 = TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 });
-        _testParams3 = TestParam({ principal: 700 * _scale, depositPeriod: 30, redeemPeriod: 55 });
+        _testParams1 = TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 });
+        _testParams2 = TestParamSet.TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 });
+        _testParams3 = TestParamSet.TestParam({ principal: 700 * _scale, depositPeriod: 30, redeemPeriod: 55 });
     }
 
     function test__MultiTokenVaulTest__SimpleDeposit() public {
@@ -76,7 +78,8 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     function test__MultiTokenVaulTest__RedeemBeforeDepositPeriodReverts() public {
         MultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
 
-        TestParam memory testParam = TestParam({ principal: 1001 * _scale, depositPeriod: 2, redeemPeriod: 1 });
+        TestParamSet.TestParam memory testParam =
+            TestParamSet.TestParam({ principal: 1001 * _scale, depositPeriod: 2, redeemPeriod: 1 });
 
         // deposit period > redeem period should fail
         vm.expectRevert(
@@ -93,7 +96,8 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     function test__MultiTokenVaulTest__CurrentBeforeRedeemPeriodReverts() public {
         MultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
 
-        TestParam memory testParam = TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: 3 });
+        TestParamSet.TestParam memory testParam =
+            TestParamSet.TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: 3 });
 
         uint256 currentPeriod = testParam.redeemPeriod - 1;
 
@@ -113,7 +117,8 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     function test__MultiTokenVaulTest__RedeemOverMaxSharesReverts() public {
         MultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
 
-        TestParam memory testParam = TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: 3 });
+        TestParamSet.TestParam memory testParam =
+            TestParamSet.TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: 3 });
 
         uint256 sharesToRedeem = 1;
 
@@ -188,15 +193,19 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         uint256 assetToSharesRatio = 2;
         uint256 redeemPeriod = 2001;
 
-        IMTVTestParams testParams = new IMTVTestParams();
-        testParams.add(TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: redeemPeriod }));
-        testParams.add(TestParam({ principal: 2002 * _scale, depositPeriod: 202, redeemPeriod: redeemPeriod }));
-        testParams.add(TestParam({ principal: 3003 * _scale, depositPeriod: 303, redeemPeriod: redeemPeriod }));
+        TestParamSet.TestParam[] memory _batchTestParams = new TestParamSet.TestParam[](3);
+
+        _batchTestParams[0] =
+            TestParamSet.TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: redeemPeriod });
+        _batchTestParams[1] =
+            TestParamSet.TestParam({ principal: 2002 * _scale, depositPeriod: 202, redeemPeriod: redeemPeriod });
+        _batchTestParams[2] =
+            TestParamSet.TestParam({ principal: 3003 * _scale, depositPeriod: 303, redeemPeriod: redeemPeriod });
 
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
-        uint256[] memory shares = _testDepositOnly(_alice, vault, testParams);
-        uint256[] memory depositPeriods = testParams.depositPeriods();
+        uint256[] memory shares = _testDepositOnly(_alice, vault, _batchTestParams);
+        uint256[] memory depositPeriods = _batchTestParams.depositPeriods();
 
         // ------------------------ batch convert to assets ------------------------
         uint256[] memory assets = vault.convertToAssetsForDepositPeriodBatch(shares, depositPeriods, redeemPeriod);
@@ -219,7 +228,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         );
 
         // ------------------------ batch approvalForAll safeBatchTransferFrom balance ------------------------
-        uint256[] memory aliceBalances = _testBalanceOfBatch(_alice, vault, testParams, assetToSharesRatio);
+        uint256[] memory aliceBalances = _testBalanceOfBatch(_alice, vault, _batchTestParams, assetToSharesRatio);
 
         // have alice approve bob for all
         vm.prank(_alice);
@@ -229,27 +238,27 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         vm.prank(_bob);
         vault.safeBatchTransferFrom(_alice, _charlie, depositPeriods, aliceBalances, "");
 
-        _testBalanceOfBatch(_charlie, vault, testParams, assetToSharesRatio); // verify bob
+        _testBalanceOfBatch(_charlie, vault, _batchTestParams, assetToSharesRatio); // verify bob
     }
 
     function _testBalanceOfBatch(
         address account,
         IMultiTokenVault vault,
-        IMTVTestParams testParams,
+        TestParamSet.TestParam[] memory testParams,
         uint256 assetToSharesRatio
     ) internal view returns (uint256[] memory balances_) {
         address[] memory accounts = testParams.accountArray(account);
         uint256[] memory balances = vault.balanceOfBatch(accounts, testParams.depositPeriods());
         assertEq(3, balances.length, "balances size incorrect");
 
-        assertEq(testParams.get(0).principal / assetToSharesRatio, balances[0], "balance mismatch period 0");
-        assertEq(testParams.get(1).principal / assetToSharesRatio, balances[1], "balance mismatch period 1");
-        assertEq(testParams.get(2).principal / assetToSharesRatio, balances[2], "balance mismatch period 2");
+        assertEq(testParams[0].principal / assetToSharesRatio, balances[0], "balance mismatch period 0");
+        assertEq(testParams[1].principal / assetToSharesRatio, balances[1], "balance mismatch period 1");
+        assertEq(testParams[2].principal / assetToSharesRatio, balances[2], "balance mismatch period 2");
 
         return balances;
     }
 
-    function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParam memory testParam)
+    function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParamSet.TestParam memory testParam)
         internal
         view
         override
