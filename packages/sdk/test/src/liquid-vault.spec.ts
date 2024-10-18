@@ -18,7 +18,10 @@ test.describe.skip('Test LiquidContinuousMultiTokenVault ethers operations', () 
   test('Test read operations', async () => {
     const user = testSigners.alice;
 
-    const liquidVault = LiquidContinuousMultiTokenVault__factory.connect(VAULT_PROXY_CONTRACT_ADDRESS, user.getDelegate());
+    const liquidVault = LiquidContinuousMultiTokenVault__factory.connect(
+      VAULT_PROXY_CONTRACT_ADDRESS,
+      user.getDelegate(),
+    );
 
     const blockNumber = provider.getBlockNumber();
     const block = await provider.getBlock(blockNumber);
@@ -54,7 +57,10 @@ test.describe.skip('Test LiquidContinuousMultiTokenVault ethers operations', () 
     const user = testSigners.alice;
     const redeemPeriod = BigNumber.from(30).toNumber(); // redeemPeriod and requestId are equal
 
-    const liquidVault = LiquidContinuousMultiTokenVault__factory.connect(VAULT_PROXY_CONTRACT_ADDRESS, user.getDelegate());
+    const liquidVault = LiquidContinuousMultiTokenVault__factory.connect(
+      VAULT_PROXY_CONTRACT_ADDRESS,
+      user.getDelegate(),
+    );
     const userAddress = await user.getAddress();
 
     // unlock requests
