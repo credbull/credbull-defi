@@ -1,6 +1,6 @@
 import { ERC20__factory, LiquidContinuousMultiTokenVault__factory } from '@credbull/contracts';
 import { expect, test } from '@playwright/test';
-import { BigNumber, ethers } from 'ethers';
+import {BigNumber, type BigNumberish, type CallOverrides, ethers} from 'ethers';
 
 import { TestSigners } from './utils/test-signer';
 
@@ -53,7 +53,30 @@ test.describe.skip('Test LiquidContinuousMultiTokenVault ethers operations', () 
     expect(liquidVault.currentPeriod()).resolves.toEqual(BigNumber.from(expectedTenor));
   });
 
-  test('Release unlock', async () => {
+  test('Redeem a redeemRequest', async () => {
+    const user = testSigners.alice;
+    const redeemPeriod = BigNumber.from(30).toNumber(); // redeemPeriod and requestId are equal
+
+    const liquidVault = LiquidContinuousMultiTokenVault__factory.connect(
+        VAULT_PROXY_CONTRACT_ADDRESS,
+        user.getDelegate(),
+    );
+    const userAddress = await user.getAddress();
+
+    // unlock requests
+    const unlockRequestAmount = (await liquidVault.unlockRequestAmount(userAddress, redeemPeriod)).toNumber();
+
+    if (unlockRequestAmount > 0) {
+      console.log('Redeeming for redeemPeriod = %s ...', redeemPeriod);
+
+      await liquidVault.redeem(unlockRequestAmount, userAddress, userAddress);
+
+      // verify unlock succeeded
+      expect((await liquidVault.unlockRequestAmount(userAddress, redeemPeriod)).toNumber()).toEqual(0);
+    }
+  });
+
+  test('Release a redeemRequest without redeeming', async () => {
     const user = testSigners.alice;
     const redeemPeriod = BigNumber.from(30).toNumber(); // redeemPeriod and requestId are equal
 
@@ -63,17 +86,18 @@ test.describe.skip('Test LiquidContinuousMultiTokenVault ethers operations', () 
     );
     const userAddress = await user.getAddress();
 
-    // unlock requests
     const unlockRequestAmount = (await liquidVault.unlockRequestAmount(userAddress, redeemPeriod)).toNumber();
 
     if (unlockRequestAmount > 0) {
-      console.log('Unlocking request for redeemPeriod = %s ...', redeemPeriod);
+      console.log('Releasing requestRedeem without redeeming for redeemPeriod = %s ...', redeemPeriod);
 
-      // unlock
+      // unlocks does NOT redeem.  it only deletes the request.
       await liquidVault.unlock(userAddress, BigNumber.from(redeemPeriod).toNumber());
 
       // verify unlock succeeded
       expect((await liquidVault.unlockRequestAmount(userAddress, redeemPeriod)).toNumber()).toEqual(0);
     }
   });
+
+
 });
