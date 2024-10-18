@@ -12,12 +12,14 @@ import { Timer } from "@credbull/timelock/Timer.sol";
 import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault.s.sol";
 import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
-import { IMTVTestParamArray } from "@test/test/token/ERC1155/IMTVTestParamArray.t.sol";
+import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTestBase {
+    using TestParamSet for TestParamSet.TestParam[];
+
     LiquidContinuousMultiTokenVault internal _liquidVault;
 
     LiquidContinuousMultiTokenVault.VaultAuth internal _vaultAuth = LiquidContinuousMultiTokenVault.VaultAuth({
@@ -45,7 +47,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     }
 
     // verify deposit.  updates vault assets and shares.
-    function _testDepositOnly(address receiver, IMultiTokenVault vault, TestParam memory testParam)
+    function _testDepositOnly(address receiver, IMultiTokenVault vault, TestParamSet.TestParam memory testParam)
         internal
         virtual
         override
@@ -90,7 +92,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     function _testRedeemOnly(
         address receiver,
         IMultiTokenVault vault,
-        TestParam memory testParam,
+        TestParamSet.TestParam memory testParam,
         uint256 sharesToRedeemAtPeriod
     ) internal virtual override returns (uint256 actualAssetsAtPeriod_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
@@ -128,7 +130,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     function _testRequestRedeemMultiDeposit(
         address account,
         LiquidContinuousMultiTokenVault liquidVault,
-        IMTVTestParamArray depositTestParams,
+        TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
     ) internal virtual {
         _warpToPeriod(_liquidVault, redeemPeriod - liquidVault.noticePeriod());
@@ -150,7 +152,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     function _testRedeemMultiDeposit(
         address account,
         LiquidContinuousMultiTokenVault liquidVault,
-        IMTVTestParamArray depositTestParams,
+        TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
     ) internal virtual {
         _warpToPeriod(_liquidVault, redeemPeriod);
@@ -162,6 +164,9 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         uint256 prevAssetBalance = asset.balanceOf(account);
         uint256[] memory prevSharesBalance =
             _liquidVault.balanceOfBatch(depositTestParams.accountArray(account), depositTestParams.depositPeriods());
+
+        // get the vault enough to cover redeems
+        _transferFromTokenOwner(asset, address(liquidVault), sharesToRedeem); // this will give the vault 2x principal
 
         vm.prank(account);
         uint256 assets = liquidVault.redeem(sharesToRedeem, account, account);
@@ -179,12 +184,12 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
             _liquidVault.balanceOfBatch(depositTestParams.accountArray(account), depositTestParams.depositPeriods());
         for (uint256 i = 0; i < prevSharesBalance.length; ++i) {
             assertEq(
-                prevSharesBalance[i] - depositTestParams.get(i).principal, sharesBalance[i], "shares balance incorrect"
+                prevSharesBalance[i] - depositTestParams[i].principal, sharesBalance[i], "shares balance incorrect"
             );
         }
     }
 
-    function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParam memory testParam)
+    function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParamSet.TestParam memory testParam)
         internal
         view
         override

@@ -11,6 +11,7 @@ import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO
 import { Timer } from "@credbull/timelock/Timer.sol";
 
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
+import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
@@ -34,7 +35,8 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         uint256 scale = 10 ** asset.decimals();
         _transferAndAssert(asset, _vaultAuth.owner, alice, 1_000_000_000 * scale);
 
-        TestParam memory testParams = TestParam({ principal: 2_000 * scale, depositPeriod: 11, redeemPeriod: 71 });
+        TestParamSet.TestParam memory testParams =
+            TestParamSet.TestParam({ principal: 2_000 * scale, depositPeriod: 11, redeemPeriod: 71 });
 
         _warpToPeriod(vaultProxy, testParams.depositPeriod);
 
@@ -82,8 +84,11 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__PauseDepositAndRedeem() public {
-        TestParam memory testParams =
-            TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: _liquidVault.minUnlockPeriod() });
+        TestParamSet.TestParam memory testParams = TestParamSet.TestParam({
+            principal: 100 * _scale,
+            depositPeriod: 0,
+            redeemPeriod: _liquidVault.minUnlockPeriod()
+        });
 
         vm.prank(alice);
         _asset.approve(address(_liquidVault), testParams.principal); // grant vault allowance on alice's principal
