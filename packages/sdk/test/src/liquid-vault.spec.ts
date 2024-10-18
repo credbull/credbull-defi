@@ -1,8 +1,8 @@
 import { ERC20__factory, LiquidContinuousMultiTokenVault__factory } from '@credbull/contracts';
 import { expect, test } from '@playwright/test';
-import { BigNumber, Wallet, ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 
-import { OWNER_PUBLIC_KEY_LOCAL, TestSigner, TestSigners } from './test-signer';
+import { OWNER_PUBLIC_KEY_LOCAL, TestSigner, TestSigners } from './utils/test-signer';
 
 let provider: ethers.providers.JsonRpcProvider;
 let testSigners: TestSigners;
