@@ -2,7 +2,7 @@ import { ERC20__factory, LiquidContinuousMultiTokenVault__factory } from '@credb
 import { expect, test } from '@playwright/test';
 import { BigNumber, ethers } from 'ethers';
 
-import { OWNER_PUBLIC_KEY_LOCAL, TestSigner, TestSigners } from './utils/test-signer';
+import { TestSigners } from './utils/test-signer';
 
 let provider: ethers.providers.JsonRpcProvider;
 let testSigners: TestSigners;
@@ -12,21 +12,13 @@ test.beforeAll(async () => {
   testSigners = new TestSigners(provider);
 });
 
-// See: https://github.com/safe-global/safe-core-sdk/tree/main/packages/protocol-kit
-test.describe.skip('Test reading contracts', () => {
-  test('Create a signer from the first account', async () => {
-    const owner = new TestSigner(0, provider).getDelegate();
+const VAULT_PROXY_CONTRACT_ADDRESS = '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9';
 
-    expect(await owner.getAddress()).toEqual(OWNER_PUBLIC_KEY_LOCAL);
-  });
-
+test.describe.skip('Test LiquidContinuousMultiTokenVault ethers operations', () => {
   test('Test read operations', async () => {
-    const vaultProxyAddress = '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9'; // with data
+    const user = testSigners.alice;
 
-    const liquidVault = LiquidContinuousMultiTokenVault__factory.connect(
-      vaultProxyAddress,
-      testSigners.admin.getDelegate(),
-    );
+    const liquidVault = LiquidContinuousMultiTokenVault__factory.connect(VAULT_PROXY_CONTRACT_ADDRESS, user.getDelegate());
 
     const blockNumber = provider.getBlockNumber();
     const block = await provider.getBlock(blockNumber);
@@ -38,7 +30,7 @@ test.describe.skip('Test reading contracts', () => {
     expect(liquidVault._vaultStartTimestamp()).resolves.not.toEqual(ethers.constants.AddressZero);
 
     // check the asset
-    const usdc = ERC20__factory.connect(await liquidVault.asset(), testSigners.admin.getDelegate());
+    const usdc = ERC20__factory.connect(await liquidVault.asset(), user.getDelegate());
     expect(usdc.symbol()).resolves.toEqual('sUSDC');
 
     // check some behavior
@@ -48,19 +40,34 @@ test.describe.skip('Test reading contracts', () => {
     );
     expect(liquidVault.TENOR()).resolves.toEqual(BigNumber.from(expectedTenor));
 
-    // output some balances
-    console.log('balanceOfVault=', (await usdc.balanceOf(vaultProxyAddress)).toNumber());
-    console.log('balanceOfAssetMgr', (await usdc.balanceOf(await testSigners.assetManager.getAddress())).toNumber());
-    console.log('balanceOfCustodian', (await usdc.balanceOf(await testSigners.custodian.getAddress())).toNumber());
-
-    // output the timestamp
     const vaultStartTimestamp = (await liquidVault._vaultStartTimestamp()).toNumber();
-    console.log('StarTime:', new Date(vaultStartTimestamp * 1000).toLocaleString());
+    console.log('Vault StarTime:', new Date(vaultStartTimestamp * 1000).toUTCString());
 
-    // requires the data loaded version
     expect(liquidVault['totalSupply()']().then((ts) => ts.toNumber())).resolves.toBeGreaterThanOrEqual(
       BigNumber.from(0).toNumber(),
     );
+
     expect(liquidVault.currentPeriod()).resolves.toEqual(BigNumber.from(expectedTenor));
+  });
+
+  test('Release unlock', async () => {
+    const user = testSigners.alice;
+    const redeemPeriod = BigNumber.from(30).toNumber(); // redeemPeriod and requestId are equal
+
+    const liquidVault = LiquidContinuousMultiTokenVault__factory.connect(VAULT_PROXY_CONTRACT_ADDRESS, user.getDelegate());
+    const userAddress = await user.getAddress();
+
+    // unlock requests
+    const unlockRequestAmount = (await liquidVault.unlockRequestAmount(userAddress, redeemPeriod)).toNumber();
+
+    if (unlockRequestAmount > 0) {
+      console.log('Unlocking request for redeemPeriod = %s ...', redeemPeriod);
+
+      // unlock
+      await liquidVault.unlock(userAddress, BigNumber.from(redeemPeriod).toNumber());
+
+      // verify unlock succeeded
+      expect((await liquidVault.unlockRequestAmount(userAddress, redeemPeriod)).toNumber()).toEqual(0);
+    }
   });
 });
