@@ -21,7 +21,7 @@ export const useFetchRequestDetails = ({
   useEffect(() => {
     const getRequestDetails = async () => {
       try {
-        if (!address || !deployedContractAddress || !requestId) return;
+        if (!address || !deployedContractAddress || deployedContractAbi || !requestId) return;
 
         const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
         const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);

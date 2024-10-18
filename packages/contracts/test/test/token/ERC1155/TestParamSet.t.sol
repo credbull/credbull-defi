@@ -37,6 +37,18 @@ library TestParamSet {
     }
 
     // Calculate the total principal across all TestParams
+    function latestRedeemPeriod(TestParam[] memory self) internal pure returns (uint256 latestRedeemPeriod_) {
+        uint256 _latestRedeemPeriod = 0;
+        for (uint256 i = 0; i < self.length; i++) {
+            uint256 redeemPeriod = self[i].redeemPeriod;
+            if (_latestRedeemPeriod == 0 || redeemPeriod > _latestRedeemPeriod) {
+                _latestRedeemPeriod = redeemPeriod;
+            }
+        }
+        return _latestRedeemPeriod;
+    }
+
+    // Calculate the total principal across all TestParams
     function totalPrincipal(TestParam[] memory self) internal pure returns (uint256 totalPrincipal_) {
         uint256 principal = 0;
         for (uint256 i = 0; i < self.length; i++) {
@@ -90,7 +102,7 @@ library TestParamSet {
         return accounts;
     }
 
-    function _split(TestParam[] memory origTestParams, uint256 from, uint256 to)
+    function _subset(TestParam[] memory origTestParams, uint256 from, uint256 to)
         public
         pure
         returns (TestParam[] memory newTestParams_)
@@ -103,5 +115,29 @@ library TestParamSet {
             arrayIndex++;
         }
         return newTestParams_;
+    }
+
+    function _splitBefore(TestParam[] memory origTestParams, uint256 splitBefore)
+        public
+        pure
+        returns (TestParam[] memory leftSet_, TestParam[] memory rightSet_)
+    {
+        assert(splitBefore <= origTestParams.length);
+
+        // Initialize leftSet and rightSet arrays with their respective sizes
+        TestParam[] memory leftSet = new TestParam[](splitBefore); // Elements before splitBefore
+        TestParam[] memory rightSet = new TestParam[](origTestParams.length - splitBefore); // Elements from splitBefore onwards
+
+        // Copy elements to leftSet (up to splitBefore, exclusive)
+        for (uint256 i = 0; i < splitBefore; i++) {
+            leftSet[i] = origTestParams[i];
+        }
+
+        // Copy elements to rightSet (starting from splitBefore)
+        for (uint256 i = splitBefore; i < origTestParams.length; i++) {
+            rightSet[i - splitBefore] = origTestParams[i];
+        }
+
+        return (leftSet, rightSet);
     }
 }

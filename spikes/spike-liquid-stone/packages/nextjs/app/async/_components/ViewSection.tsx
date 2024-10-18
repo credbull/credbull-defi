@@ -8,26 +8,29 @@ import RequestUnlockAction from "./RequestUnlockAction";
 import SetCurrentPeriod from "./SetCurrentPeriod";
 import UnlockAction from "./UnlockAction";
 import { useTheme } from "next-themes";
+import { useAccount } from "wagmi";
 import { useFetchContractData } from "~~/hooks/async/useFetchContractData";
 import { useFetchLocks } from "~~/hooks/async/useFetchLocks";
 import { useFetchRequestDetails } from "~~/hooks/async/useFetchRequestDetails";
 import { useFetchUnlockRequests } from "~~/hooks/async/useFetchUnlockRequests";
-import { ContractAbi } from "~~/utils/scaffold-eth/contract";
+import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
+import { ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
+import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
 
-const ViewSection = ({
-  address,
-  deployedContractAddress,
-  deployedContractAbi,
-  deployedContractLoading,
-}: {
-  address: string | undefined;
-  deployedContractAddress: string;
-  deployedContractAbi: ContractAbi;
-  deployedContractLoading: boolean;
-}) => {
+const contractsData = getAllContracts();
+
+const ViewSection = () => {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [refetch, setRefetch] = useState(false);
+
+  const { address } = useAccount();
+  const contractNames = Object.keys(contractsData) as ContractName[];
+
+  const { data: implementationContractData, isLoading: implementationContractLoading } = useDeployedContractInfo(
+    contractNames[6],
+  );
+  const { data: proxyContractData, isLoading: proxyContractLoading } = useDeployedContractInfo(contractNames[7]);
 
   // Action Values
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -38,22 +41,22 @@ const ViewSection = ({
   }, []);
 
   const { noticePeriod, currentPeriod, minUnlockPeriod } = useFetchContractData({
-    deployedContractAddress,
-    deployedContractAbi,
+    deployedContractAddress: proxyContractData?.address || "",
+    deployedContractAbi: implementationContractData?.abi as ContractAbi,
     dependencies: [refetch],
   });
 
   const { lockDatas } = useFetchLocks({
     address: address || "",
-    deployedContractAddress,
-    deployedContractAbi,
+    deployedContractAddress: proxyContractData?.address || "",
+    deployedContractAbi: implementationContractData?.abi as ContractAbi,
     refetch,
   });
 
   const { unlockRequests } = useFetchUnlockRequests({
     address: address || "",
-    deployedContractAddress,
-    deployedContractAbi,
+    deployedContractAddress: proxyContractData?.address || "",
+    deployedContractAbi: implementationContractData?.abi as ContractAbi,
     currentPeriod,
     noticePeriod,
     refetch,
@@ -61,8 +64,8 @@ const ViewSection = ({
 
   const { requestDetails } = useFetchRequestDetails({
     address: address || "",
-    deployedContractAddress,
-    deployedContractAbi,
+    deployedContractAddress: proxyContractData?.address || "",
+    deployedContractAbi: implementationContractData?.abi as ContractAbi,
     requestId: expandedRowId,
     refetch,
   });
@@ -80,7 +83,7 @@ const ViewSection = ({
       >
         <div>
           <h2 className="text-xl font-bold mb-4">Contract Details</h2>
-          {deployedContractLoading ? (
+          {implementationContractLoading || proxyContractLoading ? (
             <LoadingSpinner />
           ) : (
             <div className="flex flex-wrap gap-4">
@@ -182,23 +185,23 @@ const ViewSection = ({
         {/* Lock */}
         <LockAction
           address={address}
-          deployedContractAddress={deployedContractAddress}
-          deployedContractAbi={deployedContractAbi}
+          deployedContractAddress={proxyContractData?.address || ""}
+          deployedContractAbi={implementationContractData?.abi as ContractAbi}
           onRefetch={() => setRefetch(prev => !prev)}
         />
         {/* Request Unlock */}
         <RequestUnlockAction
           address={address}
-          deployedContractAddress={deployedContractAddress}
-          deployedContractAbi={deployedContractAbi}
+          deployedContractAddress={proxyContractData?.address || ""}
+          deployedContractAbi={implementationContractData?.abi as ContractAbi}
           currentPeriod={currentPeriod}
           onRefetch={() => setRefetch(prev => !prev)}
         />
         {/* Unlock */}
         <UnlockAction
           address={address}
-          deployedContractAddress={deployedContractAddress}
-          deployedContractAbi={deployedContractAbi}
+          deployedContractAddress={proxyContractData?.address || ""}
+          deployedContractAbi={implementationContractData?.abi as ContractAbi}
           requestId={selectedRequestId}
           onRefetch={() => setRefetch(prev => !prev)}
         />
@@ -206,8 +209,8 @@ const ViewSection = ({
         {/* SetCurrentPeriod */}
         <SetCurrentPeriod
           address={address}
-          deployedContractAddress={deployedContractAddress}
-          deployedContractAbi={deployedContractAbi}
+          deployedContractAddress={proxyContractData?.address || ""}
+          deployedContractAbi={implementationContractData?.abi as ContractAbi}
           onRefetch={() => setRefetch(prev => !prev)}
         />
       </div>

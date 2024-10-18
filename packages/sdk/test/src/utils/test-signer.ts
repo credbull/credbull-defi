@@ -38,8 +38,10 @@ export class TestSigners {
   private _treasury: TestSigner;
   private _deployer: TestSigner;
   private _rewardVault: TestSigner;
+  private _assetManager: TestSigner;
   private _alice: TestSigner;
   private _bob: TestSigner;
+  private _charlie: TestSigner;
 
   constructor(provider: providers.JsonRpcProvider) {
     this._admin = new TestSigner(0, provider);
@@ -48,9 +50,10 @@ export class TestSigners {
     this._treasury = new TestSigner(3, provider);
     this._deployer = new TestSigner(4, provider);
     this._rewardVault = new TestSigner(5, provider);
-
+    this._assetManager = new TestSigner(6, provider);
     this._alice = new TestSigner(7, provider);
     this._bob = new TestSigner(8, provider);
+    this._charlie = new TestSigner(9, provider);
   }
 
   get admin(): TestSigner {
@@ -77,11 +80,19 @@ export class TestSigners {
     return this._rewardVault;
   }
 
+  get assetManager(): TestSigner {
+    return this._assetManager;
+  }
+
   get alice(): TestSigner {
     return this._alice;
   }
 
   get bob(): TestSigner {
     return this._bob;
+  }
+
+  get charlie(): TestSigner {
+    return this._charlie;
   }
 }
