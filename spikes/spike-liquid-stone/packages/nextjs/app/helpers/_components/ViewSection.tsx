@@ -397,6 +397,9 @@ const ViewSection = () => {
       }
 
       const amountToWithdraw = !withdrawType ? ethers.parseUnits(assets?.toString(), 6) : vaultBalance;
+      const amountToWithdrawInt = BigInt(
+        typeof amountToWithdraw === "string" ? Math.floor(Number(amountToWithdraw) * 1e6) : amountToWithdraw,
+      );
 
       if (vaultBalance < amountToWithdraw) {
         notification.error("Insufficient assets to withdraw");
@@ -409,7 +412,7 @@ const ViewSection = () => {
             address: proxyContractData?.address || "",
             functionName: "withdrawAsset",
             abi: implementationContractData?.abi || [],
-            args: [custodian, BigInt(amountToWithdraw)],
+            args: [custodian, BigInt(amountToWithdrawInt)],
           });
 
         const trx = await writeTxn(makeWithdrawTrx);
