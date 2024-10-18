@@ -4,8 +4,8 @@
 
 [evm]
 # blockchain id, e.g. baseSepolia=84532, arbSepolia=421614
-chain_id = 84532
-deploy_mocks = true
+chain_id = 421614
+deploy_mocks = false
 
 [evm.address]
 # credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)
@@ -17,6 +17,8 @@ operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
 # devops upgrader (wallet 4) - public address, okay to share
 upgrader = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
+# CBL on arbitrum sepolia
+cbl_token = "0x3Dd53Ec7DFff8cf774391867C83583E634363345"
 
 [evm.contracts.liquid_continuous_multi_token_vault]
 # rate in basis points, e.g.  10% = 1000 bps
@@ -30,15 +32,15 @@ collateral_percentage = 200
 
 [evm.contracts.cbl]
 # CBL token params
-# devops admin/owner (wallet 1) - public address, okay to share
-owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
-# devops operator (wallet 2) - public address, okay to share
-minter = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
+# primevault Wallet "TEST - Testnet Owner Role v1.0"
+owner = "0xd0065B8662846EaDB3F619c2e2b5b20Bdf47da36"
+# primevault Wallet "TEST - Testnet Operator Role v1.0"
+minter = "0x5103697D83F52D6184B55506345e4B7bbB300E2f"
 # CBL token params
-max_supply = 10_000_000 # 10 million in wei
+max_supply = 1_000_000_000 # 1 billion in wei
 
 [services.supabase]
-url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
+url = ""
 
 # Save the contract deployment details to the database.
-update_contract_addresses = true
+update_contract_addresses = false
