@@ -83,7 +83,14 @@ export const useFetchContractData = ({
     args: [],
   });
 
-  const { refetch: refetchReducedRate } = useReadContract({
+  const { refetch: refetchPreviousReducedRate } = useReadContract({
+    address: deployedContractAddress,
+    functionName: "previousPeriodRate",
+    abi: deployedContractAbi,
+    args: [],
+  });
+
+  const { refetch: refetchCurrentReducedRate } = useReadContract({
     address: deployedContractAddress,
     functionName: "currentPeriodRate",
     abi: deployedContractAbi,
@@ -94,7 +101,8 @@ export const useFetchContractData = ({
   useEffect(() => {
     const fetchData = async () => {
       const currentPeriodData = await refetchCurrentPeriod();
-      setCurrentPeriod(Number(currentPeriodData?.data));
+      const _currentPeriod = Number(currentPeriodData?.data);
+      setCurrentPeriod(_currentPeriod);
 
       const assetAmountData = await refetchAssetAmount();
       const assetAmountBigInt = BigInt(assetAmountData?.data as bigint);
@@ -121,9 +129,15 @@ export const useFetchContractData = ({
         setFullRate(Number(fullRateData?.data) / scale);
       }
 
-      const reducedRateData = await refetchReducedRate();
+      const previousReducedRateData = await refetchPreviousReducedRate();
+      const currentReducedRateData = await refetchCurrentReducedRate();
+
       if (scale > 0) {
-        setReducedRate(Number((reducedRateData?.data as PeriodRate)?.interestRate) / scale);
+        if (_currentPeriod < Number(currentReducedRateData?.data?.effectiveFromPeriod)) {
+          setReducedRate(Number((previousReducedRateData?.data as PeriodRate)?.interestRate) / scale);
+        } else {
+          setReducedRate(Number((currentReducedRateData?.data as PeriodRate)?.interestRate) / scale);
+        }
       }
     };
 
@@ -139,7 +153,8 @@ export const useFetchContractData = ({
     refetchTenor,
     refetchScale,
     refetchFullRate,
-    refetchReducedRate,
+    refetchPreviousReducedRate,
+    refetchCurrentReducedRate,
     scale,
     ...dependencies,
   ]);
