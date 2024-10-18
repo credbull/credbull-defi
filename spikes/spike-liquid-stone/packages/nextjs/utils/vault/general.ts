@@ -17,3 +17,8 @@ export const formatAddress = (address: string, chars = 6) => {
   const end = address.slice(-chars);
   return `${start}...${end}`;
 };
+
+export const formatNumber = (value: string | number | bigint) =>
+  Number(value).toLocaleString("en-US", {
+    minimumFractionDigits: value.toString().split(".")[1]?.length || 0,
+  });

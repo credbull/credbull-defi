@@ -10,6 +10,7 @@ import DepositPoolCard from "./DepositPoolCard";
 import { ethers } from "ethers";
 import { useTheme } from "next-themes";
 import { useAccount, useChainId, useWriteContract } from "wagmi";
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import ActionCard from "~~/components/general/ActionCard";
 import { useFetchContractData } from "~~/hooks/custom/useFetchContractData";
 import { useFetchDepositPools } from "~~/hooks/custom/useFetchDepositPools";
@@ -19,6 +20,7 @@ import { RedeemRequest } from "~~/types/vault";
 import { notification } from "~~/utils/scaffold-eth";
 import { ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
 import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
+import { formatNumber } from "~~/utils/vault/general";
 
 const contractsData = getAllContracts();
 
@@ -45,18 +47,29 @@ const ViewSection = () => {
   const [sharesToRequest, setSharesToRequest] = useState("");
   const [assets, setAssets] = useState("");
   const [sharesToRedeem, setSharesToRedeem] = useState("");
+  const [assetsToRedeem, setAssetsToRedeem] = useState("");
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const { currentPeriod, assetAmount, startTime, noticePeriod, frequency, tenor, fullRate, reducedRate } =
-    useFetchContractData({
-      deployedContractAddress,
-      deployedContractAbi,
-      simpleUsdcContractData,
-      dependencies: [refetch],
-    });
+  const {
+    currentPeriod,
+    assetAmount,
+    startTime,
+    noticePeriod,
+    frequency,
+    tenor,
+    fullRate,
+    currentReducedRate,
+    previousReducedRate,
+    effectiveReducedRate,
+  } = useFetchContractData({
+    deployedContractAddress,
+    deployedContractAbi,
+    simpleUsdcContractData,
+    dependencies: [refetch],
+  });
 
   const { pools } = useFetchDepositPools({
     chainId,
@@ -166,6 +179,11 @@ const ViewSection = () => {
       return;
     }
 
+    if (assetAmount < assetsToRedeem) {
+      notification.error("Sorry! No enough balance in the vault.");
+      return;
+    }
+
     if (writeContractAsync) {
       try {
         const makeRedeem = () =>
@@ -190,8 +208,15 @@ const ViewSection = () => {
   };
 
   const setRequestAmountToRedeem = (request: RedeemRequest) => {
-    const amount = request?.shareAmount?.toString();
-    setSharesToRedeem(amount?.toString());
+    if (request?.id !== currentPeriod) {
+      notification.error(`You should redeem this request at period #${request?.id}.`);
+      return;
+    }
+
+    const shareAmount = request?.shareAmount?.toString();
+    const assetAmount = request?.assetAmount?.toString();
+    setSharesToRedeem(shareAmount?.toString());
+    setAssetsToRedeem(assetAmount?.toString());
   };
 
   if (!mounted) {
@@ -209,13 +234,22 @@ const ViewSection = () => {
         ) : (
           <div className="flex flex-wrap gap-4">
             <ContractValueBadge name="Current Period" value={currentPeriod} />
-            <ContractValueBadge name="Asset Amount" value={`${assetAmount} USDC`} />
+            <ContractValueBadge name="Asset Amount" value={`${formatNumber(assetAmount)} USDC`} />
             <ContractValueBadge name="Start Time" value={startTime} />
             <ContractValueBadge name="Notice Period" value={`${noticePeriod} ${noticePeriod > 1 ? "days" : "day"}`} />
             <ContractValueBadge name="Frequency" value={`${frequency} days`} />
             <ContractValueBadge name="Tenor" value={`${tenor} days`} />
             <ContractValueBadge name="Full Rate" value={`${fullRate}%`} />
-            <ContractValueBadge name="Reduced Rate" value={`${reducedRate}%`} />
+            <ContractValueBadge
+              name="Previous Reduced Rate"
+              value={`${previousReducedRate}%`}
+              icon={effectiveReducedRate === "0" ? <CheckCircleIcon style={{ width: "16px", height: "16px" }} /> : ""}
+            />
+            <ContractValueBadge
+              name="Current Reduced Rate"
+              value={`${currentReducedRate}%`}
+              icon={effectiveReducedRate === "1" ? <CheckCircleIcon style={{ width: "16px", height: "16px" }} /> : ""}
+            />
           </div>
         )}
       </div>
@@ -243,13 +277,11 @@ const ViewSection = () => {
                 <ContractValueBadge
                   key={index}
                   name={`Request ${request?.id}`}
-                  value={(
-                      <>
-                        <br/>
-                        shares: {request?.shareAmount?.toString()}<br/>
-                        assets: {request?.assetAmount?.toString()} USDC
-                      </>
-                  )}
+                  value={
+                    <>
+                      shares: {formatNumber(request?.shareAmount)} - assets: {formatNumber(request?.assetAmount)} USDC
+                    </>
+                  }
                   onClickHandler={() => setRequestAmountToRedeem(request)}
                 />
               ))}
