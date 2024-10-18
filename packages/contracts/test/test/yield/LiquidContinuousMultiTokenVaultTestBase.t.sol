@@ -36,9 +36,12 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
-    function setUp() public {
+    function setUp() public virtual {
         DeployLiquidMultiTokenVault _deployVault = new DeployLiquidMultiTokenVault();
         _liquidVault = _deployVault.run(_vaultAuth);
+
+        // warp to a "real time" time rather than block.timestamp=1
+        vm.warp(_liquidVault._vaultStartTimestamp() + 1);
 
         _asset = IERC20Metadata(_liquidVault.asset());
         _scale = 10 ** _asset.decimals();
@@ -224,14 +227,14 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         vm.warp(warpToTimeInSeconds);
     }
 
-    function _setPeriod(LiquidContinuousMultiTokenVault vault, uint256 newPeriod) public {
+    function _setPeriod(address operator, LiquidContinuousMultiTokenVault vault, uint256 newPeriod) public {
         uint256 newPeriodInSeconds = newPeriod * 1 days;
         uint256 currentTime = Timer.timestamp();
 
         uint256 newStartTime =
             currentTime > newPeriodInSeconds ? (currentTime - newPeriodInSeconds) : (newPeriodInSeconds - currentTime);
 
-        vm.prank(_vaultAuth.operator);
+        vm.prank(operator);
         vault.setVaultStartTimestamp(newStartTime);
     }
 

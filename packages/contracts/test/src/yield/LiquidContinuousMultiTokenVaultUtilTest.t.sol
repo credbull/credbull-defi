@@ -17,7 +17,7 @@ import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.so
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
-// Tets relation to the Utility / operational aspects of the LiquidContinuousMultiTokenVault
+// Tests related to the Utility / operational aspects of the LiquidContinuousMultiTokenVault
 contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVaultTestBase {
     function test__LiquidContinuousMultiTokenVaultUtil__Upgradeability() public {
         LiquidContinuousMultiTokenVaultMock vaultImpl = new LiquidContinuousMultiTokenVaultMock();
@@ -212,14 +212,13 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         _setPeriodAndAssert(_liquidVault, 10);
     }
 
-    //         vm.startPrank(_vaultAuth.operator);
     function _setPeriodAndAssert(LiquidContinuousMultiTokenVault vault, uint256 newPeriod) internal {
         assertTrue(
             Timer.timestamp() >= (vault._vaultStartTimestamp() - newPeriod * 24 hours),
             "trying to set period before block.timestamp"
         );
 
-        _setPeriod(vault, newPeriod);
+        _setPeriod(_vaultAuth.operator, vault, newPeriod);
 
         assertEq(newPeriod, (block.timestamp - vault._vaultStartTimestamp()) / 24 hours, "timestamp not set correctly");
         assertEq(newPeriod, vault.currentPeriod(), "period not set correctly");

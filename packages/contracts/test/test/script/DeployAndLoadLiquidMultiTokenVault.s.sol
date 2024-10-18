@@ -60,9 +60,9 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
         }
 
         // --------------------- load deposits ---------------------
-        _loadDepositsAndRequestSells(vault, _alice, 10);
-        _loadDepositsAndRequestSells(vault, _bob, 1);
-        _loadDepositsAndRequestSells(vault, _charlie, 2);
+        _loadDepositsAndRequestSells(vault, _alice, 10, 0);
+        _loadDepositsAndRequestSells(vault, _bob, 1, 1);
+        _loadDepositsAndRequestSells(vault, _charlie, 2, -1);
 
         return vault;
     }
@@ -70,7 +70,8 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
     function _loadDepositsAndRequestSells(
         LiquidContinuousMultiTokenVault vault,
         AnvilWallet userWallet,
-        uint256 userDepositMultiplier
+        uint256 userDepositMultiplier,
+        int256 userOffsetInSeconds // exercise deposits/redeems around cut-off times
     ) internal {
         IERC20 asset = IERC20(vault.asset());
         uint256 scale = 10 ** IERC20Metadata(vault.asset()).decimals();
@@ -92,7 +93,7 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
 
         for (uint256 depositPeriod = 0; depositPeriod <= vault.TENOR(); ++depositPeriod) {
             // first set the start time / period as operator
-            _setPeriod(vault, depositPeriod);
+            _setPeriod(vault, depositPeriod, userOffsetInSeconds);
 
             if (depositPeriod % 7 == 0) {
                 // skip deposits every 7th day
@@ -119,9 +120,19 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
         console2.log("VaultSupply after deposits %s -> %s", prevSupply, vault.totalSupply());
     }
 
-    function _setPeriod(LiquidContinuousMultiTokenVault vault, uint256 newPeriod) public {
+    function _setPeriod(LiquidContinuousMultiTokenVault vault, uint256 newPeriod, int256 offsetInSeconds) public {
         uint256 prevPeriod = vault.currentPeriod();
+
         uint256 newPeriodInSeconds = newPeriod * 1 days;
+
+        // add (or subtract) an offset number of seconds from the newPeriod
+        if (offsetInSeconds >= 0) {
+            newPeriodInSeconds += uint256(offsetInSeconds);
+        } else {
+            // if newPeriod is 0 and offset is negative, just stay at 0
+            newPeriodInSeconds -= newPeriod == 0 ? 0 : uint256(int256(-offsetInSeconds));
+        }
+
         uint256 currentTime = Timer.timestamp();
 
         uint256 newStartTime =
@@ -132,6 +143,14 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
         vm.stopBroadcast();
 
         console2.log("VaultCurrentPeriod updated %s -> %s", prevPeriod, vault.currentPeriod());
+    }
+
+    function startTimestamp() public view virtual returns (uint256 startTimestamp_) {
+        return _startTimestamp();
+    }
+
+    function auth() public view virtual returns (LiquidContinuousMultiTokenVault.VaultAuth memory auth_) {
+        return _vaultAuth;
     }
 }
 
