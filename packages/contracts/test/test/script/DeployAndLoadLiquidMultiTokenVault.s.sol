@@ -30,6 +30,8 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
     AnvilWallet private _bob = new AnvilWallet(8);
     AnvilWallet private _charlie = new AnvilWallet(9);
 
+    uint256 private constant TESTING_START_DAY = 30;
+
     error AnvilChainOnly(uint256 actualChainId, uint256 expectedChainId);
     error OwnerMismatch(address actualOwner, address expectedOwner);
 
@@ -60,9 +62,22 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
         }
 
         // --------------------- load deposits ---------------------
+        uint256 prevVaultStartTime = vault._vaultStartTimestamp(); // store "original" start time from deploy config
+
         _loadDepositsAndRequestSells(vault, _alice, 10, 0);
         _loadDepositsAndRequestSells(vault, _bob, 1, 1);
         _loadDepositsAndRequestSells(vault, _charlie, 2, -1);
+
+        // move the vault time to the testing start time.  keep the cut-off "hour:minute:seconds" from deploy config
+        uint256 elapsedDaysSinceStartTime =
+            prevVaultStartTime > Timer.timestamp() ? 0 : Timer.elapsed24Hours(prevVaultStartTime);
+        uint256 vaultTestingTime =
+            prevVaultStartTime + elapsedDaysSinceStartTime * 24 hours - TESTING_START_DAY * 24 hours;
+        _setStartTimeStamp(vault, vaultTestingTime);
+
+        console2.log(
+            "Testing can start!  VaultStartTime: %s (Period: %s)", vault._vaultStartTimestamp(), vault.currentPeriod()
+        );
 
         return vault;
     }
@@ -120,9 +135,7 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
         console2.log("VaultSupply after deposits %s -> %s", prevSupply, vault.totalSupply());
     }
 
-    function _setPeriod(LiquidContinuousMultiTokenVault vault, uint256 newPeriod, int256 offsetInSeconds) public {
-        uint256 prevPeriod = vault.currentPeriod();
-
+    function _setPeriod(LiquidContinuousMultiTokenVault vault, uint256 newPeriod, int256 offsetInSeconds) internal {
         uint256 newPeriodInSeconds = newPeriod * 1 days;
 
         // add (or subtract) an offset number of seconds from the newPeriod
@@ -138,11 +151,30 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
         uint256 newStartTime =
             currentTime > newPeriodInSeconds ? (currentTime - newPeriodInSeconds) : (newPeriodInSeconds - currentTime);
 
+        _setStartTimeStamp(vault, newStartTime);
+    }
+
+    function _setStartTimeStamp(LiquidContinuousMultiTokenVault vault, uint256 newStartTimestamp) internal {
+        uint256 prevPeriod = vault.currentPeriod();
+        uint256 prevStartTime = vault._vaultStartTimestamp();
+
         vm.startBroadcast(_operator.key());
-        vault.setVaultStartTimestamp(newStartTime);
+        vault.setVaultStartTimestamp(newStartTimestamp);
         vm.stopBroadcast();
 
-        console2.log("VaultCurrentPeriod updated %s -> %s", prevPeriod, vault.currentPeriod());
+        console2.log(
+            string.concat(
+                "VaultStartTime updated ",
+                vm.toString(prevStartTime),
+                " -> ",
+                vm.toString(vault._vaultStartTimestamp()),
+                " (Period: ",
+                vm.toString(prevPeriod),
+                " -> ",
+                vm.toString(vault.currentPeriod()),
+                " )"
+            )
+        );
     }
 
     function startTimestamp() public view virtual returns (uint256 startTimestamp_) {
