@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { RedeemRequest } from "~~/types/vault";
+import { notification } from "~~/utils/scaffold-eth";
 
 export const useFetchRedeemRequests = ({
   address,
@@ -44,8 +45,14 @@ export const useFetchRedeemRequests = ({
 
           // only yield if the deposit was in the past
           if (currentPeriod > depositPeriod) {
-            const assetAmount = await contract.convertToAssetsForDepositPeriod(share, depositPeriod);
-            totalAssetAmount += ethers.toBigInt(assetAmount);
+            try {
+              const assetAmount = await contract.convertToAssetsForDepositPeriod(share, depositPeriod);
+              totalAssetAmount += ethers.toBigInt(assetAmount);
+            } catch (error) {
+              notification.warning(
+                "It seems like you are testing a wrong scenario! You may set the reduced rate and get back to a period where it is not effective anymore. So you will see a wrong number regarding the `Assets Amount` in some of your redeem requests.",
+              );
+            }
           } else {
             totalAssetAmount += ethers.toBigInt(share); // yield is 0, assets = shares
           }
