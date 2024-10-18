@@ -2,12 +2,12 @@
 pragma solidity ^0.8.20;
 
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
-import { SimpleInterestYieldStrategy } from "@credbull/yield/strategy/SimpleInterestYieldStrategy.sol";
 import { CalcInterestMetadata } from "@credbull/yield/CalcInterestMetadata.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+import { SimpleInterestYieldStrategy } from "@test/test/yield/strategy/SimpleInterestYieldStrategy.sol";
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
 
 import { Test } from "forge-std/Test.sol";
