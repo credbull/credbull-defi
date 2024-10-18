@@ -75,7 +75,13 @@ export const useFetchDepositPools = ({
 
           return null;
         } catch (error) {
-          console.error("Error fetching balance for depositId:", depositId.tokenId, error);
+          console.error(
+            "Error fetching balance for depositId:",
+            depositId,
+            " and currentPeriod: ",
+            currentPeriod,
+            error,
+          );
           return null;
         }
       });
