@@ -14,14 +14,14 @@ contract TripleRateYieldStrategyScenarioTest is YieldStrategyScenarioTest {
     TestTripleRateContext internal context;
 
     function setUp() public override {
-        yieldStrategy = new TripleRateYieldStrategy();
+        yieldStrategy = new TripleRateYieldStrategy(IYieldStrategy.RangeInclusion.To);
         context = new TestTripleRateContext();
         context = TestTripleRateContext(
             address(
                 new ERC1967Proxy(
                     address(context),
                     abi.encodeWithSelector(
-                        context.__TestTripeRateContext_init.selector,
+                        context.__TestTripleRateContext_init.selector,
                         DEFAULT_FULL_RATE,
                         DEFAULT_REDUCED_RATE,
                         EFFECTIVE_FROM_PERIOD,
