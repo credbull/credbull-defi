@@ -39,7 +39,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     }
 
     function test__MultiTokenVaulTest__SimpleDeposit() public {
-        uint256 assetToSharesRatio = 1;
+        uint256 assetToSharesRatio = 2;
 
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
@@ -65,7 +65,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     }
 
     function test__MultiTokenVaulTest__DepositAndRedeem() public {
-        uint256 assetToSharesRatio = 1;
+        uint256 assetToSharesRatio = 3;
 
         _transferAndAssert(_asset, _owner, _charlie, 100_000 * _scale);
 
@@ -136,7 +136,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     }
 
     function test__MultiTokenVaulTest__MultipleDepositsAndRedeem() public {
-        uint256 assetToSharesRatio = 2;
+        uint256 assetToSharesRatio = 4;
 
         // setup
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);

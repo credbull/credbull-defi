@@ -16,18 +16,18 @@ library TestParamSet {
         pure
         returns (TestParam[] memory testParamsWithOffsets_)
     {
-        uint256[6] memory offsetNumPeriodsArr =
+        uint256[6] memory offsetAmounts =
             [0, 1, 2, testParam.redeemPeriod - 1, testParam.redeemPeriod, testParam.redeemPeriod + 1];
 
-        TestParam[] memory testParamsWithOffsets = new TestParam[](offsetNumPeriodsArr.length);
+        TestParam[] memory testParamsWithOffsets = new TestParam[](offsetAmounts.length);
 
-        for (uint256 i = 0; i < offsetNumPeriodsArr.length; i++) {
-            uint256 offsetNumPeriods = offsetNumPeriodsArr[i];
+        for (uint256 i = 0; i < offsetAmounts.length; i++) {
+            uint256 offsetAmount = offsetAmounts[i];
 
             TestParam memory testParamsWithOffset = TestParam({
-                principal: testParam.principal,
-                depositPeriod: testParam.depositPeriod + offsetNumPeriods,
-                redeemPeriod: testParam.redeemPeriod + offsetNumPeriods
+                principal: testParam.principal * (1 + offsetAmount),
+                depositPeriod: testParam.depositPeriod + offsetAmount,
+                redeemPeriod: testParam.redeemPeriod + offsetAmount
             });
 
             testParamsWithOffsets[i] = testParamsWithOffset;
@@ -122,7 +122,8 @@ library TestParamSet {
         pure
         returns (TestParam[] memory leftSet_, TestParam[] memory rightSet_)
     {
-        assert(splitBefore <= origTestParams.length);
+        // assert we can actually split in two at the splitBefore
+        assert(splitBefore < (origTestParams.length - 1));
 
         // Initialize leftSet and rightSet arrays with their respective sizes
         TestParam[] memory leftSet = new TestParam[](splitBefore); // Elements before splitBefore

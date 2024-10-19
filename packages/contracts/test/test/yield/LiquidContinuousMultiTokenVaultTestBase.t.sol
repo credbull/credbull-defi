@@ -16,8 +16,6 @@ import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { console2 } from "forge-std/console2.sol";
-
 abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTestBase {
     using TestParamSet for TestParamSet.TestParam[];
 
@@ -158,16 +156,18 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         IMultiTokenVault vault,
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
-    ) internal virtual {
+    ) internal virtual returns (uint256 assets_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
-        super._testRedeemMultiDeposit(account, vault, depositTestParams, redeemPeriod);
+        uint256 assets = super._testRedeemMultiDeposit(account, vault, depositTestParams, redeemPeriod);
 
         // verify the requestRedeems are released
         (uint256[] memory unlockDepositPeriods, uint256[] memory unlockAmounts) =
             liquidVault.unlockRequests(account, redeemPeriod);
         assertEq(0, unlockDepositPeriods.length, "unlock should be released");
         assertEq(0, unlockAmounts.length, "unlock should be released");
+
+        return assets;
     }
 
     /// @dev - requestRedeem AND redeem over multiple deposit and principals into one requestRedeemPeriod
@@ -176,14 +176,14 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         IMultiTokenVault vault,
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
-    ) internal virtual override {
+    ) internal virtual override returns (uint256 assets_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         // first requestRedeem
         _testRequestRedeemMultiDeposit(account, liquidVault, depositTestParams, redeemPeriod);
 
         // now redeem
-        _testRedeemAfterRequestRedeemMultiDeposit(account, vault, depositTestParams, redeemPeriod);
+        return _testRedeemAfterRequestRedeemMultiDeposit(account, vault, depositTestParams, redeemPeriod);
     }
 
     /// @dev execute a redeem on the vault across multiple deposit periods.~
@@ -196,10 +196,6 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         _warpToPeriod(vault, redeemPeriod); // warp the vault to redeem period
-
-        console2.log("depositTestParams.totalPrincipal()", depositTestParams.totalPrincipal());
-        console2.log("liquidVault.totalSupply()", liquidVault.totalSupply());
-        console2.log("liquidVault.totalAssets()", liquidVault.totalAssets());
 
         vm.prank(account);
         return liquidVault.redeem(depositTestParams.totalPrincipal(), account, account);
