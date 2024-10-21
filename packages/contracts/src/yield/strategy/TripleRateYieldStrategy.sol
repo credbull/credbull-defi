@@ -69,17 +69,37 @@ contract TripleRateYieldStrategy is YieldStrategy {
                     context.scale()
                 );
             }
-            // Timeline: Previous Period Rate -> 1st Reduced Rate Period -> Current Period Rate -> To Period
-            // If the FRRP is on or after the previous Period Rate, then the 'reduced' Yield is:
-            //  (FRRP -> Current Period Rate - 1) @ Previous Rate +
-            //  (Current Period Rate -> To Period) @ Current Rate.
-            // The '- 1' is because the Previous Period Rate applies up to but exclusive of the Current Period Rate.
-            else if (firstReducedRatePeriod >= previousPeriodRate.effectiveFromPeriod) {
-                //  1st RR Period -> Current Period @ Previous Rate +
+            // Timeline: Previous Period Rate -> 1st Reduced Rate Period -> To Period -> Current Period Rate
+            // If the FRRP is on or after the previous Period Rate and the 'to' period is before the current Period
+            // Rate, then the 'reduced' Yield is:
+            //  (FRRP -> To Period) @ Previous Rate
+            else if (
+                firstReducedRatePeriod >= previousPeriodRate.effectiveFromPeriod
+                    && toPeriod < currentPeriodRate.effectiveFromPeriod
+            ) {
+                //  1st RR Period -> To Period @ Previous Rate.
                 yield += CalcSimpleInterest.calcInterest(
                     principal,
                     previousPeriodRate.interestRate,
-                    (currentPeriodRate.effectiveFromPeriod - firstReducedRatePeriod) - 1,
+                    toPeriod - firstReducedRatePeriod,
+                    context.frequency(),
+                    context.scale()
+                );
+            }
+            // Timeline: Previous Period Rate -> 1st Reduced Rate Period -> Current Period Rate -> To Period
+            // If the FRRP is on or after the previous Period Rate and the 'to' period is on or after the current Period
+            // Rate, then the 'reduced' Yield is:
+            //  (FRRP -> Current Period Rate - 1) @ Previous Rate +
+            //  Current Period Rate -> To Period @ Current Rate.
+            else if (
+                firstReducedRatePeriod >= previousPeriodRate.effectiveFromPeriod
+                    && toPeriod >= currentPeriodRate.effectiveFromPeriod
+            ) {
+                //  FRRP -> Current Period - 1 @ Previous Rate +
+                yield += CalcSimpleInterest.calcInterest(
+                    principal,
+                    previousPeriodRate.interestRate,
+                    (currentPeriodRate.effectiveFromPeriod - 1) - firstReducedRatePeriod,
                     context.frequency(),
                     context.scale()
                 );
