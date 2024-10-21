@@ -36,6 +36,37 @@ contract TimelockAsyncUnlockTest is Test {
         _lockInMultipleDepositPeriods();
     }
 
+    function _lockAmount(address account, uint256 depositPeriod, uint256 amount) internal {
+        uint256 prevLockedAmount = asyncUnlock.lockedAmount(account, depositPeriod);
+        uint256 prevMaxRequestUnlock = asyncUnlock.maxRequestUnlock(account, depositPeriod);
+
+        vm.prank(account);
+        asyncUnlock.lock(account, depositPeriod, amount);
+
+        assertEq(prevLockedAmount + amount, asyncUnlock.lockedAmount(account, depositPeriod));
+
+        assertEq(prevMaxRequestUnlock + amount, asyncUnlock.maxRequestUnlock(account, depositPeriod));
+    }
+
+    function _requestUnlock(address account, uint256[] memory _depositPeriods, uint256[] memory _amounts) internal {
+        for (uint256 i = 0; i < _depositPeriods.length; ++i) {
+            if (_amounts[i] > asyncUnlock.maxRequestUnlock(account, _depositPeriods[i])) {
+                vm.expectRevert(
+                    abi.encodeWithSelector(
+                        TimelockAsyncUnlock.TimelockAsyncUnlock__ExceededMaxRequestUnlock.selector,
+                        account,
+                        _depositPeriods[i],
+                        _amounts[i],
+                        asyncUnlock.maxRequestUnlock(account, _depositPeriods[i])
+                    )
+                );
+                break;
+            }
+        }
+        vm.prank(account);
+        asyncUnlock.requestUnlock(account, _depositPeriods, _amounts);
+    }
+
     function test__TimelockAsyncUnlock__LocksInMultipleDepositPeriods() public view {
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
             assertEq(
