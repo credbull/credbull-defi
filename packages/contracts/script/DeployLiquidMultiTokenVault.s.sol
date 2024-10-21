@@ -28,9 +28,10 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
     using stdToml for string;
 
     string private _tomlConfig;
-    LiquidContinuousMultiTokenVault.VaultAuth public _vaultAuth;
+    LiquidContinuousMultiTokenVault.VaultAuth internal _vaultAuth;
 
     uint256 public constant NOTICE_PERIOD = 1;
+    string public constant CONTRACT_TOML_KEY = ".evm.contracts.liquid_continuous_multi_token_vault";
 
     constructor() {
         _tomlConfig = loadTomlConfiguration();
@@ -103,11 +104,9 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         IYieldStrategy yieldStrategy,
         IRedeemOptimizer redeemOptimizer
     ) public view returns (LiquidContinuousMultiTokenVault.VaultParams memory vaultParams_) {
-        string memory contractKey = ".evm.contracts.liquid_continuous_multi_token_vault";
-        uint256 fullRateBasisPoints = _tomlConfig.readUint(string.concat(contractKey, ".full_rate_bps"));
-        uint256 reducedRateBasisPoints = _tomlConfig.readUint(string.concat(contractKey, ".reduced_rate_bps"));
-        uint256 startTimestamp =
-            _readUintWithDefault(_tomlConfig, string.concat(contractKey, ".vault_start_timestamp"), block.timestamp);
+        uint256 fullRateBasisPoints = _tomlConfig.readUint(string.concat(CONTRACT_TOML_KEY, ".full_rate_bps"));
+        uint256 reducedRateBasisPoints = _tomlConfig.readUint(string.concat(CONTRACT_TOML_KEY, ".reduced_rate_bps"));
+        uint256 startTimestamp = _startTimestamp();
 
         uint256 scale = 10 ** asset.decimals();
 
@@ -133,6 +132,12 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         });
 
         return vaultParams;
+    }
+
+    function _startTimestamp() internal view virtual returns (uint256 startTimestamp_) {
+        return _readUintWithDefault(
+            _tomlConfig, string.concat(CONTRACT_TOML_KEY, ".vault_start_timestamp"), block.timestamp
+        );
     }
 
     function _usdcOrDeployMock(address contractOwner) internal returns (IERC20Metadata asset) {

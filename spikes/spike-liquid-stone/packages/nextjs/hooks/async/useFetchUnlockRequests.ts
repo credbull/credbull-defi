@@ -24,7 +24,7 @@ export const useFetchUnlockRequests = ({
   useEffect(() => {
     async function getUnlockRequests() {
       try {
-        if (!address || !deployedContractAddress || !noticePeriod) return;
+        if (!address || !deployedContractAddress || deployedContractAbi || !noticePeriod) return;
 
         const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
         const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);

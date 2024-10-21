@@ -1,5 +1,7 @@
 "use client";
 
+import LoadingSpinner from "./LoadingSpinner";
+
 const Button = ({
   text,
   size = "medium",
@@ -7,6 +9,8 @@ const Button = ({
   textColor = "white",
   tooltipData = "",
   flex = "",
+  disabled = false,
+  loading = false,
   onClickHandler,
 }: {
   text: string;
@@ -15,6 +19,8 @@ const Button = ({
   textColor?: "white";
   tooltipData?: string;
   flex?: string;
+  disabled?: boolean;
+  loading?: boolean;
   onClickHandler: () => void;
 }) => {
   const buttonConfig = {
@@ -55,10 +61,12 @@ const Button = ({
   return (
     <button
       onClick={onClickHandler}
-      data-tip={tooltipData}
+      data-tip={loading ? "Data loading.." : tooltipData}
+      disabled={disabled}
       className={`${flex} tooltip tooltip-bottom tooltip-accent ${buttonConfig.bg[bgColor].bgColor} ${buttonConfig.text[textColor].color} ${buttonConfig.size[size]} rounded`}
     >
-      {text}
+      {/* {text} */}
+      {loading ? <LoadingSpinner size="small" /> : text}
     </button>
   );
 };
