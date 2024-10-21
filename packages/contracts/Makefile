@@ -41,3 +41,9 @@ verify:
 		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume -vvvv && \
 	yarn gen-types && \
 	yarn db-export
+
+deploy-stakingVaults-local:
+	rm -rf out && \
+	forge script script/DeployStakingVaults.s.sol:DeployStakingVaults --rpc-url localhost \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast -vvv && \
+	yarn gen-types
