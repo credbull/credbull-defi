@@ -73,16 +73,16 @@ contract DeployStakingVaults is Script {
             factory.createVault(createStakingVaultParams(helperConfig, 1000), "FixedYieldVault")
         );
         stakingVaults[1] = CredbullFixedYieldVault(
-            factory.createVault(createStakingVaultParams(helperConfig, 1000), "FixedYieldVault")
+            factory.createVault(createStakingVaultParams(helperConfig, 2000), "FixedYieldVault")
         );
         stakingVaults[2] = CredbullFixedYieldVault(
-            factory.createVault(createStakingVaultParams(helperConfig, 1000), "FixedYieldVault")
+            factory.createVault(createStakingVaultParams(helperConfig, 3000), "FixedYieldVault")
         );
         stakingVaults[3] = CredbullFixedYieldVault(
-            factory.createVault(createStakingVaultParams(helperConfig, 1000), "FixedYieldVault")
+            factory.createVault(createStakingVaultParams(helperConfig, 4000), "FixedYieldVault")
         );
         stakingVaults[4] = CredbullFixedYieldVault(
-            factory.createVault(createStakingVaultParams(helperConfig, 1000), "FixedYieldVault")
+            factory.createVault(createStakingVaultParams(helperConfig, 5000), "FixedYieldVault")
         );
 
         vm.stopBroadcast();
