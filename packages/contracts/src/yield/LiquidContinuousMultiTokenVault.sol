@@ -393,17 +393,6 @@ contract LiquidContinuousMultiTokenVault is
         return balanceOf(account, depositPeriod);
     }
 
-    // ===================== TripleRateContext =====================
-
-    /// @inheritdoc TripleRateContext
-    function setReducedRate(uint256 reducedRateScaled_, uint256 effectiveFromPeriod_)
-        public
-        override
-        onlyRole(OPERATOR_ROLE)
-    {
-        super.setReducedRate(reducedRateScaled_, effectiveFromPeriod_);
-    }
-
     /**
      * @dev Withdraws the assets from out of vault for investment, i.e. in RWA.
      * Only the Asset Manager can call this function.
@@ -415,6 +404,18 @@ contract LiquidContinuousMultiTokenVault is
         _withdrawAssest(to, amount);
     }
 
+    // ===================== TripleRateContext =====================
+
+    /// @inheritdoc TripleRateContext
+    /// @dev This is an operations function, without checks.
+    function setReducedRate(uint256 reducedRateScaled_, uint256 effectiveFromPeriod_)
+        public
+        override
+        onlyRole(OPERATOR_ROLE)
+    {
+        super._setReducedRateUnchecked(reducedRateScaled_, effectiveFromPeriod_);
+    }
+
     /**
      * @notice Sets the `reducedRateScaled_` against the Current Period.
      * @dev Convenience method for setting the Reduced Rate agains the current Period.
@@ -424,7 +425,7 @@ contract LiquidContinuousMultiTokenVault is
      * @param reducedRateScaled_ The scaled percentage 'reduced' Interest Rate.
      */
     function setReducedRateAtCurrent(uint256 reducedRateScaled_) public onlyRole(OPERATOR_ROLE) {
-        setReducedRate(reducedRateScaled_, currentPeriod());
+        super.setReducedRate(reducedRateScaled_, currentPeriod());
     }
 
     // ===================== Timer / IERC6372 Clock =====================
