@@ -48,6 +48,7 @@ contract LiquidContinuousMultiTokenVault is
         address owner;
         address operator;
         address upgrader;
+        address assetManager;
     }
 
     struct VaultParams {
@@ -68,9 +69,11 @@ contract LiquidContinuousMultiTokenVault is
 
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+    bytes32 public constant ASSET_MANAGER_ROLE = keccak256("ASSET_MANAGER_ROLE");
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidAuthAddress(string authName, address authAddress);
+    error LiquidContinuousMultiTokenVault__ControllerMismatch(address sender, address controller);
     error LiquidContinuousMultiTokenVault__AmountMismatch(uint256 amount1, uint256 amount2);
     error LiquidContinuousMultiTokenVault__UnlockPeriodMismatch(uint256 unlockPeriod1, uint256 unlockPeriod2);
     error LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(
@@ -91,6 +94,7 @@ contract LiquidContinuousMultiTokenVault is
         _initRole("owner", DEFAULT_ADMIN_ROLE, vaultParams.vaultAuth.owner);
         _initRole("operator", OPERATOR_ROLE, vaultParams.vaultAuth.operator);
         _initRole("upgrader", UPGRADER_ROLE, vaultParams.vaultAuth.upgrader);
+        _initRole("assetManager", ASSET_MANAGER_ROLE, vaultParams.vaultAuth.assetManager);
 
         _yieldStrategy = vaultParams.yieldStrategy;
         _redeemOptimizer = vaultParams.redeemOptimizer;
@@ -166,62 +170,188 @@ contract LiquidContinuousMultiTokenVault is
         return principal + calcYield(principal, depositPeriod, redeemPeriod);
     }
 
-    // ===================== Buyable/Sellable =====================
+    // ===================== IComponent =====================
+    // User Functions
 
-    /// @inheritdoc IComponentToken
-    /// @dev - buys can be directly executed.
-    function requestBuy(uint256 currencyTokenAmount) public virtual override returns (uint256 requestId_) {
-        uint256 componentTokenAmount = currencyTokenAmount; // 1 asset = 1 share
+    /**
+     * @notice Transfer assets from the owner into the vault and submit a request to buy shares
+     * @param assets Amount of `asset` to deposit
+     * @param owner Source of the assets to deposit
+     * @return requestId_ Discriminator between non-fungible requests
+     */
+    function requestDeposit(uint256 assets, address controller, address owner) public returns (uint256 requestId_) {
+        if (controller != _msgSender()) {
+            revert LiquidContinuousMultiTokenVault__ControllerMismatch(_msgSender(), controller);
+        }
 
         uint256 requestId = ZERO_REQUEST_ID; // requests and requestIds not used in buys.
 
-        executeBuy(_msgSender(), requestId, currencyTokenAmount, componentTokenAmount);
-
+        deposit(assets, owner, controller);
+        emit DepositRequest(controller, owner, requestId, _msgSender(), assets);
         return requestId;
     }
 
-    /// @inheritdoc IComponentToken
-    function requestSell(uint256 componentTokenAmount) public virtual override returns (uint256 requestId) {
+    /**
+     * @notice Fulfill a request to buy shares by minting shares to the receiver
+     * @param assets Amount of `asset` that was deposited by `requestDeposit`
+     * @param receiver Address to receive the shares
+     */
+    function deposit(uint256 assets, address receiver, address controller) public returns (uint256 shares_) {
+        if (controller != _msgSender()) {
+            revert LiquidContinuousMultiTokenVault__ControllerMismatch(_msgSender(), controller);
+        }
+
+        uint256 shares = deposit(assets, receiver);
+        emit Deposit(controller, receiver, assets, shares);
+        return shares;
+    }
+
+    /**
+     * @notice Transfer shares from the owner into the vault and submit a request to redeem assets
+     * @param shares Amount of shares to redeem
+     * @param owner Source of the shares to redeem
+     * @return requestId_ Discriminator between non-fungible requests
+     */
+    function requestRedeem(uint256 shares, address, /* controller */ address owner)
+        public
+        returns (uint256 requestId_)
+    {
+        // using optimize() variant in case "shares" represents the IComponent "principal + yield" which is our "assets".
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
-            _redeemOptimizer.optimize(this, _msgSender(), componentTokenAmount, componentTokenAmount, minUnlockPeriod());
+            _redeemOptimizer.optimize(this, owner, shares, shares, minUnlockPeriod());
 
-        return requestUnlock(_msgSender(), depositPeriods, sharesAtPeriods);
+        uint256 requestId = requestUnlock(_msgSender(), depositPeriods, sharesAtPeriods);
+        emit RedeemRequest(_msgSender(), owner, requestId, _msgSender(), shares);
+        return requestId;
     }
 
-    /// @inheritdoc IComponentToken
-    function executeBuy(
-        address requestor,
-        uint256, /* requestId */
-        uint256 currencyTokenAmount,
-        uint256 componentTokenAmount
-    ) public override {
-        if (currencyTokenAmount != componentTokenAmount) {
-            revert LiquidContinuousMultiTokenVault__AmountMismatch(currencyTokenAmount, componentTokenAmount);
+    /**
+     * @notice Fulfill a request to redeem assets by transferring assets to the receiver
+     * @param shares Amount of shares that was redeemed by `requestRedeem`
+     * @param receiver Address to receive the assets
+     */
+    function redeem(uint256 shares, address receiver, address /* controller */ ) public returns (uint256 assets) {
+        uint256 requestId = currentPeriod(); // requestId = redeemPeriod, and redeem can only be called  where redeemPeriod = currentPeriod()
+
+        uint256 unlockRequestedAmount = unlockRequestAmount(receiver, requestId);
+        if (shares != unlockRequestedAmount) {
+            revert LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(shares, unlockRequestedAmount);
         }
 
-        deposit(currencyTokenAmount, requestor);
-    }
+        (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) = unlock(receiver, requestId); // unlockPeriod = redeemPeriod
 
-    /// @inheritdoc IComponentToken
-    function executeSell(
-        address requestor,
-        uint256 requestId,
-        uint256, /*currencyTokenAmount*/
-        uint256 componentTokenAmount
-    ) public override {
-        uint256 unlockRequestedAmount = unlockRequestAmount(requestor, requestId);
-        if (componentTokenAmount != unlockRequestedAmount) {
-            revert LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(
-                componentTokenAmount, unlockRequestedAmount
-            );
-        }
-
-        (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) = unlock(requestor, requestId); // unlockPeriod = redeemPeriod
+        uint256 totalAssetsRedeemed = 0;
 
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
-            _redeemForDepositPeriodAfterUnlock(sharesAtPeriods[i], requestor, requestor, depositPeriods[i], requestId);
+            totalAssetsRedeemed += _redeemForDepositPeriodAfterUnlock(
+                sharesAtPeriods[i], receiver, _msgSender(), depositPeriods[i], requestId
+            );
         }
+        emit Withdraw(_msgSender(), receiver, _msgSender(), totalAssetsRedeemed, shares);
+        return totalAssetsRedeemed;
     }
+
+    // Getter View Functions
+
+    /// @notice Address of the `asset` token
+    function asset() public view override(IComponentToken, MultiTokenVault) returns (address assetTokenAddress) {
+        return MultiTokenVault.asset();
+    }
+
+    /// @notice Total amount of `asset` held in the vault
+    // @dev - this is a heavy operation as the period of the vault increases
+    function totalAssets() public view returns (uint256 totalManagedAssets) {
+        uint256 totalAssets_ = 0;
+        uint256 currentPeriod_ = currentPeriod();
+
+        for (uint256 depositPeriod = 0; depositPeriod <= currentPeriod_; ++depositPeriod) {
+            totalAssets_ += convertToAssetsForDepositPeriod(totalSupply(depositPeriod), depositPeriod);
+        }
+
+        return totalAssets_;
+    }
+
+    /**
+     * @notice Equivalent amount of shares for the given amount of assets
+     * @param assets Amount of `asset` to convert
+     * @return shares Amount of shares that would be received in exchange
+     * @dev - used for deposits, assumes depositPeriod == currentPeriod()
+     */
+    function convertToShares(uint256 assets)
+        public
+        view
+        override(IComponentToken, MultiTokenVault)
+        returns (uint256 shares)
+    {
+        return MultiTokenVault.convertToShares(assets);
+    }
+
+    /**
+     * @notice Equivalent amount of assets for the given amount of shares
+     * @param shares Amount of shares to convert
+     * @return assets_ Amount of `asset` that would be received in exchange
+     * @dev - WARNING convertToAssets(shares) is User-specific as no depositPeriod is specified
+     *  for User-agnostic, use convertToAssetsForDepositPeriod(shares, depositPeriod)
+     */
+    function convertToAssets(uint256 shares) public view returns (uint256 assets_) {
+        uint256 assets = 0;
+
+        (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
+            _redeemOptimizer.optimizeRedeemShares(this, _msgSender(), shares, minUnlockPeriod());
+
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            assets += convertToAssetsForDepositPeriod(sharesAtPeriods[i], depositPeriods[i]);
+        }
+
+        return assets;
+    }
+
+    /**
+     * @notice Total amount of assets sent to the vault as part of pending deposit requests
+     * @return assets Amount of pending deposit assets for the given requestId and controller
+     * @dev - deposits can be processed immediately.  therefore nothing pending.
+     */
+    function pendingDepositRequest(uint256, /* requestId */ address /* controller */ )
+        public
+        pure
+        returns (uint256 assets)
+    {
+        return 0;
+    }
+
+    /**
+     * @notice Total amount of assets sitting in the vault as part of claimable deposit requests
+     * @return assets Amount of claimable deposit assets for the given requestId and controller
+     * @dev - deposits can be processed immediately.  therefore nothing to claim.
+     */
+    function claimableDepositRequest(uint256, /* requestId */ address /* controller */ )
+        public
+        pure
+        returns (uint256 assets)
+    {
+        return 0;
+    }
+
+    /**
+     * @notice Total amount of shares sent to the vault as part of pending redeem requests
+     * @param requestId Discriminator between non-fungible requests
+     * @return shares Amount of pending redeem shares for the given requestId and controller
+     */
+    function pendingRedeemRequest(uint256 requestId, address /* controller */ ) public view returns (uint256 shares) {
+        return unlockRequestAmount(_msgSender(), requestId);
+    }
+
+    /**
+     * @notice Total amount of assets sitting in the vault as part of claimable redeem requests
+     * @param requestId Discriminator between non-fungible requests
+     * @param controller Controller of the requests
+     * @return shares Amount of claimable redeem shares for the given requestId and controller
+     */
+    function claimableRedeemRequest(uint256 requestId, address controller) public view returns (uint256 shares) {
+        return (currentPeriod() == requestId) ? pendingRedeemRequest(requestId, controller) : 0;
+    }
+
+    // ===================== RedeemOptimizer =====================
 
     /// @dev set the IRedeemOptimizer
     function setRedeemOptimizer(IRedeemOptimizer redeemOptimizer) public onlyRole(OPERATOR_ROLE) {
@@ -272,6 +402,17 @@ contract LiquidContinuousMultiTokenVault is
         onlyRole(OPERATOR_ROLE)
     {
         super.setReducedRate(reducedRateScaled_, effectiveFromPeriod_);
+    }
+
+    /**
+     * @dev Withdraws the assets from out of vault for investment, i.e. in RWA.
+     * Only the Asset Manager can call this function.
+     *
+     * @param to The trusted address that will receive the assets, e.g. custodian
+     * @param amount The amount of the ERC-20 underlying assets to be withdrawn from the vault.
+     */
+    function withdrawAsset(address to, uint256 amount) public onlyRole(ASSET_MANAGER_ROLE) {
+        _withdrawAssest(to, amount);
     }
 
     /**
@@ -328,10 +469,10 @@ contract LiquidContinuousMultiTokenVault is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(MultiTokenVault, AccessControlEnumerableUpgradeable)
+        override(MultiTokenVault, AccessControlEnumerableUpgradeable, TimelockAsyncUnlock)
         returns (bool)
     {
-        return MultiTokenVault.supportsInterface(interfaceId);
+        return TimelockAsyncUnlock.supportsInterface(interfaceId) || MultiTokenVault.supportsInterface(interfaceId);
     }
 
     function getVersion() public pure returns (uint256 version) {

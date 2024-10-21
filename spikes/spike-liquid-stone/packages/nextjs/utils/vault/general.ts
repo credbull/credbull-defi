@@ -10,3 +10,15 @@ export const formatTimestamp = (timestamp: number) => {
 
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
+
+export const formatAddress = (address: string, chars = 6) => {
+  if (!address) return "";
+  const start = address.slice(0, chars);
+  const end = address.slice(-chars);
+  return `${start}...${end}`;
+};
+
+export const formatNumber = (value: string | number | bigint) =>
+  Number(value).toLocaleString("en-US", {
+    minimumFractionDigits: value.toString().split(".")[1]?.length || 0,
+  });

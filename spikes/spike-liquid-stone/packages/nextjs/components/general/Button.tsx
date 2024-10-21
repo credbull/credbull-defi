@@ -1,24 +1,36 @@
 "use client";
 
+import LoadingSpinner from "./LoadingSpinner";
+
 const Button = ({
   text,
   size = "medium",
   bgColor = "black",
   textColor = "white",
   tooltipData = "",
+  flex = "",
+  disabled = false,
+  loading = false,
   onClickHandler,
 }: {
   text: string;
   size?: "small" | "medium" | "large";
-  bgColor?: "black" | "yellow" | "blue" | "green";
+  bgColor?: "black" | "gray" | "yellow" | "blue" | "green";
   textColor?: "white";
   tooltipData?: string;
+  flex?: string;
+  disabled?: boolean;
+  loading?: boolean;
   onClickHandler: () => void;
 }) => {
   const buttonConfig = {
     bg: {
       black: {
         bgColor: "bg-black-500",
+        color: "text-white",
+      },
+      gray: {
+        bgColor: "bg-gray-500",
         color: "text-white",
       },
       yellow: {
@@ -41,7 +53,7 @@ const Button = ({
     },
     size: {
       small: "px-3 py-2",
-      medium: "px-4 py-2 mr-2",
+      medium: "px-4 py-2",
       large: "px-5 py-2",
     },
   };
@@ -49,10 +61,12 @@ const Button = ({
   return (
     <button
       onClick={onClickHandler}
-      data-tip={tooltipData}
-      className={`tooltip tooltip-bottom tooltip-accent ${buttonConfig.bg[bgColor].bgColor} ${buttonConfig.text[textColor].color} ${buttonConfig.size[size]} rounded`}
+      data-tip={loading ? "Data loading.." : tooltipData}
+      disabled={disabled}
+      className={`${flex} tooltip tooltip-bottom tooltip-accent ${buttonConfig.bg[bgColor].bgColor} ${buttonConfig.text[textColor].color} ${buttonConfig.size[size]} rounded`}
     >
-      {text}
+      {/* {text} */}
+      {loading ? <LoadingSpinner size="small" /> : text}
     </button>
   );
 };

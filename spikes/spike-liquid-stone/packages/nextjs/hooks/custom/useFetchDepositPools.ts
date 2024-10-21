@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { OwnedNft } from "alchemy-sdk";
 import { ethers } from "ethers";
 import { DepositPool } from "~~/types/vault";
+import { notification } from "~~/utils/scaffold-eth";
 import { getNFTsForOwner } from "~~/utils/vault/web3";
 
 export const useFetchDepositPools = ({
@@ -41,7 +42,7 @@ export const useFetchDepositPools = ({
 
   useEffect(() => {
     async function fetchBalances() {
-      if (!deployedContractAddress || !address || userDepositIds.length === 0) return;
+      if (!deployedContractAddress || !deployedContractAbi || !address || userDepositIds.length === 0) return;
 
       const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
       const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
@@ -61,8 +62,20 @@ export const useFetchDepositPools = ({
           const unlockRequestAmount = ethers.formatUnits(unlockRequestAmountBigInt, 6);
 
           if (balanceBigInt > 0 && Number(depositId) <= currentPeriod) {
-            const yieldAmount =
-              currentPeriod > Number(depositId) ? await contract.calcYield(balanceBigInt, depositId, currentPeriod) : 0;
+            let yieldAmount = 0;
+
+            try {
+              yieldAmount =
+                currentPeriod > Number(depositId)
+                  ? await contract.calcYield(balanceBigInt, depositId, currentPeriod)
+                  : 0;
+            } catch (error) {
+              yieldAmount = 0;
+
+              notification.warning(
+                "It seems like you are testing a wrong scenario! You may set the reduced rate and get back to a period where it is not effective anymore. So you will see a wrong number regarding the `Yield Amount`.",
+              );
+            }
 
             return {
               depositId,
@@ -75,7 +88,13 @@ export const useFetchDepositPools = ({
 
           return null;
         } catch (error) {
-          console.error("Error fetching balance for depositId:", depositId.tokenId, error);
+          console.error(
+            "Error fetching balance for depositId:",
+            depositId,
+            " and currentPeriod: ",
+            currentPeriod,
+            error,
+          );
           return null;
         }
       });

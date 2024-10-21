@@ -1,2 +1,0 @@
-@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts
-@axelar-network/axelar-gmp-sdk-solidity/contracts/=lib/axelar-network/axelar-gmp-sdk-solidity/contracts

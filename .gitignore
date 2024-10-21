@@ -34,3 +34,5 @@ packages/contracts/lib/.DS_Store
 # vercel related
 .vercel
 public
+
+.vscode

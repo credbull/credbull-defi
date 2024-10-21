@@ -20,7 +20,11 @@ function getFiles(path) {
 }
 function getArtifactOfContract(contractName) {
   let artifactJson;
-  if (['SimpleToken', 'SimpleUSDC', 'SimpleVault'].includes(contractName)) {
+  if (
+    ['SimpleToken', 'SimpleUSDC', 'SimpleVault', 'ERC1155MintableBurnable', 'SimpleTimelockAsyncUnlock'].includes(
+      contractName,
+    )
+  ) {
     const current_path_to_artifacts = path.join(__dirname, '../..', `out/${contractName}.t.sol`);
     artifactJson = JSON.parse(fs.readFileSync(`${current_path_to_artifacts}/${contractName}.json`));
   } else {
@@ -83,6 +87,7 @@ function main() {
   chains.forEach((chain) => {
     allGeneratedContracts[chain] = {};
     const broadCastObject = JSON.parse(fs.readFileSync(`${current_path_to_broadcast}/${chain}/run-latest.json`));
+
     const transactionsCreate = broadCastObject.transactions.filter(
       (transaction) => transaction.transactionType == 'CREATE',
     );
@@ -93,24 +98,28 @@ function main() {
     });
 
     const mapContracts = {};
+
     transactionsCreate.forEach((transaction) => {
-      mapContracts[transaction.contractName] = {
-        num: 0,
-        name: transaction.contractName,
+      const contractName = transaction.contractName;
+      const uniqueKey = `${contractName}#${mapContractNames[contractName]}`;
+
+      mapContracts[uniqueKey] = {
+        num: mapContractNames[contractName],
+        name: contractName,
         address: transaction.contractAddress,
       };
+
+      mapContractNames[contractName] += 1;
     });
 
     Object.values(mapContracts).forEach((contract) => {
       const artifact = getArtifactOfContract(contract.name);
 
-      allGeneratedContracts[chain][`${contract.name}#${mapContractNames[contract.name]}`] = {
+      allGeneratedContracts[chain][`${contract.name}#${contract.num}`] = {
         address: contract.address,
         abi: artifact.abi,
         inheritedFunctions: getInheritedFunctions(artifact),
       };
-
-      mapContracts[contract.name].num += 1;
     });
   });
 

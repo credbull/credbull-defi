@@ -13,7 +13,8 @@ export type DepositPool = {
   yield: string;
 };
 
-export type SellRequest = {
+export type RedeemRequest = {
   id: number;
-  amount: bigint;
+  shareAmount: bigint;
+  assetAmount: bigint;
 };

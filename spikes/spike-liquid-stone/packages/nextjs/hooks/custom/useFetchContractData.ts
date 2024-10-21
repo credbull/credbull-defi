@@ -18,13 +18,16 @@ export const useFetchContractData = ({
 }) => {
   const [currentPeriod, setCurrentPeriod] = useState<number>(0);
   const [assetAmount, setAssetAmount] = useState<string>("");
+  const [startTimestamp, setStartTimestamp] = useState<bigint>(BigInt(0));
   const [startTime, setStartTime] = useState<string>("");
   const [noticePeriod, setNoticePeriod] = useState<number>(0);
   const [frequency, setFrequency] = useState<number>(0);
   const [tenor, setTenor] = useState<number>(0);
   const [scale, setScale] = useState<number>(0);
   const [fullRate, setFullRate] = useState<number>(0);
-  const [reducedRate, setReducedRate] = useState<number>(0);
+  const [effectiveReducedRate, setEffectiveReducedRate] = useState<string>("0");
+  const [currentReducedRate, setCurrentReducedRate] = useState<number>(0);
+  const [previousReducedRate, setPreviousReducedRate] = useState<number>(0);
 
   const { refetch: refetchCurrentPeriod } = useReadContract({
     address: deployedContractAddress,
@@ -82,7 +85,14 @@ export const useFetchContractData = ({
     args: [],
   });
 
-  const { refetch: refetchReducedRate } = useReadContract({
+  const { refetch: refetchPreviousReducedRate } = useReadContract({
+    address: deployedContractAddress,
+    functionName: "previousPeriodRate",
+    abi: deployedContractAbi,
+    args: [],
+  });
+
+  const { refetch: refetchCurrentReducedRate } = useReadContract({
     address: deployedContractAddress,
     functionName: "currentPeriodRate",
     abi: deployedContractAbi,
@@ -93,13 +103,15 @@ export const useFetchContractData = ({
   useEffect(() => {
     const fetchData = async () => {
       const currentPeriodData = await refetchCurrentPeriod();
-      setCurrentPeriod(Number(currentPeriodData?.data));
+      const _currentPeriod = Number(currentPeriodData?.data);
+      setCurrentPeriod(_currentPeriod);
 
       const assetAmountData = await refetchAssetAmount();
       const assetAmountBigInt = BigInt(assetAmountData?.data as bigint);
       setAssetAmount(ethers.formatUnits(assetAmountBigInt, 6));
 
       const startTimeData = await refetchStartTime();
+      setStartTimestamp(startTimeData?.data as bigint);
       setStartTime(formatTimestamp(Number(startTimeData?.data)));
 
       const noticePeriodData = await refetchNoticePeriod();
@@ -119,9 +131,17 @@ export const useFetchContractData = ({
         setFullRate(Number(fullRateData?.data) / scale);
       }
 
-      const reducedRateData = await refetchReducedRate();
+      const previousReducedRateData = await refetchPreviousReducedRate();
+      const currentReducedRateData = await refetchCurrentReducedRate();
+
       if (scale > 0) {
-        setReducedRate(Number((reducedRateData?.data as PeriodRate)?.interestRate) / scale);
+        setPreviousReducedRate(Number((previousReducedRateData?.data as PeriodRate)?.interestRate) / scale);
+        setCurrentReducedRate(Number((currentReducedRateData?.data as PeriodRate)?.interestRate) / scale);
+        if (_currentPeriod < Number(currentReducedRateData?.data?.effectiveFromPeriod)) {
+          setEffectiveReducedRate("0");
+        } else {
+          setEffectiveReducedRate("1");
+        }
       }
     };
 
@@ -137,7 +157,8 @@ export const useFetchContractData = ({
     refetchTenor,
     refetchScale,
     refetchFullRate,
-    refetchReducedRate,
+    refetchPreviousReducedRate,
+    refetchCurrentReducedRate,
     scale,
     ...dependencies,
   ]);
@@ -145,12 +166,15 @@ export const useFetchContractData = ({
   return {
     currentPeriod,
     assetAmount,
+    startTimestamp,
     startTime,
     noticePeriod,
     frequency,
     tenor,
     scale,
     fullRate,
-    reducedRate,
+    previousReducedRate,
+    currentReducedRate,
+    effectiveReducedRate,
   };
 };

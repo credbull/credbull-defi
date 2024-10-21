@@ -17,6 +17,10 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
+import { SimpleTimelockAsyncUnlock } from "@test/test/timelock/SimpleTimelockAsyncUnlock.t.sol";
+import { ERC1155MintableBurnable } from "@test/test/token/ERC1155/ERC1155MintableBurnable.t.sol";
+import { IERC5679Ext1155 } from "@credbull/token/ERC1155/IERC5679Ext1155.sol";
+
 import { stdToml } from "forge-std/StdToml.sol";
 import { console2 } from "forge-std/console2.sol";
 
@@ -24,7 +28,10 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
     using stdToml for string;
 
     string private _tomlConfig;
-    LiquidContinuousMultiTokenVault.VaultAuth public _vaultAuth;
+    LiquidContinuousMultiTokenVault.VaultAuth internal _vaultAuth;
+
+    uint256 public constant NOTICE_PERIOD = 1;
+    string public constant CONTRACT_TOML_KEY = ".evm.contracts.liquid_continuous_multi_token_vault";
 
     constructor() {
         _tomlConfig = loadTomlConfiguration();
@@ -32,7 +39,8 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         _vaultAuth = LiquidContinuousMultiTokenVault.VaultAuth({
             owner: _tomlConfig.readAddress(".evm.address.owner"),
             operator: _tomlConfig.readAddress(".evm.address.operator"),
-            upgrader: _tomlConfig.readAddress(".evm.address.upgrader")
+            upgrader: _tomlConfig.readAddress(".evm.address.upgrader"),
+            assetManager: _tomlConfig.readAddress(".evm.address.asset_manager")
         });
     }
 
@@ -83,8 +91,9 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
                 "] !!!!!"
             )
         );
-
         vm.stopBroadcast();
+
+        _deployTimelockAsyncUnlock();
 
         return LiquidContinuousMultiTokenVault(address(liquidVaultProxy));
     }
@@ -95,11 +104,9 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         IYieldStrategy yieldStrategy,
         IRedeemOptimizer redeemOptimizer
     ) public view returns (LiquidContinuousMultiTokenVault.VaultParams memory vaultParams_) {
-        string memory contractKey = ".evm.contracts.liquid_continuous_multi_token_vault";
-        uint256 fullRateBasisPoints = _tomlConfig.readUint(string.concat(contractKey, ".full_rate_bps"));
-        uint256 reducedRateBasisPoints = _tomlConfig.readUint(string.concat(contractKey, ".reduced_rate_bps"));
-        uint256 startTimestamp =
-            _readUintWithDefault(_tomlConfig, string.concat(contractKey, ".vault_start_timestamp"), block.timestamp);
+        uint256 fullRateBasisPoints = _tomlConfig.readUint(string.concat(CONTRACT_TOML_KEY, ".full_rate_bps"));
+        uint256 reducedRateBasisPoints = _tomlConfig.readUint(string.concat(CONTRACT_TOML_KEY, ".reduced_rate_bps"));
+        uint256 startTimestamp = _startTimestamp();
 
         uint256 scale = 10 ** asset.decimals();
 
@@ -127,6 +134,12 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         return vaultParams;
     }
 
+    function _startTimestamp() internal view virtual returns (uint256 startTimestamp_) {
+        return _readUintWithDefault(
+            _tomlConfig, string.concat(CONTRACT_TOML_KEY, ".vault_start_timestamp"), block.timestamp
+        );
+    }
+
     function _usdcOrDeployMock(address contractOwner) internal returns (IERC20Metadata asset) {
         bool shouldDeployMocks = _readBoolWithDefault(_tomlConfig, ".evm.deploy_mocks", false);
 
@@ -141,6 +154,31 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
             return simpleUSDC;
         } else {
             return IERC20Metadata(_tomlConfig.readAddress(".evm.address.usdc_token"));
+        }
+    }
+
+    function _deployTimelockAsyncUnlock() internal {
+        bool shouldDeployMocks = _readBoolWithDefault(_tomlConfig, ".evm.deploy_mocks", false);
+
+        if (shouldDeployMocks) {
+            vm.startBroadcast();
+            IERC5679Ext1155 deposits = new ERC1155MintableBurnable();
+
+            SimpleTimelockAsyncUnlock asyncUnlockImpl = new SimpleTimelockAsyncUnlock();
+
+            ERC1967Proxy asyncUnlockProxy = new ERC1967Proxy(
+                address(asyncUnlockImpl),
+                abi.encodeWithSelector(asyncUnlockImpl.initialize.selector, NOTICE_PERIOD, deposits)
+            );
+
+            console2.log(
+                string.concat(
+                    "!!!!! Deploying SimpleTimelockAsyncUnlock Proxy [",
+                    vm.toString(address(asyncUnlockProxy)),
+                    "] !!!!!"
+                )
+            );
+            vm.stopBroadcast();
         }
     }
 }
