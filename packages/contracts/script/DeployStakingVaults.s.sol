@@ -8,7 +8,6 @@ import { console2 } from "forge-std/console2.sol";
 import { HelperConfig, NetworkConfig } from "@script/HelperConfig.s.sol";
 
 import { CredbullFixedYieldVaultFactory } from "@credbull/CredbullFixedYieldVaultFactory.sol";
-import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.sol";
 import { CredbullFixedYieldVault } from "@credbull/CredbullFixedYieldVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Vault } from "@credbull/vault/Vault.sol";
