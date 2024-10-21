@@ -188,6 +188,49 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         testVaultAtOffsets(_alice, vault, _testParams2);
     }
 
+    function test__LiquidContinuousMultiTokenVaultUtil__RedeemWithAllowance() public {
+        uint256 assetToSharesRatio = 2;
+
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
+        TestParamSet.TestParam memory testParams =
+            TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: 10 });
+
+        vm.prank(_alice);
+        _asset.approve(address(vault), testParams.principal); // grant vault allowance on alice's principal
+        _transferFromTokenOwner(_asset, address(vault), testParams.principal); // transfer funds to cover redeem
+
+        vm.prank(_alice);
+        uint256 shares = vault.deposit(testParams.principal, _alice);
+
+        // ------------ redeem - without allowance ------------
+        _warpToPeriod(vault, testParams.redeemPeriod);
+
+        address allowanceAccount = makeAddr("allowanceAccount");
+
+        // should fail, no allowance given yet
+        vm.prank(allowanceAccount);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MultiTokenVault.MultiTokenVault__CallerMissingApprovalForAll.selector, allowanceAccount, _alice
+            )
+        );
+        vault.redeemForDepositPeriod(shares, _alice, _alice, testParams.depositPeriod, testParams.redeemPeriod);
+
+        // ------------ redeem - with allowance ------------
+        vm.prank(_alice);
+        vault.setApprovalForAll(allowanceAccount, true); // grant allowance
+
+        // should succeed - allowance granted
+        address receiverAccount = makeAddr("receiver");
+        vm.prank(allowanceAccount);
+        uint256 assets = vault.redeemForDepositPeriod(
+            shares, receiverAccount, _alice, testParams.depositPeriod, testParams.redeemPeriod
+        );
+
+        assertEq(assets, _asset.balanceOf(receiverAccount), "receiver did not receive assets");
+    }
+
     function test__MultiTokenVaulTest__BatchFunctions() public {
         uint256 assetToSharesRatio = 2;
         uint256 redeemPeriod = 2001;
