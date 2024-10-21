@@ -10,12 +10,14 @@
     "dev": "yarn rm-dbdata && anvil --config-out localhost.json & make deploy-local",
     "build": "forge build && yarn gen-types",
     "test": "forge test",
+    "coverage": "forge coverage --report lcov && genhtml lcov.info -o out/test-reports/coverage --ignore-errors inconsistent",
     "format": "forge fmt && prettier './script/**/*.js' --write",
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint './*(test|src)/**/*.sol'",
     "db-check": "tsc && node ./script/utils/checkDb.js",
     "db-export": "tsc && node ./script/utils/exporter.js",
     "deploy": "make deploy-local",
     "deploy:ci": "yarn db-export && make deploy-baseSepolia",
+    "gen-abis": "node script/utils/generateTsAbis.js",
     "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
     "postinstall": "yarn build && yarn gen-types"
   },
@@ -28,7 +30,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
     "prettier": "^3.2.2",
-    "solhint": "^5.0.1",
+    "solhint": "^5.0.3",
     "typechain": "^8.3.2",
     "typescript": "^5.4.5"
   },

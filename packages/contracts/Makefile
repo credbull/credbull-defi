@@ -12,7 +12,6 @@ anvil: anvil
 deploy-local:
 	$(MAKE) deploy RPC_URL=localhost EXTRA_FLAGS=
 
-# TODO: change this to use the network config from foundry.toml
 deploy-arbSepolia:
 	$(MAKE) deploy RPC_URL=arbitrumSepolia EXTRA_FLAGS="--verify --slow"
 
@@ -27,36 +26,30 @@ deploy-baseSepolia:
 # in foundry.toml set the `evm_version = "cancun"`
 # forge script includes `--legacy --skip-simulation`
 deploy-plumeTestnet:
-	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://testnet-explorer.plumenetwork.xyz/api\? --legacy --slow"
+	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://test-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow"
 
 resume-plumeTestnet:
-	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://testnet-explorer.plumenetwork.xyz/api\? --legacy --slow --resume"
+	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://test-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow --resume"
 
-deploy-plumeDevnet:
-	$(MAKE) deploy RPC_URL=plumeDevnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://devnet-explorer.plumenetwork.xyz/api\? --legacy --slow"
+deploy-arbitrum:
+	$(MAKE) deploy RPC_URL=arbitrum EXTRA_FLAGS="--verify --slow"
 
-resume-plumeDevnet:
-	$(MAKE) deploy RPC_URL=plumeDevnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://devnet-explorer.plumenetwork.xyz/api\? --legacy --slow --resume"
-
+resume-arbitrum:
+	$(MAKE) deploy RPC_URL=arbitrum EXTRA_FLAGS="--verify --slow --resume"
 
 # NOTE (JL,2024-05-20): `forge` auto-includes any `.env` file in the invocation directory.
 deploy:
 	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	@rm -rf out && \
 	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) --non-interactive -vvv && \
 	yarn gen-types && \
 	yarn db-export
-
-# TODO: add --verifier flag.  forge isn't happy --etherscan-api-key is empty.
-deploy-bitlayerTestnet:
-	$(MAKE) deploy RPC_URL="https://testnet-rpc.bitlayer.org" \
-	EXTRA_FLAGS='--etherscan-api-key "" --verifier-url "https://testnet-scan.bitlayer.org" --legacy --slow'
 
 verify:
 	@echo "Running verify '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	rm -rf out && \
 	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume -vvvv && \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume --non-interactive -vvv && \
 	yarn gen-types && \
 	yarn db-export

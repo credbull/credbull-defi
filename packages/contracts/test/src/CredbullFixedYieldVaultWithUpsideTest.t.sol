@@ -36,6 +36,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
     FixedYieldVault.FixedYieldVaultParams private vaultParams;
     CredbullFixedYieldVaultWithUpside.UpsideVaultParams private upsideVaultParams;
 
+    address private owner = makeAddr("owner");
     address private alice = makeAddr("alice");
 
     uint256 private constant INITIAL_BALANCE = 1e6;
@@ -80,7 +81,7 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
     function test__UpsideVault__VaultCreationShouldRevertOnUnsupportedDecimalValue() public {
         CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params = upsideVaultParams;
-        params.cblToken = new DecimalToken(1e6, 19);
+        params.cblToken = new DecimalToken(owner, 1e6, 19);
         vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__UnsupportedDecimalValue.selector, 19));
         new CredbullFixedYieldVaultWithUpside(params);
     }
@@ -92,8 +93,8 @@ contract CredbullFixedYieldVaultWithUpsideTest is Test {
 
     function test__UpsideVault__VaultCreationShouldRevertOnTokenDecimalLessThanAssetDeciaml() public {
         CredbullFixedYieldVaultWithUpside.UpsideVaultParams memory params = upsideVaultParams;
-        params.cblToken = new DecimalToken(1e6, 6);
-        params.fixedYieldVault.maturityVault.vault.asset = new DecimalToken(1e6, 8);
+        params.cblToken = new DecimalToken(owner, 1e6, 6);
+        params.fixedYieldVault.maturityVault.vault.asset = new DecimalToken(owner, 1e6, 8);
         vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__UnsupportedDecimalValue.selector, 8));
         new CredbullFixedYieldVaultWithUpside(params);
     }

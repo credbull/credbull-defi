@@ -30,20 +30,22 @@ contract DeployMocks is Script {
     function run() public returns (SimpleToken, SimpleUSDC) {
         DeployedContracts deployChecker = new DeployedContracts();
 
+        address owner = msg.sender;
+
         SimpleToken testToken;
         SimpleUSDC testStablecoin;
 
         vm.startBroadcast();
 
         if (isTestMode || deployChecker.isDeployRequired("SimpleToken")) {
-            testToken = new SimpleToken(totalSupply);
+            testToken = new SimpleToken(owner, totalSupply);
             console2.log("!!!!! Deploying SimpleToken !!!!!");
         } else {
             testToken = SimpleToken(deployChecker.getContractAddress("SimpleToken"));
         }
 
         if (isTestMode || deployChecker.isDeployRequired("SimpleUSDC")) {
-            testStablecoin = new SimpleUSDC(totalSupply);
+            testStablecoin = new SimpleUSDC(owner, totalSupply);
             console2.log("!!!!! Deploying SimpleToken !!!!!");
         } else {
             testStablecoin = SimpleUSDC(deployChecker.getContractAddress("SimpleUSDC"));

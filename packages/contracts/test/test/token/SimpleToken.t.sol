@@ -8,5 +8,5 @@ import { OwnableToken } from "./OwnableToken.t.sol";
  * @dev The Symbol, Name and decimals are hard-coded, so an instance cannot represent anything other than 'SMPL'.
  */
 contract SimpleToken is OwnableToken {
-    constructor(uint256 initialSupply) OwnableToken("Simple Token", "SMPL", 18, initialSupply) { }
+    constructor(address owner, uint256 initialSupply) OwnableToken(owner, "Simple Token", "SMPL", 18, initialSupply) { }
 }
