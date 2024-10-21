@@ -68,21 +68,16 @@ contract DeployStakingVaults is Script {
 
         vm.startBroadcast(vm.envUint("OPERATOR_PRIVATE_KEY"));
         //Create staking vaults
-        stakingVaults[0] = CredbullFixedYieldVault(
-            factory.createVault(createStakingVaultParams(helperConfig, 1000), "FixedYieldVault")
-        );
-        stakingVaults[1] = CredbullFixedYieldVault(
-            factory.createVault(createStakingVaultParams(helperConfig, 2000), "FixedYieldVault")
-        );
-        stakingVaults[2] = CredbullFixedYieldVault(
-            factory.createVault(createStakingVaultParams(helperConfig, 3000), "FixedYieldVault")
-        );
-        stakingVaults[3] = CredbullFixedYieldVault(
-            factory.createVault(createStakingVaultParams(helperConfig, 4000), "FixedYieldVault")
-        );
-        stakingVaults[4] = CredbullFixedYieldVault(
-            factory.createVault(createStakingVaultParams(helperConfig, 5000), "FixedYieldVault")
-        );
+        stakingVaults[0] =
+            CredbullFixedYieldVault(factory.createVault(createStakingVaultParams(helperConfig, 10), "FixedYieldVault"));
+        stakingVaults[1] =
+            CredbullFixedYieldVault(factory.createVault(createStakingVaultParams(helperConfig, 20), "FixedYieldVault"));
+        stakingVaults[2] =
+            CredbullFixedYieldVault(factory.createVault(createStakingVaultParams(helperConfig, 30), "FixedYieldVault"));
+        stakingVaults[3] =
+            CredbullFixedYieldVault(factory.createVault(createStakingVaultParams(helperConfig, 40), "FixedYieldVault"));
+        stakingVaults[4] =
+            CredbullFixedYieldVault(factory.createVault(createStakingVaultParams(helperConfig, 50), "FixedYieldVault"));
 
         vm.stopBroadcast();
 
