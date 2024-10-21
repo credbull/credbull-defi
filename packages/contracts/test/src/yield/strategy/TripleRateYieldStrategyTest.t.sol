@@ -128,13 +128,31 @@ contract TripleRateYieldStrategyTest is Test {
             "incorrect 37 day combined rate yield"
         );
 
-        // 22 Days, across Current Period Rate:
+        // 22 Days, period range spans Previous and Current Period Rate:
         // $1,000 * ((5% / 365) * 10) + $1,000 * ((5.5% / 365) * 12) = 3.178082
         assertApproxEqAbs(
             3_178_082,
             yieldStrategy.calcYield(contextAddress, principal, 20, 42),
             TOLERANCE,
             "incorrect 22 day across current period rate yield"
+        );
+
+        // 10 Days, entire range before the Current Period Rate:
+        // $1,000 * ((5% / 365) * 10) = 1.369863
+        assertApproxEqAbs(
+            1_369_863,
+            yieldStrategy.calcYield(contextAddress, principal, 20, 30),
+            TOLERANCE,
+            "incorrect 10 day yield before current period rate"
+        );
+
+        // 6 Days, entire range after the Current Period Rate:
+        // $1,000 * ((5.5% / 365) * 6) = 0.904110
+        assertApproxEqAbs(
+            904_110,
+            yieldStrategy.calcYield(contextAddress, principal, 32, 38),
+            TOLERANCE,
+            "incorrect 10 day yield before current period rate"
         );
     }
 
