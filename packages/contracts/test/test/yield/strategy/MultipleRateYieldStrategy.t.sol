@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { CalcSimpleInterest } from "@credbull/yield/CalcSimpleInterest.sol";
-import { AbstractYieldStrategy } from "@credbull/yield/strategy/AbstractYieldStrategy.sol";
+import { YieldStrategy } from "@credbull/yield/strategy/YieldStrategy.sol";
 
 import { IMultipleRateContext } from "@test/test/yield/context/IMultipleRateContext.t.sol";
 
@@ -10,24 +10,27 @@ import { IMultipleRateContext } from "@test/test/yield/context/IMultipleRateCont
  * @title MultipleRateYieldStrategy
  * @dev Calculates returns using different rates depending on the holding period.
  */
-contract MultipleRateYieldStrategy is AbstractYieldStrategy {
+contract MultipleRateYieldStrategy is YieldStrategy {
+    constructor(RangeInclusion rangeInclusion_) YieldStrategy(rangeInclusion_) { }
+
+    /**
+     * @inheritdoc YieldStrategy
+     */
     function calcYield(address contextContract, uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         public
         view
-        virtual
+        override
         returns (uint256 yield)
     {
         if (address(0) == contextContract) {
             revert IYieldStrategy_InvalidContextAddress();
         }
-        if (fromPeriod >= toPeriod) {
-            revert IYieldStrategy_InvalidPeriodRange(fromPeriod, toPeriod);
-        }
 
+        (uint256 noOfPeriods,,) = periodRangeFor(fromPeriod, toPeriod);
         IMultipleRateContext context = IMultipleRateContext(contextContract);
 
         // Calculate interest for full-rate periods
-        uint256 noOfFullRatePeriods = _noOfFullRatePeriods(context.numPeriodsForFullRate(), fromPeriod, toPeriod);
+        uint256 noOfFullRatePeriods = _noOfFullRatePeriods(context.numPeriodsForFullRate(), noOfPeriods);
         if (noOfFullRatePeriods > 0) {
             yield = CalcSimpleInterest.calcInterest(
                 principal, context.rateScaled(), noOfFullRatePeriods, context.frequency(), context.scale()
@@ -35,7 +38,7 @@ contract MultipleRateYieldStrategy is AbstractYieldStrategy {
         }
 
         // Calculate interest for reduced-rate periods
-        if (_noOfPeriods(fromPeriod, toPeriod) - noOfFullRatePeriods > 0) {
+        if (noOfPeriods - noOfFullRatePeriods > 0) {
             yield += _calcReducedRateInterest(
                 principal,
                 context.frequency(),
@@ -47,21 +50,17 @@ contract MultipleRateYieldStrategy is AbstractYieldStrategy {
         }
     }
 
-    function calcPrice(address contextContract, uint256 numPeriodsElapsed)
-        public
-        view
-        virtual
-        returns (uint256 price)
-    {
+    /**
+     * @inheritdoc YieldStrategy
+     */
+    function calcPrice(address contextContract, uint256 periodsElapsed) public view override returns (uint256 price) {
         if (address(0) == contextContract) {
             revert IYieldStrategy_InvalidContextAddress();
         }
 
-        // NOTE (JL,2024-09-25): Seeing as this only uses Full Rate, I left it alone.
         IMultipleRateContext context = IMultipleRateContext(contextContract);
-
         return CalcSimpleInterest.calcPriceFromInterest(
-            numPeriodsElapsed, context.rateScaled(), context.frequency(), context.scale()
+            periodsElapsed, context.rateScaled(), context.frequency(), context.scale()
         );
     }
 
@@ -140,17 +139,16 @@ contract MultipleRateYieldStrategy is AbstractYieldStrategy {
      * @notice Calculates the number of 'full' Interest Rate Periods.
      *
      * @param noOfPeriodsForFullRate_  The number of periods that apply for the 'full' Interest Rate.
-     * @param from_ The from period
-     * @param to_ The to period
+     * @param noOfPeriods_ The total number of periods
      * @return The calculated number of 'full' Interest Rate Periods.
      */
-    function _noOfFullRatePeriods(uint256 noOfPeriodsForFullRate_, uint256 from_, uint256 to_)
+    function _noOfFullRatePeriods(uint256 noOfPeriodsForFullRate_, uint256 noOfPeriods_)
         internal
         pure
+        virtual
         returns (uint256)
     {
-        uint256 _periods = _noOfPeriods(from_, to_);
-        return _periods - (_periods % noOfPeriodsForFullRate_);
+        return noOfPeriods_ - (noOfPeriods_ % noOfPeriodsForFullRate_);
     }
 
     /**
@@ -163,7 +161,12 @@ contract MultipleRateYieldStrategy is AbstractYieldStrategy {
      * @param from_  The from period.
      * @return The calculated first Reduced Rate Period.
      */
-    function _firstReducedRatePeriod(uint256 noOfFullRatePeriods_, uint256 from_) internal pure returns (uint256) {
+    function _firstReducedRatePeriod(uint256 noOfFullRatePeriods_, uint256 from_)
+        internal
+        pure
+        virtual
+        returns (uint256)
+    {
         return noOfFullRatePeriods_ != 0 ? from_ + noOfFullRatePeriods_ : from_;
     }
 }
