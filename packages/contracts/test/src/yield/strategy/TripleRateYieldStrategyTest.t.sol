@@ -231,61 +231,90 @@ contract TripleRateYieldStrategyTest is Test {
         );
     }
 
-    /**
-     * @dev Due to the 'Triple Rate' nature, we cannot manage unlimited 'from' and 'to' boundaries. This test mimics a
-     *  real-world usage. Operations sets the 'reduced' Interest Rate at 'tenor' periods, consistently. This means that
-     *  a valid 'to' is after the Effective From period of the last setting. In this test, we mimic a year, so we just
-     *  allow the 'to' to be 365. This means we are guaranteed a 'full' and 'reduced' interest rate bases yield.
-     */
-    function test_TripleRateYieldStrategy_CalcYield_1Year_Dynamic(uint128 rawPrincipal, uint8 from) public {
-        vm.assume(rawPrincipal > 1);
-        // The 'to' must be less than a 'tenor period' more than the Current Period Rate. So, we just use 365.
-        uint16 to = 365;
-        vm.assume(from < to);
-
+    /// @dev Performs a years worth of 'reduced' Interest Rate setting.
+    function populateOneYearOfReducedRates() private {
         // Set a 'reduced' Interest Rate per Tenor/Maturity Period. We use 3.x% incrementing.
         uint32 baseInterestRate = 30;
-        uint32[][] memory periodToRate = new uint32[][]((365 / context.numPeriodsForFullRate()) + 1);
         for (uint24 i = 0; i <= 365 / context.numPeriodsForFullRate(); ++i) {
             uint16 period = uint16(context.numPeriodsForFullRate() * i) + 1; // Truncation
             uint32 interestRate = uint32((baseInterestRate + i) * SCALE) / 10; // Truncation
 
             context.setReducedRate(interestRate, period);
-
-            periodToRate[i] = new uint32[](2);
-            periodToRate[i][0] = period;
-            periodToRate[i][1] = interestRate;
         }
+    }
 
-        uint256 scaledPrincipal = rawPrincipal * SCALE;
+    /// @dev Convenience function for calculating interest based.
+    function calcInterest(uint256 principal_, uint256 noOfPeriods_, uint256 rate_)
+        private
+        view
+        returns (uint256 interest_)
+    {
+        return CalcSimpleInterest.calcInterest(principal_, rate_, noOfPeriods_, context.frequency(), context.scale());
+    }
+
+    /// @dev Overloaded convenience function for calculating interest based.
+    function calcInterest(uint256 principal_, uint256 noOfPeriods_) private view returns (uint256 interest_) {
+        return calcInterest(principal_, noOfPeriods_, context.rateScaled());
+    }
+
+    /**
+     * @dev Due to the 'Triple Rate' nature, we cannot manage unlimited 'from' and 'to' periods when calculating yields.
+     *  The 'to' period must be after the Previous Period Rate Effective Period and must be less than a 'tenor period'
+     *  after the Current Period Rate Effective Period. The 'from' must be some multiple of the 'tenor period' (and
+     *  change) less than the Previous Period Rate Effective From Period, but the First 'reduced' Interest Rate period,
+     *  (the first non-mature period) MUST be on or after the Previous Period Rate Effective From period.
+     *
+     *  This test mimics 1 year and uses fuzzing to perform a number of test cases. Given the number of restrictions on
+     *  fuzzed input, it could be that the test will surpass the limit of input rejection.
+     */
+    function test_TripleRateYieldStrategy_CalcYield_1Year_Dynamic(uint128 rawPrincipal, uint8 from, uint16 to) public {
+        vm.assume(rawPrincipal > 1);
+        vm.assume(from < to && from > 0);
+
+        populateOneYearOfReducedRates();
+
+        // The 'to' period must be later than the Previous Period Rate and within 1 'tenor' of the Current Period Rate.
+        vm.assume(
+            to > context.previousPeriodRate().effectiveFromPeriod
+                && to < context.currentPeriodRate().effectiveFromPeriod + context.numPeriodsForFullRate()
+        );
+
         (uint256 noOfPeriods,,) = yieldStrategy.periodRangeFor(from, to);
         uint256 noOfFullRatePeriods = noOfPeriods - (noOfPeriods % context.numPeriodsForFullRate());
+        uint256 firstReducedRatePeriod = noOfFullRatePeriods != 0 ? from + noOfFullRatePeriods : from;
+        ITripleRateContext.PeriodRate memory currentPeriodRate = context.currentPeriodRate();
+        ITripleRateContext.PeriodRate memory previousPeriodRate = context.previousPeriodRate();
 
-        // NOTE (JL,2024-10-16): The following code closely mimics the actual code, so is proof against regression. But
-        //  comes with an added cost of updating this code when the main code changes.
+        vm.assume(firstReducedRatePeriod >= previousPeriodRate.effectiveFromPeriod);
+
+        uint256 scaledPrincipal = rawPrincipal * SCALE;
         uint256 expectedYield;
+
         if (noOfFullRatePeriods > 0) {
-            expectedYield += CalcSimpleInterest.calcInterest(
-                scaledPrincipal, context.rateScaled(), noOfFullRatePeriods, context.frequency(), context.scale()
-            );
+            expectedYield += calcInterest(scaledPrincipal, noOfFullRatePeriods);
         }
         if (noOfPeriods - noOfFullRatePeriods > 0) {
-            uint256 firstReducedRatePeriod = noOfFullRatePeriods != 0 ? from + noOfFullRatePeriods : from;
-            uint256 rateIndex = firstReducedRatePeriod / context.numPeriodsForFullRate();
-            uint256 startPeriod = firstReducedRatePeriod;
-            for (uint256 i = rateIndex; i < periodToRate.length; ++i) {
-                uint32 endPeriod;
-                if (i == periodToRate.length - 1) {
-                    endPeriod = to;
-                } else {
-                    endPeriod = periodToRate[rateIndex + 1][0] - 1;
-                }
-                uint32 interestRate = periodToRate[i][1];
-                expectedYield += CalcSimpleInterest.calcInterest(
-                    scaledPrincipal, interestRate, endPeriod - startPeriod, context.frequency(), context.scale()
+            if (firstReducedRatePeriod >= currentPeriodRate.effectiveFromPeriod) {
+                expectedYield +=
+                    calcInterest(scaledPrincipal, to - firstReducedRatePeriod, currentPeriodRate.interestRate);
+            } else if (
+                firstReducedRatePeriod >= previousPeriodRate.effectiveFromPeriod
+                    && to < currentPeriodRate.effectiveFromPeriod
+            ) {
+                expectedYield +=
+                    calcInterest(scaledPrincipal, to - firstReducedRatePeriod, previousPeriodRate.interestRate);
+            } else if (
+                firstReducedRatePeriod >= previousPeriodRate.effectiveFromPeriod
+                    && to >= currentPeriodRate.effectiveFromPeriod
+            ) {
+                expectedYield += calcInterest(
+                    scaledPrincipal,
+                    (currentPeriodRate.effectiveFromPeriod - 1) - firstReducedRatePeriod,
+                    previousPeriodRate.interestRate
                 );
-
-                startPeriod = endPeriod;
+                expectedYield += calcInterest(
+                    scaledPrincipal, (to - currentPeriodRate.effectiveFromPeriod) + 1, currentPeriodRate.interestRate
+                );
             }
         }
 
