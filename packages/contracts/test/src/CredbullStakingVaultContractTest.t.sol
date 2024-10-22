@@ -6,14 +6,36 @@ import { Test } from "forge-std/Test.sol";
 import { HelperConfig } from "@script/HelperConfig.s.sol";
 import { DeployStakingVaults } from "@script/DeployStakingVaults.s.sol";
 import { CredbullFixedYieldVault } from "@credbull/CredbullFixedYieldVault.sol";
+import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
+import { NetworkConfig } from "@script/HelperConfig.s.sol";
 
 contract CredbullStakingVaultContractTest is Test {
     CredbullFixedYieldVault[] private vaults;
     HelperConfig private helperConfig;
     DeployStakingVaults private deployer;
+    NetworkConfig config;
+    SimpleToken private cblToken;
+
+    address alice = makeAddr("alice");
 
     function setUp() public {
         deployer = new DeployStakingVaults();
         (, vaults, helperConfig) = deployer.runTest();
+        config = helperConfig.getNetworkConfig();
+
+        cblToken = SimpleToken(address(config.cblToken));
+        cblToken.mint(alice, 100000e18);
+    }
+
+    function test__StakingVaults() public {
+        CredbullFixedYieldVault vault = vaults[0];
+
+        vm.prank(config.factoryParams.owner);
+        vault.toggleWindowCheck();
+
+        vm.startPrank(alice);
+        cblToken.approve(address(vault), 1000e18);
+        vault.deposit(1000e18, alice);
+        vm.stopPrank();
     }
 }

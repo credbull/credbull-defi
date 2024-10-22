@@ -78,7 +78,13 @@ contract DeployStakingVaults is Script {
             CredbullFixedYieldVault(factory.createVault(createStakingVaultParams(helperConfig, 40), "FixedYieldVault"));
         stakingVaults[4] =
             CredbullFixedYieldVault(factory.createVault(createStakingVaultParams(helperConfig, 50), "FixedYieldVault"));
+        vm.stopBroadcast();
 
+        vm.startBroadcast(vm.envUint("ADMIN_PRIVATE_KEY"));
+        for (uint256 i = 0; i < stakingVaults.length; i++) {
+            stakingVaults[i].toggleWhiteListCheck();
+            stakingVaults[i].setCheckMaxCap(false);
+        }
         vm.stopBroadcast();
 
         return (factory, stakingVaults, helperConfig);
