@@ -13,10 +13,10 @@ contract CredbullStakingVaultContractTest is Test {
     CredbullFixedYieldVault[] private vaults;
     HelperConfig private helperConfig;
     DeployStakingVaults private deployer;
-    NetworkConfig config;
+    NetworkConfig private config;
     SimpleToken private cblToken;
 
-    address alice = makeAddr("alice");
+    address private alice = makeAddr("alice");
 
     function setUp() public {
         deployer = new DeployStakingVaults();
