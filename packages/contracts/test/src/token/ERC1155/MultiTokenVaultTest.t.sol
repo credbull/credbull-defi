@@ -9,7 +9,6 @@ import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiToken
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
-
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
@@ -40,7 +39,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     }
 
     function test__MultiTokenVaulTest__SimpleDeposit() public {
-        uint256 assetToSharesRatio = 1;
+        uint256 assetToSharesRatio = 2;
 
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
@@ -66,7 +65,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     }
 
     function test__MultiTokenVaulTest__DepositAndRedeem() public {
-        uint256 assetToSharesRatio = 1;
+        uint256 assetToSharesRatio = 3;
 
         _transferAndAssert(_asset, _owner, _charlie, 100_000 * _scale);
 
@@ -137,7 +136,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     }
 
     function test__MultiTokenVaulTest__MultipleDepositsAndRedeem() public {
-        uint256 assetToSharesRatio = 2;
+        uint256 assetToSharesRatio = 4;
 
         // setup
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
@@ -187,6 +186,49 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
         testVaultAtOffsets(_alice, vault, _testParams1);
         testVaultAtOffsets(_alice, vault, _testParams2);
+    }
+
+    function test__LiquidContinuousMultiTokenVaultUtil__RedeemWithAllowance() public {
+        uint256 assetToSharesRatio = 2;
+
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
+        TestParamSet.TestParam memory testParams =
+            TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: 10 });
+
+        vm.prank(_alice);
+        _asset.approve(address(vault), testParams.principal); // grant vault allowance on alice's principal
+        _transferFromTokenOwner(_asset, address(vault), testParams.principal); // transfer funds to cover redeem
+
+        vm.prank(_alice);
+        uint256 shares = vault.deposit(testParams.principal, _alice);
+
+        // ------------ redeem - without allowance ------------
+        _warpToPeriod(vault, testParams.redeemPeriod);
+
+        address allowanceAccount = makeAddr("allowanceAccount");
+
+        // should fail, no allowance given yet
+        vm.prank(allowanceAccount);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MultiTokenVault.MultiTokenVault__CallerMissingApprovalForAll.selector, allowanceAccount, _alice
+            )
+        );
+        vault.redeemForDepositPeriod(shares, _alice, _alice, testParams.depositPeriod, testParams.redeemPeriod);
+
+        // ------------ redeem - with allowance ------------
+        vm.prank(_alice);
+        vault.setApprovalForAll(allowanceAccount, true); // grant allowance
+
+        // should succeed - allowance granted
+        address receiverAccount = makeAddr("receiver");
+        vm.prank(allowanceAccount);
+        uint256 assets = vault.redeemForDepositPeriod(
+            shares, receiverAccount, _alice, testParams.depositPeriod, testParams.redeemPeriod
+        );
+
+        assertEq(assets, _asset.balanceOf(receiverAccount), "receiver did not receive assets");
     }
 
     function test__MultiTokenVaulTest__BatchFunctions() public {
@@ -261,6 +303,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParamSet.TestParam memory testParam)
         internal
         view
+        virtual
         override
         returns (uint256 expectedReturns_)
     {
@@ -275,6 +318,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
     function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)
         internal
+        virtual
         returns (MultiTokenVaultDailyPeriods)
     {
         MultiTokenVaultDailyPeriods _vault = new MultiTokenVaultDailyPeriods();

@@ -1,0 +1,37 @@
+##
+# The Application Configuration for the TestNet Environment.
+##
+
+[evm]
+# blockchain id, e.g. arbitrumOne=42161
+chain_id = 42161
+deploy_mocks = false
+
+[evm.address]
+# PrimeVault wallets available ONLY on specific EVM chains, e.g.:  Ethereum, Arbitrum, Optimism, Polygon
+# primevault Wallet [0xFa..0519] "Credbull Eng - Owner Role v1.0"
+owner = "0xFa0C9EB3fd284a87c82b9809162DefEa36070519"
+# primevault Wallet [0x5F..bBf1] "Credbull Eng - Operator Role v1.0"
+operator = "0x5FAbE5420116E061D0711D849DAA4788F0d4bBf1"
+# primevault Wallet [0x1E..81b1] "Credbull Eng - Upgrader Role v1.0"
+upgrader = "0x1E2D099F4681394B0c130e7cCcc3F5275eCa81b1"
+# primevault Wallet [0x1D..7BFB] "Credbull Eng - Asset Manager Role v1.0"
+asset_manager = "0x1DA51e4Ab5D029034Db2caB258EC4e22Be647BFB"
+# primevault Wallet [0xce..3FB2] "Credbull DeFi Vault - Treasury v1.0"
+custodian = "0xce694E94e1Ddb734f2bD32B2511D193fF2783FB2"
+
+[evm.contracts.liquid_continuous_multi_token_vault]
+# rate in basis points, e.g.  10% = 1000 bps
+full_rate_bps = 10_00
+# rate in basis points, e.g.  5.5% = 550 bps
+reduced_rate_bps = 5_50
+
+[evm.contracts.upside_vault]
+# upside rate in basis points, e.g. 2% = 200 bps
+collateral_percentage = 200
+
+[services.supabase]
+url = ""
+
+# Save the contract deployment details to the database.
+update_contract_addresses = false
