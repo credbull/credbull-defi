@@ -47,3 +47,9 @@ deploy-stakingVaults-local:
 	forge script script/DeployStakingVaults.s.sol:DeployStakingVaults --rpc-url localhost \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast -vvv && \
 	yarn gen-types
+
+deploy-stakingVaults-arb-sepolia:
+	rm -rf out && \
+	forge script script/DeployStakingVaults.s.sol:DeployStakingVaults --rpc-url arbitrumSepolia \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast --verify --slow -vvv && \
+	yarn gen-types
