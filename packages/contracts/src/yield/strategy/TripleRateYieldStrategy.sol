@@ -44,9 +44,7 @@ contract TripleRateYieldStrategy is YieldStrategy {
         // Calculate interest for full-rate periods
         uint256 noOfFullRatePeriods = _noOfFullRatePeriods(context.numPeriodsForFullRate(), fromPeriod, toPeriod);
         if (noOfFullRatePeriods > 0) {
-            yield = CalcSimpleInterest.calcInterest(
-                principal, context.rateScaled(), noOfFullRatePeriods, context.frequency(), context.scale()
-            );
+            yield = _calcInterest(context, principal, noOfFullRatePeriods);
         }
 
         // Calculate interest for reduced-rate periods
@@ -61,13 +59,8 @@ contract TripleRateYieldStrategy is YieldStrategy {
             //  (FRRP -> To Period) @ Current Rate.
             if (firstReducedRatePeriod >= currentPeriodRate.effectiveFromPeriod) {
                 //  1st RR Period -> To Period @ Current Rate.
-                yield += CalcSimpleInterest.calcInterest(
-                    principal,
-                    currentPeriodRate.interestRate,
-                    toPeriod - firstReducedRatePeriod,
-                    context.frequency(),
-                    context.scale()
-                );
+                yield +=
+                    _calcInterest(context, principal, toPeriod - firstReducedRatePeriod, currentPeriodRate.interestRate);
             }
             // Timeline: Previous Period Rate -> 1st Reduced Rate Period -> To Period -> Current Period Rate
             // If the FRRP is on or after the previous Period Rate and the 'to' period is before the current Period
@@ -78,12 +71,8 @@ contract TripleRateYieldStrategy is YieldStrategy {
                     && toPeriod < currentPeriodRate.effectiveFromPeriod
             ) {
                 //  1st RR Period -> To Period @ Previous Rate.
-                yield += CalcSimpleInterest.calcInterest(
-                    principal,
-                    previousPeriodRate.interestRate,
-                    toPeriod - firstReducedRatePeriod,
-                    context.frequency(),
-                    context.scale()
+                yield += _calcInterest(
+                    context, principal, toPeriod - firstReducedRatePeriod, previousPeriodRate.interestRate
                 );
             }
             // Timeline: Previous Period Rate -> 1st Reduced Rate Period -> Current Period Rate -> To Period
@@ -96,21 +85,19 @@ contract TripleRateYieldStrategy is YieldStrategy {
                     && toPeriod >= currentPeriodRate.effectiveFromPeriod
             ) {
                 //  FRRP -> Current Period - 1 @ Previous Rate +
-                yield += CalcSimpleInterest.calcInterest(
+                yield += _calcInterest(
+                    context,
                     principal,
-                    previousPeriodRate.interestRate,
                     (currentPeriodRate.effectiveFromPeriod - 1) - firstReducedRatePeriod,
-                    context.frequency(),
-                    context.scale()
+                    previousPeriodRate.interestRate
                 );
 
                 //  Current Period -> To Period @ Current Rate.
-                yield += CalcSimpleInterest.calcInterest(
+                yield += _calcInterest(
+                    context,
                     principal,
-                    currentPeriodRate.interestRate,
                     (toPeriod - currentPeriodRate.effectiveFromPeriod) + 1,
-                    context.frequency(),
-                    context.scale()
+                    currentPeriodRate.interestRate
                 );
             }
             // Timeline: 1st Reduced Rate Period -> Previous Period Rate -> Current Period Rate -> To Period
@@ -177,5 +164,23 @@ contract TripleRateYieldStrategy is YieldStrategy {
         returns (uint256)
     {
         return noOfFullRatePeriods_ != 0 ? from_ + noOfFullRatePeriods_ : from_;
+    }
+
+    /// @dev Internal convenience function for calculating interest based on a context.
+    function _calcInterest(ITripleRateContext context, uint256 principal_, uint256 noOfPeriods_, uint256 rate_)
+        private
+        view
+        returns (uint256 interest_)
+    {
+        return CalcSimpleInterest.calcInterest(principal_, rate_, noOfPeriods_, context.frequency(), context.scale());
+    }
+
+    /// @dev Internal convenience function for calculating interest based on a context.
+    function _calcInterest(ITripleRateContext context, uint256 principal_, uint256 noOfPeriods_)
+        private
+        view
+        returns (uint256 interest_)
+    {
+        return _calcInterest(context, principal_, noOfPeriods_, context.rateScaled());
     }
 }
