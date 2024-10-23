@@ -45,13 +45,6 @@ contract DeployStakingVaults is Script {
         stakingVault = new CredbullFixedYieldVault(createStakingVaultParams(helperConfig, 50));
         vm.stopBroadcast();
 
-        vm.startBroadcast(vm.envUint("ADMIN_PRIVATE_KEY"));
-
-        stakingVault.toggleWhiteListCheck();
-        stakingVault.setCheckMaxCap(false);
-
-        vm.stopBroadcast();
-
         return (factory, stakingVault, helperConfig);
     }
 
@@ -90,7 +83,7 @@ contract DeployStakingVaults is Script {
             depositThresholdForWhiteListing: 100e6
         });
 
-        MaxCapPlugin.MaxCapPluginParams memory _maxCapPluginParams = MaxCapPlugin.MaxCapPluginParams({ maxCap: 100e6 });
+        MaxCapPlugin.MaxCapPluginParams memory _maxCapPluginParams = MaxCapPlugin.MaxCapPluginParams({ maxCap: 100e6 }); // Max cap not necessary for staking vaults
 
         return FixedYieldVault.FixedYieldVaultParams({
             maturityVault: _maturityVaultParams,
