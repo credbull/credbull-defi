@@ -96,7 +96,6 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         return vaultParams;
     }
 
-    // this vault requires an unlock request prior to redeeming
     function _testRedeemOnly(
         address receiver,
         IMultiTokenVault vault,
@@ -110,9 +109,8 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
         vm.prank(receiver);
 
-        liquidVault.requestUnlock(
-            receiver, _asSingletonArray(testParam.depositPeriod), _asSingletonArray(testParam.principal)
-        );
+        // this vault requires an unlock/redeem request prior to redeeming
+        liquidVault.requestRedeem(sharesToRedeemAtPeriod, receiver, receiver);
 
         assertEq(
             testParam.principal,
