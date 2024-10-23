@@ -8,8 +8,6 @@ import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.so
 
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
-import { console2 } from "forge-std/console2.sol";
-
 contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultTestBase {
     using TestParamSet for TestParamSet.TestParam[];
 
@@ -299,7 +297,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         uint256 sharesToRedeem = shares / 2; // redeem say half our shares
 
         vm.prank(alice);
-        uint256 requestId = _liquidVault.requestRedeem(sharesToRedeem, alice, alice);
+        _liquidVault.requestRedeem(sharesToRedeem, alice, alice);
 
         // redeem should fail - requestRedeemAmount != redeemAmount
         _warpToPeriod(_liquidVault, redeemPeriod);
