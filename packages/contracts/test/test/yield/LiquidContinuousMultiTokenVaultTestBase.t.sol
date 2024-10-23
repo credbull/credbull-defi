@@ -55,6 +55,11 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         override
         returns (uint256 actualSharesAtPeriod_)
     {
+        LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
+
+        // TODO - calling totalAssets reverts, see https://github.com/credbull/credbull-defi/issues/160
+        // uint256 prevVaultTotalAssets = liquidVault.totalAssets();
+
         uint256 actualSharesAtPeriod = super._testDepositOnly(receiver, vault, testParam);
 
         assertEq(
@@ -65,11 +70,12 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
             )
         );
 
-        LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
-
         assertEq(
             testParam.principal, liquidVault.lockedAmount(receiver, testParam.depositPeriod), "principal not locked"
         );
+
+        // TODO - this assertion *should* work, but doesn't.  see https://github.com/credbull/credbull-defi/issues/160
+        // assertEq(prevVaultTotalAssets + testParam.principal, liquidVault.totalAssets(), "vault total assets not updated");
 
         return actualSharesAtPeriod;
     }

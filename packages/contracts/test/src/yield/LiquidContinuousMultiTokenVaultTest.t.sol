@@ -68,12 +68,45 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             "user should have principal worth of vault shares"
         );
 
+        // we process deposits immediately - therefore we don't have pending or claimable deposits
+        vm.startPrank(alice);
+        assertEq(
+            0,
+            _liquidVault.pendingDepositRequest(testParams.depositPeriod, alice),
+            "deposits are processed immediately, not pending"
+        );
+        assertEq(
+            0,
+            _liquidVault.claimableDepositRequest(testParams.depositPeriod, alice),
+            "deposits are processed immediately, not claimable"
+        );
+        assertEq(
+            0,
+            _liquidVault.pendingRedeemRequest(testParams.redeemPeriod, alice),
+            "there shouldn't be any pending requestRedeems"
+        );
+        assertEq(
+            0,
+            _liquidVault.claimableRedeemRequest(testParams.redeemPeriod, alice),
+            "there shouldn't be any claimable redeems"
+        );
+        vm.stopPrank();
+
         // ---------------- requestRedeem ----------------
         _warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
 
-        // requestSell
+        // requestRedeem
         vm.prank(alice);
-        liquidVault.requestRedeem(sharesAmount, alice, alice);
+        uint256 requestId = liquidVault.requestRedeem(sharesAmount, alice, alice);
+        assertEq(requestId, testParams.redeemPeriod, "requestId should be the redeemPeriod");
+
+        vm.prank(alice);
+        assertEq(
+            sharesAmount,
+            _liquidVault.pendingRedeemRequest(testParams.redeemPeriod, alice),
+            "pending request redeem amount not correct"
+        );
+
         assertEq(
             sharesAmount,
             liquidVault.unlockRequestAmountByDepositPeriod(alice, testParams.depositPeriod),
@@ -86,6 +119,13 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         _transferFromTokenOwner(_asset, address(liquidVault), expectedYield); // fund the vault to cover redeem
 
         _warpToPeriod(liquidVault, testParams.redeemPeriod);
+
+        vm.prank(alice);
+        assertEq(
+            sharesAmount,
+            _liquidVault.claimableRedeemRequest(testParams.redeemPeriod, alice),
+            "claimable redeem amount not correct"
+        );
 
         vm.prank(alice);
         liquidVault.redeem(testParams.principal, alice, alice);
@@ -241,6 +281,16 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             )
         );
         _liquidVault.requestDeposit(1 * _scale, alice, alice);
+
+        vm.prank(randomController);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__ControllerMismatch.selector,
+                randomController,
+                alice
+            )
+        );
+        _liquidVault.deposit(1 * _scale, alice, alice);
     }
 
     function test__LiquidContinuousMultiTokenVault__FractionalAssetsGivesZeroShares() public view {
