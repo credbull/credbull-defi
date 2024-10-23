@@ -80,7 +80,7 @@ contract DeployStakingVaults is Script {
         WindowPlugin.Window memory _depositWindow = WindowPlugin.Window({ opensAt: 1730973600, closesAt: 1732320000 });
 
         WindowPlugin.Window memory _redemptionWindow =
-            WindowPlugin.Window({ opensAt: 1732320000, closesAt: 1734912000 });
+            WindowPlugin.Window({ opensAt: 1732320001, closesAt: 1734912000 });
 
         WindowPlugin.WindowPluginParams memory _windowPluginParams =
             WindowPlugin.WindowPluginParams({ depositWindow: _depositWindow, redemptionWindow: _redemptionWindow });
