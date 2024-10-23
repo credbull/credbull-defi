@@ -5,7 +5,7 @@
 [evm]
 # blockchain id, e.g. baseSepolia=84532, arbSepolia=421614
 chain_id = 421614
-deploy_mocks = true
+deploy_mocks = false
 
 [evm.address]
 # credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)
@@ -19,6 +19,11 @@ custodian = "0x8CB4783e150Fd71915Ea1D2277f264550e8784f4"
 upgrader = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # devops asset manager (wallet 7) - public address, okay to share
 asset_manager = "0xd097E901FB9B75C2d2f97E142d73fA79C31FcAb3"
+# CBL token address
+cbl_token="0xB4C80BbEa256e7E88024EfDFEE666388374f831c"
+# USDC token address
+usdc_token="0xB4C80BbEa256e7E88024EfDFEE666388374f831c"
+
 
 [evm.contracts.liquid_continuous_multi_token_vault]
 # rate in basis points, e.g.  10% = 1000 bps

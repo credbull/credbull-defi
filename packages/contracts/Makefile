@@ -53,3 +53,9 @@ deploy-stakingVaults-arb-sepolia:
 	forge script script/DeployStakingVaults.s.sol:DeployStakingVaults --rpc-url arbitrumSepolia \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast --verify --slow -vvv && \
 	yarn gen-types
+
+deploy-stakingVaults-arb-mainnet:
+	rm -rf out && \
+	forge script script/DeployStakingVaults.s.sol:DeployStakingVaults --rpc-url arbitrum \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast --verify --slow -vvv && \
+	yarn gen-types
