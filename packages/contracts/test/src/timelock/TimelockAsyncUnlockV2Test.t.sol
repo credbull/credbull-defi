@@ -9,7 +9,7 @@ import { IERC5679Ext1155 } from "@credbull/token/ERC1155/IERC5679Ext1155.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-contract TimelockAsyncUnlockTest is Test {
+contract TimelockAsyncUnlockV2Test is Test {
     /**
      * @dev Allows flexibility by not defining a specific instance.
      *      This enables the use of any contract instance derived from `TimelockAsyncUnlock`,
@@ -27,11 +27,9 @@ contract TimelockAsyncUnlockTest is Test {
     }
 
     // Unit Test
-    function testFuzz__TimelockAsyncUnlock__LockAmount(address user, uint256 depositPeriod, uint256 lockAmount)
-        public
-    {
-        vm.assume(user != address(0));
-        _lockAmount(user, depositPeriod, lockAmount);
+    function testFuzz__TimelockAsyncUnlock__LockAmount(uint256 depositPeriod, uint256 lockAmount) public {
+        _lockAmount(alice, depositPeriod, lockAmount);
+        _lockAmount(bob, depositPeriod, lockAmount);
     }
 
     function test__TimelockAsyncUnlock__RequestUnlockInvalidArrayLength() public {
