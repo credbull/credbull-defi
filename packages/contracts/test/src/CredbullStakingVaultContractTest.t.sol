@@ -28,8 +28,11 @@ contract CredbullStakingVaultContractTest is Test {
     }
 
     function test__StakingVaults() public {
-        vm.prank(config.factoryParams.owner);
+        vm.startPrank(config.factoryParams.owner);
         vault.toggleWindowCheck();
+        vault.toggleWhiteListCheck();
+        vault.setCheckMaxCap(false);
+        vm.stopPrank();
 
         vm.startPrank(alice);
         cblToken.approve(address(vault), 1000e18);
