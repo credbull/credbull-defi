@@ -25,7 +25,7 @@ contract DeployStakingVaults is Script {
         public
         returns (
             CredbullFixedYieldVaultFactory factory,
-            CredbullFixedYieldVault[] memory stakingVaults,
+            CredbullFixedYieldVault stakingVault,
             HelperConfig helperConfig
         )
     {
@@ -37,57 +37,24 @@ contract DeployStakingVaults is Script {
         public
         returns (
             CredbullFixedYieldVaultFactory factory,
-            CredbullFixedYieldVault[] memory stakingVaults,
+            CredbullFixedYieldVault stakingVault,
             HelperConfig helperConfig
         )
     {
         helperConfig = new HelperConfig(isTestMode);
-        NetworkConfig memory config = helperConfig.getNetworkConfig();
-
-        address owner = config.factoryParams.owner;
-        address operator = config.factoryParams.operator;
-        address[] memory custodians = new address[](1);
-        custodians[0] = config.factoryParams.custodian;
-
-        DeployedContracts deployChecker = new DeployedContracts();
 
         vm.startBroadcast();
-
-        if (isTestMode || deployChecker.isDeployRequired("CredbullFixedYieldVaultFactory")) {
-            factory = new CredbullFixedYieldVaultFactory(owner, operator, custodians);
-            console2.log("!!!!! Deploying CredbullFixedYieldVaultFactory !!!!!");
-        }
-
-        if (deployChecker.isFoundInContractDb("CredbullFixedYieldVaultFactory")) {
-            factory = CredbullFixedYieldVaultFactory(deployChecker.getContractAddress("CredbullFixedYieldVaultFactory"));
-        }
-
-        vm.stopBroadcast();
-
-        stakingVaults = new CredbullFixedYieldVault[](5);
-
-        vm.startBroadcast(vm.envUint("OPERATOR_PRIVATE_KEY"));
-        //Create staking vaults
-        stakingVaults[0] =
-            CredbullFixedYieldVault(factory.createVault(createStakingVaultParams(helperConfig, 10), "FixedYieldVault"));
-        stakingVaults[1] =
-            CredbullFixedYieldVault(factory.createVault(createStakingVaultParams(helperConfig, 20), "FixedYieldVault"));
-        stakingVaults[2] =
-            CredbullFixedYieldVault(factory.createVault(createStakingVaultParams(helperConfig, 30), "FixedYieldVault"));
-        stakingVaults[3] =
-            CredbullFixedYieldVault(factory.createVault(createStakingVaultParams(helperConfig, 40), "FixedYieldVault"));
-        stakingVaults[4] =
-            CredbullFixedYieldVault(factory.createVault(createStakingVaultParams(helperConfig, 50), "FixedYieldVault"));
+        stakingVault = new CredbullFixedYieldVault(createStakingVaultParams(helperConfig, 50));
         vm.stopBroadcast();
 
         vm.startBroadcast(vm.envUint("ADMIN_PRIVATE_KEY"));
-        for (uint256 i = 0; i < stakingVaults.length; i++) {
-            stakingVaults[i].toggleWhiteListCheck();
-            stakingVaults[i].setCheckMaxCap(false);
-        }
+
+        stakingVault.toggleWhiteListCheck();
+        stakingVault.setCheckMaxCap(false);
+
         vm.stopBroadcast();
 
-        return (factory, stakingVaults, helperConfig);
+        return (factory, stakingVault, helperConfig);
     }
 
     function createStakingVaultParams(HelperConfig helperConfig, uint256 _yieldPercentage)
@@ -112,10 +79,10 @@ contract DeployStakingVaults is Script {
             custodian: config.factoryParams.custodian
         });
 
-        WindowPlugin.Window memory _depositWindow = WindowPlugin.Window({ opensAt: 1729468800, closesAt: 1730246400 });
+        WindowPlugin.Window memory _depositWindow = WindowPlugin.Window({ opensAt: 1730973600, closesAt: 1732320000 });
 
         WindowPlugin.Window memory _redemptionWindow =
-            WindowPlugin.Window({ opensAt: 1730246401, closesAt: 1730332800 });
+            WindowPlugin.Window({ opensAt: 1732320000, closesAt: 1734912000 });
 
         WindowPlugin.WindowPluginParams memory _windowPluginParams =
             WindowPlugin.WindowPluginParams({ depositWindow: _depositWindow, redemptionWindow: _redemptionWindow });
