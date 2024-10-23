@@ -3,14 +3,17 @@ pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
+import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
+import { console2 } from "forge-std/console2.sol";
+
 contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultTestBase {
     using TestParamSet for TestParamSet.TestParam[];
 
-    function test__RequestRedeemTest__RedeemAtTenor() public {
+    function test__LiquidContinuousMultiTokenVault__RedeemAtTenor() public {
         testVaultAtOffsets(
             alice,
             _liquidVault,
@@ -18,15 +21,19 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
     }
 
-    function test__LiquidContinuousVaultTest__RedeemBeforeTenor() public {
+    function test__LiquidContinuousMultiTokenVault__RedeemBeforeTenor() public {
         testVaultAtOffsets(
             bob,
             _liquidVault,
-            TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: _liquidVault.TENOR() })
+            TestParamSet.TestParam({
+                principal: 100 * _scale,
+                depositPeriod: 1,
+                redeemPeriod: (_liquidVault.TENOR() - 1)
+            })
         );
     }
 
-    function test__LiquidContinuousVaultTest__Load() public {
+    function test__LiquidContinuousMultiTokenVault__LoadTest() public {
         vm.skip(true); // load test - should only be run during perf testing
 
         uint256 principal = 100_000 * _scale;
@@ -34,7 +41,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         _loadTestVault(_liquidVault, principal, 1, 1_000); // 1,000 works, 1800 too much for the vm
     }
 
-    function test__LiquidContinuousVaultTest__DepositRedeem() public {
+    function test__LiquidContinuousMultiTokenVault__DepositRedeem() public {
         LiquidContinuousMultiTokenVault liquidVault = _liquidVault; // _createLiquidContinueMultiTokenVault(_vaultParams);
 
         TestParamSet.TestParam memory testParams =
@@ -93,7 +100,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
     }
 
-    function test__LiquidContinuousVaultTest__WithdrawAssetFromVault() public {
+    function test__LiquidContinuousMultiTokenVault__WithdrawAssetFromVault() public {
         LiquidContinuousMultiTokenVault liquidVault = _liquidVault;
 
         TestParamSet.TestParam memory testParams =
@@ -119,7 +126,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         assertEq(assetManagerStartBalance + vaultStartBalance, _asset.balanceOf(assetManager));
     }
 
-    function test__LiquidContinuousVaultTest__RedeemMultiPeriodsAllShares() public {
+    function test__LiquidContinuousMultiTokenVault__RedeemMultiPeriodsAllShares() public {
         uint256 depositPeriods = 5;
         TestParamSet.TestParam[] memory depositTestParams = new TestParamSet.TestParam[](depositPeriods);
 
@@ -156,7 +163,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         _testRedeemAfterRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams2, redeemPeriod2);
     }
 
-    function test__LiquidContinuousVaultTest__RedeemMultiPeriodsPartialShares() public {
+    function test__LiquidContinuousMultiTokenVault__RedeemMultiPeriodsPartialShares() public {
         uint256 depositPeriods = 5;
         TestParamSet.TestParam[] memory depositTestParams = new TestParamSet.TestParam[](depositPeriods);
 
@@ -197,7 +204,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         _testRedeemAfterRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams2, redeemPeriod2);
     }
 
-    function test__LiquidContinuousVaultTest__ShouldRevertWithdrawAssetIfNotOwner() public {
+    function test__LiquidContinuousMultiTokenVault__WithdrawAssetNotOwnerReverts() public {
         LiquidContinuousMultiTokenVault liquidVault = _liquidVault;
         address randomWallet = makeAddr("randomWallet");
         vm.startPrank(randomWallet);
@@ -211,7 +218,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     }
 
     // Scenario: Calculating returns for a standard investment
-    function test__LiquidContinuousVaultTest__50k_Returns() public view {
+    function test__LiquidContinuousMultiTokenVault__50k_Returns() public view {
         uint256 deposit = 50_000 * _scale;
 
         // verify returns
@@ -222,5 +229,105 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         uint256 actualShares = _liquidVault.convertToShares(deposit);
         uint256 actualReturns = _liquidVault.convertToAssetsForDepositPeriod(actualShares, 0, _liquidVault.TENOR());
         assertEq(50_416_666666, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
+    }
+
+    function test__LiquidContinuousMultiTokenVault__ControllerNotSenderReverts() public {
+        address randomController = makeAddr("randomController");
+
+        vm.prank(randomController);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__ControllerMismatch.selector,
+                randomController,
+                alice
+            )
+        );
+        _liquidVault.requestDeposit(1 * _scale, alice, alice);
+    }
+
+    function test__LiquidContinuousMultiTokenVault__FractionalAssetsGivesZeroShares() public view {
+        uint256 fractionalAssets = _scale - 1; // less than the scale (fractional)
+        uint256 depositPeriod = 1;
+
+        assertEq(
+            0,
+            _liquidVault.convertToSharesForDepositPeriod(fractionalAssets, depositPeriod),
+            "zero shares for fractional assets"
+        );
+    }
+
+    function test__LiquidContinuousMultiTokenVault__FractionalSharesGivesZeroAssets() public view {
+        uint256 fractionalShares = _scale - 1; // less than the scale (fractional)
+        uint256 depositPeriod = 2;
+        uint256 redeemPeriod = depositPeriod;
+
+        assertEq(
+            0,
+            _liquidVault.convertToAssetsForDepositPeriod(fractionalShares, depositPeriod, redeemPeriod),
+            "zero assets for fractional shares"
+        );
+    }
+
+    function test__LiquidContinuousMultiTokenVault__RedeemBeforeDepositPeriodGivesZeroAssets() public view {
+        uint256 shares = 100 * _scale;
+        uint256 depositPeriod = 3;
+        uint256 redeemPeriod = depositPeriod - 1;
+
+        assertEq(
+            0,
+            _liquidVault.convertToAssetsForDepositPeriod(shares, depositPeriod, redeemPeriod),
+            "zero assets when redeemPeriod < depositPeriod"
+        );
+    }
+
+    function test__LiquidContinuousMultiTokenVault__RedeemMustBeRequestedAmountAndAuthorized() public {
+        uint256 redeemPeriod = 10;
+        uint256 depositPeriod = 2;
+
+        TestParamSet.TestParam memory testParam = TestParamSet.TestParam({
+            principal: 100 * _scale,
+            depositPeriod: depositPeriod,
+            redeemPeriod: redeemPeriod
+        });
+
+        // deposit
+        uint256 shares = _testDepositOnly(alice, _liquidVault, testParam);
+
+        // request redeem
+        _warpToPeriod(_liquidVault, redeemPeriod - _liquidVault.noticePeriod());
+
+        uint256 sharesToRedeem = shares / 2; // redeem say half our shares
+
+        vm.prank(alice);
+        uint256 requestId = _liquidVault.requestRedeem(sharesToRedeem, alice, alice);
+
+        // redeem should fail - requestRedeemAmount != redeemAmount
+        _warpToPeriod(_liquidVault, redeemPeriod);
+
+        uint256 invalidRedeemShareAmount = sharesToRedeem - 1;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount.selector,
+                invalidRedeemShareAmount,
+                sharesToRedeem
+            )
+        );
+        _liquidVault.redeem(invalidRedeemShareAmount, alice, alice);
+
+        // redeem should fail - caller != owner
+        address invalidCaller = makeAddr("callerNotAuthorized");
+        vm.prank(invalidCaller);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__AuthorizeCallerFailed.selector, invalidCaller, alice
+            )
+        );
+        _liquidVault.redeem(sharesToRedeem, alice, alice);
+
+        // redeem should succeed
+        vm.prank(alice);
+        uint256 assets = _liquidVault.redeem(sharesToRedeem, alice, alice);
+        assertLt(0, assets, "redeem should succeed");
     }
 }
