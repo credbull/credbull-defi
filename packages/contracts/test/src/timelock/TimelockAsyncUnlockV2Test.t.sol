@@ -9,7 +9,7 @@ import { IERC5679Ext1155 } from "@credbull/token/ERC1155/IERC5679Ext1155.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-contract TimelockAsyncUnlockV2Test is Test {
+contract TimelockAsyncUnlockTest is Test {
     /**
      * @dev Allows flexibility by not defining a specific instance.
      *      This enables the use of any contract instance derived from `TimelockAsyncUnlock`,
@@ -23,6 +23,29 @@ contract TimelockAsyncUnlockV2Test is Test {
         noticePeriod = 1;
 
         asyncUnlock = _deployTimelockAsyncUnlock(noticePeriod);
+    }
+
+    function testFuzz__TimelockAsyncUnlock__LockAmount(uint256 depositPeriod, uint256 lockAmount) public {
+        _lockAmount(address(0x43555), depositPeriod, lockAmount);
+    }
+
+    function test__TimelockAsyncUnlock__RequestUnlock() public {
+        uint256[] memory depositPeriods = new uint256[](2);
+        depositPeriods[0] = 0;
+        depositPeriods[1] = 1;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 1000;
+        amounts[1] = 2000;
+
+        for (uint256 i = 0; i < depositPeriods.length; i++) {
+            _lockAmount(address(0x43555), depositPeriods[i], amounts[i]);
+        }
+
+        amounts[0] = 500;
+        amounts[1] = 1000;
+
+        _requestUnlock(address(0x43555), depositPeriods, amounts);
     }
 
     /**
@@ -46,6 +69,15 @@ contract TimelockAsyncUnlockV2Test is Test {
         virtual
     {
         TimelockAsyncUnlock asyncUnlockInst = TimelockAsyncUnlock(asyncUnlock);
+        bool failed;
+
+        uint256[] memory prevUnlockRequestAmounts = new uint256[](_depositPeriods.length);
+        uint256[] memory prevMaxRequestUnlockAmounts = new uint256[](_depositPeriods.length);
+
+        for (uint256 i = 0; i < _depositPeriods.length; ++i) {
+            prevUnlockRequestAmounts[i] = asyncUnlockInst.unlockRequestAmountByDepositPeriod(user, _depositPeriods[i]);
+            prevMaxRequestUnlockAmounts[i] = asyncUnlockInst.maxRequestUnlock(user, _depositPeriods[i]);
+        }
 
         if (_depositPeriods.length != _amounts.length) {
             vm.expectRevert(
@@ -55,6 +87,7 @@ contract TimelockAsyncUnlockV2Test is Test {
                     _amounts.length
                 )
             );
+            failed = true;
         } else {
             for (uint256 i = 0; i < _depositPeriods.length; ++i) {
                 if (_amounts[i] > asyncUnlockInst.maxRequestUnlock(user, _depositPeriods[i])) {
@@ -67,12 +100,30 @@ contract TimelockAsyncUnlockV2Test is Test {
                             asyncUnlockInst.maxRequestUnlock(user, _depositPeriods[i])
                         )
                     );
+
+                    failed = true;
+
                     break;
                 }
             }
         }
         vm.prank(user);
         asyncUnlockInst.requestUnlock(user, _depositPeriods, _amounts);
+
+        // in the case of success
+        if (!failed) {
+            for (uint256 i = 0; i < _depositPeriods.length; ++i) {
+                assertEq(
+                    prevUnlockRequestAmounts[i] + _amounts[i],
+                    asyncUnlockInst.unlockRequestAmountByDepositPeriod(user, _depositPeriods[i])
+                );
+
+                assertEq(
+                    prevMaxRequestUnlockAmounts[i] - _amounts[i],
+                    asyncUnlockInst.maxRequestUnlock(user, _depositPeriods[i])
+                );
+            }
+        }
     }
 
     function _deployTimelockAsyncUnlock(uint256 noticePeriod_) internal virtual returns (address) {
@@ -83,7 +134,7 @@ contract TimelockAsyncUnlockV2Test is Test {
         asyncUnlockInst = SimpleTimelockAsyncUnlockV2(
             address(
                 new ERC1967Proxy(
-                    address(asyncUnlock),
+                    address(asyncUnlockInst),
                     abi.encodeWithSelector(asyncUnlockInst.initialize.selector, noticePeriod_, deposits)
                 )
             )
