@@ -3,7 +3,6 @@
 pragma solidity ^0.8.20;
 
 import { Script } from "forge-std/Script.sol";
-import { console2 } from "forge-std/console2.sol";
 
 import { HelperConfig, NetworkConfig } from "@script/HelperConfig.s.sol";
 
@@ -16,7 +15,6 @@ import { FixedYieldVault } from "@credbull/vault/FixedYieldVault.sol";
 import { WindowPlugin } from "@credbull/plugin/WindowPlugin.sol";
 import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
 import { MaxCapPlugin } from "@credbull/plugin/MaxCapPlugin.sol";
-import { DeployedContracts } from "./DeployedContracts.s.sol";
 
 contract DeployStakingVaults is Script {
     bool private isTestMode;
