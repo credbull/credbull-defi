@@ -10,7 +10,7 @@ import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 import { NetworkConfig } from "@script/HelperConfig.s.sol";
 
 contract CredbullStakingVaultContractTest is Test {
-    CredbullFixedYieldVault[] private vaults;
+    CredbullFixedYieldVault private vault;
     HelperConfig private helperConfig;
     DeployStakingVaults private deployer;
     NetworkConfig private config;
@@ -20,7 +20,7 @@ contract CredbullStakingVaultContractTest is Test {
 
     function setUp() public {
         deployer = new DeployStakingVaults();
-        (, vaults, helperConfig) = deployer.runTest();
+        (, vault, helperConfig) = deployer.runTest();
         config = helperConfig.getNetworkConfig();
 
         cblToken = SimpleToken(address(config.cblToken));
@@ -28,8 +28,6 @@ contract CredbullStakingVaultContractTest is Test {
     }
 
     function test__StakingVaults() public {
-        CredbullFixedYieldVault vault = vaults[0];
-
         vm.prank(config.factoryParams.owner);
         vault.toggleWindowCheck();
 
