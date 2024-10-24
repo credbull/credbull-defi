@@ -9,3 +9,12 @@
 [submodule "spikes/spike-axelar-bridge/packages/foundry/lib/forge-std"]
 	path = spikes/spike-axelar-bridge/packages/foundry/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "spikes/spike-layer-zero/packages/foundry/lib/forge-std"]
+	path = spikes/spike-layer-zero/packages/foundry/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "spikes/spike-layer-zero/packages/foundry/lib/solidity-bytes-utils"]
+	path = spikes/spike-layer-zero/packages/foundry/lib/solidity-bytes-utils
+	url = https://github.com/GNSPS/solidity-bytes-utils
+[submodule "spikes/spike-layer-zero/packages/foundry/lib/solidity-examples"]
+	path = spikes/spike-layer-zero/packages/foundry/lib/solidity-examples
+	url = https://github.com/LayerZero-Labs/solidity-examples

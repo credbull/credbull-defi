@@ -1,0 +1,40 @@
+{
+  "name": "@se-2/foundry",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "account": "make account",
+    "account:generate": "make account-generate ACCOUNT_NAME=${1:-scaffold-eth-custom}",
+    "account:import": "make account-import ACCOUNT_NAME=${1:-scaffold-eth-custom}",
+    "chain": "make chain",
+    "compile": "make compile",
+    "deploy:arb": "make deploy-arbSepolia",
+    "deploy:opt": "make deploy-optimismSepolia",
+    "gen-abis": "node script/utils/generateTsAbis.js",
+    "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
+    "flatten": "make flatten",
+    "fork": "make fork FORK_URL=${1:-mainnet}",
+    "format": "make format",
+    "lint": "make lint",
+    "test": "forge test",
+    "postinstall": "shx cp -n .env.example .env"
+  },
+  "dependencies": {
+    "@layerzerolabs/oft-evm": "^0.1.0",
+    "dotenv": "~16.3.1",
+    "envfile": "~6.18.0",
+    "ethers": "~5.7.1",
+    "prettier": "~2.8.8",
+    "qrcode": "~1.5.3",
+    "toml": "~3.0.0"
+  },
+  "devDependencies": {
+    "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/providers": "^5.7.2",
+    "@typechain/ethers-v5": "^11.1.2",
+    "@types/node": "^22.7.8",
+    "shx": "^0.3.4",
+    "typechain": "^8.3.2",
+    "typescript": "^5.6.3"
+  }
+}

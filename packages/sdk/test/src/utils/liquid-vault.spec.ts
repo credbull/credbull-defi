@@ -44,11 +44,15 @@ test.describe.skip('Test reading contracts', () => {
 
     // check some behavior
     const expectedTenor = 30;
-    expect(liquidVault._vaultStartTimestamp().then(ts => ts.toNumber())).resolves.toBeLessThanOrEqual(block.timestamp);
+    expect(liquidVault._vaultStartTimestamp().then((ts) => ts.toNumber())).resolves.toBeLessThanOrEqual(
+      block.timestamp,
+    );
     expect(liquidVault.TENOR()).resolves.toEqual(BigNumber.from(expectedTenor));
 
     // won't work with data loaded version
-    expect(liquidVault['totalSupply()']().then(ts => ts.toNumber())).resolves.toBeGreaterThanOrEqual(BigNumber.from(0).toNumber());
+    expect(liquidVault['totalSupply()']().then((ts) => ts.toNumber())).resolves.toBeGreaterThanOrEqual(
+      BigNumber.from(0).toNumber(),
+    );
     expect(liquidVault.currentPeriod()).resolves.toEqual(BigNumber.from(expectedTenor));
   });
 });
