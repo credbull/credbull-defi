@@ -24,30 +24,6 @@ abstract contract TripleRateContext is Initializable, CalcInterestMetadata, ITri
         uint256 decimals;
     }
 
-    /**
-     * @notice Reverts when the Tenor Period is before the currently set Tenor Period.
-     *
-     * @param tenorPeriod The current Tenor Period.
-     * @param newTenorPeriod The attempted update Tenor Period.
-     */
-    error TripleRateContext_TenorPeriodRegressionNotAllowed(uint256 tenorPeriod, uint256 newTenorPeriod);
-
-    /**
-     * @notice Emits when the current Tenor Period is set, with its associated Reduced Rate.
-     *
-     * @param tenorPeriod The updated current Tenor Period.
-     * @param reducedRate The updated Reduced Rate for the Tenor Period.
-     */
-    event CurrentTenorPeriodAndRateChanged(uint256 tenorPeriod, uint256 reducedRate);
-
-    /**
-     * @notice Reverts when the Period is before the currently set Period.
-     *
-     * @param currentPeriod The current Period.
-     * @param updatePeriod The attempted update Period.
-     */
-    error TripleRateContext_PeriodRegressionNotAllowed(uint256 currentPeriod, uint256 updatePeriod);
-
     /// @notice The Tenor, or Maturity Period, of this context.
     uint256 public TENOR;
 
@@ -65,12 +41,20 @@ abstract contract TripleRateContext is Initializable, CalcInterestMetadata, ITri
     PeriodRate internal _previous;
 
     /**
-     * @notice Emits when the current [TenorPeriodRate] is set.
+     * @notice Emits when the current [PeriodRate] is set.
      *
      * @param interestRate The updated reduced Interest Rate.
      * @param effectiveFromPeriod The updated period.
      */
     event CurrentPeriodRateChanged(uint256 interestRate, uint256 effectiveFromPeriod);
+
+    /**
+     * @notice Reverts when the Period is before the currently set Period.
+     *
+     * @param currentPeriod The current Period.
+     * @param updatePeriod The attempted update Period.
+     */
+    error TripleRateContext_PeriodRegressionNotAllowed(uint256 currentPeriod, uint256 updatePeriod);
 
     constructor() {
         _disableInitializers();
@@ -79,7 +63,7 @@ abstract contract TripleRateContext is Initializable, CalcInterestMetadata, ITri
     function __TripleRateContext_init(ContextParams memory params) internal onlyInitializing {
         __CalcInterestMetadata_init(params.fullRateScaled, params.frequency, params.decimals);
         TENOR = params.tenor;
-        _setReducedRate(params.initialReducedRate);
+        _setReducedRateUnchecked(params.initialReducedRate.interestRate, params.initialReducedRate.effectiveFromPeriod);
     }
 
     /**
@@ -92,22 +76,22 @@ abstract contract TripleRateContext is Initializable, CalcInterestMetadata, ITri
     /**
      * @inheritdoc ITripleRateContext
      */
-    function currentPeriodRate() public view override returns (PeriodRate memory currentPeriodRate_) {
+    function currentPeriodRate() public view returns (PeriodRate memory currentPeriodRate_) {
         currentPeriodRate_ = _current;
     }
 
     /**
      * @inheritdoc ITripleRateContext
      */
-    function previousPeriodRate() public view override returns (PeriodRate memory previousPeriodRate_) {
+    function previousPeriodRate() public view returns (PeriodRate memory previousPeriodRate_) {
         previousPeriodRate_ = _previous;
     }
 
     /**
      * @notice Sets the 'reduced' Interest Rate to be effective from the `effectiveFromPeriod_` Period.
      * @dev Reverts with [TripleRateContext_PeriodRegressionNotAllowed] if `effectiveFromPeriod_` is before the
-     *  current Period.
-     * Emits [CurrentPeriodRateChanged] upon mutation. Access is `virtual` to enable Access Control override.
+     *  Effective From Period of the 'current' [PeriodRate].
+     *  Emits [CurrentPeriodRateChanged] upon mutation. Access is `virtual` to enable Access Control override.
      *
      * @param reducedRateScaled_ The scaled 'reduced' Interest Rate percentage.
      * @param effectiveFromPeriod_ The Period from which the `reducedRateScaled_` is effective.
@@ -117,21 +101,21 @@ abstract contract TripleRateContext is Initializable, CalcInterestMetadata, ITri
             revert TripleRateContext_PeriodRegressionNotAllowed(_current.effectiveFromPeriod, effectiveFromPeriod_);
         }
 
-        _setReducedRate(PeriodRate({ interestRate: reducedRateScaled_, effectiveFromPeriod: effectiveFromPeriod_ }));
+        _setReducedRateUnchecked(reducedRateScaled_, effectiveFromPeriod_);
     }
 
     /**
-     * @dev A private convenience function for setting the  specified 'reduced' Interest Rate [PeriodRate] without
-     *  Effective Period regression checks.
-     *  Emits [CurrentPeriodRateChanged] upon success.
+     * @notice A convenience function for setting the specified 'reduced' Interest Rate without Effective Period
+     * regression checks. Emits [CurrentPeriodRateChanged] upon success.
      *
-     * @param candidate_ The [PeriodRate] to set.
+     * @param reducedRateScaled_ The scaled 'reduced' Interest Rate percentage.
+     * @param effectiveFromPeriod_ The Period from which the `reducedRateScaled_` is effective.
      */
-    function _setReducedRate(PeriodRate memory candidate_) private {
+    function _setReducedRateUnchecked(uint256 reducedRateScaled_, uint256 effectiveFromPeriod_) internal {
         _previous = _current;
-        _current = candidate_;
+        _current = PeriodRate({ interestRate: reducedRateScaled_, effectiveFromPeriod: effectiveFromPeriod_ });
 
-        emit CurrentPeriodRateChanged(candidate_.interestRate, candidate_.effectiveFromPeriod);
+        emit CurrentPeriodRateChanged(reducedRateScaled_, effectiveFromPeriod_);
     }
 
     /**
