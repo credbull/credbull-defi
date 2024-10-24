@@ -141,8 +141,10 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         // setup
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
+        TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
+
         // verify deposit - period 1
-        uint256 deposit1Shares = _testDepositOnly(_alice, vault, _testParams1);
+        uint256 deposit1Shares = _testDepositOnly(testUsers, vault, _testParams1);
         assertEq(_testParams1.principal / assetToSharesRatio, deposit1Shares, "deposit shares incorrect at period 1");
         assertEq(
             deposit1Shares,
@@ -153,7 +155,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(deposit1Shares, vault.balanceOf(_alice, _testParams1.depositPeriod), "balance incorrect at period 1");
 
         // verify deposit - period 2
-        uint256 deposit2Shares = _testDepositOnly(_alice, vault, _testParams2);
+        uint256 deposit2Shares = _testDepositOnly(testUsers, vault, _testParams2);
         assertEq(_testParams2.principal / assetToSharesRatio, deposit2Shares, "deposit shares incorrect at period 2");
         assertEq(
             deposit2Shares,
@@ -167,7 +169,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
         // verify redeem - period 1
         uint256 deposit1ExpectedYield = _expectedReturns(deposit1Shares, vault, _testParams1);
-        uint256 deposit1Assets = _testRedeemOnly(_alice, vault, _testParams1, deposit1Shares);
+        uint256 deposit1Assets = _testRedeemOnly(testUsers, vault, _testParams1, deposit1Shares);
         assertApproxEqAbs(
             _testParams1.principal + deposit1ExpectedYield,
             deposit1Assets,
@@ -176,7 +178,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         );
 
         // verify redeem - period 2
-        uint256 deposit2Assets = _testRedeemOnly(_alice, vault, _testParams2, deposit2Shares);
+        uint256 deposit2Assets = _testRedeemOnly(testUsers, vault, _testParams2, deposit2Shares);
         assertApproxEqAbs(
             _testParams2.principal + _expectedReturns(deposit1Shares, vault, _testParams2),
             deposit2Assets,
@@ -245,8 +247,9 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
             TestParamSet.TestParam({ principal: 3003 * _scale, depositPeriod: 303, redeemPeriod: redeemPeriod });
 
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+        TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
 
-        uint256[] memory shares = _testDepositOnly(_alice, vault, _batchTestParams);
+        uint256[] memory shares = _testDepositOnly(testUsers, vault, _batchTestParams);
         uint256[] memory depositPeriods = _batchTestParams.depositPeriods();
 
         // ------------------------ batch convert to assets ------------------------

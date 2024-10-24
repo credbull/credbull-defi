@@ -16,10 +16,12 @@ abstract contract IMultiTokenVaultTestBase is Test {
     uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000010
 
     /// @dev test the vault at the given test parameters
-    function testVault(address account, IMultiTokenVault vault, TestParamSet.TestParam[] memory testParams)
-        internal
-        returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_)
-    {
+    function testVault(
+        TestParamSet.TestUsers memory depositUsers,
+        TestParamSet.TestUsers memory redeemUsers,
+        IMultiTokenVault vault,
+        TestParamSet.TestParam[] memory testParams
+    ) internal returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_) {
         // previews okay to test individually.  don't update vault state.
         for (uint256 i = 0; i < testParams.length; i++) {
             TestParamSet.TestParam memory testParam = testParams[i];
@@ -32,13 +34,13 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
         // ------------------- deposits w/ redeems per deposit -------------------
         // NB - test all of the deposits BEFORE redeems.  verifies no side-effects from deposits when redeeming.
-        uint256[] memory sharesAtPeriods = _testDepositOnly(account, vault, testParams);
+        uint256[] memory sharesAtPeriods = _testDepositOnly(depositUsers, vault, testParams);
 
         // NB - test all of the redeems AFTER deposits.  verifies no side-effects from deposits when redeeming.
-        uint256[] memory assetsAtPeriods = _testRedeemOnly(account, vault, testParams, sharesAtPeriods);
+        uint256[] memory assetsAtPeriods = _testRedeemOnly(redeemUsers, vault, testParams, sharesAtPeriods);
 
         // ------------------- deposits w/ redeems across multiple deposits -------------------
-        _testVaultCombineDepositsForRedeem(account, vault, testParams, 2);
+        _testVaultCombineDepositsForRedeem(depositUsers, redeemUsers, vault, testParams, 2);
 
         _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore previous period state
 
@@ -47,13 +49,14 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
     /// @dev test the vault deposits and redeems across multiple deposit periods
     function _testVaultCombineDepositsForRedeem(
-        address account,
+        TestParamSet.TestUsers memory depositUsers,
+        TestParamSet.TestUsers memory redeemUsers,
         IMultiTokenVault vault,
         TestParamSet.TestParam[] memory testParams,
         uint256 splitBefore
     ) internal returns (uint256[] memory sharesAtPeriods_, uint256 assetsAtPeriods1_, uint256 assetsAtPeriods2_) {
         // NB - test all of the deposits BEFORE redeems.  verifies no side-effects from deposits when redeeming.
-        uint256[] memory sharesAtPeriods = _testDepositOnly(account, vault, testParams);
+        uint256[] memory sharesAtPeriods = _testDepositOnly(depositUsers, vault, testParams);
 
         // NB - test all of the redeems AFTER deposits.  verifies no side-effects from deposits when redeeming.
         uint256 finalRedeemPeriod = testParams.latestRedeemPeriod();
@@ -67,8 +70,8 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
         uint256 partialRedeemPeriod = finalRedeemPeriod - 2;
 
-        uint256 assetsAtPeriods1 = _testRedeemMultiDeposit(account, vault, redeemParams1, partialRedeemPeriod);
-        uint256 assetsAtPeriods2 = _testRedeemMultiDeposit(account, vault, redeemParams2, finalRedeemPeriod);
+        uint256 assetsAtPeriods1 = _testRedeemMultiDeposit(redeemUsers, vault, redeemParams1, partialRedeemPeriod);
+        uint256 assetsAtPeriods2 = _testRedeemMultiDeposit(redeemUsers, vault, redeemParams2, finalRedeemPeriod);
 
         return (sharesAtPeriods, assetsAtPeriods1, assetsAtPeriods2);
     }
@@ -78,8 +81,21 @@ abstract contract IMultiTokenVaultTestBase is Test {
         internal
         returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_)
     {
+        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
+            _createTestUsers(account);
+
+        return testVaultAtOffsets(depositUsers, redeemUsers, vault, testParam);
+    }
+
+    /// @dev test Vault at specified redeemPeriod and other "interesting" redeem periods
+    function testVaultAtOffsets(
+        TestParamSet.TestUsers memory depositUsers,
+        TestParamSet.TestUsers memory redeemUsers,
+        IMultiTokenVault vault,
+        TestParamSet.TestParam memory testParam
+    ) internal returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_) {
         TestParamSet.TestParam[] memory testParams = TestParamSet.toOffsetArray(testParam);
-        return testVault(account, vault, testParams);
+        return testVault(depositUsers, redeemUsers, vault, testParams);
     }
 
     /// @dev verify convertToAssets and convertToShares.  These are a "preview" and do NOT update vault assets or shares.
@@ -154,52 +170,54 @@ abstract contract IMultiTokenVaultTestBase is Test {
     }
 
     /// @dev verify deposit.  updates vault assets and shares.
-    function _testDepositOnly(address account, IMultiTokenVault vault, TestParamSet.TestParam[] memory testParams)
-        internal
-        virtual
-        returns (uint256[] memory sharesAtPeriod_)
-    {
+    function _testDepositOnly(
+        TestParamSet.TestUsers memory testUsers,
+        IMultiTokenVault vault,
+        TestParamSet.TestParam[] memory testParams
+    ) internal virtual returns (uint256[] memory sharesAtPeriod_) {
         uint256[] memory sharesAtPeriod = new uint256[](testParams.length);
         for (uint256 i = 0; i < testParams.length; i++) {
-            sharesAtPeriod[i] = _testDepositOnly(account, vault, testParams[i]);
+            sharesAtPeriod[i] = _testDepositOnly(testUsers, vault, testParams[i]);
         }
         return sharesAtPeriod;
     }
 
     /// @dev verify deposit.  updates vault assets and shares.
-    function _testDepositOnly(address account, IMultiTokenVault vault, TestParamSet.TestParam memory testParam)
-        internal
-        virtual
-        returns (uint256 actualSharesAtPeriod_)
-    {
+    function _testDepositOnly(
+        TestParamSet.TestUsers memory testUsers,
+        IMultiTokenVault vault,
+        TestParamSet.TestParam memory testParam
+    ) internal virtual returns (uint256 actualSharesAtPeriod_) {
         IERC20 asset = IERC20(vault.asset());
 
         // capture state before for validations
         uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
-        uint256 prevReceiverVaultBalance = vault.sharesAtPeriod(account, testParam.depositPeriod);
+        uint256 prevReceiverVaultBalance = vault.sharesAtPeriod(testUsers.tokenReceiver, testParam.depositPeriod);
 
         // ------------------- deposit -------------------
         _warpToPeriod(vault, testParam.depositPeriod); // warp to deposit period
 
-        vm.startPrank(account);
         assertGe(
-            asset.balanceOf(account),
+            asset.balanceOf(testUsers.tokenOwner),
             testParam.principal,
             _assertMsg("not enough assets for deposit ", vault, testParam.depositPeriod)
         );
+        vm.prank(testUsers.tokenOwner); // tokenOwner here is the owner of the USDC
         asset.approve(address(vault), testParam.principal); // grant the vault allowance
-        uint256 actualSharesAtPeriod = vault.deposit(testParam.principal, account); // now deposit
-        vm.stopPrank();
+
+        vm.prank(testUsers.tokenOwner); // tokenOwner here is the owner of the USDC
+        uint256 actualSharesAtPeriod = vault.deposit(testParam.principal, testUsers.tokenReceiver); // now deposit
+
         assertEq(
             prevReceiverVaultBalance + actualSharesAtPeriod,
-            vault.sharesAtPeriod(account, testParam.depositPeriod),
+            vault.sharesAtPeriod(testUsers.tokenReceiver, testParam.depositPeriod),
             _assertMsg(
                 "receiver did not receive the correct vault shares - sharesAtPeriod", vault, testParam.depositPeriod
             )
         );
         assertEq(
             prevReceiverVaultBalance + actualSharesAtPeriod,
-            vault.balanceOf(account, testParam.depositPeriod),
+            vault.balanceOf(testUsers.tokenReceiver, testParam.depositPeriod),
             _assertMsg("receiver did not receive the correct vault shares - balanceOf ", vault, testParam.depositPeriod)
         );
 
@@ -210,21 +228,21 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
     /// @dev verify redeem.  updates vault assets and shares.
     function _testRedeemOnly(
-        address account,
+        TestParamSet.TestUsers memory redeemUsers,
         IMultiTokenVault vault,
         TestParamSet.TestParam[] memory testParams,
         uint256[] memory sharesAtPeriods
     ) internal virtual returns (uint256[] memory assetsAtPeriods_) {
         uint256[] memory assetsAtPeriods = new uint256[](testParams.length);
         for (uint256 i = 0; i < testParams.length; i++) {
-            assetsAtPeriods[i] = _testRedeemOnly(account, vault, testParams[i], sharesAtPeriods[i]);
+            assetsAtPeriods[i] = _testRedeemOnly(redeemUsers, vault, testParams[i], sharesAtPeriods[i]);
         }
         return assetsAtPeriods;
     }
 
     /// @dev verify redeem.  updates vault assets and shares.
     function _testRedeemOnly(
-        address account,
+        TestParamSet.TestUsers memory redeemUsers,
         IMultiTokenVault vault,
         TestParamSet.TestParam memory testParam,
         uint256 sharesToRedeemAtPeriod
@@ -234,7 +252,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
 
         // ------------------- prep redeem -------------------
-        uint256 assetBalanceBeforeRedeem = asset.balanceOf(account);
+        uint256 assetBalanceBeforeRedeem = asset.balanceOf(redeemUsers.tokenReceiver);
         uint256 expectedReturns = _expectedReturns(sharesToRedeemAtPeriod, vault, testParam);
 
         _transferFromTokenOwner(asset, address(vault), expectedReturns);
@@ -242,10 +260,19 @@ abstract contract IMultiTokenVaultTestBase is Test {
         // ------------------- redeem -------------------
         _warpToPeriod(vault, testParam.redeemPeriod); // warp the vault to redeem period
 
-        vm.startPrank(account);
-        uint256 actualAssetsAtPeriod =
-            vault.redeemForDepositPeriod(sharesToRedeemAtPeriod, account, account, testParam.depositPeriod);
+        // authorize the tokenOperator
+        vm.prank(redeemUsers.tokenOwner);
+        vault.setApprovalForAll(redeemUsers.tokenOperator, true);
+
+        vm.startPrank(redeemUsers.tokenOperator);
+        uint256 actualAssetsAtPeriod = vault.redeemForDepositPeriod(
+            sharesToRedeemAtPeriod, redeemUsers.tokenReceiver, redeemUsers.tokenOwner, testParam.depositPeriod
+        );
         vm.stopPrank();
+
+        // de-authorize the tokenOperator
+        vm.prank(redeemUsers.tokenOwner);
+        vault.setApprovalForAll(redeemUsers.tokenOperator, false);
 
         assertApproxEqAbs(
             testParam.principal + expectedReturns,
@@ -257,7 +284,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         // verify the receiver has the USDC back
         assertApproxEqAbs(
             assetBalanceBeforeRedeem + testParam.principal + expectedReturns,
-            asset.balanceOf(account),
+            asset.balanceOf(redeemUsers.tokenReceiver),
             TOLERANCE,
             _assertMsg("receiver did not receive the correct yield", vault, testParam.depositPeriod)
         );
@@ -269,7 +296,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
     /// @dev - requestRedeem over multiple deposit and principals into one requestRedeemPeriod
     function _testRedeemMultiDeposit(
-        address account,
+        TestParamSet.TestUsers memory redeemUsers,
         IMultiTokenVault vault,
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
@@ -278,20 +305,26 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
         IERC20 asset = IERC20(vault.asset());
 
-        uint256 prevAssetBalance = asset.balanceOf(account);
-        uint256[] memory prevSharesBalance =
-            vault.balanceOfBatch(depositTestParams.accountArray(account), depositTestParams.depositPeriods());
+        uint256 prevAssetBalance = asset.balanceOf(redeemUsers.tokenReceiver);
+        uint256[] memory prevSharesBalance = vault.balanceOfBatch(
+            depositTestParams.accountArray(redeemUsers.tokenOwner), depositTestParams.depositPeriods()
+        );
 
         // get the vault enough to cover redeems
         _transferFromTokenOwner(asset, address(vault), depositTestParams.totalPrincipal()); // this will give the vault 2x principal
 
-        uint256 assets = _vaultRedeemBatch(account, vault, depositTestParams, redeemPeriod);
+        uint256 assets = _vaultRedeemBatch(redeemUsers, vault, depositTestParams, redeemPeriod);
 
-        assertEq(prevAssetBalance + assets, asset.balanceOf(account), "did not receive assets");
+        assertEq(
+            prevAssetBalance + assets,
+            asset.balanceOf(redeemUsers.tokenReceiver),
+            "receiver did not receive assets - redeem on multi deposit"
+        );
 
-        // check share balances reduced
-        uint256[] memory sharesBalance =
-            vault.balanceOfBatch(depositTestParams.accountArray(account), depositTestParams.depositPeriods());
+        // check share balances reduced on the owner
+        uint256[] memory sharesBalance = vault.balanceOfBatch(
+            depositTestParams.accountArray(redeemUsers.tokenOwner), depositTestParams.depositPeriods()
+        );
 
         assertEq(prevSharesBalance.length, sharesBalance.length, "mismatch on share balance");
 
@@ -299,7 +332,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
             uint256 sharesAtPeriod = vault.convertToSharesForDepositPeriod(
                 depositTestParams[i].principal, depositTestParams[i].depositPeriod
             );
-            assertEq(prevSharesBalance[i] - sharesAtPeriod, sharesBalance[i], "shares balance incorrect");
+            assertEq(prevSharesBalance[i] - sharesAtPeriod, sharesBalance[i], "token owner shares balance incorrect");
         }
 
         return assets;
@@ -320,6 +353,9 @@ abstract contract IMultiTokenVaultTestBase is Test {
         uint256[] memory charlieShares = new uint256[](toPeriod + 1);
         uint256[] memory davidShares = new uint256[](toPeriod + 1);
 
+        TestParamSet.TestUsers memory charlieTestUsers = TestParamSet.toSingletonUsers(charlie);
+        TestParamSet.TestUsers memory davidTestUsers = TestParamSet.toSingletonUsers(david);
+
         // ----------------------- deposits -----------------------
         for (uint256 i = fromPeriod; i < toPeriod; ++i) {
             TestParamSet.TestParam memory depositTestParam = TestParamSet.TestParam({
@@ -327,8 +363,8 @@ abstract contract IMultiTokenVaultTestBase is Test {
                 depositPeriod: i,
                 redeemPeriod: 0 // not used in deposit flow
              });
-            charlieShares[i] = _testDepositOnly(charlie, vault, depositTestParam);
-            davidShares[i] = _testDepositOnly(david, vault, depositTestParam);
+            charlieShares[i] = _testDepositOnly(charlieTestUsers, vault, depositTestParam);
+            davidShares[i] = _testDepositOnly(davidTestUsers, vault, depositTestParam);
         }
 
         // ----------------------- redeems -----------------------
@@ -336,32 +372,41 @@ abstract contract IMultiTokenVaultTestBase is Test {
             TestParamSet.TestParam memory redeemTestParam =
                 TestParamSet.TestParam({ principal: principal, depositPeriod: i, redeemPeriod: toPeriod });
 
-            _testRedeemOnly(charlie, vault, redeemTestParam, charlieShares[i]);
-            _testRedeemOnly(david, vault, redeemTestParam, davidShares[i]);
+            _testRedeemOnly(charlieTestUsers, vault, redeemTestParam, charlieShares[i]);
+            _testRedeemOnly(davidTestUsers, vault, redeemTestParam, davidShares[i]);
         }
     }
 
     /// @dev /// @dev execute a redeem on the vault across multiple deposit periods. (if supported)
     function _vaultRedeemBatch(
-        address account,
+        TestParamSet.TestUsers memory redeemUsers,
         IMultiTokenVault vault,
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod
     ) internal virtual returns (uint256 assets_) {
         _warpToPeriod(vault, redeemPeriod); // warp the vault to redeem period
 
-        uint256 assets = 0;
-        vm.startPrank(account);
+        // authorize the tokenOperator
+        vm.prank(redeemUsers.tokenOwner);
+        vault.setApprovalForAll(redeemUsers.tokenOperator, true);
 
+        uint256 assets = 0;
+        vm.startPrank(redeemUsers.tokenOperator);
         // @dev - IMultiTokenVault we don't support redeeming across deposit periods.  redeem period by period instead.
         for (uint256 i = 0; i < depositTestParams.length; ++i) {
             uint256 depositPeriod = depositTestParams[i].depositPeriod;
             uint256 sharesAtPeriod =
                 vault.convertToSharesForDepositPeriod(depositTestParams[i].principal, depositPeriod);
 
-            assets += vault.redeemForDepositPeriod(sharesAtPeriod, account, account, depositTestParams[i].depositPeriod);
+            assets += vault.redeemForDepositPeriod(
+                sharesAtPeriod, redeemUsers.tokenReceiver, redeemUsers.tokenOwner, depositTestParams[i].depositPeriod
+            );
         }
         vm.stopPrank();
+
+        // de-authorize the tokenOperator
+        vm.prank(redeemUsers.tokenOwner);
+        vault.setApprovalForAll(redeemUsers.tokenOperator, false);
 
         return assets;
     }
@@ -387,6 +432,26 @@ abstract contract IMultiTokenVaultTestBase is Test {
     {
         return
             TestParamSet.TestParam({ principal: principal, depositPeriod: depositPeriod, redeemPeriod: redeemPeriod });
+    }
+
+    // simple scenario with only one user
+    function _createTestUsers(address account)
+        internal
+        returns (TestParamSet.TestUsers memory depositUsers_, TestParamSet.TestUsers memory redeemUsers_)
+    {
+        TestParamSet.TestUsers memory depositUsers = TestParamSet.TestUsers({
+            tokenOwner: account, // owns tokens, can specify who can receive tokens
+            tokenReceiver: makeAddr("depositTokenReceiver"), // receiver of tokens from the tokenOwner
+            tokenOperator: makeAddr("depositTokenOperator") // granted allowance by tokenOwner to act on their behalf
+         });
+
+        TestParamSet.TestUsers memory redeemUsers = TestParamSet.TestUsers({
+            tokenOwner: depositUsers.tokenReceiver, // on deposit, the tokenReceiver receives (owns) the tokens
+            tokenReceiver: account, // virtuous cycle, the account receives the returns in the end
+            tokenOperator: makeAddr("redeemTokenOperator") // granted allowance by tokenOwner to act on their behalf
+         });
+
+        return (depositUsers, redeemUsers);
     }
 
     /// @dev - creates a message string for assertions
