@@ -476,7 +476,7 @@ contract LiquidContinuousMultiTokenVault is
 
     // @dev ensure caller is permitted to act on the owner's tokens
     modifier onlyAuthorized(address owner) {
-        _authorizeCaller(msg.sender, owner);
+        _authorizeCaller(_msgSender(), owner);
         _;
     }
 
