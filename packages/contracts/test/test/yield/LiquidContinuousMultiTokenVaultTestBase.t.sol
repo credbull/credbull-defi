@@ -108,9 +108,15 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         // request unlock
         _warpToPeriod(liquidVault, testParam.redeemPeriod - liquidVault.noticePeriod());
 
+        vm.prank(redeemUsers.tokenOwner);
+        vault.setApprovalForAll(redeemUsers.tokenOperator, true);
+
         // this vault requires an unlock/redeem request prior to redeeming
-        vm.prank(redeemUsers.tokenOwner); // TODO - should be redeemUsers.tokenOperator, see https://github.com/credbull/credbull-defi/issues/162
+        vm.prank(redeemUsers.tokenOperator);
         liquidVault.requestRedeem(sharesToRedeemAtPeriod, redeemUsers.tokenOperator, redeemUsers.tokenOwner);
+
+        vm.prank(redeemUsers.tokenOwner);
+        vault.setApprovalForAll(redeemUsers.tokenOperator, false);
 
         assertEq(
             testParam.principal,
@@ -147,8 +153,15 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
         uint256 sharesToRedeem = depositTestParams.totalPrincipal();
 
-        vm.prank(redeemUsers.tokenOwner); // TODO - should be redeemUsers.tokenOperator, see https://github.com/credbull/credbull-defi/issues/162
+        vm.prank(redeemUsers.tokenOwner);
+        liquidVault.setApprovalForAll(redeemUsers.tokenOperator, true);
+
+        vm.prank(redeemUsers.tokenOperator);
         uint256 requestId = liquidVault.requestRedeem(sharesToRedeem, redeemUsers.tokenOperator, redeemUsers.tokenOwner);
+
+        vm.prank(redeemUsers.tokenOwner);
+        liquidVault.setApprovalForAll(redeemUsers.tokenOperator, false);
+
         (uint256[] memory unlockDepositPeriods, uint256[] memory unlockShares) =
             liquidVault.unlockRequests(redeemUsers.tokenOwner, requestId);
 
@@ -167,16 +180,15 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     ) internal virtual returns (uint256 assets_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
-        // TODO HACK - work around the bug where the receiver is not specified on redeem on a LiquidContinuousMultiTokenVault
-        // see https://github.com/credbull/credbull-defi/issues/162
-        TestParamSet.TestUsers memory redeemUsersReceiverIsOwner = TestParamSet.TestUsers({
+        // in LiquidContinuousMultiTokenVault - the tokenOwner and tokenOperator (aka controller) must be the same
+        TestParamSet.TestUsers memory redeemUsersOperatorIsOwner = TestParamSet.TestUsers({
             tokenOwner: redeemUsers.tokenOwner,
-            tokenReceiver: redeemUsers.tokenOwner,
-            tokenOperator: redeemUsers.tokenOperator
+            tokenReceiver: redeemUsers.tokenReceiver,
+            tokenOperator: redeemUsers.tokenOwner
         });
 
         uint256 assets =
-            super._testRedeemMultiDeposit(redeemUsersReceiverIsOwner, vault, depositTestParams, redeemPeriod);
+            super._testRedeemMultiDeposit(redeemUsersOperatorIsOwner, vault, depositTestParams, redeemPeriod);
 
         // verify the requestRedeems are released
         (uint256[] memory unlockDepositPeriods, uint256[] memory unlockAmounts) =
@@ -218,9 +230,9 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         vm.prank(redeemUsers.tokenOwner);
         vault.setApprovalForAll(redeemUsers.tokenOperator, true);
 
-        vm.prank(redeemUsers.tokenOwner); // TODO - should be redeemUsers.tokenOperator, see https://github.com/credbull/credbull-defi/issues/162
+        vm.prank(redeemUsers.tokenOperator);
         uint256 assets =
-            liquidVault.redeem(depositTestParams.totalPrincipal(), redeemUsers.tokenOwner, redeemUsers.tokenOperator); // TODO - should pass in the receiver, see https://github.com/credbull/credbull-defi/issues/162
+            liquidVault.redeem(depositTestParams.totalPrincipal(), redeemUsers.tokenReceiver, redeemUsers.tokenOperator);
 
         // de-authorize the tokenOperator
         vm.prank(redeemUsers.tokenOwner);

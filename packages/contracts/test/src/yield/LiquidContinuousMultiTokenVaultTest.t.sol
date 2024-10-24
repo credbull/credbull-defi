@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
-import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
@@ -349,28 +348,74 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         assertEq(assetsAtRedeemPeriod, _liquidVault.totalAssets(), "totalAssets wrong at redeem period");
     }
 
-    function test__LiquidContinuousMultiTokenVault__ControllerNotSenderReverts() public {
+    function test__LiquidContinuousMultiTokenVault__DepositCallerValidation() public {
         address randomController = makeAddr("randomController");
 
-        vm.prank(randomController);
+        // ---------------- request deposit ----------------
+        vm.prank(bob);
         vm.expectRevert(
             abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__ControllerMismatch.selector,
-                randomController,
-                alice
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__UnAuthorized.selector, bob, alice
             )
         );
-        _liquidVault.requestDeposit(1 * _scale, alice, alice);
+        _liquidVault.requestDeposit(1 * _scale, bob, alice);
 
-        vm.prank(randomController);
+        vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__ControllerMismatch.selector,
-                randomController,
-                alice
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__ControllerNotSender.selector,
+                alice,
+                randomController
             )
         );
-        _liquidVault.deposit(1 * _scale, alice, alice);
+        _liquidVault.requestDeposit(1 * _scale, randomController, alice);
+
+        // ---------------- deposit ----------------
+
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__ControllerNotSender.selector,
+                alice,
+                randomController
+            )
+        );
+        _liquidVault.deposit(1 * _scale, alice, randomController);
+    }
+
+    function test__LiquidContinuousMultiTokenVault__RedeemCallerValidation() public {
+        address randomController = makeAddr("randomController");
+
+        // ---------------- request redeem ----------------
+        vm.prank(bob);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__UnAuthorized.selector, bob, alice
+            )
+        );
+        _liquidVault.requestRedeem(1 * _scale, bob, alice);
+
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__ControllerNotSender.selector,
+                alice,
+                randomController
+            )
+        );
+        _liquidVault.requestRedeem(1 * _scale, randomController, alice);
+
+        // ---------------- redeem ----------------
+
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__ControllerNotSender.selector,
+                alice,
+                randomController
+            )
+        );
+        _liquidVault.redeem(1 * _scale, makeAddr("receiver"), randomController);
     }
 
     function test__LiquidContinuousMultiTokenVault__FractionalAssetsGivesZeroShares() public view {
@@ -436,6 +481,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         uint256 invalidRedeemShareAmount = sharesToRedeem - 1;
 
+        vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount.selector,
@@ -445,19 +491,22 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
         _liquidVault.redeem(invalidRedeemShareAmount, alice, alice);
 
-        // redeem should fail - caller != owner
-        address invalidCaller = makeAddr("callerNotAuthorized");
+        // redeem should fail - caller doesn't have any tokens to redeem
+        address invalidCaller = makeAddr("randomCaller");
         vm.prank(invalidCaller);
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__AuthorizeCallerFailed.selector, invalidCaller, alice
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount.selector,
+                sharesToRedeem,
+                0
             )
         );
-        _liquidVault.redeem(sharesToRedeem, alice, alice);
+        _liquidVault.redeem(sharesToRedeem, alice, invalidCaller);
 
         // redeem should succeed
+        address receiver = makeAddr("receiver");
         vm.prank(alice);
-        uint256 assets = _liquidVault.redeem(sharesToRedeem, alice, alice);
-        assertLt(0, assets, "redeem should succeed");
+        uint256 assets = _liquidVault.redeem(sharesToRedeem, receiver, alice);
+        assertEq(assets, _asset.balanceOf(receiver), "redeem should succeed");
     }
 }
