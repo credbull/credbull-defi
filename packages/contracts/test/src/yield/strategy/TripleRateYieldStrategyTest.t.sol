@@ -362,6 +362,47 @@ contract TripleRateYieldStrategyTest is Test {
         yieldStrategy.calcYield(contextAddress, principal, 0, 26);
     }
 
+    function test_TripleRateYieldStrategy_CalcYield_NonStandard_PeriodRates() public {
+        context.setReducedRate(PERCENT_5_5_SCALED, 14); // Previous Period Rate
+        context.setReducedRate(58 * SCALE / 10, 49); // Current Period Rate
+
+        // 69 Days: 2x maturity periods and the Current Period Rate.
+        // $1,000 * ((10% / 360) * 60) + 1,000 * ((5.8% / 360) * 9) = 18.116667
+        assertApproxEqAbs(
+            18_116_667,
+            yieldStrategy.calcYield(contextAddress, principal, 2, 71),
+            TOLERANCE,
+            "incorrect 69 day mature & reduced rate yield with non-standard period rates"
+        );
+
+        // 50 Days: 1x maturity period, 17 periods at Previous Period Rate and 3 periods at Current Period Rate.
+        // $1,000 * ((10% / 360) * 30) + 1,000 * ((5.5% / 360) * 17) + 1,000 * ((5.8% / 360) * 3) = 11.413889
+        assertApproxEqAbs(
+            11_413_889,
+            yieldStrategy.calcYield(contextAddress, principal, 1, 51),
+            TOLERANCE,
+            "incorrect 50 day mature & reduced rate yield with non-standard period rates"
+        );
+
+        // 26 Days: No maturity periods, 19 periods at PPR and 7 periods at CPR.
+        // $1,000 * ((5.5% / 360) * 24) + 1,000 * ((5.8% / 360) * 2) = 3.988889
+        assertApproxEqAbs(
+            3_988_889,
+            yieldStrategy.calcYield(contextAddress, principal, 24, 50),
+            TOLERANCE,
+            "incorrect 26 day reduced rate yield with non-standard period rates"
+        );
+
+        // 5 Days: No maturity periods, 5 periods at PPR and 0 periods at CPR.
+        // $1,000 * ((5.5% / 360) * 5) = 0.763889
+        assertApproxEqAbs(
+            763_889,
+            yieldStrategy.calcYield(contextAddress, principal, 16, 21),
+            TOLERANCE,
+            "incorrect 5 day reduced rate yield with non-standard period rates"
+        );
+    }
+
     function test_TripleRateYieldStrategy_CalcPrice_WorksConsistently(uint32 periodsElapsed) public view {
         // Limit Periods Elapsed to a conservative maximum of 274,000 years(!).
         vm.assume(periodsElapsed < 100_000_000);
