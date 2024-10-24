@@ -49,29 +49,30 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     }
 
     // verify deposit.  updates vault assets and shares.
-    function _testDepositOnly(address receiver, IMultiTokenVault vault, TestParamSet.TestParam memory testParam)
-        internal
-        virtual
-        override
-        returns (uint256 actualSharesAtPeriod_)
-    {
+    function _testDepositOnly(
+        TestParamSet.TestUsers memory testUsers,
+        IMultiTokenVault vault,
+        TestParamSet.TestParam memory testParam
+    ) internal virtual override returns (uint256 actualSharesAtPeriod_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         // TODO - calling totalAssets reverts, see https://github.com/credbull/credbull-defi/issues/160
         // uint256 prevVaultTotalAssets = liquidVault.totalAssets();
 
-        uint256 actualSharesAtPeriod = super._testDepositOnly(receiver, vault, testParam);
+        uint256 actualSharesAtPeriod = super._testDepositOnly(testUsers, vault, testParam);
 
         assertEq(
             actualSharesAtPeriod,
-            vault.balanceOf(receiver, testParam.depositPeriod),
+            vault.balanceOf(testUsers.tokenReceiver, testParam.depositPeriod),
             _assertMsg(
                 "!!! receiver did not receive the correct vault shares - balanceOf ", vault, testParam.depositPeriod
             )
         );
 
         assertEq(
-            testParam.principal, liquidVault.lockedAmount(receiver, testParam.depositPeriod), "principal not locked"
+            testParam.principal,
+            liquidVault.lockedAmount(testUsers.tokenReceiver, testParam.depositPeriod),
+            "principal not locked"
         );
 
         // TODO - this assertion *should* work, but doesn't.  see https://github.com/credbull/credbull-defi/issues/160
@@ -97,7 +98,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     }
 
     function _testRedeemOnly(
-        address receiver,
+        TestParamSet.TestUsers memory redeemUsers,
         IMultiTokenVault vault,
         TestParamSet.TestParam memory testParam,
         uint256 sharesToRedeemAtPeriod
@@ -107,25 +108,28 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         // request unlock
         _warpToPeriod(liquidVault, testParam.redeemPeriod - liquidVault.noticePeriod());
 
-        vm.prank(receiver);
-
         // this vault requires an unlock/redeem request prior to redeeming
-        liquidVault.requestRedeem(sharesToRedeemAtPeriod, receiver, receiver);
+        vm.prank(redeemUsers.tokenOwner); // TODO - should be redeemUsers.tokenOperator, see https://github.com/credbull/credbull-defi/issues/162
+        liquidVault.requestRedeem(sharesToRedeemAtPeriod, redeemUsers.tokenOperator, redeemUsers.tokenOwner);
 
         assertEq(
             testParam.principal,
-            liquidVault.unlockRequestAmountByDepositPeriod(receiver, testParam.depositPeriod),
+            liquidVault.unlockRequestAmountByDepositPeriod(redeemUsers.tokenOwner, testParam.depositPeriod),
             "unlockRequest should be created"
         );
 
-        uint256 actualAssetsAtPeriod = super._testRedeemOnly(receiver, vault, testParam, sharesToRedeemAtPeriod);
+        uint256 actualAssetsAtPeriod = super._testRedeemOnly(redeemUsers, vault, testParam, sharesToRedeemAtPeriod);
 
         // verify locks and request locks released
-        assertEq(0, liquidVault.lockedAmount(receiver, testParam.depositPeriod), "deposit lock not released");
-        assertEq(0, liquidVault.balanceOf(receiver, testParam.depositPeriod), "deposits should be redeemed");
+        assertEq(
+            0, liquidVault.lockedAmount(redeemUsers.tokenOwner, testParam.depositPeriod), "deposit lock not released"
+        );
+        assertEq(
+            0, liquidVault.balanceOf(redeemUsers.tokenOwner, testParam.depositPeriod), "deposits should be redeemed"
+        );
         assertEq(
             0,
-            liquidVault.unlockRequestAmountByDepositPeriod(receiver, testParam.depositPeriod),
+            liquidVault.unlockRequestAmountByDepositPeriod(redeemUsers.tokenOwner, testParam.depositPeriod),
             "unlockRequest should be released"
         );
 
@@ -134,7 +138,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
     /// @dev - requestRedeem over multiple deposit and principals into one requestRedeemPeriod
     function _testRequestRedeemMultiDeposit(
-        address account,
+        TestParamSet.TestUsers memory redeemUsers,
         LiquidContinuousMultiTokenVault liquidVault,
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
@@ -143,10 +147,10 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
         uint256 sharesToRedeem = depositTestParams.totalPrincipal();
 
-        vm.prank(account);
-        uint256 requestId = liquidVault.requestRedeem(sharesToRedeem, account, account);
+        vm.prank(redeemUsers.tokenOwner); // TODO - should be redeemUsers.tokenOperator, see https://github.com/credbull/credbull-defi/issues/162
+        uint256 requestId = liquidVault.requestRedeem(sharesToRedeem, redeemUsers.tokenOperator, redeemUsers.tokenOwner);
         (uint256[] memory unlockDepositPeriods, uint256[] memory unlockShares) =
-            liquidVault.unlockRequests(account, requestId);
+            liquidVault.unlockRequests(redeemUsers.tokenOwner, requestId);
 
         (uint256[] memory expectedDepositPeriods, uint256[] memory expectedShares) = depositTestParams.deposits();
 
@@ -156,18 +160,27 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
     /// @dev - redeem ONLY (no requestRedeem) over multiple deposit and principals into one requestRedeemPeriod
     function _testRedeemAfterRequestRedeemMultiDeposit(
-        address account,
+        TestParamSet.TestUsers memory redeemUsers,
         IMultiTokenVault vault,
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
     ) internal virtual returns (uint256 assets_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
-        uint256 assets = super._testRedeemMultiDeposit(account, vault, depositTestParams, redeemPeriod);
+        // TODO HACK - work around the bug where the receiver is not specified on redeem on a LiquidContinuousMultiTokenVault
+        // see https://github.com/credbull/credbull-defi/issues/162
+        TestParamSet.TestUsers memory redeemUsersReceiverIsOwner = TestParamSet.TestUsers({
+            tokenOwner: redeemUsers.tokenOwner,
+            tokenReceiver: redeemUsers.tokenOwner,
+            tokenOperator: redeemUsers.tokenOperator
+        });
+
+        uint256 assets =
+            super._testRedeemMultiDeposit(redeemUsersReceiverIsOwner, vault, depositTestParams, redeemPeriod);
 
         // verify the requestRedeems are released
         (uint256[] memory unlockDepositPeriods, uint256[] memory unlockAmounts) =
-            liquidVault.unlockRequests(account, redeemPeriod);
+            liquidVault.unlockRequests(redeemUsers.tokenOwner, redeemPeriod);
         assertEq(0, unlockDepositPeriods.length, "unlock should be released");
         assertEq(0, unlockAmounts.length, "unlock should be released");
 
@@ -176,7 +189,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
     /// @dev - requestRedeem AND redeem over multiple deposit and principals into one requestRedeemPeriod
     function _testRedeemMultiDeposit(
-        address account,
+        TestParamSet.TestUsers memory redeemUsers,
         IMultiTokenVault vault,
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
@@ -184,15 +197,15 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         // first requestRedeem
-        _testRequestRedeemMultiDeposit(account, liquidVault, depositTestParams, redeemPeriod);
+        _testRequestRedeemMultiDeposit(redeemUsers, liquidVault, depositTestParams, redeemPeriod);
 
         // now redeem
-        return _testRedeemAfterRequestRedeemMultiDeposit(account, vault, depositTestParams, redeemPeriod);
+        return _testRedeemAfterRequestRedeemMultiDeposit(redeemUsers, vault, depositTestParams, redeemPeriod);
     }
 
     /// @dev execute a redeem on the vault across multiple deposit periods.~
     function _vaultRedeemBatch(
-        address account,
+        TestParamSet.TestUsers memory redeemUsers,
         IMultiTokenVault vault,
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod
@@ -201,8 +214,19 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
         _warpToPeriod(vault, redeemPeriod); // warp the vault to redeem period
 
-        vm.prank(account);
-        return liquidVault.redeem(depositTestParams.totalPrincipal(), account, account);
+        // authorize the tokenOperator
+        vm.prank(redeemUsers.tokenOwner);
+        vault.setApprovalForAll(redeemUsers.tokenOperator, true);
+
+        vm.prank(redeemUsers.tokenOwner); // TODO - should be redeemUsers.tokenOperator, see https://github.com/credbull/credbull-defi/issues/162
+        uint256 assets =
+            liquidVault.redeem(depositTestParams.totalPrincipal(), redeemUsers.tokenOwner, redeemUsers.tokenOperator); // TODO - should pass in the receiver, see https://github.com/credbull/credbull-defi/issues/162
+
+        // de-authorize the tokenOperator
+        vm.prank(redeemUsers.tokenOwner);
+        vault.setApprovalForAll(redeemUsers.tokenOperator, false);
+
+        return assets;
     }
 
     function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParamSet.TestParam memory testParam)

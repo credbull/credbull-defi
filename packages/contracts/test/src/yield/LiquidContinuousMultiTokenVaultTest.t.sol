@@ -11,11 +11,21 @@ import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultTestBase {
     using TestParamSet for TestParamSet.TestParam[];
 
+    function test__LiquidContinuousMultiTokenVault__SimpleDepositAndRedeem() public {
+        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
+            _createTestUsers(alice);
+        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
+        testParams[0] = TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: 5 });
+
+        uint256[] memory sharesAtPeriods = _testDepositOnly(depositUsers, _liquidVault, testParams);
+        _testRedeemOnly(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
+    }
+
     function test__LiquidContinuousMultiTokenVault__RedeemAtTenor() public {
         testVaultAtOffsets(
             alice,
             _liquidVault,
-            TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: _liquidVault.TENOR() })
+            TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: 0, redeemPeriod: _liquidVault.TENOR() })
         );
     }
 
@@ -24,7 +34,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             bob,
             _liquidVault,
             TestParamSet.TestParam({
-                principal: 100 * _scale,
+                principal: 401 * _scale,
                 depositPeriod: 1,
                 redeemPeriod: (_liquidVault.TENOR() - 1)
             })
@@ -178,7 +188,9 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             });
         }
 
-        _testDepositOnly(alice, _liquidVault, depositTestParams);
+        TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(alice);
+
+        _testDepositOnly(testUsers, _liquidVault, depositTestParams);
 
         // split our deposits into two "batches" of redeems
         (TestParamSet.TestParam[] memory redeemParams1, TestParamSet.TestParam[] memory redeemParams2) =
@@ -188,17 +200,17 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         // ------------ requestRedeem #1 -----------
         uint256 redeemPeriod1 = 31;
-        _testRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams1, 31);
+        _testRequestRedeemMultiDeposit(testUsers, _liquidVault, redeemParams1, 31);
 
         // ------------ requestRedeem #2 ------------
         uint256 redeemPeriod2 = 41;
-        _testRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams2, 41);
+        _testRequestRedeemMultiDeposit(testUsers, _liquidVault, redeemParams2, 41);
 
         // ------------ redeems ------------
         // NB - call the redeem AFTER the multiple requestRedeems.  verify multiple requestRedeems work.
-        _testRedeemAfterRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams1, redeemPeriod1);
+        _testRedeemAfterRequestRedeemMultiDeposit(testUsers, _liquidVault, redeemParams1, redeemPeriod1);
 
-        _testRedeemAfterRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams2, redeemPeriod2);
+        _testRedeemAfterRequestRedeemMultiDeposit(testUsers, _liquidVault, redeemParams2, redeemPeriod2);
     }
 
     function test__LiquidContinuousMultiTokenVault__RedeemMultiPeriodsPartialShares() public {
@@ -215,7 +227,9 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             });
         }
 
-        _testDepositOnly(alice, _liquidVault, depositTestParams);
+        TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(alice);
+
+        _testDepositOnly(testUsers, _liquidVault, depositTestParams);
 
         uint256 partialShares = 1 * _scale;
 
@@ -224,7 +238,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         TestParamSet.TestParam[] memory redeemParams1 = depositTestParams._subset(0, 2);
         redeemParams1[2].principal = partialShares;
 
-        _testRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams1, redeemPeriod1);
+        _testRequestRedeemMultiDeposit(testUsers, _liquidVault, redeemParams1, redeemPeriod1);
 
         // ------------ requestRedeem #2 ------------
         uint256 redeemPeriod2 = 50;
@@ -232,14 +246,14 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         redeemParams2[0].principal = (depositTestParams[2].principal - partialShares);
         redeemParams2[2].principal = partialShares;
 
-        _testRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams2, redeemPeriod2);
+        _testRequestRedeemMultiDeposit(testUsers, _liquidVault, redeemParams2, redeemPeriod2);
 
         // ------------ redeems ------------
         // NB - call the redeem AFTER the multiple requestRedeems.  verify multiple requestRedeems work.
 
-        _testRedeemAfterRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams1, redeemPeriod1);
+        _testRedeemAfterRequestRedeemMultiDeposit(testUsers, _liquidVault, redeemParams1, redeemPeriod1);
 
-        _testRedeemAfterRequestRedeemMultiDeposit(alice, _liquidVault, redeemParams2, redeemPeriod2);
+        _testRedeemAfterRequestRedeemMultiDeposit(testUsers, _liquidVault, redeemParams2, redeemPeriod2);
     }
 
     function test__LiquidContinuousMultiTokenVault__WithdrawAssetNotOwnerReverts() public {
@@ -285,7 +299,9 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             redeemPeriod: redeemPeriod
         });
 
-        uint256[] memory shares = _testDepositOnly(alice, _liquidVault, testParams);
+        TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(alice);
+
+        uint256[] memory shares = _testDepositOnly(testUsers, _liquidVault, testParams);
         uint256 totalShares = shares[0] + shares[1];
 
         // -------------- deposit period1  --------------
@@ -402,8 +418,10 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             redeemPeriod: redeemPeriod
         });
 
+        TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(alice);
+
         // deposit
-        uint256 shares = _testDepositOnly(alice, _liquidVault, testParam);
+        uint256 shares = _testDepositOnly(testUsers, _liquidVault, testParam);
 
         // request redeem
         _warpToPeriod(_liquidVault, redeemPeriod - _liquidVault.noticePeriod());
