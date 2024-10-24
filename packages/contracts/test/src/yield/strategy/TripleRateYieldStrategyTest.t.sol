@@ -234,10 +234,10 @@ contract TripleRateYieldStrategyTest is Test {
     /// @dev Performs a years worth of 'reduced' Interest Rate setting.
     function populateOneYearOfReducedRates() private {
         // Set a 'reduced' Interest Rate per Tenor/Maturity Period. We use 3.x% incrementing.
-        uint32 baseInterestRate = 30;
-        for (uint24 i = 0; i <= 365 / context.numPeriodsForFullRate(); ++i) {
-            uint16 period = uint16(context.numPeriodsForFullRate() * i) + 1; // Truncation
-            uint32 interestRate = uint32((baseInterestRate + i) * SCALE) / 10; // Truncation
+        uint256 baseInterestRate = 30;
+        for (uint256 i = 0; i <= 365 / context.numPeriodsForFullRate(); ++i) {
+            uint256 period = context.numPeriodsForFullRate() * i + 1;
+            uint256 interestRate = ((baseInterestRate + i) * SCALE) / 10;
 
             context.setReducedRate(interestRate, period);
         }
