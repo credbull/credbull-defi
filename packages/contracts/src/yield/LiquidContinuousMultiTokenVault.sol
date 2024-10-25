@@ -76,6 +76,7 @@ contract LiquidContinuousMultiTokenVault is
     error LiquidContinuousMultiTokenVault__ControllerMismatch(address sender, address controller);
     error LiquidContinuousMultiTokenVault__AmountMismatch(uint256 amount1, uint256 amount2);
     error LiquidContinuousMultiTokenVault__UnlockPeriodMismatch(uint256 unlockPeriod1, uint256 unlockPeriod2);
+    error LiquidContinuousMultiTokenVault__FractionalSharesNotSupported();
     error LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(
         uint256 componentTokenAmount, uint256 unlockRequestedAmount
     );
@@ -125,7 +126,7 @@ contract LiquidContinuousMultiTokenVault is
         override
         returns (uint256 shares)
     {
-        if (assets < SCALE) return 0; // no shares for fractional principal
+        if (assets < SCALE) revert LiquidContinuousMultiTokenVault__FractionalSharesNotSupported(); // no shares for fractional principal
 
         return assets; // 1 asset = 1 share
     }

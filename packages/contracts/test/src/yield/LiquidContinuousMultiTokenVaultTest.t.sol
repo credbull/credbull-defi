@@ -223,4 +223,16 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         uint256 actualReturns = _liquidVault.convertToAssetsForDepositPeriod(actualShares, 0, _liquidVault.TENOR());
         assertEq(50_416_666666, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
     }
+
+    function test__LiquidContinuousVaultTest__ShouldRevertOnFractionalShareDeposit() public {
+        LiquidContinuousMultiTokenVault liquidVault = _liquidVault;
+        uint256 depositAmount = 1 * _scale - 1;
+        vm.startPrank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__FractionalSharesNotSupported.selector
+            )
+        );
+        liquidVault.deposit(depositAmount, alice);
+    }
 }
