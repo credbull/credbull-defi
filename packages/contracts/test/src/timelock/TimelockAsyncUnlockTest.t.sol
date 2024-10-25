@@ -84,7 +84,7 @@ contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
         (uint256[] memory depositPeriods, uint256[] memory amounts) = _generate1(noOfPeriods);
 
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
-            _lockAmount(alice, depositPeriods[i], amounts[i]);
+            _lockAmountWithAssertion(alice, depositPeriods[i], amounts[i]);
         }
     }
 
@@ -114,7 +114,7 @@ contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
 
         (uint256[] memory depositPeriods, uint256[] memory amounts) = _generate1(noOfPeriods);
 
-        _lockAmountBatch(alice, depositPeriods, amounts);
+        _lockAmountBatchWithAssertion(alice, depositPeriods, amounts);
 
         (uint256[] memory ruDepositPeriods, uint256[] memory ruAmounts) =
             _generateSubArray(depositPeriods, amounts, requestUnlockSeed);
@@ -128,7 +128,7 @@ contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
         vm.assume(noOfPeriods > 0);
 
         (uint256[] memory depositPeriods, uint256[] memory amounts) = _generate1(noOfPeriods);
-        _lockAmountBatch(alice, depositPeriods, amounts);
+        _lockAmountBatchWithAssertion(alice, depositPeriods, amounts);
 
         (uint256[] memory ruDepositPeriods, uint256[] memory ruAmounts) =
             _generateSubArray(depositPeriods, amounts, unlockSeed);
@@ -137,38 +137,40 @@ contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
 
         uint256 unlockPeriod = TimelockAsyncUnlock(asyncUnlock).minUnlockPeriod();
 
-        _setCurrentPeriod(unlockPeriod + periodOffset);
-        _unlock(alice, alice, unlockPeriod);
+        _setCurrentPeriodWithAssertion(unlockPeriod + periodOffset);
+        _unlockWithAssertion(alice, alice, unlockPeriod);
     }
 
-    function _lockAmountBatch(address user, uint256[] memory depositPeriods, uint256[] memory lockAmounts)
+    function _lockAmountBatchWithAssertion(address user, uint256[] memory depositPeriods, uint256[] memory lockAmounts)
         internal
-        virtual
     {
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
-            _lockAmount(user, depositPeriods[i], lockAmounts[i]);
+            _lockAmountWithAssertion(user, depositPeriods[i], lockAmounts[i]);
         }
     }
 
-    function _setCurrentPeriod(uint256 _currentPeriod) internal virtual {
-        SimpleTimelockAsyncUnlockV2(asyncUnlock).setCurrentPeriod(_currentPeriod);
+    function _setCurrentPeriodWithAssertion(uint256 _currentPeriod) internal {
+        _setCurrentPeriod(_currentPeriod);
 
         assertEq(TimelockAsyncUnlock(asyncUnlock).currentPeriod(), _currentPeriod);
+        assertEq(
+            TimelockAsyncUnlock(asyncUnlock).minUnlockPeriod(),
+            _currentPeriod + TimelockAsyncUnlock(asyncUnlock).noticePeriod()
+        );
     }
 
-    function _lockAmount(address user, uint256 depositPeriod, uint256 lockAmount) internal virtual {
+    function _lockAmountWithAssertion(address user, uint256 depositPeriod, uint256 lockAmount) internal {
         TimelockAsyncUnlock asyncUnlockInst = TimelockAsyncUnlock(asyncUnlock);
         uint256 prevLockedAmount = asyncUnlockInst.lockedAmount(user, depositPeriod);
         uint256 prevMaxRequestUnlock = asyncUnlockInst.maxRequestUnlock(user, depositPeriod);
 
-        vm.prank(user);
-        SimpleTimelockAsyncUnlockV2(asyncUnlock).deposit(user, depositPeriod, lockAmount);
+        _lockAmount(user, depositPeriod, lockAmount);
 
         assertEq(prevLockedAmount + lockAmount, asyncUnlockInst.lockedAmount(user, depositPeriod));
         assertEq(prevMaxRequestUnlock + lockAmount, asyncUnlockInst.maxRequestUnlock(user, depositPeriod));
     }
 
-    function _unlock(address caller, address user, uint256 requestId) internal virtual {
+    function _unlockWithAssertion(address caller, address user, uint256 requestId) internal {
         TimelockAsyncUnlock asyncUnlockInst = TimelockAsyncUnlock(asyncUnlock);
         bool failed;
 
@@ -217,8 +219,8 @@ contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
                 }
             }
         }
-        vm.prank(caller);
-        asyncUnlockInst.unlock(user, requestId);
+
+        _unlock(caller, user, requestId);
 
         // in the case of success
         if (!failed) {
@@ -321,6 +323,7 @@ contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
         }
     }
 
+    // Need to Override in Child contracts
     function _deployTimelockAsyncUnlock(uint256 noticePeriod_) internal virtual returns (address) {
         IERC5679Ext1155 deposits = new ERC1155MintableBurnable();
 
@@ -336,6 +339,20 @@ contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
         );
 
         return address(asyncUnlockInst);
+    }
+
+    function _lockAmount(address user, uint256 depositPeriod, uint256 lockAmount) internal virtual {
+        vm.prank(user);
+        SimpleTimelockAsyncUnlockV2(asyncUnlock).deposit(user, depositPeriod, lockAmount);
+    }
+
+    function _unlock(address caller, address user, uint256 requestId) internal virtual {
+        vm.prank(caller);
+        SimpleTimelockAsyncUnlockV2(asyncUnlock).unlock(user, requestId);
+    }
+
+    function _setCurrentPeriod(uint256 _currentPeriod) internal virtual {
+        SimpleTimelockAsyncUnlockV2(asyncUnlock).setCurrentPeriod(_currentPeriod);
     }
 
     // util functions
