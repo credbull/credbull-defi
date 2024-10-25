@@ -9,7 +9,28 @@ import { IERC5679Ext1155 } from "@credbull/token/ERC1155/IERC5679Ext1155.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-contract TimelockAsyncUnlockV2Test is Test {
+contract TimelockAsyncUnlockBase {
+    uint256 public constant MAX_COUNT = 10;
+    uint256 public constant INITIAL_AMOUNT = 250000;
+
+    function _generate1(uint256 length) internal pure returns (uint256[] memory, uint256[] memory) {
+        length = length % MAX_COUNT;
+
+        uint256[] memory depositPeriods = new uint256[](length);
+        uint256[] memory amounts = new uint256[](length);
+
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            depositPeriods[i] = i + 1;
+            amounts[i] = i % 2 == 0
+                ? (INITIAL_AMOUNT > (1000 * i) ? INITIAL_AMOUNT - (1000 * i) : 0)
+                : INITIAL_AMOUNT + (1000 * i);
+        }
+
+        return (depositPeriods, amounts);
+    }
+}
+
+contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
     /**
      * @dev Allows flexibility by not defining a specific instance.
      *      This enables the use of any contract instance derived from `TimelockAsyncUnlock`,
@@ -26,25 +47,33 @@ contract TimelockAsyncUnlockV2Test is Test {
         asyncUnlock = _deployTimelockAsyncUnlock(noticePeriod);
     }
 
-    // Unit Test
-    function testFuzz__TimelockAsyncUnlock__LockAmount(uint256 depositPeriod, uint256 lockAmount) public {
-        _lockAmount(alice, depositPeriod, lockAmount);
-        _lockAmount(bob, depositPeriod, lockAmount);
+    function testFuzz__TimelockAsyncUnlock__LockAmount(address account, uint256 noOfPeriods) public {
+        vm.assume(noOfPeriods > 0);
+        vm.assume(account != address(0));
+
+        (uint256[] memory depositPeriods, uint256[] memory amounts) = _generate1(noOfPeriods);
+
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            _lockAmount(account, depositPeriods[i], amounts[i]);
+        }
     }
 
     function test__TimelockAsyncUnlock__RequestUnlockInvalidArrayLength() public {
+        // ======== generate depositPeriods and amounts ========
         uint256[] memory depositPeriods = new uint256[](2);
         depositPeriods[0] = 0;
         depositPeriods[1] = 1;
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = 1000;
+        // ============ end =============
 
         // depositPeriods length and amounts length are different, expect revert
         _requestUnlock(alice, alice, depositPeriods, amounts);
     }
 
     function test__TimelockAsyncUnlock__RequestUnlockAuthorizeCallerFailed() public {
+        // ======== generate depositPeriods and amounts ========
         uint256[] memory depositPeriods = new uint256[](2);
         depositPeriods[0] = 0;
         depositPeriods[1] = 1;
@@ -52,6 +81,7 @@ contract TimelockAsyncUnlockV2Test is Test {
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = 1000;
         amounts[1] = 1000;
+        // ============ end =============
 
         // Caller(alice) and owner(bob) are different, expect revert
         _requestUnlock(alice, bob, depositPeriods, amounts);
