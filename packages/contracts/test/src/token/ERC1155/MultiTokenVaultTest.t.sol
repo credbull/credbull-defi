@@ -25,7 +25,6 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     TestParamSet.TestParam internal _testParams1;
     TestParamSet.TestParam internal _testParams2;
     TestParamSet.TestParam internal _testParams3;
-    TestParamSet.TestParam internal _testParamsMax;
 
     function setUp() public virtual {
         vm.prank(_owner);
@@ -37,7 +36,6 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         _testParams1 = TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 });
         _testParams2 = TestParamSet.TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 });
         _testParams3 = TestParamSet.TestParam({ principal: 700 * _scale, depositPeriod: 30, redeemPeriod: 55 });
-        _testParamsMax = TestParamSet.TestParam({ principal: type(uint256).max, depositPeriod: 1, redeemPeriod: 31 });
     }
 
     function test__MultiTokenVaulTest__SimpleDeposit() public {
@@ -65,41 +63,6 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
         testVaultAtOffsets(_alice, vault, _testParams1);
     }
-
-    // function test__MultiTokenVaulTest__MaxDeposit() public {
-    //     uint256 assetToSharesRatio = 2;
-
-    //     IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-
-    //     address vaultAddress = address(vault);
-
-    //     assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance to start");
-    //     assertEq(0, _asset.balanceOf(vaultAddress), "vault shouldn't have a balance to start");
-
-    //     vm.startPrank(_alice);
-    //     _asset.approve(vaultAddress, _testParamsMax.principal);
-
-    //     assertEq(_testParamsMax.principal, _asset.allowance(_alice, vaultAddress), "vault should have allowance");
-    //     vm.stopPrank();
-
-    //     vm.startPrank(_alice);
-    //     vm.expectRevert(
-    //         abi.encodeWithSelector(
-    //             MultiTokenVault.MultiTokenVault__ExceededMaxDeposit.selector,
-    //             _alice,
-    //             _testParamsMax.depositPeriod,
-    //             _testParamsMax.principal,
-    //             type(uint256).max
-    //         )
-    //     );
-    //     vault.deposit(_testParamsMax.principal, _alice);
-    //     vm.stopPrank();
-
-    //     // assertEq(_testParams1.principal, _asset.balanceOf(vaultAddress), "vault should have the asset");
-    //     // assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance after deposit");
-
-    //     // testVaultAtOffsets(_alice, vault, _testParams1);
-    // }
 
     function test__MultiTokenVaulTest__DepositAndRedeem() public {
         uint256 assetToSharesRatio = 3;
