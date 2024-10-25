@@ -181,6 +181,10 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
     {
         _authorizeCaller(_msgSender(), owner);
 
+        if (requestId > currentPeriod()) {
+            revert TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(_msgSender(), owner, currentPeriod(), requestId);
+        }
+
         // use copy of the depositPeriods and amounts.  we will be altering the storage in _unlock()
         (depositPeriods, amounts) = unlockRequests(owner, requestId);
 
@@ -200,7 +204,9 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         internal
         virtual
     {
-        _handleUnlockValidation(owner, depositPeriod, requestId);
+        if (requestId < depositPeriod) {
+            revert TimelockAsyncUnlock__UnlockBeforeDepositPeriod(_msgSender(), owner, depositPeriod, requestId);
+        }
 
         EnumerableMap.UintToUintMap storage unlockRequestsForRequestId = _unlockRequests[owner][requestId];
 
@@ -266,19 +272,6 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
     function _authorizeCaller(address caller, address owner) internal virtual {
         if (caller != owner) {
             revert TimelockAsyncUnlock__AuthorizeCallerFailed(caller, owner);
-        }
-    }
-
-    /**
-     * @dev An internal function to check if unlock can be performed
-     */
-    function _handleUnlockValidation(address owner, uint256 depositPeriod, uint256 unlockPeriod) internal virtual {
-        if (unlockPeriod > currentPeriod()) {
-            revert TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(_msgSender(), owner, currentPeriod(), unlockPeriod);
-        }
-
-        if (unlockPeriod < depositPeriod) {
-            revert TimelockAsyncUnlock__UnlockBeforeDepositPeriod(_msgSender(), owner, depositPeriod, unlockPeriod);
         }
     }
 
