@@ -38,7 +38,7 @@ contract TimelockAsyncUnlockBase {
         uint256[] memory amounts,
         uint256 randomSeed,
         bool useLargerAmount
-    ) private pure returns (uint256[] memory, uint256[] memory) {
+    ) internal pure returns (uint256[] memory, uint256[] memory) {
         uint256 subArrayLength = (randomSeed % depositPeriods.length) + 1;
 
         uint256[] memory subDepositPeriods = new uint256[](subArrayLength);
