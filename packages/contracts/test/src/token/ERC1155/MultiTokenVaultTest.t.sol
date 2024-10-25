@@ -25,6 +25,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     TestParamSet.TestParam internal _testParams1;
     TestParamSet.TestParam internal _testParams2;
     TestParamSet.TestParam internal _testParams3;
+    TestParamSet.TestParam internal _testParamsMax;
 
     function setUp() public virtual {
         vm.prank(_owner);
@@ -36,6 +37,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         _testParams1 = TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 });
         _testParams2 = TestParamSet.TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 });
         _testParams3 = TestParamSet.TestParam({ principal: 700 * _scale, depositPeriod: 30, redeemPeriod: 55 });
+        _testParamsMax = TestParamSet.TestParam({ principal: type(uint256).max, depositPeriod: 1, redeemPeriod: 31 });
     }
 
     function test__MultiTokenVaulTest__SimpleDeposit() public {
@@ -63,6 +65,41 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
 
         testVaultAtOffsets(_alice, vault, _testParams1);
     }
+
+    // function test__MultiTokenVaulTest__MaxDeposit() public {
+    //     uint256 assetToSharesRatio = 2;
+
+    //     IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
+    //     address vaultAddress = address(vault);
+
+    //     assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance to start");
+    //     assertEq(0, _asset.balanceOf(vaultAddress), "vault shouldn't have a balance to start");
+
+    //     vm.startPrank(_alice);
+    //     _asset.approve(vaultAddress, _testParamsMax.principal);
+
+    //     assertEq(_testParamsMax.principal, _asset.allowance(_alice, vaultAddress), "vault should have allowance");
+    //     vm.stopPrank();
+
+    //     vm.startPrank(_alice);
+    //     vm.expectRevert(
+    //         abi.encodeWithSelector(
+    //             MultiTokenVault.MultiTokenVault__ExceededMaxDeposit.selector,
+    //             _alice,
+    //             _testParamsMax.depositPeriod,
+    //             _testParamsMax.principal,
+    //             type(uint256).max
+    //         )
+    //     );
+    //     vault.deposit(_testParamsMax.principal, _alice);
+    //     vm.stopPrank();
+
+    //     // assertEq(_testParams1.principal, _asset.balanceOf(vaultAddress), "vault should have the asset");
+    //     // assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance after deposit");
+
+    //     // testVaultAtOffsets(_alice, vault, _testParams1);
+    // }
 
     function test__MultiTokenVaulTest__DepositAndRedeem() public {
         uint256 assetToSharesRatio = 3;
@@ -238,6 +275,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         uint256 redeemPeriod = 2001;
 
         TestParamSet.TestParam[] memory _batchTestParams = new TestParamSet.TestParam[](3);
+        TestParamSet.TestParam[] memory _batchTestParamsToRevert = new TestParamSet.TestParam[](2);
 
         _batchTestParams[0] =
             TestParamSet.TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: redeemPeriod });
@@ -246,14 +284,29 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         _batchTestParams[2] =
             TestParamSet.TestParam({ principal: 3003 * _scale, depositPeriod: 303, redeemPeriod: redeemPeriod });
 
+        _batchTestParamsToRevert[0] =
+            TestParamSet.TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: redeemPeriod });
+        _batchTestParamsToRevert[1] =
+            TestParamSet.TestParam({ principal: 2002 * _scale, depositPeriod: 202, redeemPeriod: redeemPeriod });
+
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
         TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
 
         uint256[] memory shares = _testDepositOnly(testUsers, vault, _batchTestParams);
         uint256[] memory depositPeriods = _batchTestParams.depositPeriods();
+        uint256[] memory depositPeriodsToRevert = _batchTestParamsToRevert.depositPeriods();
 
         // ------------------------ batch convert to assets ------------------------
         uint256[] memory assets = vault.convertToAssetsForDepositPeriodBatch(shares, depositPeriods, redeemPeriod);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MultiTokenVault.MultiTokenVault__InvalidArrayLength.selector,
+                depositPeriodsToRevert.length,
+                shares.length
+            )
+        );
+        vault.convertToAssetsForDepositPeriodBatch(shares, depositPeriodsToRevert, redeemPeriod);
 
         assertEq(3, assets.length, "assets are wrong length");
         assertEq(
@@ -284,6 +337,172 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         vault.safeBatchTransferFrom(_alice, _charlie, depositPeriods, aliceBalances, "");
 
         _testBalanceOfBatch(_charlie, vault, _batchTestParams, assetToSharesRatio); // verify bob
+    }
+
+    function test__MultiTokenVaulTest__SafeTransferFrom() public {
+        uint256 assetToSharesRatio = 2;
+
+        TestParamSet.TestParam memory testParams =
+            TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: 10 });
+
+        // Step 1: Create and set up the vault
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
+        // Step 2: Deposit some assets for _alice to receive shares
+        vm.startPrank(_alice);
+        _asset.approve(address(vault), testParams.principal);
+        uint256 shares = vault.deposit(testParams.principal, _alice);
+        vm.stopPrank();
+
+        // Verify _alice has received the shares
+        assertEq(
+            vault.balanceOf(_alice, testParams.depositPeriod), shares, "_alice should have the shares after deposit"
+        );
+
+        // Step 3: Perform the safe transfer from _alice to _bob
+        vm.startPrank(_alice);
+        vault.safeTransferFrom(_alice, _bob, testParams.depositPeriod, shares, "");
+        vm.stopPrank();
+
+        // Step 4: Verify the transfer was successful
+        assertEq(vault.balanceOf(_alice, testParams.depositPeriod), 0, "_alice should have no shares after transfer");
+        assertEq(vault.balanceOf(_bob, testParams.depositPeriod), shares, "_bob should have the transferred shares");
+    }
+
+    function test__MultiTokenVaulTest__ConvertToSharesForDepositPeriod() public {
+        // Assuming the asset to shares ratio is set to a fixed value for testing.
+        uint256 assetToSharesRatio = 2;
+        uint256 depositPeriod = 1;
+
+        // Step 1: Create and initialize the vault with a dummy asset
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
+        // Typical Case: Convert a positive asset amount to shares
+        uint256 assets = 500 * _scale;
+        uint256 expectedShares = assets / assetToSharesRatio;
+        uint256 shares = vault.convertToSharesForDepositPeriod(assets, depositPeriod);
+        assertEq(shares, expectedShares, "Conversion to shares did not match expected value");
+
+        // Edge Case: Convert zero assets to shares
+        assets = 0;
+        expectedShares = 0;
+        shares = vault.convertToSharesForDepositPeriod(assets, depositPeriod);
+        assertEq(shares, expectedShares, "Conversion of zero assets to shares failed");
+
+        // Edge Case: Convert maximum assets to shares
+        assets = type(uint256).max;
+        expectedShares = assets / assetToSharesRatio;
+        shares = vault.convertToSharesForDepositPeriod(assets, depositPeriod);
+        assertEq(shares, expectedShares, "Conversion of max assets to shares failed");
+    }
+
+    function test__MultiTokenVaulTest__ConvertToAssetsForDepositPeriod() public {
+        uint256 assetToSharesRatio = 2;
+
+        TestParamSet.TestParam memory testParams =
+            TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 0, redeemPeriod: 30 });
+
+        // Step 1: Create and initialize the vault with a dummy asset
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
+        // Typical Case: Convert a positive share amount to assets
+        uint256 shares = testParams.principal / assetToSharesRatio;
+        uint256 expectedAssets = shares * assetToSharesRatio + _expectedReturns(shares, vault, testParams);
+        uint256 assets =
+            vault.convertToAssetsForDepositPeriod(shares, testParams.depositPeriod, testParams.redeemPeriod);
+        assertEq(assets, expectedAssets, "Conversion to assets did not match expected value");
+
+        // Edge Case: Convert zero shares to assets
+        shares = 0;
+        expectedAssets = 0;
+        assets = vault.convertToAssetsForDepositPeriod(shares, testParams.depositPeriod, testParams.redeemPeriod);
+        assertEq(assets, expectedAssets, "Conversion of zero shares to assets failed");
+
+        // Edge Case: Convert maximum shares to assets
+        testParams =
+            TestParamSet.TestParam({ principal: type(uint128).max * _scale, depositPeriod: 0, redeemPeriod: 30 });
+        shares = testParams.principal / assetToSharesRatio;
+        expectedAssets = shares * assetToSharesRatio + _expectedReturns(shares, vault, testParams);
+        assets = vault.convertToAssetsForDepositPeriod(shares, testParams.depositPeriod, testParams.redeemPeriod);
+        assertEq(assets, expectedAssets, "Conversion of max shares to assets failed");
+    }
+
+    function test__MultiTokenVaulTest__PreviewDeposit() public {
+        uint256 assetToSharesRatio = 2;
+
+        TestParamSet.TestParam memory testParams =
+            TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 0, redeemPeriod: 30 });
+
+        uint256 expectedShares = testParams.principal / assetToSharesRatio;
+
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
+        uint256 shares = vault.previewDeposit(testParams.principal);
+        assertEq(shares, expectedShares, "Preview deposit conversion did not match expected value");
+    }
+
+    function test__MultiTokenVaulTest__PreviewRedeemForDepositPeriod() public {
+        uint256 assetToSharesRatio = 2;
+
+        TestParamSet.TestParam memory testParams =
+            TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 0, redeemPeriod: 30 });
+
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
+        uint256 shares = testParams.principal / assetToSharesRatio;
+        uint256 expectedAssets = shares * assetToSharesRatio + _expectedReturns(shares, vault, testParams);
+
+        uint256 assets = vault.previewRedeemForDepositPeriod(shares, testParams.depositPeriod);
+        assertEq(assets, expectedAssets, "Preview redeem conversion did not match expected value");
+    }
+
+    function test__MultiTokenVaulTest__IsApprovedForAll() public {
+        address operator = makeAddr("operator");
+        uint256 assetToSharesRatio = 2;
+
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
+        // Set approval
+        vm.prank(_alice);
+        vault.setApprovalForAll(operator, true);
+
+        // Check if the operator is approved
+        bool isApproved = vault.isApprovedForAll(_alice, operator);
+        assertEq(isApproved, true, "Operator should be approved");
+
+        // Revoke approval and check
+        vm.prank(_alice);
+        vault.setApprovalForAll(operator, false);
+        isApproved = vault.isApprovedForAll(_alice, operator);
+        assertEq(isApproved, false, "Operator should not be approved");
+    }
+
+    function test__MultiTokenVaulTest__MaxDeposit() public {
+        uint256 assetToSharesRatio = 2;
+
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
+        uint256 maxDepositValue = vault.maxDeposit(_alice);
+        assertEq(maxDepositValue, type(uint256).max, "Max deposit should be uint256 max");
+    }
+
+    function test__MultiTokenVaulTest__MaxRedeemAtPeriod() public {
+        uint256 assetToSharesRatio = 2;
+
+        TestParamSet.TestParam memory testParams =
+            TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 0, redeemPeriod: 30 });
+
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+
+        // Alice deposits assets and receives shares
+        vm.startPrank(_alice);
+        _asset.approve(address(vault), testParams.principal);
+        uint256 shares = vault.deposit(testParams.principal, _alice);
+        vm.stopPrank();
+
+        // Check max redeemable shares for the deposit period
+        uint256 maxShares = vault.maxRedeemAtPeriod(_alice, testParams.depositPeriod); // Assuming deposit period = 1
+        assertEq(maxShares, shares, "Max redeemable shares did not match the deposited shares");
     }
 
     function _testBalanceOfBatch(
