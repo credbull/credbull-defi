@@ -13,7 +13,7 @@ contract TimelockAsyncUnlockBase {
     uint256 public constant MAX_COUNT = 10;
     uint256 public constant INITIAL_AMOUNT = 250000;
 
-    function _generate1(uint256 length) internal pure returns (uint256[] memory, uint256[] memory) {
+    function _generate1(uint256 length) internal pure returns (uint256[] memory, uint256[] memory, uint256) {
         length = length % MAX_COUNT + 1;
 
         uint256[] memory depositPeriods = new uint256[](length);
@@ -26,7 +26,7 @@ contract TimelockAsyncUnlockBase {
                 : INITIAL_AMOUNT + (1000 * i);
         }
 
-        return (depositPeriods, amounts);
+        return (depositPeriods, amounts, depositPeriods.length);
     }
 
     function _generateSubArray(uint256[] memory depositPeriods, uint256[] memory amounts, uint256 randomSeed)
@@ -78,11 +78,11 @@ contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
         asyncUnlock = _deployTimelockAsyncUnlock(noticePeriod);
     }
 
-    // Unit Test
+    // ==================== Unit Test/Fuzzing Test ====================
     function testFuzz__TimelockAsyncUnlock__LockAmount(uint256 noOfPeriods) public {
         vm.assume(noOfPeriods > 0);
 
-        (uint256[] memory depositPeriods, uint256[] memory amounts) = _generate1(noOfPeriods);
+        (uint256[] memory depositPeriods, uint256[] memory amounts,) = _generate1(noOfPeriods);
 
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
             _lockAmountWithAssertion(alice, depositPeriods[i], amounts[i]);
@@ -104,7 +104,7 @@ contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
     function testFuzz__TimelockAsyncUnlock__RequestUnlock__AuthorizeCallerFailed(address caller) public {
         vm.assume(caller != address(0) && caller != alice);
 
-        (uint256[] memory depositPeriods, uint256[] memory amounts) = _generate1(2);
+        (uint256[] memory depositPeriods, uint256[] memory amounts,) = _generate1(2);
 
         // caller and owner(alice) are different, expect revert
         _requestUnlock(caller, alice, depositPeriods, amounts);
@@ -113,7 +113,7 @@ contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
     function testFuzz__TimelockAsyncUnlock__RequestUnlock(uint256 noOfPeriods, uint256 requestUnlockSeed) public {
         vm.assume(noOfPeriods > 0);
 
-        (uint256[] memory depositPeriods, uint256[] memory amounts) = _generate1(noOfPeriods);
+        (uint256[] memory depositPeriods, uint256[] memory amounts,) = _generate1(noOfPeriods);
 
         _lockAmountBatchWithAssertion(alice, depositPeriods, amounts);
 
@@ -137,7 +137,7 @@ contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
         uint256 periodOffset
     ) public {
         vm.assume(noOfPeriods > 0);
-        (uint256[] memory depositPeriods, uint256[] memory amounts) = _generate1(noOfPeriods);
+        (uint256[] memory depositPeriods, uint256[] memory amounts,) = _generate1(noOfPeriods);
         _lockAmountBatchWithAssertion(alice, depositPeriods, amounts);
         (uint256[] memory ruDepositPeriods, uint256[] memory ruAmounts) =
             _generateSubArray(depositPeriods, amounts, unlockSeed);
@@ -150,12 +150,36 @@ contract TimelockAsyncUnlockTest is Test, TimelockAsyncUnlockBase {
         _unlockWithAssertion(alice, alice, unlockPeriod);
     }
 
+    function testFuzz__TimelockAsyncUnlock__Unlock__UnlockBeforeDepositPeriod(uint256 noOfPeriods, uint256 unlockSeed)
+        public
+    {
+        vm.assume(noOfPeriods > 0);
+
+        (uint256[] memory depositPeriods, uint256[] memory amounts,) = _generate1(noOfPeriods);
+        _lockAmountBatchWithAssertion(alice, depositPeriods, amounts);
+
+        (uint256[] memory ruDepositPeriods, uint256[] memory ruAmounts) =
+            _generateSubArray(depositPeriods, amounts, unlockSeed);
+
+        _requestUnlock(alice, alice, ruDepositPeriods, ruAmounts);
+
+        uint256 unlockPeriod = TimelockAsyncUnlock(asyncUnlock).minUnlockPeriod();
+
+        _setCurrentPeriodWithAssertion(unlockPeriod);
+
+        _unlockWithAssertion(alice, alice, unlockPeriod);
+    }
+
     function testFuzz__TimelockAsyncUnlock__Unlock(uint256 noOfPeriods, uint256 unlockSeed, uint8 periodOffset)
         public
     {
         vm.assume(noOfPeriods > 0);
 
-        (uint256[] memory depositPeriods, uint256[] memory amounts) = _generate1(noOfPeriods);
+        (uint256[] memory depositPeriods, uint256[] memory amounts, uint256 maxDepositPeriod) = _generate1(noOfPeriods);
+
+        // Need to put it into modifier
+        _setCurrentPeriodWithAssertion(maxDepositPeriod);
+        //
         _lockAmountBatchWithAssertion(alice, depositPeriods, amounts);
 
         (uint256[] memory ruDepositPeriods, uint256[] memory ruAmounts) =
