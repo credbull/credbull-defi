@@ -110,7 +110,7 @@ contract DeployStakingVaults is Script {
     //@dev - see https://www.epochconverter.com/batch#results
     function _logWindowTimestamps(WindowPlugin.Window memory depositWindow, WindowPlugin.Window memory redemptionWindow)
         internal
-        view
+        pure
     {
         console2.log("===============================================================");
         console2.log("Vault windows: depositStart, depositEnd, redeemStart, redeemEnd");
