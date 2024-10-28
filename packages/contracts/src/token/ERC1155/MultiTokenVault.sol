@@ -41,6 +41,7 @@ abstract contract MultiTokenVault is
     error MultiTokenVault__CallerMissingApprovalForAll(address operator, address owner);
     error MultiTokenVault__RedeemBeforeDeposit(address owner, uint256 depositPeriod, uint256 redeemPeriod);
     error MultiTokenVault__InvalidArrayLength(uint256 depositPeriodsLength, uint256 sharesLength);
+    error MultiTokenVault__FractionalSharesNotAllowed();
 
     constructor() {
         _disableInitializers();
@@ -76,6 +77,10 @@ abstract contract MultiTokenVault is
         }
 
         shares = previewDeposit(assets);
+
+        if (shares == 0) {
+            revert MultiTokenVault__FractionalSharesNotAllowed();
+        }
 
         _deposit(_msgSender(), receiver, depositPeriod, assets, shares);
     }

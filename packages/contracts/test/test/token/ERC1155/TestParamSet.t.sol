@@ -44,6 +44,24 @@ library TestParamSet {
         return testParamsWithOffsets;
     }
 
+    // Generate and add multiple testParams with offsets
+    function toLoadSet(uint256 principal, uint256 fromPeriod, uint256 toPeriod)
+        internal
+        pure
+        returns (TestParam[] memory loadTestParams_)
+    {
+        TestParam[] memory loadTestParams = new TestParam[](toPeriod - fromPeriod);
+
+        uint256 arrayIndex = 0;
+        for (uint256 i = fromPeriod; i < toPeriod; ++i) {
+            loadTestParams[arrayIndex] =
+                TestParamSet.TestParam({ principal: principal, depositPeriod: i, redeemPeriod: toPeriod });
+            arrayIndex++;
+        }
+
+        return loadTestParams;
+    }
+
     // simple scenario with only one user
     function toSingletonUsers(address account) internal pure returns (TestUsers memory testUsers_) {
         TestUsers memory testUsers = TestUsers({

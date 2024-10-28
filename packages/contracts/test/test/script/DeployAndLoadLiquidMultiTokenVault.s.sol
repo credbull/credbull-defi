@@ -118,7 +118,7 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
             vm.startBroadcast(userWallet.key());
 
             // --------------------- deposits ---------------------
-            uint256 depositAmount = baseDepositAmount * vault.currentPeriod();
+            uint256 depositAmount = baseDepositAmount * (vault.currentPeriod() + 1);
             asset.approve(address(vault), depositAmount);
             vault.deposit(depositAmount, userWallet.addr());
             totalUserDeposits += depositAmount;
