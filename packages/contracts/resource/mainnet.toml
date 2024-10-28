@@ -20,9 +20,9 @@ asset_manager = "0x1DA51e4Ab5D029034Db2caB258EC4e22Be647BFB"
 # primevault Wallet [0xce..3FB2] "Credbull DeFi Vault - Treasury v1.0"
 custodian = "0xce694E94e1Ddb734f2bD32B2511D193fF2783FB2"
 # CBL token address
-cbl_token=""
+cbl_token="0xD6b3d81868770083307840F513A3491960b95cb6"
 # USDC token address
-usdc_token=""
+usdc_token="0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
 
 
 [evm.contracts.liquid_continuous_multi_token_vault]
