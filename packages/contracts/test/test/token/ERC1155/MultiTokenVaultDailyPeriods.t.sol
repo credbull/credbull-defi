@@ -10,7 +10,6 @@ contract MultiTokenVaultDailyPeriods is Initializable, UUPSUpgradeable, MultiTok
     uint256 internal ASSET_TO_SHARES_RATIO;
     uint256 internal YIELD_PERCENTAGE;
     uint256 private _currentPeriod;
-    uint256 public constant SCALE = 1e6;
     uint256 private _maxDeposit;
 
     function initialize(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage) public initializer {
