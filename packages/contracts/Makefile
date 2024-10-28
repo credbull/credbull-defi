@@ -3,6 +3,8 @@
 #	directory and our deployment scripts depend on this, it seems unnecessary to change this now.
 -include .env
 
+DEPLOY_SCRIPT ?= script/DeployVaultFactory.s.sol:DeployVaultFactory
+
 build:; forge build
 
 anvil: anvil
@@ -10,7 +12,6 @@ anvil: anvil
 deploy-local:
 	$(MAKE) deploy RPC_URL=localhost EXTRA_FLAGS=
 
-# TODO: change this to use the network config from foundry.toml
 deploy-arbSepolia:
 	$(MAKE) deploy RPC_URL=arbitrumSepolia EXTRA_FLAGS="--verify --slow"
 
@@ -20,24 +21,35 @@ resume-arbSepolia:
 deploy-baseSepolia:
 	$(MAKE) deploy RPC_URL=baseSepolia EXTRA_FLAGS="--verify --slow"
 
+# From https://docs.plumenetwork.xyz/plume/deploying-on-plume/deploy-with-foundry
+# Foundry has a bug with gas estimation on L2s (https://github.com/foundry-rs/foundry/issues/6542).  To work-around:
+# in foundry.toml set the `evm_version = "cancun"`
+# forge script includes `--legacy --skip-simulation`
+deploy-plumeTestnet:
+	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://test-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow"
+
+resume-plumeTestnet:
+	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://test-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow --resume"
+
+deploy-arbitrum:
+	$(MAKE) deploy RPC_URL=arbitrum EXTRA_FLAGS="--verify --slow"
+
+resume-arbitrum:
+	$(MAKE) deploy RPC_URL=arbitrum EXTRA_FLAGS="--verify --slow --resume"
+
 # NOTE (JL,2024-05-20): `forge` auto-includes any `.env` file in the invocation directory.
 deploy:
 	@echo "Running deploy '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	@rm -rf out && \
-	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) -vvvv && \
+	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) --non-interactive -vvv && \
 	yarn gen-types && \
 	yarn db-export
-
-# TODO: add --verifier flag.  forge isn't happy --etherscan-api-key is empty.
-deploy-bitlayerTestnet:
-	$(MAKE) deploy RPC_URL="https://testnet-rpc.bitlayer.org" \
-	EXTRA_FLAGS='--etherscan-api-key "" --verifier-url "https://testnet-scan.bitlayer.org" --legacy --slow'
 
 verify:
 	@echo "Running verify '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
 	rm -rf out && \
-	forge script script/DeployVaultFactory.s.sol:DeployVaultFactory --rpc-url $(RPC_URL) \
-		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume -vvvv && \
+	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) \
+		--private-key $(DEPLOYER_PRIVATE_KEY) --verify --resume --non-interactive -vvv && \
 	yarn gen-types && \
 	yarn db-export
