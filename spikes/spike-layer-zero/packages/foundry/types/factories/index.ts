@@ -9,6 +9,7 @@ export * as deploySimpleOftSSol from "./DeploySimpleOFT.s.sol";
 export * as ierc721Sol from "./IERC721.sol";
 export * as stdStorageSol from "./StdStorage.sol";
 export * as vmSol from "./Vm.sol";
+export * as lzMoneyTransferSol from "./_LZMoneyTransfer.sol";
 export * as draftIerc6093Sol from "./draft-IERC6093.sol";
 export { BaseOFTV2__factory } from "./BaseOFTV2__factory";
 export { ERC165__factory } from "./ERC165__factory";

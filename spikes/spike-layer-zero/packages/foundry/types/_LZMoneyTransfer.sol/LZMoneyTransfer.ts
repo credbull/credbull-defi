@@ -25,12 +25,13 @@ import type {
   TypedEvent,
   TypedListener,
   OnEvent,
-} from "./common";
+} from "../common";
 
 export interface LZMoneyTransferInterface extends utils.Interface {
   functions: {
     "DEFAULT_PAYLOAD_SIZE_LIMIT()": FunctionFragment;
-    "deployer()": FunctionFragment;
+    "destChainId()": FunctionFragment;
+    "endpoint()": FunctionFragment;
     "failedMessages(uint16,bytes,uint64)": FunctionFragment;
     "forceResumeReceive(uint16,bytes)": FunctionFragment;
     "getConfig(uint16,uint16,address,uint256)": FunctionFragment;
@@ -45,7 +46,7 @@ export interface LZMoneyTransferInterface extends utils.Interface {
     "precrime()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "retryMessage(uint16,bytes,uint64,bytes)": FunctionFragment;
-    "sendETH(uint16)": FunctionFragment;
+    "sendTokens(address)": FunctionFragment;
     "setConfig(uint16,uint16,uint256,bytes)": FunctionFragment;
     "setMinDstGas(uint16,uint16,uint256)": FunctionFragment;
     "setPayloadSizeLimit(uint16,uint256)": FunctionFragment;
@@ -62,7 +63,8 @@ export interface LZMoneyTransferInterface extends utils.Interface {
   getFunction(
     nameOrSignatureOrTopic:
       | "DEFAULT_PAYLOAD_SIZE_LIMIT"
-      | "deployer"
+      | "destChainId"
+      | "endpoint"
       | "failedMessages"
       | "forceResumeReceive"
       | "getConfig"
@@ -77,7 +79,7 @@ export interface LZMoneyTransferInterface extends utils.Interface {
       | "precrime"
       | "renounceOwnership"
       | "retryMessage"
-      | "sendETH"
+      | "sendTokens"
       | "setConfig"
       | "setMinDstGas"
       | "setPayloadSizeLimit"
@@ -95,7 +97,11 @@ export interface LZMoneyTransferInterface extends utils.Interface {
     functionFragment: "DEFAULT_PAYLOAD_SIZE_LIMIT",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "deployer", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "destChainId",
+    values?: undefined
+  ): string;
+  encodeFunctionData(functionFragment: "endpoint", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "failedMessages",
     values: [BigNumberish, BytesLike, BigNumberish]
@@ -146,10 +152,7 @@ export interface LZMoneyTransferInterface extends utils.Interface {
     functionFragment: "retryMessage",
     values: [BigNumberish, BytesLike, BigNumberish, BytesLike]
   ): string;
-  encodeFunctionData(
-    functionFragment: "sendETH",
-    values: [BigNumberish]
-  ): string;
+  encodeFunctionData(functionFragment: "sendTokens", values: [string]): string;
   encodeFunctionData(
     functionFragment: "setConfig",
     values: [BigNumberish, BigNumberish, BigNumberish, BytesLike]
@@ -196,7 +199,11 @@ export interface LZMoneyTransferInterface extends utils.Interface {
     functionFragment: "DEFAULT_PAYLOAD_SIZE_LIMIT",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "deployer", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "destChainId",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "endpoint", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "failedMessages",
     data: BytesLike
@@ -238,7 +245,7 @@ export interface LZMoneyTransferInterface extends utils.Interface {
     functionFragment: "retryMessage",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "sendETH", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "sendTokens", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "setConfig", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setMinDstGas",
@@ -412,7 +419,9 @@ export interface LZMoneyTransfer extends BaseContract {
   functions: {
     DEFAULT_PAYLOAD_SIZE_LIMIT(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    deployer(overrides?: CallOverrides): Promise<[string]>;
+    destChainId(overrides?: CallOverrides): Promise<[number]>;
+
+    endpoint(overrides?: CallOverrides): Promise<[string]>;
 
     failedMessages(
       arg0: BigNumberish,
@@ -491,8 +500,8 @@ export interface LZMoneyTransfer extends BaseContract {
       overrides?: PayableOverrides & { from?: string }
     ): Promise<ContractTransaction>;
 
-    sendETH(
-      _dstChainId: BigNumberish,
+    sendTokens(
+      _toAddress: string,
       overrides?: PayableOverrides & { from?: string }
     ): Promise<ContractTransaction>;
 
@@ -561,7 +570,9 @@ export interface LZMoneyTransfer extends BaseContract {
 
   DEFAULT_PAYLOAD_SIZE_LIMIT(overrides?: CallOverrides): Promise<BigNumber>;
 
-  deployer(overrides?: CallOverrides): Promise<string>;
+  destChainId(overrides?: CallOverrides): Promise<number>;
+
+  endpoint(overrides?: CallOverrides): Promise<string>;
 
   failedMessages(
     arg0: BigNumberish,
@@ -640,8 +651,8 @@ export interface LZMoneyTransfer extends BaseContract {
     overrides?: PayableOverrides & { from?: string }
   ): Promise<ContractTransaction>;
 
-  sendETH(
-    _dstChainId: BigNumberish,
+  sendTokens(
+    _toAddress: string,
     overrides?: PayableOverrides & { from?: string }
   ): Promise<ContractTransaction>;
 
@@ -710,7 +721,9 @@ export interface LZMoneyTransfer extends BaseContract {
   callStatic: {
     DEFAULT_PAYLOAD_SIZE_LIMIT(overrides?: CallOverrides): Promise<BigNumber>;
 
-    deployer(overrides?: CallOverrides): Promise<string>;
+    destChainId(overrides?: CallOverrides): Promise<number>;
+
+    endpoint(overrides?: CallOverrides): Promise<string>;
 
     failedMessages(
       arg0: BigNumberish,
@@ -787,10 +800,7 @@ export interface LZMoneyTransfer extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    sendETH(
-      _dstChainId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    sendTokens(_toAddress: string, overrides?: CallOverrides): Promise<void>;
 
     setConfig(
       _version: BigNumberish,
@@ -924,7 +934,9 @@ export interface LZMoneyTransfer extends BaseContract {
   estimateGas: {
     DEFAULT_PAYLOAD_SIZE_LIMIT(overrides?: CallOverrides): Promise<BigNumber>;
 
-    deployer(overrides?: CallOverrides): Promise<BigNumber>;
+    destChainId(overrides?: CallOverrides): Promise<BigNumber>;
+
+    endpoint(overrides?: CallOverrides): Promise<BigNumber>;
 
     failedMessages(
       arg0: BigNumberish,
@@ -1003,8 +1015,8 @@ export interface LZMoneyTransfer extends BaseContract {
       overrides?: PayableOverrides & { from?: string }
     ): Promise<BigNumber>;
 
-    sendETH(
-      _dstChainId: BigNumberish,
+    sendTokens(
+      _toAddress: string,
       overrides?: PayableOverrides & { from?: string }
     ): Promise<BigNumber>;
 
@@ -1074,7 +1086,9 @@ export interface LZMoneyTransfer extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    deployer(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    destChainId(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    endpoint(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     failedMessages(
       arg0: BigNumberish,
@@ -1153,8 +1167,8 @@ export interface LZMoneyTransfer extends BaseContract {
       overrides?: PayableOverrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
-    sendETH(
-      _dstChainId: BigNumberish,
+    sendTokens(
+      _toAddress: string,
       overrides?: PayableOverrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 

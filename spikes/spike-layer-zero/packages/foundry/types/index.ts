@@ -17,6 +17,8 @@ import type * as stdStorageSol from "./StdStorage.sol";
 export type { stdStorageSol };
 import type * as vmSol from "./Vm.sol";
 export type { vmSol };
+import type * as lzMoneyTransferSol from "./_LZMoneyTransfer.sol";
+export type { lzMoneyTransferSol };
 import type * as draftIerc6093Sol from "./draft-IERC6093.sol";
 export type { draftIerc6093Sol };
 export type { BaseOFTV2 } from "./BaseOFTV2";
