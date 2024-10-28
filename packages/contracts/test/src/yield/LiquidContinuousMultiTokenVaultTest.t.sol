@@ -560,4 +560,44 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             principalDecimalPart, assetDecimalPart, "principal + returns should be at least principal decimal amount"
         );
     }
+
+    // TODO - this isn't supposed to give yield
+    // Scenario: User requests redemption before the cutoff time on the same day as deposit
+    // Given the Redemption Request cutoff time is 2:59:59pm
+    // And the Redemption Settlement cutoff time is 2:59:59pm the next day
+    // And Alice deposits 100 USDC on Day 1 at 2:59:58pm
+    // When Alice requests full redemption on Day 1 at 2:59:58pm
+    // Then Alice's redemption should be settled on Day 2 at 2:59:59pm
+    // And Alice should not receive any yield just the pincipal (100 USDC)
+    function test__LiquidContinuousMultiTokenVault__DepositAndRedeemAtCutOffs() public {
+        uint256 principal = 10 * _scale;
+
+        deal(address(_asset), address(_liquidVault), 100e6);
+
+        // ----------------- deposit ------------
+        uint256 depositAtCutoff = _liquidVault._vaultStartTimestamp() + 1 days - 1 minutes;
+        vm.warp(depositAtCutoff); // set the time very close to the cut-off
+
+        uint256 depositPeriod = _liquidVault.currentPeriod();
+        vm.startPrank(alice);
+        _asset.approve(address(_liquidVault), principal);
+        uint256 shares = _liquidVault.deposit(principal, alice);
+        vm.stopPrank();
+
+        // ----------------- requestRedeem ------------
+        // request redeem on the deposit day
+        vm.prank(alice);
+        uint256 redeemPeriod = _liquidVault.requestRedeem(shares, alice, alice);
+
+        // ----------------- requestRedeem  ------------
+        vm.warp(depositAtCutoff + 2 minutes); // warp to the next day
+        assertEq(redeemPeriod, _liquidVault.currentPeriod(), "didn't tick over a day");
+
+        uint256 assetPreview = _liquidVault.previewRedeemForDepositPeriod(shares, depositPeriod, redeemPeriod);
+        assertLt(principal, assetPreview, "assets preview greater than principal, but should it be??!?"); // TODO - shouldn't this return 0 yield ?
+
+        vm.prank(alice);
+        uint256 assets = _liquidVault.redeem(shares, alice, alice);
+        assertLt(principal, assets, "assets greater than principal, but should it be??!?"); // TODO - shouldn't this return 0 yield ?
+    }
 }
