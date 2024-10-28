@@ -2,13 +2,21 @@
 pragma solidity ^0.8.20;
 
 library TestParamSet {
+    using TestParamSet for TestParam[];
+
+    // params for testing deposits and redeems
     struct TestParam {
         uint256 principal;
         uint256 depositPeriod;
         uint256 redeemPeriod;
     }
 
-    using TestParamSet for TestParam[];
+    // users involved in deposit and redeems.  using "tokenOwner" to distinguish vs. contract "owner"
+    struct TestUsers {
+        address tokenOwner; // owns tokens, can specify who can receive tokens
+        address tokenReceiver; // token owner or granted tokens by the token owner
+        address tokenOperator; // for txn to succeed MUST be tokenOwner or granted allowance by tokenOwner
+    }
 
     // Generate and add multiple testParams with offsets
     function toOffsetArray(TestParam memory testParam)
@@ -34,6 +42,17 @@ library TestParamSet {
         }
 
         return testParamsWithOffsets;
+    }
+
+    // simple scenario with only one user
+    function toSingletonUsers(address account) internal pure returns (TestUsers memory testUsers_) {
+        TestUsers memory testUsers = TestUsers({
+            tokenOwner: account, // owns tokens, can specify who can receive tokens
+            tokenReceiver: account, // receiver of tokens from the tokenOwner
+            tokenOperator: account // granted allowance by tokenOwner to act on their behalf
+         });
+
+        return testUsers;
     }
 
     // Calculate the total principal across all TestParams

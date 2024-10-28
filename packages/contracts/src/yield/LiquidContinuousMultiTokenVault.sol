@@ -73,10 +73,10 @@ contract LiquidContinuousMultiTokenVault is
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidAuthAddress(string authName, address authAddress);
-    error LiquidContinuousMultiTokenVault__ControllerMismatch(address sender, address controller);
+    error LiquidContinuousMultiTokenVault__ControllerNotSender(address sender, address controller);
+    error LiquidContinuousMultiTokenVault__UnAuthorized(address sender, address authorizedOwner);
     error LiquidContinuousMultiTokenVault__AmountMismatch(uint256 amount1, uint256 amount2);
     error LiquidContinuousMultiTokenVault__UnlockPeriodMismatch(uint256 unlockPeriod1, uint256 unlockPeriod2);
-    error LiquidContinuousMultiTokenVault__FractionalSharesNotSupported();
     error LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(
         uint256 componentTokenAmount, uint256 unlockRequestedAmount
     );
@@ -126,7 +126,7 @@ contract LiquidContinuousMultiTokenVault is
         override
         returns (uint256 shares)
     {
-        if (assets < SCALE) revert LiquidContinuousMultiTokenVault__FractionalSharesNotSupported(); // no shares for fractional principal
+        if (assets < SCALE) return 0; // no shares for fractional principal
 
         return assets; // 1 asset = 1 share
     }
@@ -180,11 +180,12 @@ contract LiquidContinuousMultiTokenVault is
      * @param owner Source of the assets to deposit
      * @return requestId_ Discriminator between non-fungible requests
      */
-    function requestDeposit(uint256 assets, address controller, address owner) public returns (uint256 requestId_) {
-        if (controller != _msgSender()) {
-            revert LiquidContinuousMultiTokenVault__ControllerMismatch(_msgSender(), controller);
-        }
-
+    function requestDeposit(uint256 assets, address controller, address owner)
+        public
+        onlyAuthorized(owner)
+        onlyController(controller)
+        returns (uint256 requestId_)
+    {
         uint256 requestId = ZERO_REQUEST_ID; // requests and requestIds not used in buys.
 
         deposit(assets, owner, controller);
@@ -197,11 +198,11 @@ contract LiquidContinuousMultiTokenVault is
      * @param assets Amount of `asset` that was deposited by `requestDeposit`
      * @param receiver Address to receive the shares
      */
-    function deposit(uint256 assets, address receiver, address controller) public returns (uint256 shares_) {
-        if (controller != _msgSender()) {
-            revert LiquidContinuousMultiTokenVault__ControllerMismatch(_msgSender(), controller);
-        }
-
+    function deposit(uint256 assets, address receiver, address controller)
+        public
+        onlyController(controller)
+        returns (uint256 shares_)
+    {
         uint256 shares = deposit(assets, receiver);
         emit Deposit(controller, receiver, assets, shares);
         return shares;
@@ -213,16 +214,18 @@ contract LiquidContinuousMultiTokenVault is
      * @param owner Source of the shares to redeem
      * @return requestId_ Discriminator between non-fungible requests
      */
-    function requestRedeem(uint256 shares, address, /* controller */ address owner)
+    function requestRedeem(uint256 shares, address controller, address owner)
         public
+        onlyAuthorized(owner)
+        onlyController(controller)
         returns (uint256 requestId_)
     {
         // using optimize() variant in case "shares" represents the IComponent "principal + yield" which is our "assets".
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
             _redeemOptimizer.optimize(this, owner, shares, shares, minUnlockPeriod());
 
-        uint256 requestId = requestUnlock(_msgSender(), depositPeriods, sharesAtPeriods);
-        emit RedeemRequest(_msgSender(), owner, requestId, _msgSender(), shares);
+        uint256 requestId = requestUnlock(owner, depositPeriods, sharesAtPeriods);
+        emit RedeemRequest(controller, owner, requestId, _msgSender(), shares);
         return requestId;
     }
 
@@ -230,25 +233,30 @@ contract LiquidContinuousMultiTokenVault is
      * @notice Fulfill a request to redeem assets by transferring assets to the receiver
      * @param shares Amount of shares that was redeemed by `requestRedeem`
      * @param receiver Address to receive the assets
+     * @dev controller will only have tokens to redeem if they are also the owner
      */
-    function redeem(uint256 shares, address receiver, address /* controller */ ) public returns (uint256 assets) {
+    function redeem(uint256 shares, address receiver, address controller)
+        public
+        onlyController(controller)
+        returns (uint256 assets)
+    {
         uint256 requestId = currentPeriod(); // requestId = redeemPeriod, and redeem can only be called  where redeemPeriod = currentPeriod()
 
-        uint256 unlockRequestedAmount = unlockRequestAmount(receiver, requestId);
+        uint256 unlockRequestedAmount = unlockRequestAmount(controller, requestId);
         if (shares != unlockRequestedAmount) {
             revert LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(shares, unlockRequestedAmount);
         }
 
-        (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) = unlock(receiver, requestId); // unlockPeriod = redeemPeriod
+        (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) = unlock(controller, requestId); // unlockPeriod = redeemPeriod
 
         uint256 totalAssetsRedeemed = 0;
 
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
             totalAssetsRedeemed += _redeemForDepositPeriodAfterUnlock(
-                sharesAtPeriods[i], receiver, _msgSender(), depositPeriods[i], requestId
+                sharesAtPeriods[i], receiver, controller, depositPeriods[i], requestId
             );
         }
-        emit Withdraw(_msgSender(), receiver, _msgSender(), totalAssetsRedeemed, shares);
+        emit Withdraw(_msgSender(), receiver, controller, totalAssetsRedeemed, shares);
         return totalAssetsRedeemed;
     }
 
@@ -394,6 +402,13 @@ contract LiquidContinuousMultiTokenVault is
         return balanceOf(account, depositPeriod);
     }
 
+    /// @inheritdoc TimelockAsyncUnlock
+    function _authorizeCaller(address caller, address owner) internal virtual override {
+        if (caller != owner && !isApprovedForAll(owner, caller)) {
+            revert LiquidContinuousMultiTokenVault__UnAuthorized(caller, owner);
+        }
+    }
+
     // ===================== TripleRateContext =====================
 
     /// @inheritdoc TripleRateContext
@@ -458,6 +473,22 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     // ===================== Utility =====================
+
+    // @dev ensure caller is permitted to act on the owner's tokens
+    modifier onlyAuthorized(address owner) {
+        _authorizeCaller(_msgSender(), owner);
+        _;
+    }
+
+    // @dev ensure the controller is the caller
+    modifier onlyController(address controller) {
+        address caller = _msgSender();
+
+        if (caller != controller) {
+            revert LiquidContinuousMultiTokenVault__ControllerNotSender(caller, controller);
+        }
+        _;
+    }
 
     function pause() public onlyRole(OPERATOR_ROLE) {
         _pause();

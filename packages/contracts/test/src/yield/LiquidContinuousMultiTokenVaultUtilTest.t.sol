@@ -218,6 +218,20 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         assertEq(newPeriod, vault.currentPeriod(), "period not set correctly");
     }
 
+    function test__LiquidContinuousMultiTokenVaultUtil__InvalidFrequencyReverts() public {
+        LiquidContinuousMultiTokenVault liquidVault = new LiquidContinuousMultiTokenVault();
+        LiquidContinuousMultiTokenVault.VaultParams memory invalidParams = _createVaultParams(_vaultAuth);
+        invalidParams.contextParams.frequency = 12; // Invalid frequency
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidFrequency.selector,
+                invalidParams.contextParams.frequency
+            )
+        );
+        new ERC1967Proxy(address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, invalidParams));
+    }
+
     function test__LiquidContinuousMultiTokenVaultUtil__ZeroAddressAuthReverts() public {
         address zeroAddress = address(0);
 
