@@ -286,6 +286,12 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         _testBalanceOfBatch(_charlie, vault, _batchTestParams, assetToSharesRatio); // verify bob
     }
 
+    function test__MultiTokenVaultTest__ShouldRevertOnFractionalShareDeposit() public {
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
+        vm.expectRevert(abi.encodeWithSelector(MultiTokenVault.MultiTokenVault__FractionalSharesNotAllowed.selector));
+        vault.deposit(1e6 - 1, _alice);
+    }
+
     function _testBalanceOfBatch(
         address account,
         IMultiTokenVault vault,

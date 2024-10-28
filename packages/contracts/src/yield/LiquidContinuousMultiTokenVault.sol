@@ -17,6 +17,7 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { AccessControlEnumerableUpgradeable } from
     "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlEnumerableUpgradeable.sol";
+import { console2 } from "forge-std/console2.sol";
 
 /**
  * @title LiquidContinuousMultiTokenVault
@@ -126,6 +127,7 @@ contract LiquidContinuousMultiTokenVault is
         override
         returns (uint256 shares)
     {
+        console2.log(assets);
         if (assets < SCALE) return 0; // no shares for fractional principal
 
         return assets; // 1 asset = 1 share

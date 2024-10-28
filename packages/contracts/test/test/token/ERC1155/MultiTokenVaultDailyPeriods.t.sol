@@ -10,6 +10,7 @@ contract MultiTokenVaultDailyPeriods is Initializable, UUPSUpgradeable, MultiTok
     uint256 internal ASSET_TO_SHARES_RATIO;
     uint256 internal YIELD_PERCENTAGE;
     uint256 public _currentPeriod;
+    uint256 public constant SCALE = 1e6;
 
     function initialize(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage) public initializer {
         __MultiTokenVault_init(asset);
@@ -46,6 +47,10 @@ contract MultiTokenVaultDailyPeriods is Initializable, UUPSUpgradeable, MultiTok
         override
         returns (uint256 shares)
     {
+        if (assets < SCALE) {
+            return 0;
+        }
+
         return assets / ASSET_TO_SHARES_RATIO;
     }
 

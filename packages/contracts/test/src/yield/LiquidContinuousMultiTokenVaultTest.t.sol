@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
+import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
@@ -514,5 +515,12 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         vm.prank(alice);
         uint256 assets = _liquidVault.redeem(sharesToRedeem, receiver, alice);
         assertEq(assets, _asset.balanceOf(receiver), "redeem should succeed");
+    }
+
+    function test__LiquidContinuousMultiTokenVault__ShouldRevertOnFractionalShareDeposit() public {
+        vm.startPrank(alice);
+        vm.expectRevert(abi.encodeWithSelector(MultiTokenVault.MultiTokenVault__FractionalSharesNotAllowed.selector));
+        _liquidVault.deposit(1e6 - 1, alice, alice);
+        vm.stopPrank();
     }
 }
