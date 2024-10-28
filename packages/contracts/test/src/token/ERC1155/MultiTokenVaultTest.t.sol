@@ -327,12 +327,12 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         _testBalanceOfBatch(_charlie, vault, _batchTestParams, assetToSharesRatio); // verify bob
     }
 
-    function test__MultiTokenVaultTest__ShouldReturnZeroOnFractionalShareDeposit() public {
+    function test__MultiTokenVaultTest__ZeroOrOneAssetsShouldGiveZeroShares() public {
         uint256 assetToSharesRatio = 2;
 
         TestParamSet.TestParam memory zeroPrincipal =
             TestParamSet.TestParam({ principal: 0, depositPeriod: 10, redeemPeriod: 21 });
-        TestParamSet.TestParam memory fractionalPrincipal =
+        TestParamSet.TestParam memory onePrincipal =
             TestParamSet.TestParam({ principal: 1, depositPeriod: 10, redeemPeriod: 21 });
 
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
@@ -340,23 +340,24 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         address vaultAddress = address(vault);
 
         vm.startPrank(_alice);
-        _asset.approve(vaultAddress, fractionalPrincipal.principal);
+        _asset.approve(vaultAddress, onePrincipal.principal);
 
-        // ------------- test for zero deposit -------------
+        // ------------- test for deposit of 0 -------------
         vm.startPrank(_alice);
-        uint256 zeroAssets = vault.deposit(zeroPrincipal.principal, _alice);
+        uint256 sharesFromZeroPrincipal = vault.deposit(zeroPrincipal.principal, _alice);
         vm.stopPrank();
 
         assertEq(zeroPrincipal.principal, _asset.balanceOf(vaultAddress), "vault should have the asset");
-        assertEq(0, zeroAssets, "zero shares should give zero assets");
+        assertEq(0, sharesFromZeroPrincipal, "deposit of zero assets should give zero shares");
 
-        // ------------- test for fractional deposit -------------
+        // ------------- test for deposit of 1  -------------
         vm.startPrank(_alice);
-        uint256 fractionalAssets = vault.deposit(fractionalPrincipal.principal, _alice);
+        uint256 sharesFromOnePrincipal = vault.deposit(onePrincipal.principal, _alice);
         vm.stopPrank();
 
-        assertEq(fractionalPrincipal.principal, _asset.balanceOf(vaultAddress), "vault should have the asset");
-        assertEq(0, fractionalAssets, "fractional shares should give zero assets");
+        // 1 asset converts to 0 shares with any assetToShare ratio > 0.  e.g.: 1 asset / 2 = 0 shares rounded down.
+        assertEq(onePrincipal.principal, _asset.balanceOf(vaultAddress), "vault should have the asset");
+        assertEq(0, sharesFromOnePrincipal, "deposit of fractional assets should give zero shares");
     }
 
     function test__MultiTokenVaultTest__SafeTransferFrom() public {

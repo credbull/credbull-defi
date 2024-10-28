@@ -126,7 +126,7 @@ contract LiquidContinuousMultiTokenVault is
         override
         returns (uint256 shares)
     {
-        if (assets < SCALE) return 0; // no shares for fractional principal
+        if (assets < _minConversionThreshold()) return 0; // no shares for small fractional assets
 
         return assets; // 1 asset = 1 share
     }
@@ -162,7 +162,7 @@ contract LiquidContinuousMultiTokenVault is
         override
         returns (uint256 assets)
     {
-        if (shares < SCALE) return 0; // no assets for fractional shares
+        if (shares < _minConversionThreshold()) return 0; // no assets for small fractional shares
 
         if (redeemPeriod < depositPeriod) return 0; // trying to redeem before depositPeriod
 
@@ -473,6 +473,11 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     // ===================== Utility =====================
+
+    /// minimum shares required to convert to assets and vice-versa.
+    function _minConversionThreshold() internal view returns (uint256 minConversionThreshold) {
+        return SCALE < 10 ? SCALE : 10;
+    }
 
     // @dev ensure caller is permitted to act on the owner's tokens
     modifier onlyAuthorized(address owner) {

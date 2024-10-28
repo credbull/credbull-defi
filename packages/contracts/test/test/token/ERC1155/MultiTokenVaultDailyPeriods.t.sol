@@ -48,10 +48,6 @@ contract MultiTokenVaultDailyPeriods is Initializable, UUPSUpgradeable, MultiTok
         override
         returns (uint256 shares)
     {
-        if (assets < SCALE) {
-            return 0;
-        }
-
         return assets / ASSET_TO_SHARES_RATIO;
     }
 

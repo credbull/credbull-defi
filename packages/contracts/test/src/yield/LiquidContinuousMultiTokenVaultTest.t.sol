@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
-import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
@@ -428,7 +427,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     }
 
     function test__LiquidContinuousMultiTokenVault__FractionalAssetsGivesZeroShares() public view {
-        uint256 fractionalAssets = _scale - 1; // less than the scale (fractional)
+        uint256 fractionalAssets = 9; // 9 wei - tiny amount
         uint256 depositPeriod = 1;
 
         assertEq(
@@ -439,7 +438,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     }
 
     function test__LiquidContinuousMultiTokenVault__FractionalSharesGivesZeroAssets() public view {
-        uint256 fractionalShares = _scale - 1; // less than the scale (fractional)
+        uint256 fractionalShares = 9; // 9 wei - tiny amount
         uint256 depositPeriod = 2;
         uint256 redeemPeriod = depositPeriod;
 
@@ -521,38 +520,44 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         uint256 redeemPeriod = 10;
         uint256 depositPeriod = 2;
 
+        uint256 principalIntegerPart = 5 * _scale; // e.g. 5 ETH
+        uint256 principalDecimalPart = 10; // e.g. 10 wei
+
         TestParamSet.TestParam memory testParam = TestParamSet.TestParam({
-            principal: 5500000, // 5.5 USDC
+            principal: principalIntegerPart + principalDecimalPart,
             depositPeriod: depositPeriod,
             redeemPeriod: redeemPeriod
         });
 
+        TestParamSet.TestUsers memory aliceTestUsers = TestParamSet.toSingletonUsers(alice);
+
         // deposit
-        _testDepositOnly(TestParamSet.toSingletonUsers(alice), _liquidVault, testParam);
+        uint256 shares = _testDepositOnly(aliceTestUsers, _liquidVault, testParam);
 
-        // request redeem
-        _warpToPeriod(_liquidVault, redeemPeriod - _liquidVault.noticePeriod());
+        assertEq(shares, testParam.principal, "shares should be 1:1 with principal"); // liquid vault should be 1:1
 
-        vm.prank(alice);
-        _liquidVault.requestRedeem(5 * _scale, alice, alice);
+        // ----------------- redeem principal first -----------------
+        TestParamSet.TestParam memory integerTestParam = TestParamSet.TestParam({
+            principal: principalIntegerPart,
+            depositPeriod: depositPeriod,
+            redeemPeriod: redeemPeriod
+        });
 
-        _warpToPeriod(_liquidVault, redeemPeriod);
-        vm.prank(alice);
-        _liquidVault.redeem(5 * _scale, alice, alice); //Redeem successful.
+        uint256 assetIntegerPart = _testRedeemOnly(aliceTestUsers, _liquidVault, integerTestParam, principalIntegerPart);
+        assertLe(
+            principalIntegerPart, assetIntegerPart, "principal + returns should be at least principal integer amount"
+        );
 
-        //Requesting for redeem with fractional shares (remaining 0.5 shares)
-        uint256 fractionalShare = testParam.principal - 5 * _scale;
-        _warpToPeriod(_liquidVault, redeemPeriod + 1 - _liquidVault.noticePeriod());
-        vm.prank(alice);
-        _liquidVault.requestRedeem(fractionalShare, alice, alice);
+        // ----------------- redeem decimal second -----------------
+        TestParamSet.TestParam memory decimalTestParam = TestParamSet.TestParam({
+            principal: principalDecimalPart,
+            depositPeriod: depositPeriod,
+            redeemPeriod: redeemPeriod
+        });
 
-        assertEq(fractionalShare, _liquidVault.lockedAmount(alice, depositPeriod), "Should have fractional shares");
-
-        _warpToPeriod(_liquidVault, redeemPeriod + 1);
-        vm.prank(alice);
-        uint256 redeemedAsset = _liquidVault.redeem(fractionalShare, alice, alice);
-
-        //Redeemed asset should have a fractional amount, but got zero
-        assertEq(0, redeemedAsset);
+        uint256 assetDecimalPart = _testRedeemOnly(aliceTestUsers, _liquidVault, decimalTestParam, principalDecimalPart);
+        assertLe(
+            principalDecimalPart, assetDecimalPart, "principal + returns should be at least principal decimal amount"
+        );
     }
 }

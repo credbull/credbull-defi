@@ -105,6 +105,9 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     ) internal virtual override returns (uint256 actualAssetsAtPeriod_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
+        uint256 prevLockedAmount = liquidVault.lockedAmount(redeemUsers.tokenOwner, testParam.depositPeriod);
+        uint256 prevBalanceOf = liquidVault.balanceOf(redeemUsers.tokenOwner, testParam.depositPeriod);
+
         // request unlock
         _warpToPeriod(liquidVault, testParam.redeemPeriod - liquidVault.noticePeriod());
 
@@ -119,7 +122,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         vault.setApprovalForAll(redeemUsers.tokenOperator, false);
 
         assertEq(
-            testParam.principal,
+            sharesToRedeemAtPeriod,
             liquidVault.unlockRequestAmountByDepositPeriod(redeemUsers.tokenOwner, testParam.depositPeriod),
             "unlockRequest should be created"
         );
@@ -128,10 +131,14 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
         // verify locks and request locks released
         assertEq(
-            0, liquidVault.lockedAmount(redeemUsers.tokenOwner, testParam.depositPeriod), "deposit lock not released"
+            prevLockedAmount - sharesToRedeemAtPeriod,
+            liquidVault.lockedAmount(redeemUsers.tokenOwner, testParam.depositPeriod),
+            "deposit lock not released"
         );
         assertEq(
-            0, liquidVault.balanceOf(redeemUsers.tokenOwner, testParam.depositPeriod), "deposits should be redeemed"
+            prevBalanceOf - sharesToRedeemAtPeriod,
+            liquidVault.balanceOf(redeemUsers.tokenOwner, testParam.depositPeriod),
+            "deposits should be redeemed"
         );
         assertEq(
             0,
