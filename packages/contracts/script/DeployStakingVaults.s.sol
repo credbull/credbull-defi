@@ -16,6 +16,8 @@ import { WindowPlugin } from "@credbull/plugin/WindowPlugin.sol";
 import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
 import { MaxCapPlugin } from "@credbull/plugin/MaxCapPlugin.sol";
 
+import { console2 } from "forge-std/console2.sol";
+
 contract DeployStakingVaults is Script {
     bool private isTestMode;
 
@@ -42,7 +44,12 @@ contract DeployStakingVaults is Script {
         helperConfig = new HelperConfig(isTestMode);
 
         vm.startBroadcast();
+
         stakingVault = new CredbullFixedYieldVault(createStakingVaultParams(helperConfig, 50));
+        console2.log(
+            string.concat("!!!!! Deploying CredbullFixedYieldVault [", vm.toString(address(stakingVault)), "] !!!!!")
+        );
+
         vm.stopBroadcast();
 
         return (factory, stakingVault, helperConfig);
@@ -56,8 +63,8 @@ contract DeployStakingVaults is Script {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         Vault.VaultParams memory _vaultParams = Vault.VaultParams({
             asset: IERC20(config.cblToken),
-            shareName: "CBLStakingShares",
-            shareSymbol: "sCBL",
+            shareName: "inCredbull Earn CBL Staking Challenge",
+            shareSymbol: "iceCBLsc",
             custodian: config.factoryParams.custodian
         });
 
@@ -70,18 +77,23 @@ contract DeployStakingVaults is Script {
             custodian: config.factoryParams.custodian
         });
 
-        WindowPlugin.Window memory _depositWindow = WindowPlugin.Window({ opensAt: 1730973600, closesAt: 1732320000 });
+        uint256 depositStart = 1730973600; // Deposit Start: Nov 7 10 AM UTC - okay
+        WindowPlugin.Window memory _depositWindow =
+            WindowPlugin.Window({ opensAt: depositStart, closesAt: depositStart + 14 days - 1 });
 
+        uint256 redeemStart = _depositWindow.closesAt + 30 days + 2; // Withdraw Start: Deposit End + 30 days
         WindowPlugin.Window memory _redemptionWindow =
-            WindowPlugin.Window({ opensAt: 1732320001, closesAt: 1734912000 });
+            WindowPlugin.Window({ opensAt: (redeemStart), closesAt: (redeemStart + 365 days - 1) });
+
+        _logWindowTimestamps(_depositWindow, _redemptionWindow);
 
         WindowPlugin.WindowPluginParams memory _windowPluginParams =
             WindowPlugin.WindowPluginParams({ depositWindow: _depositWindow, redemptionWindow: _redemptionWindow });
 
         WhiteListPlugin.WhiteListPluginParams memory _whiteListPluginParams = WhiteListPlugin.WhiteListPluginParams({
-            whiteListProvider: vm.addr(1), // Whitelist provider not necessary for staking vaults
-            depositThresholdForWhiteListing: 100e6
-        });
+            whiteListProvider: config.factoryParams.owner, // using owner as the whitelist provider
+            depositThresholdForWhiteListing: type(uint256).max // logically disable the whitelist
+         });
 
         MaxCapPlugin.MaxCapPluginParams memory _maxCapPluginParams = MaxCapPlugin.MaxCapPluginParams({ maxCap: 100e6 }); // Max cap not necessary for staking vaults
 
@@ -93,5 +105,20 @@ contract DeployStakingVaults is Script {
             maxCapPlugin: _maxCapPluginParams,
             promisedYield: _yieldPercentage
         });
+    }
+
+    //@dev - see https://www.epochconverter.com/batch#results
+    function _logWindowTimestamps(WindowPlugin.Window memory depositWindow, WindowPlugin.Window memory redemptionWindow)
+        internal
+        view
+    {
+        console2.log("===============================================================");
+        console2.log("Vault windows: depositStart, depositEnd, redeemStart, redeemEnd");
+        console2.log("===============================================================");
+        console2.log(depositWindow.opensAt);
+        console2.log(depositWindow.closesAt);
+        console2.log(redemptionWindow.opensAt);
+        console2.log(redemptionWindow.closesAt);
+        console2.log("===============================================================");
     }
 }

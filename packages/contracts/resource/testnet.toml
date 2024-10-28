@@ -4,8 +4,8 @@
 
 [evm]
 # blockchain id, e.g. baseSepolia=84532, arbSepolia=421614
-chain_id = 84532
-deploy_mocks = true
+chain_id = 421614
+deploy_mocks = false
 
 [evm.address]
 # credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)
@@ -15,6 +15,20 @@ owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # devops custodian (wallet 3) - public address, okay to share
 custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
+# devops upgrader (wallet 4) - public address, okay to share
+upgrader = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
+# devops asset manager (wallet 7) - public address, okay to share
+asset_manager = "0xd097E901FB9B75C2d2f97E142d73fA79C31FcAb3"
+# CBL token address - Arbitrum Sepolia
+cbl_token="0x3Dd53Ec7DFff8cf774391867C83583E634363345"
+# USDC token address - Arbitrum Sepolia
+usdc_token="0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d"
+
+[evm.contracts.liquid_continuous_multi_token_vault]
+# rate in basis points, e.g.  10% = 1000 bps
+full_rate_bps = 10_00
+# rate in basis points, e.g.  5.5% = 550 bps
+reduced_rate_bps = 5_50
 
 [evm.contracts.upside_vault]
 # 2 decimal place percentage (meaining value divided by 100) as integer.
