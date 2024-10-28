@@ -38,7 +38,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         _testParams3 = TestParamSet.TestParam({ principal: 700 * _scale, depositPeriod: 30, redeemPeriod: 55 });
     }
 
-    function test__MultiTokenVaulTest__SimpleDeposit() public {
+    function test__MultiTokenVaultTest__SimpleDeposit() public {
         uint256 assetToSharesRatio = 2;
 
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
@@ -64,7 +64,32 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         testVaultAtOffsets(_alice, vault, _testParams1);
     }
 
-    function test__MultiTokenVaulTest__DepositAndRedeem() public {
+    function test__MultiTokenVaultTest__RevertWhen_DepositExceedsMax() public {
+        uint256 assetToSharesRatio = 2;
+
+        MultiTokenVaultDailyPeriods vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+        uint256 _maxDeposit = 250 * _scale;
+        vault.setMaxDeposit(_maxDeposit);
+
+        address vaultAddress = address(vault);
+        vm.startPrank(_alice);
+        _asset.approve(vaultAddress, _testParams1.principal);
+
+        // deposit amount > max deposit amount should fail.
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MultiTokenVault.MultiTokenVault__ExceededMaxDeposit.selector,
+                _alice,
+                vault.currentPeriodsElapsed(),
+                _testParams1.principal,
+                _maxDeposit
+            )
+        );
+        vault.deposit(_testParams1.principal, _alice);
+        vm.stopPrank();
+    }
+
+    function test__MultiTokenVaultTest__DepositAndRedeem() public {
         uint256 assetToSharesRatio = 3;
 
         _transferAndAssert(_asset, _owner, _charlie, 100_000 * _scale);
@@ -74,7 +99,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         testVaultAtOffsets(_charlie, vault, _testParams1);
     }
 
-    function test__MultiTokenVaulTest__RedeemBeforeDepositPeriodReverts() public {
+    function test__MultiTokenVaultTest__RedeemBeforeDepositPeriodReverts() public {
         MultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
 
         TestParamSet.TestParam memory testParam =
@@ -92,7 +117,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         vault.redeemForDepositPeriod(1, _alice, _alice, testParam.depositPeriod, testParam.redeemPeriod);
     }
 
-    function test__MultiTokenVaulTest__CurrentBeforeRedeemPeriodReverts() public {
+    function test__MultiTokenVaultTest__CurrentBeforeRedeemPeriodReverts() public {
         MultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
 
         TestParamSet.TestParam memory testParam =
@@ -113,7 +138,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         vault.redeemForDepositPeriod(1, _alice, _alice, testParam.depositPeriod, testParam.redeemPeriod);
     }
 
-    function test__MultiTokenVaulTest__RedeemOverMaxSharesReverts() public {
+    function test__MultiTokenVaultTest__RedeemOverMaxSharesReverts() public {
         MultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
 
         TestParamSet.TestParam memory testParam =
@@ -135,7 +160,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         vault.redeemForDepositPeriod(sharesToRedeem, _alice, _alice, testParam.depositPeriod, testParam.redeemPeriod);
     }
 
-    function test__MultiTokenVaulTest__MultipleDepositsAndRedeem() public {
+    function test__MultiTokenVaultTest__MultipleDepositsAndRedeem() public {
         uint256 assetToSharesRatio = 4;
 
         // setup
@@ -233,7 +258,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(assets, _asset.balanceOf(receiverAccount), "receiver did not receive assets");
     }
 
-    function test__MultiTokenVaulTest__BatchFunctions() public {
+    function test__MultiTokenVaultTest__BatchFunctions() public {
         uint256 assetToSharesRatio = 2;
         uint256 redeemPeriod = 2001;
 
@@ -302,7 +327,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         _testBalanceOfBatch(_charlie, vault, _batchTestParams, assetToSharesRatio); // verify bob
     }
 
-    function test__MultiTokenVaulTest__SafeTransferFrom() public {
+    function test__MultiTokenVaultTest__SafeTransferFrom() public {
         uint256 assetToSharesRatio = 2;
 
         TestParamSet.TestParam memory testParams =
@@ -332,7 +357,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(vault.balanceOf(_bob, testParams.depositPeriod), shares, "_bob should have the transferred shares");
     }
 
-    function test__MultiTokenVaulTest__ConvertToSharesForDepositPeriod() public {
+    function test__MultiTokenVaultTest__ConvertToSharesForDepositPeriod() public {
         // Assuming the asset to shares ratio is set to a fixed value for testing.
         uint256 assetToSharesRatio = 2;
         uint256 depositPeriod = 1;
@@ -359,7 +384,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(shares, expectedShares, "Conversion of max assets to shares failed");
     }
 
-    function test__MultiTokenVaulTest__ConvertToAssetsForDepositPeriod() public {
+    function test__MultiTokenVaultTest__ConvertToAssetsForDepositPeriod() public {
         uint256 assetToSharesRatio = 2;
 
         TestParamSet.TestParam memory testParams =
@@ -390,7 +415,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(assets, expectedAssets, "Conversion of max shares to assets failed");
     }
 
-    function test__MultiTokenVaulTest__PreviewDeposit() public {
+    function test__MultiTokenVaultTest__PreviewDeposit() public {
         uint256 assetToSharesRatio = 2;
 
         TestParamSet.TestParam memory testParams =
@@ -404,7 +429,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(shares, expectedShares, "Preview deposit conversion did not match expected value");
     }
 
-    function test__MultiTokenVaulTest__PreviewRedeemForDepositPeriod() public {
+    function test__MultiTokenVaultTest__PreviewRedeemForDepositPeriod() public {
         uint256 assetToSharesRatio = 2;
 
         TestParamSet.TestParam memory testParams =
@@ -419,7 +444,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(assets, expectedAssets, "Preview redeem conversion did not match expected value");
     }
 
-    function test__MultiTokenVaulTest__IsApprovedForAll() public {
+    function test__MultiTokenVaultTest__IsApprovedForAll() public {
         address operator = makeAddr("operator");
         uint256 assetToSharesRatio = 2;
 
@@ -440,7 +465,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(isApproved, false, "Operator should not be approved");
     }
 
-    function test__MultiTokenVaulTest__MaxDeposit() public {
+    function test__MultiTokenVaultTest__MaxDeposit() public {
         uint256 assetToSharesRatio = 2;
 
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
@@ -449,7 +474,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(maxDepositValue, type(uint256).max, "Max deposit should be uint256 max");
     }
 
-    function test__MultiTokenVaulTest__MaxRedeemAtPeriod() public {
+    function test__MultiTokenVaultTest__MaxRedeemAtPeriod() public {
         uint256 assetToSharesRatio = 2;
 
         TestParamSet.TestParam memory testParams =
