@@ -78,10 +78,6 @@ abstract contract MultiTokenVault is
 
         shares = previewDeposit(assets);
 
-        if (shares == 0) {
-            revert MultiTokenVault__FractionalSharesNotAllowed();
-        }
-
         _deposit(_msgSender(), receiver, depositPeriod, assets, shares);
     }
 

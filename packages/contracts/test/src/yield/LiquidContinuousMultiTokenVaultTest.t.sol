@@ -7,7 +7,6 @@ import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.so
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
-import { console2 } from "forge-std/console2.sol";
 
 contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultTestBase {
     using TestParamSet for TestParamSet.TestParam[];
@@ -518,14 +517,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         assertEq(assets, _asset.balanceOf(receiver), "redeem should succeed");
     }
 
-    function test__LiquidContinuousMultiTokenVault__ShouldRevertOnFractionalShareDeposit() public {
-        vm.startPrank(alice);
-        vm.expectRevert(abi.encodeWithSelector(MultiTokenVault.MultiTokenVault__FractionalSharesNotAllowed.selector));
-        _liquidVault.deposit(1e6 - 1, alice, alice);
-        vm.stopPrank();
-    }
-
-    function test__RedeemFractional() public {
+    function test__LiquidContinuousMultiTokenVault__RedeemFractional() public {
         uint256 redeemPeriod = 10;
         uint256 depositPeriod = 2;
 
@@ -546,20 +538,21 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         _warpToPeriod(_liquidVault, redeemPeriod);
         vm.prank(alice);
-        _liquidVault.redeem(5 * _scale, alice, alice);
+        _liquidVault.redeem(5 * _scale, alice, alice); //Redeem successful.
 
+        //Requesting for redeem with fractional shares (remaining 0.5 shares)
+        uint256 fractionalShare = testParam.principal - 5 * _scale;
         _warpToPeriod(_liquidVault, redeemPeriod + 1 - _liquidVault.noticePeriod());
         vm.prank(alice);
-        _liquidVault.requestRedeem(500000, alice, alice);
+        _liquidVault.requestRedeem(fractionalShare, alice, alice);
 
-        console2.log("locked amount", _liquidVault.lockedAmount(alice, depositPeriod));
+        assertEq(fractionalShare, _liquidVault.lockedAmount(alice, depositPeriod), "Should have fractional shares");
 
         _warpToPeriod(_liquidVault, redeemPeriod + 1);
         vm.prank(alice);
-        uint256 redeemedAsset = _liquidVault.redeem(500000, alice, alice);
+        uint256 redeemedAsset = _liquidVault.redeem(fractionalShare, alice, alice);
 
-        console2.log("redeemedAsset", redeemedAsset);
-
-        //assert(redeemedAsset > 0);
+        //Redeemed asset should have a fractional amount, but got zero
+        assertEq(0, redeemedAsset);
     }
 }
