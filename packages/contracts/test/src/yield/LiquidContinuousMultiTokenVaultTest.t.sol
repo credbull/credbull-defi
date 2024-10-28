@@ -7,6 +7,7 @@ import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.so
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
+import { console2 } from "forge-std/console2.sol";
 
 contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultTestBase {
     using TestParamSet for TestParamSet.TestParam[];
@@ -522,5 +523,43 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         vm.expectRevert(abi.encodeWithSelector(MultiTokenVault.MultiTokenVault__FractionalSharesNotAllowed.selector));
         _liquidVault.deposit(1e6 - 1, alice, alice);
         vm.stopPrank();
+    }
+
+    function test__RedeemFractional() public {
+        uint256 redeemPeriod = 10;
+        uint256 depositPeriod = 2;
+
+        TestParamSet.TestParam memory testParam = TestParamSet.TestParam({
+            principal: 5500000, // 5.5 USDC
+            depositPeriod: depositPeriod,
+            redeemPeriod: redeemPeriod
+        });
+
+        // deposit
+        _testDepositOnly(TestParamSet.toSingletonUsers(alice), _liquidVault, testParam);
+
+        // request redeem
+        _warpToPeriod(_liquidVault, redeemPeriod - _liquidVault.noticePeriod());
+
+        vm.prank(alice);
+        _liquidVault.requestRedeem(5 * _scale, alice, alice);
+
+        _warpToPeriod(_liquidVault, redeemPeriod);
+        vm.prank(alice);
+        _liquidVault.redeem(5 * _scale, alice, alice);
+
+        _warpToPeriod(_liquidVault, redeemPeriod + 1 - _liquidVault.noticePeriod());
+        vm.prank(alice);
+        _liquidVault.requestRedeem(500000, alice, alice);
+
+        console2.log("locked amount", _liquidVault.lockedAmount(alice, depositPeriod));
+
+        _warpToPeriod(_liquidVault, redeemPeriod + 1);
+        vm.prank(alice);
+        uint256 redeemedAsset = _liquidVault.redeem(500000, alice, alice);
+
+        console2.log("redeemedAsset", redeemedAsset);
+
+        //assert(redeemedAsset > 0);
     }
 }
