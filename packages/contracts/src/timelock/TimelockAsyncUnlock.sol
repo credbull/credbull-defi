@@ -6,6 +6,8 @@ import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Co
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
+import { console } from "forge-std/console.sol";
+
 /**
  * @title TimelockAsyncUnlock
  *
@@ -155,13 +157,20 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         virtual
         returns (uint256)
     {
+        return requestUnlock(owner, depositPeriods, amounts, minUnlockPeriod());
+    }
+
+    function requestUnlock(
+        address owner,
+        uint256[] memory depositPeriods,
+        uint256[] memory amounts,
+        uint256 unlockPeriod
+    ) public virtual returns (uint256) {
         if (depositPeriods.length != amounts.length) {
             revert TimelockAsyncUnlock__InvalidArrayLength(depositPeriods.length, amounts.length);
         }
 
         _authorizeCaller(_msgSender(), owner);
-
-        uint256 unlockPeriod = minUnlockPeriod();
 
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
             _handleSingleUnlockRequest(owner, depositPeriods[i], unlockPeriod, amounts[i]);
@@ -245,6 +254,10 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
                 owner, depositPeriod, amount, maxRequestUnlock(owner, depositPeriod)
             );
         }
+
+        console.log(
+            "_handleSingleUnlockRequest(): Deposit= %s, Request Id= %s, Amount= %s", depositPeriod, requestId, amount
+        );
 
         EnumerableMap.UintToUintMap storage unlockRequestsForRequestId = _unlockRequests[owner][requestId];
         EnumerableMap.UintToUintMap storage depositPeriodAmountCache = _depositPeriodAmountCache[owner];
