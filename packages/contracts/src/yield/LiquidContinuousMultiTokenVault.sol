@@ -229,17 +229,6 @@ contract LiquidContinuousMultiTokenVault is
         return requestId;
     }
 
-    /// @inheritdoc IComponentToken
-    function cancelRedeemRequest(uint256 requestId, address controller) public onlyController(controller) {
-        (uint256[] memory depositPeriods, uint256[] memory amounts) = unlockRequests(controller, requestId);
-
-        for (uint256 i = 0; i < depositPeriods.length; ++i) {
-            _unlock(controller, depositPeriods[i], requestId, amounts[i]);
-        }
-
-        emit CancelRedeemRequest(controller, requestId, _msgSender());
-    }
-
     /**
      * @notice Fulfill a request to redeem assets by transferring assets to the receiver
      * @param shares Amount of shares that was redeemed by `requestRedeem`
@@ -401,6 +390,17 @@ contract LiquidContinuousMultiTokenVault is
     /// @dev - users should call deposit() instead that returns shares
     function lock(address account, uint256 depositPeriod, uint256 amount) public onlyRole(OPERATOR_ROLE) {
         _depositForDepositPeriod(amount, account, depositPeriod);
+    }
+
+    /// @dev Cancel a pending request to unlock
+    function cancelRequestUnlock(address owner, uint256 requestId) public onlyAuthorized(owner) {
+        (uint256[] memory depositPeriods, uint256[] memory amounts) = unlockRequests(owner, requestId);
+
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            _unlock(owner, depositPeriods[i], requestId, amounts[i]);
+        }
+
+        emit CancelRedeemRequest(owner, requestId, _msgSender());
     }
 
     /// @inheritdoc TimelockAsyncUnlock

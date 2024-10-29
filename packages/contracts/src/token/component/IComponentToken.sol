@@ -49,8 +49,6 @@ interface IComponentToken {
         address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
     );
 
-    event CancelRedeemRequest(address indexed controller, uint256 indexed requestId, address indexed sender);
-
     // User Functions
 
     /**
@@ -140,11 +138,4 @@ interface IComponentToken {
      * @return shares Amount of claimable redeem shares for the given requestId and controller
      */
     function claimableRedeemRequest(uint256 requestId, address controller) external view returns (uint256 shares);
-
-    /**
-     * @notice Cancel a pending redeem request
-     * @param requestId Discriminator between non-fungible requests
-     * @param controller Controller of the request
-     */
-    function cancelRedeemRequest(uint256 requestId, address controller) external;
 }

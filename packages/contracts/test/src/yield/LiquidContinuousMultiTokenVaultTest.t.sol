@@ -595,7 +595,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         // When alice calls unlock before redeem period, it will revert
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeUnlockPeriod.selector,
+                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeCurrentPeriod.selector,
                 alice,
                 alice,
                 liquidVault.currentPeriod(),
@@ -607,7 +607,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         // Alice cancels his redeem request and it works even before the redeem period.
         vm.prank(alice);
-        liquidVault.cancelRedeemRequest(requestId, alice);
+        liquidVault.cancelRequestUnlock(alice, requestId);
 
         assertEq(
             0, _liquidVault.pendingRedeemRequest(requestId, alice), "there shouldn't be any pending requestRedeems"
@@ -617,7 +617,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         // Alice calls this function again, but nothing happens.
         vm.prank(alice);
-        liquidVault.cancelRedeemRequest(requestId, alice);
+        liquidVault.cancelRequestUnlock(alice, requestId);
     }
 
     /**
@@ -648,7 +648,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         // Alice cancels his redeem request first
         vm.startPrank(alice);
-        liquidVault.cancelRedeemRequest(requestId, alice);
+        liquidVault.cancelRequestUnlock(alice, requestId);
 
         // Alice submits a redeem request again with the amount = [sharesAmount / 2].
         requestId = liquidVault.requestRedeem(sharesAmount / 2, alice, alice);
@@ -780,7 +780,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         // Alice cancels his redeem request
         // Alice can use either cancelRedeemRequest or unlock
         vm.prank(alice);
-        liquidVault.cancelRedeemRequest(requestId, alice);
+        liquidVault.cancelRequestUnlock(alice, requestId);
         // Alice makes another unlock request
         vm.prank(alice);
         liquidVault.requestRedeem(remainingShare_Alice, alice, alice);

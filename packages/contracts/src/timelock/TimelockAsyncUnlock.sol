@@ -22,6 +22,8 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
     // cache of user requested unlocks by depositPeriod across ALL requests.  maps account => map(depositPeriod -> unlockAmount)
     mapping(address account => EnumerableMap.UintToUintMap) private _depositPeriodAmountCache;
 
+    event CancelRedeemRequest(address indexed owner, uint256 indexed requestId, address indexed sender);
+
     error TimelockAsyncUnlock__AuthorizeCallerFailed(address caller, address owner);
     error TimelockAsyncUnlock__InvalidArrayLength(uint256 depositPeriodsLength, uint256 amountsLength);
     error TimelockAsyncUnlock__ExceededMaxRequestUnlock(
@@ -33,7 +35,7 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
     error TimelockAsyncUnlock__UnlockBeforeDepositPeriod(
         address caller, address owner, uint256 depositPeriod, uint256 unlockPeriod
     );
-    error TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(
+    error TimelockAsyncUnlock__UnlockBeforeCurrentPeriod(
         address caller, address owner, uint256 currentPeriod, uint256 unlockPeriod
     );
 
@@ -182,7 +184,7 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         _authorizeCaller(_msgSender(), owner);
 
         if (requestId > currentPeriod()) {
-            revert TimelockAsyncUnlock__UnlockBeforeUnlockPeriod(_msgSender(), owner, currentPeriod(), requestId);
+            revert TimelockAsyncUnlock__UnlockBeforeCurrentPeriod(_msgSender(), owner, currentPeriod(), requestId);
         }
 
         // use copy of the depositPeriods and amounts.  we will be altering the storage in _unlock()
