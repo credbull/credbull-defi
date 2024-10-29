@@ -105,6 +105,9 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     ) internal virtual override returns (uint256 actualAssetsAtPeriod_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
+        uint256 prevLockedAmount = liquidVault.lockedAmount(redeemUsers.tokenOwner, testParam.depositPeriod);
+        uint256 prevBalanceOf = liquidVault.balanceOf(redeemUsers.tokenOwner, testParam.depositPeriod);
+
         // request unlock
         _warpToPeriod(liquidVault, testParam.redeemPeriod - liquidVault.noticePeriod());
 
@@ -119,7 +122,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         vault.setApprovalForAll(redeemUsers.tokenOperator, false);
 
         assertEq(
-            testParam.principal,
+            sharesToRedeemAtPeriod,
             liquidVault.unlockRequestAmountByDepositPeriod(redeemUsers.tokenOwner, testParam.depositPeriod),
             "unlockRequest should be created"
         );
@@ -128,10 +131,14 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
         // verify locks and request locks released
         assertEq(
-            0, liquidVault.lockedAmount(redeemUsers.tokenOwner, testParam.depositPeriod), "deposit lock not released"
+            prevLockedAmount - sharesToRedeemAtPeriod,
+            liquidVault.lockedAmount(redeemUsers.tokenOwner, testParam.depositPeriod),
+            "deposit lock not released"
         );
         assertEq(
-            0, liquidVault.balanceOf(redeemUsers.tokenOwner, testParam.depositPeriod), "deposits should be redeemed"
+            prevBalanceOf - sharesToRedeemAtPeriod,
+            liquidVault.balanceOf(redeemUsers.tokenOwner, testParam.depositPeriod),
+            "deposits should be redeemed"
         );
         assertEq(
             0,
@@ -180,15 +187,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     ) internal virtual returns (uint256 assets_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
-        // in LiquidContinuousMultiTokenVault - the tokenOwner and tokenOperator (aka controller) must be the same
-        TestParamSet.TestUsers memory redeemUsersOperatorIsOwner = TestParamSet.TestUsers({
-            tokenOwner: redeemUsers.tokenOwner,
-            tokenReceiver: redeemUsers.tokenReceiver,
-            tokenOperator: redeemUsers.tokenOwner
-        });
-
-        uint256 assets =
-            super._testRedeemMultiDeposit(redeemUsersOperatorIsOwner, vault, depositTestParams, redeemPeriod);
+        uint256 assets = super._testRedeemMultiDeposit(redeemUsers, vault, depositTestParams, redeemPeriod);
 
         // verify the requestRedeems are released
         (uint256[] memory unlockDepositPeriods, uint256[] memory unlockAmounts) =
@@ -215,7 +214,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         return _testRedeemAfterRequestRedeemMultiDeposit(redeemUsers, vault, depositTestParams, redeemPeriod);
     }
 
-    /// @dev execute a redeem on the vault across multiple deposit periods.~
+    /// @dev redeem across multiple deposit periods
     function _vaultRedeemBatch(
         TestParamSet.TestUsers memory redeemUsers,
         IMultiTokenVault vault,
@@ -261,6 +260,27 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         uint256 warpToTimeInSeconds = liquidVault._vaultStartTimestamp() + timePeriod * 24 hours;
 
         vm.warp(warpToTimeInSeconds);
+    }
+
+    // simple scenario with only one user
+    function _createTestUsers(address account)
+        internal
+        virtual
+        override
+        returns (TestParamSet.TestUsers memory depositUsers_, TestParamSet.TestUsers memory redeemUsers_)
+    {
+        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
+            super._createTestUsers(account);
+
+        // in LiquidContinuousMultiTokenVault - tokenOwner and tokenOperator (aka controller) must be the same
+        // because IComponentToken.redeem() does not have an `owner` parameter.  // TODO - we should add this in with Plume !
+        TestParamSet.TestUsers memory redeemUsersOperatorIsOwner = TestParamSet.TestUsers({
+            tokenOwner: redeemUsers.tokenOwner,
+            tokenReceiver: redeemUsers.tokenReceiver,
+            tokenOperator: redeemUsers.tokenOwner
+        });
+
+        return (depositUsers, redeemUsersOperatorIsOwner);
     }
 
     function _setPeriod(address operator, LiquidContinuousMultiTokenVault vault, uint256 newPeriod) public {

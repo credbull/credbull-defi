@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
@@ -171,20 +170,20 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
     /// @dev verify deposit.  updates vault assets and shares.
     function _testDepositOnly(
-        TestParamSet.TestUsers memory testUsers,
+        TestParamSet.TestUsers memory depositUsers,
         IMultiTokenVault vault,
         TestParamSet.TestParam[] memory testParams
     ) internal virtual returns (uint256[] memory sharesAtPeriod_) {
         uint256[] memory sharesAtPeriod = new uint256[](testParams.length);
         for (uint256 i = 0; i < testParams.length; i++) {
-            sharesAtPeriod[i] = _testDepositOnly(testUsers, vault, testParams[i]);
+            sharesAtPeriod[i] = _testDepositOnly(depositUsers, vault, testParams[i]);
         }
         return sharesAtPeriod;
     }
 
     /// @dev verify deposit.  updates vault assets and shares.
     function _testDepositOnly(
-        TestParamSet.TestUsers memory testUsers,
+        TestParamSet.TestUsers memory depositUsers,
         IMultiTokenVault vault,
         TestParamSet.TestParam memory testParam
     ) internal virtual returns (uint256 actualSharesAtPeriod_) {
@@ -192,32 +191,32 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
         // capture state before for validations
         uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
-        uint256 prevReceiverVaultBalance = vault.sharesAtPeriod(testUsers.tokenReceiver, testParam.depositPeriod);
+        uint256 prevReceiverVaultBalance = vault.sharesAtPeriod(depositUsers.tokenReceiver, testParam.depositPeriod);
 
         // ------------------- deposit -------------------
         _warpToPeriod(vault, testParam.depositPeriod); // warp to deposit period
 
         assertGe(
-            asset.balanceOf(testUsers.tokenOwner),
+            asset.balanceOf(depositUsers.tokenOwner),
             testParam.principal,
             _assertMsg("not enough assets for deposit ", vault, testParam.depositPeriod)
         );
-        vm.prank(testUsers.tokenOwner); // tokenOwner here is the owner of the USDC
+        vm.prank(depositUsers.tokenOwner); // tokenOwner here is the owner of the USDC
         asset.approve(address(vault), testParam.principal); // grant the vault allowance
 
-        vm.prank(testUsers.tokenOwner); // tokenOwner here is the owner of the USDC
-        uint256 actualSharesAtPeriod = vault.deposit(testParam.principal, testUsers.tokenReceiver); // now deposit
+        vm.prank(depositUsers.tokenOwner); // tokenOwner here is the owner of the USDC
+        uint256 actualSharesAtPeriod = vault.deposit(testParam.principal, depositUsers.tokenReceiver); // now deposit
 
         assertEq(
             prevReceiverVaultBalance + actualSharesAtPeriod,
-            vault.sharesAtPeriod(testUsers.tokenReceiver, testParam.depositPeriod),
+            vault.sharesAtPeriod(depositUsers.tokenReceiver, testParam.depositPeriod),
             _assertMsg(
                 "receiver did not receive the correct vault shares - sharesAtPeriod", vault, testParam.depositPeriod
             )
         );
         assertEq(
             prevReceiverVaultBalance + actualSharesAtPeriod,
-            vault.balanceOf(testUsers.tokenReceiver, testParam.depositPeriod),
+            vault.balanceOf(depositUsers.tokenReceiver, testParam.depositPeriod),
             _assertMsg("receiver did not receive the correct vault shares - balanceOf ", vault, testParam.depositPeriod)
         );
 
@@ -253,6 +252,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
         // ------------------- prep redeem -------------------
         uint256 assetBalanceBeforeRedeem = asset.balanceOf(redeemUsers.tokenReceiver);
+        uint256 shareBalanceBeforeRedeem = vault.balanceOf(redeemUsers.tokenOwner, testParam.depositPeriod);
         uint256 expectedReturns = _expectedReturns(sharesToRedeemAtPeriod, vault, testParam);
 
         _transferFromTokenOwner(asset, address(vault), expectedReturns);
@@ -279,6 +279,13 @@ abstract contract IMultiTokenVaultTestBase is Test {
             actualAssetsAtPeriod,
             TOLERANCE,
             _assertMsg("assets does not equal principal + yield", vault, testParam.depositPeriod)
+        );
+
+        // verify the token owner shares reduced
+        assertEq(
+            shareBalanceBeforeRedeem - sharesToRedeemAtPeriod,
+            vault.balanceOf(redeemUsers.tokenOwner, testParam.depositPeriod),
+            _assertMsg("shares not reduced by redeem amount", vault, testParam.depositPeriod)
         );
 
         // verify the receiver has the USDC back
@@ -338,46 +345,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
         return assets;
     }
 
-    /// @dev performance / load test harness to execute a number of deposits first, and then redeem after
-    function _loadTestVault(IMultiTokenVault vault, uint256 principal, uint256 fromPeriod, uint256 toPeriod) internal {
-        address charlie = makeAddr("charlie");
-        address david = makeAddr("david");
-
-        IERC20Metadata _asset = IERC20Metadata(vault.asset());
-        uint256 _scale = 10 ** _asset.decimals();
-
-        _transferFromTokenOwner(_asset, charlie, 1_000_000_000 * _scale);
-        _transferFromTokenOwner(_asset, david, 1_000_000_000 * _scale);
-
-        // "wastes" storage from 0 -> fromPeriod.  but fine in test, and makes the depositPeriod clear
-        uint256[] memory charlieShares = new uint256[](toPeriod + 1);
-        uint256[] memory davidShares = new uint256[](toPeriod + 1);
-
-        TestParamSet.TestUsers memory charlieTestUsers = TestParamSet.toSingletonUsers(charlie);
-        TestParamSet.TestUsers memory davidTestUsers = TestParamSet.toSingletonUsers(david);
-
-        // ----------------------- deposits -----------------------
-        for (uint256 i = fromPeriod; i < toPeriod; ++i) {
-            TestParamSet.TestParam memory depositTestParam = TestParamSet.TestParam({
-                principal: principal,
-                depositPeriod: i,
-                redeemPeriod: 0 // not used in deposit flow
-             });
-            charlieShares[i] = _testDepositOnly(charlieTestUsers, vault, depositTestParam);
-            davidShares[i] = _testDepositOnly(davidTestUsers, vault, depositTestParam);
-        }
-
-        // ----------------------- redeems -----------------------
-        for (uint256 i = fromPeriod; i < toPeriod; ++i) {
-            TestParamSet.TestParam memory redeemTestParam =
-                TestParamSet.TestParam({ principal: principal, depositPeriod: i, redeemPeriod: toPeriod });
-
-            _testRedeemOnly(charlieTestUsers, vault, redeemTestParam, charlieShares[i]);
-            _testRedeemOnly(davidTestUsers, vault, redeemTestParam, davidShares[i]);
-        }
-    }
-
-    /// @dev /// @dev execute a redeem on the vault across multiple deposit periods. (if supported)
+    /// @dev vault redeem across multiple deposit periods. (if supported)
     function _vaultRedeemBatch(
         TestParamSet.TestUsers memory redeemUsers,
         IMultiTokenVault vault,
@@ -392,7 +360,7 @@ abstract contract IMultiTokenVaultTestBase is Test {
 
         uint256 assets = 0;
         vm.startPrank(redeemUsers.tokenOperator);
-        // @dev - IMultiTokenVault we don't support redeeming across deposit periods.  redeem period by period instead.
+        // IMultiTokenVault doesn't support redeeming across deposit periods.  redeem period by period instead.
         for (uint256 i = 0; i < depositTestParams.length; ++i) {
             uint256 depositPeriod = depositTestParams[i].depositPeriod;
             uint256 sharesAtPeriod =
@@ -437,18 +405,22 @@ abstract contract IMultiTokenVaultTestBase is Test {
     // simple scenario with only one user
     function _createTestUsers(address account)
         internal
+        virtual
         returns (TestParamSet.TestUsers memory depositUsers_, TestParamSet.TestUsers memory redeemUsers_)
     {
+        // Convert the address to a string and then to bytes
+        string memory accountStr = vm.toString(account);
+
         TestParamSet.TestUsers memory depositUsers = TestParamSet.TestUsers({
             tokenOwner: account, // owns tokens, can specify who can receive tokens
-            tokenReceiver: makeAddr("depositTokenReceiver"), // receiver of tokens from the tokenOwner
-            tokenOperator: makeAddr("depositTokenOperator") // granted allowance by tokenOwner to act on their behalf
+            tokenReceiver: makeAddr(string.concat("depositTokenReceiver-", accountStr)), // receiver of tokens from the tokenOwner
+            tokenOperator: makeAddr(string.concat("depositTokenOperator-", accountStr)) // granted allowance by tokenOwner to act on their behalf
          });
 
         TestParamSet.TestUsers memory redeemUsers = TestParamSet.TestUsers({
             tokenOwner: depositUsers.tokenReceiver, // on deposit, the tokenReceiver receives (owns) the tokens
             tokenReceiver: account, // virtuous cycle, the account receives the returns in the end
-            tokenOperator: makeAddr("redeemTokenOperator") // granted allowance by tokenOwner to act on their behalf
+            tokenOperator: makeAddr(string.concat("redeemTokenOperator-", accountStr)) // granted allowance by tokenOwner to act on their behalf
          });
 
         return (depositUsers, redeemUsers);
