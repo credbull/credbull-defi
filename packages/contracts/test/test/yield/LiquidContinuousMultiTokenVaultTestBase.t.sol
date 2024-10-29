@@ -56,8 +56,12 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     ) internal virtual override returns (uint256 actualSharesAtPeriod_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
-        // TODO - calling totalAssets reverts, see https://github.com/credbull/credbull-defi/issues/160
-        // uint256 prevVaultTotalAssets = liquidVault.totalAssets();
+        uint256 prevVaultBalanceOf = _asset.balanceOf(address(_liquidVault));
+        uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
+
+        _warpToPeriod(vault, testParam.depositPeriod); // warp to deposit period to calc totalAssets correctly
+        uint256 prevVaultTotalAssets = liquidVault.totalAssets();
+        _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore previous period state
 
         uint256 actualSharesAtPeriod = super._testDepositOnly(testUsers, vault, testParam);
 
@@ -70,13 +74,22 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         );
 
         assertEq(
+            prevVaultBalanceOf + testParam.principal,
+            _asset.balanceOf(address(_liquidVault)),
+            "vault didn't receive the assets"
+        );
+
+        assertEq(
             testParam.principal,
             liquidVault.lockedAmount(testUsers.tokenReceiver, testParam.depositPeriod),
             "principal not locked"
         );
 
-        // TODO - this assertion *should* work, but doesn't.  see https://github.com/credbull/credbull-defi/issues/160
-        // assertEq(prevVaultTotalAssets + testParam.principal, liquidVault.totalAssets(), "vault total assets not updated");
+        _warpToPeriod(vault, testParam.depositPeriod); // warp to deposit period to calc totalAssets correctly
+        assertEq(
+            prevVaultTotalAssets + testParam.principal, liquidVault.totalAssets(), "vault total assets not updated"
+        );
+        _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore previous period state
 
         return actualSharesAtPeriod;
     }
