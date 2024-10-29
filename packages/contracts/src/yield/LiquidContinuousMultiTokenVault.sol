@@ -398,6 +398,17 @@ contract LiquidContinuousMultiTokenVault is
         _depositForDepositPeriod(amount, account, depositPeriod);
     }
 
+    /// @dev Cancel a pending request to unlock
+    function cancelRequestUnlock(address owner, uint256 requestId) public onlyAuthorized(owner) {
+        (uint256[] memory depositPeriods, uint256[] memory amounts) = unlockRequests(owner, requestId);
+
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            _unlock(owner, depositPeriods[i], requestId, amounts[i]);
+        }
+
+        emit CancelRedeemRequest(owner, requestId, _msgSender());
+    }
+
     /// @inheritdoc TimelockAsyncUnlock
     function lockedAmount(address account, uint256 depositPeriod)
         public

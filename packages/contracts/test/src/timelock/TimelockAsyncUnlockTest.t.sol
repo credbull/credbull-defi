@@ -185,7 +185,7 @@ contract TimelockAsyncUnlockTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeUnlockPeriod.selector,
+                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeCurrentPeriod.selector,
                 alice,
                 alice,
                 asyncUnlock.currentPeriod(),

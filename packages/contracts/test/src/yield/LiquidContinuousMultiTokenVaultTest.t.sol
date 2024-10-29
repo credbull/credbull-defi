@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
+import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
@@ -567,6 +568,241 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         assertLe(
             principalDecimalPart, assetDecimalPart, "principal + returns should be at least principal decimal amount"
         );
+    }
+
+    // ================== F-2024-6700 ==================
+    /**
+     * Scenario
+     * 1. Alice deposits assets at the deposit period.
+     * 2. Alice requests redeem to withdraw his assets from the vault.
+     * 3. Alice wants to cancel his redeem request before the redeem period.
+     */
+    function test__LiquidContinuousMultiTokenVault__CancelUnlockRequest__BeforeRedeemPeriod() public {
+        LiquidContinuousMultiTokenVault liquidVault = _liquidVault;
+
+        TestParamSet.TestParam memory testParams =
+            TestParamSet.TestParam({ principal: 2_000 * _scale, depositPeriod: 10, redeemPeriod: 70 });
+
+        uint256 sharesAmount = testParams.principal;
+
+        _warpToPeriod(liquidVault, testParams.depositPeriod);
+
+        vm.startPrank(alice);
+        _asset.approve(address(liquidVault), testParams.principal);
+        liquidVault.requestDeposit(testParams.principal, alice, alice);
+        vm.stopPrank();
+
+        _warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+
+        // Alice requests redeem for sharesAmount
+        vm.prank(alice);
+        uint256 requestId = liquidVault.requestRedeem(sharesAmount, alice, alice);
+
+        assertEq(requestId, testParams.redeemPeriod, "requestId should be the redeemPeriod");
+
+        // When alice calls unlock before redeem period, it will revert
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeCurrentPeriod.selector,
+                alice,
+                alice,
+                liquidVault.currentPeriod(),
+                testParams.redeemPeriod
+            )
+        );
+        vm.prank(alice);
+        liquidVault.unlock(alice, requestId);
+
+        // Alice cancels his redeem request and it works even before the redeem period.
+        vm.prank(alice);
+        liquidVault.cancelRequestUnlock(alice, requestId);
+
+        assertEq(
+            0, _liquidVault.pendingRedeemRequest(requestId, alice), "there shouldn't be any pending requestRedeems"
+        );
+
+        assertEq(0, _liquidVault.claimableRedeemRequest(requestId, alice), "there shouldn't be any claimable redeems");
+
+        // Alice calls this function again, but nothing happens.
+        vm.prank(alice);
+        liquidVault.cancelRequestUnlock(alice, requestId);
+    }
+
+    /**
+     * Scenario
+     * 1. Alice deposits assets at the deposit period.
+     * 2. Alice requests to redeem for [sharesAmount]
+     * 3. Alice wants to decrease his redeem request amount to [sharesAmount / 2] before redeem Period
+     */
+    function test__LiquidContinuousMultiTokenVault__ModifyUnlockRequest__BeforeRedeemPeriod() public {
+        LiquidContinuousMultiTokenVault liquidVault = _liquidVault;
+
+        TestParamSet.TestParam memory testParams =
+            TestParamSet.TestParam({ principal: 2_000 * _scale, depositPeriod: 10, redeemPeriod: 70 });
+
+        uint256 sharesAmount = testParams.principal;
+
+        _warpToPeriod(liquidVault, testParams.depositPeriod);
+
+        vm.startPrank(alice);
+        _asset.approve(address(liquidVault), testParams.principal);
+        liquidVault.requestDeposit(testParams.principal, alice, alice);
+        vm.stopPrank();
+
+        _warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+
+        vm.prank(alice);
+        uint256 requestId = liquidVault.requestRedeem(sharesAmount, alice, alice);
+
+        // Alice cancels his redeem request first
+        vm.startPrank(alice);
+        liquidVault.cancelRequestUnlock(alice, requestId);
+
+        // Alice submits a redeem request again with the amount = [sharesAmount / 2].
+        requestId = liquidVault.requestRedeem(sharesAmount / 2, alice, alice);
+        vm.stopPrank();
+
+        vm.prank(alice);
+        assertEq(
+            sharesAmount / 2,
+            _liquidVault.pendingRedeemRequest(requestId, alice),
+            "pending request redeem amount not correct"
+        );
+
+        assertEq(
+            sharesAmount / 2,
+            liquidVault.unlockRequestAmountByDepositPeriod(alice, testParams.depositPeriod),
+            "unlockRequest should be created"
+        );
+    }
+
+    /**
+     * Scenario
+     * 1. Alice deposits assets at the deposit period.
+     * 2. Alice requests to redeem for [sharesAmount_1_Alice]
+     * 3. Alice transfers [sharesAmount_1_David] shares to David
+     * 4. David requests reedeem for sharesAmount_1_David
+     * 5. Alice makes another request redeems for [sharesAmount_2_Alice]
+     * 6. Alice transfers another amount[sharesAmount_2_David] of shares to David
+     * 7. David makes another redeem request for [sharesAmount_2_David]
+     * 8. Alice cancels his redeem request (because redeem will fail)
+     * 9. Alice makes new redeem request at redeem period
+     * 10.David redeems his shares which already requested at redeem period
+     */
+    function test__LiquidContinuousMultiTokenVault__ModifyUnlockRequest__Sdsed() public {
+        LiquidContinuousMultiTokenVault liquidVault = _liquidVault;
+
+        TestParamSet.TestParam memory testParams =
+            TestParamSet.TestParam({ principal: 2_000 * _scale, depositPeriod: 10, redeemPeriod: 70 });
+
+        uint256 sharesAmount_1_Alice = testParams.principal / 2;
+
+        _warpToPeriod(liquidVault, testParams.depositPeriod);
+
+        vm.startPrank(alice);
+        _asset.approve(address(liquidVault), testParams.principal);
+        liquidVault.requestDeposit(testParams.principal, alice, alice);
+        vm.stopPrank();
+
+        _warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+
+        // Alice requests redeem for sharesAmount_1_Alice
+        vm.prank(alice);
+        uint256 requestId = liquidVault.requestRedeem(sharesAmount_1_Alice, alice, alice);
+
+        address david = makeAddr("david");
+
+        uint256 sharesAmount_1_David = sharesAmount_1_Alice / 2;
+
+        // Alice transfers [sharesAmount_1_David] shares to David
+        vm.prank(alice);
+        liquidVault.safeTransferFrom(alice, david, testParams.depositPeriod, sharesAmount_1_David, "");
+
+        assertEq(sharesAmount_1_David, liquidVault.balanceOf(david, testParams.depositPeriod));
+        assertEq(testParams.principal - sharesAmount_1_David, liquidVault.lockedAmount(alice, testParams.depositPeriod));
+
+        // David requests reedeem for sharesAmount_1_David
+        vm.startPrank(david);
+        liquidVault.requestRedeem(sharesAmount_1_David, david, david);
+
+        assertEq(
+            sharesAmount_1_David,
+            _liquidVault.pendingRedeemRequest(requestId, david),
+            "david pending request redeem amount not correct"
+        );
+        vm.stopPrank();
+
+        // Alice makes another request redeems
+        uint256 sharesAmount_2_Alice = testParams.principal - sharesAmount_1_Alice - sharesAmount_1_David;
+
+        vm.startPrank(alice);
+        liquidVault.requestRedeem(sharesAmount_2_Alice, alice, alice);
+
+        assertEq(
+            sharesAmount_1_Alice + sharesAmount_2_Alice,
+            _liquidVault.pendingRedeemRequest(requestId, alice),
+            "alice pending request redeem amount not correct"
+        );
+        vm.stopPrank();
+
+        // Alice transfers another amount of shares to David
+        // amount = (sharesAmount_1_Alice + sharesAmount_2_Alice) / 2
+
+        uint256 sharesAmount_2_David = (sharesAmount_1_Alice + sharesAmount_2_Alice) / 2;
+        vm.prank(alice);
+        liquidVault.safeTransferFrom(alice, david, testParams.depositPeriod, sharesAmount_2_David, "");
+
+        assertEq(sharesAmount_1_David + sharesAmount_2_David, liquidVault.balanceOf(david, testParams.depositPeriod));
+
+        uint256 remainingShare_Alice = testParams.principal - sharesAmount_1_David - sharesAmount_2_David;
+        assertEq(remainingShare_Alice, liquidVault.balanceOf(alice, testParams.depositPeriod));
+        assertTrue(
+            remainingShare_Alice < liquidVault.unlockRequestAmountByDepositPeriod(alice, testParams.depositPeriod),
+            "Alice requested unlock amount should be bigger than locked amount"
+        );
+
+        // David makes another redeem request
+        vm.startPrank(david);
+        liquidVault.requestRedeem(sharesAmount_2_David, david, david);
+
+        assertEq(
+            sharesAmount_1_David + sharesAmount_2_David,
+            _liquidVault.pendingRedeemRequest(requestId, david),
+            "david pending request redeem amount not correct"
+        );
+        vm.stopPrank();
+
+        _warpToPeriod(liquidVault, testParams.redeemPeriod);
+
+        // We expect revert in Alice's redeem because shares and ruquest unlocked amount for Alice are different
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount.selector,
+                remainingShare_Alice,
+                liquidVault.unlockRequestAmountByDepositPeriod(alice, testParams.depositPeriod)
+            )
+        );
+        vm.prank(alice);
+        liquidVault.redeem(remainingShare_Alice, alice, alice);
+
+        // Alice cancels his redeem request
+        // Alice can use either cancelRedeemRequest or unlock
+        vm.prank(alice);
+        liquidVault.cancelRequestUnlock(alice, requestId);
+        // Alice makes another unlock request
+        vm.prank(alice);
+        liquidVault.requestRedeem(remainingShare_Alice, alice, alice);
+
+        // David redeems his shares
+        vm.startPrank(david);
+        liquidVault.redeem(sharesAmount_1_David + sharesAmount_2_David, david, david);
+
+        assertEq(
+            0, _liquidVault.pendingRedeemRequest(requestId, david), "david pending request redeem amount should be zero"
+        );
+
+        assertEq(0, liquidVault.balanceOf(david, testParams.depositPeriod), "david should have no shares remaining");
+        vm.stopPrank();
     }
 
     // Scenario: User requests redemption before the cutoff time on the same day as deposit
