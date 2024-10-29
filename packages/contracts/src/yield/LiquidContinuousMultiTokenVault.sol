@@ -236,7 +236,7 @@ contract LiquidContinuousMultiTokenVault is
             }
         }
 
-        uint256 requestId = requestUnlock(owner, depositPeriods, sharesAtPeriods, redeemPeriod);
+        uint256 requestId = _requestUnlock(owner, depositPeriods, sharesAtPeriods, redeemPeriod);
         emit RedeemRequest(controller, owner, requestId, _msgSender(), shares);
         return requestId;
     }

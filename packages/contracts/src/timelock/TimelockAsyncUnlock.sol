@@ -157,15 +157,15 @@ abstract contract TimelockAsyncUnlock is Initializable, ITimelockAsyncUnlock, Co
         virtual
         returns (uint256)
     {
-        return requestUnlock(owner, depositPeriods, amounts, minUnlockPeriod());
+        return _requestUnlock(owner, depositPeriods, amounts, minUnlockPeriod());
     }
 
-    function requestUnlock(
+    function _requestUnlock(
         address owner,
         uint256[] memory depositPeriods,
         uint256[] memory amounts,
         uint256 unlockPeriod
-    ) public virtual returns (uint256) {
+    ) internal virtual returns (uint256) {
         if (depositPeriods.length != amounts.length) {
             revert TimelockAsyncUnlock__InvalidArrayLength(depositPeriods.length, amounts.length);
         }
