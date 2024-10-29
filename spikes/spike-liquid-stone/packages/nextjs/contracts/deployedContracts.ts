@@ -1030,6 +1030,24 @@
       },
       {
         "type": "function",
+        "name": "cancelRequestUnlock",
+        "inputs": [
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "requestId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
         "name": "claimableDepositRequest",
         "inputs": [
           {
@@ -1980,7 +1998,7 @@
             "internalType": "address"
           },
           {
-            "name": "",
+            "name": "controller",
             "type": "address",
             "internalType": "address"
           }
@@ -2124,7 +2142,7 @@
             "internalType": "uint256"
           },
           {
-            "name": "",
+            "name": "controller",
             "type": "address",
             "internalType": "address"
           },
@@ -2689,6 +2707,31 @@
             "type": "uint256",
             "indexed": false,
             "internalType": "uint256"
+          }
+        ],
+        "anonymous": false
+      },
+      {
+        "type": "event",
+        "name": "CancelRedeemRequest",
+        "inputs": [
+          {
+            "name": "owner",
+            "type": "address",
+            "indexed": true,
+            "internalType": "address"
+          },
+          {
+            "name": "requestId",
+            "type": "uint256",
+            "indexed": true,
+            "internalType": "uint256"
+          },
+          {
+            "name": "sender",
+            "type": "address",
+            "indexed": true,
+            "internalType": "address"
           }
         ],
         "anonymous": false
@@ -3383,7 +3426,7 @@
       },
       {
         "type": "error",
-        "name": "LiquidContinuousMultiTokenVault__ControllerMismatch",
+        "name": "LiquidContinuousMultiTokenVault__ControllerNotSender",
         "inputs": [
           {
             "name": "sender",
@@ -3437,6 +3480,22 @@
             "name": "frequency",
             "type": "uint256",
             "internalType": "uint256"
+          }
+        ]
+      },
+      {
+        "type": "error",
+        "name": "LiquidContinuousMultiTokenVault__UnAuthorized",
+        "inputs": [
+          {
+            "name": "sender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "authorizedOwner",
+            "type": "address",
+            "internalType": "address"
           }
         ]
       },
@@ -3705,6 +3764,32 @@
       },
       {
         "type": "error",
+        "name": "TimelockAsyncUnlock__UnlockBeforeCurrentPeriod",
+        "inputs": [
+          {
+            "name": "caller",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "currentPeriod",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "unlockPeriod",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      },
+      {
+        "type": "error",
         "name": "TimelockAsyncUnlock__UnlockBeforeDepositPeriod",
         "inputs": [
           {
@@ -3719,32 +3804,6 @@
           },
           {
             "name": "depositPeriod",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "unlockPeriod",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      },
-      {
-        "type": "error",
-        "name": "TimelockAsyncUnlock__UnlockBeforeUnlockPeriod",
-        "inputs": [
-          {
-            "name": "caller",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "owner",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "currentPeriod",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -4474,6 +4533,24 @@
       },
       {
         "type": "function",
+        "name": "cancelRequestUnlock",
+        "inputs": [
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "requestId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
         "name": "currentPeriod",
         "inputs": [],
         "outputs": [
@@ -4824,6 +4901,31 @@
       },
       {
         "type": "event",
+        "name": "CancelRedeemRequest",
+        "inputs": [
+          {
+            "name": "owner",
+            "type": "address",
+            "indexed": true,
+            "internalType": "address"
+          },
+          {
+            "name": "requestId",
+            "type": "uint256",
+            "indexed": true,
+            "internalType": "uint256"
+          },
+          {
+            "name": "sender",
+            "type": "address",
+            "indexed": true,
+            "internalType": "address"
+          }
+        ],
+        "anonymous": false
+      },
+      {
+        "type": "event",
         "name": "Initialized",
         "inputs": [
           {
@@ -4987,6 +5089,32 @@
       },
       {
         "type": "error",
+        "name": "TimelockAsyncUnlock__UnlockBeforeCurrentPeriod",
+        "inputs": [
+          {
+            "name": "caller",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "currentPeriod",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "unlockPeriod",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      },
+      {
+        "type": "error",
         "name": "TimelockAsyncUnlock__UnlockBeforeDepositPeriod",
         "inputs": [
           {
@@ -5001,32 +5129,6 @@
           },
           {
             "name": "depositPeriod",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "unlockPeriod",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      },
-      {
-        "type": "error",
-        "name": "TimelockAsyncUnlock__UnlockBeforeUnlockPeriod",
-        "inputs": [
-          {
-            "name": "caller",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "owner",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "currentPeriod",
             "type": "uint256",
             "internalType": "uint256"
           },

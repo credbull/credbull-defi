@@ -179,8 +179,9 @@ const ViewSection = () => {
       return;
     }
 
-    if (assetAmount < assetsToRedeem) {
-      notification.error("Sorry! No enough balance in the vault.");
+    if (parseFloat(assetAmount) < parseFloat(assetsToRedeem)) {
+      const errorMsg = "Sorry! Not enough balance in the vault. " + assetAmount + " < " + assetsToRedeem;
+      notification.error(errorMsg);
       return;
     }
 
