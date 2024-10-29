@@ -298,12 +298,12 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         uint256 redeemPeriod = 10;
         TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](2);
         testParams[0] = TestParamSet.TestParam({
-            principal: 100 * _scale,
+            principal: 50 * _scale,
             depositPeriod: depositPeriod1,
             redeemPeriod: redeemPeriod
         });
         testParams[1] = TestParamSet.TestParam({
-            principal: 100 * _scale,
+            principal: 80 * _scale,
             depositPeriod: depositPeriod2,
             redeemPeriod: redeemPeriod
         });
@@ -312,19 +312,27 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         uint256 totalShares = shares[0] + shares[1];
 
         // -------------- deposit period1  --------------
+        _warpToPeriod(_liquidVault, depositPeriod1);
 
-        // TODO - depositPeriod1 fails [FAIL: IYieldStrategy_InvalidPeriodRange(5, 5)]
-        //        assertEq(assetsAtDepositPeriod2, _liquidVault.convertToAssets(shares[0]), "assets wrong at deposit period 1");
+        uint256 assetsAtDepositPeriod1 =
+            _liquidVault.convertToAssetsForDepositPeriod(shares[0], testParams[0].depositPeriod, depositPeriod1);
+
+        vm.prank(alice);
+        assertEq(assetsAtDepositPeriod1, _liquidVault.convertToAssets(shares[0]), "assets wrong at deposit period 1");
 
         // -------------- deposit period2 --------------
         _warpToPeriod(_liquidVault, depositPeriod2);
 
         uint256 assetsAtDepositPeriod2 =
-            _liquidVault.convertToAssetsForDepositPeriod(shares[0], testParams[0].depositPeriod, depositPeriod2);
+            _liquidVault.convertToAssetsForDepositPeriod(shares[1], testParams[1].depositPeriod, depositPeriod2);
 
         vm.prank(alice);
-        assertEq(assetsAtDepositPeriod2, _liquidVault.convertToAssets(shares[0]), "assets wrong at deposit period 2");
-        // assertEq(assetsAtDepositPeriod2, _liquidVault.totalAssets(), "totalAssets wrong at deposit period 2"); // TODO - fails [FAIL: IYieldStrategy_InvalidPeriodRange(6, 6)]
+        assertEq(assetsAtDepositPeriod2, _liquidVault.convertToAssets(shares[1]), "assets wrong at deposit period 2");
+        assertEq(
+            assetsAtDepositPeriod1 + assetsAtDepositPeriod2,
+            _liquidVault.totalAssets(),
+            "totalAssets wrong at deposit period 2"
+        );
 
         // -------------- requestRedeem period --------------
         uint256 requestRedeemPeriod = redeemPeriod - _liquidVault.noticePeriod();
@@ -561,7 +569,6 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
     }
 
-    // TODO - this isn't supposed to give yield
     // Scenario: User requests redemption before the cutoff time on the same day as deposit
     // Given the Redemption Request cutoff time is 2:59:59pm
     // And the Redemption Settlement cutoff time is 2:59:59pm the next day
@@ -589,15 +596,15 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         vm.prank(alice);
         uint256 redeemPeriod = _liquidVault.requestRedeem(shares, alice, alice);
 
-        // ----------------- requestRedeem  ------------
+        // ----------------- redeem  ------------
         vm.warp(depositAtCutoff + 2 minutes); // warp to the next day
         assertEq(redeemPeriod, _liquidVault.currentPeriod(), "didn't tick over a day");
 
         uint256 assetPreview = _liquidVault.previewRedeemForDepositPeriod(shares, depositPeriod, redeemPeriod);
-        assertLt(principal, assetPreview, "assets preview greater than principal, but should it be??!?"); // TODO - shouldn't this return 0 yield ?
+        assertEq(principal, assetPreview, "assets should be the same as principal");
 
         vm.prank(alice);
         uint256 assets = _liquidVault.redeem(shares, alice, alice);
-        assertLt(principal, assets, "assets greater than principal, but should it be??!?"); // TODO - shouldn't this return 0 yield ?
+        assertEq(principal, assets, "assets should be the same as principal");
     }
 }

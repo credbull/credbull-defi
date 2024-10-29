@@ -376,6 +376,12 @@ contract LiquidContinuousMultiTokenVault is
 
     /// @dev yield based on the associated yieldStrategy
     function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod) public view returns (uint256 yield) {
+        // no yield earned when depositing and requesting redeem within the notice period.
+        // e.g. deposit day 1, immediately request redeem on day 1.  should give 0 returns.
+        if (toPeriod <= fromPeriod + noticePeriod()) {
+            return 0;
+        }
+
         return _yieldStrategy.calcYield(address(this), principal, fromPeriod, toPeriod);
     }
 
