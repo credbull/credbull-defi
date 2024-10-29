@@ -229,6 +229,17 @@ contract LiquidContinuousMultiTokenVault is
         return requestId;
     }
 
+    /// @inheritdoc IComponentToken
+    function cancelRedeemRequest(uint256 requestId, address controller) public onlyController(controller) {
+        (uint256[] memory depositPeriods, uint256[] memory amounts) = unlockRequests(controller, requestId);
+
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            _unlock(controller, depositPeriods[i], requestId, amounts[i]);
+        }
+
+        emit CancelRedeemRequest(controller, requestId, _msgSender());
+    }
+
     /**
      * @notice Fulfill a request to redeem assets by transferring assets to the receiver
      * @param shares Amount of shares that was redeemed by `requestRedeem`

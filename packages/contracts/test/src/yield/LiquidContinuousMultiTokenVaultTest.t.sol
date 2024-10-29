@@ -561,6 +561,9 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
     }
 
+    // ================== F-2024-6700 ==================
+    // =================================================
+
     // TODO - this isn't supposed to give yield
     // Scenario: User requests redemption before the cutoff time on the same day as deposit
     // Given the Redemption Request cutoff time is 2:59:59pm
