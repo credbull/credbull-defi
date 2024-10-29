@@ -678,7 +678,8 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
      * 6. Alice transfers another amount[sharesAmount_2_David] of shares to David
      * 7. David makes another redeem request for [sharesAmount_2_David]
      * 8. Alice cancels his redeem request (because redeem will fail)
-     * 9. David redeems his shares which already requested at redeem period
+     * 9. Alice makes new redeem request at redeem period
+     * 10.David redeems his shares which already requested at redeem period
      */
     function test__LiquidContinuousMultiTokenVault__ModifyUnlockRequest__Sdsed() public {
         LiquidContinuousMultiTokenVault liquidVault = _liquidVault;
