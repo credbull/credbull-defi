@@ -4,24 +4,36 @@ pragma solidity ^0.8.20;
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import { MultiTokenVaultTest } from "@test/src/token/ERC1155/MultiTokenVaultTest.t.sol";
+import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
+import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriods.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
+import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 
-contract RedeemOptimizerTest is MultiTokenVaultTest {
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+
+contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
     using TestParamSet for TestParamSet.TestParam[];
+
+    IERC20Metadata internal _asset;
+    uint256 internal _scale;
 
     address private _owner = makeAddr("owner");
     address private _alice = makeAddr("alice");
 
     TestParamSet.TestParam[] private testParams;
 
-    function setUp() public override {
-        super.setUp();
+    function setUp() public {
+        vm.prank(_owner);
+        _asset = new SimpleUSDC(_owner, 1_000_000 ether);
 
-        testParams.push(_testParams1);
-        testParams.push(_testParams2);
-        testParams.push(_testParams3);
+        _scale = 10 ** _asset.decimals();
+        _transferAndAssert(_asset, _owner, _alice, 100_000 * _scale);
+
+        testParams.push(TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 }));
+        testParams.push(TestParamSet.TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 }));
+        testParams.push(TestParamSet.TestParam({ principal: 700 * _scale, depositPeriod: 30, redeemPeriod: 55 }));
     }
 
     function test__RedeemOptimizerTest__RedeemAllShares() public {
@@ -32,11 +44,12 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         IRedeemOptimizer redeemOptimizer =
             new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, multiTokenVault.currentPeriodsElapsed());
 
-        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParams);
+        uint256[] memory depositShares =
+            _testDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
         uint256 totalDepositShares = depositShares[0] + depositShares[1] + depositShares[2];
 
         // warp vault ahead to redeemPeriod
-        uint256 redeemPeriod = _testParams3.redeemPeriod;
+        uint256 redeemPeriod = testParams[2].redeemPeriod;
         _warpToPeriod(multiTokenVault, redeemPeriod);
 
         // check full redeem
@@ -49,7 +62,7 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
 
     function test__RedeemOptimizerTest__WithdrawAllShares() public {
         uint256 assetToSharesRatio = 2;
-        uint256 redeemPeriod = _testParams3.redeemPeriod;
+        uint256 redeemPeriod = testParams[2].redeemPeriod;
 
         // setup
         IMultiTokenVault multiTokenVault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
@@ -57,7 +70,8 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
 
-        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParams);
+        uint256[] memory depositShares =
+            _testDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
             depositShares, testParams.depositPeriods(), redeemPeriod
         );
@@ -77,14 +91,15 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
 
     function test__RedeemOptimizerTest__PartialRedeem() public {
         uint256 residualShareAmount = 1 * _scale; // leave 1 share after redeem
-        uint256 redeemPeriod = _testParams3.redeemPeriod;
+        uint256 redeemPeriod = testParams[2].redeemPeriod;
 
         // ---------------------- setup ----------------------
         IMultiTokenVault multiTokenVault = _createMultiTokenVault(_asset, 2, 10);
         IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
-        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParams);
+        uint256[] memory depositShares =
+            _testDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
 
         uint256 sharesToWithdraw = depositShares[0] + depositShares[1] + depositShares[2] - residualShareAmount;
 
@@ -107,7 +122,7 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
 
     function test__RedeemOptimizerTest__PartialWithdraw() public {
         uint256 residualShareAmount = 1 * _scale; // leave 1 share after redeem
-        uint256 redeemPeriod = _testParams3.redeemPeriod;
+        uint256 redeemPeriod = testParams[2].redeemPeriod;
 
         // ---------------------- setup ----------------------
         IMultiTokenVault multiTokenVault = _createMultiTokenVault(_asset, 2, 10);
@@ -115,13 +130,14 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
 
-        uint256[] memory depositShares = _testDepositOnly(_alice, multiTokenVault, testParams);
+        uint256[] memory depositShares =
+            _testDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
             depositShares, testParams.depositPeriods(), redeemPeriod
         );
 
         uint256 residualAssetAmount = multiTokenVault.convertToAssetsForDepositPeriod(
-            residualShareAmount, _testParams3.depositPeriod, redeemPeriod
+            residualShareAmount, testParams[2].depositPeriod, redeemPeriod
         );
         uint256 assetsToWithdraw = depositAssets[0] + depositAssets[1] + depositAssets[2] - residualAssetAmount;
 
@@ -170,9 +186,11 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
         );
         redeemOptimizer.optimizeRedeemShares(multiTokenVault, _alice, oneShare, vaultCurrentPeriod);
 
+        (TestParamSet.TestUsers memory depositUsers,) = _createTestUsers(_alice);
+
         // shares to find greater than the deposits
-        uint256 deposit1Shares = _testDepositOnly(_alice, multiTokenVault, _testParams1);
-        uint256 deposit2Shares = _testDepositOnly(_alice, multiTokenVault, _testParams2);
+        uint256 deposit1Shares = _testDepositOnly(depositUsers, multiTokenVault, testParams[0]);
+        uint256 deposit2Shares = _testDepositOnly(depositUsers, multiTokenVault, testParams[1]);
         uint256 totalDepositShares = deposit1Shares + deposit2Shares;
 
         uint256 sharesGreaterThanDeposits = totalDepositShares + 1;
@@ -228,6 +246,37 @@ contract RedeemOptimizerTest is MultiTokenVaultTest {
                 redeemPeriod: vaultCurrentPeriod,
                 optimizerBasis: IRedeemOptimizer.OptimizerBasis.Shares
             })
+        );
+    }
+
+    function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParamSet.TestParam memory testParam)
+        internal
+        view
+        override
+        returns (uint256 expectedReturns_)
+    {
+        return MultiTokenVaultDailyPeriods(address(vault)).calcYield(
+            testParam.principal, testParam.depositPeriod, testParam.redeemPeriod
+        );
+    }
+
+    function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
+        MultiTokenVaultDailyPeriods(address(vault)).setCurrentPeriodsElapsed(timePeriod);
+    }
+
+    function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)
+        internal
+        returns (MultiTokenVaultDailyPeriods)
+    {
+        MultiTokenVaultDailyPeriods _vault = new MultiTokenVaultDailyPeriods();
+
+        return MultiTokenVaultDailyPeriods(
+            address(
+                new ERC1967Proxy(
+                    address(_vault),
+                    abi.encodeWithSelector(_vault.initialize.selector, asset_, assetToSharesRatio, yieldPercentage)
+                )
+            )
         );
     }
 }

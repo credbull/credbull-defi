@@ -19,7 +19,7 @@ import { useDeployedContractInfo, useTransactor } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 import { ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
 import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
-import { formatAddress } from "~~/utils/vault/general";
+import { formatAddress, formatNumber } from "~~/utils/vault/general";
 
 const contractsData = getAllContracts();
 
@@ -43,11 +43,9 @@ const ViewSection = () => {
   const [numOfPeriods, setNumOfPeriods] = useState("");
   const [assets, setAssets] = useState("");
   const [reducedRate, setReducedRate] = useState("");
-  const [effectivePeriod, setEffectivePeriod] = useState("");
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null);
-  const [useCurrentPeriod, setUseCurrentPeriod] = useState(false);
 
   const contractNames = Object.keys(contractsData) as ContractName[];
   const { data: simpleUsdcContractData } = useDeployedContractInfo(contractNames[0]);
@@ -59,7 +57,7 @@ const ViewSection = () => {
 
   const custodian = process.env.NEXT_PUBLIC_CUSTODIAN || "";
 
-  const { currentPeriod, startTimeNumber } = useFetchContractData({
+  const { currentPeriod, startTimestamp, previousReducedRate } = useFetchContractData({
     deployedContractAddress: proxyContractData?.address || "",
     deployedContractAbi: implementationContractData?.abi as ContractAbi,
     simpleUsdcContractData,
@@ -244,20 +242,27 @@ const ViewSection = () => {
       const secondsInADay = BigInt(86400);
       switch (directionIndex) {
         case 0: // Going backward
-          updatedTime = startTimeNumber + BigInt(numOfPeriods) * secondsInADay;
+          if (previousReducedRate) {
+            notification.warning(
+              "Sorry! Since you initiated the reduced rate with a new value, we prevented going backward in the UI so it does not fail the Yield calculation.",
+            );
+            setPeriodTrxLoading(false);
+            return;
+          }
+          updatedTime = startTimestamp + BigInt(numOfPeriods) * secondsInADay;
           const currentTimeStamp = Math.floor(Date.now() / 1000);
 
           if (updatedTime > currentTimeStamp) {
-            notification.error("Cannot move backward beyond the vault's start time.");
+            notification.warning("You are trying to set the current period as a negative value.");
             setPeriodTrxLoading(false);
             return;
           }
           break;
         case 1: // Going forward
-          updatedTime = startTimeNumber - BigInt(numOfPeriods) * secondsInADay;
+          updatedTime = startTimestamp - BigInt(numOfPeriods) * secondsInADay;
           break;
         default:
-          updatedTime = startTimeNumber + BigInt(numOfPeriods) * secondsInADay;
+          updatedTime = startTimestamp + BigInt(numOfPeriods) * secondsInADay;
           break;
       }
 
@@ -300,8 +305,18 @@ const ViewSection = () => {
     const currentTimeStamp = Math.floor(Date.now() / 1000);
 
     if (selectedTimestamp > currentTimeStamp) {
-      notification.error("Cannot move backward beyond the vault's start time.");
+      notification.warning(
+        "Not Allowed in the UI. If we set the time to be after the current timestamp this will result in a negative current period value.",
+      );
       setTimestampTrxLoading(false);
+      return;
+    }
+
+    if (selectedTimestamp > startTimestamp && previousReducedRate) {
+      notification.warning(
+        "Sorry! Since you initiated the reduced rate with a new value, we prevented going backward in the UI so it does not fail the Yield calculation.",
+      );
+      setPeriodTrxLoading(false);
       return;
     }
 
@@ -333,7 +348,7 @@ const ViewSection = () => {
   };
 
   const handleSetReducedRate = async () => {
-    if (!reducedRate || !effectivePeriod) {
+    if (!reducedRate) {
       notification.error("Missing required fields");
       return;
     }
@@ -350,9 +365,9 @@ const ViewSection = () => {
         const makeSetReducedRateTrx = () =>
           writeContractAsync({
             address: proxyContractData?.address || "",
-            functionName: "setReducedRate",
+            functionName: "setReducedRateAtCurrent",
             abi: implementationContractData?.abi || [],
-            args: [ethers.parseUnits(reducedRate, 6), BigInt(effectivePeriod)],
+            args: [ethers.parseUnits(reducedRate, 6)],
           });
 
         const trx = await writeTxn(makeSetReducedRateTrx);
@@ -361,7 +376,6 @@ const ViewSection = () => {
           if (transactionReceipt.status === "success") {
             setRefetch(prev => !prev);
             setReducedRate("");
-            setEffectivePeriod("");
             setReducedRateTrxLoading(false);
           }
         }
@@ -397,6 +411,9 @@ const ViewSection = () => {
       }
 
       const amountToWithdraw = !withdrawType ? ethers.parseUnits(assets?.toString(), 6) : vaultBalance;
+      const amountToWithdrawInt = BigInt(
+        typeof amountToWithdraw === "string" ? Math.floor(Number(amountToWithdraw) * 1e6) : amountToWithdraw,
+      );
 
       if (vaultBalance < amountToWithdraw) {
         notification.error("Insufficient assets to withdraw");
@@ -409,7 +426,7 @@ const ViewSection = () => {
             address: proxyContractData?.address || "",
             functionName: "withdrawAsset",
             abi: implementationContractData?.abi || [],
-            args: [custodian, BigInt(amountToWithdraw)],
+            args: [custodian, BigInt(amountToWithdrawInt)],
           });
 
         const trx = await writeTxn(makeWithdrawTrx);
@@ -442,16 +459,6 @@ const ViewSection = () => {
   if (!mounted) {
     return <LoadingSpinner />;
   }
-
-  // Toggling between using the current period or enabling input
-  const handleToggle = () => {
-    setUseCurrentPeriod(!useCurrentPeriod);
-    if (!useCurrentPeriod) {
-      setEffectivePeriod(currentPeriod.toString()); // Set effectivePeriod to currentPeriod
-    } else {
-      setEffectivePeriod(""); // Reset effectivePeriod
-    }
-  };
 
   return (
     <>
@@ -488,6 +495,8 @@ const ViewSection = () => {
                       bgColor="blue"
                       tooltipData="Grant operator role"
                       flex="flex-1"
+                      disabled={!allDataFetched}
+                      loading={!allDataFetched}
                       onClickHandler={() => handleGrantRole(0)}
                     />
                     <Button
@@ -495,6 +504,8 @@ const ViewSection = () => {
                       bgColor="blue"
                       tooltipData="Grant upgrader role"
                       flex="flex-1"
+                      disabled={!allDataFetched}
+                      loading={!allDataFetched}
                       onClickHandler={() => handleGrantRole(1)}
                     />
                     <Button
@@ -502,6 +513,8 @@ const ViewSection = () => {
                       bgColor="blue"
                       tooltipData="Grant asset manager role"
                       flex="flex-1"
+                      disabled={!allDataFetched}
+                      loading={!allDataFetched}
                       onClickHandler={() => handleGrantRole(2)}
                     />
                   </>
@@ -526,6 +539,8 @@ const ViewSection = () => {
                       bgColor="blue"
                       tooltipData="Revoke operator role"
                       flex="flex-1"
+                      disabled={!allDataFetched}
+                      loading={!allDataFetched}
                       onClickHandler={() => handleRevokeRole(0)}
                     />
                     <Button
@@ -533,6 +548,8 @@ const ViewSection = () => {
                       bgColor="blue"
                       tooltipData="Revoke upgrader role"
                       flex="flex-1"
+                      disabled={!allDataFetched}
+                      loading={!allDataFetched}
                       onClickHandler={() => handleRevokeRole(1)}
                     />
                     <Button
@@ -540,6 +557,8 @@ const ViewSection = () => {
                       bgColor="blue"
                       tooltipData="Revoke asset manager role"
                       flex="flex-1"
+                      disabled={!allDataFetched}
+                      loading={!allDataFetched}
                       onClickHandler={() => handleRevokeRole(2)}
                     />
                   </>
@@ -570,6 +589,8 @@ const ViewSection = () => {
                       bgColor="blue"
                       tooltipData="Go backwards by a number of periods"
                       flex="flex-1"
+                      disabled={!allDataFetched}
+                      loading={!allDataFetched}
                       onClickHandler={() => handleSetPeriod(0)}
                     />
                     <Button
@@ -577,6 +598,8 @@ const ViewSection = () => {
                       bgColor="blue"
                       tooltipData="Go forward by a number of periods"
                       flex="flex-1"
+                      disabled={!allDataFetched}
+                      loading={!allDataFetched}
                       onClickHandler={() => handleSetPeriod(1)}
                     />
                   </>
@@ -603,6 +626,8 @@ const ViewSection = () => {
                       bgColor="blue"
                       tooltipData="Set the start timestamp for the vault"
                       flex="flex-1"
+                      disabled={!allDataFetched}
+                      loading={!allDataFetched}
                       onClickHandler={handleSetTimestamp}
                     />
                   </>
@@ -612,30 +637,12 @@ const ViewSection = () => {
             <ActionCard>
               <div className="flex justify-between mb-4">
                 <h2 className="text-xl font-bold">Set Reduced Rate</h2>
-
-                <div className="flex justify-between gap-2">
-                  <small className="m-0">Use Current Period</small>
-                  <input
-                    id="theme-toggle"
-                    type="checkbox"
-                    className="toggle toggle-primary bg-primary hover:bg-primary border-primary"
-                    onChange={handleToggle}
-                    checked={useCurrentPeriod}
-                  />
-                </div>
               </div>
               <Input
                 type="text"
                 value={reducedRate}
                 placeholder="Enter Reduced Rate"
                 onChangeHandler={value => setReducedRate(value)}
-              />
-              <Input
-                type="text"
-                value={effectivePeriod}
-                placeholder="Enter Period Effective"
-                disabled={useCurrentPeriod}
-                onChangeHandler={value => setEffectivePeriod(value)}
               />
 
               <div className="flex flex-row gap-2 justify-between">
@@ -646,8 +653,10 @@ const ViewSection = () => {
                     <Button
                       text="Set Reduced Rate"
                       bgColor="blue"
-                      tooltipData="Set the reduced rate with the effective period"
+                      tooltipData="Set the reduced rate for the current period"
                       flex="flex-1"
+                      disabled={!allDataFetched}
+                      loading={!allDataFetched}
                       onClickHandler={handleSetReducedRate}
                     />
                   </>
@@ -678,6 +687,8 @@ const ViewSection = () => {
                       bgColor="blue"
                       tooltipData="Withdraw the amount of assets you entered"
                       flex="flex-1"
+                      disabled={!allDataFetched}
+                      loading={!allDataFetched}
                       onClickHandler={() => handleWithdraw(0)}
                     />
                     <Button
@@ -685,6 +696,8 @@ const ViewSection = () => {
                       bgColor="blue"
                       tooltipData="Withdraw all assets"
                       flex="flex-1"
+                      disabled={!allDataFetched}
+                      loading={!allDataFetched}
                       onClickHandler={() => handleWithdraw(1)}
                     />
                   </>
@@ -706,11 +719,11 @@ const ViewSection = () => {
               </small>{" "}
               &nbsp;&nbsp;
               <small>
-                <ContractValueBadge name="Vault Balance" value={`${vaultBalance} USDC`} />
+                <ContractValueBadge name="Vault Balance" value={`${formatNumber(vaultBalance)} USDC`} />
               </small>
               &nbsp;&nbsp;
               <small>
-                <ContractValueBadge name="Custodian Balance" value={`${custodianBalance} USDC`} />
+                <ContractValueBadge name="Custodian Balance" value={`${formatNumber(custodianBalance)} USDC`} />
               </small>
             </h2>
             {implementationContractLoading || proxyContractLoading ? (

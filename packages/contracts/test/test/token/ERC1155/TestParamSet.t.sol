@@ -2,13 +2,21 @@
 pragma solidity ^0.8.20;
 
 library TestParamSet {
+    using TestParamSet for TestParam[];
+
+    // params for testing deposits and redeems
     struct TestParam {
         uint256 principal;
         uint256 depositPeriod;
         uint256 redeemPeriod;
     }
 
-    using TestParamSet for TestParam[];
+    // users involved in deposit and redeems.  using "tokenOwner" to distinguish vs. contract "owner"
+    struct TestUsers {
+        address tokenOwner; // owns tokens, can specify who can receive tokens
+        address tokenReceiver; // token owner or granted tokens by the token owner
+        address tokenOperator; // for txn to succeed MUST be tokenOwner or granted allowance by tokenOwner
+    }
 
     // Generate and add multiple testParams with offsets
     function toOffsetArray(TestParam memory testParam)
@@ -16,24 +24,65 @@ library TestParamSet {
         pure
         returns (TestParam[] memory testParamsWithOffsets_)
     {
-        uint256[6] memory offsetNumPeriodsArr =
+        uint256[6] memory offsetAmounts =
             [0, 1, 2, testParam.redeemPeriod - 1, testParam.redeemPeriod, testParam.redeemPeriod + 1];
 
-        TestParam[] memory testParamsWithOffsets = new TestParam[](offsetNumPeriodsArr.length);
+        TestParam[] memory testParamsWithOffsets = new TestParam[](offsetAmounts.length);
 
-        for (uint256 i = 0; i < offsetNumPeriodsArr.length; i++) {
-            uint256 offsetNumPeriods = offsetNumPeriodsArr[i];
+        for (uint256 i = 0; i < offsetAmounts.length; i++) {
+            uint256 offsetAmount = offsetAmounts[i];
 
             TestParam memory testParamsWithOffset = TestParam({
-                principal: testParam.principal,
-                depositPeriod: testParam.depositPeriod + offsetNumPeriods,
-                redeemPeriod: testParam.redeemPeriod + offsetNumPeriods
+                principal: testParam.principal * (1 + offsetAmount),
+                depositPeriod: testParam.depositPeriod + offsetAmount,
+                redeemPeriod: testParam.redeemPeriod + offsetAmount
             });
 
             testParamsWithOffsets[i] = testParamsWithOffset;
         }
 
         return testParamsWithOffsets;
+    }
+
+    // Generate and add multiple testParams with offsets
+    function toLoadSet(uint256 principal, uint256 fromPeriod, uint256 toPeriod)
+        internal
+        pure
+        returns (TestParam[] memory loadTestParams_)
+    {
+        TestParam[] memory loadTestParams = new TestParam[](toPeriod - fromPeriod);
+
+        uint256 arrayIndex = 0;
+        for (uint256 i = fromPeriod; i < toPeriod; ++i) {
+            loadTestParams[arrayIndex] =
+                TestParamSet.TestParam({ principal: principal, depositPeriod: i, redeemPeriod: toPeriod });
+            arrayIndex++;
+        }
+
+        return loadTestParams;
+    }
+
+    // simple scenario with only one user
+    function toSingletonUsers(address account) internal pure returns (TestUsers memory testUsers_) {
+        TestUsers memory testUsers = TestUsers({
+            tokenOwner: account, // owns tokens, can specify who can receive tokens
+            tokenReceiver: account, // receiver of tokens from the tokenOwner
+            tokenOperator: account // granted allowance by tokenOwner to act on their behalf
+         });
+
+        return testUsers;
+    }
+
+    // Calculate the total principal across all TestParams
+    function latestRedeemPeriod(TestParam[] memory self) internal pure returns (uint256 latestRedeemPeriod_) {
+        uint256 _latestRedeemPeriod = 0;
+        for (uint256 i = 0; i < self.length; i++) {
+            uint256 redeemPeriod = self[i].redeemPeriod;
+            if (_latestRedeemPeriod == 0 || redeemPeriod > _latestRedeemPeriod) {
+                _latestRedeemPeriod = redeemPeriod;
+            }
+        }
+        return _latestRedeemPeriod;
     }
 
     // Calculate the total principal across all TestParams
@@ -90,7 +139,7 @@ library TestParamSet {
         return accounts;
     }
 
-    function _split(TestParam[] memory origTestParams, uint256 from, uint256 to)
+    function _subset(TestParam[] memory origTestParams, uint256 from, uint256 to)
         public
         pure
         returns (TestParam[] memory newTestParams_)
@@ -103,5 +152,30 @@ library TestParamSet {
             arrayIndex++;
         }
         return newTestParams_;
+    }
+
+    function _splitBefore(TestParam[] memory origTestParams, uint256 splitBefore)
+        public
+        pure
+        returns (TestParam[] memory leftSet_, TestParam[] memory rightSet_)
+    {
+        // assert we can actually split in two at the splitBefore
+        assert(splitBefore < (origTestParams.length - 1));
+
+        // Initialize leftSet and rightSet arrays with their respective sizes
+        TestParam[] memory leftSet = new TestParam[](splitBefore); // Elements before splitBefore
+        TestParam[] memory rightSet = new TestParam[](origTestParams.length - splitBefore); // Elements from splitBefore onwards
+
+        // Copy elements to leftSet (up to splitBefore, exclusive)
+        for (uint256 i = 0; i < splitBefore; i++) {
+            leftSet[i] = origTestParams[i];
+        }
+
+        // Copy elements to rightSet (starting from splitBefore)
+        for (uint256 i = splitBefore; i < origTestParams.length; i++) {
+            rightSet[i - splitBefore] = origTestParams[i];
+        }
+
+        return (leftSet, rightSet);
     }
 }

@@ -46,5 +46,8 @@
     "alchemy-sdk": "^3.4.2",
     "ethers": "^6.13.3",
     "react-tooltip": "^5.28.0"
+  },
+  "resolutions": {
+    "@babel/traverse": "^7.25.6"
   }
 }

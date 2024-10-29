@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
-import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
@@ -17,7 +16,7 @@ import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.so
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
-// Tets relation to the Utility / operational aspects of the LiquidContinuousMultiTokenVault
+// Tests related to the Utility / operational aspects of the LiquidContinuousMultiTokenVault
 contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVaultTestBase {
     function test__LiquidContinuousMultiTokenVaultUtil__Upgradeability() public {
         LiquidContinuousMultiTokenVaultMock vaultImpl = new LiquidContinuousMultiTokenVaultMock();
@@ -115,21 +114,11 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         _liquidVault.pause();
 
         vm.prank(alice);
-
         _liquidVault.requestUnlock(alice, _asSingletonArray(testParams.depositPeriod), _asSingletonArray(shares));
 
         _warpToPeriod(_liquidVault, testParams.redeemPeriod);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                MultiTokenVault.MultiTokenVault__CallerMissingApprovalForAll.selector, address(this), alice
-            )
-        );
-        _liquidVault.redeemForDepositPeriod(shares, alice, alice, testParams.depositPeriod, testParams.redeemPeriod);
-
         vm.prank(alice);
-        _liquidVault.setApprovalForAll(address(this), true);
-
         vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
         _liquidVault.redeemForDepositPeriod(shares, alice, alice, testParams.depositPeriod, testParams.redeemPeriod);
 
@@ -137,7 +126,12 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         vm.prank(_vaultAuth.operator);
         _liquidVault.unpause();
 
-        _liquidVault.redeemForDepositPeriod(shares, alice, alice, testParams.depositPeriod, testParams.redeemPeriod);
+        address carol = makeAddr("carol"); // random address to receive redeem
+        vm.prank(alice);
+        uint256 assets =
+            _liquidVault.redeemForDepositPeriod(shares, carol, alice, testParams.depositPeriod, testParams.redeemPeriod);
+
+        assertEq(assets, _asset.balanceOf(carol), "carol did not receive assets");
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__UpdateStateVariables() public {
@@ -212,17 +206,30 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         _setPeriodAndAssert(_liquidVault, 10);
     }
 
-    //         vm.startPrank(_vaultAuth.operator);
     function _setPeriodAndAssert(LiquidContinuousMultiTokenVault vault, uint256 newPeriod) internal {
         assertTrue(
             Timer.timestamp() >= (vault._vaultStartTimestamp() - newPeriod * 24 hours),
             "trying to set period before block.timestamp"
         );
 
-        _setPeriod(vault, newPeriod);
+        _setPeriod(_vaultAuth.operator, vault, newPeriod);
 
         assertEq(newPeriod, (block.timestamp - vault._vaultStartTimestamp()) / 24 hours, "timestamp not set correctly");
         assertEq(newPeriod, vault.currentPeriod(), "period not set correctly");
+    }
+
+    function test__LiquidContinuousMultiTokenVaultUtil__InvalidFrequencyReverts() public {
+        LiquidContinuousMultiTokenVault liquidVault = new LiquidContinuousMultiTokenVault();
+        LiquidContinuousMultiTokenVault.VaultParams memory invalidParams = _createVaultParams(_vaultAuth);
+        invalidParams.contextParams.frequency = 12; // Invalid frequency
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidFrequency.selector,
+                invalidParams.contextParams.frequency
+            )
+        );
+        new ERC1967Proxy(address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, invalidParams));
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__ZeroAddressAuthReverts() public {

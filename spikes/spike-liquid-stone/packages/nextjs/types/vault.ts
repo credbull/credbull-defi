@@ -15,5 +15,6 @@ export type DepositPool = {
 
 export type RedeemRequest = {
   id: number;
-  amount: bigint;
+  shareAmount: bigint;
+  assetAmount: bigint;
 };
