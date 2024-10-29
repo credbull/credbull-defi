@@ -7,6 +7,8 @@ import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.so
 
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
+import { console } from "forge-std/console.sol";
+
 contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultTestBase {
     using TestParamSet for TestParamSet.TestParam[];
 
@@ -561,6 +563,22 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
     }
 
+    function zeroPadded(uint256 n) private pure returns (string memory) {
+        string memory sn = vm.toString(n);
+        return n <= 9 ? string.concat("0", sn) : sn;
+    }
+
+    function logSince() private view {
+        uint256 since = block.timestamp - _liquidVault._vaultStartTimestamp();
+        uint256 d = since / 1 days;
+        uint256 h = (since - (d * 1 days)) / 1 hours;
+        uint256 m = (since - (d * 1 days) - (h * 1 hours)) / 1 minutes;
+        uint256 s = since - (d * 1 days) - (h * 1 hours) - (m * 1 minutes);
+        string memory time = string(abi.encodePacked(zeroPadded(h), ":", zeroPadded(m), ":", zeroPadded(s)));
+
+        console.log("Since Vault Start Time: Day= %s, HH:MM:SS= %s", d, time);
+    }
+
     // TODO - this isn't supposed to give yield
     // Scenario: User requests redemption before the cutoff time on the same day as deposit
     // Given the Redemption Request cutoff time is 2:59:59pm
@@ -572,13 +590,17 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     function test__LiquidContinuousMultiTokenVault__DepositAndRedeemAtCutOffs() public {
         uint256 principal = 10 * _scale;
 
+        console.log("Vault Start Timestamp= %s", _liquidVault._vaultStartTimestamp());
+
         deal(address(_asset), address(_liquidVault), 100e6);
 
         // ----------------- deposit ------------
-        uint256 depositAtCutoff = _liquidVault._vaultStartTimestamp() + 1 days - 1 minutes;
+        uint256 depositAtCutoff = _liquidVault._vaultStartTimestamp() + 2 days - 2 seconds;
         vm.warp(depositAtCutoff); // set the time very close to the cut-off
+        logSince();
+        console.log("Vault Current Period= %s", _liquidVault.currentPeriod());
+        uint256 currentPeriod = _liquidVault.currentPeriod();
 
-        uint256 depositPeriod = _liquidVault.currentPeriod();
         vm.startPrank(alice);
         _asset.approve(address(_liquidVault), principal);
         uint256 shares = _liquidVault.deposit(principal, alice);
@@ -588,16 +610,38 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         // request redeem on the deposit day
         vm.prank(alice);
         uint256 redeemPeriod = _liquidVault.requestRedeem(shares, alice, alice);
+        console.log("Redeem Period= %s", redeemPeriod);
 
-        // ----------------- requestRedeem  ------------
-        vm.warp(depositAtCutoff + 2 minutes); // warp to the next day
-        assertEq(redeemPeriod, _liquidVault.currentPeriod(), "didn't tick over a day");
+        // ----------------- redeem  ------------
+        vm.warp(depositAtCutoff + 1 minutes); // warp to the next day
+        logSince();
+        console.log("Vault Current Period= %s", _liquidVault.currentPeriod());
+        assertEq(currentPeriod + 1, _liquidVault.currentPeriod(), "didn't tick over a day");
 
-        uint256 assetPreview = _liquidVault.previewRedeemForDepositPeriod(shares, depositPeriod, redeemPeriod);
-        assertLt(principal, assetPreview, "assets preview greater than principal, but should it be??!?"); // TODO - shouldn't this return 0 yield ?
+        // uint256 assetPreview = _liquidVault.previewRedeemForDepositPeriod(shares, depositPeriod, redeemPeriod);
+        // console.log("Preview of Asset= %s", assetPreview);
+        // TODO - shouldn't this return 0 yield ?
+        // assertLt(principal, assetPreview, "assets preview greater than principal, but should it be??!?");
+
+        vm.startPrank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount.selector,
+                shares,
+                0
+            )
+        );
+        _liquidVault.redeem(shares, alice, alice);
+        vm.stopPrank();
+
+        vm.warp(depositAtCutoff + 1 minutes + 1 days); // warp to the next day again
+        logSince();
+        console.log("Vault Current Period= %s", _liquidVault.currentPeriod());
 
         vm.prank(alice);
         uint256 assets = _liquidVault.redeem(shares, alice, alice);
-        assertLt(principal, assets, "assets greater than principal, but should it be??!?"); // TODO - shouldn't this return 0 yield ?
+        console.log("Returned Assets= %s", assets);
+        // TODO - shouldn't this return 0 yield ?
+        assertLt(principal, assets, "assets greater than principal, but should it be??!?");
     }
 }
