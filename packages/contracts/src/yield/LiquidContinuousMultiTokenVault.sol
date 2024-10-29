@@ -18,6 +18,8 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 import { AccessControlEnumerableUpgradeable } from
     "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlEnumerableUpgradeable.sol";
 
+import { console } from "forge-std/console.sol";
+
 /**
  * @title LiquidContinuousMultiTokenVault
  * Vault with the following properties:
@@ -224,7 +226,17 @@ contract LiquidContinuousMultiTokenVault is
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) =
             _redeemOptimizer.optimize(this, owner, shares, shares, minUnlockPeriod());
 
-        uint256 requestId = requestUnlock(owner, depositPeriods, sharesAtPeriods);
+        // IFF the current period is part of the optimised redeem, then the User only deposited today. So, we increase
+        // the Redeem Period by 1. If not, then the User had sufficient earlier deposits to proceed as normal.
+        uint256 redeemPeriod = minUnlockPeriod();
+        for (uint256 i = 0; i < depositPeriods.length; ++i) {
+            if (depositPeriods[i] == currentPeriod()) {
+                ++redeemPeriod;
+                break;
+            }
+        }
+
+        uint256 requestId = requestUnlock(owner, depositPeriods, sharesAtPeriods, redeemPeriod);
         emit RedeemRequest(controller, owner, requestId, _msgSender(), shares);
         return requestId;
     }
