@@ -88,24 +88,25 @@ contract StargateUSDCBridge is Ownable {
         address _recipient,
         uint256 _amount,
         uint256 _minAmountLD,
+        IStargateRouter.lzTxObj memory _lzTxParams,
         bytes calldata _adapterParams
     ) external payable {
         require(usdcToken.transferFrom(msg.sender, address(this), _amount), "Transfer failed");
         usdcToken.approve(address(stargateRouter), _amount);
 
         stargateRouter.swap{value: msg.value}(
-            _dstChainId,         // Destination chain ID
-            _srcPoolId,          // Source pool ID (USDC on Arbitrum Sepolia)
-            _dstPoolId,          // Destination pool ID (USDC on Optimism Sepolia)
-            msg.sender,          // Refund address
-            _amount,             // Amount to transfer
-            _minAmountLD,        // Minimum amount to receive on the destination chain
-            abi.encodePacked(_recipient), // Encoded recipient address on destination chain
-            _adapterParams       // Additional adapter parameters for gas settings
+            _dstChainId,
+            _srcPoolId, 
+            _dstPoolId, 
+            payable(msg.sender),
+            _amount,
+            _minAmountLD,
+            _lzTxParams,
+            abi.encodePacked(_recipient),
+            _adapterParams
         );
     }
 
-    // Emergency withdrawal
     function emergencyWithdraw(address _token, uint256 _amount) external onlyOwner {
         IERC20(_token).transfer(owner(), _amount);
     }
