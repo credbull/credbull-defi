@@ -8,7 +8,7 @@
 
       const deployedContracts = {31337:{
   "SimpleUSDC#0": {
-    "address": "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+    "address": "0x5fbdb2315678afecb367f032d93f642f64180aa4",
     "abi": [
       {
         "type": "constructor",
