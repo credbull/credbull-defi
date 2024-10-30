@@ -2,19 +2,20 @@ import { Chain } from "viem";
 import * as chains from "viem/chains";
 
 const plumeTestnet: Chain = {
-  id: 98864, // Replace with Plume Testnet's actual chain ID
+  id: 98864,
   name: "Plume Testnet",
-  // network: "plume",
   nativeCurrency: { name: "Plume Test Token", symbol: "PLM", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://test-rpc.plumenetwork.xyz"] }, // Replace with the actual RPC URL
-    public: { http: ["https://test-rpc.plumenetwork.xyz"] }, // Replace with the actual RPC URL
+    default: { http: ["https://test-rpc.plumenetwork.xyz"] },
+    public: { http: ["https://test-rpc.plumenetwork.xyz"] },
   },
+  formatters: undefined,
+  fees: undefined,
   blockExplorers: {
-    default: { name: "Plume Explorer", url: "https://test-explorer.plumenetwork.xyz" }, // Replace with actual explorer URL
+    default: { name: "Plume Explorer", url: "https://test-explorer.plumenetwork.xyz" },
   },
   testnet: true,
-};
+} as Chain;
 
 export type ScaffoldConfig = {
   targetNetworks: readonly chains.Chain[];
