@@ -17,6 +17,7 @@
     "db-export": "tsc && node ./script/utils/exporter.js",
     "deploy": "make deploy-local",
     "deploy-plume": "make deploy-plumeTestnet",
+    "deploy-arbSepolia": "make deploy-arbSepolia",
     "deploy:ci": "yarn db-export && make deploy-baseSepolia",
     "gen-abis": "node script/utils/generateTsAbis.js",
     "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
