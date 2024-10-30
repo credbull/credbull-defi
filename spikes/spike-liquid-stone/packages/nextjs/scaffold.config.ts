@@ -1,4 +1,20 @@
+import { Chain } from "viem";
 import * as chains from "viem/chains";
+
+const plumeTestnet: Chain = {
+  id: 98864, // Replace with Plume Testnet's actual chain ID
+  name: "Plume Testnet",
+  // network: "plume",
+  nativeCurrency: { name: "Plume Test Token", symbol: "PLM", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://test-rpc.plumenetwork.xyz"] }, // Replace with the actual RPC URL
+    public: { http: ["https://test-rpc.plumenetwork.xyz"] }, // Replace with the actual RPC URL
+  },
+  blockExplorers: {
+    default: { name: "Plume Explorer", url: "https://test-explorer.plumenetwork.xyz" }, // Replace with actual explorer URL
+  },
+  testnet: true,
+};
 
 export type ScaffoldConfig = {
   targetNetworks: readonly chains.Chain[];
@@ -10,7 +26,7 @@ export type ScaffoldConfig = {
 
 const scaffoldConfig = {
   // The networks on which your DApp is live
-  targetNetworks: [chains.foundry],
+  targetNetworks: [chains.foundry, plumeTestnet, chains.arbitrumSepolia],
 
   // The interval at which your front-end polls the RPC servers for new data
   // it has no effect if you only target the local network (default is 4000)
