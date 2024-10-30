@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { useChainId, useChains } from "wagmi";
 import { RedeemRequest } from "~~/types/vault";
 import { notification } from "~~/utils/scaffold-eth";
 
@@ -16,13 +17,18 @@ export const useFetchRedeemRequests = ({
   currentPeriod: number;
   refetch: any;
 }) => {
+  const chains = useChains();
+  const chianId = useChainId();
+
+  const chain = chains?.filter(_chain => _chain?.id === chianId)[0];
+
   const [redeemRequests, setRedeemRequests] = useState<RedeemRequest[]>([]);
 
   useEffect(() => {
     async function getRequestIds() {
-      if (!address || !deployedContractAddress || !deployedContractAbi) return;
+      if (!address || !deployedContractAddress || !deployedContractAbi || !chain) return;
 
-      const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+      const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
       const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
       const requests: RedeemRequest[] = [];
 

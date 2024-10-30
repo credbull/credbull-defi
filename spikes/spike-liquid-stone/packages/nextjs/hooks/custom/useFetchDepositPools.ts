@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { OwnedNft } from "alchemy-sdk";
 import { ethers } from "ethers";
+import { useChainId, useChains } from "wagmi";
 import { DepositPool } from "~~/types/vault";
 import { notification } from "~~/utils/scaffold-eth";
 import { getNFTsForOwner } from "~~/utils/vault/web3";
@@ -20,6 +21,11 @@ export const useFetchDepositPools = ({
   currentPeriod: number;
   refetch: any;
 }) => {
+  const chains = useChains();
+  const chianId = useChainId();
+
+  const chain = chains?.filter(_chain => _chain?.id === chianId)[0];
+
   const [userDepositIds, setUserDepositIds] = useState<OwnedNft[]>([]);
   const [pools, setPools] = useState<DepositPool[]>([]);
 
@@ -44,7 +50,7 @@ export const useFetchDepositPools = ({
     async function fetchBalances() {
       if (!deployedContractAddress || !deployedContractAbi || !address || userDepositIds.length === 0) return;
 
-      const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+      const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
       const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
 
       const balancePromises = userDepositIds.map(async depositId => {

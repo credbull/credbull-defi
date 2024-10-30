@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { useChainId, useChains } from "wagmi";
 import { LockRow } from "~~/types/async";
 import { MAX_PERIODS } from "~~/utils/async/config";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
@@ -15,6 +16,11 @@ export const useFetchLocks = ({
   deployedContractAbi: ContractAbi;
   refetch: any;
 }) => {
+  const chains = useChains();
+  const chianId = useChainId();
+
+  const chain = chains?.filter(_chain => _chain?.id === chianId)[0];
+
   const userDepositPeriods = Array.from({ length: MAX_PERIODS + 1 }, (_, index) => index);
 
   const [lockDatas, setLockDatas] = useState<LockRow[]>([]);
@@ -23,7 +29,7 @@ export const useFetchLocks = ({
     async function fetchBalances() {
       if (!deployedContractAddress || !address || userDepositPeriods.length === 0) return;
 
-      const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+      const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
       const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
 
       const lockPromises = userDepositPeriods.map(async depositPeriod => {

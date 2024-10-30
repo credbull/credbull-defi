@@ -52,7 +52,7 @@ export const useFetchAdminData = ({
   const [assetManagerRoleMembers, setAssetManagerRoleMembers] = useState<string[]>([]);
   const [userHasAssetManagerRole, setUserHasAssetManagerRole] = useState<boolean>(false);
 
-  const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.public?.http[0]);
+  const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
 
   const { refetch: refetchVaultBalance } = useReadContract({
     address: simpleUsdcContractData?.address,
