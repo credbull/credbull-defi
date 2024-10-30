@@ -508,6 +508,20 @@ contract TimelockAsyncUnlockTest is Test {
         );
     }
 
+    function test__TimelockAsyncUnlock__RequestUnlockInvalidArrayLengthReverts() public {
+        uint256[] memory depositPeriods_ = new uint256[](2);
+        uint256[] memory amounts_ = new uint256[](1);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__InvalidArrayLength.selector,
+                depositPeriods_.length,
+                amounts_.length
+            )
+        );
+        asyncUnlock.requestUnlock(alice, depositPeriods_, amounts_);
+    }
+
     function _asSingletonArray(uint256 element) internal pure returns (uint256[] memory array) {
         array = new uint256[](1);
         array[0] = element;

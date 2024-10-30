@@ -261,8 +261,11 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
+        // LiquidStone stops accruing yield at the requestRedeem period
+        uint256 requestRedeemPeriod = testParam.redeemPeriod - _liquidVault.noticePeriod();
+
         return liquidVault._yieldStrategy().calcYield(
-            address(vault), testParam.principal, testParam.depositPeriod, testParam.redeemPeriod
+            address(vault), testParam.principal, testParam.depositPeriod, requestRedeemPeriod
         );
     }
 

@@ -63,7 +63,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         LiquidContinuousMultiTokenVault liquidVault = _liquidVault; // _createLiquidContinueMultiTokenVault(_vaultParams);
 
         TestParamSet.TestParam memory testParams =
-            TestParamSet.TestParam({ principal: 2_000 * _scale, depositPeriod: 10, redeemPeriod: 70 });
+            TestParamSet.TestParam({ principal: 2_000 * _scale, depositPeriod: 10, redeemPeriod: 71 });
 
         uint256 assetStartBalance = _asset.balanceOf(alice);
 
@@ -283,13 +283,15 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     function test__LiquidContinuousMultiTokenVault__50k_Returns() public view {
         uint256 deposit = 50_000 * _scale;
 
+        uint256 tenorPlusNoticePeriod = _liquidVault.TENOR() + _liquidVault.noticePeriod();
+
         // verify returns
-        uint256 actualYield = _liquidVault.calcYield(deposit, 0, _liquidVault.TENOR());
+        uint256 actualYield = _liquidVault.calcYield(deposit, 0, tenorPlusNoticePeriod);
         assertEq(416_666666, actualYield, "interest not correct for $50k deposit after 30 days");
 
         // verify principal + returns
         uint256 actualShares = _liquidVault.convertToShares(deposit);
-        uint256 actualReturns = _liquidVault.convertToAssetsForDepositPeriod(actualShares, 0, _liquidVault.TENOR());
+        uint256 actualReturns = _liquidVault.convertToAssetsForDepositPeriod(actualShares, 0, tenorPlusNoticePeriod);
         assertEq(50_416_666666, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
     }
 
@@ -842,5 +844,58 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         vm.prank(alice);
         uint256 assets = _liquidVault.redeem(shares, alice, alice);
         assertEq(principal, assets, "assets should be the same as principal");
+    }
+
+    function test__LiquidContinuousMultiTokenVault__CalcYieldEdgeCases() public view {
+        uint256 principal = 1_000_000_000 * _scale;
+        uint256 zeroPeriod = 0;
+        uint256 hundredPeriod = 100;
+        uint256 noticePeriod = _liquidVault.noticePeriod();
+
+        // check scenarios with zero returns
+        assertEq(
+            0,
+            _liquidVault.calcYield(principal, zeroPeriod, zeroPeriod),
+            "no returns when redeeming at deposit period - deposit at 0"
+        );
+        assertEq(
+            0,
+            _liquidVault.calcYield(principal, hundredPeriod, hundredPeriod),
+            "no returns when redeeming at deposit period - deposit at 100"
+        );
+
+        assertEq(
+            0,
+            _liquidVault.calcYield(principal, zeroPeriod, zeroPeriod + noticePeriod),
+            "no returns when redeeming at notice period - deposit at 0"
+        );
+        assertEq(
+            0,
+            _liquidVault.calcYield(principal, hundredPeriod, hundredPeriod + noticePeriod),
+            "no returns when redeeming at notice period - deposit at 100"
+        );
+
+        assertEq(
+            0,
+            _liquidVault.calcYield(principal, 1, zeroPeriod),
+            "zero yield redeem less than deposit period - redeem at 0"
+        );
+        assertEq(
+            0,
+            _liquidVault.calcYield(principal, hundredPeriod, hundredPeriod - 1),
+            "zero yield redeem less than deposit period - redeem at 99"
+        );
+
+        // check scenarios with returns
+        assertLt(
+            0,
+            _liquidVault.calcYield(principal, zeroPeriod, zeroPeriod + noticePeriod + 1),
+            "redeem > notice period should have yield"
+        );
+        assertLt(
+            0,
+            _liquidVault.calcYield(principal, hundredPeriod, hundredPeriod + noticePeriod + 1),
+            "redeem > notice period should have yield"
+        );
     }
 }
