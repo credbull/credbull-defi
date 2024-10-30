@@ -374,15 +374,17 @@ contract LiquidContinuousMultiTokenVault is
         _yieldStrategy = yieldStrategy;
     }
 
-    /// @dev yield based on the associated yieldStrategy
-    function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod) public view returns (uint256 yield) {
-        // no yield earned when depositing and requesting redeem within the notice period.
-        // e.g. deposit day 1, immediately request redeem on day 1.  should give 0 returns.
-        if (toPeriod <= fromPeriod + noticePeriod()) {
-            return 0;
-        }
+    /// @dev yield accrues up to the `requestRedeemPeriod` (as opposed to the `redeemPeriod`)
+    function calcYield(uint256 principal, uint256 depositPeriod, uint256 redeemPeriod)
+        public
+        view
+        returns (uint256 yield)
+    {
+        uint256 requestRedeemPeriod = redeemPeriod > noticePeriod() ? redeemPeriod - noticePeriod() : 0;
 
-        return _yieldStrategy.calcYield(address(this), principal, fromPeriod, toPeriod);
+        if (requestRedeemPeriod <= depositPeriod) return 0; // no yield when deposit and requestRedeems are the same period
+
+        return _yieldStrategy.calcYield(address(this), principal, depositPeriod, requestRedeemPeriod);
     }
 
     /// @dev price is not used in Vault calculations.  however, 1 asset = 1 share, implying a price of 1
