@@ -25,7 +25,7 @@ export async function getNFTsForOwner(chainId: number, owner: string, contract: 
     }
 
     const settings: AlchemySettings = {
-      apiKey: "BJ_wKaAj5RmFwYW9Ag-Ns_3k_JhPhs4F",
+      apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
       network: chain,
     };
 
