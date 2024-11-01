@@ -35,22 +35,25 @@ export class TestSigners {
   private _admin: TestSigner;
   private _operator: TestSigner;
   private _custodian: TestSigner;
-  private _treasury: TestSigner;
+  private _upgrader: TestSigner;
   private _deployer: TestSigner;
-  private _rewardVault: TestSigner;
+  private _treasury: TestSigner;
+  private _assetManager: TestSigner;
   private _alice: TestSigner;
   private _bob: TestSigner;
+  private _charlie: TestSigner;
 
   constructor(provider: providers.JsonRpcProvider) {
     this._admin = new TestSigner(0, provider);
     this._operator = new TestSigner(1, provider);
     this._custodian = new TestSigner(2, provider);
-    this._treasury = new TestSigner(3, provider);
+    this._upgrader = new TestSigner(3, provider);
     this._deployer = new TestSigner(4, provider);
-    this._rewardVault = new TestSigner(5, provider);
-
+    this._treasury = new TestSigner(5, provider);
+    this._assetManager = new TestSigner(6, provider);
     this._alice = new TestSigner(7, provider);
     this._bob = new TestSigner(8, provider);
+    this._charlie = new TestSigner(9, provider);
   }
 
   get admin(): TestSigner {
@@ -65,16 +68,20 @@ export class TestSigners {
     return this._custodian;
   }
 
-  get treasury(): TestSigner {
-    return this._treasury;
+  get upgrader(): TestSigner {
+    return this._upgrader;
   }
 
   get deployer(): TestSigner {
     return this._deployer;
   }
 
-  get rewardVault(): TestSigner {
-    return this._rewardVault;
+  get treasury(): TestSigner {
+    return this._treasury;
+  }
+
+  get assetManager(): TestSigner {
+    return this._assetManager;
   }
 
   get alice(): TestSigner {
@@ -83,5 +90,9 @@ export class TestSigners {
 
   get bob(): TestSigner {
     return this._bob;
+  }
+
+  get charlie(): TestSigner {
+    return this._charlie;
   }
 }
