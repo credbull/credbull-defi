@@ -52,7 +52,10 @@ export const useFetchAdminData = ({
   const [assetManagerRoleMembers, setAssetManagerRoleMembers] = useState<string[]>([]);
   const [userHasAssetManagerRole, setUserHasAssetManagerRole] = useState<boolean>(false);
 
-  const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
+  // const provider = useCallback(
+  //   () => new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]),
+  //   [chain?.rpcUrls?.default?.http],
+  // );
 
   const { refetch: refetchVaultBalance } = useReadContract({
     address: simpleUsdcContractData?.address,
@@ -155,11 +158,17 @@ export const useFetchAdminData = ({
   // Fetch data and set state
   useEffect(() => {
     const fetchData = async () => {
-      if (!deployedContractAddress || !deployedContractAbi || !provider || !simpleUsdcContractData) {
+      if (
+        !deployedContractAddress ||
+        !deployedContractAbi ||
+        !chain?.rpcUrls?.default?.http[0] ||
+        !simpleUsdcContractData
+      ) {
         return;
       }
 
       try {
+        const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
         const deployedContract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
 
         setFetchingAdmins(true);
@@ -282,7 +291,30 @@ export const useFetchAdminData = ({
     };
 
     fetchData();
-  }, [userAccount, deployedContractAddress, simpleUsdcContractData, vaultBalance, custodianBalance, ...dependencies]);
+  }, [
+    userAccount,
+    deployedContractAddress,
+    chain?.rpcUrls?.default?.http,
+    simpleUsdcContractData,
+    vaultBalance,
+    custodianBalance,
+    deployedContractAbi,
+    refetchAdminRole,
+    refetchAdminRoleCount,
+    refetchAssetManagerRole,
+    refetchAssetManagerRoleCount,
+    refetchCustodianBalance,
+    refetchOperatorRole,
+    refetchOperatorRoleCount,
+    refetchUpgraderRole,
+    refetchUpgraderRoleCount,
+    refetchUserHasAdminRole,
+    refetchUserHasAssetManagerRole,
+    refetchUserHasOperatorRole,
+    refetchUserHasUpgraderRole,
+    refetchVaultBalance,
+    ...dependencies,
+  ]);
 
   return {
     allDataFetched,

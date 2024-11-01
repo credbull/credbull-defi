@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     "SimpleUSDC#0": {
-      address: "0x3fdc08d815cc4ed3b7f69ee246716f2c8bcd6b07",
+      address: "0x5fbdb2315678afecb367f032d93f642f64180aa3",
       abi: [
         {
           type: "constructor",
@@ -429,7 +429,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "TripleRateYieldStrategy#0": {
-      address: "0x286b8decd5ed79c962b2d8f4346cd97ff0e2c352",
+      address: "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
       abi: [
         {
           type: "function",
@@ -519,7 +519,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "RedeemOptimizerFIFO#0": {
-      address: "0xb868cc77a95a65f42611724af05aa2d3b6ec05f2",
+      address: "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
       abi: [
         {
           type: "constructor",
@@ -742,7 +742,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "LiquidContinuousMultiTokenVault#0": {
-      address: "0x70e5370b8981abc6e14c91f4ace823954efc8ea3",
+      address: "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9",
       abi: [
         {
           type: "constructor",
@@ -3822,7 +3822,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "ERC1967Proxy#0": {
-      address: "0x4000f8820522ac96c4221b299876e3e53bcc8525",
+      address: "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
       abi: [
         {
           type: "constructor",
@@ -3893,7 +3893,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "ERC1155MintableBurnable#0": {
-      address: "0x9338ca7d556248055f5751d85cda7ad6ef254433",
+      address: "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
       abi: [
         {
           type: "constructor",
@@ -4430,7 +4430,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "SimpleTimelockAsyncUnlock#0": {
-      address: "0x9c65f85425c619a6cb6d29ff8d57ef696323d188",
+      address: "0x0165878a594ca255338adfa4d48449f69242eb8f",
       abi: [
         {
           type: "function",
@@ -5056,7 +5056,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "ERC1967Proxy#1": {
-      address: "0x7cf4be31f546c04787886358b9486ca3d62b9acf",
+      address: "0xa513e6e4b8f2a923d98304ec87f64353c4d5c853",
       abi: [
         {
           type: "constructor",

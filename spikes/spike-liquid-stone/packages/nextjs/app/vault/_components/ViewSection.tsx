@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-// import ActionLogSection from "./ActionLogSection";
 import Button from "../../../components/general/Button";
 import ContractValueBadge from "../../../components/general/ContractValueBadge";
 import Input from "../../../components/general/Input";
@@ -71,7 +70,7 @@ const ViewSection = () => {
     dependencies: [refetch],
   });
 
-  const { pools } = useFetchDepositPools({
+  const { pools, depositPoolsFetched } = useFetchDepositPools({
     chainId,
     address: address || "",
     deployedContractAddress,
@@ -92,8 +91,6 @@ const ViewSection = () => {
   const { writeContractAsync } = useWriteContract();
 
   const handleRequestDeposit = async () => {
-    // const message = `Bought ${assets} currency tokens.`;
-    // setLog([...log, message]);
     if (!address || !assets) {
       notification.error("Missing required fields");
       return;
@@ -135,14 +132,10 @@ const ViewSection = () => {
       }
     }
 
-    // setLog(prevLog => [...prevLog, `Bought ${assets} currency tokens.`]);
-
     setAssets("");
   };
 
   const handleRequestRedeem = () => {
-    // const message = `Requested to redeem ${sharesToRequest} component tokens.`;
-    // setLog([...log, message]);
     if (!address || !sharesToRequest) {
       notification.error("Missing required fields");
       return;
@@ -166,20 +159,16 @@ const ViewSection = () => {
       }
     }
 
-    // setLog(prevLog => [...prevLog, `Requested to redeem ${sharesToRequest} sharesToRequest.`]);
-
     setSharesToRequest("");
   };
 
   const handleRedeem = () => {
-    // const message = `Redeemed of ${sharesToRedeem} shares.`;
-    // setLog([...log, message]);
     if (!address || !sharesToRedeem) {
       notification.error("Missing required fields");
       return;
     }
 
-    if (assetAmount < assetsToRedeem) {
+    if (Number(assetAmount) < Number(assetsToRedeem)) {
       notification.error("Sorry! No enough balance in the vault.");
       return;
     }
@@ -201,8 +190,6 @@ const ViewSection = () => {
         console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:handleRedeem  ~ error", error);
       }
     }
-
-    // setLog(prevLog => [...prevLog, `Bought ${assets} currency tokens.`]);
 
     setSharesToRedeem("");
   };
@@ -261,9 +248,17 @@ const ViewSection = () => {
           } p-4 rounded-lg grid gap-3`}
         >
           <h2 className="text-xl font-bold mb-4">Deposit Pools</h2>
-          {pools.map((pool, index) => (
-            <DepositPoolCard key={index} pool={pool} />
-          ))}
+          {!depositPoolsFetched ? (
+            <>
+              <LoadingSpinner />
+            </>
+          ) : (
+            <>
+              {pools.map((pool, index) => (
+                <DepositPoolCard key={index} pool={pool} />
+              ))}
+            </>
+          )}
         </div>
         <div
           className={`${resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"} p-4 rounded-lg`}
@@ -333,10 +328,6 @@ const ViewSection = () => {
           <Button text="Redeem" bgColor="green" onClickHandler={handleRedeem} />
         </ActionCard>
       </div>
-
-      {/* Activity Log */}
-      {/* <ActionLogSection log={log} /> */}
-      {/* <ActionLogSection log={log} /> */}
     </div>
   );
 };

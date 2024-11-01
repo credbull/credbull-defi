@@ -20,6 +20,7 @@
     "deploy-arbSepolia": "make deploy-arbSepolia",
     "deploy:ci": "yarn db-export && make deploy-baseSepolia",
     "gen-abis": "node script/utils/generateTsAbis.js",
+    "add-abi": "node script/utils/addAbi.js",
     "gen-types": "yarn typechain --target ethers-v5 --out-dir ./types ./out/*.sol/*.json && tsc",
     "postinstall": "yarn build && yarn gen-types"
   },
