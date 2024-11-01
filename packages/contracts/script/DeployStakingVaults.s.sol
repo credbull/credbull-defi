@@ -81,9 +81,9 @@ contract DeployStakingVaults is Script {
         WindowPlugin.Window memory _depositWindow =
             WindowPlugin.Window({ opensAt: depositStart, closesAt: depositStart + 14 days - 1 });
 
-        uint256 redeemStart = _depositWindow.closesAt + 30 days + 2; // Withdraw Start: Deposit End + 30 days
+        uint256 redeemStart = _depositWindow.closesAt + 30 days + 1; // Withdraw Start: Deposit End + 30 days
         WindowPlugin.Window memory _redemptionWindow =
-            WindowPlugin.Window({ opensAt: (redeemStart), closesAt: (redeemStart + 365 days - 1) });
+            WindowPlugin.Window({ opensAt: (redeemStart), closesAt: (redeemStart + 30 days - 2) });
 
         _logWindowTimestamps(_depositWindow, _redemptionWindow);
 
@@ -95,7 +95,8 @@ contract DeployStakingVaults is Script {
             depositThresholdForWhiteListing: type(uint256).max // logically disable the whitelist
          });
 
-        MaxCapPlugin.MaxCapPluginParams memory _maxCapPluginParams = MaxCapPlugin.MaxCapPluginParams({ maxCap: 100e6 }); // Max cap not necessary for staking vaults
+        uint256 maxCap = 10_000_000 ether;
+        MaxCapPlugin.MaxCapPluginParams memory _maxCapPluginParams = MaxCapPlugin.MaxCapPluginParams({ maxCap: maxCap }); // Max cap not necessary for staking vaults
 
         return FixedYieldVault.FixedYieldVaultParams({
             maturityVault: _maturityVaultParams,
