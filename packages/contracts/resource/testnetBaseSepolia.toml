@@ -4,26 +4,25 @@
 
 [evm]
 # blockchain id, e.g. baseSepolia=84532, arbSepolia=421614
-chain_id = 421614
+chain_id = 84532
 deploy_mocks = false
 
 [evm.address]
 # credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)
 # devops admin/owner (wallet 1) - public address, okay to share
-owner = "0x029412BAfa6D524E547386Db2C20F9ee39e8F0a9"
+owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 # devops operator (wallet 2) - public address, okay to share
-operator = "0xc89EB0727F0738Eaffa6df183789614DD5d46393"
+operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # devops custodian (wallet 3) - public address, okay to share
-custodian = "0x8CB4783e150Fd71915Ea1D2277f264550e8784f4"
+custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
 # devops upgrader (wallet 4) - public address, okay to share
 upgrader = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # devops asset manager (wallet 7) - public address, okay to share
 asset_manager = "0xd097E901FB9B75C2d2f97E142d73fA79C31FcAb3"
-# CBL token address
-cbl_token="0xB4C80BbEa256e7E88024EfDFEE666388374f831c"
-# USDC token address
-usdc_token="0xB4C80BbEa256e7E88024EfDFEE666388374f831c"
-
+# CBL token address - Base Sepolia
+cbl_token="0x2064334877Fac12f353b8FB42440805709eC267A"
+# USDC token address - Base Sepolia
+usdc_token="0x036CbD53842c5426634e7929541eC2318f3dCF7e"
 
 [evm.contracts.liquid_continuous_multi_token_vault]
 # rate in basis points, e.g.  10% = 1000 bps
