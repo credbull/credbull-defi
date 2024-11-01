@@ -4,7 +4,7 @@ import * as chains from "viem/chains";
 const plumeTestnet: Chain = {
   id: 98864,
   name: "Plume Testnet",
-  nativeCurrency: { name: "Plume Test Token", symbol: "PLM", decimals: 18 },
+  nativeCurrency: { name: "Plume Ethereum", symbol: "ETH", decimals: 18 },
   rpcUrls: {
     default: { http: ["https://test-rpc.plumenetwork.xyz"] },
     public: { http: ["https://test-rpc.plumenetwork.xyz"] },

@@ -107,7 +107,7 @@ export const useFetchContractData = ({
       setCurrentPeriod(_currentPeriod);
 
       const assetAmountData = await refetchAssetAmount();
-      const assetAmountBigInt = BigInt(assetAmountData?.data as bigint);
+      const assetAmountBigInt = BigInt(assetAmountData?.data as number);
       setAssetAmount(ethers.formatUnits(assetAmountBigInt, 6));
 
       const startTimeData = await refetchStartTime();
@@ -137,7 +137,7 @@ export const useFetchContractData = ({
       if (scale > 0) {
         setPreviousReducedRate(Number((previousReducedRateData?.data as PeriodRate)?.interestRate) / scale);
         setCurrentReducedRate(Number((currentReducedRateData?.data as PeriodRate)?.interestRate) / scale);
-        if (_currentPeriod < Number(currentReducedRateData?.data?.effectiveFromPeriod)) {
+        if (_currentPeriod < Number((currentReducedRateData?.data as PeriodRate)?.effectiveFromPeriod)) {
           setEffectiveReducedRate("0");
         } else {
           setEffectiveReducedRate("1");
