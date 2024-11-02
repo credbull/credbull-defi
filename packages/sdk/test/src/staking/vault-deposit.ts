@@ -10,24 +10,23 @@ type Address = string;
 export class VaultDeposit {
   constructor(
     private _id: number,
-    private _owner: Wallet,
     private _receiver: Address,
     private _depositAmount: BigNumber,
   ) {}
 
   toString(): string {
-    return `[VaultDeposit ID: ${this._id}, Owner: ${this._owner.address}, Receiver: ${this._receiver}, Amount: ${this._depositAmount.toString()}]`;
+    return `VaultDeposit [id: ${this._id}, Receiver: ${this._receiver}, Amount: ${this._depositAmount.toString()}]`;
   }
 
-  async depositWithAllowance(vault: CredbullFixedYieldVault) {
+  async depositWithAllowance(owner: Wallet, vault: CredbullFixedYieldVault) {
     logger.debug('------------------');
     // console.log(`Begin Deposit with Allowance ${this.toString()}`);
-    logger.info(`Begin Deposit with Allowance ${this.toString()}`);
+    logger.info(`Begin Deposit from: ${owner.address} to: ${this.toString()}`);
 
-    await this.allowance(vault);
+    await this.allowance(owner, vault);
     await this.depositOnly(vault);
 
-    logger.debug(`End Deposit with Allowance [id=${this._id}]`);
+    logger.debug(`End Deposit [id=${this._id}]`);
     logger.debug('------------------');
   }
 
@@ -72,10 +71,10 @@ export class VaultDeposit {
     logger.debug(`End Deposit Only [id=${this._id}].`);
   }
 
-  async allowance(vault: CredbullFixedYieldVault) {
+  async allowance(owner: Wallet, vault: CredbullFixedYieldVault) {
     const assetAddress: string = await vault.asset();
-    const tokenAsOwner: OwnableToken = OwnableToken__factory.connect(assetAddress, this._owner);
-    const ownerAddress = await this._owner.getAddress();
+    const tokenAsOwner: OwnableToken = OwnableToken__factory.connect(assetAddress, owner);
+    const ownerAddress = await owner.getAddress();
 
     const allowanceToGrant = this._depositAmount.sub(await tokenAsOwner.allowance(ownerAddress, vault.address));
 
