@@ -15,7 +15,7 @@ dotenv.config({
   override: true,
 });
 
-interface Config {
+export interface Config {
   secret?: {
     SUPABASE_SERVICE_ROLE_KEY?: string;
     SUPABASE_ANONYMOUS_KEY?: string;
@@ -44,7 +44,7 @@ export const loadConfiguration = (): Config => {
   const toml = fs.readFileSync(configFile, 'utf8');
   const config: Config = load(toml);
 
-  console.log(`Successfully loaded configuration from: '${configFile}'`);
+  console.log('Successfully loaded configuration:', JSON.stringify(config, null, 2));
 
   // include Environment into config
   // NB - call this after the log statement to avoid logging keys!
