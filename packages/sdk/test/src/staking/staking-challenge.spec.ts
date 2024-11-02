@@ -2,9 +2,10 @@ import { CredbullFixedYieldVault__factory, ERC20__factory, OwnableToken__factory
 import { expect, test } from '@playwright/test';
 import { Wallet, ethers } from 'ethers';
 
-import { Config, loadConfiguration } from './utils/config';
-import { handleError } from './utils/decoder';
-import { TestSigners } from './utils/test-signer';
+import { Config, loadConfiguration } from '../utils/config';
+import { handleError } from '../utils/decoder';
+import { TestSigners } from '../utils/test-signer';
+import { Deposit } from './staking-challenge';
 
 const VAULT_MAX_CAP = '10000000';
 
@@ -58,41 +59,41 @@ test.describe('Test Credbull Staking Challenge read operations', () => {
 
 test.describe('Test Credbull Staking Challenge Owner updates', () => {
   test('Test turn off window checking', async () => {
-    const liquidVault = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, ownerSigner);
+    const vault = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, ownerSigner);
 
     // turn off window checking
-    if (await liquidVault.checkWindow()) {
-      await liquidVault.toggleWindowCheck();
+    if (await vault.checkWindow()) {
+      await vault.toggleWindowCheck();
     } else {
       console.log('Window already toggled off, skipping');
     }
 
-    expect(await liquidVault.checkWindow()).toEqual(false); // now should be off
+    expect(await vault.checkWindow()).toEqual(false); // now should be off
   });
 
   test('Update max cap to be the right precision', async () => {
     const maxcap = ethers.utils.parseEther(VAULT_MAX_CAP); // 10 million ETH in wei
 
-    const liquidVault = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, ownerSigner);
+    const vault = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, ownerSigner);
 
     // check the asset
-    const usdc = ERC20__factory.connect(await liquidVault.asset(), ownerSigner);
+    const usdc = ERC20__factory.connect(await vault.asset(), ownerSigner);
     expect(usdc.decimals()).resolves.toEqual(18);
 
-    const maxCap = await liquidVault.maxCap();
+    const maxCap = await vault.maxCap();
     console.log('Vault maximum cap:', maxCap.toString());
 
-    expect(await liquidVault.checkMaxCap()).toEqual(true);
-    console.log('maxcap=%s', (await liquidVault.maxCap()).toBigInt());
+    expect(await vault.checkMaxCap()).toEqual(true);
+    console.log('maxcap=%s', (await vault.maxCap()).toBigInt());
 
-    if ((await liquidVault.maxCap()).toBigInt() != maxcap.toBigInt()) {
+    if ((await vault.maxCap()).toBigInt() != maxcap.toBigInt()) {
       console.log('Updating max cap...');
-      await liquidVault.updateMaxCap(maxcap); // update the max cap
+      await vault.updateMaxCap(maxcap); // update the max cap
     } else {
       console.log('Max cap already updated, skipping');
     }
 
-    expect((await liquidVault.maxCap()).toBigInt()).toEqual(maxcap.toBigInt()); // window starts on
+    expect((await vault.maxCap()).toBigInt()).toEqual(maxcap.toBigInt()); // window starts on
   });
 });
 
@@ -100,8 +101,8 @@ test.describe('Test Credbull Staking Challenge Vault Mint and Deposit', () => {
   const depositAmount = ethers.utils.parseEther('1000');
 
   test('Test Mint', async () => {
-    const liquidVaultAsUser = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, userSigner);
-    const assetAddress = await liquidVaultAsUser.asset();
+    const vaultAsUser = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, userSigner);
+    const assetAddress = await vaultAsUser.asset();
     const tokenAsUser = await connectToken(assetAddress, userSigner);
 
     // ------------------------- Mint -------------------------
@@ -112,33 +113,15 @@ test.describe('Test Credbull Staking Challenge Vault Mint and Deposit', () => {
   });
 
   test('Test Deposit', async () => {
-    const liquidVaultAsUser = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, userSigner);
-    const assetAddress = await liquidVaultAsUser.asset();
-    const tokenAsUser = await connectToken(assetAddress, userSigner);
+    const receiver = userSigner.address;
 
-    const userAddress = await userSigner.getAddress();
+    const vaultAsUser = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, userSigner);
+    const prevVaultBalance = await vaultAsUser.balanceOf(receiver);
 
-    // ------------------------- Deposit -------------------------
-    // grant permission to vault to spend
-    console.log('Approving staking vault for spend... ' + userAddress);
-    await tokenAsUser.approve(stakingVaultAddress, depositAmount);
+    const deposit = new Deposit(1, userSigner, receiver, depositAmount);
+    await deposit.depositWithAllowance(vaultAsUser);
 
-    expect((await tokenAsUser.allowance(userAddress, stakingVaultAddress)).toBigInt()).toBeGreaterThanOrEqual(
-      depositAmount.toBigInt(),
-    );
-
-    console.log('Depositing as user %s... ' + userAddress);
-
-    const prevVaultBalance = await liquidVaultAsUser.balanceOf(userAddress);
-
-    // now deposit
-    await liquidVaultAsUser.deposit(depositAmount, userAddress).catch((err) => {
-      const decodedError = handleError(liquidVaultAsUser, err);
-      console.error('Deposit contract error:', decodedError.message);
-      throw decodedError;
-    });
-
-    expect((await liquidVaultAsUser.balanceOf(userAddress)).toBigInt()).toEqual(
+    expect((await vaultAsUser.balanceOf(receiver)).toBigInt()).toEqual(
       prevVaultBalance.toBigInt() + depositAmount.toBigInt(),
     );
   });
@@ -146,21 +129,21 @@ test.describe('Test Credbull Staking Challenge Vault Mint and Deposit', () => {
 
 test.describe('Test Credbull Staking Challenge Redeem', () => {
   test('Test turn off maturity checking', async () => {
-    const liquidVault = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, ownerSigner);
+    const vault = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, ownerSigner);
 
     // turn off window checking
-    if (await liquidVault.checkMaturity()) {
-      await liquidVault.setMaturityCheck(false);
+    if (await vault.checkMaturity()) {
+      await vault.setMaturityCheck(false);
     } else {
       console.log('Maturity already off, skipping');
     }
 
-    expect(await liquidVault.checkMaturity()).toEqual(false); // now should be off
+    expect(await vault.checkMaturity()).toEqual(false); // now should be off
   });
 
   test('As Custodian, Move Assets into Vault', async () => {
-    const liquidVaultAsCustodian = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, custodianSigner);
-    const assetAddress = await liquidVaultAsCustodian.asset();
+    const vaultAsCustodian = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, custodianSigner);
+    const assetAddress = await vaultAsCustodian.asset();
     const tokenAsCustodian = await connectToken(assetAddress, custodianSigner);
 
     const tokenAsCustodianAddress = await custodianSigner.getAddress();
