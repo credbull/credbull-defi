@@ -119,8 +119,8 @@ test.describe('Test Credbull Staking Challenge Vault Mint and Deposit', () => {
     const vaultAsUser = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, userSigner);
     const prevVaultBalance = await vaultAsUser.balanceOf(receiver);
 
-    const vaultDeposit: VaultDeposit = new VaultDeposit(1, userSigner, receiver, depositAmount);
-    await vaultDeposit.depositWithAllowance(vaultAsUser);
+    const vaultDeposit: VaultDeposit = new VaultDeposit(1, receiver, depositAmount);
+    await vaultDeposit.depositWithAllowance(userSigner, vaultAsUser);
 
     expect((await vaultAsUser.balanceOf(receiver)).toBigInt()).toEqual(
       prevVaultBalance.toBigInt() + depositAmount.toBigInt(),
