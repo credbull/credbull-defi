@@ -3,8 +3,9 @@ import { BigNumber } from 'ethers';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { VaultDeposit } from './vault-deposit';
 import logger from '../utils/logger';
+
+import { VaultDeposit } from './vault-deposit';
 
 const resourcePath = path.join(__dirname, '../../resource');
 
