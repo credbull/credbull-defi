@@ -18,9 +18,10 @@ export class TestSigner {
   private _delegate: Wallet;
 
   constructor(index: number, provider: providers.JsonRpcProvider) {
+    const anvilMnemonic = 'test test test test test test test test test test test junk';
     const path = `m/44'/60'/0'/0/${index}`;
-    // const hdNode = ethers.utils.HDNode.fromMnemonic(process.env.TEST_MNEMONIC);
-    const hdNode = ethers.utils.HDNode.fromMnemonic('test test test test test test test test test test test junk');
+
+    const hdNode = ethers.utils.HDNode.fromMnemonic(process.env.TEST_MNEMONIC || anvilMnemonic);
     this._delegate = new ethers.Wallet(hdNode.derivePath(path), provider);
   }
 
