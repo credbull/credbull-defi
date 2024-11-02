@@ -9,9 +9,9 @@ type Address = string;
 
 export class VaultDeposit {
   constructor(
-    private _id: number,
-    private _receiver: Address,
-    private _depositAmount: BigNumber,
+    public readonly _id: number,
+    public readonly _receiver: Address,
+    public readonly _depositAmount: BigNumber,
   ) {}
 
   toString(): string {
@@ -20,7 +20,6 @@ export class VaultDeposit {
 
   async depositWithAllowance(owner: Wallet, vault: CredbullFixedYieldVault) {
     logger.debug('------------------');
-    // console.log(`Begin Deposit with Allowance ${this.toString()}`);
     logger.info(`Begin Deposit from: ${owner.address} to: ${this.toString()}`);
 
     await this.allowance(owner, vault);
@@ -59,7 +58,7 @@ export class VaultDeposit {
 
     // wait for the transaction to be mined
     const receipt = await depositTxnResponse.wait();
-    logger.info(`Deposit ${this.toString()} Txn status: ${receipt.status}  Txn hash: ${depositTxnResponse.hash}`);
+    logger.info(`Deposit Txn ${this.toString()} Txn status: ${receipt.status}  Txn hash: ${depositTxnResponse.hash}`);
 
     const receiverBalance = await vault.balanceOf(this._receiver);
     const expectedBalance = this._depositAmount.add(prevVaultBalanceReceiver);
