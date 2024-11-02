@@ -8,14 +8,13 @@ export const processedLogCache: any[] = [];
 
 const processedLogFilePath = path.join(logDirectory, 'staking-processed.json');
 
-// Initialize logMessages from file, if it exists
-function initProcessedLogCache() {
+function initProcessedLogCache(filePath = processedLogFilePath) {
   console.log('Loading log messages into cache...');
-  if (!fs.existsSync(processedLogFilePath)) {
+  processedLogCache.length = 0; // Clear existing cache
+  if (!fs.existsSync(filePath)) {
     return;
   }
-
-  const fileData = fs.readFileSync(processedLogFilePath, 'utf-8');
+  const fileData = fs.readFileSync(filePath, 'utf-8');
   fileData
     .trim()
     .split('\n')
@@ -44,18 +43,24 @@ const logger = winston.createLogger({
   ],
 });
 
-const processedLogger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json(), // Structured logging in JSON format
-  ),
-  transports: [
-    new winston.transports.File({ filename: processedLogFilePath, level: 'info' }),
-    new winston.transports.Stream({ stream: logStream, level: 'info' }), // In-memory transport
-  ],
-});
+function createProcessedLogger(filePath = processedLogFilePath) {
+  const logStream = new PassThrough();
+  logStream.on('data', (chunk) => {
+    processedLogCache.push(JSON.parse(chunk.toString())); // Store each log entry in the cache
+  });
+
+  return winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+    transports: [
+      new winston.transports.File({ filename: filePath, level: 'info' }),
+      new winston.transports.Stream({ stream: logStream, level: 'info' }), // In-memory transport
+    ],
+  });
+}
 
 initProcessedLogCache();
 
-export { logger, processedLogger };
+const processedLogger = createProcessedLogger();
+
+export { logger, processedLogger, initProcessedLogCache, createProcessedLogger };
