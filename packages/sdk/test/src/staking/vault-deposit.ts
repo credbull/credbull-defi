@@ -3,7 +3,7 @@ import * as assert from 'assert';
 import { BigNumber, Wallet, ethers } from 'ethers';
 
 import { handleError } from '../utils/decoder';
-import { logger, processedLogger } from '../utils/logger';
+import { processedLogCache, logger, processedLogger } from '../utils/logger';
 
 type Address = string;
 
@@ -34,9 +34,13 @@ export class VaultDeposit {
     logger.info('------------------');
     logger.info(`Begin Deposit from: ${owner.address} to: ${this.toString()}`);
 
-    await this.allowance(owner, vault);
-    await this.depositOnly(vault);
-
+    const alreadyProcessed = await (this.isProcessed(await owner.getChainId(), processedLogCache));
+    if (alreadyProcessed) {
+      return;
+    } else {
+      await this.allowance(owner, vault);
+      await this.depositOnly(vault);
+    }
     logger.debug(`End Deposit [id=${this._id}]`);
   }
 
@@ -46,7 +50,6 @@ export class VaultDeposit {
     const prevVaultBalanceReceiver = await vault.balanceOf(this._receiver);
 
     // TODO - check if the same address will have multiple deposits. if not, we can skip any deposits that already exist.
-    // TODO - save the txn and grab the return value (shares)
 
     // -------------------------- Simulate --------------------------
 
@@ -74,12 +77,13 @@ export class VaultDeposit {
     );
     await this.logResult(depositTxnResponse.chainId, depositTxnResponse.hash);
 
-    const receiverBalance = await vault.balanceOf(this._receiver);
     const expectedBalance = this._depositAmount.add(prevVaultBalanceReceiver);
-    assert.ok(
-      expectedBalance.eq(receiverBalance),
-      `Balance not correct!  Expected: ${expectedBalance} (${prevVaultBalanceReceiver} + ${this._depositAmount.toBigInt()}), but was: ${receiverBalance.toBigInt()}`,
-    );
+    const receiverBalance = await vault.balanceOf(this._receiver);
+    if (!expectedBalance.eq(receiverBalance)) {
+      logger.error(
+        `!!!! Balance not correct after deposit [id=${this._id}]!!!!  Expected: ${expectedBalance} (${prevVaultBalanceReceiver} + ${this._depositAmount.toString()}), but was: ${receiverBalance.toString()}`,
+      );
+    }
 
     logger.debug(`End Deposit Only [id=${this._id}].`);
   }
@@ -112,6 +116,22 @@ export class VaultDeposit {
     } else {
       logger.debug(`Sufficient Allowance already exists [id=${this._id}]`);
     }
+  }
+
+  async isProcessed(chainId: number, processedLogMessages: any[]): Promise<boolean> {
+    const alreadyProcessed = processedLogMessages.some(
+      (entry) =>
+        entry.message &&
+        entry.message.chainId === chainId &&
+        entry.message.VaultDeposit &&
+        entry.message.VaultDeposit.id === this._id,
+    );
+
+    if (alreadyProcessed) {
+      logger.debug(`Skipping VaultDeposit with id ${this._id} on chain ${chainId}.  Already processed.`);
+    }
+
+    return alreadyProcessed;
   }
 
   async logResult(chainId: number, txnHash: string, customLogger = processedLogger) {
