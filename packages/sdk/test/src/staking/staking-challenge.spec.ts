@@ -5,7 +5,8 @@ import { Wallet, ethers } from 'ethers';
 import { Config, loadConfiguration } from '../utils/config';
 import { handleError } from '../utils/decoder';
 import { TestSigners } from '../utils/test-signer';
-import { Deposit } from './staking-challenge';
+
+import { VaultDeposit } from './vault-deposit';
 
 const VAULT_MAX_CAP = '10000000';
 
@@ -118,8 +119,8 @@ test.describe('Test Credbull Staking Challenge Vault Mint and Deposit', () => {
     const vaultAsUser = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, userSigner);
     const prevVaultBalance = await vaultAsUser.balanceOf(receiver);
 
-    const deposit = new Deposit(1, userSigner, receiver, depositAmount);
-    await deposit.depositWithAllowance(vaultAsUser);
+    const vaultDeposit: VaultDeposit = new VaultDeposit(1, userSigner, receiver, depositAmount);
+    await vaultDeposit.depositWithAllowance(vaultAsUser);
 
     expect((await vaultAsUser.balanceOf(receiver)).toBigInt()).toEqual(
       prevVaultBalance.toBigInt() + depositAmount.toBigInt(),
