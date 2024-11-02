@@ -1,20 +1,13 @@
+import { CredbullFixedYieldVault, OwnableToken, OwnableToken__factory } from '@credbull/contracts';
 import * as assert from 'assert';
+import { BigNumber, Wallet, ethers } from 'ethers';
 
-import {
-  CredbullFixedYieldVault,
-  OwnableToken,
-  OwnableToken__factory
-} from '@credbull/contracts';
-import {Wallet, ethers, BigNumber} from 'ethers';
-
-import { Config, loadConfiguration } from '../utils/config';
 import { handleError } from '../utils/decoder';
-
-let config: Config;
+import logger from '../utils/logger';
 
 type Address = string;
 
-export class Deposit {
+export class VaultDeposit {
   constructor(
     private _id: number,
     private _owner: Wallet,
@@ -23,38 +16,51 @@ export class Deposit {
   ) {}
 
   toString(): string {
-    return `[Deposit ID: ${this._id}, Owner: ${this._owner.address}, Receiver: ${this._receiver}, Amount: ${this._depositAmount.toString()}]`;
+    return `[VaultDeposit ID: ${this._id}, Owner: ${this._owner.address}, Receiver: ${this._receiver}, Amount: ${this._depositAmount.toString()}]`;
   }
 
   async depositWithAllowance(vault: CredbullFixedYieldVault) {
-    console.log('------------------');
-    console.log(`Begin Deposit with Allowance ${this.toString()}`);
+    logger.debug('------------------');
+    // console.log(`Begin Deposit with Allowance ${this.toString()}`);
+    logger.info(`Begin Deposit with Allowance ${this.toString()}`);
 
     await this.allowance(vault);
     await this.depositOnly(vault);
 
-    console.log(`End Deposit with Allowance [id=${this._id}]`);
-    console.log('------------------');
+    logger.debug(`End Deposit with Allowance [id=${this._id}]`);
+    logger.debug('------------------');
   }
 
   async depositOnly(vault: CredbullFixedYieldVault) {
-    console.log(`Depositing [id=${this._id}] ...`);
+    logger.debug(`Depositing [id=${this._id}] ...`);
 
     const prevVaultBalanceReceiver = await vault.balanceOf(this._receiver);
 
     // TODO - check if the same address will have multiple deposits. if not, we can skip any deposits that already exist.
-
-    // now deposit
     // TODO - save the txn and grab the return value (shares)
+
+    // -------------------------- Simulate --------------------------
+
+    // Simulate the deposit to get the return value (shares) without sending a transaction
+    const shares = await vault.callStatic.deposit(this._depositAmount, this._receiver).catch((err) => {
+      const decodedError = handleError(vault, err);
+      logger.error('CallStatic deposit error:', decodedError.message);
+      throw decodedError;
+    });
+
+    logger.debug(`Deposit simulated shares: ${shares.toString()}`);
+
+    // -------------------------- Deposit --------------------------
 
     const depositTxnResponse = await vault.deposit(this._depositAmount, this._receiver).catch((err) => {
       const decodedError = handleError(vault, err);
-      console.error('Deposit contract error:', decodedError.message);
+      logger.error('Deposit contract error:', decodedError.message);
       throw decodedError;
     });
 
     // wait for the transaction to be mined
-    await depositTxnResponse.wait();
+    const receipt = await depositTxnResponse.wait();
+    logger.info(`Deposit ${this.toString()} Txn status: ${receipt.status}  Txn hash: ${depositTxnResponse.hash}`);
 
     const receiverBalance = await vault.balanceOf(this._receiver);
     const expectedBalance = this._depositAmount.add(prevVaultBalanceReceiver);
@@ -63,7 +69,7 @@ export class Deposit {
       `Balance not correct!  Expected: ${expectedBalance} (${prevVaultBalanceReceiver} + ${this._depositAmount.toBigInt()}), but was: ${receiverBalance.toBigInt()}`,
     );
 
-    console.log(`End Deposit Only [id=${this._id}].`);
+    logger.debug(`End Deposit Only [id=${this._id}].`);
   }
 
   async allowance(vault: CredbullFixedYieldVault) {
@@ -73,13 +79,13 @@ export class Deposit {
 
     const allowanceToGrant = this._depositAmount.sub(await tokenAsOwner.allowance(ownerAddress, vault.address));
 
-    console.log(`Granting Allowance [id=${this._id}] ...`);
+    logger.debug(`Granting Allowance [id=${this._id}] ...`);
 
     if (allowanceToGrant.gt(ethers.BigNumber.from(0))) {
-      console.log(`Approving staking vault [id=${this._id}] Allowance of: ${allowanceToGrant.toBigInt()}`);
+      logger.debug(`Approving staking vault [id=${this._id}] Allowance of: ${allowanceToGrant.toBigInt()}`);
       const approveTxnResponse = await tokenAsOwner.approve(vault.address, allowanceToGrant).catch((err) => {
         const decodedError = handleError(vault, err);
-        console.error('Approval contract error:', decodedError.message);
+        logger.error('Approval contract error:', decodedError.message);
         throw decodedError;
       });
 
@@ -92,7 +98,7 @@ export class Deposit {
         `Allowance not granted [id=${this._id}]. Expected: ${allowanceToGrant.toString()}, but was: ${allowance.toString()}`,
       );
     } else {
-      console.log(`Sufficient Allowance already exists [id=${this._id}]`);
+      logger.debug(`Sufficient Allowance already exists [id=${this._id}]`);
     }
   }
 }
