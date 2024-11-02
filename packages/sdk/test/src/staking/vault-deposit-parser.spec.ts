@@ -7,7 +7,6 @@ import { parseFromFile } from './vault-depost-parser';
 test.describe('Test Vault Deposit loader', () => {
   test('Test parse from file', async () => {
     const vaultDeposits: VaultDeposit[] = parseFromFile('TEST-staking-data.json');
-    console.log(`Array: ${vaultDeposits}`);
     expect(vaultDeposits.length).toBeGreaterThanOrEqual(1);
 
     for (const vaultDeposit of vaultDeposits) {
