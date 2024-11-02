@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as winston from 'winston';
 
-const logFilePath = path.join(__dirname, '../../../../logs/staking.log');
+const logFilePath = path.join(__dirname, '../../../logs/staking.log');
 
 const logger = winston.createLogger({
   level: 'debug', // Set the default log level
