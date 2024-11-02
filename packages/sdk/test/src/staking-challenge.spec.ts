@@ -158,7 +158,6 @@ test.describe('Test Credbull Staking Challenge Redeem', () => {
     expect(await liquidVault.checkMaturity()).toEqual(false); // now should be off
   });
 
-
   test('As Custodian, Move Assets into Vault', async () => {
     const liquidVaultAsCustodian = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, custodianSigner);
     const assetAddress = await liquidVaultAsCustodian.asset();
@@ -168,7 +167,10 @@ test.describe('Test Credbull Staking Challenge Redeem', () => {
     const custodianBalance = await tokenAsCustodian.balanceOf(tokenAsCustodianAddress);
 
     console.log(
-      'Transferring assets to vault as custodian %s balance of... ', (await custodianSigner.address), custodianBalance.toBigInt());
+      'Transferring assets to vault as custodian %s balance of... ',
+      await custodianSigner.address,
+      custodianBalance.toBigInt(),
+    );
 
     // now transfer
     await tokenAsCustodian.transfer(stakingVaultAddress, custodianBalance).catch((err) => {
