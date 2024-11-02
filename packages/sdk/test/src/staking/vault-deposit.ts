@@ -3,7 +3,7 @@ import * as assert from 'assert';
 import { BigNumber, Wallet, ethers } from 'ethers';
 
 import { handleError } from '../utils/decoder';
-import { processedLogCache, logger, processedLogger } from '../utils/logger';
+import { logger, processedLogCache, processedLogger } from '../utils/logger';
 
 type Address = string;
 
@@ -34,7 +34,7 @@ export class VaultDeposit {
     logger.info('------------------');
     logger.info(`Begin Deposit from: ${owner.address} to: ${this.toString()}`);
 
-    const alreadyProcessed = await (this.isProcessed(await owner.getChainId(), processedLogCache));
+    const alreadyProcessed = await this.isProcessed(await owner.getChainId(), processedLogCache);
     if (alreadyProcessed) {
       return;
     } else {

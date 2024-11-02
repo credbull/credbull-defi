@@ -3,11 +3,13 @@ import { expect, test } from '@playwright/test';
 import { BigNumber, Wallet, ethers } from 'ethers';
 
 import { Config, loadConfiguration } from '../utils/config';
+import { processedLogCache, processedLogger } from '../utils/logger';
 import { TestSigners } from '../utils/test-signer';
 
 import { VaultDeposit } from './vault-deposit';
 import { parseFromFile } from './vault-depost-parser';
-import { processedLogger, processedLogCache } from '../utils/logger'; // Import processedLogger and logMessages
+
+// Import processedLogger and logMessages
 
 let config: Config;
 
