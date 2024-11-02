@@ -18,15 +18,30 @@ export class VaultDeposit {
     return `VaultDeposit [id: ${this._id}, Receiver: ${this._receiver}, Amount: ${this._depositAmount.toString()}]`;
   }
 
+  static async depositWithAllowanceForAll(owner: Wallet, vault: CredbullFixedYieldVault, deposits: VaultDeposit[]) {
+    logger.info('******************');
+    logger.info('Begin DepositWithAllowance for all');
+
+    for (const deposit of deposits) {
+      try {
+        await deposit.depositWithAllowance(owner, vault);
+      } catch (error) {
+        logger.error(`!!!! Deposit failed !!!! ${deposit.toString()} .  Error: ${error.message}`);
+      }
+    }
+
+    logger.info('End DepositWithAllowance for all');
+    logger.info('******************');
+  }
+
   async depositWithAllowance(owner: Wallet, vault: CredbullFixedYieldVault) {
-    logger.debug('------------------');
+    logger.info('------------------');
     logger.info(`Begin Deposit from: ${owner.address} to: ${this.toString()}`);
 
     await this.allowance(owner, vault);
     await this.depositOnly(vault);
 
     logger.debug(`End Deposit [id=${this._id}]`);
-    logger.debug('------------------');
   }
 
   async depositOnly(vault: CredbullFixedYieldVault) {
