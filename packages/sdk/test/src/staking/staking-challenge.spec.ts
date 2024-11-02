@@ -43,7 +43,6 @@ test.describe('Test Credbull Staking Challenge read operations', () => {
     // check the toggles
     expect(await vault.checkMaxCap()).toEqual(true);
     expect(await vault.checkWhiteList()).toEqual(true);
-    // expect(await vault.checkMaturity()).toEqual(true); // depends on whether we are open for deposits or not
 
     // check the balances
     console.log('Owner CBL balance     = %s', (await token.balanceOf(ownerSigner.address)).toBigInt().toString());
