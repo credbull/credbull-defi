@@ -1,0 +1,37 @@
+node_env = "test"
+
+[api]
+url = ""
+
+[app]
+url = ""
+
+[services.supabase]
+url = ""
+
+[services.ethers]
+# TODO - need to add API key to URL
+url = "https://arb-sepolia.g.alchemy.com/v2/"
+
+[evm.address]
+# credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)
+# devops admin/owner (wallet 1) - public address, okay to share
+owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
+# devops operator (wallet 2) - public address, okay to share
+operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
+# devops custodian (wallet 3) - public address, okay to share
+custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
+## CBL Staking Vault address - Arbitrum Sepolia
+vault_cbl_staking="0x810d489487C385fEb6ee4d7e2B16B5AED35E47e5"
+
+
+[users]
+# Associated with Dev/Anvil Wallet, Account[0]
+admin.email_address = "test+admin@credbull.io"
+# Associated with Dev/Anvil Wallet, Account[7]
+alice.email_address = "test+alice@credbull.io"
+# Associated with Dev/Anvil Wallet, Account[8]
+bob.email_address = "test+bob@credbull.io"
+
+[operation.createVault]
+collateral_percentage = 20

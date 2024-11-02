@@ -1,16 +1,26 @@
-import { Signer, Wallet, ethers, providers } from 'ethers';
+import * as dotenv from 'dotenv';
+import { Wallet, ethers, providers } from 'ethers';
+import * as path from 'path';
 
-export const OWNER_PUBLIC_KEY_LOCAL: string = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+// NOTE (JL,2024-05-20): Hierarchical Environments are loaded from the package's grandparent directory (../..),
+//  then the parent (..) and finally the package directory (.) (adjusted for module location).
+dotenv.config({
+  encoding: 'utf-8',
+  path: [
+    path.resolve(__dirname, '../../../../../.env'), // credbull-defi (root)
+    path.resolve(__dirname, '../../../../.env'), // packages
+    path.resolve(__dirname, '../../../.env'), // sdk
+  ],
+  override: true,
+});
 
 export class TestSigner {
   private _delegate: Wallet;
 
   constructor(index: number, provider: providers.JsonRpcProvider) {
-    // TODO: the SDK is expecting a Wallet (that extends Signer).  using mnemonic to set this for now.
-
-    const anvilMnemonic = 'test test test test test test test test test test test junk';
     const path = `m/44'/60'/0'/0/${index}`;
-    const hdNode = ethers.utils.HDNode.fromMnemonic(anvilMnemonic);
+    // const hdNode = ethers.utils.HDNode.fromMnemonic(process.env.TEST_MNEMONIC);
+    const hdNode = ethers.utils.HDNode.fromMnemonic('test test test test test test test test test test test junk');
     this._delegate = new ethers.Wallet(hdNode.derivePath(path), provider);
   }
 
@@ -20,7 +30,7 @@ export class TestSigner {
     return address;
   }
 
-  getDelegate(): Signer {
+  getDelegate(): Wallet {
     return this._delegate;
   }
 

@@ -52,14 +52,13 @@ contract CredbullFixedYieldVaultStakingTest is Test {
 
         vm.prank(owner);
         vault.toggleWindowCheck();
-
         assertFalse(vault.checkWindow(), "window should be off");
 
-        vm.prank(owner);
-        vault.updateMaxCap(10_000_000 * precision);
-
         uint256 depositAmount = 10 * precision;
-        deposit(vault, alice, depositAmount, false);
+        uint256 shares = deposit(vault, alice, depositAmount, false);
+
+        assertEq(depositAmount, cbl.balanceOf(vault.CUSTODIAN()), "custodian should have the CBL");
+        assertEq(shares, vault.balanceOf(alice), "alice should have the shares");
 
         uint256 expectedAssetValue = ((depositAmount * (100 + 50)) / 100);
         assertEq(vault.expectedAssetsOnMaturity(), expectedAssetValue);
