@@ -3,7 +3,7 @@ import * as assert from 'assert';
 import { BigNumber, Wallet, ethers } from 'ethers';
 
 import { handleError } from '../utils/decoder';
-import logger from '../utils/logger';
+import { logger, processedLogger } from '../utils/logger';
 
 type Address = string;
 
@@ -13,10 +13,6 @@ export class VaultDeposit {
     public readonly _receiver: Address,
     public readonly _depositAmount: BigNumber,
   ) {}
-
-  toString(): string {
-    return `VaultDeposit [id: ${this._id}, Receiver: ${this._receiver}, Amount: ${this._depositAmount.toString()}]`;
-  }
 
   static async depositWithAllowanceForAll(owner: Wallet, vault: CredbullFixedYieldVault, deposits: VaultDeposit[]) {
     logger.info('******************');
@@ -73,7 +69,10 @@ export class VaultDeposit {
 
     // wait for the transaction to be mined
     const receipt = await depositTxnResponse.wait();
-    logger.info(`Deposit Txn ${this.toString()} Txn status: ${receipt.status}  Txn hash: ${depositTxnResponse.hash}`);
+    logger.info(
+      `Deposit Processed ${this.toString()} Txn status: ${receipt.status}  Txn hash: ${depositTxnResponse.hash}`,
+    );
+    await this.logResult(depositTxnResponse.chainId, depositTxnResponse.hash);
 
     const receiverBalance = await vault.balanceOf(this._receiver);
     const expectedBalance = this._depositAmount.add(prevVaultBalanceReceiver);
@@ -113,5 +112,27 @@ export class VaultDeposit {
     } else {
       logger.debug(`Sufficient Allowance already exists [id=${this._id}]`);
     }
+  }
+
+  async logResult(chainId: number, txnHash: string, customLogger = processedLogger) {
+    customLogger.info({
+      chainId,
+      ...this.toJson(), // Spread the JSON representation of the deposit
+      txnHash, // Add the transaction hash
+    });
+  }
+
+  toString(): string {
+    return `VaultDeposit [id: ${this._id}, Receiver: ${this._receiver}, Amount: ${this._depositAmount.toString()}]`;
+  }
+
+  toJson(): object {
+    return {
+      VaultDeposit: {
+        id: this._id,
+        receiver: this._receiver,
+        depositAmount: this._depositAmount.toString(), // Convert BigNumber to string for JSON serialization
+      },
+    };
   }
 }
