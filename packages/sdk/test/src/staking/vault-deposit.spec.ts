@@ -1,5 +1,5 @@
-import { CredbullFixedYieldVault__factory} from '@credbull/contracts';
-import { expect, test } from '@playwright/test';
+import { CredbullFixedYieldVault__factory } from '@credbull/contracts';
+import { test } from '@playwright/test';
 import { Wallet, ethers } from 'ethers';
 
 import { Config, loadConfiguration } from '../utils/config';
