@@ -28,7 +28,7 @@ test.beforeAll(async () => {
   ownerSigner = testSigners.admin.getDelegate();
   operatorSigner = testSigners.operator.getDelegate();
   custodianSigner = testSigners.custodian.getDelegate();
-  userSigner = testSigners.treasury.getDelegate();
+  userSigner = testSigners.alice.getDelegate();
 
   stakingVaultAddress = config.evm.address.vault_cbl_staking;
 });
@@ -98,7 +98,7 @@ test.describe('Test Credbull Staking Challenge Owner updates', () => {
 });
 
 test.describe('Test Credbull Staking Challenge Vault Mint and Deposit', () => {
-  const depositAmount = ethers.utils.parseEther('1000');
+  const depositAmount = ethers.utils.parseEther('1000000');
 
   test('Test Mint', async () => {
     const vaultAsUser = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, userSigner);
