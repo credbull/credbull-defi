@@ -1,34 +1,21 @@
-import { CredbullFixedYieldVault__factory } from '@credbull/contracts';
 import { expect, test } from '@playwright/test';
-import { BigNumber, Wallet, ethers } from 'ethers';
+import { BigNumber } from 'ethers';
 
-import { Config, loadConfiguration } from '../utils/config';
 import { processedLogCache, processedLogger } from '../utils/logger';
-import { TestSigners } from '../utils/test-signer';
 
 import { VaultDeposit } from './vault-deposit';
-import { parseFromFile } from './vault-depost-parser';
+import { VaultDepositApp } from './vault-deposit-app';
 
-// Import processedLogger and logMessages
-
-let config: Config;
 
 test.beforeAll(async () => {
-  config = loadConfiguration();
 });
 
 test.describe('Test Vault Deposit for all', () => {
-  test('Test Deposit for all', async () => {
-    const provider = new ethers.providers.JsonRpcProvider(config.services.ethers.url);
-    const tokenOwner: Wallet = new TestSigners(provider).treasury.getDelegate();
-    const stakingVaultAddress = config.evm.address.vault_cbl_staking;
+  test('Test Deposit all', async () => {
 
-    // parse the deposits
-    const vaultDeposits: VaultDeposit[] = parseFromFile('TEST-staking-data.json');
+    const vaultDepositApp = new VaultDepositApp();
 
-    // now deposit all
-    const vault = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, tokenOwner);
-    await VaultDeposit.depositWithAllowanceForAll(tokenOwner, vault, vaultDeposits);
+    vaultDepositApp.loadDeposits('TEST-staking-data.json');
   });
 });
 

@@ -5,7 +5,12 @@ import { BigNumber, Wallet, ethers } from 'ethers';
 import { handleError } from '../utils/decoder';
 import { logger, processedLogCache, processedLogger } from '../utils/logger';
 
-type Address = string;
+export type Address = string;
+
+interface LoadDepositResult {
+  processed: VaultDeposit[];
+  skipped: VaultDeposit[];
+}
 
 export class VaultDeposit {
   constructor(
@@ -14,13 +19,13 @@ export class VaultDeposit {
     public readonly _depositAmount: BigNumber,
   ) {}
 
-  static async depositWithAllowanceForAll(owner: Wallet, vault: CredbullFixedYieldVault, deposits: VaultDeposit[]) {
+  static async depositAll(owner: Wallet, vault: CredbullFixedYieldVault, deposits: VaultDeposit[]) {
     logger.info('******************');
     logger.info('Begin DepositWithAllowance for all');
 
     for (const deposit of deposits) {
       try {
-        await deposit.depositWithAllowance(owner, vault);
+        await deposit.deposit(owner, vault);
       } catch (error) {
         logger.error(`!!!! Deposit failed !!!! ${deposit.toString()} .  Error: ${error.message}`);
       }
@@ -30,7 +35,7 @@ export class VaultDeposit {
     logger.info('******************');
   }
 
-  async depositWithAllowance(owner: Wallet, vault: CredbullFixedYieldVault) {
+  async deposit(owner: Wallet, vault: CredbullFixedYieldVault) {
     logger.info('------------------');
     logger.info(`Begin Deposit from: ${owner.address} to: ${this.toString()}`);
 
