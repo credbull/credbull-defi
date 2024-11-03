@@ -1,27 +1,25 @@
 import { expect, test } from '@playwright/test';
 import { BigNumber } from 'ethers';
+import * as path from 'path';
 
-import { processedLogCache, processedLogger } from '../utils/logger';
+import { createProcessedLogger, initProcessedLogCache, processedLogCache } from '../utils/logger';
 
 import { VaultDeposit } from './vault-deposit';
 import { VaultDepositApp } from './vault-deposit-app';
 
-
-test.beforeAll(async () => {
-});
+test.beforeAll(async () => {});
 
 test.describe('Test Vault Deposit for all', () => {
   test('Test Deposit all', async () => {
-
     const vaultDepositApp = new VaultDepositApp();
 
-    vaultDepositApp.loadDeposits('TEST-staking-data.json');
+    await vaultDepositApp.loadDeposits('TEST-staking-data.json');
   });
 });
 
 test.describe('Test VaultDeposit Utility functions', () => {
   const vaultDeposit = new VaultDeposit(
-    15,
+    -1,
     '0x14dC79964da2C08b23698B3D3cc7Ca32193d9955',
     BigNumber.from('7000000000000000000'),
   );
@@ -43,14 +41,20 @@ test.describe('Test VaultDeposit Utility functions', () => {
   test('should log as json and determine if processed', async () => {
     const chainId = 31137;
 
-    // Clear logMessages array before starting the test
+    const testLogFilePath = path.join(__dirname, '../../../logs/test-staking-processed.json');
+
+    // Clear log cache and initialize it for the test log file
     processedLogCache.length = 0;
+    initProcessedLogCache(testLogFilePath);
 
-    expect(await vaultDeposit.isProcessed(chainId, processedLogCache)).toBe(false); // Nothing logged, should NOT be processed
+    // Create a test-specific logger pointing to test-staking-processed.json
+    const testProcessedLogger = createProcessedLogger(testLogFilePath);
 
-    // Act: Call logResult using the real processedLogger
+    expect(await vaultDeposit.isProcessed(chainId, processedLogCache)).toBe(false); // Should not be processed initially
+
+    // Act: Call logResult using the test-specific logger
     const txnHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-    await vaultDeposit.logResult(chainId, txnHash, processedLogger);
+    await vaultDeposit.logResult(chainId, txnHash, testProcessedLogger);
 
     // Check if the log entry is correctly stored in logMessages
     expect(processedLogCache[0]).toEqual({

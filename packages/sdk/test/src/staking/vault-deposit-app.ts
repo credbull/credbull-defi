@@ -21,7 +21,7 @@ export class VaultDepositApp {
   }
 
   async loadDeposits(filePath: string) {
-    logger.info('##################');
+    logger.info('******************');
     logger.info('Starting Staking App');
 
     const vault: CredbullFixedYieldVault = CredbullFixedYieldVault__factory.connect(
@@ -34,10 +34,20 @@ export class VaultDepositApp {
     // parse the deposits
     const vaultDeposits: VaultDeposit[] = parseFromFile(filePath);
 
-    // now deposit all
-    await VaultDeposit.depositAll(this._tokenOwner, vault, vaultDeposits);
+    logger.info('Begin Deposit all...');
 
-    logger.info('End Staking App');
-    logger.info('##################');
+    for (const deposit of vaultDeposits) {
+      try {
+        await deposit.deposit(this._tokenOwner, vault);
+        logger.error(`++ Deposit success !!!! ${deposit.toString()}`);
+
+      } catch (error) {
+        logger.error(`-- Deposit failed !!!! ${deposit.toString()} .  Error: ${error.message}`);
+        throw error;
+      }
+    }
+
+    logger.info('End Staking app');
+    logger.info('******************');
   }
 }

@@ -7,33 +7,12 @@ import { logger, processedLogCache, processedLogger } from '../utils/logger';
 
 export type Address = string;
 
-interface LoadDepositResult {
-  processed: VaultDeposit[];
-  skipped: VaultDeposit[];
-}
-
 export class VaultDeposit {
   constructor(
     public readonly _id: number,
     public readonly _receiver: Address,
     public readonly _depositAmount: BigNumber,
   ) {}
-
-  static async depositAll(owner: Wallet, vault: CredbullFixedYieldVault, deposits: VaultDeposit[]) {
-    logger.info('******************');
-    logger.info('Begin DepositWithAllowance for all');
-
-    for (const deposit of deposits) {
-      try {
-        await deposit.deposit(owner, vault);
-      } catch (error) {
-        logger.error(`!!!! Deposit failed !!!! ${deposit.toString()} .  Error: ${error.message}`);
-      }
-    }
-
-    logger.info('End DepositWithAllowance for all');
-    logger.info('******************');
-  }
 
   async deposit(owner: Wallet, vault: CredbullFixedYieldVault) {
     logger.info('------------------');
