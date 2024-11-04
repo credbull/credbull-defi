@@ -5,7 +5,7 @@ import * as path from 'path';
 import { createProcessedLogger, initProcessedLogCache, processedLogCache } from '../utils/logger';
 
 import { VaultDeposit } from './vault-deposit';
-import { VaultDepositApp } from './vault-deposit-app';
+import { LoadDepositResult, VaultDepositApp } from './vault-deposit-app';
 
 test.beforeAll(async () => {});
 
@@ -13,9 +13,30 @@ test.describe('Test Vault Deposit for all', () => {
   test('Test Deposit all', async () => {
     const vaultDepositApp = new VaultDepositApp();
 
-    await vaultDepositApp.loadDeposits('TEST-staking-data.json');
+    const stakingFilePath = 'TEST-staking-data.json';
+    const result: LoadDepositResult = await vaultDepositApp.loadDeposits(stakingFilePath);
+    expect(result.successes.length).toBe(3);
+    expect(result.fails.length).toBe(0);
+    expect(result.skipped.length).toBe(0);
+
+    // call it again - now should skip them all
+    const resultSkipped: LoadDepositResult = await vaultDepositApp.loadDeposits(stakingFilePath);
+    expect(resultSkipped.successes.length).toBe(0);
+    expect(resultSkipped.fails.length).toBe(0);
+    expect(resultSkipped.skipped.length).toBe(3);
+  });
+
+  test('Test Deposit empty json should process nothing', async () => {
+    const vaultDepositApp = new VaultDepositApp();
+
+    const resultEmpty: LoadDepositResult = await vaultDepositApp.loadDeposits('TEST-staking-data-empty.json');
+    expect(resultEmpty.successes.length).toBe(0);
+    expect(resultEmpty.fails.length).toBe(0);
+    expect(resultEmpty.skipped.length).toBe(0);
   });
 });
+
+
 
 test.describe('Test VaultDeposit Utility functions', () => {
   const vaultDeposit = new VaultDeposit(

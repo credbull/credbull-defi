@@ -4,8 +4,18 @@ import { Wallet, ethers, providers } from 'ethers';
 import { Config, loadConfiguration } from '../utils/config';
 import { logger } from '../utils/logger';
 
-import { Address, VaultDeposit } from './vault-deposit';
+import { Address, DepositStatus, VaultDeposit } from './vault-deposit';
 import { parseFromFile } from './vault-depost-parser';
+
+export class LoadDepositResult {
+  successes: VaultDeposit[] = [];
+  fails: VaultDeposit[] = [];
+  skipped: VaultDeposit[] = [];
+
+  logSummary() {
+    logger.info(`Successes: ${this.successes.length}, Skipped: ${this.skipped.length}, Fails: ${this.fails.length}`);
+  }
+}
 
 export class VaultDepositApp {
   private _config: Config;
@@ -20,9 +30,11 @@ export class VaultDepositApp {
     this._tokenOwner = new ethers.Wallet(this._config.secret.ALICE_PRIVATE_KEY, this._provider);
   }
 
-  async loadDeposits(filePath: string) {
+  async loadDeposits(filePath: string): Promise<LoadDepositResult> {
     logger.info('******************');
     logger.info('Starting Staking App');
+
+    const result = new LoadDepositResult();
 
     const vault: CredbullFixedYieldVault = CredbullFixedYieldVault__factory.connect(
       this._stakingVaultAddress,
@@ -38,9 +50,14 @@ export class VaultDepositApp {
 
     for (const deposit of vaultDeposits) {
       try {
-        await deposit.deposit(this._tokenOwner, vault);
-        logger.error(`++ Deposit success !!!! ${deposit.toString()}`);
-
+        const status = await deposit.deposit(this._tokenOwner, vault);
+        if (status === DepositStatus.Success) {
+          result.successes.push(deposit);
+          logger.info(`++ Deposit success: ${deposit.toString()}`);
+        } else if (status === DepositStatus.SkippedAlreadyProcessed) {
+          result.skipped.push(deposit);
+          logger.info(`== Deposit skipped (already processed): ${deposit.toString()}`);
+        }
       } catch (error) {
         logger.error(`-- Deposit failed !!!! ${deposit.toString()} .  Error: ${error.message}`);
         throw error;
@@ -49,5 +66,7 @@ export class VaultDepositApp {
 
     logger.info('End Staking app');
     logger.info('******************');
+
+    return result;
   }
 }
