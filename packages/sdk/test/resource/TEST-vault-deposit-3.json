@@ -1,0 +1,25 @@
+{
+  "VaultDeposits": [
+    {
+      "VaultDeposit": {
+        "id": 8,
+        "receiver": "0x40524fB22EbF46ac8593F9945b936e3aD1dC33ba",
+        "depositAmount": "8000000000000000000"
+      }
+    },
+    {
+      "VaultDeposit": {
+        "id": 9,
+        "receiver": "0x9b7d876D89cf06a011f5F0949bd438C1654E1b8A",
+        "depositAmount": "9000000000000000000"
+      }
+    },
+    {
+      "VaultDeposit": {
+        "id": 10,
+        "receiver": "0x1709Fd8718EE17A6f81c08a5D751381A9cb34619",
+        "depositAmount": "10000000000000000000"
+      }
+    }
+  ]
+}

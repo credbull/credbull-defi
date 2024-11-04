@@ -14,6 +14,9 @@ url = ""
 url = "https://arb-sepolia.g.alchemy.com/v2/"
 
 [evm.address]
+# CBL Staking Vault address - Arbitrum Sepolia
+vault_cbl_staking="0x810d489487C385fEb6ee4d7e2B16B5AED35E47e5"
+
 # credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)
 # devops admin/owner (wallet 1) - public address, okay to share
 owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
@@ -21,8 +24,22 @@ owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # devops custodian (wallet 3) - public address, okay to share
 custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
-## CBL Staking Vault address - Arbitrum Sepolia
-vault_cbl_staking="0x810d489487C385fEb6ee4d7e2B16B5AED35E47e5"
+
+# BELOW are used only in testing
+# devops upgrader (wallet 4) - public address, okay to share
+upgrader = "0x77f07B5d5E03e39Dc42FBCa53F122D4c1851B939"
+# devops deployer (wallet 5) - public address, okay to share
+deployer = "0x1dC62317f7B1d981eE16618678586460635300d3"
+# devops treasury (wallet 6) - public address, okay to share
+treasury = "0x0822a51f5f8DB0480A0eA294099D56EA1aCcdC5c"
+# devops asset manager (wallet 7) - public address, okay to share
+asset_manager = "0xd097E901FB9B75C2d2f97E142d73fA79C31FcAb3"
+# devops alice (wallet 8) - public address, okay to share
+alice = "0x40524fB22EbF46ac8593F9945b936e3aD1dC33ba"
+# devops bob (wallet 9) - public address, okay to share
+bob = "0x9b7d876D89cf06a011f5F0949bd438C1654E1b8A"
+# devops charlie (wallet 9) - public address, okay to share
+charlie = "0x1709Fd8718EE17A6f81c08a5D751381A9cb34619"
 
 
 [users]
