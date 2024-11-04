@@ -27,7 +27,7 @@ export class VaultDepositApp {
     this._config = loadConfiguration();
     this._provider = new ethers.providers.JsonRpcProvider(this._config.services.ethers.url);
     this._stakingVaultAddress = this._config.evm.address.vault_cbl_staking;
-    this._tokenOwner = new ethers.Wallet(this._config.secret.ALICE_PRIVATE_KEY, this._provider);
+    this._tokenOwner = new ethers.Wallet(this._config.secret.DEPLOYER_PRIVATE_KEY, this._provider);
   }
 
   async loadDeposits(filePath: string): Promise<LoadDepositResult> {
