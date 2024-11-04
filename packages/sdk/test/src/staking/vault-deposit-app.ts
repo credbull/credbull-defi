@@ -35,8 +35,8 @@ export class VaultDepositApp {
   }
 
   async loadDeposits(filePath: string): Promise<LoadDepositResult> {
-    logger.info('******************');
-    logger.info('Starting Staking App');
+    logger.warn('******************');
+    logger.warn('Starting Staking App');
 
     const result = new LoadDepositResult();
 
@@ -68,8 +68,8 @@ export class VaultDepositApp {
       }
     }
 
-    logger.info(`End Staking app.  Result: ' ${result.logSummary()}`);
-    logger.info('******************');
+    logger.warn(`End Staking app.  Result: ' ${result.logSummary()}`);
+    logger.warn('******************');
 
     return result;
   }
