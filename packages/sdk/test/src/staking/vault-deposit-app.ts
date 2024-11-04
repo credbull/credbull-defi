@@ -77,7 +77,8 @@ export class VaultDepositApp {
 
 async function main() {
   const vaultDepositApp = new VaultDepositApp();
-  const filePath = 'TEST-vault-deposit-3.json'; // TODO - update to the file to be run
+  const args = process.argv.slice(2); // Gets arguments after `--`
+  const filePath = args[0] || 'TEST-vault-deposit-empty.json'; // default if no value is provided
 
   try {
     const result: LoadDepositResult = await vaultDepositApp.loadDeposits(filePath);
