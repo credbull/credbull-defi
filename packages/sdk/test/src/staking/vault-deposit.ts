@@ -7,6 +7,11 @@ import { logger, processedLogCache, processedLogger } from '../utils/logger';
 
 export type Address = string;
 
+export enum DepositStatus {
+  Success = 'Success',
+  SkippedAlreadyProcessed = 'SkippedAlreadyProcessed',
+}
+
 export class VaultDeposit {
   constructor(
     public readonly _id: number,
@@ -14,18 +19,24 @@ export class VaultDeposit {
     public readonly _depositAmount: BigNumber,
   ) {}
 
-  async deposit(owner: Wallet, vault: CredbullFixedYieldVault) {
+  async deposit(owner: Wallet, vault: CredbullFixedYieldVault): Promise<DepositStatus> {
     logger.info('------------------');
-    logger.info(`Begin Deposit from: ${owner.address} to: ${this.toString()}`);
+    logger.info(`Begin Deposit ${this.toString()} from: ${owner.address}`);
+
+    let depositStatus = undefined;
 
     const alreadyProcessed = await this.isProcessed(await owner.getChainId(), processedLogCache);
     if (alreadyProcessed) {
-      return;
+      depositStatus = DepositStatus.SkippedAlreadyProcessed;
     } else {
       await this.allowance(owner, vault);
       await this.depositOnly(vault);
+      depositStatus = DepositStatus.Success;
     }
+
     logger.debug(`End Deposit [id=${this._id}]`);
+    logger.info('------------------');
+    return depositStatus;
   }
 
   async depositOnly(vault: CredbullFixedYieldVault) {

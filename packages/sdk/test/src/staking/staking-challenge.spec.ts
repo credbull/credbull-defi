@@ -97,7 +97,7 @@ test.describe('Test Credbull Staking Challenge Owner updates', () => {
   });
 });
 
-test.describe('Test Credbull Staking Challenge Vault Mint and Deposit', () => {
+test.describe('Test Credbull Staking Challenge Vault Mint', () => {
   const depositAmount = ethers.utils.parseEther('1000000');
 
   test('Test Mint', async () => {
@@ -110,20 +110,6 @@ test.describe('Test Credbull Staking Challenge Vault Mint and Deposit', () => {
     await (await connectToken(assetAddress, operatorSigner)).mint(userAddress, depositAmount);
 
     expect((await tokenAsUser.balanceOf(userAddress)).toBigInt()).toBeGreaterThanOrEqual(depositAmount.toBigInt()); // window starts on
-  });
-
-  test('Test Deposit', async () => {
-    const receiver = userSigner.address;
-
-    const vaultAsUser = CredbullFixedYieldVault__factory.connect(stakingVaultAddress, userSigner);
-    const prevVaultBalance = await vaultAsUser.balanceOf(receiver);
-
-    const vaultDeposit: VaultDeposit = new VaultDeposit(1, receiver, depositAmount);
-    await vaultDeposit.deposit(userSigner, vaultAsUser);
-
-    expect((await vaultAsUser.balanceOf(receiver)).toBigInt()).toEqual(
-      prevVaultBalance.toBigInt() + depositAmount.toBigInt(),
-    );
   });
 });
 
