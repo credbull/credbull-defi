@@ -88,29 +88,24 @@ export class VaultDeposit {
     const tokenAsOwner: OwnableToken = OwnableToken__factory.connect(assetAddress, owner);
     const ownerAddress = await owner.getAddress();
 
-    const allowanceToGrant = this._depositAmount.sub(await tokenAsOwner.allowance(ownerAddress, vault.address));
+    //const allowanceToGrant = this._depositAmount.sub(await tokenAsOwner.allowance(ownerAddress, vault.address));
 
     logger.debug(`Granting Allowance [id=${this._id}] ...`);
 
-    if (allowanceToGrant.gt(ethers.BigNumber.from(0))) {
-      logger.debug(`Approving staking vault [id=${this._id}] Allowance of: ${allowanceToGrant.toBigInt()}`);
-      const approveTxnResponse = await tokenAsOwner.approve(vault.address, allowanceToGrant).catch((err) => {
-        const decodedError = handleError(vault, err);
-        logger.error('Approval contract error:', decodedError.message);
-        throw decodedError;
-      });
+    const approveTxnResponse = await tokenAsOwner.approve(vault.address, this._depositAmount).catch((err) => {
+      const decodedError = handleError(vault, err);
+      logger.error('Approval contract error:', decodedError.message);
+      throw decodedError;
+    });
 
-      // wait for the transaction to be mined
-      await approveTxnResponse.wait();
+    // wait for the transaction to be mined
+    await approveTxnResponse.wait();
 
-      const allowance = await tokenAsOwner.allowance(ownerAddress, vault.address);
-      assert.ok(
-        this._depositAmount.gte(allowance),
-        `Allowance not granted [id=${this._id}]. Expected: ${allowanceToGrant.toString()}, but was: ${allowance.toString()}`,
-      );
-    } else {
-      logger.debug(`Sufficient Allowance already exists [id=${this._id}]`);
-    }
+    const allowance = await tokenAsOwner.allowance(ownerAddress, vault.address);
+    assert.ok(
+      this._depositAmount.gte(allowance),
+      `Allowance not granted [id=${this._id}]. Expected: ${this._depositAmount.toString()}, but was: ${allowance.toString()}`,
+    );
   }
 
   async isProcessed(chainId: number, processedLogMessages: any[]): Promise<boolean> {

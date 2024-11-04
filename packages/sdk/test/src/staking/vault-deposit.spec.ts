@@ -9,34 +9,45 @@ import { LoadDepositResult, VaultDepositApp } from './vault-deposit-app';
 
 test.beforeAll(async () => {});
 
+export const TEST_VAULT_DEPOSIT_0_FILENAME = 'TEST-vault-deposit-0.json';
+export const TEST_VAULT_DEPOSIT_3_FILENAME = 'TEST-vault-deposit-3.json';
+export const TEST_VAULT_DEPOSIT_1000_FILENAME = 'TEST-vault-deposit-1000.json';
+
 test.describe('Test Vault Deposit for all', () => {
-  test('Test Deposit all', async () => {
+  test('Test Deposit 3', async () => {
     const vaultDepositApp = new VaultDepositApp();
 
-    const stakingFilePath = 'TEST-staking-data.json';
-    const result: LoadDepositResult = await vaultDepositApp.loadDeposits(stakingFilePath);
+    const result: LoadDepositResult = await vaultDepositApp.loadDeposits(TEST_VAULT_DEPOSIT_3_FILENAME);
     expect(result.successes.length).toBe(3);
     expect(result.fails.length).toBe(0);
     expect(result.skipped.length).toBe(0);
 
     // call it again - now should skip them all
-    const resultSkipped: LoadDepositResult = await vaultDepositApp.loadDeposits(stakingFilePath);
+    const resultSkipped: LoadDepositResult = await vaultDepositApp.loadDeposits(TEST_VAULT_DEPOSIT_3_FILENAME);
     expect(resultSkipped.successes.length).toBe(0);
     expect(resultSkipped.fails.length).toBe(0);
     expect(resultSkipped.skipped.length).toBe(3);
   });
 
+  test.skip('Test Deposit 1000', async () => {
+    test.setTimeout(300000); // Set timeout to 5 minutes (300,000 ms)
+    const vaultDepositApp = new VaultDepositApp();
+
+    const result: LoadDepositResult = await vaultDepositApp.loadDeposits(TEST_VAULT_DEPOSIT_1000_FILENAME);
+    expect(result.successes.length).toBe(997); // IDs 7,8,9 will be skipped from Test Deposit 3
+    expect(result.fails.length).toBe(0);
+    expect(result.skipped.length).toBe(3); // IDs 7,8,9 will be skipped from Test Deposit 3
+  });
+
   test('Test Deposit empty json should process nothing', async () => {
     const vaultDepositApp = new VaultDepositApp();
 
-    const resultEmpty: LoadDepositResult = await vaultDepositApp.loadDeposits('TEST-staking-data-empty.json');
+    const resultEmpty: LoadDepositResult = await vaultDepositApp.loadDeposits(TEST_VAULT_DEPOSIT_0_FILENAME);
     expect(resultEmpty.successes.length).toBe(0);
     expect(resultEmpty.fails.length).toBe(0);
     expect(resultEmpty.skipped.length).toBe(0);
   });
 });
-
-
 
 test.describe('Test VaultDeposit Utility functions', () => {
   const vaultDeposit = new VaultDeposit(

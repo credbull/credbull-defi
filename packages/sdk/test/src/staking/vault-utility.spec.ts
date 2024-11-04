@@ -6,8 +6,6 @@ import { Config, loadConfiguration } from '../utils/config';
 import { handleError } from '../utils/decoder';
 import { TestSigners } from '../utils/test-signer';
 
-import { VaultDeposit } from './vault-deposit';
-
 const VAULT_MAX_CAP = '10000000';
 
 let provider: ethers.providers.JsonRpcProvider;

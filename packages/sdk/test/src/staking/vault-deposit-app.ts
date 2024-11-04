@@ -5,7 +5,7 @@ import { Config, loadConfiguration } from '../utils/config';
 import { logger } from '../utils/logger';
 
 import { Address, DepositStatus, VaultDeposit } from './vault-deposit';
-import { parseFromFile } from './vault-depost-parser';
+import { parseFromFile } from './vault-deposit-parser';
 
 export class LoadDepositResult {
   successes: VaultDeposit[] = [];
