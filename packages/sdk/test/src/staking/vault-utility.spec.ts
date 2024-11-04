@@ -26,7 +26,7 @@ test.beforeAll(async () => {
   ownerSigner = testSigners.admin.getDelegate();
   operatorSigner = testSigners.operator.getDelegate();
   custodianSigner = testSigners.custodian.getDelegate();
-  userSigner = testSigners.alice.getDelegate();
+  userSigner = testSigners.deployer.getDelegate();
 
   stakingVaultAddress = config.evm.address.vault_cbl_staking;
 });

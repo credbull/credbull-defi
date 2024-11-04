@@ -21,6 +21,7 @@ export interface Config {
     SUPABASE_ANONYMOUS_KEY?: string;
     ADMIN_PASSWORD?: string;
     ADMIN_PRIVATE_KEY?: string;
+    DEPLOYER_PRIVATE_KEY?: string;
     ALICE_PASSWORD?: string;
     ALICE_PRIVATE_KEY?: string;
     BOB_PASSWORD?: string;
@@ -53,6 +54,7 @@ export const loadConfiguration = (): Config => {
   config.secret.SUPABASE_ANONYMOUS_KEY = process.env.SUPABASE_ANONYMOUS_KEY;
   config.secret.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
   config.secret.ADMIN_PRIVATE_KEY = process.env.ADMIN_PRIVATE_KEY;
+  config.secret.DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
   config.secret.ALICE_PASSWORD = process.env.ALICE_PASSWORD;
   config.secret.ALICE_PRIVATE_KEY = process.env.ALICE_PRIVATE_KEY;
   config.secret.BOB_PASSWORD = process.env.BOB_PASSWORD;
