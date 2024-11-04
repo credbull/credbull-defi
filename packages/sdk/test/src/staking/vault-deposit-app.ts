@@ -12,8 +12,8 @@ export class LoadDepositResult {
   fails: VaultDeposit[] = [];
   skipped: VaultDeposit[] = [];
 
-  logSummary() {
-    logger.info(`Successes: ${this.successes.length}, Skipped: ${this.skipped.length}, Fails: ${this.fails.length}`);
+  logSummary(): string {
+    return `Successes: ${this.successes.length}, Skipped: ${this.skipped.length}, Fails: ${this.fails.length}`;
   }
 }
 
@@ -27,6 +27,10 @@ export class VaultDepositApp {
     this._config = loadConfiguration();
     this._provider = new ethers.providers.JsonRpcProvider(this._config.services.ethers.url);
     this._stakingVaultAddress = this._config.evm.address.vault_cbl_staking;
+
+    if (!this._config || !this._config.secret || !this._config.secret.DEPLOYER_PRIVATE_KEY) {
+      throw new Error(`Deployer configuration and key not defined.`);
+    }
     this._tokenOwner = new ethers.Wallet(this._config.secret.DEPLOYER_PRIVATE_KEY, this._provider);
   }
 
@@ -59,14 +63,33 @@ export class VaultDepositApp {
           logger.info(`== Deposit skipped (already processed): ${deposit.toString()}`);
         }
       } catch (error) {
-        logger.error(`-- Deposit failed !!!! ${deposit.toString()} .  Error: ${error.message}`);
+        logger.error(`-- Deposit failed !!!! ${deposit.toString()} .  Error: ${String(error)}`);
         throw error;
       }
     }
 
-    logger.info('End Staking app');
+    logger.info(`End Staking app.  Result: ' ${result.logSummary()}`);
     logger.info('******************');
 
     return result;
   }
 }
+
+async function main() {
+  const vaultDepositApp = new VaultDepositApp();
+  const filePath = 'TEST-vault-deposit-3.json'; // TODO - update to the file to be run
+
+  try {
+    const result: LoadDepositResult = await vaultDepositApp.loadDeposits(filePath);
+    logger.info(`Successfully loaded deposits!  Summary: ${result.logSummary()}`); // Log a summary after processing
+  } catch (error) {
+    logger.error('An error occurred while processing deposits:', error);
+    throw error;
+  }
+}
+
+// Execute main function if the file is run directly
+main().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});
