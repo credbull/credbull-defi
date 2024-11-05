@@ -32,6 +32,13 @@ interface ITimelockAsyncUnlock {
         returns (uint256[] memory depositPeriods, uint256[] memory amounts);
 
     /**
+     * @notice Cancel a pending request to unlock
+     * @param owner Owner of the request
+     * @param requestId Discriminator between non-fungible requests
+     */
+    function cancelRequestUnlock(address owner, uint256 requestId) external;
+
+    /**
      * @dev Return notice period
      */
     function noticePeriod() external view returns (uint256 noticePeriod_);

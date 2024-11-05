@@ -185,7 +185,7 @@ contract TimelockAsyncUnlockTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeUnlockPeriod.selector,
+                TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeCurrentPeriod.selector,
                 alice,
                 alice,
                 asyncUnlock.currentPeriod(),
@@ -506,6 +506,20 @@ contract TimelockAsyncUnlockTest is Test {
             asyncUnlock.lockedAmount(alice, depositPeriods[2]),
             "Locked amount should be updated after unlock (index=2)"
         );
+    }
+
+    function test__TimelockAsyncUnlock__RequestUnlockInvalidArrayLengthReverts() public {
+        uint256[] memory depositPeriods_ = new uint256[](2);
+        uint256[] memory amounts_ = new uint256[](1);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TimelockAsyncUnlock.TimelockAsyncUnlock__InvalidArrayLength.selector,
+                depositPeriods_.length,
+                amounts_.length
+            )
+        );
+        asyncUnlock.requestUnlock(alice, depositPeriods_, amounts_);
     }
 
     function _asSingletonArray(uint256 element) internal pure returns (uint256[] memory array) {

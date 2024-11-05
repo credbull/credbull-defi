@@ -102,6 +102,10 @@ export const useFetchContractData = ({
   // Fetch data and set state
   useEffect(() => {
     const fetchData = async () => {
+      if (!deployedContractAddress || !deployedContractAbi) {
+        return;
+      }
+
       const currentPeriodData = await refetchCurrentPeriod();
       const _currentPeriod = Number(currentPeriodData?.data);
       setCurrentPeriod(_currentPeriod);
@@ -148,6 +152,7 @@ export const useFetchContractData = ({
     fetchData();
   }, [
     deployedContractAddress,
+    deployedContractAbi,
     simpleUsdcContractData,
     refetchCurrentPeriod,
     refetchAssetAmount,

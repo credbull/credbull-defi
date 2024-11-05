@@ -8,7 +8,7 @@ import LoadingSpinner from "../../../components/general/LoadingSpinner";
 import DepositPoolCard from "./DepositPoolCard";
 import { ethers } from "ethers";
 import { useTheme } from "next-themes";
-import { useAccount, useChainId, useWriteContract } from "wagmi";
+import { useAccount, useWriteContract } from "wagmi";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import ActionCard from "~~/components/general/ActionCard";
 import { useFetchContractData } from "~~/hooks/custom/useFetchContractData";
@@ -36,8 +36,6 @@ const ViewSection = () => {
   const deployedContractAddress = proxyContractData?.address || "";
   const deployedContractAbi = implementationContractData?.abi as ContractAbi;
   const deployedContractLoading = implementationContractLoading || proxyContractLoading;
-
-  const chainId = useChainId();
 
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -71,7 +69,6 @@ const ViewSection = () => {
   });
 
   const { pools, depositPoolsFetched } = useFetchDepositPools({
-    chainId,
     address: address || "",
     deployedContractAddress,
     deployedContractAbi,
@@ -79,7 +76,7 @@ const ViewSection = () => {
     refetch,
   });
 
-  const { redeemRequests } = useFetchRedeemRequests({
+  const { redeemRequests, redeemRequestsFetched } = useFetchRedeemRequests({
     address: address || "",
     deployedContractAddress,
     deployedContractAbi,
@@ -168,8 +165,9 @@ const ViewSection = () => {
       return;
     }
 
-    if (Number(assetAmount) < Number(assetsToRedeem)) {
-      notification.error("Sorry! No enough balance in the vault.");
+    if (parseFloat(assetAmount) < parseFloat(assetsToRedeem)) {
+      const errorMsg = "Sorry! Not enough balance in the vault. " + assetAmount + " < " + assetsToRedeem;
+      notification.error(errorMsg);
       return;
     }
 
@@ -268,18 +266,27 @@ const ViewSection = () => {
             <LoadingSpinner />
           ) : (
             <div className="flex flex-wrap gap-4">
-              {redeemRequests?.map((request, index) => (
-                <ContractValueBadge
-                  key={index}
-                  name={`Request ${request?.id}`}
-                  value={
-                    <>
-                      shares: {formatNumber(request?.shareAmount)} - assets: {formatNumber(request?.assetAmount)} USDC
-                    </>
-                  }
-                  onClickHandler={() => setRequestAmountToRedeem(request)}
-                />
-              ))}
+              {redeemRequestsFetched ? (
+                <>
+                  {redeemRequests?.map((request, index) => (
+                    <ContractValueBadge
+                      key={index}
+                      name={`Request ${request?.id}`}
+                      value={
+                        <>
+                          shares: {formatNumber(request?.shareAmount)} - assets: {formatNumber(request?.assetAmount)}{" "}
+                          USDC
+                        </>
+                      }
+                      onClickHandler={() => setRequestAmountToRedeem(request)}
+                    />
+                  ))}
+                </>
+              ) : (
+                <>
+                  <LoadingSpinner />
+                </>
+              )}
             </div>
           )}
         </div>

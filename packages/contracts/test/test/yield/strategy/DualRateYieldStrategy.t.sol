@@ -60,7 +60,7 @@ contract DualRateYieldStrategy is IYieldStrategy {
         IDualRateContext context = IDualRateContext(contextContract);
 
         return CalcSimpleInterest.calcPriceFromInterest(
-            numPeriodsElapsed, context.rateScaled(), context.frequency(), context.scale()
+            context.rateScaled(), numPeriodsElapsed, context.frequency(), context.scale()
         );
     }
 

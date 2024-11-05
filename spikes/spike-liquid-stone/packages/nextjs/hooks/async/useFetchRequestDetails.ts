@@ -18,9 +18,9 @@ export const useFetchRequestDetails = ({
   refetch: any;
 }) => {
   const chains = useChains();
-  const chianId = useChainId();
+  const chainId = useChainId();
 
-  const chain = chains?.filter(_chain => _chain?.id === chianId)[0];
+  const chain = chains?.filter(_chain => _chain?.id === chainId)[0];
 
   const [requestDetails, setRequestDetails] = useState<RequestDetail[]>([]);
 

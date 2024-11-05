@@ -7,14 +7,12 @@ import { notification } from "~~/utils/scaffold-eth";
 import { getNFTsForOwner } from "~~/utils/vault/web3";
 
 export const useFetchDepositPools = ({
-  chainId,
   address,
   deployedContractAddress,
   deployedContractAbi,
   currentPeriod,
   refetch,
 }: {
-  chainId: number;
   address: string;
   deployedContractAddress: string;
   deployedContractAbi: any;
@@ -22,11 +20,11 @@ export const useFetchDepositPools = ({
   refetch: any;
 }) => {
   const chains = useChains();
-  const chianId = useChainId();
+  const chainId = useChainId();
 
-  const chain = chains?.filter(_chain => _chain?.id === chianId)[0];
+  const chain = chains?.filter(_chain => _chain?.id === chainId)[0];
 
-  const [depositPoolsFetched, setDepositPoolsFetched] = useState<boolean>(true);
+  const [depositPoolsFetched, setDepositPoolsFetched] = useState<boolean>(!!address);
 
   const [userDepositIds, setUserDepositIds] = useState<OwnedNft[]>([]);
   const [fetchedWithAlchemy, setFetchedWithAlchemy] = useState<boolean>(false);
@@ -37,7 +35,10 @@ export const useFetchDepositPools = ({
     setDepositPoolsFetched(false);
 
     async function fetchUserDepositIds() {
-      if (!chainId || !address || !deployedContractAddress) return;
+      if (!chainId || !address || !deployedContractAddress) {
+        setDepositPoolsFetched(true);
+        return;
+      }
 
       try {
         const { nfts: _userDepositIds, fetchedWithAlchemy: _fetchedWithAlchemy } = await getNFTsForOwner(
@@ -56,6 +57,7 @@ export const useFetchDepositPools = ({
         }
       } catch (error) {
         console.error("Error fetching user deposit IDs:", error);
+        setDepositPoolsFetched(true);
       }
     }
 
@@ -66,7 +68,10 @@ export const useFetchDepositPools = ({
     setDepositPoolsFetched(false);
 
     async function fetchExistingUserDepositIds() {
-      if (!deployedContractAddress || !deployedContractAbi || fetchedWithAlchemy) return;
+      if (!deployedContractAddress || !deployedContractAbi || fetchedWithAlchemy || !currentPeriod) {
+        setDepositPoolsFetched(true);
+        return;
+      }
 
       try {
         const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
@@ -74,7 +79,7 @@ export const useFetchDepositPools = ({
 
         const existingUserDepositIds: OwnedNft[] = [];
 
-        for (let i = 0; i < userDepositIds.length; i++) {
+        for (let i = 0; i <= currentPeriod; i++) {
           const depositId = userDepositIds[i];
 
           const exists = await contract.exists(depositId?.tokenId);
@@ -88,11 +93,13 @@ export const useFetchDepositPools = ({
         }
       } catch (error) {
         console.error("Error fetching existing user deposit IDs:", error);
+        setDepositPoolsFetched(true);
       }
     }
 
     fetchExistingUserDepositIds();
   }, [
+    currentPeriod,
     userDepositIds,
     fetchedWithAlchemy,
     chainId,
@@ -112,21 +119,17 @@ export const useFetchDepositPools = ({
         !address ||
         existingUserDepositIds.length === 0 ||
         !chain?.rpcUrls?.default?.http[0]
-      )
+      ) {
+        setDepositPoolsFetched(true);
         return;
+      }
 
       const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
       const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
 
       const balancePromises = existingUserDepositIds.map(async depositId => {
         try {
-          let balanceBigInt;
-
-          if (fetchedWithAlchemy) {
-            balanceBigInt = BigInt(depositId?.balance);
-          } else {
-            balanceBigInt = await contract.balanceOf(address, depositId?.tokenId);
-          }
+          const balanceBigInt = await contract.balanceOf(address, depositId?.tokenId);
 
           const balance = ethers.formatUnits(balanceBigInt, 6);
 
@@ -187,11 +190,14 @@ export const useFetchDepositPools = ({
     if (fetchedWithAlchemy) {
       if (existingUserDepositIds.length > 0 && deployedContractAddress) {
         try {
+          console.log("here");
           fetchBalances();
         } catch (error) {
           console.log(error);
           setDepositPoolsFetched(true);
         }
+      } else {
+        setDepositPoolsFetched(true);
       }
     } else {
       if (userDepositIds.length > 0 && deployedContractAddress) {
@@ -201,6 +207,8 @@ export const useFetchDepositPools = ({
           console.log(error);
           setDepositPoolsFetched(true);
         }
+      } else {
+        setDepositPoolsFetched(true);
       }
     }
   }, [
@@ -214,6 +222,10 @@ export const useFetchDepositPools = ({
     existingUserDepositIds,
     chain?.rpcUrls?.default?.http,
   ]);
+
+  if (!address) {
+    return { pools: [], depositPoolsFetched: true };
+  }
 
   return { pools, depositPoolsFetched };
 };

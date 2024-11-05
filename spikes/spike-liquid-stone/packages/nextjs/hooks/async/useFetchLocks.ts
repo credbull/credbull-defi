@@ -17,9 +17,9 @@ export const useFetchLocks = ({
   refetch: any;
 }) => {
   const chains = useChains();
-  const chianId = useChainId();
+  const chainId = useChainId();
 
-  const chain = chains?.filter(_chain => _chain?.id === chianId)[0];
+  const chain = chains?.filter(_chain => _chain?.id === chainId)[0];
 
   const userDepositPeriods = Array.from({ length: MAX_PERIODS + 1 }, (_, index) => index);
 

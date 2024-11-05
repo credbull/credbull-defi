@@ -10,7 +10,7 @@
     "dev": "yarn rm-dbdata && anvil --config-out localhost.json & make deploy-local",
     "build": "forge build && yarn gen-types",
     "test": "forge test",
-    "coverage": "forge coverage --report lcov && genhtml lcov.info -o out/test-reports/coverage --ignore-errors inconsistent",
+    "coverage": "forge coverage --report lcov && genhtml lcov.info --branch-coverage -o out/test-reports/coverage --ignore-errors inconsistent",
     "format": "forge fmt && prettier './script/**/*.js' --write",
     "lint": "forge fmt && eslint --fix --ignore-path .gitignore && yarn solhint './*(test|src)/**/*.sol'",
     "db-check": "tsc && node ./script/utils/checkDb.js",
