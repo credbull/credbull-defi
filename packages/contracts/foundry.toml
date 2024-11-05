@@ -4,7 +4,6 @@ out = "out"
 libs = ["lib"]
 fs_permissions = [{ access = "read-write", path = "./" }]
 solc_version="0.8.23"
-evm_version = "cancun"
 [fmt]
 bracket_spacing = true
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
@@ -32,7 +31,7 @@ localhost = { key = "" , url="http://127.0.0.1:8545"}
 base = { key = "${BASE_ETHERSCAN_API_KEY}" }
 baseSepolia = { key = "${BASE_SEPOLIA_ETHERSCAN_API_KEY}" }
 arbitrum = { key = "${ARB_ETHERSCAN_API_KEY}", url = "https://api.arbiscan.io/api", chain=42161 }
-arbitrumSepolia = { key = "${ARB_ETHERSCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api", chain=421614 }
+arbitrumSepolia = { key = "${ARB_SEPOLIA_ETHERSCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api", chain=421614 }
 bitlayer = { key = "bitlayer", url="https://rpc.bitlayer.org" }
 bitlayerTestnet = { key = "bitlayerTestnet", url="https://testnet-scan.bitlayer.org" }
 plumeDevnet = { key = "plumeDevnet", url = 'https://devnet-explorer.plumenetwork.xyz/api\?', chain=18230 }

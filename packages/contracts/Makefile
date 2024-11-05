@@ -3,7 +3,7 @@
 #	directory and our deployment scripts depend on this, it seems unnecessary to change this now.
 -include .env
 
-DEPLOY_SCRIPT ?= script/DeployLiquidMultiTokenVault.s.sol:DeployLiquidMultiTokenVault
+DEPLOY_SCRIPT ?= script/DeployVaultFactory.s.sol:DeployVaultFactory
 
 build:; forge build
 
@@ -25,9 +25,6 @@ deploy-baseSepolia:
 # Foundry has a bug with gas estimation on L2s (https://github.com/foundry-rs/foundry/issues/6542).  To work-around:
 # in foundry.toml set the `evm_version = "cancun"`
 # forge script includes `--legacy --skip-simulation`
-deploy-plumeDevnet:
-	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://test-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow"
-
 deploy-plumeTestnet:
 	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://test-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow"
 
@@ -46,7 +43,8 @@ deploy:
 	@rm -rf out && \
 	forge script $(DEPLOY_SCRIPT) --rpc-url $(RPC_URL) \
 		--private-key $(DEPLOYER_PRIVATE_KEY) --broadcast $(EXTRA_FLAGS) --non-interactive -vvv && \
-	yarn gen-types
+	yarn gen-types && \
+	yarn db-export
 
 verify:
 	@echo "Running verify '$(RPC_URL)' for '$(ENVIRONMENT)' environment."
