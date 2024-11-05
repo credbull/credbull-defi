@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-// import ActionLogSection from "./ActionLogSection";
 import Button from "../../../components/general/Button";
 import ContractValueBadge from "../../../components/general/ContractValueBadge";
 import Input from "../../../components/general/Input";
@@ -9,7 +8,7 @@ import LoadingSpinner from "../../../components/general/LoadingSpinner";
 import DepositPoolCard from "./DepositPoolCard";
 import { ethers } from "ethers";
 import { useTheme } from "next-themes";
-import { useAccount, useChainId, useWriteContract } from "wagmi";
+import { useAccount, useWriteContract } from "wagmi";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import ActionCard from "~~/components/general/ActionCard";
 import { useFetchContractData } from "~~/hooks/custom/useFetchContractData";
@@ -37,8 +36,6 @@ const ViewSection = () => {
   const deployedContractAddress = proxyContractData?.address || "";
   const deployedContractAbi = implementationContractData?.abi as ContractAbi;
   const deployedContractLoading = implementationContractLoading || proxyContractLoading;
-
-  const chainId = useChainId();
 
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -71,8 +68,7 @@ const ViewSection = () => {
     dependencies: [refetch],
   });
 
-  const { pools } = useFetchDepositPools({
-    chainId,
+  const { pools, depositPoolsFetched } = useFetchDepositPools({
     address: address || "",
     deployedContractAddress,
     deployedContractAbi,
@@ -80,7 +76,7 @@ const ViewSection = () => {
     refetch,
   });
 
-  const { redeemRequests } = useFetchRedeemRequests({
+  const { redeemRequests, redeemRequestsFetched } = useFetchRedeemRequests({
     address: address || "",
     deployedContractAddress,
     deployedContractAbi,
@@ -92,8 +88,6 @@ const ViewSection = () => {
   const { writeContractAsync } = useWriteContract();
 
   const handleRequestDeposit = async () => {
-    // const message = `Bought ${assets} currency tokens.`;
-    // setLog([...log, message]);
     if (!address || !assets) {
       notification.error("Missing required fields");
       return;
@@ -135,14 +129,10 @@ const ViewSection = () => {
       }
     }
 
-    // setLog(prevLog => [...prevLog, `Bought ${assets} currency tokens.`]);
-
     setAssets("");
   };
 
   const handleRequestRedeem = () => {
-    // const message = `Requested to redeem ${sharesToRequest} component tokens.`;
-    // setLog([...log, message]);
     if (!address || !sharesToRequest) {
       notification.error("Missing required fields");
       return;
@@ -166,14 +156,10 @@ const ViewSection = () => {
       }
     }
 
-    // setLog(prevLog => [...prevLog, `Requested to redeem ${sharesToRequest} sharesToRequest.`]);
-
     setSharesToRequest("");
   };
 
   const handleRedeem = () => {
-    // const message = `Redeemed of ${sharesToRedeem} shares.`;
-    // setLog([...log, message]);
     if (!address || !sharesToRedeem) {
       notification.error("Missing required fields");
       return;
@@ -202,8 +188,6 @@ const ViewSection = () => {
         console.error("⚡️ ~ file: vault/_components/ViewSection.tsx:handleRedeem  ~ error", error);
       }
     }
-
-    // setLog(prevLog => [...prevLog, `Bought ${assets} currency tokens.`]);
 
     setSharesToRedeem("");
   };
@@ -262,9 +246,17 @@ const ViewSection = () => {
           } p-4 rounded-lg grid gap-3`}
         >
           <h2 className="text-xl font-bold mb-4">Deposit Pools</h2>
-          {pools.map((pool, index) => (
-            <DepositPoolCard key={index} pool={pool} />
-          ))}
+          {!depositPoolsFetched ? (
+            <>
+              <LoadingSpinner />
+            </>
+          ) : (
+            <>
+              {pools.map((pool, index) => (
+                <DepositPoolCard key={index} pool={pool} />
+              ))}
+            </>
+          )}
         </div>
         <div
           className={`${resolvedTheme === "dark" ? "bg-gray-800 text-white" : "bg-white text-black"} p-4 rounded-lg`}
@@ -274,18 +266,27 @@ const ViewSection = () => {
             <LoadingSpinner />
           ) : (
             <div className="flex flex-wrap gap-4">
-              {redeemRequests?.map((request, index) => (
-                <ContractValueBadge
-                  key={index}
-                  name={`Request ${request?.id}`}
-                  value={
-                    <>
-                      shares: {formatNumber(request?.shareAmount)} - assets: {formatNumber(request?.assetAmount)} USDC
-                    </>
-                  }
-                  onClickHandler={() => setRequestAmountToRedeem(request)}
-                />
-              ))}
+              {redeemRequestsFetched ? (
+                <>
+                  {redeemRequests?.map((request, index) => (
+                    <ContractValueBadge
+                      key={index}
+                      name={`Request ${request?.id}`}
+                      value={
+                        <>
+                          shares: {formatNumber(request?.shareAmount)} - assets: {formatNumber(request?.assetAmount)}{" "}
+                          USDC
+                        </>
+                      }
+                      onClickHandler={() => setRequestAmountToRedeem(request)}
+                    />
+                  ))}
+                </>
+              ) : (
+                <>
+                  <LoadingSpinner />
+                </>
+              )}
             </div>
           )}
         </div>
@@ -334,10 +335,6 @@ const ViewSection = () => {
           <Button text="Redeem" bgColor="green" onClickHandler={handleRedeem} />
         </ActionCard>
       </div>
-
-      {/* Activity Log */}
-      {/* <ActionLogSection log={log} /> */}
-      {/* <ActionLogSection log={log} /> */}
     </div>
   );
 };

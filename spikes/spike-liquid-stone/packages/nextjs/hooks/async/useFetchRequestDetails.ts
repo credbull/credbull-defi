@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { useChainId, useChains } from "wagmi";
 import { RequestDetail } from "~~/types/async";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
 
@@ -16,6 +17,11 @@ export const useFetchRequestDetails = ({
   requestId: number | null;
   refetch: any;
 }) => {
+  const chains = useChains();
+  const chainId = useChainId();
+
+  const chain = chains?.filter(_chain => _chain?.id === chainId)[0];
+
   const [requestDetails, setRequestDetails] = useState<RequestDetail[]>([]);
 
   useEffect(() => {
@@ -23,7 +29,7 @@ export const useFetchRequestDetails = ({
       try {
         if (!address || !deployedContractAddress || deployedContractAbi || !requestId) return;
 
-        const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+        const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
         const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
 
         const [depositPeriods, amounts] = await contract.unlockRequests(address, BigInt(requestId));
