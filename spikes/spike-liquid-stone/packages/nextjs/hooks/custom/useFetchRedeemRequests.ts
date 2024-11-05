@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { useChainId, useChains } from "wagmi";
 import { RedeemRequest } from "~~/types/vault";
 import { notification } from "~~/utils/scaffold-eth";
 
@@ -16,34 +17,41 @@ export const useFetchRedeemRequests = ({
   currentPeriod: number;
   refetch: any;
 }) => {
+  const chains = useChains();
+  const chainId = useChainId();
+
+  const chain = chains?.filter(_chain => _chain?.id === chainId)[0];
+
   const [redeemRequests, setRedeemRequests] = useState<RedeemRequest[]>([]);
+  const [redeemRequestsFetched, setRedeemRequestsFetched] = useState<boolean>(!!address);
 
   useEffect(() => {
-    async function getRequestIds() {
-      if (!address || !deployedContractAddress || !deployedContractAbi) return;
+    setRedeemRequestsFetched(false);
 
-      const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+    async function getRequestIds() {
+      if (!address || !deployedContractAddress || !deployedContractAbi || !chain || !currentPeriod) {
+        setRedeemRequestsFetched(true);
+        return;
+      }
+
+      const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
       const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
       const requests: RedeemRequest[] = [];
 
       for (let i = 0; i <= currentPeriod + 1; i++) {
-        // Fetch the deposit periods and amounts (shares) from unlockRequests
         const [depositPeriods, shares] = await contract.unlockRequests(address, i);
 
-        // If there are no shares, skip this request
         if (shares.length === 0) continue;
 
         let totalShareAmount = BigInt(0);
         let totalAssetAmount = BigInt(0);
 
-        // Loop through each deposit period and calculate the corresponding asset value
         for (let index = 0; index < depositPeriods.length; index++) {
           const depositPeriod = depositPeriods[index];
           const share = shares[index];
 
           totalShareAmount += ethers.toBigInt(share);
 
-          // only yield if the deposit was in the past
           if (currentPeriod > depositPeriod) {
             try {
               const assetAmount = await contract.convertToAssetsForDepositPeriod(share, depositPeriod);
@@ -54,7 +62,7 @@ export const useFetchRedeemRequests = ({
               );
             }
           } else {
-            totalAssetAmount += ethers.toBigInt(share); // yield is 0, assets = shares
+            totalAssetAmount += ethers.toBigInt(share);
           }
         }
 
@@ -69,10 +77,11 @@ export const useFetchRedeemRequests = ({
       }
 
       setRedeemRequests(requests);
+      setRedeemRequestsFetched(true);
     }
 
     getRequestIds();
-  }, [address, deployedContractAddress, deployedContractAbi, currentPeriod, refetch]);
+  }, [address, deployedContractAddress, deployedContractAbi, currentPeriod, chain, refetch]);
 
-  return { redeemRequests };
+  return { redeemRequests, redeemRequestsFetched };
 };

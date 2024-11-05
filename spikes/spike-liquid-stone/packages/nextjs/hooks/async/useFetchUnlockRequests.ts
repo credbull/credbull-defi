@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { useChainId, useChains } from "wagmi";
 import { UnlockRequest } from "~~/types/async";
 import { MAX_PERIODS } from "~~/utils/async/config";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
@@ -19,6 +20,11 @@ export const useFetchUnlockRequests = ({
   noticePeriod: number;
   refetch: any;
 }) => {
+  const chains = useChains();
+  const chainId = useChainId();
+
+  const chain = chains?.filter(_chain => _chain?.id === chainId)[0];
+
   const [unlockRequests, setUnlockRequests] = useState<UnlockRequest[]>([]);
 
   useEffect(() => {
@@ -26,7 +32,7 @@ export const useFetchUnlockRequests = ({
       try {
         if (!address || !deployedContractAddress || deployedContractAbi || !noticePeriod) return;
 
-        const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+        const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
         const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
         const requests: UnlockRequest[] = [];
 
