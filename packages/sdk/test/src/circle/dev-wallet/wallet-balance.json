@@ -2,7 +2,7 @@
   "request": {
     "method": "GET",
     "headers": {
-      "Authorization": "Bearer TEST_API_KEY:3b83cfb81a396e96d5d2254c2636cf98:a34b0ff80f77cc5803ddc56e44082275",
+      "Authorization": "",
       "Content-Type": "application/json"
     },
     "body": {

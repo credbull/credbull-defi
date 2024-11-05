@@ -29,8 +29,9 @@ async function getDepositTransaction() {
   }
 }
 
+// TODO - this is not working -  error  message: 'value at "/0" is required'
+// as work-around you can manually get attestation here: https://learn.circle.com/cctp#approve-burn
 async function createMessageBytesAndHash(transaction) {
-  // TODO: fails with Error in fetch-attestation: TypeError: Cannot read properties of undefined (reading 'requestManager')
   if (!transaction.txHash) {
     throw new Error('Transaction hash (txHash) is missing from the transaction data');
   }
@@ -45,6 +46,7 @@ async function createMessageBytesAndHash(transaction) {
   return messageHash;
 }
 
+// as work-around you can manually get attestation here: https://learn.circle.com/cctp#approve-burn
 async function getAttestationResponse() {
   // Get attestation signature from iris-api.circle.com
   let attestationResponse = { status: 'pending' };

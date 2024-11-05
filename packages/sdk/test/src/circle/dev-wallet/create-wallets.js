@@ -24,8 +24,8 @@ async function createWalletSet() {
 
 async function createWallets() {
   const response = await client.createWallets({
-    blockchains: ['ETH-SEPOLIA', 'MATIC-AMOY', 'AVAX-FUJI'],
-    count: 2,
+    blockchains: ['ETH-SEPOLIA'], // Testnets:  ['ETH-SEPOLIA', 'MATIC-AMOY', 'AVAX-FUJI'],
+    count: 1, // number of walelts to create
     walletSetId: walletSetId,
   });
 
