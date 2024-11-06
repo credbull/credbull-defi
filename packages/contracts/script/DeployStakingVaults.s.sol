@@ -79,11 +79,11 @@ contract DeployStakingVaults is Script {
 
         uint256 depositStart = 1730973600; // Deposit Start: Nov 7 10 AM UTC - okay
         WindowPlugin.Window memory _depositWindow =
-            WindowPlugin.Window({ opensAt: depositStart, closesAt: depositStart + 14 days - 1 });
+            WindowPlugin.Window({ opensAt: depositStart, closesAt: depositStart + 7 days - 1 });
 
         uint256 redeemStart = _depositWindow.closesAt + 30 days + 1; // Withdraw Start: Deposit End + 30 days
         WindowPlugin.Window memory _redemptionWindow =
-            WindowPlugin.Window({ opensAt: (redeemStart), closesAt: (redeemStart + 30 days - 2) });
+            WindowPlugin.Window({ opensAt: (redeemStart), closesAt: (redeemStart + 30 days - 1) });
 
         _logWindowTimestamps(_depositWindow, _redemptionWindow);
 
