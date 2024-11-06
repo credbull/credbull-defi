@@ -190,7 +190,6 @@ export const useFetchDepositPools = ({
     if (fetchedWithAlchemy) {
       if (existingUserDepositIds.length > 0 && deployedContractAddress) {
         try {
-          console.log("here");
           fetchBalances();
         } catch (error) {
           console.log(error);

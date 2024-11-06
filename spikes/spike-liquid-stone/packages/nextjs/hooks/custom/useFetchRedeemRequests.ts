@@ -29,7 +29,7 @@ export const useFetchRedeemRequests = ({
     setRedeemRequestsFetched(false);
 
     async function getRequestIds() {
-      if (!address || !deployedContractAddress || !deployedContractAbi || !chain || !currentPeriod) {
+      if (!address || !deployedContractAddress || !deployedContractAbi || !chain) {
         setRedeemRequestsFetched(true);
         return;
       }
