@@ -25,7 +25,8 @@ contract DeployStakingVaults is Script {
         public
         returns (
             CredbullFixedYieldVaultFactory factory,
-            CredbullFixedYieldVault stakingVault,
+            CredbullFixedYieldVault stakingVault50APY_,
+            CredbullFixedYieldVault stakingVault0APY_,
             HelperConfig helperConfig
         )
     {
@@ -37,7 +38,8 @@ contract DeployStakingVaults is Script {
         public
         returns (
             CredbullFixedYieldVaultFactory factory,
-            CredbullFixedYieldVault stakingVault,
+            CredbullFixedYieldVault stakingVault50APY_,
+            CredbullFixedYieldVault stakingVault0APY_,
             HelperConfig helperConfig
         )
     {
@@ -45,26 +47,40 @@ contract DeployStakingVaults is Script {
 
         vm.startBroadcast();
 
-        stakingVault = new CredbullFixedYieldVault(createStakingVaultParams(helperConfig, 50));
+        CredbullFixedYieldVault stakingVault50APY = new CredbullFixedYieldVault(
+            createStakingVaultParams(helperConfig, "inCredbull Earn CBL Staking Challenge", "iceCBLsc", 50)
+        );
         console2.log(
-            string.concat("!!!!! Deploying CredbullFixedYieldVault [", vm.toString(address(stakingVault)), "] !!!!!")
+            string.concat(
+                "!!!!! Deploying CredbullFixedYieldVault 50APY [", vm.toString(address(stakingVault50APY)), "] !!!!!"
+            )
+        );
+
+        CredbullFixedYieldVault stakingVault0APY = new CredbullFixedYieldVault(
+            createStakingVaultParams(helperConfig, "inCredbull Earn CBL Booster Vault", "iceCBLBooster", 0)
+        );
+        console2.log(
+            string.concat(
+                "!!!!! Deploying CredbullFixedYieldVault OAPY [", vm.toString(address(stakingVault0APY_)), "] !!!!!"
+            )
         );
 
         vm.stopBroadcast();
 
-        return (factory, stakingVault, helperConfig);
+        return (factory, stakingVault50APY, stakingVault0APY, helperConfig);
     }
 
-    function createStakingVaultParams(HelperConfig helperConfig, uint256 _yieldPercentage)
-        internal
-        view
-        returns (CredbullFixedYieldVault.FixedYieldVaultParams memory)
-    {
+    function createStakingVaultParams(
+        HelperConfig helperConfig,
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 _yieldPercentage
+    ) internal view returns (CredbullFixedYieldVault.FixedYieldVaultParams memory) {
         NetworkConfig memory config = helperConfig.getNetworkConfig();
         Vault.VaultParams memory _vaultParams = Vault.VaultParams({
             asset: IERC20(config.cblToken),
-            shareName: "inCredbull Earn CBL Staking Challenge",
-            shareSymbol: "iceCBLsc",
+            shareName: shareName,
+            shareSymbol: shareSymbol,
             custodian: config.factoryParams.custodian
         });
 

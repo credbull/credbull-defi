@@ -11,7 +11,8 @@ import { CredbullFixedYieldVault } from "@credbull/CredbullFixedYieldVault.sol";
 import { CBL } from "@credbull/token/CBL.sol";
 
 contract CredbullFixedYieldVaultStakingTest is Test {
-    CredbullFixedYieldVault private vault;
+    CredbullFixedYieldVault private vault50APY;
+    CredbullFixedYieldVault private vault0APY;
     HelperConfig private helperConfig;
 
     CBL private cbl;
@@ -28,9 +29,9 @@ contract CredbullFixedYieldVaultStakingTest is Test {
 
     function setUp() public {
         DeployStakingVaults deployStakingVaults = new DeployStakingVaults();
-        (, vault, helperConfig) = deployStakingVaults.run();
+        (, vault50APY, vault0APY, helperConfig) = deployStakingVaults.run();
 
-        cbl = CBL(vault.asset());
+        cbl = CBL(vault50APY.asset());
         precision = 10 ** cbl.decimals();
 
         assertEq(10 ** 18, precision, "should be 10^18");
@@ -48,40 +49,33 @@ contract CredbullFixedYieldVaultStakingTest is Test {
     }
 
     function test__FixedYieldVaultStakingChallenge__Expect50APY() public {
+        uint256 depositAmount = 10 * precision;
+        uint256 expectedAssets = ((depositAmount * (100 + 50)) / 100);
+
+        depositAndVerify(vault50APY, depositAmount, expectedAssets);
+    }
+
+    function test__FixedYieldVaultStakingChallenge__Expect0APY() public {
+        uint256 depositAmount = 10 * precision;
+
+        depositAndVerify(vault0APY, depositAmount, depositAmount);
+    }
+
+    function depositAndVerify(CredbullFixedYieldVault vault, uint256 depositAmount, uint256 expectedAssets) public {
         assertTrue(vault.checkWindow(), "window should be on");
 
         vm.prank(owner);
         vault.toggleWindowCheck();
         assertFalse(vault.checkWindow(), "window should be off");
 
-        uint256 depositAmount = 10 * precision;
-        uint256 shares = deposit(vault, alice, depositAmount, false);
+        vm.startPrank(alice);
+        cbl.approve(address(vault), depositAmount);
+        uint256 shares = vault.deposit(depositAmount, alice);
+        vm.stopPrank();
 
         assertEq(depositAmount, cbl.balanceOf(vault.CUSTODIAN()), "custodian should have the CBL");
         assertEq(shares, vault.balanceOf(alice), "alice should have the shares");
 
-        uint256 expectedAssetValue = ((depositAmount * (100 + 50)) / 100);
-        assertEq(vault.expectedAssetsOnMaturity(), expectedAssetValue);
-    }
-
-    function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
-        return deposit(vault, user, assets, warp);
-    }
-
-    function deposit(CredbullFixedYieldVault fixedYieldVault, address user, uint256 assets, bool warp)
-        internal
-        returns (uint256 shares)
-    {
-        // first, approve the deposit
-        vm.startPrank(user);
-        cbl.approve(address(fixedYieldVault), assets);
-
-        // wrap if set to true
-        if (warp) {
-            vm.warp(fixedYieldVault.depositOpensAtTimestamp());
-        }
-
-        shares = fixedYieldVault.deposit(assets, user);
-        vm.stopPrank();
+        assertEq(vault.expectedAssetsOnMaturity(), expectedAssets);
     }
 }
