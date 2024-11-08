@@ -1,4 +1,4 @@
-node_env = "test"
+node_env = "prod"
 
 [api]
 url = ""
@@ -14,6 +14,5 @@ url = ""
 url = "https://arb-mainnet.g.alchemy.com/v2/"
 
 [evm.address]
-# CBL Staking Vault address - Arbitrum Sepolia
-# TODO this one...
+# CBL Staking Vault address - Arbitrum One
 vault_cbl_staking="0xe4a4d891f02DF7bFFc5ff9e691313DE8a9E76b91"

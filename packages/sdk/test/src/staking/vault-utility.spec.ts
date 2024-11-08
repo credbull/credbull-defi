@@ -26,7 +26,7 @@ test.beforeAll(async () => {
   ownerSigner = testSigners.admin.getDelegate();
   operatorSigner = testSigners.operator.getDelegate();
   custodianSigner = testSigners.custodian.getDelegate();
-  userSigner = testSigners.deployer.getDelegate();
+  userSigner = new ethers.Wallet(config.secret.DEPLOYER_PRIVATE_KEY, provider);
 
   stakingVaultAddress = config.evm.address.vault_cbl_staking;
 });
