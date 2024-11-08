@@ -61,7 +61,7 @@ contract DeployStakingVaults is Script {
         );
         console2.log(
             string.concat(
-                "!!!!! Deploying CredbullFixedYieldVault OAPY [", vm.toString(address(stakingVault0APY_)), "] !!!!!"
+                "!!!!! Deploying CredbullFixedYieldVault OAPY [", vm.toString(address(stakingVault0APY)), "] !!!!!"
             )
         );
 
