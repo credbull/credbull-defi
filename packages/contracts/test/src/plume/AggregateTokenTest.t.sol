@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import { IComponentToken } from "@credbull/plume/interfaces/IComponentToken.sol";
-import { AggregateToken } from "@credbull/plume/AggregateToken.sol";
+import { IComponentToken } from "@plume/contracts/nest/interfaces/IComponentToken.sol";
+import { AggregateToken } from "@plume/contracts/nest/AggregateToken.sol";
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
-import { AggregateTokenProxy } from "@credbull/plume/proxy/AggregateTokenProxy.sol";
+import { AggregateTokenProxy } from "@plume/contracts/nest/proxy/AggregateTokenProxy.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 import { console2 } from "forge-std/console2.sol";
 
