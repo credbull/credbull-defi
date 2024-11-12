@@ -2,11 +2,15 @@
 pragma solidity ^0.8.25;
 
 import { IComponentToken } from "@plume/contracts/nest/interfaces/IComponentToken.sol";
+import { IERC7575 } from "@plume/contracts/nest/interfaces/IERC7575.sol";
+import { IERC7540 } from "@plume/contracts/nest/interfaces/IERC7540.sol";
 import { AggregateToken } from "@plume/contracts/nest/AggregateToken.sol";
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
 import { AggregateTokenProxy } from "@plume/contracts/nest/proxy/AggregateTokenProxy.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 import { console2 } from "forge-std/console2.sol";
+
+import { IERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
 contract AggregateTokenTest is LiquidContinuousMultiTokenVaultTestBase {
     AggregateToken internal aggregateToken;
@@ -30,6 +34,12 @@ contract AggregateTokenTest is LiquidContinuousMultiTokenVaultTestBase {
         aggregateToken = AggregateToken(address(aggregateTokenProxy));
     }
 
+    function test__AggregateTokenTest__SupportsInterface() public view {
+        assertTrue(aggregateToken.supportsInterface(type(IERC1155Receiver).interfaceId));
+        assertTrue(aggregateToken.supportsInterface(type(IERC7575).interfaceId));
+        assertTrue(aggregateToken.supportsInterface(0xe3bc4e65));
+    }
+
     function test__AggregateTokenTest__BuyComponentToken() public {
         uint256 depositAmount = 2_000 * _scale;
 
@@ -42,8 +52,10 @@ contract AggregateTokenTest is LiquidContinuousMultiTokenVaultTestBase {
         );
 
         // Call buyComponentToken
-        vm.prank(NEST_ADMIN_ADDRESS);
+        vm.startPrank(NEST_ADMIN_ADDRESS);
+        aggregateToken.approveComponentToken(IComponentToken(address(_liquidVault)), depositAmount);
         aggregateToken.buyComponentToken(IComponentToken(address(_liquidVault)), depositAmount);
+        vm.stopPrank();
 
         assertEq(
             depositAmount,
@@ -69,8 +81,10 @@ contract AggregateTokenTest is LiquidContinuousMultiTokenVaultTestBase {
         );
 
         // Call buyComponentToken
-        vm.prank(NEST_ADMIN_ADDRESS);
+        vm.startPrank(NEST_ADMIN_ADDRESS);
+        aggregateToken.approveComponentToken(IComponentToken(address(_liquidVault)), testParams.principal);
         aggregateToken.buyComponentToken(IComponentToken(address(_liquidVault)), testParams.principal);
+        vm.stopPrank();
 
         assertEq(0, _asset.balanceOf(address(aggregateToken)), "There shouldn't be any remaining amount");
         assertEq(
