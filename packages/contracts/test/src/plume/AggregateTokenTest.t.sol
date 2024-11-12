@@ -43,7 +43,7 @@ contract AggregateTokenTest is LiquidContinuousMultiTokenVaultTestBase {
     function test__AggregateTokenTest__BuyComponentToken() public {
         uint256 depositAmount = 2_000 * _scale;
 
-        _depositAssets_AggregateToken(alice, depositAmount);
+        _depositAssetsAggregateToken(alice, depositAmount);
 
         assertEq(
             depositAmount,
@@ -72,7 +72,7 @@ contract AggregateTokenTest is LiquidContinuousMultiTokenVaultTestBase {
         // Move the blocktime to depositPeriod
         _warpToPeriod(_liquidVault, testParams.depositPeriod);
 
-        _depositAssets_AggregateToken(alice, testParams.principal);
+        _depositAssetsAggregateToken(alice, testParams.principal);
 
         assertEq(
             testParams.principal,
@@ -118,7 +118,7 @@ contract AggregateTokenTest is LiquidContinuousMultiTokenVaultTestBase {
     }
 
     /// @dev Deposits assets into AggregateToken
-    function _depositAssets_AggregateToken(address user, uint256 depositAmount) internal {
+    function _depositAssetsAggregateToken(address user, uint256 depositAmount) internal {
         vm.startPrank(user);
         _asset.approve(address(aggregateToken), depositAmount);
         aggregateToken.deposit(depositAmount, user, user);
