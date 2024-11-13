@@ -28,7 +28,7 @@ contract DeployAggregateToken is TomlConfig {
     }
 
     function run(address contractOwner, address assetAddress) public virtual returns (AggregateToken aggregateToken_) {
-        vm.startBroadcast(contractOwner);
+        vm.startBroadcast();
 
         // Deploy AggregateToken with both component tokens
         AggregateToken aggregateToken = new AggregateToken();
