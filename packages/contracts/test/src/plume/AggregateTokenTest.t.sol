@@ -3,35 +3,23 @@ pragma solidity ^0.8.25;
 
 import { IComponentToken } from "@plume/contracts/nest/interfaces/IComponentToken.sol";
 import { IERC7575 } from "@plume/contracts/nest/interfaces/IERC7575.sol";
-import { IERC7540 } from "@plume/contracts/nest/interfaces/IERC7540.sol";
 import { AggregateToken } from "@plume/contracts/nest/AggregateToken.sol";
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
-import { AggregateTokenProxy } from "@plume/contracts/nest/proxy/AggregateTokenProxy.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
-import { console2 } from "forge-std/console2.sol";
 
 import { IERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import { DeployAggregateToken } from "@script/DeployAggregateToken.s.sol";
 
 contract AggregateTokenTest is LiquidContinuousMultiTokenVaultTestBase {
     AggregateToken internal aggregateToken;
-    address public NEST_ADMIN_ADDRESS = makeAddr("NEST_ADMIN_ADDRESS");
+    address public aggTokenOwner;
 
     function setUp() public override {
         super.setUp();
 
-        // Deploy implementation of AggregateToken
-        AggregateToken aggregateTokenImpl = new AggregateToken();
-
-        // Deploy proxy of AggregateToken
-        AggregateTokenProxy aggregateTokenProxy = new AggregateTokenProxy(
-            address(aggregateTokenImpl),
-            abi.encodeCall(
-                AggregateToken.initialize,
-                (NEST_ADMIN_ADDRESS, "Aggregate Token", "AGGT", IComponentToken(address(_asset)), 15e17, 12e17)
-            )
-        );
-
-        aggregateToken = AggregateToken(address(aggregateTokenProxy));
+        DeployAggregateToken deployAggToken = new DeployAggregateToken();
+        aggTokenOwner = _vaultAuth.owner;
+        aggregateToken = deployAggToken.run(aggTokenOwner, address(_asset));
     }
 
     function test__AggregateTokenTest__SupportsInterface() public view {
@@ -52,7 +40,7 @@ contract AggregateTokenTest is LiquidContinuousMultiTokenVaultTestBase {
         );
 
         // Call buyComponentToken
-        vm.startPrank(NEST_ADMIN_ADDRESS);
+        vm.startPrank(aggTokenOwner);
         aggregateToken.approveComponentToken(IComponentToken(address(_liquidVault)), depositAmount);
         aggregateToken.buyComponentToken(IComponentToken(address(_liquidVault)), depositAmount);
         vm.stopPrank();
@@ -81,7 +69,7 @@ contract AggregateTokenTest is LiquidContinuousMultiTokenVaultTestBase {
         );
 
         // Call buyComponentToken
-        vm.startPrank(NEST_ADMIN_ADDRESS);
+        vm.startPrank(aggTokenOwner);
         aggregateToken.approveComponentToken(IComponentToken(address(_liquidVault)), testParams.principal);
         aggregateToken.buyComponentToken(IComponentToken(address(_liquidVault)), testParams.principal);
         vm.stopPrank();
@@ -101,14 +89,14 @@ contract AggregateTokenTest is LiquidContinuousMultiTokenVaultTestBase {
         _warpToPeriod(_liquidVault, testParams.redeemPeriod - _liquidVault.noticePeriod());
 
         // Call requestSellComponentToken (newly added by us)
-        vm.prank(NEST_ADMIN_ADDRESS);
+        vm.prank(aggTokenOwner);
         aggregateToken.requestSellComponentToken(IComponentToken(address(_liquidVault)), testParams.principal);
 
         // Move the blocktime to redeemPeriod
         _warpToPeriod(_liquidVault, testParams.redeemPeriod);
 
         // Call sellComponentToken
-        vm.prank(NEST_ADMIN_ADDRESS);
+        vm.prank(aggTokenOwner);
         aggregateToken.sellComponentToken(IComponentToken(address(_liquidVault)), testParams.principal);
 
         uint256 expectedAmount = testParams.principal + _expectedReturns(0, _liquidVault, testParams);
