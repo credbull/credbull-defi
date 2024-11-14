@@ -1,0 +1,39 @@
+##
+# The Application Configuration for the Plume Mainnet Environment.
+##
+
+[evm]
+# blockchain id, e.g. plumeMainnet=98865, plumeTestnet=98864, plumeTestnet_old=161221135, plumeDevnet=18230
+chain_id = 98865
+deploy_mocks = false
+
+
+[evm.address]
+# credbull.cb.id admin/owner (#1)
+owner = "0x0fEcd2f7B3EC4BeE8001B4F73df32e7917d8fdE3"
+# credbulloper.cb.id operator (#2)
+operator = "0xf589233a140F037976f2786C8A4Fba4920EB687b"
+# credbullupgrader.cb.id upgrader (#4)
+upgrader = "0x3E449960Ba36cB00B728A370F991c658e7cca459"
+# credbullassetmgr.cb.id asset manager (#7)
+asset_manager = "0x97BE1b79AA9dB55e7235a9dd5E686cc4A26A7959"
+
+# USDC.e token address (Fiat Proxy
+usdc_token="0x0F3B6CC558A714ecf4Cc9ec8caFF0b57ECf65890"
+## Liquid Continuous Multi Token Vault Proxy
+#liquid_vault_proxy=""
+## Liquid Continuous Multi Token Vault Impl
+#liquid_vault_impl=""
+
+
+[evm.contracts.liquid_continuous_multi_token_vault]
+# rate in basis points, e.g.  10% = 1000 bps
+full_rate_bps = 10_00
+# rate in basis points, e.g.  5.5% = 550 bps
+reduced_rate_bps = 5_50
+
+[services.supabase]
+url = ""
+
+# Save the contract deployment details to the database.
+update_contract_addresses = false

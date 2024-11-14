@@ -31,6 +31,12 @@ deploy-plumeTestnet:
 resume-plumeTestnet:
 	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://test-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow --resume"
 
+deploy-plume:
+	$(MAKE) deploy RPC_URL=plume EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://phoenix-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow"
+
+resume-plume:
+	$(MAKE) deploy RPC_URL=plume EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://phoenix-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow --resume"
+
 deploy-arbitrum:
 	$(MAKE) deploy RPC_URL=arbitrum EXTRA_FLAGS="--verify --slow"
 
