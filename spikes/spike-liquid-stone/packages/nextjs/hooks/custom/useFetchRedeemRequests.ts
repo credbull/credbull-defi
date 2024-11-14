@@ -39,9 +39,17 @@ export const useFetchRedeemRequests = ({
       const requests: RedeemRequest[] = [];
 
       for (let i = 0; i <= currentPeriod + 1; i++) {
+        try {
+          await createRedeemRequest(i);
+        } catch (error) {
+          console.error(`Failed to fetch unlock request for period ${i}:`, error);
+        }
+      }
+
+      async function createRedeemRequest(i: number) {
         const [depositPeriods, shares] = await contract.unlockRequests(address, i);
 
-        if (shares.length === 0) continue;
+        if (shares.length === 0) return;
 
         let totalShareAmount = BigInt(0);
         let totalAssetAmount = BigInt(0);
