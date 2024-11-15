@@ -159,6 +159,31 @@ export declare namespace VmSafe {
 
   export type RpcStructOutput = [string, string] & { key: string; url: string };
 
+  export type DebugStepStruct = {
+    stack: BigNumberish[];
+    memoryInput: BytesLike;
+    opcode: BigNumberish;
+    depth: BigNumberish;
+    isOutOfGas: boolean;
+    contractAddr: string;
+  };
+
+  export type DebugStepStructOutput = [
+    BigNumber[],
+    string,
+    number,
+    BigNumber,
+    boolean,
+    string
+  ] & {
+    stack: BigNumber[];
+    memoryInput: string;
+    opcode: number;
+    depth: BigNumber;
+    isOutOfGas: boolean;
+    contractAddr: string;
+  };
+
   export type ChainInfoStruct = { forkId: BigNumberish; chainId: BigNumberish };
 
   export type ChainInfoStructOutput = [BigNumber, BigNumber] & {
@@ -443,6 +468,8 @@ export interface VmSafeInterface extends utils.Interface {
     "getNonce(address)": FunctionFragment;
     "getNonce((address,uint256,uint256,uint256))": FunctionFragment;
     "getRecordedLogs()": FunctionFragment;
+    "getScriptWallets()": FunctionFragment;
+    "getWallets()": FunctionFragment;
     "indexOf(string,string)": FunctionFragment;
     "isContext(uint8)": FunctionFragment;
     "isDir(string)": FunctionFragment;
@@ -511,6 +538,8 @@ export interface VmSafeInterface extends utils.Interface {
     "randomAddress()": FunctionFragment;
     "randomBool()": FunctionFragment;
     "randomBytes(uint256)": FunctionFragment;
+    "randomBytes4()": FunctionFragment;
+    "randomBytes8()": FunctionFragment;
     "randomInt()": FunctionFragment;
     "randomInt(uint256)": FunctionFragment;
     "randomUint()": FunctionFragment;
@@ -526,6 +555,8 @@ export interface VmSafeInterface extends utils.Interface {
     "record()": FunctionFragment;
     "recordLogs()": FunctionFragment;
     "rememberKey(uint256)": FunctionFragment;
+    "rememberKeys(string,string,uint32)": FunctionFragment;
+    "rememberKeys(string,string,string,uint32)": FunctionFragment;
     "removeDir(string,bool)": FunctionFragment;
     "removeFile(string)": FunctionFragment;
     "replace(string,string,string)": FunctionFragment;
@@ -571,8 +602,10 @@ export interface VmSafeInterface extends utils.Interface {
     "startBroadcast()": FunctionFragment;
     "startBroadcast(address)": FunctionFragment;
     "startBroadcast(uint256)": FunctionFragment;
+    "startDebugTraceRecording()": FunctionFragment;
     "startMappingRecording()": FunctionFragment;
     "startStateDiffRecording()": FunctionFragment;
+    "stopAndReturnDebugTraceRecording()": FunctionFragment;
     "stopAndReturnStateDiff()": FunctionFragment;
     "stopBroadcast()": FunctionFragment;
     "stopMappingRecording()": FunctionFragment;
@@ -793,6 +826,8 @@ export interface VmSafeInterface extends utils.Interface {
       | "getNonce(address)"
       | "getNonce((address,uint256,uint256,uint256))"
       | "getRecordedLogs"
+      | "getScriptWallets"
+      | "getWallets"
       | "indexOf"
       | "isContext"
       | "isDir"
@@ -861,6 +896,8 @@ export interface VmSafeInterface extends utils.Interface {
       | "randomAddress"
       | "randomBool"
       | "randomBytes"
+      | "randomBytes4"
+      | "randomBytes8"
       | "randomInt()"
       | "randomInt(uint256)"
       | "randomUint()"
@@ -876,6 +913,8 @@ export interface VmSafeInterface extends utils.Interface {
       | "record"
       | "recordLogs"
       | "rememberKey"
+      | "rememberKeys(string,string,uint32)"
+      | "rememberKeys(string,string,string,uint32)"
       | "removeDir"
       | "removeFile"
       | "replace"
@@ -921,8 +960,10 @@ export interface VmSafeInterface extends utils.Interface {
       | "startBroadcast()"
       | "startBroadcast(address)"
       | "startBroadcast(uint256)"
+      | "startDebugTraceRecording"
       | "startMappingRecording"
       | "startStateDiffRecording"
+      | "stopAndReturnDebugTraceRecording"
       | "stopAndReturnStateDiff"
       | "stopBroadcast"
       | "stopMappingRecording"
@@ -1682,6 +1723,14 @@ export interface VmSafeInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "getScriptWallets",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getWallets",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "indexOf",
     values: [string, string]
   ): string;
@@ -1930,6 +1979,14 @@ export interface VmSafeInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "randomBytes4",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "randomBytes8",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "randomInt()",
     values?: undefined
   ): string;
@@ -1976,6 +2033,14 @@ export interface VmSafeInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "rememberKey",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "rememberKeys(string,string,uint32)",
+    values: [string, string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "rememberKeys(string,string,string,uint32)",
+    values: [string, string, string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "removeDir",
@@ -2146,11 +2211,19 @@ export interface VmSafeInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "startDebugTraceRecording",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "startMappingRecording",
     values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "startStateDiffRecording",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "stopAndReturnDebugTraceRecording",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -2967,6 +3040,11 @@ export interface VmSafeInterface extends utils.Interface {
     functionFragment: "getRecordedLogs",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "getScriptWallets",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "getWallets", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "indexOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "isContext", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "isDir", data: BytesLike): Result;
@@ -3198,6 +3276,14 @@ export interface VmSafeInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "randomBytes4",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "randomBytes8",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "randomInt()",
     data: BytesLike
   ): Result;
@@ -3240,6 +3326,14 @@ export interface VmSafeInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "recordLogs", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "rememberKey",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "rememberKeys(string,string,uint32)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "rememberKeys(string,string,string,uint32)",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "removeDir", data: BytesLike): Result;
@@ -3396,11 +3490,19 @@ export interface VmSafeInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "startDebugTraceRecording",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "startMappingRecording",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "startStateDiffRecording",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "stopAndReturnDebugTraceRecording",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -4333,14 +4435,14 @@ export interface VmSafe extends BaseContract {
 
     "breakpoint(string)"(
       char: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      overrides?: CallOverrides
+    ): Promise<[void]>;
 
     "breakpoint(string,bool)"(
       char: string,
       value: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      overrides?: CallOverrides
+    ): Promise<[void]>;
 
     "broadcast()"(
       overrides?: Overrides & { from?: string }
@@ -4734,6 +4836,14 @@ export interface VmSafe extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
+    getScriptWallets(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    getWallets(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
     indexOf(
       input: string,
       key: string,
@@ -5114,6 +5224,10 @@ export interface VmSafe extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
+    randomBytes4(overrides?: CallOverrides): Promise<[string]>;
+
+    randomBytes8(overrides?: CallOverrides): Promise<[string]>;
+
     "randomInt()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     "randomInt(uint256)"(
@@ -5196,6 +5310,21 @@ export interface VmSafe extends BaseContract {
 
     rememberKey(
       privateKey: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    "rememberKeys(string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      count: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    "rememberKeys(string,string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      language: string,
+      count: BigNumberish,
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
@@ -5466,11 +5595,19 @@ export interface VmSafe extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
+    startDebugTraceRecording(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
     startMappingRecording(
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
     startStateDiffRecording(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    stopAndReturnDebugTraceRecording(
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
@@ -6414,16 +6551,13 @@ export interface VmSafe extends BaseContract {
 
   assumeNoRevert(overrides?: CallOverrides): Promise<void>;
 
-  "breakpoint(string)"(
-    char: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  "breakpoint(string)"(char: string, overrides?: CallOverrides): Promise<void>;
 
   "breakpoint(string,bool)"(
     char: string,
     value: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+    overrides?: CallOverrides
+  ): Promise<void>;
 
   "broadcast()"(
     overrides?: Overrides & { from?: string }
@@ -6781,6 +6915,14 @@ export interface VmSafe extends BaseContract {
   ): Promise<ContractTransaction>;
 
   getRecordedLogs(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  getScriptWallets(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  getWallets(
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
@@ -7148,6 +7290,10 @@ export interface VmSafe extends BaseContract {
 
   randomBytes(len: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
+  randomBytes4(overrides?: CallOverrides): Promise<string>;
+
+  randomBytes8(overrides?: CallOverrides): Promise<string>;
+
   "randomInt()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   "randomInt(uint256)"(
@@ -7206,6 +7352,21 @@ export interface VmSafe extends BaseContract {
 
   rememberKey(
     privateKey: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "rememberKeys(string,string,uint32)"(
+    mnemonic: string,
+    derivationPath: string,
+    count: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "rememberKeys(string,string,string,uint32)"(
+    mnemonic: string,
+    derivationPath: string,
+    language: string,
+    count: BigNumberish,
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
@@ -7469,11 +7630,19 @@ export interface VmSafe extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
+  startDebugTraceRecording(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
   startMappingRecording(
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
   startStateDiffRecording(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  stopAndReturnDebugTraceRecording(
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
@@ -8781,6 +8950,10 @@ export interface VmSafe extends BaseContract {
       overrides?: CallOverrides
     ): Promise<VmSafe.LogStructOutput[]>;
 
+    getScriptWallets(overrides?: CallOverrides): Promise<string[]>;
+
+    getWallets(overrides?: CallOverrides): Promise<string[]>;
+
     indexOf(
       input: string,
       key: string,
@@ -9141,6 +9314,10 @@ export interface VmSafe extends BaseContract {
 
     randomBytes(len: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
+    randomBytes4(overrides?: CallOverrides): Promise<string>;
+
+    randomBytes8(overrides?: CallOverrides): Promise<string>;
+
     "randomInt()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     "randomInt(uint256)"(
@@ -9195,6 +9372,21 @@ export interface VmSafe extends BaseContract {
       privateKey: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
+
+    "rememberKeys(string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string[]>;
+
+    "rememberKeys(string,string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      language: string,
+      count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string[]>;
 
     removeDir(
       path: string,
@@ -9444,9 +9636,15 @@ export interface VmSafe extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    startDebugTraceRecording(overrides?: CallOverrides): Promise<void>;
+
     startMappingRecording(overrides?: CallOverrides): Promise<void>;
 
     startStateDiffRecording(overrides?: CallOverrides): Promise<void>;
+
+    stopAndReturnDebugTraceRecording(
+      overrides?: CallOverrides
+    ): Promise<VmSafe.DebugStepStructOutput[]>;
 
     stopAndReturnStateDiff(
       overrides?: CallOverrides
@@ -10381,13 +10579,13 @@ export interface VmSafe extends BaseContract {
 
     "breakpoint(string)"(
       char: string,
-      overrides?: Overrides & { from?: string }
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     "breakpoint(string,bool)"(
       char: string,
       value: boolean,
-      overrides?: Overrides & { from?: string }
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     "broadcast()"(
@@ -10760,6 +10958,12 @@ export interface VmSafe extends BaseContract {
     getRecordedLogs(
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
+
+    getScriptWallets(
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    getWallets(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
 
     indexOf(
       input: string,
@@ -11135,6 +11339,10 @@ export interface VmSafe extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    randomBytes4(overrides?: CallOverrides): Promise<BigNumber>;
+
+    randomBytes8(overrides?: CallOverrides): Promise<BigNumber>;
+
     "randomInt()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     "randomInt(uint256)"(
@@ -11189,6 +11397,21 @@ export interface VmSafe extends BaseContract {
 
     rememberKey(
       privateKey: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "rememberKeys(string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      count: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "rememberKeys(string,string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      language: string,
+      count: BigNumberish,
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
@@ -11452,11 +11675,19 @@ export interface VmSafe extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
+    startDebugTraceRecording(
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
     startMappingRecording(
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
     startStateDiffRecording(
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    stopAndReturnDebugTraceRecording(
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
@@ -12398,13 +12629,13 @@ export interface VmSafe extends BaseContract {
 
     "breakpoint(string)"(
       char: string,
-      overrides?: Overrides & { from?: string }
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     "breakpoint(string,bool)"(
       char: string,
       value: boolean,
-      overrides?: Overrides & { from?: string }
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     "broadcast()"(
@@ -12790,6 +13021,14 @@ export interface VmSafe extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
+    getScriptWallets(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    getWallets(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
     indexOf(
       input: string,
       key: string,
@@ -13164,6 +13403,10 @@ export interface VmSafe extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    randomBytes4(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    randomBytes8(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     "randomInt()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "randomInt(uint256)"(
@@ -13234,6 +13477,21 @@ export interface VmSafe extends BaseContract {
 
     rememberKey(
       privateKey: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "rememberKeys(string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      count: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "rememberKeys(string,string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      language: string,
+      count: BigNumberish,
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
@@ -13500,11 +13758,19 @@ export interface VmSafe extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
+    startDebugTraceRecording(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
     startMappingRecording(
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
     startStateDiffRecording(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    stopAndReturnDebugTraceRecording(
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 

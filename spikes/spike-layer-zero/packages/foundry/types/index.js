@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IERC721Errors__factory = exports.IERC20Errors__factory = exports.IERC1155Errors__factory = exports.VmSafe__factory = exports.Vm__factory = exports.StdStorageSafe__factory = exports.SimpleOFT__factory = exports.Script__factory = exports.Ownable__factory = exports.OFTV2__factory = exports.OFTCoreV2__factory = exports.NonblockingLzApp__factory = exports.MockERC721__factory = exports.MockERC20__factory = exports.LzApp__factory = exports.LZWrite__factory = exports.LZMoneyTransfer__factory = exports.IOFTV2__factory = exports.IOFTReceiverV2__factory = exports.IMulticall3__factory = exports.ILayerZeroUserApplicationConfig__factory = exports.ILayerZeroReceiver__factory = exports.ILayerZeroEndpoint__factory = exports.IERC721TokenReceiver__factory = exports.IERC721Metadata__factory = exports.IERC721Enumerable__factory = exports.IERC721__factory = exports.IERC20Metadata__factory = exports.IERC20__factory = exports.IERC165__factory = exports.ICommonOFT__factory = exports.ERC20__factory = exports.ERC165__factory = exports.DeploySimpleOFT__factory = exports.DeployLZWrite__factory = exports.DeployLZMoneyTransfer__factory = exports.ScaffoldETHDeploy__factory = exports.DeployScript__factory = exports.BaseOFTV2__factory = exports.factories = void 0;
+exports.IERC721Errors__factory = exports.IERC20Errors__factory = exports.IERC1155Errors__factory = exports.VmSafe__factory = exports.Vm__factory = exports.StdStorageSafe__factory = exports.StargateUSDCBridge__factory = exports.IStargateRouter__factory = exports.SimpleOFT__factory = exports.Script__factory = exports.Ownable__factory = exports.OFTV2__factory = exports.OFTCoreV2__factory = exports.NonblockingLzApp__factory = exports.MockERC721__factory = exports.MockERC20__factory = exports.LzApp__factory = exports.LZWrite__factory = exports.LZMoneyTransfer__factory = exports.IOFTV2__factory = exports.IOFTReceiverV2__factory = exports.IMulticall3__factory = exports.ILayerZeroUserApplicationConfig__factory = exports.ILayerZeroReceiver__factory = exports.ILayerZeroEndpoint__factory = exports.IERC721TokenReceiver__factory = exports.IERC721Metadata__factory = exports.IERC721Enumerable__factory = exports.IERC721__factory = exports.IERC20Metadata__factory = exports.IERC20__factory = exports.IERC165__factory = exports.ICommonOFT__factory = exports.ERC20__factory = exports.ERC165__factory = exports.DeployStargateUSDCBridge__factory = exports.DeploySimpleOFT__factory = exports.DeployLZWrite__factory = exports.DeployLZMoneyTransfer__factory = exports.ScaffoldETHDeploy__factory = exports.DeployScript__factory = exports.BaseOFTV2__factory = exports.factories = void 0;
 exports.factories = __importStar(require("./factories"));
 var BaseOFTV2__factory_1 = require("./factories/BaseOFTV2__factory");
 Object.defineProperty(exports, "BaseOFTV2__factory", { enumerable: true, get: function () { return BaseOFTV2__factory_1.BaseOFTV2__factory; } });
@@ -37,6 +37,8 @@ var DeployLZWrite__factory_1 = require("./factories/DeployLZWrite.s.sol/DeployLZ
 Object.defineProperty(exports, "DeployLZWrite__factory", { enumerable: true, get: function () { return DeployLZWrite__factory_1.DeployLZWrite__factory; } });
 var DeploySimpleOFT__factory_1 = require("./factories/DeploySimpleOFT.s.sol/DeploySimpleOFT__factory");
 Object.defineProperty(exports, "DeploySimpleOFT__factory", { enumerable: true, get: function () { return DeploySimpleOFT__factory_1.DeploySimpleOFT__factory; } });
+var DeployStargateUSDCBridge__factory_1 = require("./factories/DeployStargateUSDCBridge.s.sol/DeployStargateUSDCBridge__factory");
+Object.defineProperty(exports, "DeployStargateUSDCBridge__factory", { enumerable: true, get: function () { return DeployStargateUSDCBridge__factory_1.DeployStargateUSDCBridge__factory; } });
 var ERC165__factory_1 = require("./factories/ERC165__factory");
 Object.defineProperty(exports, "ERC165__factory", { enumerable: true, get: function () { return ERC165__factory_1.ERC165__factory; } });
 var ERC20__factory_1 = require("./factories/ERC20__factory");
@@ -91,6 +93,10 @@ var Script__factory_1 = require("./factories/Script__factory");
 Object.defineProperty(exports, "Script__factory", { enumerable: true, get: function () { return Script__factory_1.Script__factory; } });
 var SimpleOFT__factory_1 = require("./factories/SimpleOFT__factory");
 Object.defineProperty(exports, "SimpleOFT__factory", { enumerable: true, get: function () { return SimpleOFT__factory_1.SimpleOFT__factory; } });
+var IStargateRouter__factory_1 = require("./factories/StargateUSDCBridge.sol/IStargateRouter__factory");
+Object.defineProperty(exports, "IStargateRouter__factory", { enumerable: true, get: function () { return IStargateRouter__factory_1.IStargateRouter__factory; } });
+var StargateUSDCBridge__factory_1 = require("./factories/StargateUSDCBridge.sol/StargateUSDCBridge__factory");
+Object.defineProperty(exports, "StargateUSDCBridge__factory", { enumerable: true, get: function () { return StargateUSDCBridge__factory_1.StargateUSDCBridge__factory; } });
 var StdStorageSafe__factory_1 = require("./factories/StdStorage.sol/StdStorageSafe__factory");
 Object.defineProperty(exports, "StdStorageSafe__factory", { enumerable: true, get: function () { return StdStorageSafe__factory_1.StdStorageSafe__factory; } });
 var Vm__factory_1 = require("./factories/Vm.sol/Vm__factory");

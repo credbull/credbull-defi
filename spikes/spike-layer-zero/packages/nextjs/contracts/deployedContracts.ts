@@ -6,19 +6,14 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 const deployedContracts = {
   31337: {
-    LZWrite: {
-      address: "0x71685b615333022b3ff203ff34fda04cc3dfcd30",
+    YourContract: {
+      address: "0x700b6a60ce7eaaea56f065753d8dcb9653dbad35",
       abi: [
         {
           type: "constructor",
           inputs: [
             {
-              name: "_lzEndpoint",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "_initialOwner",
+              name: "_owner",
               type: "address",
               internalType: "address",
             },
@@ -26,21 +21,12 @@ const deployedContracts = {
           stateMutability: "nonpayable",
         },
         {
-          type: "function",
-          name: "DEFAULT_PAYLOAD_SIZE_LIMIT",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
+          type: "receive",
+          stateMutability: "payable",
         },
         {
           type: "function",
-          name: "data",
+          name: "greeting",
           inputs: [],
           outputs: [
             {
@@ -50,223 +36,6 @@ const deployedContracts = {
             },
           ],
           stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "failedMessages",
-          inputs: [
-            {
-              name: "",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "",
-              type: "bytes",
-              internalType: "bytes",
-            },
-            {
-              name: "",
-              type: "uint64",
-              internalType: "uint64",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "bytes32",
-              internalType: "bytes32",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "forceResumeReceive",
-          inputs: [
-            {
-              name: "_srcChainId",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_srcAddress",
-              type: "bytes",
-              internalType: "bytes",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "getConfig",
-          inputs: [
-            {
-              name: "_version",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_chainId",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "_configType",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "bytes",
-              internalType: "bytes",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "getTrustedRemoteAddress",
-          inputs: [
-            {
-              name: "_remoteChainId",
-              type: "uint16",
-              internalType: "uint16",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "bytes",
-              internalType: "bytes",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "isTrustedRemote",
-          inputs: [
-            {
-              name: "_srcChainId",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_srcAddress",
-              type: "bytes",
-              internalType: "bytes",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "bool",
-              internalType: "bool",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "lzEndpoint",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "address",
-              internalType: "contract ILayerZeroEndpoint",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "lzReceive",
-          inputs: [
-            {
-              name: "_srcChainId",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_srcAddress",
-              type: "bytes",
-              internalType: "bytes",
-            },
-            {
-              name: "_nonce",
-              type: "uint64",
-              internalType: "uint64",
-            },
-            {
-              name: "_payload",
-              type: "bytes",
-              internalType: "bytes",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "minDstGasLookup",
-          inputs: [
-            {
-              name: "",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "",
-              type: "uint16",
-              internalType: "uint16",
-            },
-          ],
-          outputs: [
-            {
-              name: "",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "nonblockingLzReceive",
-          inputs: [
-            {
-              name: "_srcChainId",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_srcAddress",
-              type: "bytes",
-              internalType: "bytes",
-            },
-            {
-              name: "_nonce",
-              type: "uint64",
-              internalType: "uint64",
-            },
-            {
-              name: "_payload",
-              type: "bytes",
-              internalType: "bytes",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
         },
         {
           type: "function",
@@ -283,77 +52,23 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "payloadSizeLimitLookup",
-          inputs: [
-            {
-              name: "",
-              type: "uint16",
-              internalType: "uint16",
-            },
-          ],
+          name: "premium",
+          inputs: [],
           outputs: [
             {
               name: "",
-              type: "uint256",
-              internalType: "uint256",
+              type: "bool",
+              internalType: "bool",
             },
           ],
           stateMutability: "view",
         },
         {
           type: "function",
-          name: "precrime",
-          inputs: [],
-          outputs: [
-            {
-              name: "",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "renounceOwnership",
-          inputs: [],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "retryMessage",
+          name: "setGreeting",
           inputs: [
             {
-              name: "_srcChainId",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_srcAddress",
-              type: "bytes",
-              internalType: "bytes",
-            },
-            {
-              name: "_nonce",
-              type: "uint64",
-              internalType: "uint64",
-            },
-            {
-              name: "_payload",
-              type: "bytes",
-              internalType: "bytes",
-            },
-          ],
-          outputs: [],
-          stateMutability: "payable",
-        },
-        {
-          type: "function",
-          name: "sendMessage",
-          inputs: [
-            {
-              name: "_message",
+              name: "_newGreeting",
               type: "string",
               internalType: "string",
             },
@@ -363,285 +78,67 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "setConfig",
-          inputs: [
-            {
-              name: "_version",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_chainId",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_configType",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "_config",
-              type: "bytes",
-              internalType: "bytes",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "setMinDstGas",
-          inputs: [
-            {
-              name: "_dstChainId",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_packetType",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_minGas",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "setPayloadSizeLimit",
-          inputs: [
-            {
-              name: "_dstChainId",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_size",
-              type: "uint256",
-              internalType: "uint256",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "setPrecrime",
-          inputs: [
-            {
-              name: "_precrime",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "setReceiveVersion",
-          inputs: [
-            {
-              name: "_version",
-              type: "uint16",
-              internalType: "uint16",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "setSendVersion",
-          inputs: [
-            {
-              name: "_version",
-              type: "uint16",
-              internalType: "uint16",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "setTrustedRemote",
-          inputs: [
-            {
-              name: "_remoteChainId",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_path",
-              type: "bytes",
-              internalType: "bytes",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "setTrustedRemoteAddress",
-          inputs: [
-            {
-              name: "_remoteChainId",
-              type: "uint16",
-              internalType: "uint16",
-            },
-            {
-              name: "_remoteAddress",
-              type: "bytes",
-              internalType: "bytes",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "transferOwnership",
-          inputs: [
-            {
-              name: "newOwner",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-        {
-          type: "function",
-          name: "trustedRemoteLookup",
-          inputs: [
-            {
-              name: "",
-              type: "uint16",
-              internalType: "uint16",
-            },
-          ],
+          name: "totalCounter",
+          inputs: [],
           outputs: [
             {
               name: "",
-              type: "bytes",
-              internalType: "bytes",
+              type: "uint256",
+              internalType: "uint256",
             },
           ],
           stateMutability: "view",
         },
         {
-          type: "event",
-          name: "MessageFailed",
+          type: "function",
+          name: "userGreetingCounter",
           inputs: [
             {
-              name: "_srcChainId",
-              type: "uint16",
-              indexed: false,
-              internalType: "uint16",
-            },
-            {
-              name: "_srcAddress",
-              type: "bytes",
-              indexed: false,
-              internalType: "bytes",
-            },
-            {
-              name: "_nonce",
-              type: "uint64",
-              indexed: false,
-              internalType: "uint64",
-            },
-            {
-              name: "_payload",
-              type: "bytes",
-              indexed: false,
-              internalType: "bytes",
-            },
-            {
-              name: "_reason",
-              type: "bytes",
-              indexed: false,
-              internalType: "bytes",
+              name: "",
+              type: "address",
+              internalType: "address",
             },
           ],
-          anonymous: false,
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "withdraw",
+          inputs: [],
+          outputs: [],
+          stateMutability: "nonpayable",
         },
         {
           type: "event",
-          name: "OwnershipTransferred",
+          name: "GreetingChange",
           inputs: [
             {
-              name: "previousOwner",
+              name: "greetingSetter",
               type: "address",
               indexed: true,
               internalType: "address",
             },
             {
-              name: "newOwner",
-              type: "address",
-              indexed: true,
-              internalType: "address",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "RetryMessageSuccess",
-          inputs: [
-            {
-              name: "_srcChainId",
-              type: "uint16",
+              name: "newGreeting",
+              type: "string",
               indexed: false,
-              internalType: "uint16",
+              internalType: "string",
             },
             {
-              name: "_srcAddress",
-              type: "bytes",
+              name: "premium",
+              type: "bool",
               indexed: false,
-              internalType: "bytes",
+              internalType: "bool",
             },
             {
-              name: "_nonce",
-              type: "uint64",
-              indexed: false,
-              internalType: "uint64",
-            },
-            {
-              name: "_payloadHash",
-              type: "bytes32",
-              indexed: false,
-              internalType: "bytes32",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "SetMinDstGas",
-          inputs: [
-            {
-              name: "_dstChainId",
-              type: "uint16",
-              indexed: false,
-              internalType: "uint16",
-            },
-            {
-              name: "_type",
-              type: "uint16",
-              indexed: false,
-              internalType: "uint16",
-            },
-            {
-              name: "_minDstGas",
+              name: "value",
               type: "uint256",
               indexed: false,
               internalType: "uint256",
@@ -649,127 +146,8 @@ const deployedContracts = {
           ],
           anonymous: false,
         },
-        {
-          type: "event",
-          name: "SetPrecrime",
-          inputs: [
-            {
-              name: "precrime",
-              type: "address",
-              indexed: false,
-              internalType: "address",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "SetTrustedRemote",
-          inputs: [
-            {
-              name: "_remoteChainId",
-              type: "uint16",
-              indexed: false,
-              internalType: "uint16",
-            },
-            {
-              name: "_path",
-              type: "bytes",
-              indexed: false,
-              internalType: "bytes",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "event",
-          name: "SetTrustedRemoteAddress",
-          inputs: [
-            {
-              name: "_remoteChainId",
-              type: "uint16",
-              indexed: false,
-              internalType: "uint16",
-            },
-            {
-              name: "_remoteAddress",
-              type: "bytes",
-              indexed: false,
-              internalType: "bytes",
-            },
-          ],
-          anonymous: false,
-        },
-        {
-          type: "error",
-          name: "OwnableInvalidOwner",
-          inputs: [
-            {
-              name: "owner",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
-        {
-          type: "error",
-          name: "OwnableUnauthorizedAccount",
-          inputs: [
-            {
-              name: "account",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-        },
       ],
-      inheritedFunctions: {
-        DEFAULT_PAYLOAD_SIZE_LIMIT:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        failedMessages:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        forceResumeReceive:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        getConfig: "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        getTrustedRemoteAddress:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        isTrustedRemote:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        lzEndpoint:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        lzReceive: "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        minDstGasLookup:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        nonblockingLzReceive:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        owner: "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        payloadSizeLimitLookup:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        precrime: "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        renounceOwnership:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        retryMessage:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        setConfig: "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        setMinDstGas:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        setPayloadSizeLimit:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        setPrecrime:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        setReceiveVersion:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        setSendVersion:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        setTrustedRemote:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        setTrustedRemoteAddress:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        transferOwnership:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-        trustedRemoteLookup:
-          "lib/solidity-examples/contracts/lzApp/NonblockingLzApp.sol",
-      },
+      inheritedFunctions: {},
     },
   },
 } as const;

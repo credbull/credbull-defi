@@ -2730,7 +2730,7 @@ const _abi = [
             },
         ],
         outputs: [],
-        stateMutability: "nonpayable",
+        stateMutability: "pure",
     },
     {
         type: "function",
@@ -2748,7 +2748,7 @@ const _abi = [
             },
         ],
         outputs: [],
-        stateMutability: "nonpayable",
+        stateMutability: "pure",
     },
     {
         type: "function",
@@ -2813,6 +2813,24 @@ const _abi = [
         type: "function",
         name: "clearMockedCalls",
         inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "cloneAccount",
+        inputs: [
+            {
+                name: "source",
+                type: "address",
+                internalType: "address",
+            },
+            {
+                name: "target",
+                type: "address",
+                internalType: "address",
+            },
+        ],
         outputs: [],
         stateMutability: "nonpayable",
     },
@@ -3281,6 +3299,32 @@ const _abi = [
     {
         type: "function",
         name: "deleteSnapshots",
+        inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "deleteStateSnapshot",
+        inputs: [
+            {
+                name: "snapshotId",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        outputs: [
+            {
+                name: "success",
+                type: "bool",
+                internalType: "bool",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "deleteStateSnapshots",
         inputs: [],
         outputs: [],
         stateMutability: "nonpayable",
@@ -5260,6 +5304,32 @@ const _abi = [
     },
     {
         type: "function",
+        name: "getScriptWallets",
+        inputs: [],
+        outputs: [
+            {
+                name: "wallets",
+                type: "address[]",
+                internalType: "address[]",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "getWallets",
+        inputs: [],
+        outputs: [
+            {
+                name: "wallets",
+                type: "address[]",
+                internalType: "address[]",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
         name: "indexOf",
         inputs: [
             {
@@ -5689,6 +5759,57 @@ const _abi = [
                 name: "revertData",
                 type: "bytes",
                 internalType: "bytes",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "mockCalls",
+        inputs: [
+            {
+                name: "callee",
+                type: "address",
+                internalType: "address",
+            },
+            {
+                name: "msgValue",
+                type: "uint256",
+                internalType: "uint256",
+            },
+            {
+                name: "data",
+                type: "bytes",
+                internalType: "bytes",
+            },
+            {
+                name: "returnData",
+                type: "bytes[]",
+                internalType: "bytes[]",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "mockCalls",
+        inputs: [
+            {
+                name: "callee",
+                type: "address",
+                internalType: "address",
+            },
+            {
+                name: "data",
+                type: "bytes",
+                internalType: "bytes",
+            },
+            {
+                name: "returnData",
+                type: "bytes[]",
+                internalType: "bytes[]",
             },
         ],
         outputs: [],
@@ -7051,6 +7172,32 @@ const _abi = [
     },
     {
         type: "function",
+        name: "randomBytes4",
+        inputs: [],
+        outputs: [
+            {
+                name: "",
+                type: "bytes4",
+                internalType: "bytes4",
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "randomBytes8",
+        inputs: [],
+        outputs: [
+            {
+                name: "",
+                type: "bytes8",
+                internalType: "bytes8",
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
         name: "randomInt",
         inputs: [],
         outputs: [
@@ -7424,6 +7571,69 @@ const _abi = [
     },
     {
         type: "function",
+        name: "rememberKeys",
+        inputs: [
+            {
+                name: "mnemonic",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "derivationPath",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "count",
+                type: "uint32",
+                internalType: "uint32",
+            },
+        ],
+        outputs: [
+            {
+                name: "keyAddrs",
+                type: "address[]",
+                internalType: "address[]",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "rememberKeys",
+        inputs: [
+            {
+                name: "mnemonic",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "derivationPath",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "language",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "count",
+                type: "uint32",
+                internalType: "uint32",
+            },
+        ],
+        outputs: [
+            {
+                name: "keyAddrs",
+                type: "address[]",
+                internalType: "address[]",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
         name: "removeDir",
         inputs: [
             {
@@ -7538,6 +7748,44 @@ const _abi = [
     {
         type: "function",
         name: "revertToAndDelete",
+        inputs: [
+            {
+                name: "snapshotId",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        outputs: [
+            {
+                name: "success",
+                type: "bool",
+                internalType: "bool",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "revertToState",
+        inputs: [
+            {
+                name: "snapshotId",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        outputs: [
+            {
+                name: "success",
+                type: "bool",
+                internalType: "bool",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "revertToStateAndDelete",
         inputs: [
             {
                 name: "snapshotId",
@@ -8754,6 +9002,103 @@ const _abi = [
     },
     {
         type: "function",
+        name: "snapshotGasLastCall",
+        inputs: [
+            {
+                name: "group",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "gasUsed",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "snapshotGasLastCall",
+        inputs: [
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "gasUsed",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "snapshotState",
+        inputs: [],
+        outputs: [
+            {
+                name: "snapshotId",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "snapshotValue",
+        inputs: [
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "value",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "snapshotValue",
+        inputs: [
+            {
+                name: "group",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "value",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
         name: "split",
         inputs: [
             {
@@ -8811,6 +9156,13 @@ const _abi = [
     },
     {
         type: "function",
+        name: "startDebugTraceRecording",
+        inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
         name: "startMappingRecording",
         inputs: [],
         outputs: [],
@@ -8849,9 +9201,85 @@ const _abi = [
     },
     {
         type: "function",
+        name: "startSnapshotGas",
+        inputs: [
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "startSnapshotGas",
+        inputs: [
+            {
+                name: "group",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
         name: "startStateDiffRecording",
         inputs: [],
         outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "stopAndReturnDebugTraceRecording",
+        inputs: [],
+        outputs: [
+            {
+                name: "step",
+                type: "tuple[]",
+                internalType: "struct VmSafe.DebugStep[]",
+                components: [
+                    {
+                        name: "stack",
+                        type: "uint256[]",
+                        internalType: "uint256[]",
+                    },
+                    {
+                        name: "memoryInput",
+                        type: "bytes",
+                        internalType: "bytes",
+                    },
+                    {
+                        name: "opcode",
+                        type: "uint8",
+                        internalType: "uint8",
+                    },
+                    {
+                        name: "depth",
+                        type: "uint64",
+                        internalType: "uint64",
+                    },
+                    {
+                        name: "isOutOfGas",
+                        type: "bool",
+                        internalType: "bool",
+                    },
+                    {
+                        name: "contractAddr",
+                        type: "address",
+                        internalType: "address",
+                    },
+                ],
+            },
+        ],
         stateMutability: "nonpayable",
     },
     {
@@ -9004,6 +9432,62 @@ const _abi = [
         name: "stopPrank",
         inputs: [],
         outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "stopSnapshotGas",
+        inputs: [
+            {
+                name: "group",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "gasUsed",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "stopSnapshotGas",
+        inputs: [
+            {
+                name: "name",
+                type: "string",
+                internalType: "string",
+            },
+        ],
+        outputs: [
+            {
+                name: "gasUsed",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "stopSnapshotGas",
+        inputs: [],
+        outputs: [
+            {
+                name: "gasUsed",
+                type: "uint256",
+                internalType: "uint256",
+            },
+        ],
         stateMutability: "nonpayable",
     },
     {

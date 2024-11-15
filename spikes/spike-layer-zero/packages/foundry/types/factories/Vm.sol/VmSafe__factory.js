@@ -2678,7 +2678,7 @@ const _abi = [
             },
         ],
         outputs: [],
-        stateMutability: "nonpayable",
+        stateMutability: "pure",
     },
     {
         type: "function",
@@ -2696,7 +2696,7 @@ const _abi = [
             },
         ],
         outputs: [],
-        stateMutability: "nonpayable",
+        stateMutability: "pure",
     },
     {
         type: "function",
@@ -4392,6 +4392,32 @@ const _abi = [
     },
     {
         type: "function",
+        name: "getScriptWallets",
+        inputs: [],
+        outputs: [
+            {
+                name: "wallets",
+                type: "address[]",
+                internalType: "address[]",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "getWallets",
+        inputs: [],
+        outputs: [
+            {
+                name: "wallets",
+                type: "address[]",
+                internalType: "address[]",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
         name: "indexOf",
         inputs: [
             {
@@ -5902,6 +5928,32 @@ const _abi = [
     },
     {
         type: "function",
+        name: "randomBytes4",
+        inputs: [],
+        outputs: [
+            {
+                name: "",
+                type: "bytes4",
+                internalType: "bytes4",
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "randomBytes8",
+        inputs: [],
+        outputs: [
+            {
+                name: "",
+                type: "bytes8",
+                internalType: "bytes8",
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
         name: "randomInt",
         inputs: [],
         outputs: [
@@ -6246,6 +6298,69 @@ const _abi = [
                 name: "keyAddr",
                 type: "address",
                 internalType: "address",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "rememberKeys",
+        inputs: [
+            {
+                name: "mnemonic",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "derivationPath",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "count",
+                type: "uint32",
+                internalType: "uint32",
+            },
+        ],
+        outputs: [
+            {
+                name: "keyAddrs",
+                type: "address[]",
+                internalType: "address[]",
+            },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "rememberKeys",
+        inputs: [
+            {
+                name: "mnemonic",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "derivationPath",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "language",
+                type: "string",
+                internalType: "string",
+            },
+            {
+                name: "count",
+                type: "uint32",
+                internalType: "uint32",
+            },
+        ],
+        outputs: [
+            {
+                name: "keyAddrs",
+                type: "address[]",
+                internalType: "address[]",
             },
         ],
         stateMutability: "nonpayable",
@@ -7376,6 +7491,13 @@ const _abi = [
     },
     {
         type: "function",
+        name: "startDebugTraceRecording",
+        inputs: [],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
         name: "startMappingRecording",
         inputs: [],
         outputs: [],
@@ -7386,6 +7508,51 @@ const _abi = [
         name: "startStateDiffRecording",
         inputs: [],
         outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "stopAndReturnDebugTraceRecording",
+        inputs: [],
+        outputs: [
+            {
+                name: "step",
+                type: "tuple[]",
+                internalType: "struct VmSafe.DebugStep[]",
+                components: [
+                    {
+                        name: "stack",
+                        type: "uint256[]",
+                        internalType: "uint256[]",
+                    },
+                    {
+                        name: "memoryInput",
+                        type: "bytes",
+                        internalType: "bytes",
+                    },
+                    {
+                        name: "opcode",
+                        type: "uint8",
+                        internalType: "uint8",
+                    },
+                    {
+                        name: "depth",
+                        type: "uint64",
+                        internalType: "uint64",
+                    },
+                    {
+                        name: "isOutOfGas",
+                        type: "bool",
+                        internalType: "bool",
+                    },
+                    {
+                        name: "contractAddr",
+                        type: "address",
+                        internalType: "address",
+                    },
+                ],
+            },
+        ],
         stateMutability: "nonpayable",
     },
     {

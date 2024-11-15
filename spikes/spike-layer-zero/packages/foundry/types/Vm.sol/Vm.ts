@@ -159,6 +159,31 @@ export declare namespace VmSafe {
 
   export type RpcStructOutput = [string, string] & { key: string; url: string };
 
+  export type DebugStepStruct = {
+    stack: BigNumberish[];
+    memoryInput: BytesLike;
+    opcode: BigNumberish;
+    depth: BigNumberish;
+    isOutOfGas: boolean;
+    contractAddr: string;
+  };
+
+  export type DebugStepStructOutput = [
+    BigNumber[],
+    string,
+    number,
+    BigNumber,
+    boolean,
+    string
+  ] & {
+    stack: BigNumber[];
+    memoryInput: string;
+    opcode: number;
+    depth: BigNumber;
+    isOutOfGas: boolean;
+    contractAddr: string;
+  };
+
   export type ChainInfoStruct = { forkId: BigNumberish; chainId: BigNumberish };
 
   export type ChainInfoStructOutput = [BigNumber, BigNumber] & {
@@ -384,6 +409,7 @@ export interface VmInterface extends utils.Interface {
     "broadcastRawTransaction(bytes)": FunctionFragment;
     "chainId(uint256)": FunctionFragment;
     "clearMockedCalls()": FunctionFragment;
+    "cloneAccount(address,address)": FunctionFragment;
     "closeFile(string)": FunctionFragment;
     "coinbase(address)": FunctionFragment;
     "computeCreate2Address(bytes32,bytes32)": FunctionFragment;
@@ -404,6 +430,8 @@ export interface VmInterface extends utils.Interface {
     "deal(address,uint256)": FunctionFragment;
     "deleteSnapshot(uint256)": FunctionFragment;
     "deleteSnapshots()": FunctionFragment;
+    "deleteStateSnapshot(uint256)": FunctionFragment;
+    "deleteStateSnapshots()": FunctionFragment;
     "deployCode(string,bytes)": FunctionFragment;
     "deployCode(string)": FunctionFragment;
     "deriveKey(string,string,uint32,string)": FunctionFragment;
@@ -490,6 +518,8 @@ export interface VmInterface extends utils.Interface {
     "getNonce(address)": FunctionFragment;
     "getNonce((address,uint256,uint256,uint256))": FunctionFragment;
     "getRecordedLogs()": FunctionFragment;
+    "getScriptWallets()": FunctionFragment;
+    "getWallets()": FunctionFragment;
     "indexOf(string,string)": FunctionFragment;
     "isContext(uint8)": FunctionFragment;
     "isDir(string)": FunctionFragment;
@@ -510,6 +540,8 @@ export interface VmInterface extends utils.Interface {
     "mockCall(address,bytes,bytes)": FunctionFragment;
     "mockCallRevert(address,uint256,bytes,bytes)": FunctionFragment;
     "mockCallRevert(address,bytes,bytes)": FunctionFragment;
+    "mockCalls(address,uint256,bytes,bytes[])": FunctionFragment;
+    "mockCalls(address,bytes,bytes[])": FunctionFragment;
     "mockFunction(address,address,bytes)": FunctionFragment;
     "parseAddress(string)": FunctionFragment;
     "parseBool(string)": FunctionFragment;
@@ -573,6 +605,8 @@ export interface VmInterface extends utils.Interface {
     "randomAddress()": FunctionFragment;
     "randomBool()": FunctionFragment;
     "randomBytes(uint256)": FunctionFragment;
+    "randomBytes4()": FunctionFragment;
+    "randomBytes8()": FunctionFragment;
     "randomInt()": FunctionFragment;
     "randomInt(uint256)": FunctionFragment;
     "randomUint()": FunctionFragment;
@@ -589,6 +623,8 @@ export interface VmInterface extends utils.Interface {
     "record()": FunctionFragment;
     "recordLogs()": FunctionFragment;
     "rememberKey(uint256)": FunctionFragment;
+    "rememberKeys(string,string,uint32)": FunctionFragment;
+    "rememberKeys(string,string,string,uint32)": FunctionFragment;
     "removeDir(string,bool)": FunctionFragment;
     "removeFile(string)": FunctionFragment;
     "replace(string,string,string)": FunctionFragment;
@@ -598,6 +634,8 @@ export interface VmInterface extends utils.Interface {
     "resumeTracing()": FunctionFragment;
     "revertTo(uint256)": FunctionFragment;
     "revertToAndDelete(uint256)": FunctionFragment;
+    "revertToState(uint256)": FunctionFragment;
+    "revertToStateAndDelete(uint256)": FunctionFragment;
     "revokePersistent(address[])": FunctionFragment;
     "revokePersistent(address)": FunctionFragment;
     "roll(uint256)": FunctionFragment;
@@ -647,19 +685,31 @@ export interface VmInterface extends utils.Interface {
     "skip(bool)": FunctionFragment;
     "sleep(uint256)": FunctionFragment;
     "snapshot()": FunctionFragment;
+    "snapshotGasLastCall(string,string)": FunctionFragment;
+    "snapshotGasLastCall(string)": FunctionFragment;
+    "snapshotState()": FunctionFragment;
+    "snapshotValue(string,uint256)": FunctionFragment;
+    "snapshotValue(string,string,uint256)": FunctionFragment;
     "split(string,string)": FunctionFragment;
     "startBroadcast()": FunctionFragment;
     "startBroadcast(address)": FunctionFragment;
     "startBroadcast(uint256)": FunctionFragment;
+    "startDebugTraceRecording()": FunctionFragment;
     "startMappingRecording()": FunctionFragment;
     "startPrank(address)": FunctionFragment;
     "startPrank(address,address)": FunctionFragment;
+    "startSnapshotGas(string)": FunctionFragment;
+    "startSnapshotGas(string,string)": FunctionFragment;
     "startStateDiffRecording()": FunctionFragment;
+    "stopAndReturnDebugTraceRecording()": FunctionFragment;
     "stopAndReturnStateDiff()": FunctionFragment;
     "stopBroadcast()": FunctionFragment;
     "stopExpectSafeMemory()": FunctionFragment;
     "stopMappingRecording()": FunctionFragment;
     "stopPrank()": FunctionFragment;
+    "stopSnapshotGas(string,string)": FunctionFragment;
+    "stopSnapshotGas(string)": FunctionFragment;
+    "stopSnapshotGas()": FunctionFragment;
     "store(address,bytes32,bytes32)": FunctionFragment;
     "toBase64(string)": FunctionFragment;
     "toBase64(bytes)": FunctionFragment;
@@ -823,6 +873,7 @@ export interface VmInterface extends utils.Interface {
       | "broadcastRawTransaction"
       | "chainId"
       | "clearMockedCalls"
+      | "cloneAccount"
       | "closeFile"
       | "coinbase"
       | "computeCreate2Address(bytes32,bytes32)"
@@ -843,6 +894,8 @@ export interface VmInterface extends utils.Interface {
       | "deal"
       | "deleteSnapshot"
       | "deleteSnapshots"
+      | "deleteStateSnapshot"
+      | "deleteStateSnapshots"
       | "deployCode(string,bytes)"
       | "deployCode(string)"
       | "deriveKey(string,string,uint32,string)"
@@ -929,6 +982,8 @@ export interface VmInterface extends utils.Interface {
       | "getNonce(address)"
       | "getNonce((address,uint256,uint256,uint256))"
       | "getRecordedLogs"
+      | "getScriptWallets"
+      | "getWallets"
       | "indexOf"
       | "isContext"
       | "isDir"
@@ -949,6 +1004,8 @@ export interface VmInterface extends utils.Interface {
       | "mockCall(address,bytes,bytes)"
       | "mockCallRevert(address,uint256,bytes,bytes)"
       | "mockCallRevert(address,bytes,bytes)"
+      | "mockCalls(address,uint256,bytes,bytes[])"
+      | "mockCalls(address,bytes,bytes[])"
       | "mockFunction"
       | "parseAddress"
       | "parseBool"
@@ -1012,6 +1069,8 @@ export interface VmInterface extends utils.Interface {
       | "randomAddress"
       | "randomBool"
       | "randomBytes"
+      | "randomBytes4"
+      | "randomBytes8"
       | "randomInt()"
       | "randomInt(uint256)"
       | "randomUint()"
@@ -1028,6 +1087,8 @@ export interface VmInterface extends utils.Interface {
       | "record"
       | "recordLogs"
       | "rememberKey"
+      | "rememberKeys(string,string,uint32)"
+      | "rememberKeys(string,string,string,uint32)"
       | "removeDir"
       | "removeFile"
       | "replace"
@@ -1037,6 +1098,8 @@ export interface VmInterface extends utils.Interface {
       | "resumeTracing"
       | "revertTo"
       | "revertToAndDelete"
+      | "revertToState"
+      | "revertToStateAndDelete"
       | "revokePersistent(address[])"
       | "revokePersistent(address)"
       | "roll"
@@ -1086,19 +1149,31 @@ export interface VmInterface extends utils.Interface {
       | "skip(bool)"
       | "sleep"
       | "snapshot"
+      | "snapshotGasLastCall(string,string)"
+      | "snapshotGasLastCall(string)"
+      | "snapshotState"
+      | "snapshotValue(string,uint256)"
+      | "snapshotValue(string,string,uint256)"
       | "split"
       | "startBroadcast()"
       | "startBroadcast(address)"
       | "startBroadcast(uint256)"
+      | "startDebugTraceRecording"
       | "startMappingRecording"
       | "startPrank(address)"
       | "startPrank(address,address)"
+      | "startSnapshotGas(string)"
+      | "startSnapshotGas(string,string)"
       | "startStateDiffRecording"
+      | "stopAndReturnDebugTraceRecording"
       | "stopAndReturnStateDiff"
       | "stopBroadcast"
       | "stopExpectSafeMemory"
       | "stopMappingRecording"
       | "stopPrank"
+      | "stopSnapshotGas(string,string)"
+      | "stopSnapshotGas(string)"
+      | "stopSnapshotGas()"
       | "store"
       | "toBase64(string)"
       | "toBase64(bytes)"
@@ -1647,6 +1722,10 @@ export interface VmInterface extends utils.Interface {
     functionFragment: "clearMockedCalls",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "cloneAccount",
+    values: [string, string]
+  ): string;
   encodeFunctionData(functionFragment: "closeFile", values: [string]): string;
   encodeFunctionData(functionFragment: "coinbase", values: [string]): string;
   encodeFunctionData(
@@ -1719,6 +1798,14 @@ export interface VmInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "deleteSnapshots",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "deleteStateSnapshot",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "deleteStateSnapshots",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -2039,6 +2126,14 @@ export interface VmInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "getScriptWallets",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getWallets",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "indexOf",
     values: [string, string]
   ): string;
@@ -2108,6 +2203,14 @@ export interface VmInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "mockCallRevert(address,bytes,bytes)",
     values: [string, BytesLike, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "mockCalls(address,uint256,bytes,bytes[])",
+    values: [string, BigNumberish, BytesLike, BytesLike[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "mockCalls(address,bytes,bytes[])",
+    values: [string, BytesLike, BytesLike[]]
   ): string;
   encodeFunctionData(
     functionFragment: "mockFunction",
@@ -2344,6 +2447,14 @@ export interface VmInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "randomBytes4",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "randomBytes8",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "randomInt()",
     values?: undefined
   ): string;
@@ -2396,6 +2507,14 @@ export interface VmInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "rememberKeys(string,string,uint32)",
+    values: [string, string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "rememberKeys(string,string,string,uint32)",
+    values: [string, string, string, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "removeDir",
     values: [string, boolean]
   ): string;
@@ -2423,6 +2542,14 @@ export interface VmInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "revertToAndDelete",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "revertToState",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "revertToStateAndDelete",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -2604,6 +2731,26 @@ export interface VmInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "sleep", values: [BigNumberish]): string;
   encodeFunctionData(functionFragment: "snapshot", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "snapshotGasLastCall(string,string)",
+    values: [string, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "snapshotGasLastCall(string)",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "snapshotState",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "snapshotValue(string,uint256)",
+    values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "snapshotValue(string,string,uint256)",
+    values: [string, string, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "split",
     values: [string, string]
   ): string;
@@ -2620,6 +2767,10 @@ export interface VmInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "startDebugTraceRecording",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "startMappingRecording",
     values?: undefined
   ): string;
@@ -2632,7 +2783,19 @@ export interface VmInterface extends utils.Interface {
     values: [string, string]
   ): string;
   encodeFunctionData(
+    functionFragment: "startSnapshotGas(string)",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "startSnapshotGas(string,string)",
+    values: [string, string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "startStateDiffRecording",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "stopAndReturnDebugTraceRecording",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -2652,6 +2815,18 @@ export interface VmInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "stopPrank", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "stopSnapshotGas(string,string)",
+    values: [string, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "stopSnapshotGas(string)",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "stopSnapshotGas()",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "store",
     values: [string, BytesLike, BytesLike]
@@ -3253,6 +3428,10 @@ export interface VmInterface extends utils.Interface {
     functionFragment: "clearMockedCalls",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "cloneAccount",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "closeFile", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "coinbase", data: BytesLike): Result;
   decodeFunctionResult(
@@ -3316,6 +3495,14 @@ export interface VmInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "deleteSnapshots",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "deleteStateSnapshot",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "deleteStateSnapshots",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -3632,6 +3819,11 @@ export interface VmInterface extends utils.Interface {
     functionFragment: "getRecordedLogs",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "getScriptWallets",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "getWallets", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "indexOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "isContext", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "isDir", data: BytesLike): Result;
@@ -3686,6 +3878,14 @@ export interface VmInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "mockCallRevert(address,bytes,bytes)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "mockCalls(address,uint256,bytes,bytes[])",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "mockCalls(address,bytes,bytes[])",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -3920,6 +4120,14 @@ export interface VmInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "randomBytes4",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "randomBytes8",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "randomInt()",
     data: BytesLike
   ): Result;
@@ -3968,6 +4176,14 @@ export interface VmInterface extends utils.Interface {
     functionFragment: "rememberKey",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "rememberKeys(string,string,uint32)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "rememberKeys(string,string,string,uint32)",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "removeDir", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "removeFile", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "replace", data: BytesLike): Result;
@@ -3987,6 +4203,14 @@ export interface VmInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "revertTo", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "revertToAndDelete",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "revertToState",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "revertToStateAndDelete",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -4155,6 +4379,26 @@ export interface VmInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "skip(bool)", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "sleep", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "snapshot", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "snapshotGasLastCall(string,string)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "snapshotGasLastCall(string)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "snapshotState",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "snapshotValue(string,uint256)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "snapshotValue(string,string,uint256)",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "split", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "startBroadcast()",
@@ -4166,6 +4410,10 @@ export interface VmInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "startBroadcast(uint256)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "startDebugTraceRecording",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -4181,7 +4429,19 @@ export interface VmInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "startSnapshotGas(string)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "startSnapshotGas(string,string)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "startStateDiffRecording",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "stopAndReturnDebugTraceRecording",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -4201,6 +4461,18 @@ export interface VmInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "stopPrank", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "stopSnapshotGas(string,string)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "stopSnapshotGas(string)",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "stopSnapshotGas()",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "store", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "toBase64(string)",
@@ -5149,14 +5421,14 @@ export interface Vm extends BaseContract {
 
     "breakpoint(string)"(
       char: string,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      overrides?: CallOverrides
+    ): Promise<[void]>;
 
     "breakpoint(string,bool)"(
       char: string,
       value: boolean,
-      overrides?: Overrides & { from?: string }
-    ): Promise<ContractTransaction>;
+      overrides?: CallOverrides
+    ): Promise<[void]>;
 
     "broadcast()"(
       overrides?: Overrides & { from?: string }
@@ -5183,6 +5455,12 @@ export interface Vm extends BaseContract {
     ): Promise<ContractTransaction>;
 
     clearMockedCalls(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    cloneAccount(
+      source: string,
+      target: string,
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
@@ -5295,6 +5573,15 @@ export interface Vm extends BaseContract {
     ): Promise<ContractTransaction>;
 
     deleteSnapshots(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    deleteStateSnapshot(
+      snapshotId: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    deleteStateSnapshots(
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
@@ -5808,6 +6095,14 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
+    getScriptWallets(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    getWallets(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
     indexOf(
       input: string,
       key: string,
@@ -5923,6 +6218,21 @@ export interface Vm extends BaseContract {
       callee: string,
       data: BytesLike,
       revertData: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    "mockCalls(address,uint256,bytes,bytes[])"(
+      callee: string,
+      msgValue: BigNumberish,
+      data: BytesLike,
+      returnData: BytesLike[],
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    "mockCalls(address,bytes,bytes[])"(
+      callee: string,
+      data: BytesLike,
+      returnData: BytesLike[],
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
@@ -6279,6 +6589,10 @@ export interface Vm extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
+    randomBytes4(overrides?: CallOverrides): Promise<[string]>;
+
+    randomBytes8(overrides?: CallOverrides): Promise<[string]>;
+
     "randomInt()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     "randomInt(uint256)"(
@@ -6368,6 +6682,21 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
+    "rememberKeys(string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      count: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    "rememberKeys(string,string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      language: string,
+      count: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
     removeDir(
       path: string,
       recursive: boolean,
@@ -6407,6 +6736,16 @@ export interface Vm extends BaseContract {
     ): Promise<ContractTransaction>;
 
     revertToAndDelete(
+      snapshotId: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    revertToState(
+      snapshotId: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    revertToStateAndDelete(
       snapshotId: BigNumberish,
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
@@ -6705,6 +7044,34 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
+    "snapshotGasLastCall(string,string)"(
+      group: string,
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    "snapshotGasLastCall(string)"(
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    snapshotState(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    "snapshotValue(string,uint256)"(
+      name: string,
+      value: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    "snapshotValue(string,string,uint256)"(
+      group: string,
+      name: string,
+      value: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
     split(
       input: string,
       delimiter: string,
@@ -6725,6 +7092,10 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
+    startDebugTraceRecording(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
     startMappingRecording(
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
@@ -6740,7 +7111,22 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
+    "startSnapshotGas(string)"(
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    "startSnapshotGas(string,string)"(
+      group: string,
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
     startStateDiffRecording(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    stopAndReturnDebugTraceRecording(
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
@@ -6761,6 +7147,21 @@ export interface Vm extends BaseContract {
     ): Promise<ContractTransaction>;
 
     stopPrank(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    "stopSnapshotGas(string,string)"(
+      group: string,
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    "stopSnapshotGas(string)"(
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    "stopSnapshotGas()"(
       overrides?: Overrides & { from?: string }
     ): Promise<ContractTransaction>;
 
@@ -7737,16 +8138,13 @@ export interface Vm extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
-  "breakpoint(string)"(
-    char: string,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+  "breakpoint(string)"(char: string, overrides?: CallOverrides): Promise<void>;
 
   "breakpoint(string,bool)"(
     char: string,
     value: boolean,
-    overrides?: Overrides & { from?: string }
-  ): Promise<ContractTransaction>;
+    overrides?: CallOverrides
+  ): Promise<void>;
 
   "broadcast()"(
     overrides?: Overrides & { from?: string }
@@ -7773,6 +8171,12 @@ export interface Vm extends BaseContract {
   ): Promise<ContractTransaction>;
 
   clearMockedCalls(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  cloneAccount(
+    source: string,
+    target: string,
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
@@ -7885,6 +8289,15 @@ export interface Vm extends BaseContract {
   ): Promise<ContractTransaction>;
 
   deleteSnapshots(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  deleteStateSnapshot(
+    snapshotId: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  deleteStateSnapshots(
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
@@ -8363,6 +8776,14 @@ export interface Vm extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
+  getScriptWallets(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  getWallets(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
   indexOf(
     input: string,
     key: string,
@@ -8470,6 +8891,21 @@ export interface Vm extends BaseContract {
     callee: string,
     data: BytesLike,
     revertData: BytesLike,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "mockCalls(address,uint256,bytes,bytes[])"(
+    callee: string,
+    msgValue: BigNumberish,
+    data: BytesLike,
+    returnData: BytesLike[],
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "mockCalls(address,bytes,bytes[])"(
+    callee: string,
+    data: BytesLike,
+    returnData: BytesLike[],
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
@@ -8815,6 +9251,10 @@ export interface Vm extends BaseContract {
 
   randomBytes(len: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
+  randomBytes4(overrides?: CallOverrides): Promise<string>;
+
+  randomBytes8(overrides?: CallOverrides): Promise<string>;
+
   "randomInt()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   "randomInt(uint256)"(
@@ -8880,6 +9320,21 @@ export interface Vm extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
+  "rememberKeys(string,string,uint32)"(
+    mnemonic: string,
+    derivationPath: string,
+    count: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "rememberKeys(string,string,string,uint32)"(
+    mnemonic: string,
+    derivationPath: string,
+    language: string,
+    count: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
   removeDir(
     path: string,
     recursive: boolean,
@@ -8919,6 +9374,16 @@ export interface Vm extends BaseContract {
   ): Promise<ContractTransaction>;
 
   revertToAndDelete(
+    snapshotId: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  revertToState(
+    snapshotId: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  revertToStateAndDelete(
     snapshotId: BigNumberish,
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
@@ -9210,6 +9675,34 @@ export interface Vm extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
+  "snapshotGasLastCall(string,string)"(
+    group: string,
+    name: string,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "snapshotGasLastCall(string)"(
+    name: string,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  snapshotState(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "snapshotValue(string,uint256)"(
+    name: string,
+    value: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "snapshotValue(string,string,uint256)"(
+    group: string,
+    name: string,
+    value: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
   split(
     input: string,
     delimiter: string,
@@ -9230,6 +9723,10 @@ export interface Vm extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
+  startDebugTraceRecording(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
   startMappingRecording(
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
@@ -9245,7 +9742,22 @@ export interface Vm extends BaseContract {
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
+  "startSnapshotGas(string)"(
+    name: string,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "startSnapshotGas(string,string)"(
+    group: string,
+    name: string,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
   startStateDiffRecording(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  stopAndReturnDebugTraceRecording(
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
@@ -9266,6 +9778,21 @@ export interface Vm extends BaseContract {
   ): Promise<ContractTransaction>;
 
   stopPrank(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "stopSnapshotGas(string,string)"(
+    group: string,
+    name: string,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "stopSnapshotGas(string)"(
+    name: string,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "stopSnapshotGas()"(
     overrides?: Overrides & { from?: string }
   ): Promise<ContractTransaction>;
 
@@ -10255,6 +10782,12 @@ export interface Vm extends BaseContract {
 
     clearMockedCalls(overrides?: CallOverrides): Promise<void>;
 
+    cloneAccount(
+      source: string,
+      target: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     closeFile(path: string, overrides?: CallOverrides): Promise<void>;
 
     coinbase(newCoinbase: string, overrides?: CallOverrides): Promise<void>;
@@ -10358,6 +10891,13 @@ export interface Vm extends BaseContract {
     ): Promise<boolean>;
 
     deleteSnapshots(overrides?: CallOverrides): Promise<void>;
+
+    deleteStateSnapshot(
+      snapshotId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    deleteStateSnapshots(overrides?: CallOverrides): Promise<void>;
 
     "deployCode(string,bytes)"(
       artifactPath: string,
@@ -10837,6 +11377,10 @@ export interface Vm extends BaseContract {
       overrides?: CallOverrides
     ): Promise<VmSafe.LogStructOutput[]>;
 
+    getScriptWallets(overrides?: CallOverrides): Promise<string[]>;
+
+    getWallets(overrides?: CallOverrides): Promise<string[]>;
+
     indexOf(
       input: string,
       key: string,
@@ -10941,6 +11485,21 @@ export interface Vm extends BaseContract {
       callee: string,
       data: BytesLike,
       revertData: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "mockCalls(address,uint256,bytes,bytes[])"(
+      callee: string,
+      msgValue: BigNumberish,
+      data: BytesLike,
+      returnData: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "mockCalls(address,bytes,bytes[])"(
+      callee: string,
+      data: BytesLike,
+      returnData: BytesLike[],
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -11285,6 +11844,10 @@ export interface Vm extends BaseContract {
 
     randomBytes(len: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
+    randomBytes4(overrides?: CallOverrides): Promise<string>;
+
+    randomBytes8(overrides?: CallOverrides): Promise<string>;
+
     "randomInt()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     "randomInt(uint256)"(
@@ -11350,6 +11913,21 @@ export interface Vm extends BaseContract {
       overrides?: CallOverrides
     ): Promise<string>;
 
+    "rememberKeys(string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string[]>;
+
+    "rememberKeys(string,string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      language: string,
+      count: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string[]>;
+
     removeDir(
       path: string,
       recursive: boolean,
@@ -11379,6 +11957,16 @@ export interface Vm extends BaseContract {
     ): Promise<boolean>;
 
     revertToAndDelete(
+      snapshotId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    revertToState(
+      snapshotId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    revertToStateAndDelete(
       snapshotId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<boolean>;
@@ -11656,6 +12244,32 @@ export interface Vm extends BaseContract {
 
     snapshot(overrides?: CallOverrides): Promise<BigNumber>;
 
+    "snapshotGasLastCall(string,string)"(
+      group: string,
+      name: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "snapshotGasLastCall(string)"(
+      name: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    snapshotState(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "snapshotValue(string,uint256)"(
+      name: string,
+      value: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "snapshotValue(string,string,uint256)"(
+      group: string,
+      name: string,
+      value: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     split(
       input: string,
       delimiter: string,
@@ -11674,6 +12288,8 @@ export interface Vm extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    startDebugTraceRecording(overrides?: CallOverrides): Promise<void>;
+
     startMappingRecording(overrides?: CallOverrides): Promise<void>;
 
     "startPrank(address)"(
@@ -11687,7 +12303,22 @@ export interface Vm extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    "startSnapshotGas(string)"(
+      name: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "startSnapshotGas(string,string)"(
+      group: string,
+      name: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     startStateDiffRecording(overrides?: CallOverrides): Promise<void>;
+
+    stopAndReturnDebugTraceRecording(
+      overrides?: CallOverrides
+    ): Promise<VmSafe.DebugStepStructOutput[]>;
 
     stopAndReturnStateDiff(
       overrides?: CallOverrides
@@ -11700,6 +12331,19 @@ export interface Vm extends BaseContract {
     stopMappingRecording(overrides?: CallOverrides): Promise<void>;
 
     stopPrank(overrides?: CallOverrides): Promise<void>;
+
+    "stopSnapshotGas(string,string)"(
+      group: string,
+      name: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "stopSnapshotGas(string)"(
+      name: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "stopSnapshotGas()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     store(
       target: string,
@@ -12668,13 +13312,13 @@ export interface Vm extends BaseContract {
 
     "breakpoint(string)"(
       char: string,
-      overrides?: Overrides & { from?: string }
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     "breakpoint(string,bool)"(
       char: string,
       value: boolean,
-      overrides?: Overrides & { from?: string }
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     "broadcast()"(
@@ -12702,6 +13346,12 @@ export interface Vm extends BaseContract {
     ): Promise<BigNumber>;
 
     clearMockedCalls(
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    cloneAccount(
+      source: string,
+      target: string,
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
@@ -12814,6 +13464,15 @@ export interface Vm extends BaseContract {
     ): Promise<BigNumber>;
 
     deleteSnapshots(
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    deleteStateSnapshot(
+      snapshotId: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    deleteStateSnapshots(
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
@@ -13304,6 +13963,12 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
+    getScriptWallets(
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    getWallets(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
+
     indexOf(
       input: string,
       key: string,
@@ -13417,6 +14082,21 @@ export interface Vm extends BaseContract {
       callee: string,
       data: BytesLike,
       revertData: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "mockCalls(address,uint256,bytes,bytes[])"(
+      callee: string,
+      msgValue: BigNumberish,
+      data: BytesLike,
+      returnData: BytesLike[],
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "mockCalls(address,bytes,bytes[])"(
+      callee: string,
+      data: BytesLike,
+      returnData: BytesLike[],
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
@@ -13769,6 +14449,10 @@ export interface Vm extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    randomBytes4(overrides?: CallOverrides): Promise<BigNumber>;
+
+    randomBytes8(overrides?: CallOverrides): Promise<BigNumber>;
+
     "randomInt()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     "randomInt(uint256)"(
@@ -13828,6 +14512,21 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
+    "rememberKeys(string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      count: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "rememberKeys(string,string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      language: string,
+      count: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
     removeDir(
       path: string,
       recursive: boolean,
@@ -13867,6 +14566,16 @@ export interface Vm extends BaseContract {
     ): Promise<BigNumber>;
 
     revertToAndDelete(
+      snapshotId: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    revertToState(
+      snapshotId: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    revertToStateAndDelete(
       snapshotId: BigNumberish,
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
@@ -14156,6 +14865,34 @@ export interface Vm extends BaseContract {
 
     snapshot(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
 
+    "snapshotGasLastCall(string,string)"(
+      group: string,
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "snapshotGasLastCall(string)"(
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    snapshotState(
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "snapshotValue(string,uint256)"(
+      name: string,
+      value: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "snapshotValue(string,string,uint256)"(
+      group: string,
+      name: string,
+      value: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
     split(
       input: string,
       delimiter: string,
@@ -14176,6 +14913,10 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
+    startDebugTraceRecording(
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
     startMappingRecording(
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
@@ -14191,7 +14932,22 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
+    "startSnapshotGas(string)"(
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "startSnapshotGas(string,string)"(
+      group: string,
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
     startStateDiffRecording(
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    stopAndReturnDebugTraceRecording(
       overrides?: Overrides & { from?: string }
     ): Promise<BigNumber>;
 
@@ -14212,6 +14968,21 @@ export interface Vm extends BaseContract {
     ): Promise<BigNumber>;
 
     stopPrank(overrides?: Overrides & { from?: string }): Promise<BigNumber>;
+
+    "stopSnapshotGas(string,string)"(
+      group: string,
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "stopSnapshotGas(string)"(
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "stopSnapshotGas()"(
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
 
     store(
       target: string,
@@ -15184,13 +15955,13 @@ export interface Vm extends BaseContract {
 
     "breakpoint(string)"(
       char: string,
-      overrides?: Overrides & { from?: string }
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     "breakpoint(string,bool)"(
       char: string,
       value: boolean,
-      overrides?: Overrides & { from?: string }
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     "broadcast()"(
@@ -15218,6 +15989,12 @@ export interface Vm extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     clearMockedCalls(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    cloneAccount(
+      source: string,
+      target: string,
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
@@ -15330,6 +16107,15 @@ export interface Vm extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     deleteSnapshots(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    deleteStateSnapshot(
+      snapshotId: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    deleteStateSnapshots(
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
@@ -15832,6 +16618,14 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
+    getScriptWallets(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    getWallets(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
     indexOf(
       input: string,
       key: string,
@@ -15945,6 +16739,21 @@ export interface Vm extends BaseContract {
       callee: string,
       data: BytesLike,
       revertData: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "mockCalls(address,uint256,bytes,bytes[])"(
+      callee: string,
+      msgValue: BigNumberish,
+      data: BytesLike,
+      returnData: BytesLike[],
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "mockCalls(address,bytes,bytes[])"(
+      callee: string,
+      data: BytesLike,
+      returnData: BytesLike[],
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
@@ -16297,6 +17106,10 @@ export interface Vm extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    randomBytes4(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    randomBytes8(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     "randomInt()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "randomInt(uint256)"(
@@ -16374,6 +17187,21 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
+    "rememberKeys(string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      count: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "rememberKeys(string,string,string,uint32)"(
+      mnemonic: string,
+      derivationPath: string,
+      language: string,
+      count: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
     removeDir(
       path: string,
       recursive: boolean,
@@ -16413,6 +17241,16 @@ export interface Vm extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     revertToAndDelete(
+      snapshotId: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    revertToState(
+      snapshotId: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    revertToStateAndDelete(
       snapshotId: BigNumberish,
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
@@ -16707,6 +17545,34 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
+    "snapshotGasLastCall(string,string)"(
+      group: string,
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "snapshotGasLastCall(string)"(
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    snapshotState(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "snapshotValue(string,uint256)"(
+      name: string,
+      value: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "snapshotValue(string,string,uint256)"(
+      group: string,
+      name: string,
+      value: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
     split(
       input: string,
       delimiter: string,
@@ -16727,6 +17593,10 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
+    startDebugTraceRecording(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
     startMappingRecording(
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
@@ -16742,7 +17612,22 @@ export interface Vm extends BaseContract {
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
+    "startSnapshotGas(string)"(
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "startSnapshotGas(string,string)"(
+      group: string,
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
     startStateDiffRecording(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    stopAndReturnDebugTraceRecording(
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
@@ -16763,6 +17648,21 @@ export interface Vm extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     stopPrank(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "stopSnapshotGas(string,string)"(
+      group: string,
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "stopSnapshotGas(string)"(
+      name: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "stopSnapshotGas()"(
       overrides?: Overrides & { from?: string }
     ): Promise<PopulatedTransaction>;
 
