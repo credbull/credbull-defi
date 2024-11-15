@@ -106,7 +106,7 @@ const ViewSection = () => {
 
   const handleGrantRole = async (roleIndex: number) => {
     if (!userAccountToGrant) {
-      notification.error("Missing required fields");
+      notification.error(`Grant Role: Missing userAccountToGrant`);
       return;
     }
 
@@ -166,7 +166,7 @@ const ViewSection = () => {
 
   const handleRevokeRole = async (roleIndex: number) => {
     if (!userAccountToRevoke) {
-      notification.error("Missing required fields");
+      notification.error(`Revoke Role: Missing userAccountToRevoke`);
       return;
     }
 
@@ -226,7 +226,7 @@ const ViewSection = () => {
 
   const handleSetPeriod = async (directionIndex: number) => {
     if (!numOfPeriods) {
-      notification.error("Missing required fields");
+      notification.error("Set Period. Missing numOfPeriods");
       return;
     }
 
@@ -293,7 +293,7 @@ const ViewSection = () => {
 
   const handleSetTimestamp = async () => {
     if (!selectedTimestamp) {
-      notification.error("Missing required fields");
+      notification.error("Set Timestamp.  Missing selectedTimestamp");
       return;
     }
 
@@ -349,7 +349,7 @@ const ViewSection = () => {
 
   const handleSetReducedRate = async () => {
     if (!reducedRate) {
-      notification.error("Missing required fields");
+      notification.error("Set Reduced Rate. Missing reducedRate");
       return;
     }
 
@@ -388,12 +388,14 @@ const ViewSection = () => {
 
   const handleWithdraw = async (withdrawType: number) => {
     if (!custodian || !proxyContractData || !simpleUsdcContractData) {
-      notification.error("Missing required fields");
+      notification.error(
+        `Handle Withdraw - Missing required fields.  Custodian:${custodian} , ProxyContractData: ${proxyContractData} , SimpleUsdcContractData: ${simpleUsdcContractData}`,
+      );
       return;
     }
 
     if (!withdrawType && !assets) {
-      notification.error("Missing required fields");
+      notification.error(`Withdraw.  Missing required fields.  Withdraw Type: ${withdrawType} , assets: ${assets}`);
       return;
     }
 

@@ -34,6 +34,9 @@ liquid_vault_impl="0x9Db9df1D91c5cdE0c92cf02B9992d42f47028b4A"
 full_rate_bps = 10_00
 # rate in basis points, e.g.  5.5% = 550 bps
 reduced_rate_bps = 5_50
+# January 1, 2024 2:00:00 PM UTC = 1704117600
+vault_start_timestamp = 1704117600
+
 
 [evm.contracts.upside_vault]
 # 2 decimal place percentage (meaining value divided by 100) as integer.
