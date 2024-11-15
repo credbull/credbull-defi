@@ -31,6 +31,8 @@ liquid_vault_impl="0x8f87E1258d645d948F270221C34202Be0583F29b"
 full_rate_bps = 10_00
 # rate in basis points, e.g.  5.5% = 550 bps
 reduced_rate_bps = 5_50
+# January 1, 2025 2:00:00 PM UTC = 1735740000
+vault_start_timestamp = 1735740000
 
 [services.supabase]
 url = ""
