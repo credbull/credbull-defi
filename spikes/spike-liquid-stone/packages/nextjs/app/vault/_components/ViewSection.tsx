@@ -29,9 +29,9 @@ const ViewSection = () => {
   const { data: simpleUsdcContractData } = useDeployedContractInfo(contractNames[0]);
 
   const { data: implementationContractData, isLoading: implementationContractLoading } = useDeployedContractInfo(
-    contractNames[3],
+    contractNames[4],
   );
-  const { data: proxyContractData, isLoading: proxyContractLoading } = useDeployedContractInfo(contractNames[4]);
+  const { data: proxyContractData, isLoading: proxyContractLoading } = useDeployedContractInfo(contractNames[5]);
 
   const deployedContractAddress = proxyContractData?.address || "";
   const deployedContractAbi = implementationContractData?.abi as ContractAbi;
