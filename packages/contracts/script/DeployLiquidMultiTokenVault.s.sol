@@ -103,7 +103,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         IERC20Metadata asset,
         IYieldStrategy yieldStrategy,
         IRedeemOptimizer redeemOptimizer
-    ) public view returns (LiquidContinuousMultiTokenVault.VaultParams memory vaultParams_) {
+    ) public view virtual returns (LiquidContinuousMultiTokenVault.VaultParams memory vaultParams_) {
         uint256 fullRateBasisPoints = _tomlConfig.readUint(string.concat(CONTRACT_TOML_KEY, ".full_rate_bps"));
         uint256 reducedRateBasisPoints = _tomlConfig.readUint(string.concat(CONTRACT_TOML_KEY, ".reduced_rate_bps"));
         uint256 startTimestamp = _startTimestamp();
