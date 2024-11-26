@@ -353,6 +353,12 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
 
         assertEq(assetsAtRequestRedeemPeriod, _liquidVault.totalAssets(), "totalAssets wrong at requestRedeem period");
+        assertEq(
+            assetsAtRequestRedeemPeriod,
+            _liquidVault.totalAssets(alice),
+            "totalAssets(user) wrong at requestRedeem period"
+        );
+        assertEq(0, _liquidVault.totalAssets(bob), "totalAssets(user) wrong at requestRedeem period");
 
         // -------------- redeem period --------------
         _warpToPeriod(_liquidVault, redeemPeriod);
@@ -365,6 +371,8 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         assertEq(assetsAtRedeemPeriod, _liquidVault.convertToAssets(totalShares), "assets wrong at redeem period");
 
         assertEq(assetsAtRedeemPeriod, _liquidVault.totalAssets(), "totalAssets wrong at redeem period");
+        assertEq(assetsAtRedeemPeriod, _liquidVault.totalAssets(alice), "totalAssets(alice) wrong at redeem period");
+        assertEq(0, _liquidVault.totalAssets(bob), "totalAssets(bob) wrong at redeem period");
     }
 
     function test__LiquidContinuousMultiTokenVault__DepositCallerValidation() public {
