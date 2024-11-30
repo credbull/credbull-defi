@@ -27,7 +27,14 @@ usdc_token="0x401eCb1D350407f13ba348573E5630B83638E30D"
 liquid_vault_proxy="0x4B1fC984F324D2A0fDD5cD83925124b61175f5C6"
 # Liquid Continuous Multi Token Vault Impl - Plume Testnet
 liquid_vault_impl="0x9Db9df1D91c5cdE0c92cf02B9992d42f47028b4A"
-
+## Credbull Aggregate Token Proxy - Plume Testnet
+credbull_aggregate_proxy="0x82D7f1E6DC243Acba12B7bdAeA27d053f1799015"
+## Credbull Aggregate Token Impl - Plume Testnet
+credbull_aggregate_impl="0x87Bac7c1099977A9973d57927DeCa6e51145eEB4"
+## Nest Aggregate Token Proxy - Plume Testnet
+nest_aggregate_proxy="0x659619AEdf381c3739B0375082C2d61eC1fD8835"
+## Nest Aggregate Token Impl - Plume Testnet
+nest_aggregate_impl="0x1871d1BC586db7Cc7f5951798B88d6ffDdAEC588"
 
 [evm.contracts.liquid_continuous_multi_token_vault]
 # rate in basis points, e.g.  10% = 1000 bps
