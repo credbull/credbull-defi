@@ -66,6 +66,12 @@ jobs:
       - name: Run Docker Compose with Background Services
         run: docker compose --env-file packages/api/.env up --detach --build --wait
 
+      - name: Deploy Credbull Staking Vault
+        run: yarn deploy
+        working-directory: packages/contracts
+        env:
+          DEPLOY_SCRIPT: "script/DeployStakingVaults.s.sol:DeployStakingVaults"
+
       - name: Deploy Credbull Contracts
         run: yarn deploy
         working-directory: packages/contracts

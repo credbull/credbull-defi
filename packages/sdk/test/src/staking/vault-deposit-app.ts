@@ -74,23 +74,3 @@ export class VaultDepositApp {
     return result;
   }
 }
-
-async function main() {
-  const vaultDepositApp = new VaultDepositApp();
-  const args = process.argv.slice(2); // Gets arguments after `--`
-  const filePath = args[0] || 'TEST-vault-deposit-empty.json'; // default if no value is provided
-
-  try {
-    const result: LoadDepositResult = await vaultDepositApp.loadDeposits(filePath);
-    logger.info(`Successfully loaded deposits!  Summary: ${result.logSummary()}`); // Log a summary after processing
-  } catch (error) {
-    logger.error('An error occurred while processing deposits:', error);
-    throw error;
-  }
-}
-
-// Execute main function if the file is run directly
-main().catch((error) => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
