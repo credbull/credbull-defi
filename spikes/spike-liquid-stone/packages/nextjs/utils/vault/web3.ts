@@ -1,12 +1,32 @@
-import { Alchemy, AlchemySettings, Network } from "alchemy-sdk";
+import { Alchemy, AlchemySettings, Network, OwnedNft } from "alchemy-sdk";
 
-export async function getNFTsForOwner(chain: number, owner: string, contract: string) {
-  if (chain === 31337) {
-    return Array.from({ length: 1001 }, (_, index) => index);
+export async function getNFTsForOwner(chainId: number, owner: string, contract: string) {
+  if ([31337, 98864].includes(chainId)) {
+    return {
+      nfts: Array.from(
+        { length: 101 },
+        (_, index) =>
+          ({
+            tokenId: index.toString(),
+          } as OwnedNft),
+      ),
+      fetchedWithAlchemy: false,
+    };
   } else {
+    let chain: Network;
+
+    switch (chainId) {
+      case 421614:
+        chain = Network.ARB_SEPOLIA;
+        break;
+      default:
+        chain = Network.ARB_SEPOLIA;
+        break;
+    }
+
     const settings: AlchemySettings = {
-      apiKey: process.env.ALCHEMY_API_KEY,
-      network: Network.ETH_MAINNET,
+      apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
+      network: chain,
     };
 
     const alchemy = new Alchemy(settings);
@@ -15,9 +35,17 @@ export async function getNFTsForOwner(chain: number, owner: string, contract: st
       contractAddresses: [contract],
     });
 
-    const erc1155Tokens = nfts.ownedNfts.filter(nft => nft.tokenType === "ERC1155");
+    const filteredNfts = nfts.ownedNfts.filter(nft => nft.tokenType === "ERC1155");
 
-    return erc1155Tokens;
+    const erc1155Tokens: OwnedNft[] = filteredNfts.map(
+      token =>
+        ({
+          tokenId: token?.tokenId,
+          balance: token?.balance,
+        } as OwnedNft),
+    );
+
+    return { nfts: erc1155Tokens, fetchedWithAlchemy: true };
   }
 }
 
