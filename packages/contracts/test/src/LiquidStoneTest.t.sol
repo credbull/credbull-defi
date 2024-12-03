@@ -24,11 +24,11 @@ contract DeployLiquidStone is DeployLiquidMultiTokenVault {
         LiquidContinuousMultiTokenVault.VaultParams memory vaultParams =
             super._createVaultParams(vaultAuth, asset, yieldStrategy, redeemOptimizer);
 
-        uint256 scale = 10 ** asset.decimals();
         vaultParams.contextParams.tenor = 90;
         vaultParams.redeemNoticePeriod = 0;
-        vaultParams.contextParams.fullRateScaled = 10 * scale;
-        vaultParams.contextParams.initialReducedRate.interestRate = 0; // zero for less than tenor
+
+        // reduced rate as 0
+        vaultParams.contextParams.initialReducedRate.interestRate = 0;
 
         return vaultParams;
     }
@@ -55,7 +55,23 @@ contract LiquidStoneTest is LiquidContinuousMultiTokenVaultTestBase {
         assertEq(90, _liquidVault.TENOR(), "tenor incorrect");
     }
 
-    // TODO - need to implement and test for RetainedAssetsReceive1APY
+    function test__LiquidStoneTest__SimpleDepositAndRedeem() public {
+        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
+            _createTestUsers(alice);
+        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
+        testParams[0] = TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: 5 });
+
+        uint256[] memory sharesAtPeriods = _testDepositOnly(depositUsers, _liquidVault, testParams);
+        _testRedeemOnly(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
+    }
+
+    function test__LiquidStoneTest__RedeemAtTenor() public {
+        testVaultAtOffsets(
+            alice,
+            _liquidVault,
+            TestParamSet.TestParam({ principal: 25 * _scale, depositPeriod: 0, redeemPeriod: _liquidVault.TENOR() })
+        );
+    }
 
     function test__LiquidStoneTest__RedeemFullTenor() public {
         uint256 depositPeriod = 5;
