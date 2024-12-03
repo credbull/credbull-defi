@@ -22,14 +22,21 @@ polygon = "https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
 polygonMumbai = "https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
 bitlayer = "https://rpc.bitlayer.org"
 bitlayerTestnet = "https://testnet-rpc.bitlayer.org"
+plume = "https://phoenix-rpc.plumenetwork.xyz/${PLUME_API_KEY}"
+plumeDevnet = "https://devnet-rpc.plumenetwork.xyz"
+plumeTestnet_old = "https://testnet-rpc.plumenetwork.xyz"
+plumeTestnet= "https://test-rpc.plumenetwork.xyz"
 
 
 [etherscan]
 localhost = { key = "" , url="http://127.0.0.1:8545"}
 base = { key = "${BASE_ETHERSCAN_API_KEY}" }
 baseSepolia = { key = "${BASE_SEPOLIA_ETHERSCAN_API_KEY}" }
-# arbitrum Endpoints: see https://docs.arbiscan.io/getting-started/endpoint-urls
 arbitrum = { key = "${ARB_ETHERSCAN_API_KEY}", url = "https://api.arbiscan.io/api", chain=42161 }
 arbitrumSepolia = { key = "${ARB_SEPOLIA_ETHERSCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api", chain=421614 }
 bitlayer = { key = "bitlayer", url="https://rpc.bitlayer.org" }
 bitlayerTestnet = { key = "bitlayerTestnet", url="https://testnet-scan.bitlayer.org" }
+plume = { key = "plume", url = 'https://phoenix-explorer.plumenetwork.xyz/api\?', chain=98865 }
+plumeDevnet = { key = "plumeDevnet", url = 'https://devnet-explorer.plumenetwork.xyz/api\?', chain=18230 }
+plumeTestnet_old = { key = "plumeTestnet_old", url = 'https://testnet-explorer.plumenetwork.xyz/api\?', chain=161221135 }
+plumeTestnet = { key = "plumeTestnet", url = 'https://test-explorer.plumenetwork.xyz/api\?', chain=98864 }
