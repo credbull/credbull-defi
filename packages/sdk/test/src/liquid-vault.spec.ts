@@ -1,6 +1,6 @@
 import { ERC20__factory, LiquidContinuousMultiTokenVault__factory } from '@credbull/contracts';
 import { expect, test } from '@playwright/test';
-import {BigNumber, type BigNumberish, type CallOverrides, ethers} from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 
 import { TestSigners } from './utils/test-signer';
 
@@ -58,8 +58,8 @@ test.describe.skip('Test LiquidContinuousMultiTokenVault ethers operations', () 
     const redeemPeriod = BigNumber.from(30).toNumber(); // redeemPeriod and requestId are equal
 
     const liquidVault = LiquidContinuousMultiTokenVault__factory.connect(
-        VAULT_PROXY_CONTRACT_ADDRESS,
-        user.getDelegate(),
+      VAULT_PROXY_CONTRACT_ADDRESS,
+      user.getDelegate(),
     );
     const userAddress = await user.getAddress();
 
@@ -98,6 +98,4 @@ test.describe.skip('Test LiquidContinuousMultiTokenVault ethers operations', () 
       expect((await liquidVault.unlockRequestAmount(userAddress, redeemPeriod)).toNumber()).toEqual(0);
     }
   });
-
-
 });

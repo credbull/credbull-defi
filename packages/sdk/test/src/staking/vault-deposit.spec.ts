@@ -15,7 +15,6 @@ export const TEST_VAULT_DEPOSIT_50_FILENAME = 'TEST-vault-deposit-50.json';
 export const TEST_VAULT_DEPOSIT_1000_FILENAME = 'TEST-vault-deposit-1000.json';
 
 test.describe('Test Vault Deposit for all', () => {
-
   test.skip('Load Test Deposit 1000', async () => {
     test.setTimeout(3600000); // Set timeout to 1 hour (3,600,000 ms) - 1000 would take an hour on Arb!
     const vaultDepositApp = new VaultDepositApp();
