@@ -10,6 +10,8 @@
     "build:ci": "yarn build",
     "int-test": "playwright test",
     "format": "prettier . --write",
+    "int-test-staking": "playwright test test/src/staking/vault-deposit.spec.ts -g \"Test Deposit 3\"",
+    "start-staking": "ts-node test/src/staking/vault-deposit-app.ts TEST-vault-deposit-3.json",
     "lint": "eslint --fix --ignore-path .gitignore",
     "report": "playwright show-report"
   },

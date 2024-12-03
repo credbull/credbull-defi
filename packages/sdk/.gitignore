@@ -5,6 +5,7 @@ node_modules/
 /playwright/.cache/
 dist/
 build/
+logs/
 
 # NOTE (JL,2024-05-28): TSC Project Reference artifact.
 **/*.tsbuildinfo
