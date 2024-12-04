@@ -19,11 +19,11 @@ upgrader = "0x3E449960Ba36cB00B728A370F991c658e7cca459"
 asset_manager = "0x97BE1b79AA9dB55e7235a9dd5E686cc4A26A7959"
 
 # USDC.e token address (Fiat Proxy
-usdc_token="0x0F3B6CC558A714ecf4Cc9ec8caFF0b57ECf65890"
+usdc_token="0x28E0f0eed8d6A6a96033feEe8b2D7F32EB5CCc48"
 # Liquid Continuous Multi Token Vault Proxy
-liquid_vault_proxy="0xb89846b74f3B190F6e00fc35B3aFfCDF5d4BB9f9"
+liquid_vault_proxy="0x577349C99830D3c078034087A532581EF5381A08"
 # Liquid Continuous Multi Token Vault Impl
-liquid_vault_impl="0x8f87E1258d645d948F270221C34202Be0583F29b"
+liquid_vault_impl="0x155EF98eC2D8CeE03c4419e03024AAe7876B08A9"
 
 
 [evm.contracts.liquid_continuous_multi_token_vault]
