@@ -15,9 +15,12 @@ import { CredbullWhiteListProvider } from "@credbull/CredbullWhiteListProvider.s
 import { WhiteListProvider } from "@credbull/provider/whiteList/WhiteListProvider.sol";
 import { WhiteListPlugin } from "@credbull/plugin/WhiteListPlugin.sol";
 import { FixedYieldVault } from "@credbull/vault/FixedYieldVault.sol";
+import { Vault } from "@credbull/vault/Vault.sol";
 
 import { ParamsFactory } from "@test/test/vault/utils/ParamsFactory.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract CredbullFixedYieldVaultTest is Test {
     CredbullFixedYieldVault private vault;
@@ -320,6 +323,47 @@ contract CredbullFixedYieldVaultTest is Test {
         assertEq(token.balanceOf(address(vault)), 0);
     }
 
+    function test__FixedYieldVault__DepositAssetsAndGetShares() public {
+        IERC20 asset = IERC20(vault.asset());
+        uint256 custodiansBalance = asset.balanceOf(vault.CUSTODIAN());
+
+        address vaultAddress = address(vault);
+        // address receiver = makeAddr("receiver");
+        address receiver = vaultAddress;
+
+        // ---- Setup Part 1, Check balance before deposit ----
+        assertEq(asset.balanceOf(address(vault)), 0, "Vault should start with no assets");
+        assertEq(vault.totalAssets(), 0, "Vault should start with no assets");
+        assertEq(vault.balanceOf(alice), 0, "User should start with no Shares");
+
+        // ---- Setup Part 2 - alice Deposit and receiver receives shares ----
+        uint256 depositAmount = 10 * precision;
+        //Call internal deposit function
+        uint256 shares = deposit(vault, alice, receiver, depositAmount, false);
+
+        // ---- Assert - Vault gets the Assets, Receiver gets Shares ----
+
+        // vault should have the assets
+        assertEq(vault.totalAssets(), depositAmount, "Vault should now have the assets");
+        assertEq(
+            asset.balanceOf(vault.CUSTODIAN()),
+            depositAmount + custodiansBalance,
+            "Custodian should have received the assets"
+        );
+
+        // receiver should have the shares
+        assertEq(shares, depositAmount, "User should now have the Shares");
+        assertEq(vault.balanceOf(receiver), depositAmount, "Receiver should now have the Shares");
+        assertEq(vault.balanceOf(vaultAddress), depositAmount, "Vault should now have the Shares");
+
+        address[] memory addresses = new address[](1);
+        addresses[0] = address(vault);
+
+        vm.prank(params.roles.owner);
+        vm.expectRevert(abi.encodeWithSelector(Vault.CredbullVault__TransferOutsideEcosystem.selector, address(vault)));
+        vault.withdrawERC20(addresses);
+    }
+
     function deposit(address user, uint256 assets, bool warp) internal returns (uint256 shares) {
         return deposit(vault, user, assets, warp);
     }
@@ -328,8 +372,18 @@ contract CredbullFixedYieldVaultTest is Test {
         internal
         returns (uint256 shares)
     {
+        return deposit(fixedYieldVault, user, user, assets, warp);
+    }
+
+    function deposit(
+        CredbullFixedYieldVault fixedYieldVault,
+        address owner,
+        address receiver,
+        uint256 assets,
+        bool warp
+    ) internal returns (uint256 shares) {
         // first, approve the deposit
-        vm.startPrank(user);
+        vm.startPrank(owner);
         params.maturityVault.vault.asset.approve(address(fixedYieldVault), assets);
 
         // wrap if set to true
@@ -337,7 +391,7 @@ contract CredbullFixedYieldVaultTest is Test {
             vm.warp(params.windowPlugin.depositWindow.opensAt);
         }
 
-        shares = fixedYieldVault.deposit(assets, user);
+        shares = fixedYieldVault.deposit(assets, receiver);
         vm.stopPrank();
     }
 }

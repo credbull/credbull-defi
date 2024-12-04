@@ -102,12 +102,16 @@ export const useFetchContractData = ({
   // Fetch data and set state
   useEffect(() => {
     const fetchData = async () => {
+      if (!deployedContractAddress || !deployedContractAbi) {
+        return;
+      }
+
       const currentPeriodData = await refetchCurrentPeriod();
       const _currentPeriod = Number(currentPeriodData?.data);
       setCurrentPeriod(_currentPeriod);
 
       const assetAmountData = await refetchAssetAmount();
-      const assetAmountBigInt = BigInt(assetAmountData?.data as bigint);
+      const assetAmountBigInt = BigInt(typeof assetAmountData?.data === "number" || typeof assetAmountData?.data === "string" ? assetAmountData.data : 0);
       setAssetAmount(ethers.formatUnits(assetAmountBigInt, 6));
 
       const startTimeData = await refetchStartTime();
@@ -137,7 +141,7 @@ export const useFetchContractData = ({
       if (scale > 0) {
         setPreviousReducedRate(Number((previousReducedRateData?.data as PeriodRate)?.interestRate) / scale);
         setCurrentReducedRate(Number((currentReducedRateData?.data as PeriodRate)?.interestRate) / scale);
-        if (_currentPeriod < Number(currentReducedRateData?.data?.effectiveFromPeriod)) {
+        if (_currentPeriod < Number((currentReducedRateData?.data as PeriodRate)?.effectiveFromPeriod)) {
           setEffectiveReducedRate("0");
         } else {
           setEffectiveReducedRate("1");
@@ -148,6 +152,7 @@ export const useFetchContractData = ({
     fetchData();
   }, [
     deployedContractAddress,
+    deployedContractAbi,
     simpleUsdcContractData,
     refetchCurrentPeriod,
     refetchAssetAmount,

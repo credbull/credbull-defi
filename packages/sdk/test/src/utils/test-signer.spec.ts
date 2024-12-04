@@ -1,26 +1,29 @@
 import { expect, test } from '@playwright/test';
 import { BigNumber, Wallet, ethers } from 'ethers';
 
-import { OWNER_PUBLIC_KEY_LOCAL, TestSigner, TestSigners } from './test-signer';
+import { Config, loadConfiguration } from './config';
+import { TestSigner, TestSigners } from './test-signer';
 
 let provider: ethers.providers.JsonRpcProvider;
 let testSigners: TestSigners;
+let config: Config;
 
 test.beforeAll(async () => {
-  provider = new ethers.providers.JsonRpcProvider(); // no url, defaults to 'http://localhost:8545'
+  config = loadConfiguration();
+
+  provider = new ethers.providers.JsonRpcProvider(config.services.ethers.url);
   testSigners = new TestSigners(provider);
 });
 
 // See: https://github.com/safe-global/safe-core-sdk/tree/main/packages/protocol-kit
 test.describe('Test signers', () => {
-  test('Create a signer from the first account', async () => {
+  test('TestSigners admin should be the first account', async () => {
+    const ownerWallet = new ethers.Wallet(config.secret.ADMIN_PRIVATE_KEY, provider);
+
     const owner = new TestSigner(0, provider).getDelegate();
 
-    expect(await owner.getAddress()).toEqual(OWNER_PUBLIC_KEY_LOCAL);
-  });
-
-  test('TestSigners signer address should be the first account', async () => {
-    expect(await testSigners.admin.getAddress()).toEqual(OWNER_PUBLIC_KEY_LOCAL);
+    expect(await owner.getAddress()).toEqual(ownerWallet.address);
+    expect(await testSigners.admin.getAddress()).toEqual(ownerWallet.address);
   });
 
   test('Admin signer sends 1 ETH', async () => {

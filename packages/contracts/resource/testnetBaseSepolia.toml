@@ -3,8 +3,8 @@
 ##
 
 [evm]
-# blockchain id, e.g. plumeTestnet=98864, plumeTestnet_old=161221135, plumeDevnet=18230
-chain_id = 98864
+# blockchain id, e.g. baseSepolia=84532, arbSepolia=421614
+chain_id = 84532
 deploy_mocks = false
 
 [evm.address]
@@ -19,24 +19,16 @@ custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
 upgrader = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # devops asset manager (wallet 7) - public address, okay to share
 asset_manager = "0xd097E901FB9B75C2d2f97E142d73fA79C31FcAb3"
-# CBL token address - Plume Testnet
-cbl_token="0x931Cf9ab674bAbfa7De712EE635b75b5636b4D29"
-# USDC.e token address - Plume Testnet
-usdc_token="0x401eCb1D350407f13ba348573E5630B83638E30D"
-# Liquid Continuous Multi Token Vault Proxy - Plume Testnet
-liquid_vault_proxy="0x4B1fC984F324D2A0fDD5cD83925124b61175f5C6"
-# Liquid Continuous Multi Token Vault Impl - Plume Testnet
-liquid_vault_impl="0x9Db9df1D91c5cdE0c92cf02B9992d42f47028b4A"
-
+# CBL token address - Base Sepolia
+cbl_token="0x2064334877Fac12f353b8FB42440805709eC267A"
+# USDC token address - Base Sepolia
+usdc_token="0x036CbD53842c5426634e7929541eC2318f3dCF7e"
 
 [evm.contracts.liquid_continuous_multi_token_vault]
 # rate in basis points, e.g.  10% = 1000 bps
 full_rate_bps = 10_00
 # rate in basis points, e.g.  5.5% = 550 bps
 reduced_rate_bps = 5_50
-# January 1, 2024 2:00:00 PM UTC = 1704117600
-vault_start_timestamp = 1704117600
-
 
 [evm.contracts.upside_vault]
 # 2 decimal place percentage (meaining value divided by 100) as integer.
@@ -52,7 +44,7 @@ minter = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 max_supply = 10_000_000 # 10 million in wei
 
 [services.supabase]
-url = ""
+url = "https://kyvvhlnmoqibdihqrlmc.supabase.co"
 
 # Save the contract deployment details to the database.
-update_contract_addresses = false
+update_contract_addresses = true

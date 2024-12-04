@@ -34,6 +34,7 @@
     "verify": "yarn workspace @se-2/foundry verify"
   },
   "devDependencies": {
+    "@types/dotenv": "^8.2.3",
     "husky": "^9.1.4",
     "lint-staged": "^15.2.9"
   },
@@ -44,6 +45,7 @@
   "dependencies": {
     "@openzeppelin/contracts-upgradeable": "^5.0.2",
     "alchemy-sdk": "^3.4.2",
+    "dotenv": "^16.4.5",
     "ethers": "^6.13.3",
     "react-tooltip": "^5.28.0"
   },

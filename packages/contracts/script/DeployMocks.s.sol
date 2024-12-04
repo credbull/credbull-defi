@@ -39,14 +39,14 @@ contract DeployMocks is Script {
 
         if (isTestMode || deployChecker.isDeployRequired("SimpleToken")) {
             testToken = new SimpleToken(owner, totalSupply);
-            console2.log("!!!!! Deploying SimpleToken !!!!!");
+            console2.log(string.concat("!!!!! Deploying SimpleToken [", vm.toString(address(testToken)), "] !!!!!"));
         } else {
             testToken = SimpleToken(deployChecker.getContractAddress("SimpleToken"));
         }
 
         if (isTestMode || deployChecker.isDeployRequired("SimpleUSDC")) {
             testStablecoin = new SimpleUSDC(owner, totalSupply);
-            console2.log("!!!!! Deploying SimpleToken !!!!!");
+            console2.log(string.concat("!!!!! Deploying SimpleUSDC [", vm.toString(address(testStablecoin)), "] !!!!!"));
         } else {
             testStablecoin = SimpleUSDC(deployChecker.getContractAddress("SimpleUSDC"));
         }
@@ -59,7 +59,7 @@ contract DeployMocks is Script {
                 custodian: custodian
             });
             testVault = new SimpleVault(params);
-            console2.log("!!!!! Deploying Simple Vault !!!!!");
+            console2.log(string.concat("!!!!! Deploying Simple Vault [", vm.toString(address(testVault)), "] !!!!!"));
         }
 
         vm.stopBroadcast();
