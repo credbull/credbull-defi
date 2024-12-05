@@ -91,8 +91,8 @@ contract StargateUSDCBridge is Ownable {
         IStargateRouter.lzTxObj memory _lzTxParams,
         bytes calldata _adapterParams
     ) external payable {
-        require(usdcToken.transferFrom(msg.sender, address(this), _amount), "Transfer failed");
-        usdcToken.approve(address(stargateRouter), _amount);
+        // require(usdcToken.transferFrom(msg.sender, address(this), _amount), "Transfer failed");
+        // usdcToken.approve(address(stargateRouter), _amount);
 
         stargateRouter.swap{value: msg.value}(
             _dstChainId,
