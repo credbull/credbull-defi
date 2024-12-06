@@ -18,12 +18,12 @@ upgrader = "0x3E449960Ba36cB00B728A370F991c658e7cca459"
 # credbullassetmgr.cb.id asset manager (#7)
 asset_manager = "0x97BE1b79AA9dB55e7235a9dd5E686cc4A26A7959"
 
-# USDC.e token address (Fiat Proxy
-usdc_token="0x28E0f0eed8d6A6a96033feEe8b2D7F32EB5CCc48"
+# USDC.e token address - Bridged USDC (Stargate) (USDC.e)
+usdc_token="0x3938A812c54304fEffD266C7E2E70B48F9475aD6"
 # Liquid Continuous Multi Token Vault Proxy
-liquid_vault_proxy="0x577349C99830D3c078034087A532581EF5381A08"
+liquid_vault_proxy="0x2b9d2023DbF3c7473f1cec42F78713d09DdC9FBF"
 # Liquid Continuous Multi Token Vault Impl
-liquid_vault_impl="0x155EF98eC2D8CeE03c4419e03024AAe7876B08A9"
+liquid_vault_impl="0xe4a4d891f02DF7bFFc5ff9e691313DE8a9E76b91"
 
 
 [evm.contracts.liquid_continuous_multi_token_vault]
