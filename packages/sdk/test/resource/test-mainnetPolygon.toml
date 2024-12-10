@@ -23,7 +23,7 @@ url = "https://polygon-mainnet.g.alchemy.com/v2/"
 fund_value_calculator="0xcdf038dd3b66506d2e5378aee185b2f0084b7a33"
 # Deploys Manual Value Oracle Proxy (see: ManualValueOracleFactory.sol)
 manual_value_oracle_factory="0x735615beb04bfd3665f06541ea00af1860c4354f"
-accounting_module=""
+accounting_module="0x735615beb04bfd3665f06541ea00af1860c4354f"
 
 [[evm.address.enzyme.flexible_loans]]
 flexible_loan="0xfa5d33621f94e596c8d18f3c4a2553ff0f6d538e"
