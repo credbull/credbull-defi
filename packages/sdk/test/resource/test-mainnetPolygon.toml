@@ -1,0 +1,33 @@
+node_env = "prod"
+
+[api]
+url = ""
+
+[app]
+url = ""
+
+[services.supabase]
+url = ""
+
+[services.ethers]
+# TODO - need to add API key to URL
+url = "https://polygon-mainnet.g.alchemy.com/v2/"
+
+[evm.address]
+
+# Enzyme
+# - Contract Source: https://github.com/enzymefinance/protocol/tree/dev/contracts/
+# - Deployments: https://github.com/enzymefinance/sdk/blob/main/packages/environment/src/deployments/polygon.ts
+[evm.address.enzyme]
+# Calculates Fund NAV
+fund_value_calculator="0xcdf038dd3b66506d2e5378aee185b2f0084b7a33"
+# Deploys Manual Value Oracle Proxy (see: ManualValueOracleFactory.sol)
+manual_value_oracle_factory="0x735615beb04bfd3665f06541ea00af1860c4354f"
+accounting_module=""
+
+[[evm.address.enzyme.flexible_loans]]
+flexible_loan="0xfa5d33621f94e596c8d18f3c4a2553ff0f6d538e"
+# Update Flexible Loan Values (see: ManualValueOracleLib.sol & ManualValueOracleProxy.sol)
+manual_value_oracle_proxy="0x6748B0f4Cd17d1dE0CF718c747D6C0897B2922fb"
+# Abi-encoded Oracle address and staleness threshold of 0.  (0 meaning price never gets stale).
+accounting_module_config="0x0000000000000000000000006748B0f4Cd17d1dE0CF718c747D6C0897B2922fb0000000000000000000000000000000000000000000000000000000000000000"
