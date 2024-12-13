@@ -23,11 +23,22 @@ url = "https://polygon-mainnet.g.alchemy.com/v2/"
 fund_value_calculator="0xcdf038dd3b66506d2e5378aee185b2f0084b7a33"
 # Deploys Manual Value Oracle Proxy (see: ManualValueOracleFactory.sol)
 manual_value_oracle_factory="0x735615beb04bfd3665f06541ea00af1860c4354f"
-accounting_module="0x735615beb04bfd3665f06541ea00af1860c4354f"
+accounting_module="0x9301b377f646b38e31681cc5c35f364385e4121d"
 
 [[evm.address.enzyme.flexible_loans]]
+name = "BlackOpal LiquidStone x Plume 2024"
+flexible_loan="0xe53b5173e1a89e5923c96f5efb35bc292144657c"
+# Update Flexible Loan Values (see: ManualValueOracleLib.sol & ManualValueOracleProxy.sol)
+manual_value_oracle_proxy="0x79ec25cBBf6E93C5bF327100FCA4B8D8b1619481"
+# Abi-encoded Oracle address and staleness threshold of 0.  (0 meaning price never gets stale).
+accounting_module_config="0x00000000000000000000000079ec25cBBf6E93C5bF327100FCA4B8D8b16194810000000000000000000000000000000000000000000000000000000000000000"
+
+
+[[evm.address.enzyme.flexible_loans]]
+name = "Credbull Example Flexible Loan 202412"
 flexible_loan="0xfa5d33621f94e596c8d18f3c4a2553ff0f6d538e"
 # Update Flexible Loan Values (see: ManualValueOracleLib.sol & ManualValueOracleProxy.sol)
 manual_value_oracle_proxy="0x6748B0f4Cd17d1dE0CF718c747D6C0897B2922fb"
 # Abi-encoded Oracle address and staleness threshold of 0.  (0 meaning price never gets stale).
 accounting_module_config="0x0000000000000000000000006748B0f4Cd17d1dE0CF718c747D6C0897B2922fb0000000000000000000000000000000000000000000000000000000000000000"
+
