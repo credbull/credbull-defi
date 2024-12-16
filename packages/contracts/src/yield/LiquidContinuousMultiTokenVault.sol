@@ -545,6 +545,6 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     function getVersion() public pure returns (uint256 version) {
-        return 1;
+        return 2;
     }
 }
