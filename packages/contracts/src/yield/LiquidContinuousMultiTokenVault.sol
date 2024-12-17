@@ -280,6 +280,19 @@ contract LiquidContinuousMultiTokenVault is
         return totalAssets_;
     }
 
+    /// @notice Total amount of `asset` held in the vault by the `owner`
+    // @dev - this is a heavy operation as the period of the vault increases
+    function totalAssets(address owner) public view returns (uint256 totalManagedAssets) {
+        uint256 totalAssets_ = 0;
+        uint256 currentPeriod_ = currentPeriod();
+
+        for (uint256 depositPeriod = 0; depositPeriod <= currentPeriod_; ++depositPeriod) {
+            totalAssets_ += convertToAssetsForDepositPeriod(balanceOf(owner, depositPeriod), depositPeriod);
+        }
+
+        return totalAssets_;
+    }
+
     /**
      * @notice Equivalent amount of shares for the given amount of assets
      * @param assets Amount of `asset` to convert
@@ -532,6 +545,6 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     function getVersion() public pure returns (uint256 version) {
-        return 1;
+        return 2;
     }
 }
