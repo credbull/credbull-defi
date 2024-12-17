@@ -16733,7 +16733,7 @@ const deployedContracts = {
   },
   98865: {
     "SimpleUSDC#0": {
-      address: "0x0F3B6CC558A714ecf4Cc9ec8caFF0b57ECf65890",
+      address: "0x3938A812c54304fEffD266C7E2E70B48F9475aD6",
       abi: [
         {
           type: "constructor",
@@ -17155,7 +17155,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "TripleRateYieldStrategy#0": {
-      address: "0x797ccfe4063e0c0cc6c1eb580f29bbcec6f62e4b",
+      address: "0x511A391900D2eF4bEf510C8918a7d514B71Ecd01",
       abi: [
         {
           type: "function",
@@ -17245,7 +17245,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "RedeemOptimizerFIFO#0": {
-      address: "0x1e0d689be9cab9ef4db8b24eb2a34feab54b0b8b",
+      address: "0xD6b3d81868770083307840F513A3491960b95cb6",
       abi: [
         {
           type: "constructor",
@@ -17468,7 +17468,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "LiquidContinuousMultiTokenVaultAsProxy#0": {
-      address: "0xb89846b74f3b190f6e00fc35b3affcdf5d4bb9f9",
+      address: "0x2b9d2023DbF3c7473f1cec42F78713d09DdC9FBF",
       abi: [
         {
           type: "constructor",
@@ -20607,7 +20607,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "LiquidContinuousMultiTokenVault#0": {
-      address: "0x8f87e1258d645d948f270221c34202be0583f29b",
+      address: "0xe4a4d891f02DF7bFFc5ff9e691313DE8a9E76b91",
       abi: [
         {
           type: "constructor",
@@ -23746,7 +23746,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "ERC1967Proxy#0": {
-      address: "0xb89846b74f3b190f6e00fc35b3affcdf5d4bb9f9",
+      address: "0x2b9d2023DbF3c7473f1cec42F78713d09DdC9FBF",
       abi: [
         {
           type: "constructor",
