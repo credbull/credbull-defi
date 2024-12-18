@@ -18,12 +18,14 @@ upgrader = "0x3E449960Ba36cB00B728A370F991c658e7cca459"
 # credbullassetmgr.cb.id asset manager (#7)
 asset_manager = "0x97BE1b79AA9dB55e7235a9dd5E686cc4A26A7959"
 
-# USDC.e token address (Fiat Proxy
-usdc_token="0x0F3B6CC558A714ecf4Cc9ec8caFF0b57ECf65890"
-# Liquid Continuous Multi Token Vault Proxy
-liquid_vault_proxy="0xb89846b74f3B190F6e00fc35B3aFfCDF5d4BB9f9"
-# Liquid Continuous Multi Token Vault Impl
-liquid_vault_impl="0x8f87E1258d645d948F270221C34202Be0583F29b"
+# USDC.e token address - Bridged USDC (Stargate) (USDC.e)
+usdc_token="0x3938A812c54304fEffD266C7E2E70B48F9475aD6"
+# Liquid Continuous Multi Token Vault Proxy - Plume Mainnet
+liquid_vault_proxy="0x2b9d2023DbF3c7473f1cec42F78713d09DdC9FBF"
+# Liquid Continuous Multi Token Vault Impl - Plume Mainnet (v2 - latest)
+liquid_vault_impl="0xD9991FC39980E4294F6953AB5aDf514Db8545658"
+# Liquid Continuous Multi Token Vault Impl - Plume Mainnet (v1)
+liquid_vault_impl_V1="0xe4a4d891f02DF7bFFc5ff9e691313DE8a9E76b91"
 
 
 [evm.contracts.liquid_continuous_multi_token_vault]
@@ -31,8 +33,8 @@ liquid_vault_impl="0x8f87E1258d645d948F270221C34202Be0583F29b"
 full_rate_bps = 10_00
 # rate in basis points, e.g.  5.5% = 550 bps
 reduced_rate_bps = 5_50
-# January 1, 2025 2:00:00 PM UTC = 1735740000
-vault_start_timestamp = 1735740000
+# December 4, 2024 2:00:00 PM UTC = 1733277600
+vault_start_timestamp = 1733277600
 
 [services.supabase]
 url = ""
