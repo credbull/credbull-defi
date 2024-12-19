@@ -35,10 +35,10 @@ accounting_module_config="0x00000000000000000000000079ec25cBBf6E93C5bF327100FCA4
 
 
 [[evm.address.enzyme.flexible_loans]]
-name = "Credbull Example Flexible Loan 202412"
-flexible_loan="0xfa5d33621f94e596c8d18f3c4a2553ff0f6d538e"
+name = "TEST - BlackOpal Test Vault Flexible Loan 20241218"
+flexible_loan="0x9144066ddff9ae04aa3ef3af766c8c774781f01b"
 # Update Flexible Loan Values (see: ManualValueOracleLib.sol & ManualValueOracleProxy.sol)
-manual_value_oracle_proxy="0x6748B0f4Cd17d1dE0CF718c747D6C0897B2922fb"
+manual_value_oracle_proxy="0x5eAe7fcA6Bb5bA22cdEAEfCB08a3d351B6DCC4C1"
 # Abi-encoded Oracle address and staleness threshold of 0.  (0 meaning price never gets stale).
-accounting_module_config="0x0000000000000000000000006748B0f4Cd17d1dE0CF718c747D6C0897B2922fb0000000000000000000000000000000000000000000000000000000000000000"
+accounting_module_config="0x0000000000000000000000005eAe7fcA6Bb5bA22cdEAEfCB08a3d351B6DCC4C10000000000000000000000000000000000000000000000000000000000000000"
 
