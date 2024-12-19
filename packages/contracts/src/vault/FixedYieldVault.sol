@@ -84,7 +84,7 @@ contract FixedYieldVault is MaturityVault, WhiteListPlugin, WindowPlugin, MaxCap
 
     // @notice - Returns expected assets on maturity
     function expectedAssetsOnMaturity() public view override returns (uint256) {
-        return totalAssetDeposited.mulDiv(100 + FIXED_YIELD, 100);
+        return totalAssetDeposited.mulDiv(100_000 + FIXED_YIELD, 100_000);
     }
 
     /// @notice Mature the vault

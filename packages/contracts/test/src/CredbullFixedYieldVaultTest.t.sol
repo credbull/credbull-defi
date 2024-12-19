@@ -111,7 +111,7 @@ contract CredbullFixedYieldVaultTest is Test {
         uint256 depositAmount = 10 * precision;
         deposit(alice, depositAmount, false);
 
-        uint256 expectedAssetValue = ((depositAmount * (100 + params.promisedYield)) / 100);
+        uint256 expectedAssetValue = ((depositAmount * (100_000 + params.promisedYield)) / 100_000);
         assertEq(vault.expectedAssetsOnMaturity(), expectedAssetValue);
     }
 

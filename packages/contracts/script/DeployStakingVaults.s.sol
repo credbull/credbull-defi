@@ -48,8 +48,9 @@ contract DeployStakingVaults is Script {
         vm.startBroadcast();
 
         CredbullFixedYieldVault stakingVault50APY = new CredbullFixedYieldVault(
-            createStakingVaultParams(helperConfig, "inCredbull Earn CBL Staking Challenge", "iceCBLsc", 50)
+            createStakingVaultParams(helperConfig, "inCredbull Earn CBL Staking Challenge", "iceCBLsc", 4_167)
         );
+
         console2.log(
             string.concat(
                 "!!!!! Deploying CredbullFixedYieldVault 50APY [", vm.toString(address(stakingVault50APY)), "] !!!!!"
