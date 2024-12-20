@@ -12,6 +12,9 @@ export enum DepositStatus {
   SkippedAlreadyProcessed = 'SkippedAlreadyProcessed',
 }
 
+const MAX_GAS_GWEI = BigInt(20000);
+const ETH_PRICE_20241220 = BigInt(3300);
+
 export class VaultDeposit {
   constructor(
     public readonly _id: number,
@@ -47,6 +50,13 @@ export class VaultDeposit {
     // TODO - check if the same address will have multiple deposits. if not, we can skip any deposits that already exist.
 
     // -------------------------- Simulate --------------------------
+
+    const gasEstimate = await this.estimateGasForDeposit(vault);
+    if (gasEstimate.toBigInt() > MAX_GAS_GWEI) {
+      throw Error(
+        `Gas Deposit (Deposit) [id=${this._id}] too high!  Gas= ${gasEstimate.toBigInt().toLocaleString()} gwei`,
+      );
+    }
 
     // Simulate the deposit to get the return value (shares) without sending a transaction
     const shares = await vault.callStatic.deposit(this._depositAmount, this._receiver).catch((err) => {
@@ -92,6 +102,13 @@ export class VaultDeposit {
 
     logger.debug(`Granting Allowance [id=${this._id}] ...`);
 
+    const gasEstimate = await this.estimateGasForAllowance(owner, vault);
+    if (gasEstimate.toBigInt() > MAX_GAS_GWEI) {
+      throw Error(
+        `Gas Deposit (Allowance) [id=${this._id}] too high!  Gas: ${gasEstimate.toBigInt().toLocaleString()} gwei`,
+      );
+    }
+
     const approveTxnResponse = await tokenAsOwner.approve(vault.address, this._depositAmount).catch((err) => {
       const decodedError = handleError(vault, err);
       logger.error('Approval contract error:', decodedError.message);
@@ -106,6 +123,58 @@ export class VaultDeposit {
       this._depositAmount.gte(allowance),
       `Allowance not granted [id=${this._id}]. Expected: ${this._depositAmount.toString()}, but was: ${allowance.toString()}`,
     );
+  }
+
+  async estimateGas(vault: CredbullFixedYieldVault, gasEstimate: BigNumber): Promise<BigNumber> {
+    try {
+      // Estimate gas
+      const gasPrice = await vault.provider.getGasPrice(); // Gas price in Wei
+      const tnxCostInWei = gasEstimate.mul(gasPrice);
+      const txnCostInGwei = tnxCostInWei.div(BigNumber.from(10).pow(9)); // Divide by 10^9
+
+      const txnCostInEth = parseFloat(ethers.utils.formatEther(tnxCostInWei));
+      const txnCostInUsd = txnCostInEth * Number(ETH_PRICE_20241220);
+
+      logger.info(
+        `Estimated gas for deposit [id=${this._id}]: ${txnCostInEth} ETH , ${txnCostInUsd} ( ${gasEstimate.toBigInt().toLocaleString()} * ${txnCostInGwei} gwei)`,
+      );
+
+      return txnCostInGwei;
+    } catch (err) {
+      const decodedError = handleError(vault, err);
+      logger.error('Gas estimation error:', decodedError.message);
+      throw decodedError;
+    }
+  }
+
+  async estimateGasForDeposit(vault: CredbullFixedYieldVault): Promise<BigNumber> {
+    logger.debug(`Estimating gas for deposit [id=${this._id}] ...`);
+
+    try {
+      // Estimate gas
+      const gasEstimate = await vault.estimateGas.deposit(this._depositAmount, this._receiver);
+      return this.estimateGas(vault, gasEstimate);
+    } catch (err) {
+      const decodedError = handleError(vault, err);
+      logger.error('Gas estimation error:', decodedError.message);
+      throw decodedError;
+    }
+  }
+
+  async estimateGasForAllowance(owner: Wallet, vault: CredbullFixedYieldVault): Promise<BigNumber> {
+    logger.debug(`Estimating gas for allowance [id=${this._id}] ...`);
+    const assetAddress: string = await vault.asset();
+    const tokenAsOwner: OwnableToken = OwnableToken__factory.connect(assetAddress, owner);
+
+    try {
+      // Get the asset address and connect the token as the owner
+      const gasEstimate = await tokenAsOwner.estimateGas.approve(vault.address, this._depositAmount);
+      return this.estimateGas(vault, gasEstimate);
+    } catch (err) {
+      const decodedError = handleError(tokenAsOwner, err);
+      logger.error('Gas estimation error for allowance:', decodedError.message);
+      throw decodedError;
+    }
   }
 
   async isProcessed(chainId: number, processedLogMessages: any[]): Promise<boolean> {
