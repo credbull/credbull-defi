@@ -56,6 +56,7 @@ const ViewSection = () => {
   const { data: proxyContractData, isLoading: proxyContractLoading } = useDeployedContractInfo(contractNames[5]);
 
   const custodian = process.env.NEXT_PUBLIC_CUSTODIAN || "";
+  const custodianBlockExplorerUrl = `${client?.chain?.blockExplorers?.default?.url}/address/${custodian}`;
 
   const { currentPeriod, startTimestamp, previousReducedRate } = useFetchContractData({
     deployedContractAddress: proxyContractData?.address || "",
@@ -672,7 +673,12 @@ const ViewSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             <ActionCard>
               <h2 className="text-xl font-bold mb-4">Withdraw Funds</h2>
-              <span className="text-base">Custodian: {custodian}</span>
+              <span className="text-base">
+                Custodian:
+                <a href={custodianBlockExplorerUrl} className="link">
+                  {custodian}
+                </a>
+              </span>
               <Input
                 type="text"
                 value={assets}
