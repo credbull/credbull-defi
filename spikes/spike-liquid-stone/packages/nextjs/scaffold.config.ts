@@ -5,14 +5,15 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 console.log(`*** Config loaded, network is ${process.env.NEXT_PUBLIC_NETWORK}`);
+console.log(`*** Custodian is ${process.env.NEXT_PUBLIC_CUSTODIAN}`);
 
 const plume: Chain = {
   id: 98865,
   name: "Plume",
   nativeCurrency: { name: "Plume Ethereum", symbol: "ETH", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://phoenix-rpc.plumenetwork.xyz/" + process.env.NEXT_PUBLIC_PLUME_API_KEY] },
-    public: { http: ["https://phoenix-rpc.plumenetwork.xyz/" + process.env.NEXT_PUBLIC_PLUME_API_KEY] },
+    default: { http: ["https://phoenix-rpc.plumenetwork.xyz/"] },
+    public: { http: ["https://phoenix-rpc.plumenetwork.xyz/"] },
   },
   formatters: undefined,
   fees: undefined,

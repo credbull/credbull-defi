@@ -672,6 +672,7 @@ const ViewSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             <ActionCard>
               <h2 className="text-xl font-bold mb-4">Withdraw Funds</h2>
+              <span className="text-base">Custodian: {custodian}</span>
               <Input
                 type="text"
                 value={assets}
