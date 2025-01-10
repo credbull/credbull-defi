@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-import { LoadDepositResult, VaultDepositApp } from './vault-deposit-app';
+import { LoadDepositResult } from './deposit-app';
+import { VaultDepositApp } from './vault-deposit-app';
 
 test.beforeAll(async () => {});
 

@@ -1,4 +1,4 @@
-import {BigNumber, ethers} from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 
 import { logger, processedLogger } from '../utils/logger';
 

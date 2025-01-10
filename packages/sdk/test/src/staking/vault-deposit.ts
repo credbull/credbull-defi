@@ -1,6 +1,6 @@
 import { CredbullFixedYieldVault, OwnableToken, OwnableToken__factory } from '@credbull/contracts';
 import * as assert from 'assert';
-import { BigNumber, Wallet, ethers } from 'ethers';
+import { BigNumber, Wallet } from 'ethers';
 
 import { handleError } from '../utils/decoder';
 import { logger, processedLogCache } from '../utils/logger';
