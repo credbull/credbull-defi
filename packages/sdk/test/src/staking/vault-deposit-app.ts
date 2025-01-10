@@ -4,8 +4,9 @@ import { Wallet, ethers, providers } from 'ethers';
 import { Config, loadConfiguration } from '../utils/config';
 import { logger } from '../utils/logger';
 
-import { Address, DepositStatus, VaultDeposit } from './vault-deposit';
-import { parseFromFile } from './vault-deposit-parser';
+import { Address, DepositStatus } from './deposit';
+import { parseFromFile } from './deposit-parser';
+import { VaultDeposit } from './vault-deposit';
 
 export class LoadDepositResult {
   successes: VaultDeposit[] = [];
@@ -48,7 +49,7 @@ export class VaultDepositApp {
     // TODO - check if the tokenOwner has any tokens - no point in loading anything if not
 
     // parse the deposits
-    const vaultDeposits: VaultDeposit[] = parseFromFile(filePath);
+    const vaultDeposits: VaultDeposit[] = parseFromFile(filePath, VaultDeposit);
 
     logger.info('Begin Deposit all...');
 
@@ -75,22 +76,20 @@ export class VaultDepositApp {
   }
 }
 
-async function main() {
-  const vaultDepositApp = new VaultDepositApp();
-  const args = process.argv.slice(2); // Gets arguments after `--`
-  const filePath = args[0] || 'TEST-vault-deposit-empty.json'; // default if no value is provided
-
-  try {
-    const result: LoadDepositResult = await vaultDepositApp.loadDeposits(filePath);
-    logger.info(`Successfully loaded deposits!  Summary: ${result.logSummary()}`); // Log a summary after processing
-  } catch (error) {
-    logger.error('An error occurred while processing deposits:', error);
-    throw error;
-  }
-}
-
-// Execute main function if the file is run directly
-main().catch((error) => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+// async function main() {
+//   const vaultDepositApp = new VaultDepositApp();
+//
+//   try {
+//     const result: LoadDepositResult = await vaultDepositApp.loadDeposits(filePath);
+//     logger.info(`Successfully loaded deposits!  Summary: ${result.logSummary()}`); // Log a summary after processing
+//   } catch (error) {
+//     logger.error('An error occurred while processing deposits:', error);
+//     throw error;
+//   }
+// }
+//
+// // Execute main function if the file is run directly
+// main().catch((error) => {
+//   console.error('Fatal error:', error);
+//   process.exit(1);
+// });

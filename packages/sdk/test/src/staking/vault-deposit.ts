@@ -3,24 +3,17 @@ import * as assert from 'assert';
 import { BigNumber, Wallet, ethers } from 'ethers';
 
 import { handleError } from '../utils/decoder';
-import { logger, processedLogCache, processedLogger } from '../utils/logger';
+import { logger, processedLogCache } from '../utils/logger';
 
-export type Address = string;
+import { Address, Deposit, DepositStatus } from './deposit';
 
-export enum DepositStatus {
-  Success = 'Success',
-  SkippedAlreadyProcessed = 'SkippedAlreadyProcessed',
-}
-
-const MAX_GAS_GWEI = BigInt(20000);
+const MAX_GAS_GWEI = BigInt(200_000);
 const ETH_PRICE_20241220 = BigInt(3300);
 
-export class VaultDeposit {
-  constructor(
-    public readonly _id: number,
-    public readonly _receiver: Address,
-    public readonly _depositAmount: BigNumber,
-  ) {}
+export class VaultDeposit extends Deposit {
+  constructor(_id: number, _receiver: Address, _depositAmount: BigNumber) {
+    super(_id, _receiver, _depositAmount);
+  }
 
   async deposit(owner: Wallet, vault: CredbullFixedYieldVault): Promise<DepositStatus> {
     logger.info('------------------');
@@ -175,43 +168,5 @@ export class VaultDeposit {
       logger.error('Gas estimation error for allowance:', decodedError.message);
       throw decodedError;
     }
-  }
-
-  async isProcessed(chainId: number, processedLogMessages: any[]): Promise<boolean> {
-    const alreadyProcessed = processedLogMessages.some(
-      (entry) =>
-        entry.message &&
-        entry.message.chainId === chainId &&
-        entry.message.VaultDeposit &&
-        entry.message.VaultDeposit.id === this._id,
-    );
-
-    if (alreadyProcessed) {
-      logger.debug(`Skipping VaultDeposit with id ${this._id} on chain ${chainId}.  Already processed.`);
-    }
-
-    return alreadyProcessed;
-  }
-
-  async logResult(chainId: number, txnHash: string, customLogger = processedLogger) {
-    customLogger.info({
-      chainId,
-      ...this.toJson(), // Spread the JSON representation of the deposit
-      txnHash, // Add the transaction hash
-    });
-  }
-
-  toString(): string {
-    return `VaultDeposit [id: ${this._id}, Receiver: ${this._receiver}, Amount: ${this._depositAmount.toString()}]`;
-  }
-
-  toJson(): object {
-    return {
-      VaultDeposit: {
-        id: this._id,
-        receiver: this._receiver,
-        depositAmount: this._depositAmount.toString(), // Convert BigNumber to string for JSON serialization
-      },
-    };
   }
 }
