@@ -1,11 +1,10 @@
-import { Wallet, ethers, providers } from 'ethers';
+import { BigNumber, Wallet, ethers, providers } from 'ethers';
 
 import { Config, loadConfiguration } from '../utils/config';
 import { logger } from '../utils/logger';
 
 import { Deposit, DepositStatus } from './deposit';
 import { parseFromFile } from './deposit-parser';
-import { VaultDeposit } from './vault-deposit';
 
 export class LoadDepositResult {
   successes: Deposit[] = [];
@@ -17,7 +16,7 @@ export class LoadDepositResult {
   }
 }
 
-export abstract class DepositApp {
+export abstract class DepositApp<T extends Deposit> {
   protected _config: Config;
   protected _provider: providers.JsonRpcProvider;
   protected _tokenOwner: Wallet;
@@ -38,8 +37,7 @@ export abstract class DepositApp {
 
     const result = new LoadDepositResult();
 
-    // parse the deposits
-    const deposits: Deposit[] = parseFromFile(filePath, VaultDeposit);
+    const deposits: T[] = parseFromFile(filePath, this.getDepositType());
 
     logger.info('Begin Deposit all...');
 
@@ -66,5 +64,7 @@ export abstract class DepositApp {
     return result;
   }
 
-  abstract deposit(deposit: Deposit): Promise<DepositStatus>;
+  protected abstract getDepositType(): new (id: number, receiver: string, depositAmount: BigNumber) => T;
+
+  abstract deposit(deposit: T): Promise<DepositStatus>;
 }

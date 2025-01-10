@@ -15,6 +15,9 @@ url = ""
 url = "https://arb-sepolia.g.alchemy.com/v2/wWh5FldeScQuh0NcuGzDB6HM6jLBhhyw"
 
 [evm.address]
+# CBL token address - Arbitrum Sepolia
+cbl_token="0x3Dd53Ec7DFff8cf774391867C83583E634363345"
+
 # CBL Staking Vault address - Arbitrum Sepolia
 vault_cbl_staking="0x810d489487C385fEb6ee4d7e2B16B5AED35E47e5"
 

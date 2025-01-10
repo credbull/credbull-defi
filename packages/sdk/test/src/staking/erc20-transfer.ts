@@ -21,7 +21,7 @@ export class Erc20Transfer extends Deposit {
     if (alreadyProcessed) {
       depositStatus = DepositStatus.SkippedAlreadyProcessed;
     } else {
-      await this.transferOnly(erc20);
+      await this.transferOnly(owner, erc20);
       depositStatus = DepositStatus.Success;
     }
 
@@ -30,10 +30,14 @@ export class Erc20Transfer extends Deposit {
     return depositStatus;
   }
 
-  async transferOnly(erc20: OwnableToken) {
+  async transferOnly(owner: Wallet, erc20: OwnableToken) {
     logger.debug(`Transferring [id=${this._id}] ...`);
 
     const prevVaultBalanceReceiver = await erc20.balanceOf(this._receiver);
+    const prevVaultBalanceSender = await erc20.balanceOf(owner.address);
+
+    logger.error(`!!!! Receiver: ${this._receiver} balance: ${prevVaultBalanceReceiver}`);
+    logger.error(`!!!! Sender: ${owner.address} balance: ${prevVaultBalanceSender}`);
 
     const txnResponse = await erc20.transfer(this._receiver, this._depositAmount).catch((err) => {
       const decodedError = handleError(erc20, err);

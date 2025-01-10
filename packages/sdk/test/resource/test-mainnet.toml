@@ -14,6 +14,9 @@ url = ""
 url = "https://arb-mainnet.g.alchemy.com/v2/"
 
 [evm.address]
+# CBL token address - Arbitrum mainnet
+cbl_token="0xD6b3d81868770083307840F513A3491960b95cb6"
+
 # CBL Staking Vault address - Arbitrum One v2 (YIELD = 50% APY / 12 months = 4.167%)
 vault_cbl_staking="0xc0C1DaA773570C041c47cE12c397AdDFD6B7403F"
 
