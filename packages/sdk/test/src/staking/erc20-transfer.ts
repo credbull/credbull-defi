@@ -1,4 +1,4 @@
-import { OwnableToken } from '@credbull/contracts';
+import { ERC20 } from '@credbull/contracts';
 import { BigNumber, Wallet } from 'ethers';
 
 import { handleError } from '../utils/decoder';
@@ -11,7 +11,7 @@ export class Erc20Transfer extends Deposit {
     super(_id, _receiver, _depositAmount);
   }
 
-  async deposit(owner: Wallet, erc20: OwnableToken): Promise<DepositStatus> {
+  async deposit(owner: Wallet, erc20: ERC20): Promise<DepositStatus> {
     logger.info('------------------');
     logger.info(`Begin Transfer ${this.toString()} from: ${owner.address}`);
 
@@ -30,7 +30,7 @@ export class Erc20Transfer extends Deposit {
     return depositStatus;
   }
 
-  async transferOnly(owner: Wallet, erc20: OwnableToken) {
+  async transferOnly(owner: Wallet, erc20: ERC20) {
     logger.debug(`Transferring [id=${this._id}] ...`);
 
     const prevVaultBalanceReceiver = await erc20.balanceOf(this._receiver);

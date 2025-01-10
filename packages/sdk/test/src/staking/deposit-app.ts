@@ -19,7 +19,7 @@ export class LoadDepositResult {
 export abstract class DepositApp<T extends Deposit> {
   protected _config: Config;
   protected _provider: providers.JsonRpcProvider;
-  protected _tokenOwner: Wallet;
+  protected _signerWallet: Wallet;
 
   constructor() {
     this._config = loadConfiguration();
@@ -28,7 +28,7 @@ export abstract class DepositApp<T extends Deposit> {
     if (!this._config || !this._config.secret || !this._config.secret.DEPLOYER_PRIVATE_KEY) {
       throw new Error(`Deployer configuration and key not defined.`);
     }
-    this._tokenOwner = new ethers.Wallet(this._config.secret.DEPLOYER_PRIVATE_KEY, this._provider);
+    this._signerWallet = new ethers.Wallet(this._config.secret.DEPLOYER_PRIVATE_KEY, this._provider);
   }
 
   async loadDeposits(filePath: string): Promise<LoadDepositResult> {

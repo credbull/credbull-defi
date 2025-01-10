@@ -12,7 +12,7 @@ export class VaultDepositApp extends DepositApp<VaultDeposit> {
     super();
     this._stakingVaultAddress = this._config.evm.address.vault_cbl_staking;
 
-    this._stakingVault = CredbullFixedYieldVault__factory.connect(this._stakingVaultAddress, this._tokenOwner);
+    this._stakingVault = CredbullFixedYieldVault__factory.connect(this._stakingVaultAddress, this._signerWallet);
   }
 
   protected getDepositType() {
@@ -20,6 +20,6 @@ export class VaultDepositApp extends DepositApp<VaultDeposit> {
   }
 
   async deposit(deposit: VaultDeposit): Promise<DepositStatus> {
-    return await deposit.deposit(this._tokenOwner, this._stakingVault);
+    return await deposit.deposit(this._signerWallet, this._stakingVault);
   }
 }
