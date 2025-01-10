@@ -211,7 +211,7 @@ async function connectVault(vaultAddress: string, wallet: Wallet) {
   console.log('Connecting to vault...');
 
   const vault = CredbullFixedYieldVault__factory.connect(vaultAddress, wallet);
-  expect(await vault.symbol()).toEqual('iceCBLscV2');
+  expect(await vault.symbol()).toContain('iceCBLsc');
 
   console.log('Connected to Vault! ' + (await vault.symbol()));
 

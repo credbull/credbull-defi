@@ -1,4 +1,4 @@
-import { BigNumber } from 'ethers';
+import {BigNumber, ethers} from 'ethers';
 
 import { logger, processedLogger } from '../utils/logger';
 
@@ -8,6 +8,10 @@ export enum DepositStatus {
   Success = 'Success',
   SkippedAlreadyProcessed = 'SkippedAlreadyProcessed',
 }
+
+export const MAX_GAS_GWEI = BigInt(200_000);
+export const ETH_PRICE_20241220 = BigInt(3300);
+
 export class Deposit {
   constructor(
     public readonly _id: number,
@@ -51,5 +55,20 @@ export class Deposit {
     }
 
     return alreadyProcessed;
+  }
+
+  estimateGas(gasPrice: BigNumber, gasEstimate: BigNumber): BigNumber {
+    // Estimate gas
+    const tnxCostInWei = gasEstimate.mul(gasPrice);
+    const txnCostInGwei = tnxCostInWei.div(BigNumber.from(10).pow(9)); // Divide by 10^9
+
+    const txnCostInEth = parseFloat(ethers.utils.formatEther(tnxCostInWei));
+    const txnCostInUsd = txnCostInEth * Number(ETH_PRICE_20241220);
+
+    logger.info(
+      `Estimated gas for deposit [id=${this._id}]: ${txnCostInEth} ETH , ${txnCostInUsd} ( ${gasEstimate.toBigInt().toLocaleString()} * ${txnCostInGwei} gwei)`,
+    );
+
+    return txnCostInGwei;
   }
 }

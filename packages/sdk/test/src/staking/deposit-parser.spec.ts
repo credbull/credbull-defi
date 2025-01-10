@@ -1,8 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { ethers } from 'ethers';
-;
-import { parseFromFile } from './deposit-parser';
 
+import { parseFromFile } from './deposit-parser';
 import { VaultDeposit } from './vault-deposit';
 
 const TEST_DEPOSIT_3_FILENAME = 'TEST-deposit-3.json';

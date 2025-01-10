@@ -5,10 +5,7 @@ import { BigNumber, Wallet, ethers } from 'ethers';
 import { handleError } from '../utils/decoder';
 import { logger, processedLogCache } from '../utils/logger';
 
-import { Address, Deposit, DepositStatus } from './deposit';
-
-const MAX_GAS_GWEI = BigInt(200_000);
-const ETH_PRICE_20241220 = BigInt(3300);
+import { Address, Deposit, DepositStatus, MAX_GAS_GWEI } from './deposit';
 
 export class VaultDeposit extends Deposit {
   constructor(_id: number, _receiver: Address, _depositAmount: BigNumber) {
@@ -118,35 +115,14 @@ export class VaultDeposit extends Deposit {
     );
   }
 
-  async estimateGas(vault: CredbullFixedYieldVault, gasEstimate: BigNumber): Promise<BigNumber> {
-    try {
-      // Estimate gas
-      const gasPrice = await vault.provider.getGasPrice(); // Gas price in Wei
-      const tnxCostInWei = gasEstimate.mul(gasPrice);
-      const txnCostInGwei = tnxCostInWei.div(BigNumber.from(10).pow(9)); // Divide by 10^9
-
-      const txnCostInEth = parseFloat(ethers.utils.formatEther(tnxCostInWei));
-      const txnCostInUsd = txnCostInEth * Number(ETH_PRICE_20241220);
-
-      logger.info(
-        `Estimated gas for deposit [id=${this._id}]: ${txnCostInEth} ETH , ${txnCostInUsd} ( ${gasEstimate.toBigInt().toLocaleString()} * ${txnCostInGwei} gwei)`,
-      );
-
-      return txnCostInGwei;
-    } catch (err) {
-      const decodedError = handleError(vault, err);
-      logger.error('Gas estimation error:', decodedError.message);
-      throw decodedError;
-    }
-  }
-
   async estimateGasForDeposit(vault: CredbullFixedYieldVault): Promise<BigNumber> {
     logger.debug(`Estimating gas for deposit [id=${this._id}] ...`);
 
     try {
       // Estimate gas
+      const gasPrice = await vault.provider.getGasPrice(); // Gas price in Wei
       const gasEstimate = await vault.estimateGas.deposit(this._depositAmount, this._receiver);
-      return this.estimateGas(vault, gasEstimate);
+      return this.estimateGas(gasPrice, gasEstimate);
     } catch (err) {
       const decodedError = handleError(vault, err);
       logger.error('Gas estimation error:', decodedError.message);
@@ -161,8 +137,9 @@ export class VaultDeposit extends Deposit {
 
     try {
       // Get the asset address and connect the token as the owner
+      const gasPrice = await vault.provider.getGasPrice(); // Gas price in Wei
       const gasEstimate = await tokenAsOwner.estimateGas.approve(vault.address, this._depositAmount);
-      return this.estimateGas(vault, gasEstimate);
+      return this.estimateGas(gasPrice, gasEstimate);
     } catch (err) {
       const decodedError = handleError(tokenAsOwner, err);
       logger.error('Gas estimation error for allowance:', decodedError.message);
