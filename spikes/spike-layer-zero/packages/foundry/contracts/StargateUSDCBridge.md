@@ -4,12 +4,6 @@
 
 The `StargateUSDCBridge` contract facilitates cross-chain transfers of USDC tokens using the Stargate protocol. It allows users to transfer USDC from the current chain to a specified destination chain seamlessly.
 
-## Prerequisites
-
-- **Stargate Protocol**: An omnichain protocol built on top of LayerZero that enables users and dApps to transfer native assets cross-chain while accessing unified liquidity pools with instant guaranteed finality.
-
-- **USDC Token**: A widely used stablecoin pegged to the US Dollar, operating as an ERC20 token on Ethereum and available on multiple blockchains.
-
 ## Contract Details
 
 ### Interfaces
