@@ -9,7 +9,7 @@ export enum DepositStatus {
   SkippedAlreadyProcessed = 'SkippedAlreadyProcessed',
 }
 
-export const MAX_GAS_GWEI = BigInt(200_000);
+const MAX_GAS_GWEI = BigInt(20_000);
 export const ETH_PRICE_20241220 = BigInt(3300);
 
 export class Deposit {

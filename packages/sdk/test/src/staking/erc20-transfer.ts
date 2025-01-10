@@ -34,10 +34,6 @@ export class Erc20Transfer extends Deposit {
     logger.debug(`Transferring [id=${this._id}] ...`);
 
     const prevVaultBalanceReceiver = await erc20.balanceOf(this._receiver);
-    const prevVaultBalanceSender = await erc20.balanceOf(owner.address);
-
-    logger.error(`!!!! Receiver: ${this._receiver} balance: ${prevVaultBalanceReceiver}`);
-    logger.error(`!!!! Sender: ${owner.address} balance: ${prevVaultBalanceSender}`);
 
     const txnResponse = await erc20.transfer(this._receiver, this._depositAmount).catch((err) => {
       const decodedError = handleError(erc20, err);

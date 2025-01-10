@@ -1,7 +1,9 @@
 import { ERC20, ERC20__factory } from '@credbull/contracts';
 
+import { logger } from '../utils/logger';
+
 import { Address } from './deposit';
-import { DepositApp } from './deposit-app';
+import { DepositApp, LoadDepositResult } from './deposit-app';
 import { Erc20Transfer } from './erc20-transfer';
 
 export class Erc20TransferApp extends DepositApp<Erc20Transfer> {
@@ -23,3 +25,23 @@ export class Erc20TransferApp extends DepositApp<Erc20Transfer> {
     return erc20transfer.deposit(this._signerWallet, this._erc20);
   }
 }
+
+async function main() {
+  const vaultDepositApp = new Erc20TransferApp();
+  const args = process.argv.slice(2); // Gets arguments after `--`
+  const filePath = args[0] || 'TEST-vault-deposit-empty.json'; // default if no value is provided
+
+  try {
+    const result: LoadDepositResult = await vaultDepositApp.loadDeposits(filePath);
+    logger.info(`Successfully loaded deposits!  Summary: ${result.logSummary()}`); // Log a summary after processing
+  } catch (error) {
+    logger.error('An error occurred while processing deposits:', error);
+    throw error;
+  }
+}
+
+// Execute main function if the file is run directly
+main().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});
