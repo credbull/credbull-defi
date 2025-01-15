@@ -119,3 +119,79 @@ Before calling `transferUSDC`, the user must approve the `StargateUSDCBridge` co
 ### Transfer
 
 Call the `transferUSDC` function with the appropriate parameters to initiate a cross-chain transfer. Ensure that the `msg.value` sent with the transaction covers the LayerZero fees for the operation.
+
+## TypeScript Integration Example
+
+```typescript
+import { ethers } from "ethers";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+async function main() {
+  const stargateRouterAddress = "<Stargate_Router_Address>";
+  const usdcTokenAddress = "<USDC_Token_Address>";
+  const stargateBridgeAddress = "<Stargate_Bridge_Contract_Address>";
+
+  const contractABI = [
+    "function transferUSDC(uint16 _dstChainId, uint256 _srcPoolId, uint256 _dstPoolId, address _recipient, uint256 _amount, uint256 _minAmountLD, tuple(uint256 dstGasForCall, uint256 dstNativeAmount, bytes dstNativeAddr) _lzTxParams, bytes _adapterParams) external payable",
+    "function approve(address spender, uint256 amount) external returns (bool)",
+  ];
+
+  const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+  const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+
+  const stargateBridge = new ethers.Contract(
+    stargateBridgeAddress,
+    contractABI,
+    wallet
+  );
+  const usdcToken = new ethers.Contract(usdcTokenAddress, contractABI, wallet);
+
+  const dstChainId = 102;
+  const srcPoolId = 1;
+  const dstPoolId = 1;
+  const recipient = "<Recipient_Address>";
+  const amount = ethers.utils.parseUnits("100", 6); // 100 USDC with 6 decimals
+  const minAmountLD = ethers.utils.parseUnits("95", 6);
+
+  const lzTxParams = {
+    dstGasForCall: 200000,
+    dstNativeAmount: ethers.utils.parseEther("0.01"),
+    dstNativeAddr: ethers.utils.hexlify(ethers.utils.toUtf8Bytes("")),
+  };
+
+  const adapterParams = ethers.utils.defaultAbiCoder.encode(
+    ["uint16", "uint256"],
+    [1, 200000]
+  );
+
+  console.log("Approving USDC...");
+  const approveTx = await usdcToken.approve(stargateBridgeAddress, amount);
+  await approveTx.wait();
+  console.log("USDC Approved.");
+
+  console.log("Initiating Transfer...");
+  const tx = await stargateBridge.transferUSDC(
+    dstChainId,
+    srcPoolId,
+    dstPoolId,
+    recipient,
+    amount,
+    minAmountLD,
+    lzTxParams,
+    adapterParams,
+    {
+      value: ethers.utils.parseEther("0.1"), // Includes Stargate fees
+    }
+  );
+  console.log("Transaction Hash:", tx.hash);
+  await tx.wait();
+  console.log("USDC Transferred Successfully.");
+}
+
+main().catch((error) => {
+  console.error("Error:", error);
+  process.exit(1);
+});
+```

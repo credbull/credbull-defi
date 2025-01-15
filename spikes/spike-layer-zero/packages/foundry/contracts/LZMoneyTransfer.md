@@ -139,3 +139,84 @@ Use the `withdrawAll` function to recover all ETH stored in the contract in case
 
 - Ensure the LayerZero endpoints are configured correctly for both source and destination chains.
 - Use the LayerZero documentation to fetch the appropriate chain IDs and endpoint addresses for your deployment environment.
+
+## TypeScript Integration Example
+
+```typescript
+import { ethers } from "ethers";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+async function main() {
+  const ethereumSepoliaContractAddress = "<Ethereum_Sepolia_Contract_Address>";
+  const optimismSepoliaContractAddress = "<Optimism_Sepolia_Contract_Address>";
+
+  const ethereumSepoliaChainId = 10121;
+  const optimismSepoliaChainId = 10132;
+
+  const contractABI = [
+    "function setTrustedRemote(uint16 _remoteChainId, bytes calldata _remoteAddress) external",
+    "function sendTokens(address _toAddress) external payable",
+    "function estimateFees(uint16 _dstChainId, address _sender, address _recipient, uint256 _amount, bool _payInZRO, bytes calldata _adapterParams) external view returns (uint256, uint256)"
+  ];
+
+  const sepoliaProvider = new ethers.providers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL);
+  const sepoliaWallet = new ethers.Wallet(process.env.PRIVATE_KEY!, sepoliaProvider);
+
+  const optimismProvider = new ethers.providers.JsonRpcProvider(process.env.OPTIMISM_RPC_URL);
+  const optimismWallet = new ethers.Wallet(process.env.PRIVATE_KEY!, optimismProvider);
+
+  const ethereumSepoliaContract = new ethers.Contract(ethereumSepoliaContractAddress, contractABI, sepoliaWallet);
+  const optimismSepoliaContract = new ethers.Contract(optimismSepoliaContractAddress, contractABI, optimismWallet);
+
+  const optimismTrustedRemote = ethers.utils.defaultAbiCoder.encode(
+    ["address"],
+    [optimismSepoliaContractAddress]
+  );
+  console.log("Setting trusted remote on Ethereum Sepolia...");
+  let tx = await ethereumSepoliaContract.setTrustedRemote(optimismSepoliaChainId, optimismTrustedRemote);
+  console.log("Transaction hash:", tx.hash);
+  await tx.wait();
+  console.log("Trusted remote set on Ethereum Sepolia.");
+
+  const ethereumTrustedRemote = ethers.utils.defaultAbiCoder.encode(
+    ["address"],
+    [ethereumSepoliaContractAddress]
+  );
+  console.log("Setting trusted remote on Optimism Sepolia...");
+  tx = await optimismSepoliaContract.setTrustedRemote(ethereumSepoliaChainId, ethereumTrustedRemote);
+  console.log("Transaction hash:", tx.hash);
+  await tx.wait();
+  console.log("Trusted remote set on Optimism Sepolia.");
+
+  const recipientAddress = "<Recipient_Address>";
+  const amountToSend = ethers.utils.parseEther("0.01");
+  const adapterParams = ethers.utils.defaultAbiCoder.encode(["uint16", "uint256"], [1, 200000]);
+
+  console.log("Estimating LayerZero fees...");
+  const [nativeFee] = await ethereumSepoliaContract.estimateFees(
+    optimismSepoliaChainId,
+    sepoliaWallet.address,
+    recipientAddress,
+    amountToSend,
+    false,
+    adapterParams
+  );
+  console.log("Estimated LayerZero fee (in wei):", nativeFee.toString());
+
+  console.log("Sending tokens...");
+  tx = await ethereumSepoliaContract.sendTokens(recipientAddress, {
+    value: amountToSend.add(nativeFee),
+    gasLimit: 300000
+  });
+  console.log("Transaction hash:", tx.hash);
+  await tx.wait();
+  console.log("Tokens sent successfully.");
+}
+
+main().catch((error) => {
+  console.error("Error:", error);
+  process.exit(1);
+});
+```
