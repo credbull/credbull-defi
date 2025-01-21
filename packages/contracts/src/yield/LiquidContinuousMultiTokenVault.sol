@@ -58,6 +58,7 @@ contract LiquidContinuousMultiTokenVault is
         IRedeemOptimizer redeemOptimizer;
         uint256 vaultStartTimestamp;
         uint256 redeemNoticePeriod;
+        uint256 minHoldingPeriod;
         TripleRateContext.ContextParams contextParams;
     }
 
@@ -70,6 +71,10 @@ contract LiquidContinuousMultiTokenVault is
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant ASSET_MANAGER_ROLE = keccak256("ASSET_MANAGER_ROLE");
+    bytes32 public constant TOKEN_HOLDER_ROLE = keccak256("TOKEN_HOLDER_ROLE");
+
+    // TODO - confirm if minHolding OR only redeem on tenor period (e.g. 1 -> 31 -> 61)
+    uint256 public _minHoldingPeriod; // added Jan 2025 - needs to be after all prior allocated storage space
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidAuthAddress(string authName, address authAddress);
@@ -100,6 +105,7 @@ contract LiquidContinuousMultiTokenVault is
         _yieldStrategy = vaultParams.yieldStrategy;
         _redeemOptimizer = vaultParams.redeemOptimizer;
         _vaultStartTimestamp = vaultParams.vaultStartTimestamp;
+        _minHoldingPeriod = vaultParams.minHoldingPeriod;
 
         if (vaultParams.contextParams.frequency != 360 && vaultParams.contextParams.frequency != 365) {
             revert LiquidContinuousMultiTokenVault__InvalidFrequency(vaultParams.contextParams.frequency);
@@ -435,6 +441,15 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     /// @inheritdoc TimelockAsyncUnlock
+    function maxRequestUnlock(address owner, uint256 depositPeriod) public view virtual override returns (uint256) {
+        if (currentPeriod() < (depositPeriod + _minHoldingPeriod)) {
+            return 0;
+        }
+
+        return lockedAmount(owner, depositPeriod) - unlockRequestAmountByDepositPeriod(owner, depositPeriod);
+    }
+
+    /// @inheritdoc TimelockAsyncUnlock
     function _authorizeCaller(address caller, address owner) internal virtual override {
         if (caller != owner && !isApprovedForAll(owner, caller)) {
             revert LiquidContinuousMultiTokenVault__UnAuthorized(caller, owner);
@@ -506,6 +521,11 @@ contract LiquidContinuousMultiTokenVault is
 
     // ===================== Utility =====================
 
+    /// @dev set the vault start timestamp
+    function setMinHoldingPeriod(uint256 minHoldingPeriod) public onlyRole(OPERATOR_ROLE) {
+        _minHoldingPeriod = minHoldingPeriod;
+    }
+
     /// minimum shares required to convert to assets and vice-versa.
     function _minConversionThreshold() internal view returns (uint256 minConversionThreshold) {
         return SCALE < 10 ? SCALE : 10;
@@ -545,6 +565,6 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     function getVersion() public pure returns (uint256 version) {
-        return 2;
+        return 3;
     }
 }

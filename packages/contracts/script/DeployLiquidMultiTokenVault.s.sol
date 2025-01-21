@@ -128,7 +128,8 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
             yieldStrategy: yieldStrategy,
             redeemOptimizer: redeemOptimizer,
             vaultStartTimestamp: startTimestamp,
-            redeemNoticePeriod: 1,
+            redeemNoticePeriod: 1, // TODO add this as toml config param
+            minHoldingPeriod: 0, // TODO add this as toml config param
             contextParams: contextParams
         });
 

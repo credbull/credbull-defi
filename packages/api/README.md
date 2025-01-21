@@ -77,3 +77,22 @@ docker rm credbull-local-container
 # delete the image
 docker rmi credbull-local-api
 ```
+
+## Deploy to fly.io
+Pre-requisite: build the docker image
+
+Deploy credbull-defi-api:
+```bash
+flyctl deploy ../.. --app credbull-defi-api --env ENVIRONMENT=testnet --local-only
+```
+**Troubleshooting** - change fly.io deploy region (if region is not available) 
+```bash
+# scale up a new region, e.g. 'ams' for amsterdam
+ fly scale count 2 --region ams --app credbull-defi-api
+ # scale down the current region, e.g. 'fra' for frankfurt
+ fly scale count 0 --region fra --app credbull-defi-api
+ 
+ # redeploy
+ flyctl deploy ../.. --app credbull-defi-api --env ENVIRONMENT=testnet --local-only
+```
+
