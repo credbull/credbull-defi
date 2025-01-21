@@ -3,6 +3,7 @@
 pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
+import { BaseVault } from "@credbull/yield/BaseVault.sol";
 import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault.s.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 
@@ -45,7 +46,7 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
         _chain = getChain(anvilChainId);
     }
 
-    function run(LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth)
+    function run(BaseVault.VaultAuth memory vaultAuth)
         public
         override
         returns (LiquidContinuousMultiTokenVault vault_)
@@ -181,7 +182,7 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
         return _startTimestamp();
     }
 
-    function auth() public view virtual returns (LiquidContinuousMultiTokenVault.VaultAuth memory auth_) {
+    function auth() public view virtual returns (BaseVault.VaultAuth memory auth_) {
         return _vaultAuth;
     }
 }

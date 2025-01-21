@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
+import { BaseVault } from "@credbull/yield/BaseVault.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
@@ -237,7 +238,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
 
         LiquidContinuousMultiTokenVault liquidVault = new LiquidContinuousMultiTokenVault();
         LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroOperator = _createVaultParams(
-            LiquidContinuousMultiTokenVault.VaultAuth({
+            BaseVault.VaultAuth({
                 owner: makeAddr("owner"),
                 operator: zeroAddress,
                 upgrader: makeAddr("upgrader"),
@@ -247,9 +248,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector,
-                "operator",
-                zeroAddress
+                BaseVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector, "operator", zeroAddress
             )
         );
 
@@ -258,7 +257,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         );
 
         LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroUpgrader = _createVaultParams(
-            LiquidContinuousMultiTokenVault.VaultAuth({
+            BaseVault.VaultAuth({
                 owner: makeAddr("owner"),
                 operator: makeAddr("operator"),
                 upgrader: zeroAddress,
@@ -267,9 +266,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         );
         vm.expectRevert(
             abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector,
-                "upgrader",
-                zeroAddress
+                BaseVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector, "upgrader", zeroAddress
             )
         );
         new ERC1967Proxy(
@@ -277,7 +274,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         );
 
         LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroAssetManager = _createVaultParams(
-            LiquidContinuousMultiTokenVault.VaultAuth({
+            BaseVault.VaultAuth({
                 owner: makeAddr("owner"),
                 operator: makeAddr("operator"),
                 upgrader: makeAddr("upgrader"),
@@ -286,9 +283,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         );
         vm.expectRevert(
             abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector,
-                "assetManager",
-                zeroAddress
+                BaseVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector, "assetManager", zeroAddress
             )
         );
         new ERC1967Proxy(

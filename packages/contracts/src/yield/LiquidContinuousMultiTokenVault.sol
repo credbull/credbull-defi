@@ -5,18 +5,14 @@ import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { IComponentToken } from "@credbull/token/component/IComponentToken.sol";
 import { TimelockAsyncUnlock } from "@credbull/timelock/TimelockAsyncUnlock.sol";
+import { BaseVault } from "@credbull/yield/BaseVault.sol";
 import { TripleRateContext } from "@credbull/yield/context/TripleRateContext.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC6372 } from "@openzeppelin/contracts/interfaces/IERC6372.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import { AccessControlEnumerableUpgradeable } from
-    "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlEnumerableUpgradeable.sol";
 
 /**
  * @title LiquidContinuousMultiTokenVault
@@ -33,23 +29,13 @@ import { AccessControlEnumerableUpgradeable } from
  *
  */
 contract LiquidContinuousMultiTokenVault is
-    Initializable,
-    UUPSUpgradeable,
+    BaseVault,
     MultiTokenVault,
     IComponentToken,
     TimelockAsyncUnlock,
-    TripleRateContext,
-    AccessControlEnumerableUpgradeable,
-    IERC6372
+    TripleRateContext
 {
     using SafeERC20 for IERC20;
-
-    struct VaultAuth {
-        address owner;
-        address operator;
-        address upgrader;
-        address assetManager;
-    }
 
     struct VaultParams {
         VaultAuth vaultAuth;
@@ -67,12 +53,7 @@ contract LiquidContinuousMultiTokenVault is
 
     uint256 private constant ZERO_REQUEST_ID = 0;
 
-    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
-    bytes32 public constant ASSET_MANAGER_ROLE = keccak256("ASSET_MANAGER_ROLE");
-
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
-    error LiquidContinuousMultiTokenVault__InvalidAuthAddress(string authName, address authAddress);
     error LiquidContinuousMultiTokenVault__ControllerNotSender(address sender, address controller);
     error LiquidContinuousMultiTokenVault__UnAuthorized(address sender, address authorizedOwner);
     error LiquidContinuousMultiTokenVault__AmountMismatch(uint256 amount1, uint256 amount2);
@@ -86,16 +67,11 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     function initialize(VaultParams memory vaultParams) public initializer {
-        __UUPSUpgradeable_init();
-        __AccessControl_init();
+        __BaseVault_init(vaultParams.vaultAuth);
+
         __MultiTokenVault_init(vaultParams.asset);
         __TimelockAsyncUnlock_init(vaultParams.redeemNoticePeriod);
         __TripleRateContext_init(vaultParams.contextParams);
-
-        _initRole("owner", DEFAULT_ADMIN_ROLE, vaultParams.vaultAuth.owner);
-        _initRole("operator", OPERATOR_ROLE, vaultParams.vaultAuth.operator);
-        _initRole("upgrader", UPGRADER_ROLE, vaultParams.vaultAuth.upgrader);
-        _initRole("assetManager", ASSET_MANAGER_ROLE, vaultParams.vaultAuth.assetManager);
 
         _yieldStrategy = vaultParams.yieldStrategy;
         _redeemOptimizer = vaultParams.redeemOptimizer;
@@ -105,17 +81,6 @@ contract LiquidContinuousMultiTokenVault is
             revert LiquidContinuousMultiTokenVault__InvalidFrequency(vaultParams.contextParams.frequency);
         }
     }
-
-    function _initRole(string memory roleName, bytes32 role, address account) private {
-        if (account == address(0)) {
-            revert LiquidContinuousMultiTokenVault__InvalidAuthAddress(roleName, account);
-        }
-
-        _grantRole(role, account);
-    }
-
-    // solhint-disable-next-line no-empty-blocks
-    function _authorizeUpgrade(address newImplementation) internal view override onlyRole(UPGRADER_ROLE) { }
 
     // ===================== MultiTokenVault =====================
 
@@ -475,7 +440,7 @@ contract LiquidContinuousMultiTokenVault is
         setReducedRate(reducedRateScaled_, currentPeriod());
     }
 
-    // ===================== Timer / IERC6372 Clock =====================
+    // ===================== Timer =====================
 
     /// @dev set the vault start timestamp
     function setVaultStartTimestamp(uint256 vaultStartTimestamp) public onlyRole(OPERATOR_ROLE) {
@@ -492,16 +457,6 @@ contract LiquidContinuousMultiTokenVault is
     /// @dev vault is 0 based. so currentPeriodsElapsed() = currentPeriod() - 0
     function currentPeriod() public view override returns (uint256 currentPeriod_) {
         return currentPeriodsElapsed();
-    }
-
-    /// @inheritdoc IERC6372
-    function clock() public view returns (uint48 clock_) {
-        return Timer.clock();
-    }
-
-    /// @inheritdoc IERC6372
-    function CLOCK_MODE() public pure returns (string memory) {
-        return Timer.CLOCK_MODE();
     }
 
     // ===================== Utility =====================
@@ -538,13 +493,11 @@ contract LiquidContinuousMultiTokenVault is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(MultiTokenVault, AccessControlEnumerableUpgradeable, TimelockAsyncUnlock)
+        virtual
+        override(MultiTokenVault, BaseVault, TimelockAsyncUnlock)
         returns (bool)
     {
-        return TimelockAsyncUnlock.supportsInterface(interfaceId) || MultiTokenVault.supportsInterface(interfaceId);
-    }
-
-    function getVersion() public pure returns (uint256 version) {
-        return 2;
+        return BaseVault.supportsInterface(interfaceId) || TimelockAsyncUnlock.supportsInterface(interfaceId)
+            || MultiTokenVault.supportsInterface(interfaceId);
     }
 }

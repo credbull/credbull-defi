@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
+import { BaseVault } from "@credbull/yield/BaseVault.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
@@ -21,7 +22,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
     LiquidContinuousMultiTokenVault internal _liquidVault;
 
-    LiquidContinuousMultiTokenVault.VaultAuth internal _vaultAuth = LiquidContinuousMultiTokenVault.VaultAuth({
+    BaseVault.VaultAuth internal _vaultAuth = BaseVault.VaultAuth({
         owner: makeAddr("owner"),
         operator: makeAddr("operator"),
         upgrader: makeAddr("upgrader"),
@@ -94,7 +95,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         return actualSharesAtPeriod;
     }
 
-    function _createVaultParams(LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth)
+    function _createVaultParams(BaseVault.VaultAuth memory vaultAuth)
         internal
         returns (LiquidContinuousMultiTokenVault.VaultParams memory vaultParams_)
     {

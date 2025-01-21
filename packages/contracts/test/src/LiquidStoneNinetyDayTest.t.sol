@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
+import { BaseVault } from "@credbull/yield/BaseVault.sol";
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
 
 import { CalcSimpleInterest } from "@credbull/yield/CalcSimpleInterest.sol";
@@ -16,7 +17,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 
 contract DeployLiquidStoneNinetyDay is DeployLiquidMultiTokenVault {
     function _createVaultParams(
-        LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth,
+        BaseVault.VaultAuth memory vaultAuth,
         IERC20Metadata asset,
         IYieldStrategy yieldStrategy,
         IRedeemOptimizer redeemOptimizer

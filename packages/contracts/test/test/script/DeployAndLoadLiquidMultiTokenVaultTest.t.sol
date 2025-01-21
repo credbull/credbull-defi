@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
+import { BaseVault } from "@credbull/yield/BaseVault.sol";
 import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/LiquidContinuousMultiTokenVaultTestBase.t.sol";
 import { DeployAndLoadLiquidMultiTokenVault } from "./DeployAndLoadLiquidMultiTokenVault.s.sol";
 
@@ -19,7 +19,7 @@ contract DeployAndLoadLiquidMultiTokenVaultTest is LiquidContinuousMultiTokenVau
 
     /// @dev - this SHOULD work, but will have knock-off effects to yield/returns and pending requests
     function test__DeployAndLoadLiquidMultiTokenVaultTest__VerifyCutoffs() public {
-        LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth = _deployVault.auth();
+        BaseVault.VaultAuth memory vaultAuth = _deployVault.auth();
 
         _setPeriod(vaultAuth.operator, _liquidVault, 0);
         _setPeriod(vaultAuth.operator, _liquidVault, 30);

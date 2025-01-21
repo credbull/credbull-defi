@@ -3,6 +3,7 @@
 pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
+import { BaseVault } from "@credbull/yield/BaseVault.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
 import { ITripleRateContext } from "@credbull/yield/context/ITripleRateContext.sol";
@@ -28,7 +29,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
     using stdToml for string;
 
     string private _tomlConfig;
-    LiquidContinuousMultiTokenVault.VaultAuth internal _vaultAuth;
+    BaseVault.VaultAuth internal _vaultAuth;
 
     uint256 public constant NOTICE_PERIOD = 1;
     string public constant CONTRACT_TOML_KEY = ".evm.contracts.liquid_continuous_multi_token_vault";
@@ -36,7 +37,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
     constructor() {
         _tomlConfig = loadTomlConfiguration();
 
-        _vaultAuth = LiquidContinuousMultiTokenVault.VaultAuth({
+        _vaultAuth = BaseVault.VaultAuth({
             owner: _tomlConfig.readAddress(".evm.address.owner"),
             operator: _tomlConfig.readAddress(".evm.address.operator"),
             upgrader: _tomlConfig.readAddress(".evm.address.upgrader"),
@@ -48,11 +49,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         return run(_vaultAuth);
     }
 
-    function run(LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth)
-        public
-        virtual
-        returns (LiquidContinuousMultiTokenVault vault)
-    {
+    function run(BaseVault.VaultAuth memory vaultAuth) public virtual returns (LiquidContinuousMultiTokenVault vault) {
         IERC20Metadata usdc = _usdcOrDeployMock(vaultAuth.owner);
 
         vm.startBroadcast();
@@ -99,7 +96,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
     }
 
     function _createVaultParams(
-        LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth,
+        BaseVault.VaultAuth memory vaultAuth,
         IERC20Metadata asset,
         IYieldStrategy yieldStrategy,
         IRedeemOptimizer redeemOptimizer
