@@ -50,7 +50,7 @@ contract DiscountVault is
         _disableInitializers();
     }
 
-    function initialize(DiscountVaultParams memory params) public initializer {
+    function __DiscountVault_init(DiscountVaultParams memory params) public initializer {
         __UUPSUpgradeable_init();
         __AccessControl_init();
         __ERC20_init("Simple Interest Rate Claim", "cSIR"); // TODO - parameterize these
@@ -64,7 +64,7 @@ contract DiscountVault is
 
     // TODO - put back access control check
     // solhint-disable-next-line no-empty-blocks
-    function _authorizeUpgrade(address newImplementation) internal view override { } // onlyRole(UPGRADER_ROLE) { }
+    function _authorizeUpgrade(address newImplementation) internal view virtual override { } // onlyRole(UPGRADER_ROLE) { }
 
     /// @inheritdoc IDiscountVault
     function calcPrice(uint256 numPeriodsElapsed) public view returns (uint256 priceScaled) {
@@ -161,5 +161,9 @@ contract DiscountVault is
      */
     function _update(address from, address to, uint256 value) internal virtual override {
         ERC20Upgradeable._update(from, to, value);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 }

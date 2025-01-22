@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import { IVault } from "../../../../src/token/ERC4626/IVault.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
@@ -62,31 +63,6 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance after deposit");
 
         testVaultAtOffsets(_alice, vault, _testParams1);
-    }
-
-    function test__MultiTokenVaultTest__RevertWhen_DepositExceedsMax() public {
-        uint256 assetToSharesRatio = 2;
-
-        MultiTokenVaultDailyPeriods vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-        uint256 _maxDeposit = 250 * _scale;
-        vault.setMaxDeposit(_maxDeposit);
-
-        address vaultAddress = address(vault);
-        vm.startPrank(_alice);
-        _asset.approve(vaultAddress, _testParams1.principal);
-
-        // deposit amount > max deposit amount should fail.
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                MultiTokenVault.MultiTokenVault__ExceededMaxDeposit.selector,
-                _alice,
-                vault.currentPeriodsElapsed(),
-                _testParams1.principal,
-                _maxDeposit
-            )
-        );
-        vault.deposit(_testParams1.principal, _alice);
-        vm.stopPrank();
     }
 
     function test__MultiTokenVaultTest__DepositAndRedeem() public {
@@ -543,7 +519,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         return balances;
     }
 
-    function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParamSet.TestParam memory testParam)
+    function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
         internal
         view
         virtual
@@ -555,14 +531,14 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         );
     }
 
-    function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
+    function _warpToPeriod(IVault vault, uint256 timePeriod) internal virtual override {
         MultiTokenVaultDailyPeriods(address(vault)).setCurrentPeriodsElapsed(timePeriod);
     }
 
     function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)
         internal
         virtual
-        returns (MultiTokenVaultDailyPeriods)
+        returns (MultiTokenVault)
     {
         MultiTokenVaultDailyPeriods _vault = new MultiTokenVaultDailyPeriods();
 

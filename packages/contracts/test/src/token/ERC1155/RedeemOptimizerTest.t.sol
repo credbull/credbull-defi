@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
+import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -249,7 +250,7 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         );
     }
 
-    function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParamSet.TestParam memory testParam)
+    function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
         internal
         view
         override
@@ -260,7 +261,7 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         );
     }
 
-    function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
+    function _warpToPeriod(IVault vault, uint256 timePeriod) internal override {
         MultiTokenVaultDailyPeriods(address(vault)).setCurrentPeriodsElapsed(timePeriod);
     }
 

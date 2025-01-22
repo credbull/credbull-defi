@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
+import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
@@ -51,7 +52,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     // verify deposit.  updates vault assets and shares.
     function _testDepositOnly(
         TestParamSet.TestUsers memory testUsers,
-        IMultiTokenVault vault,
+        IVault vault,
         TestParamSet.TestParam memory testParam
     ) internal virtual override returns (uint256 actualSharesAtPeriod_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
@@ -67,7 +68,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
         assertEq(
             actualSharesAtPeriod,
-            vault.balanceOf(testUsers.tokenReceiver, testParam.depositPeriod),
+            liquidVault.balanceOf(testUsers.tokenReceiver, testParam.depositPeriod),
             _assertMsg(
                 "!!! receiver did not receive the correct vault shares - balanceOf ", vault, testParam.depositPeriod
             )
@@ -112,7 +113,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
 
     function _testRedeemOnly(
         TestParamSet.TestUsers memory redeemUsers,
-        IMultiTokenVault vault,
+        IVault vault,
         TestParamSet.TestParam memory testParam,
         uint256 sharesToRedeemAtPeriod
     ) internal virtual override returns (uint256 actualAssetsAtPeriod_) {
@@ -125,14 +126,14 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         _warpToPeriod(liquidVault, testParam.redeemPeriod - liquidVault.noticePeriod());
 
         vm.prank(redeemUsers.tokenOwner);
-        vault.setApprovalForAll(redeemUsers.tokenOperator, true);
+        liquidVault.setApprovalForAll(redeemUsers.tokenOperator, true);
 
         // this vault requires an unlock/redeem request prior to redeeming
         vm.prank(redeemUsers.tokenOperator);
         liquidVault.requestRedeem(sharesToRedeemAtPeriod, redeemUsers.tokenOperator, redeemUsers.tokenOwner);
 
         vm.prank(redeemUsers.tokenOwner);
-        vault.setApprovalForAll(redeemUsers.tokenOperator, false);
+        liquidVault.setApprovalForAll(redeemUsers.tokenOperator, false);
 
         assertEq(
             sharesToRedeemAtPeriod,
@@ -253,7 +254,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         return assets;
     }
 
-    function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParamSet.TestParam memory testParam)
+    function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
         internal
         view
         override
@@ -270,7 +271,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     }
 
     /// @dev this assumes timePeriod is in days
-    function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
+    function _warpToPeriod(IVault vault, uint256 timePeriod) internal override {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         uint256 warpToTimeInSeconds = liquidVault._vaultStartTimestamp() + timePeriod * 24 hours;

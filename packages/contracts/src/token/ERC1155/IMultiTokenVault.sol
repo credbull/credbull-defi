@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 
 /**
  * @title IMultiTokenVault
@@ -10,7 +11,7 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
  *   - Users redeem ERC1155 share tokens, and the vault returns the corresponding amount of ERC20 assets.
  *   - Each deposit period has its own ERC1155 share token, allowing for time-based calculations, e.g. for returns.
  */
-interface IMultiTokenVault is IERC1155 {
+interface IMultiTokenVault is IVault, IERC1155 {
     /// @notice The event is being emitted once user deposits.
     event Deposit(
         address indexed sender, address indexed receiver, uint256 depositPeriod, uint256 assets, uint256 shares

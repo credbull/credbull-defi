@@ -9,7 +9,7 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 contract MultiTokenVaultDailyPeriods is Initializable, UUPSUpgradeable, MultiTokenVault {
     uint256 internal ASSET_TO_SHARES_RATIO;
     uint256 internal YIELD_PERCENTAGE;
-    uint256 private _currentPeriod;
+    uint256 private _currentPeriod; // TODO - replace this with timer impl
     uint256 private _maxDeposit;
 
     function initialize(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage) public initializer {

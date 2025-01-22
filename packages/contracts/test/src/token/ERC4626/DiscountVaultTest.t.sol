@@ -148,7 +148,11 @@ contract DiscountVaultTest is DiscountVaultTestBase {
     function _createVault(DiscountVault.DiscountVaultParams memory params) internal returns (IDiscountVault vault_) {
         DiscountVault vaultImpl = new DiscountVault();
         DiscountVault vaultProxy = DiscountVault(
-            address(new ERC1967Proxy(address(vaultImpl), abi.encodeWithSelector(vaultImpl.initialize.selector, params)))
+            address(
+                new ERC1967Proxy(
+                    address(vaultImpl), abi.encodeWithSelector(vaultImpl.__DiscountVault_init.selector, params)
+                )
+            )
         );
 
         return vaultProxy;
