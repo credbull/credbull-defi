@@ -23,7 +23,4 @@ interface IDiscountVault is IERC4626 {
 
     /// @notice Gets the current number of time periods elapsed
     function currentPeriodsElapsed() external view returns (uint256 currentPeriodsElapsed_);
-
-    /// @notice Sets `currentTimePeriodsElapsed` for testing purposes
-    function setCurrentPeriodsElapsed(uint256 currentPeriodsElapsed_) external;
 }

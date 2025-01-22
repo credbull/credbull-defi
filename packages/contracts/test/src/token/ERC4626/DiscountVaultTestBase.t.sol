@@ -46,10 +46,10 @@ abstract contract DiscountVaultTestBase is Test {
         // ------------------- check toShares/toAssets - current period -------------------
         uint256 prevVaultTimePeriodsElapsed = vault.currentPeriodsElapsed(); // save previous state for later
 
-        vault.setCurrentPeriodsElapsed(numTimePeriods); // set deposit numTimePeriods
+        _warpToPeriod(vault, numTimePeriods); // set deposit numTimePeriods
         uint256 actualShares = vault.convertToShares(principal);
 
-        vault.setCurrentPeriodsElapsed(numTimePeriods + vault.getTenor()); // set redeem numTimePeriods
+        _warpToPeriod(vault, numTimePeriods + vault.getTenor()); // set redeem numTimePeriods
         uint256 actualAssets = vault.convertToAssets(actualShares); // now redeem
 
         assertApproxEqAbs(
@@ -63,7 +63,7 @@ abstract contract DiscountVaultTestBase is Test {
         uint256 expectedPartialYield =
             principal.mulDiv(33, 100) + vault.calcYield(principal.mulDiv(33, 100), vault.getTenor());
 
-        vault.setCurrentPeriodsElapsed(numTimePeriods + vault.getTenor()); // set redeem numTimePeriods
+        _warpToPeriod(vault, numTimePeriods + vault.getTenor()); // set redeem numTimePeriods
 
         uint256 partialAssetsAtPeriod = vault.convertToAssets(actualShares.mulDiv(33, 100));
 
@@ -74,7 +74,7 @@ abstract contract DiscountVaultTestBase is Test {
             assertMsg("partial yield does not equal principal + interest", vault, numTimePeriods)
         );
 
-        vault.setCurrentPeriodsElapsed(prevVaultTimePeriodsElapsed); // restore the vault to previous state
+        _warpToPeriod(vault, prevVaultTimePeriodsElapsed); // restore the vault to previous state
     }
 
     // verify previewDeposit and previewRedeem.  These are a "preview" and do NOT update vault assets or shares.
@@ -86,10 +86,10 @@ abstract contract DiscountVaultTestBase is Test {
         uint256 expectedInterest = vault.calcYield(principal, vault.getTenor());
         uint256 expectedPrincipalAndInterest = principal + expectedInterest;
 
-        vault.setCurrentPeriodsElapsed(numTimePeriods); // set deposit period prior to deposit
+        _warpToPeriod(vault, numTimePeriods); // set deposit period prior to deposit
         uint256 actualSharesDeposit = vault.previewDeposit(principal);
 
-        vault.setCurrentPeriodsElapsed(numTimePeriods + vault.getTenor()); // warp to redeem / withdraw
+        _warpToPeriod(vault, numTimePeriods + vault.getTenor()); // warp to redeem / withdraw
 
         // check previewRedeem
         assertApproxEqAbs(
@@ -107,7 +107,7 @@ abstract contract DiscountVaultTestBase is Test {
             assertMsg("previewWithdraw incorrect - principal", vault, numTimePeriods)
         );
 
-        vault.setCurrentPeriodsElapsed(prevVaultTimePeriodsElapsed);
+        _warpToPeriod(vault, prevVaultTimePeriodsElapsed);
     }
 
     // verify deposit and redeem.  These update vault assets and shares.
@@ -126,7 +126,7 @@ abstract contract DiscountVaultTestBase is Test {
         uint256 prevReceiverAssetBalance = asset.balanceOf(receiver);
 
         // deposit
-        vault.setCurrentPeriodsElapsed(numTimePeriods); // set deposit numTimePeriods
+        _warpToPeriod(vault, numTimePeriods); // set deposit numTimePeriods
         vm.startPrank(receiver);
         assertGe(
             asset.balanceOf(receiver), principal, assertMsg("not enough assets for deposit ", vault, numTimePeriods)
@@ -149,7 +149,7 @@ abstract contract DiscountVaultTestBase is Test {
         vm.stopPrank();
 
         // redeem
-        vault.setCurrentPeriodsElapsed(numTimePeriods + vault.getTenor()); // warp the vault to redeem period
+        _warpToPeriod(vault, numTimePeriods + vault.getTenor()); // warp the vault to redeem period
 
         vm.startPrank(receiver);
         uint256 assets = vault.redeem(shares, receiver, receiver);
@@ -168,7 +168,7 @@ abstract contract DiscountVaultTestBase is Test {
             assertMsg("yield does not equal principal + interest", vault, numTimePeriods)
         );
 
-        vault.setCurrentPeriodsElapsed(prevVaultTimePeriodsElapsed); // restore the vault to previous state
+        _warpToPeriod(vault, prevVaultTimePeriodsElapsed); // restore the vault to previous state
     }
 
     function assertMsg(string memory prefix, IDiscountVault vault, uint256 numTimePeriods)
@@ -181,8 +181,12 @@ abstract contract DiscountVaultTestBase is Test {
         return string.concat(prefix, toString(calcInterest), " timePeriod= ", vm.toString(numTimePeriods));
     }
 
-    function _warpToPeriod(DiscountVault vault, uint256 timePeriod) internal virtual {
-        vault.setCurrentPeriodsElapsed(timePeriod);
+    function _warpToPeriod(IDiscountVault vault, uint256 timePeriod) internal virtual {
+        DiscountVault discountVault = DiscountVault(address(vault));
+
+        uint256 warpToTimeInSeconds = discountVault._vaultStartTimestamp() + timePeriod * 24 hours;
+
+        vm.warp(warpToTimeInSeconds);
     }
 
     function toString(ICalcInterestMetadata calcInterest) internal view returns (string memory) {

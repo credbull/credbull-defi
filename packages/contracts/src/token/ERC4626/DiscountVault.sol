@@ -5,6 +5,7 @@ import { CalcDiscounted } from "@credbull/yield/CalcDiscounted.sol";
 import { ICalcInterestMetadata } from "@credbull/yield/ICalcInterestMetadata.sol";
 import { IDiscountVault } from "@credbull/token/ERC4626/IDiscountVault.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
+import { Timer } from "@credbull/timelock/Timer.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -33,7 +34,7 @@ contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
 
     error RedeemTimePeriodNotSupported(uint256 currentPeriod, uint256 redeemPeriod);
 
-    uint256 public _currentPeriodsElapsed = 0; // the current number of time periods elapsed
+    uint256 public _vaultStartTimestamp;
 
     IYieldStrategy public immutable YIELD_STRATEGY;
     uint256 public immutable TENOR;
@@ -60,6 +61,10 @@ contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
         return YIELD_STRATEGY.calcPrice(address(this), numPeriodsElapsed);
     }
 
+    function _currentPrice() public view returns (uint256 priceScaled) {
+        return calcPrice(currentPeriodsElapsed());
+    }
+
     function calcYield(uint256 principal, uint256 toPeriod) public view returns (uint256 yield) {
         return calcYield(principal, 0, toPeriod);
     }
@@ -79,8 +84,7 @@ contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
         override
         returns (uint256 shares)
     {
-        uint256 price = calcPrice(_currentPeriodsElapsed);
-        return CalcDiscounted.calcDiscounted(assets, price, SCALE);
+        return CalcDiscounted.calcDiscounted(assets, _currentPrice(), SCALE);
     }
 
     // =============== Redeem ===============
@@ -93,12 +97,14 @@ contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
         override(ERC4626)
         returns (uint256 assets)
     {
+        uint256 currentPeriodsElapsed_ = currentPeriodsElapsed();
         // redeeming before TENOR - give back the Discounted Amount.
         // This is a slash of Principal (and no Interest).
         // TODO - need to account for deposits after TENOR.  e.g. 30 day tenor, deposit on day 31 and redeem on day 32.
-        if (_currentPeriodsElapsed < TENOR) return 0;
+        if (currentPeriodsElapsed_ < TENOR) return 0;
 
-        uint256 price = calcPrice(_currentPeriodsElapsed - TENOR);
+        uint256 price = calcPrice(currentPeriodsElapsed_ - TENOR);
+
         uint256 _principal = CalcDiscounted.calcPrincipalFromDiscounted(shares, price, SCALE);
 
         return _principal + calcYield(_principal, TENOR);
@@ -109,12 +115,12 @@ contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
     /// @inheritdoc ERC4626
     // TODO - simplify this - should be able to reuse convert functions
     function previewWithdraw(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256 shares) {
-        if (assets < SCALE) return 0; // no shares for fractional assets
+        uint256 currentPeriodsElapsed_ = currentPeriodsElapsed();
 
         // withdraw before TENOR - not enough time periods to calculate Discounted properly
-        if (_currentPeriodsElapsed < TENOR) return 0;
+        if (currentPeriodsElapsed_ < TENOR) return 0;
 
-        uint256 price = calcPrice(_currentPeriodsElapsed - TENOR);
+        uint256 price = calcPrice(currentPeriodsElapsed_ - TENOR);
 
         return CalcDiscounted.calcDiscounted(assets, price, SCALE);
     }
@@ -145,11 +151,7 @@ contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
     // =============== Utility ===============
 
     function currentPeriodsElapsed() public view virtual returns (uint256) {
-        return _currentPeriodsElapsed;
-    }
-
-    function setCurrentPeriodsElapsed(uint256 currentPeriodsElapsed_) public virtual {
-        _currentPeriodsElapsed = currentPeriodsElapsed_;
+        return Timer.elapsed24Hours(_vaultStartTimestamp);
     }
 
     function getTenor() public view returns (uint256 tenor) {
