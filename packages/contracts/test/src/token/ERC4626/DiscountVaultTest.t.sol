@@ -3,6 +3,8 @@ pragma solidity ^0.8.23;
 
 import { IDiscountVault } from "@credbull/token/ERC4626/IDiscountVault.sol";
 import { DiscountVault } from "@credbull/token/ERC4626/DiscountVault.sol";
+import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
+import { SimpleInterestYieldStrategy } from "@credbull/yield/strategy/SimpleInterestYieldStrategy.sol";
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";
 
 import { DiscountVaultTestBase } from "./DiscountVaultTestBase.t.sol";
@@ -15,6 +17,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
     using Math for uint256;
 
     IERC20Metadata private asset;
+    IYieldStrategy private yieldStrategy;
 
     uint256 internal SCALE;
 
@@ -32,36 +35,32 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         assertEq(asset.balanceOf(owner), tokenSupply, "owner should start with total supply");
         transferAndAssert(asset, owner, alice, userTokenAmount);
         transferAndAssert(asset, owner, bob, userTokenAmount);
-    }
 
-    function test__DiscountVaultTest__CheckScale() public {
-        uint256 apy = 10 * SCALE;
-        uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-        uint256 tenor = 90;
-
-        IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
-
-        uint256 scaleMinus1 = SCALE - 1;
-
-        assertEq(0, vault.convertToShares(scaleMinus1), "convert to shares not scaled");
+        yieldStrategy = new SimpleInterestYieldStrategy();
     }
 
     function test__DiscountVaultTest__Monthly() public {
-        uint256 apy = 12 * SCALE;
-        uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.MONTHLY);
-        uint256 tenor = 3;
-
-        IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
+        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+            asset: asset,
+            yieldStrategy: yieldStrategy,
+            interestRatePercentageScaled: 12 * SCALE,
+            frequency: Frequencies.toValue(Frequencies.Frequency.MONTHLY),
+            tenor: 3
+        });
+        IDiscountVault vault = new DiscountVault(params);
 
         testVaultAtTenorPeriods(200 * SCALE, vault);
     }
 
     function test__DiscountVaultTest__Daily360() public {
-        uint256 apy = 12 * SCALE;
-        uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-        uint256 tenor = 30;
-
-        IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
+        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+            asset: asset,
+            yieldStrategy: yieldStrategy,
+            interestRatePercentageScaled: 12 * SCALE,
+            frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            tenor: 30
+        });
+        IDiscountVault vault = new DiscountVault(params);
 
         uint256 principal = 100 * SCALE;
         uint256 actualInterestDay721 = vault.calcYield(principal, 721);
@@ -72,47 +71,63 @@ contract DiscountVaultTest is DiscountVaultTestBase {
 
     // Scenario: Calculating returns for a standard investment
     function test__DiscountVaultTest__6APY_30day_50K() public {
-        uint256 apy = 6 * SCALE;
-        uint256 tenor = 30;
-        uint256 deposit = 50_000 * SCALE; // APY in percentage
-        uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
+        uint256 deposit = 50_000 * SCALE;
 
-        IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
+        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+            asset: asset,
+            yieldStrategy: yieldStrategy,
+            interestRatePercentageScaled: 6 * SCALE,
+            frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            tenor: 30
+        });
+        IDiscountVault vault = new DiscountVault(params);
 
         // verify interest
-        uint256 actualInterest = vault.calcYield(deposit, tenor);
+        uint256 actualInterest = vault.calcYield(deposit, params.tenor);
         assertEq(250 * SCALE, actualInterest, "interest not correct for $50k deposit after 30 days");
 
         // verify full returns
         uint256 actualShares = vault.convertToShares(deposit);
-        uint256 actualReturns = vault.convertToAssetsAtPeriod(actualShares, tenor);
+
+        vault.setCurrentPeriodsElapsed(params.tenor);
+        uint256 actualReturns = vault.convertToAssets(actualShares);
         assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
     }
 
     // Scenario: Calculating returns for a rolled-over investment
     function test__DiscountVaultTest__6APY_30day_40K_and_Rollover() public {
-        uint256 apy = 6 * SCALE;
-        uint256 tenor = 30;
         uint256 deposit = 50_000 * SCALE; // APY in percentage
-        uint256 frequencyValue = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
 
-        IDiscountVault vault = new DiscountVault(asset, apy, frequencyValue, tenor);
+        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+            asset: asset,
+            yieldStrategy: yieldStrategy,
+            interestRatePercentageScaled: 6 * SCALE,
+            frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            tenor: 30
+        });
+        IDiscountVault vault = new DiscountVault(params);
 
         // verify interest
-        uint256 actualInterest = vault.calcYield(deposit, tenor);
+        uint256 actualInterest = vault.calcYield(deposit, params.tenor);
         assertEq(250 * SCALE, actualInterest, "interest not correct for $50k deposit after 30 days");
 
         // verify full returns
         uint256 actualShares = vault.convertToShares(deposit);
-        uint256 actualReturns = vault.convertToAssetsAtPeriod(actualShares, tenor);
+
+        vault.setCurrentPeriodsElapsed(params.tenor);
+        uint256 actualReturns = vault.convertToAssets(actualShares);
         assertEq(50_250 * SCALE, actualReturns, "principal + interest not correct for $50k deposit after 30 days");
     }
 
     function test__DiscountVaultTest__Price() public {
-        uint256 apy = 12 * SCALE;
-        uint256 frequency = Frequencies.toValue(Frequencies.Frequency.DAYS_360);
-
-        IDiscountVault vault = new DiscountVault(asset, apy, frequency, 30);
+        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+            asset: asset,
+            yieldStrategy: yieldStrategy,
+            interestRatePercentageScaled: 12 * SCALE,
+            frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            tenor: 30
+        });
+        IDiscountVault vault = new DiscountVault(params);
 
         uint256 day0 = 0;
         assertEq(1 * SCALE, vault.calcPrice(day0)); // 1 + (0.12 * 0) / 360 = 1

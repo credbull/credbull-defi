@@ -3,8 +3,8 @@ pragma solidity ^0.8.23;
 
 import { CalcDiscounted } from "@credbull/yield/CalcDiscounted.sol";
 import { ICalcInterestMetadata } from "@credbull/yield/ICalcInterestMetadata.sol";
-import { CalcSimpleInterest } from "@credbull/yield/CalcSimpleInterest.sol";
 import { IDiscountVault } from "@credbull/token/ERC4626/IDiscountVault.sol";
+import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -33,141 +33,88 @@ contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
 
     error RedeemTimePeriodNotSupported(uint256 currentPeriod, uint256 redeemPeriod);
 
-    uint256 public currentTimePeriodsElapsed = 0; // the current number of time periods elapsed
+    uint256 public _currentPeriodsElapsed = 0; // the current number of time periods elapsed
 
+    IYieldStrategy public immutable YIELD_STRATEGY;
     uint256 public immutable TENOR;
 
-    constructor(IERC20Metadata asset, uint256 interestRatePercentage_, uint256 frequency_, uint256 tenor_)
-        ERC4626(asset)
-        ERC20("Simple Interest Rate Claim", "cSIR")
-    {
-        RATE_PERCENT_SCALED = interestRatePercentage_;
-        FREQUENCY = frequency_;
-        SCALE = 10 ** asset.decimals();
-        TENOR = tenor_;
+    struct DiscountVaultParams {
+        IERC20Metadata asset;
+        IYieldStrategy yieldStrategy;
+        uint256 interestRatePercentageScaled;
+        uint256 frequency;
+        uint256 tenor;
+    }
+
+    constructor(DiscountVaultParams memory params) ERC4626(params.asset) ERC20("Simple Interest Rate Claim", "cSIR") {
+        YIELD_STRATEGY = params.yieldStrategy;
+
+        RATE_PERCENT_SCALED = params.interestRatePercentageScaled;
+        FREQUENCY = params.frequency;
+        SCALE = 10 ** params.asset.decimals();
+        TENOR = params.tenor;
     }
 
     /// @inheritdoc IDiscountVault
-    function calcPrice(uint256 numTimePeriodsElapsed) public view returns (uint256 priceScaled) {
-        uint256 interest = calcYield(SCALE, numTimePeriodsElapsed); // principal of 1 at SCALE
-
-        return SCALE + interest;
+    function calcPrice(uint256 numPeriodsElapsed) public view returns (uint256 priceScaled) {
+        return YIELD_STRATEGY.calcPrice(address(this), numPeriodsElapsed);
     }
 
-    function calcPrincipalFromDiscounted(uint256 discounted, uint256 numTimePeriodsElapsed)
-        public
-        view
-        returns (uint256 principal)
-    {
-        uint256 price = calcPrice(numTimePeriodsElapsed);
-
-        return CalcDiscounted.calcPrincipalFromDiscounted(discounted, price, SCALE);
+    function calcYield(uint256 principal, uint256 toPeriod) public view returns (uint256 yield) {
+        return calcYield(principal, 0, toPeriod);
     }
 
     /// @inheritdoc IDiscountVault
-    function calcYield(uint256 principal, uint256 numTimePeriodsElapsed) public view returns (uint256 interest) {
-        return CalcSimpleInterest.calcInterest(principal, RATE_PERCENT_SCALED, numTimePeriodsElapsed, FREQUENCY, SCALE);
+    function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod) public view returns (uint256 yield) {
+        return YIELD_STRATEGY.calcYield(address(this), principal, fromPeriod, toPeriod);
     }
 
     // =============== Deposit ===============
 
-    /// @inheritdoc IDiscountVault
-    function convertToSharesAtPeriod(uint256 assets, uint256 numTimePeriodsElapsed)
-        public
+    /// @inheritdoc ERC4626
+    function _convertToShares(uint256 assets, Math.Rounding /* rounding */ )
+        internal
         view
+        virtual
+        override
         returns (uint256 shares)
     {
-        if (assets < SCALE) return 0; // no shares for fractional assets
-
-        uint256 price = calcPrice(numTimePeriodsElapsed);
-
+        uint256 price = calcPrice(_currentPeriodsElapsed);
         return CalcDiscounted.calcDiscounted(assets, price, SCALE);
-    }
-
-    /// @inheritdoc ERC4626
-    function previewDeposit(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256 shares) {
-        return convertToShares(assets);
-    }
-
-    /// @inheritdoc ERC4626
-    function convertToShares(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256 shares) {
-        return convertToSharesAtPeriod(assets, currentTimePeriodsElapsed);
     }
 
     // =============== Redeem ===============
 
-    /**
-     * @notice Redeems shares for assets at a specific time period, transferring the assets to the receiver.
-     * @param shares The number of shares to redeem.
-     * @param receiver The address receiving the assets.
-     * @param owner The address that owns the shares.
-     * @param redeemTimePeriod The time period at which the shares are redeemed.
-     * @return assets The number of assets transferred to the receiver.
-     */
-    function redeemAtPeriod(uint256 shares, address receiver, address owner, uint256 redeemTimePeriod)
-        public
-        virtual
-        returns (uint256 assets)
-    {
-        if (currentTimePeriodsElapsed != redeemTimePeriod) {
-            revert RedeemTimePeriodNotSupported(currentTimePeriodsElapsed, redeemTimePeriod);
-        }
-
-        return redeem(shares, receiver, owner);
-    }
-
-    /// @inheritdoc IDiscountVault
-    function convertToAssetsAtPeriod(uint256 shares, uint256 numTimePeriodsElapsed)
-        public
+    /// @inheritdoc ERC4626
+    function _convertToAssets(uint256 shares, Math.Rounding /* rounding */ )
+        internal
         view
+        virtual
+        override(ERC4626)
         returns (uint256 assets)
     {
-        if (shares < SCALE) return 0; // no assets for fractional shares
-
         // redeeming before TENOR - give back the Discounted Amount.
         // This is a slash of Principal (and no Interest).
         // TODO - need to account for deposits after TENOR.  e.g. 30 day tenor, deposit on day 31 and redeem on day 32.
-        if (numTimePeriodsElapsed < TENOR) return 0;
+        if (_currentPeriodsElapsed < TENOR) return 0;
 
-        uint256 impliedNumTimePeriodsAtDeposit = (numTimePeriodsElapsed - TENOR);
-
-        uint256 _principal = _convertToPrincipalAtDepositPeriod(shares, impliedNumTimePeriodsAtDeposit);
+        uint256 price = calcPrice(_currentPeriodsElapsed - TENOR);
+        uint256 _principal = CalcDiscounted.calcPrincipalFromDiscounted(shares, price, SCALE);
 
         return _principal + calcYield(_principal, TENOR);
-    }
-
-    function _convertToPrincipalAtDepositPeriod(uint256 shares, uint256 depositTimePeriod)
-        internal
-        view
-        returns (uint256 principal)
-    {
-        if (shares < SCALE) return 0; // no assets for fractional shares
-
-        uint256 _principal = calcPrincipalFromDiscounted(shares, depositTimePeriod);
-
-        return _principal;
-    }
-
-    /// @inheritdoc ERC4626
-    function previewRedeem(uint256 shares) public view override(ERC4626, IERC4626) returns (uint256 assets) {
-        return convertToAssets(shares);
-    }
-
-    /// @inheritdoc ERC4626
-    function convertToAssets(uint256 shares) public view override(ERC4626, IERC4626) returns (uint256 assets) {
-        return convertToAssetsAtPeriod(shares, currentTimePeriodsElapsed);
     }
 
     // =============== Withdraw ===============
 
     /// @inheritdoc ERC4626
+    // TODO - simplify this - should be able to reuse convert functions
     function previewWithdraw(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256 shares) {
         if (assets < SCALE) return 0; // no shares for fractional assets
 
         // withdraw before TENOR - not enough time periods to calculate Discounted properly
-        if (currentTimePeriodsElapsed < TENOR) return 0;
+        if (_currentPeriodsElapsed < TENOR) return 0;
 
-        uint256 price = calcPrice(currentTimePeriodsElapsed - TENOR);
+        uint256 price = calcPrice(_currentPeriodsElapsed - TENOR);
 
         return CalcDiscounted.calcDiscounted(assets, price, SCALE);
     }
@@ -197,26 +144,14 @@ contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
 
     // =============== Utility ===============
 
-    /**
-     * @notice Returns the current number of time periods elapsed.
-     * @return The current time periods elapsed.
-     */
-    function getCurrentTimePeriodsElapsed() public view virtual returns (uint256) {
-        return currentTimePeriodsElapsed;
+    function currentPeriodsElapsed() public view virtual returns (uint256) {
+        return _currentPeriodsElapsed;
     }
 
-    /**
-     * @notice Sets the current number of time periods elapsed.
-     * @param _currentTimePeriodsElapsed The new number of time periods elapsed.
-     */
-    function setCurrentTimePeriodsElapsed(uint256 _currentTimePeriodsElapsed) public virtual {
-        currentTimePeriodsElapsed = _currentTimePeriodsElapsed;
+    function setCurrentPeriodsElapsed(uint256 currentPeriodsElapsed_) public virtual {
+        _currentPeriodsElapsed = currentPeriodsElapsed_;
     }
 
-    /**
-     * @notice Returns the tenor (lock period) of the vault.
-     * @return tenor The tenor value.
-     */
     function getTenor() public view returns (uint256 tenor) {
         return TENOR;
     }
