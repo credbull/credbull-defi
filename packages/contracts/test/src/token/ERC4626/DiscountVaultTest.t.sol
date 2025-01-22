@@ -63,7 +63,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         IDiscountVault vault = new DiscountVault(params);
 
         uint256 principal = 100 * SCALE;
-        uint256 actualInterestDay721 = vault.calcYield(principal, 721);
+        uint256 actualInterestDay721 = _expectedReturns(principal, vault, 0, 721);
         assertEq(24_033_333, actualInterestDay721, "interest should be ~ 24.0333 at day 721");
 
         testVaultAtTenorPeriods(principal, vault);
@@ -83,7 +83,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         IDiscountVault vault = new DiscountVault(params);
 
         // verify interest
-        uint256 actualInterest = vault.calcYield(deposit, params.tenor);
+        uint256 actualInterest = _expectedReturnsFullTenor(deposit, vault);
         assertEq(250 * SCALE, actualInterest, "interest not correct for $50k deposit after 30 days");
 
         // verify full returns
@@ -108,7 +108,7 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         IDiscountVault vault = new DiscountVault(params);
 
         // verify interest
-        uint256 actualInterest = vault.calcYield(deposit, params.tenor);
+        uint256 actualInterest = _expectedReturnsFullTenor(deposit, vault);
         assertEq(250 * SCALE, actualInterest, "interest not correct for $50k deposit after 30 days");
 
         // verify full returns

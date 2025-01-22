@@ -2,8 +2,6 @@
 pragma solidity ^0.8.23;
 
 import { IDiscountVault } from "@credbull/token/ERC4626/IDiscountVault.sol";
-import { ICalcInterestMetadata } from "@credbull/yield/ICalcInterestMetadata.sol";
-
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
@@ -53,7 +51,7 @@ abstract contract DiscountVaultTestBase is Test {
         uint256 actualAssets = vault.convertToAssets(actualShares); // now redeem
 
         assertApproxEqAbs(
-            principal + vault.calcYield(principal, vault.getTenor()),
+            principal + _expectedReturnsFullTenor(principal, vault),
             actualAssets,
             TOLERANCE,
             assertMsg("toShares/toAssets yield does not equal principal + interest", vault, numTimePeriods)
@@ -61,7 +59,7 @@ abstract contract DiscountVaultTestBase is Test {
 
         // ------------------- check partials  -------------------
         uint256 expectedPartialYield =
-            principal.mulDiv(33, 100) + vault.calcYield(principal.mulDiv(33, 100), vault.getTenor());
+            principal.mulDiv(33, 100) + _expectedReturnsFullTenor(principal.mulDiv(33, 100), vault);
 
         _warpToPeriod(vault, numTimePeriods + vault.getTenor()); // set redeem numTimePeriods
 
@@ -83,7 +81,7 @@ abstract contract DiscountVaultTestBase is Test {
         virtual
     {
         uint256 prevVaultTimePeriodsElapsed = vault.currentPeriodsElapsed();
-        uint256 expectedInterest = vault.calcYield(principal, vault.getTenor());
+        uint256 expectedInterest = _expectedReturnsFullTenor(principal, vault);
         uint256 expectedPrincipalAndInterest = principal + expectedInterest;
 
         _warpToPeriod(vault, numTimePeriods); // set deposit period prior to deposit
@@ -143,7 +141,7 @@ abstract contract DiscountVaultTestBase is Test {
 
         // give the vault enough to cover the earned interest
 
-        uint256 interest = vault.calcYield(principal, vault.getTenor());
+        uint256 interest = _expectedReturnsFullTenor(principal, vault);
         vm.startPrank(_owner);
         transferAndAssert(asset, _owner, address(vault), interest);
         vm.stopPrank();
@@ -171,16 +169,6 @@ abstract contract DiscountVaultTestBase is Test {
         _warpToPeriod(vault, prevVaultTimePeriodsElapsed); // restore the vault to previous state
     }
 
-    function assertMsg(string memory prefix, IDiscountVault vault, uint256 numTimePeriods)
-        internal
-        view
-        returns (string memory)
-    {
-        ICalcInterestMetadata calcInterest = ICalcInterestMetadata(address(vault));
-
-        return string.concat(prefix, toString(calcInterest), " timePeriod= ", vm.toString(numTimePeriods));
-    }
-
     function _warpToPeriod(IDiscountVault vault, uint256 timePeriod) internal virtual {
         DiscountVault discountVault = DiscountVault(address(vault));
 
@@ -189,15 +177,30 @@ abstract contract DiscountVaultTestBase is Test {
         vm.warp(warpToTimeInSeconds);
     }
 
-    function toString(ICalcInterestMetadata calcInterest) internal view returns (string memory) {
-        return string.concat(
-            " ISimpleInterest [ ",
-            " IR = ",
-            vm.toString(calcInterest.rateScaled()),
-            " Freq = ",
-            vm.toString(calcInterest.frequency()),
-            " ] "
-        );
+    function _expectedReturnsFullTenor(uint256 principal, IDiscountVault vault)
+        internal
+        view
+        returns (uint256 expectedReturns_)
+    {
+        return _expectedReturns(principal, vault, 0, vault.getTenor());
+    }
+
+    function _expectedReturns(uint256 principal, IDiscountVault vault, uint256 fromPeriod, uint256 toPeriod)
+        internal
+        view
+        returns (uint256 expectedReturns_)
+    {
+        DiscountVault discountVault = DiscountVault(address(vault));
+
+        return discountVault.YIELD_STRATEGY().calcYield(address(vault), principal, fromPeriod, toPeriod);
+    }
+
+    function assertMsg(string memory prefix, IDiscountVault vault, uint256 numTimePeriods)
+        internal
+        view
+        returns (string memory)
+    {
+        return string.concat(prefix, vm.toString(address(vault)), " timePeriod= ", vm.toString(numTimePeriods));
     }
 
     function transferAndAssert(IERC20 _token, address fromAddress, address toAddress, uint256 amount) internal {

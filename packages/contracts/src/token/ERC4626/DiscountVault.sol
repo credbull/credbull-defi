@@ -19,7 +19,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
- * @title SimpleInterestVault
+ * @title DiscountVault
  * @dev A vault that uses SimpleInterest to calculate shares per asset.
  *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
  */
@@ -65,13 +65,8 @@ contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
         return calcPrice(currentPeriodsElapsed());
     }
 
-    function calcYield(uint256 principal, uint256 toPeriod) public view returns (uint256 yield) {
-        return calcYield(principal, 0, toPeriod);
-    }
-
-    /// @inheritdoc IDiscountVault
-    function calcYield(uint256 principal, uint256 fromPeriod, uint256 toPeriod) public view returns (uint256 yield) {
-        return YIELD_STRATEGY.calcYield(address(this), principal, fromPeriod, toPeriod);
+    function calcYieldForTenor(uint256 principal) public view returns (uint256 yield) {
+        return YIELD_STRATEGY.calcYield(address(this), principal, 0, getTenor());
     }
 
     // =============== Deposit ===============
@@ -107,7 +102,7 @@ contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
 
         uint256 _principal = CalcDiscounted.calcPrincipalFromDiscounted(shares, price, SCALE);
 
-        return _principal + calcYield(_principal, TENOR);
+        return _principal + calcYieldForTenor(_principal);
     }
 
     // =============== Withdraw ===============
