@@ -1,77 +1,95 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.20;
 
 import { CalcDiscounted } from "@credbull/yield/CalcDiscounted.sol";
-import { ICalcInterestMetadata } from "@credbull/yield/ICalcInterestMetadata.sol";
 import { IDiscountVault } from "@credbull/token/ERC4626/IDiscountVault.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
+import { CalcInterestMetadata } from "@credbull/yield/CalcInterestMetadata.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
-// TODO - use the upgradeable versions of the contractds
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import { ERC4626Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
+import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { AccessControlEnumerableUpgradeable } from
+    "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlEnumerableUpgradeable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  * @title DiscountVault
  * @dev A vault that uses SimpleInterest to calculate shares per asset.
- *      The vault manages deposits and redemptions based on elapsed time periods and applies simple interest calculations.
+ * @notice Children MUST implement Access Control for sensitive operations (e.g. Upgrading, Asset movements)
  */
-contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
+contract DiscountVault is
+    Initializable,
+    UUPSUpgradeable,
+    IDiscountVault,
+    CalcInterestMetadata,
+    ERC4626Upgradeable,
+    AccessControlEnumerableUpgradeable
+{
     using Math for uint256;
 
-    // TODO - remove these after inheriting from CalcInterestMetaData directly
-    uint256 public RATE_PERCENT_SCALED; // rate in percentage * scale.  e.g., at scale 1e3, 5% = 5000.
-    uint256 public FREQUENCY;
-    uint256 public SCALE;
-    // end TODO - remove these after inheriting from CalcInterestMetaData directly
-
-    error RedeemTimePeriodNotSupported(uint256 currentPeriod, uint256 redeemPeriod);
-
+    IYieldStrategy public _yieldStrategy;
     uint256 public _vaultStartTimestamp;
-
-    IYieldStrategy public immutable YIELD_STRATEGY;
-    uint256 public immutable TENOR;
+    uint256 public _tenor;
 
     struct DiscountVaultParams {
         IERC20Metadata asset;
         IYieldStrategy yieldStrategy;
-        uint256 interestRatePercentageScaled;
+        uint256 vaultStartTimestamp;
+        uint256 ratePercentageScaled;
         uint256 frequency;
         uint256 tenor;
     }
 
-    constructor(DiscountVaultParams memory params) ERC4626(params.asset) ERC20("Simple Interest Rate Claim", "cSIR") {
-        YIELD_STRATEGY = params.yieldStrategy;
-
-        RATE_PERCENT_SCALED = params.interestRatePercentageScaled;
-        FREQUENCY = params.frequency;
-        SCALE = 10 ** params.asset.decimals();
-        TENOR = params.tenor;
+    constructor() {
+        _disableInitializers();
     }
+
+    function initialize(DiscountVaultParams memory params) public initializer {
+        __UUPSUpgradeable_init();
+        __AccessControl_init();
+        __ERC20_init("Simple Interest Rate Claim", "cSIR"); // TODO - parameterize these
+        __ERC4626_init(params.asset);
+        __CalcInterestMetadata_init(params.ratePercentageScaled, params.frequency, params.asset.decimals());
+
+        _yieldStrategy = params.yieldStrategy;
+        _vaultStartTimestamp = params.vaultStartTimestamp;
+        _tenor = params.tenor;
+    }
+
+    // TODO - put back access control check
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address newImplementation) internal view override { } // onlyRole(UPGRADER_ROLE) { }
 
     /// @inheritdoc IDiscountVault
     function calcPrice(uint256 numPeriodsElapsed) public view returns (uint256 priceScaled) {
-        return YIELD_STRATEGY.calcPrice(address(this), numPeriodsElapsed);
+        return _yieldStrategy.calcPrice(address(this), numPeriodsElapsed);
     }
 
-    function _currentPrice() public view returns (uint256 priceScaled) {
+    function price() public view returns (uint256 priceScaled) {
         return calcPrice(currentPeriodsElapsed());
     }
 
-    function calcYieldForTenor(uint256 principal) public view returns (uint256 yield) {
-        return YIELD_STRATEGY.calcYield(address(this), principal, 0, getTenor());
+    // TODO - need to account for deposits after _tenor.  e.g. 30 day tenor, deposit on day 31 and redeem on day 32.
+    // NB - this can be done by a lock outside of this contract for example
+    function _impliedDepositPrice() internal view returns (uint256 priceScaled) {
+        if (currentPeriodsElapsed() < _tenor) return 0;
+
+        return calcPrice(currentPeriodsElapsed() - _tenor);
+    }
+
+    function calcYieldSingleTenor(uint256 principal) public view returns (uint256 yield) {
+        return _yieldStrategy.calcYield(address(this), principal, 0, tenor());
     }
 
     // =============== Deposit ===============
 
-    /// @inheritdoc ERC4626
+    /// @inheritdoc ERC4626Upgradeable
     function _convertToShares(uint256 assets, Math.Rounding /* rounding */ )
         internal
         view
@@ -79,78 +97,60 @@ contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
         override
         returns (uint256 shares)
     {
-        return CalcDiscounted.calcDiscounted(assets, _currentPrice(), SCALE);
+        return CalcDiscounted.calcDiscounted(assets, price(), SCALE);
     }
 
     // =============== Redeem ===============
 
-    /// @inheritdoc ERC4626
+    /// @inheritdoc ERC4626Upgradeable
     function _convertToAssets(uint256 shares, Math.Rounding /* rounding */ )
         internal
         view
         virtual
-        override(ERC4626)
+        override
         returns (uint256 assets)
     {
-        uint256 currentPeriodsElapsed_ = currentPeriodsElapsed();
-        // redeeming before TENOR - give back the Discounted Amount.
-        // This is a slash of Principal (and no Interest).
-        // TODO - need to account for deposits after TENOR.  e.g. 30 day tenor, deposit on day 31 and redeem on day 32.
-        if (currentPeriodsElapsed_ < TENOR) return 0;
+        uint256 depositPrice = _impliedDepositPrice();
 
-        uint256 price = calcPrice(currentPeriodsElapsed_ - TENOR);
+        if (depositPrice == 0) return 0;
 
-        uint256 _principal = CalcDiscounted.calcPrincipalFromDiscounted(shares, price, SCALE);
+        uint256 _principal = CalcDiscounted.calcPrincipalFromDiscounted(shares, depositPrice, SCALE);
 
-        return _principal + calcYieldForTenor(_principal);
+        return _principal + calcYieldSingleTenor(_principal);
     }
 
     // =============== Withdraw ===============
 
-    /// @inheritdoc ERC4626
-    // TODO - simplify this - should be able to reuse convert functions
-    function previewWithdraw(uint256 assets) public view override(ERC4626, IERC4626) returns (uint256 shares) {
-        uint256 currentPeriodsElapsed_ = currentPeriodsElapsed();
+    /// @inheritdoc ERC4626Upgradeable
+    // TODO - change this to only owner - simplify the vault functions
+    function previewWithdraw(uint256 assets)
+        public
+        view
+        override(ERC4626Upgradeable, IERC4626)
+        returns (uint256 shares)
+    {
+        uint256 depositPrice = _impliedDepositPrice();
 
-        // withdraw before TENOR - not enough time periods to calculate Discounted properly
-        if (currentPeriodsElapsed_ < TENOR) return 0;
-
-        uint256 price = calcPrice(currentPeriodsElapsed_ - TENOR);
-
-        return CalcDiscounted.calcDiscounted(assets, price, SCALE);
+        return depositPrice == 0 ? 0 : CalcDiscounted.calcDiscounted(assets, depositPrice, SCALE);
     }
 
     // =============== ERC4626 and ERC20 ===============
 
-    /// @inheritdoc ERC4626
-    function decimals() public view virtual override(ERC4626, IERC20Metadata) returns (uint8) {
-        return ERC4626.decimals();
-    }
-
-    // =============== CalcInterestMetadata ===============
-    /// @notice Returns the frequency of interest application.
-    function frequency() public view virtual returns (uint256 frequency_) {
-        return FREQUENCY;
-    }
-
-    /// @notice Returns the annual interest rate as a percentage, scaled.
-    function rateScaled() public view virtual returns (uint256 ratePercentageScaled_) {
-        return RATE_PERCENT_SCALED;
-    }
-
-    /// @notice Returns the scale factor for calculations (e.g., 10^18 for 18 decimals).
-    function scale() public view virtual returns (uint256 scale_) {
-        return SCALE;
+    /// @inheritdoc ERC4626Upgradeable
+    function decimals() public view virtual override(ERC4626Upgradeable, IERC20Metadata) returns (uint8) {
+        return ERC4626Upgradeable.decimals();
     }
 
     // =============== Utility ===============
 
+    /// @inheritdoc IDiscountVault
     function currentPeriodsElapsed() public view virtual returns (uint256) {
         return Timer.elapsed24Hours(_vaultStartTimestamp);
     }
 
-    function getTenor() public view returns (uint256 tenor) {
-        return TENOR;
+    /// @inheritdoc IDiscountVault
+    function tenor() public view returns (uint256 tenor_) {
+        return _tenor;
     }
 
     /**
@@ -160,6 +160,6 @@ contract DiscountVault is IDiscountVault, ICalcInterestMetadata, ERC4626 {
      * @param value The amount of tokens being transferred.
      */
     function _update(address from, address to, uint256 value) internal virtual override {
-        ERC20._update(from, to, value);
+        ERC20Upgradeable._update(from, to, value);
     }
 }

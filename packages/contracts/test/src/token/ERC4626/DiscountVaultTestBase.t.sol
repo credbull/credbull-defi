@@ -18,7 +18,7 @@ abstract contract DiscountVaultTestBase is Test {
     address internal bob = makeAddr("bob");
 
     function testVaultAtTenorPeriods(uint256 principal, IDiscountVault vault) internal {
-        uint256 tenor = vault.getTenor();
+        uint256 tenor = vault.tenor();
 
         uint256[5] memory numTimePeriodsElapsedArr = [0, 1, tenor - 1, tenor, tenor + 1];
 
@@ -47,29 +47,26 @@ abstract contract DiscountVaultTestBase is Test {
         _warpToPeriod(vault, numTimePeriods); // set deposit numTimePeriods
         uint256 actualShares = vault.convertToShares(principal);
 
-        _warpToPeriod(vault, numTimePeriods + vault.getTenor()); // set redeem numTimePeriods
+        _warpToPeriod(vault, numTimePeriods + vault.tenor()); // set redeem numTimePeriods
         uint256 actualAssets = vault.convertToAssets(actualShares); // now redeem
 
         assertApproxEqAbs(
             principal + _expectedReturnsFullTenor(principal, vault),
             actualAssets,
             TOLERANCE,
-            assertMsg("toShares/toAssets yield does not equal principal + interest", vault, numTimePeriods)
+            "toShares/toAssets yield does not equal principal + interest"
         );
 
         // ------------------- check partials  -------------------
         uint256 expectedPartialYield =
             principal.mulDiv(33, 100) + _expectedReturnsFullTenor(principal.mulDiv(33, 100), vault);
 
-        _warpToPeriod(vault, numTimePeriods + vault.getTenor()); // set redeem numTimePeriods
+        _warpToPeriod(vault, numTimePeriods + vault.tenor()); // set redeem numTimePeriods
 
         uint256 partialAssetsAtPeriod = vault.convertToAssets(actualShares.mulDiv(33, 100));
 
         assertApproxEqAbs(
-            expectedPartialYield,
-            partialAssetsAtPeriod,
-            TOLERANCE,
-            assertMsg("partial yield does not equal principal + interest", vault, numTimePeriods)
+            expectedPartialYield, partialAssetsAtPeriod, TOLERANCE, "partial yield does not equal principal + interest"
         );
 
         _warpToPeriod(vault, prevVaultTimePeriodsElapsed); // restore the vault to previous state
@@ -87,23 +84,19 @@ abstract contract DiscountVaultTestBase is Test {
         _warpToPeriod(vault, numTimePeriods); // set deposit period prior to deposit
         uint256 actualSharesDeposit = vault.previewDeposit(principal);
 
-        _warpToPeriod(vault, numTimePeriods + vault.getTenor()); // warp to redeem / withdraw
+        _warpToPeriod(vault, numTimePeriods + vault.tenor()); // warp to redeem / withdraw
 
         // check previewRedeem
         assertApproxEqAbs(
             expectedPrincipalAndInterest,
             vault.previewRedeem(actualSharesDeposit),
             TOLERANCE,
-            assertMsg("previewDeposit/previewRedeem yield does not equal principal + interest", vault, numTimePeriods)
+            "previewDeposit/previewRedeem yield does not equal principal + interest"
         );
 
         // check previewWithdraw (uses assets as basis of shares returned)
         // as per definition - should be the same as convertToShares
-        assertEq(
-            vault.previewWithdraw(principal),
-            actualSharesDeposit,
-            assertMsg("previewWithdraw incorrect - principal", vault, numTimePeriods)
-        );
+        assertEq(vault.previewWithdraw(principal), actualSharesDeposit, "previewWithdraw incorrect - principal");
 
         _warpToPeriod(vault, prevVaultTimePeriodsElapsed);
     }
@@ -126,9 +119,7 @@ abstract contract DiscountVaultTestBase is Test {
         // deposit
         _warpToPeriod(vault, numTimePeriods); // set deposit numTimePeriods
         vm.startPrank(receiver);
-        assertGe(
-            asset.balanceOf(receiver), principal, assertMsg("not enough assets for deposit ", vault, numTimePeriods)
-        );
+        assertGe(asset.balanceOf(receiver), principal, "not enough assets for deposit ");
         asset.approve(address(vault), principal); // grant the vault allowance
         uint256 shares = vault.deposit(principal, receiver); // now deposit
 
@@ -136,7 +127,7 @@ abstract contract DiscountVaultTestBase is Test {
         assertEq(
             prevReceiverVaultBalance + shares,
             vault.balanceOf(receiver),
-            assertMsg("receiver did not receive the correct vault shares ", vault, numTimePeriods)
+            "receiver did not receive the correct vault shares "
         );
 
         // give the vault enough to cover the earned interest
@@ -147,7 +138,7 @@ abstract contract DiscountVaultTestBase is Test {
         vm.stopPrank();
 
         // redeem
-        _warpToPeriod(vault, numTimePeriods + vault.getTenor()); // warp the vault to redeem period
+        _warpToPeriod(vault, numTimePeriods + vault.tenor()); // warp the vault to redeem period
 
         vm.startPrank(receiver);
         uint256 assets = vault.redeem(shares, receiver, receiver);
@@ -156,15 +147,10 @@ abstract contract DiscountVaultTestBase is Test {
             prevReceiverAssetBalance + interest,
             asset.balanceOf(receiver),
             TOLERANCE,
-            assertMsg("receiver did not receive the correct yield", vault, numTimePeriods)
+            "receiver did not receive the correct yield"
         );
 
-        assertApproxEqAbs(
-            principal + interest,
-            assets,
-            TOLERANCE,
-            assertMsg("yield does not equal principal + interest", vault, numTimePeriods)
-        );
+        assertApproxEqAbs(principal + interest, assets, TOLERANCE, "yield does not equal principal + interest");
 
         _warpToPeriod(vault, prevVaultTimePeriodsElapsed); // restore the vault to previous state
     }
@@ -182,7 +168,7 @@ abstract contract DiscountVaultTestBase is Test {
         view
         returns (uint256 expectedReturns_)
     {
-        return _expectedReturns(principal, vault, 0, vault.getTenor());
+        return _expectedReturns(principal, vault, 0, vault.tenor());
     }
 
     function _expectedReturns(uint256 principal, IDiscountVault vault, uint256 fromPeriod, uint256 toPeriod)
@@ -192,15 +178,7 @@ abstract contract DiscountVaultTestBase is Test {
     {
         DiscountVault discountVault = DiscountVault(address(vault));
 
-        return discountVault.YIELD_STRATEGY().calcYield(address(vault), principal, fromPeriod, toPeriod);
-    }
-
-    function assertMsg(string memory prefix, IDiscountVault vault, uint256 numTimePeriods)
-        internal
-        view
-        returns (string memory)
-    {
-        return string.concat(prefix, vm.toString(address(vault)), " timePeriod= ", vm.toString(numTimePeriods));
+        return discountVault._yieldStrategy().calcYield(address(vault), principal, fromPeriod, toPeriod);
     }
 
     function transferAndAssert(IERC20 _token, address fromAddress, address toAddress, uint256 amount) internal {

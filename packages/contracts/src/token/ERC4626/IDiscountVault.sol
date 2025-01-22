@@ -12,9 +12,9 @@ interface IDiscountVault is IERC4626 {
     /// @notice Calculates price for a given `numPeriodsElapsed`
     function calcPrice(uint256 numPeriodsElapsed) external view returns (uint256 price);
 
-    /// @notice Gets the vault's tenor
-    function getTenor() external view returns (uint256 tenor);
+    /// @notice get the vault's tenor
+    function tenor() external view returns (uint256 tenor_);
 
-    /// @notice Gets the current number of time periods elapsed
+    /// @notice get current number of time periods elapsed
     function currentPeriodsElapsed() external view returns (uint256 currentPeriodsElapsed_);
 }

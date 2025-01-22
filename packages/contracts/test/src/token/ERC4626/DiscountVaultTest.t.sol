@@ -12,6 +12,7 @@ import { DiscountVaultTestBase } from "./DiscountVaultTestBase.t.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract DiscountVaultTest is DiscountVaultTestBase {
     using Math for uint256;
@@ -43,11 +44,12 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
             asset: asset,
             yieldStrategy: yieldStrategy,
-            interestRatePercentageScaled: 12 * SCALE,
+            ratePercentageScaled: 12 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.MONTHLY),
+            vaultStartTimestamp: 0,
             tenor: 3
         });
-        IDiscountVault vault = new DiscountVault(params);
+        IDiscountVault vault = _createVault(params);
 
         testVaultAtTenorPeriods(200 * SCALE, vault);
     }
@@ -56,11 +58,12 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
             asset: asset,
             yieldStrategy: yieldStrategy,
-            interestRatePercentageScaled: 12 * SCALE,
+            ratePercentageScaled: 12 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            vaultStartTimestamp: 0,
             tenor: 30
         });
-        IDiscountVault vault = new DiscountVault(params);
+        IDiscountVault vault = _createVault(params);
 
         uint256 principal = 100 * SCALE;
         uint256 actualInterestDay721 = _expectedReturns(principal, vault, 0, 721);
@@ -76,11 +79,12 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
             asset: asset,
             yieldStrategy: yieldStrategy,
-            interestRatePercentageScaled: 6 * SCALE,
+            ratePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            vaultStartTimestamp: 0,
             tenor: 30
         });
-        IDiscountVault vault = new DiscountVault(params);
+        IDiscountVault vault = _createVault(params);
 
         // verify interest
         uint256 actualInterest = _expectedReturnsFullTenor(deposit, vault);
@@ -101,11 +105,12 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
             asset: asset,
             yieldStrategy: yieldStrategy,
-            interestRatePercentageScaled: 6 * SCALE,
+            ratePercentageScaled: 6 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            vaultStartTimestamp: 0,
             tenor: 30
         });
-        IDiscountVault vault = new DiscountVault(params);
+        IDiscountVault vault = _createVault(params);
 
         // verify interest
         uint256 actualInterest = _expectedReturnsFullTenor(deposit, vault);
@@ -123,11 +128,12 @@ contract DiscountVaultTest is DiscountVaultTestBase {
         DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
             asset: asset,
             yieldStrategy: yieldStrategy,
-            interestRatePercentageScaled: 12 * SCALE,
+            ratePercentageScaled: 12 * SCALE,
             frequency: Frequencies.toValue(Frequencies.Frequency.DAYS_360),
+            vaultStartTimestamp: 0,
             tenor: 30
         });
-        IDiscountVault vault = new DiscountVault(params);
+        IDiscountVault vault = _createVault(params);
 
         uint256 day0 = 0;
         assertEq(1 * SCALE, vault.calcPrice(day0)); // 1 + (0.12 * 0) / 360 = 1
@@ -137,5 +143,14 @@ contract DiscountVaultTest is DiscountVaultTestBase {
 
         uint256 day30 = 30;
         assertEq((101 * SCALE / 100), vault.calcPrice(day30)); // 1 + (0.12 * 30) / 360 = 1.01
+    }
+
+    function _createVault(DiscountVault.DiscountVaultParams memory params) internal returns (IDiscountVault vault_) {
+        DiscountVault vaultImpl = new DiscountVault();
+        DiscountVault vaultProxy = DiscountVault(
+            address(new ERC1967Proxy(address(vaultImpl), abi.encodeWithSelector(vaultImpl.initialize.selector, params)))
+        );
+
+        return vaultProxy;
     }
 }
