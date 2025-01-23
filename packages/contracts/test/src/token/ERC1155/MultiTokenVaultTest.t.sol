@@ -12,7 +12,6 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
-import { IVaultTestVerifier } from "@test/test/token/ERC4626/IVaultTestVerifier.t.sol";
 import { IVaultTestBase } from "@test/test/token/ERC4626/IVaultTestBase.t.sol";
 
 contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
