@@ -6,7 +6,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { Test } from "forge-std/Test.sol";
-import { DiscountVault } from "../../../../src/token/ERC4626/DiscountVault.sol";
+import { DiscountVault } from "@credbull/token/ERC4626/DiscountVault.sol";
 
 abstract contract DiscountVaultTestBase is Test {
     using Math for uint256;

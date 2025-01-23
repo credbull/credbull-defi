@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IVault } from "../../../../src/token/ERC4626/IVault.sol";
+import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
@@ -522,17 +522,20 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
         internal
         view
-        virtual
         override
         returns (uint256 expectedReturns_)
     {
-        return MultiTokenVaultDailyPeriods(address(vault)).calcYield(
-            testParam.principal, testParam.depositPeriod, testParam.redeemPeriod
+        return MultiTokenVaultDailyPeriods(address(vault))._yieldStrategy().calcYield(
+            address(vault), testParam.principal, testParam.depositPeriod, testParam.redeemPeriod
         );
     }
 
-    function _warpToPeriod(IVault vault, uint256 timePeriod) internal virtual override {
-        MultiTokenVaultDailyPeriods(address(vault)).setCurrentPeriodsElapsed(timePeriod);
+    function _warpToPeriod(IVault vault, uint256 timePeriod) internal override {
+        MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
+
+        uint256 warpToTimeInSeconds = multiTokenVault._vaultStartTimestamp() + timePeriod * 24 hours;
+
+        vm.warp(warpToTimeInSeconds);
     }
 
     function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)

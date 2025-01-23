@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IVault } from "../../../../src/token/ERC4626/IVault.sol";
+import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";

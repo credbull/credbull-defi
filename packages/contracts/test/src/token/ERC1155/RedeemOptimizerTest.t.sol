@@ -256,13 +256,17 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         override
         returns (uint256 expectedReturns_)
     {
-        return MultiTokenVaultDailyPeriods(address(vault)).calcYield(
-            testParam.principal, testParam.depositPeriod, testParam.redeemPeriod
+        return MultiTokenVaultDailyPeriods(address(vault))._yieldStrategy().calcYield(
+            address(vault), testParam.principal, testParam.depositPeriod, testParam.redeemPeriod
         );
     }
 
     function _warpToPeriod(IVault vault, uint256 timePeriod) internal override {
-        MultiTokenVaultDailyPeriods(address(vault)).setCurrentPeriodsElapsed(timePeriod);
+        MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
+
+        uint256 warpToTimeInSeconds = multiTokenVault._vaultStartTimestamp() + timePeriod * 24 hours;
+
+        vm.warp(warpToTimeInSeconds);
     }
 
     function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)
