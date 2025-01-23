@@ -4,14 +4,13 @@ pragma solidity ^0.8.20;
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { IVaultTestBase } from "@test/test/token/ERC4626/IVaultTestBase.t.sol";
+import { IVaultVerifierBase } from "@test/test/token/ERC4626/IVaultVerifierBase.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
-abstract contract IMultiTokenVaultTestBase is IVaultTestBase {
+abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
     using TestParamSet for TestParamSet.TestParam[];
 
     /// @dev test the vault at the given test parameters
-    // TODO - better decouple this from the super class
     function verifyVault(
         TestParamSet.TestUsers memory depositUsers,
         TestParamSet.TestUsers memory redeemUsers,
@@ -78,6 +77,15 @@ abstract contract IMultiTokenVaultTestBase is IVaultTestBase {
 
         // ------------------- check toShares/toAssets - specified period -------------------
         actualSharesAtPeriod = vault.convertToSharesForDepositPeriod(testParam.principal, testParam.depositPeriod);
+        assertApproxEqAbs(
+            _expectedShares(vault, testParam),
+            actualSharesAtPeriod,
+            TOLERANCE,
+            _assertMsg(
+                "convertToSharesForDepositPeriod shares don't match expected shares", vault, testParam.depositPeriod
+            )
+        );
+
         actualAssetsAtPeriod =
             vault.convertToAssetsForDepositPeriod(actualSharesAtPeriod, testParam.depositPeriod, testParam.redeemPeriod);
 
@@ -118,6 +126,12 @@ abstract contract IMultiTokenVaultTestBase is IVaultTestBase {
         // ------------------- check previewDeposit/previewRedeem - current period -------------------
         _warpToPeriod(vault, testParam.depositPeriod); // warp to deposit
         actualSharesAtPeriod = vault.previewDeposit(testParam.principal);
+        assertApproxEqAbs(
+            _expectedShares(vault, testParam),
+            actualSharesAtPeriod,
+            TOLERANCE,
+            _assertMsg("previewDeposit shares don't match expected shares", vault, testParam.depositPeriod)
+        );
 
         _warpToPeriod(vault, testParam.redeemPeriod); // warp to redeem / withdraw
         actualAssetsAtPeriod = vault.previewRedeemForDepositPeriod(actualSharesAtPeriod, testParam.depositPeriod);
@@ -127,7 +141,7 @@ abstract contract IMultiTokenVaultTestBase is IVaultTestBase {
         // check previewRedeem
         assertApproxEqAbs(
             expectedAssetsAtRedeem,
-            vault.previewRedeemForDepositPeriod(actualSharesAtPeriod, testParam.depositPeriod),
+            actualAssetsAtPeriod,
             TOLERANCE,
             _assertMsg(
                 "previewDeposit/previewRedeem yield does not equal principal + interest", vault, testParam.depositPeriod

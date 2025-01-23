@@ -6,11 +6,11 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 import { TestUtil } from "@test/test/util/TestUtil.t.sol";
-import { IVaultTestVerifier } from "@test/test/token/ERC4626/IVaultTestVerifier.t.sol";
+import { IVaultVerifier } from "@test/test/token/ERC4626/IVaultVerifier.t.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-abstract contract IVaultTestBase is IVaultTestVerifier, Test, TestUtil {
+abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
     using TestParamSet for TestParamSet.TestParam[];
 
     /// @dev test the vault at the given test parameters
@@ -63,7 +63,7 @@ abstract contract IVaultTestBase is IVaultTestVerifier, Test, TestUtil {
         TestParamSet.TestUsers memory depositUsers,
         IVault vault,
         TestParamSet.TestParam[] memory testParams
-    ) internal virtual returns (uint256[] memory sharesAtPeriod_) {
+    ) public virtual returns (uint256[] memory sharesAtPeriod_) {
         uint256[] memory sharesAtPeriod = new uint256[](testParams.length);
         for (uint256 i = 0; i < testParams.length; i++) {
             sharesAtPeriod[i] = _verifyDepositOnly(depositUsers, vault, testParams[i]);
@@ -99,7 +99,7 @@ abstract contract IVaultTestBase is IVaultTestVerifier, Test, TestUtil {
         assertEq(
             _expectedShares(vault, testParam),
             actualSharesAtPeriod,
-            _assertMsg("vault shares mismatch", vault, testParam.depositPeriod)
+            _assertMsg("deposit shares don't match expected shares", vault, testParam.depositPeriod)
         );
         assertEq(
             prevReceiverVaultBalance + actualSharesAtPeriod,

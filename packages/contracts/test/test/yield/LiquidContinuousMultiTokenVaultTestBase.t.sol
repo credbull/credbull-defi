@@ -11,13 +11,13 @@ import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO
 import { Timer } from "@credbull/timelock/Timer.sol";
 
 import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault.s.sol";
-import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
+import { IMultiTokenVaultVerifierBase } from "@test/test/token/ERC1155/IMultiTokenVaultVerifierBase.t.sol";
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTestBase {
+abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultVerifierBase {
     using TestParamSet for TestParamSet.TestParam[];
 
     LiquidContinuousMultiTokenVault internal _liquidVault;

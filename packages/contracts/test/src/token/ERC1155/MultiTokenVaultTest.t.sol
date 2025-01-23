@@ -4,27 +4,31 @@ pragma solidity ^0.8.20;
 import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
-import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
+import { IMultiTokenVaultVerifierBase } from "@test/test/token/ERC1155/IMultiTokenVaultVerifierBase.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriods.t.sol";
+import { IMultiTokenVaultVerifierBase } from "@test/test/token/ERC1155/IMultiTokenVaultVerifierBase.t.sol";
+import { MultiTokenVaultDailyPeriodsVerifier } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriodsVerifier.t.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
-import { IVaultTestBase } from "@test/test/token/ERC4626/IVaultTestBase.t.sol";
+import { IVaultVerifier } from "@test/test/token/ERC4626/IVaultVerifier.t.sol";
 
-contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
+contract MultiTokenVaultTest is IVaultTestSuite {
     using TestParamSet for TestParamSet.TestParam[];
 
     uint256 public constant TEST_ASSET_TO_SHARE_RATIO = 3;
 
     IMultiTokenVault private _multiTokenVault;
+    IMultiTokenVaultVerifierBase private _verifier;
 
     function setUp() public virtual override {
         super.setUp();
 
         _multiTokenVault = _createMultiTokenVault(_asset, 3, 10);
+        _verifier = new MultiTokenVaultDailyPeriodsVerifier();
     }
 
     function test__MultiTokenVaultTest__RedeemBeforeDepositPeriodReverts() public {
@@ -53,7 +57,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
 
         uint256 currentPeriod = testParam.redeemPeriod - 1;
 
-        _warpToPeriod(vault, currentPeriod);
+        _verifier._warpToPeriod(vault, currentPeriod);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -74,7 +78,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
 
         uint256 sharesToRedeem = 1;
 
-        _warpToPeriod(vault, testParam.redeemPeriod);
+        _verifier._warpToPeriod(vault, testParam.redeemPeriod);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -104,7 +108,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         uint256 shares = vault.deposit(testParams.principal, _alice);
 
         // ------------ redeem - without allowance ------------
-        _warpToPeriod(vault, testParams.redeemPeriod);
+        _verifier._warpToPeriod(vault, testParams.redeemPeriod);
 
         address allowanceAccount = makeAddr("allowanceAccount");
 
@@ -153,7 +157,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
         TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
 
-        uint256[] memory shares = _verifyDepositOnly(testUsers, vault, _batchTestParams);
+        uint256[] memory shares = _verifier._verifyDepositOnly(testUsers, vault, _batchTestParams);
         uint256[] memory depositPeriods = _batchTestParams.depositPeriods();
         uint256[] memory depositPeriodsToRevert = _batchTestParamsToRevert.depositPeriods();
 
@@ -263,93 +267,6 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         assertEq(vault.balanceOf(_bob, testParams.depositPeriod), shares, "_bob should have the transferred shares");
     }
 
-    function test__MultiTokenVaultTest__ConvertToSharesForDepositPeriod() public {
-        // Assuming the asset to shares ratio is set to a fixed value for testing.
-        uint256 assetToSharesRatio = 2;
-        uint256 depositPeriod = 1;
-
-        // Step 1: Create and initialize the vault with a dummy asset
-        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-
-        // Typical Case: Convert a positive asset amount to shares
-        uint256 assets = 500 * _scale;
-        uint256 expectedShares = assets / assetToSharesRatio;
-        uint256 shares = vault.convertToSharesForDepositPeriod(assets, depositPeriod);
-        assertEq(shares, expectedShares, "Conversion to shares did not match expected value");
-
-        // Edge Case: Convert zero assets to shares
-        assets = 0;
-        expectedShares = 0;
-        shares = vault.convertToSharesForDepositPeriod(assets, depositPeriod);
-        assertEq(shares, expectedShares, "Conversion of zero assets to shares failed");
-
-        // Edge Case: Convert maximum assets to shares
-        assets = type(uint256).max;
-        expectedShares = assets / assetToSharesRatio;
-        shares = vault.convertToSharesForDepositPeriod(assets, depositPeriod);
-        assertEq(shares, expectedShares, "Conversion of max assets to shares failed");
-    }
-
-    function test__MultiTokenVaultTest__ConvertToAssetsForDepositPeriod() public {
-        uint256 assetToSharesRatio = 2;
-
-        TestParamSet.TestParam memory testParams =
-            TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 0, redeemPeriod: 30 });
-
-        // Step 1: Create and initialize the vault with a dummy asset
-        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-
-        // Typical Case: Convert a positive share amount to assets
-        uint256 shares = testParams.principal / assetToSharesRatio;
-        uint256 expectedAssets = shares * assetToSharesRatio + _expectedReturns(shares, vault, testParams);
-        uint256 assets =
-            vault.convertToAssetsForDepositPeriod(shares, testParams.depositPeriod, testParams.redeemPeriod);
-        assertEq(assets, expectedAssets, "Conversion to assets did not match expected value");
-
-        // Edge Case: Convert zero shares to assets
-        shares = 0;
-        expectedAssets = 0;
-        assets = vault.convertToAssetsForDepositPeriod(shares, testParams.depositPeriod, testParams.redeemPeriod);
-        assertEq(assets, expectedAssets, "Conversion of zero shares to assets failed");
-
-        // Edge Case: Convert maximum shares to assets
-        testParams =
-            TestParamSet.TestParam({ principal: type(uint128).max * _scale, depositPeriod: 0, redeemPeriod: 30 });
-        shares = testParams.principal / assetToSharesRatio;
-        expectedAssets = shares * assetToSharesRatio + _expectedReturns(shares, vault, testParams);
-        assets = vault.convertToAssetsForDepositPeriod(shares, testParams.depositPeriod, testParams.redeemPeriod);
-        assertEq(assets, expectedAssets, "Conversion of max shares to assets failed");
-    }
-
-    function test__MultiTokenVaultTest__PreviewDeposit() public {
-        uint256 assetToSharesRatio = 2;
-
-        TestParamSet.TestParam memory testParams =
-            TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 0, redeemPeriod: 30 });
-
-        uint256 expectedShares = testParams.principal / assetToSharesRatio;
-
-        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-
-        uint256 shares = vault.previewDeposit(testParams.principal);
-        assertEq(shares, expectedShares, "Preview deposit conversion did not match expected value");
-    }
-
-    function test__MultiTokenVaultTest__PreviewRedeemForDepositPeriod() public {
-        uint256 assetToSharesRatio = 2;
-
-        TestParamSet.TestParam memory testParams =
-            TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 0, redeemPeriod: 30 });
-
-        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-
-        uint256 shares = testParams.principal / assetToSharesRatio;
-        uint256 expectedAssets = shares * assetToSharesRatio + _expectedReturns(shares, vault, testParams);
-
-        uint256 assets = vault.previewRedeemForDepositPeriod(shares, testParams.depositPeriod);
-        assertEq(assets, expectedAssets, "Preview redeem conversion did not match expected value");
-    }
-
     function test__MultiTokenVaultTest__IsApprovedForAll() public {
         address operator = makeAddr("operator");
         uint256 assetToSharesRatio = 2;
@@ -431,66 +348,11 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         );
     }
 
-    // ========================= Verifiers =========================
-
-    function verifyVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
-        public
-        virtual
-        override(IVaultTestBase, IVaultTestSuite)
-        returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_)
-    {
-        return IVaultTestBase.verifyVaultAtOffsets(account, vault, testParam);
-    }
-
-    function _verifyDepositOnly(
-        TestParamSet.TestUsers memory depositUsers,
-        IVault vault,
-        TestParamSet.TestParam memory testParam
-    ) public virtual override(IVaultTestBase, IVaultTestSuite) returns (uint256 actualSharesAtPeriod_) {
-        return IVaultTestBase._verifyDepositOnly(depositUsers, vault, testParam);
-    }
-
-    function _verifyRedeemOnly(
-        TestParamSet.TestUsers memory redeemUsers,
-        IVault vault,
-        TestParamSet.TestParam memory testParam,
-        uint256 sharesToRedeemAtPeriod
-    ) public virtual override(IVaultTestBase, IVaultTestSuite) returns (uint256 actualAssetsAtPeriod_) {
-        return IVaultTestBase._verifyRedeemOnly(redeemUsers, vault, testParam, sharesToRedeemAtPeriod);
-    }
-
-    /// @dev expected shares.  how much in assets should this vault give for the the deposit.
-    function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
-        public
-        view
-        override(IVaultTestBase, IVaultTestSuite)
-        returns (uint256 expectedShares)
-    {
-        MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
-
-        return testParam.principal / multiTokenVault.ASSET_TO_SHARES_RATIO();
-    }
-
-    function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
-        public
-        view
-        override(IVaultTestBase, IVaultTestSuite)
-        returns (uint256 expectedReturns_)
-    {
-        return MultiTokenVaultDailyPeriods(address(vault))._yieldStrategy().calcYield(
-            address(vault), testParam.principal, testParam.depositPeriod, testParam.redeemPeriod
-        );
-    }
-
-    function _warpToPeriod(IVault vault, uint256 timePeriod) public override(IVaultTestBase, IVaultTestSuite) {
-        MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
-
-        uint256 warpToTimeInSeconds = multiTokenVault._vaultStartTimestamp() + timePeriod * 24 hours;
-
-        vm.warp(warpToTimeInSeconds);
-    }
-
     function _vault() internal virtual override returns (IVault) {
         return _multiTokenVault;
+    }
+
+    function _vaultVerifier() internal virtual override returns (IVaultVerifier verifier) {
+        return _verifier;
     }
 }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
-interface IVaultTestVerifier {
+interface IVaultVerifier {
     function verifyVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
         external
         returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_);

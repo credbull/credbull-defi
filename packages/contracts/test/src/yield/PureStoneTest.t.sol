@@ -11,12 +11,12 @@ import { CalcDiscounted } from "@credbull/yield/CalcDiscounted.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/yield/strategy/SimpleInterestYieldStrategy.sol";
 import { IVault } from "@credbull/token/ERC4626/IVault.sol";
-import { IVaultTestBase } from "@test/test/token/ERC4626/IVaultTestBase.t.sol";
+import { IVaultVerifierBase } from "@test/test/token/ERC4626/IVaultVerifierBase.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
-contract PureStoneTest is IVaultTestBase {
+contract PureStoneTest is IVaultVerifierBase {
     using TestParamSet for TestParamSet.TestParam[];
 
     IERC20Metadata internal _asset;

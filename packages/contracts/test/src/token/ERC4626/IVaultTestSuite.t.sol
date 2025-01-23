@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 
-import { IVaultTestVerifier } from "@test/test/token/ERC4626/IVaultTestVerifier.t.sol";
+import { IVaultVerifier } from "@test/test/token/ERC4626/IVaultVerifier.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
@@ -11,7 +11,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 
 import { TestUtil } from "@test/test/util/TestUtil.t.sol";
 
-abstract contract IVaultTestSuite is IVaultTestVerifier, TestUtil {
+abstract contract IVaultTestSuite is TestUtil {
     using TestParamSet for TestParamSet.TestParam[];
 
     IERC20Metadata internal _asset;
@@ -41,13 +41,15 @@ abstract contract IVaultTestSuite is IVaultTestVerifier, TestUtil {
     // ========================= Test Suite =========================
 
     function test__IVaultSuite__DepositAndRedeem() public {
+        IVaultVerifier _verifier = _vaultVerifier();
         _transferAndAssert(_asset, _owner, _charlie, 100_000 * _scale);
 
-        verifyVaultAtOffsets(_charlie, _vault(), _testParams1);
+        _verifier.verifyVaultAtOffsets(_charlie, _vault(), _testParams1);
     }
 
     function test__IVaultSuite__SimpleDeposit() public {
         IVault vault = _vault();
+        IVaultVerifier _verifier = _vaultVerifier();
 
         address vaultAddress = address(vault);
 
@@ -67,22 +69,23 @@ abstract contract IVaultTestSuite is IVaultTestVerifier, TestUtil {
         assertEq(_testParams1.principal, _asset.balanceOf(vaultAddress), "vault should have the asset");
         assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance after deposit");
 
-        verifyVaultAtOffsets(_alice, vault, _testParams1);
+        _verifier.verifyVaultAtOffsets(_alice, vault, _testParams1);
     }
 
     function test__IVaultSuite__MultipleDepositsAndRedeem() public {
         IVault vault = _vault();
+        IVaultVerifier _verifier = _vaultVerifier();
 
         TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
 
-        uint256 deposit1Shares = _verifyDepositOnly(testUsers, vault, _testParams1);
-        uint256 deposit2Shares = _verifyDepositOnly(testUsers, vault, _testParams2);
+        uint256 deposit1Shares = _verifier._verifyDepositOnly(testUsers, vault, _testParams1);
+        uint256 deposit2Shares = _verifier._verifyDepositOnly(testUsers, vault, _testParams2);
 
-        _warpToPeriod(vault, _testParams2.depositPeriod); // warp to deposit2Period
+        _verifier._warpToPeriod(vault, _testParams2.depositPeriod); // warp to deposit2Period
 
         // verify redeem - period 1
-        uint256 deposit1ExpectedYield = _expectedReturns(deposit1Shares, vault, _testParams1);
-        uint256 deposit1Assets = _verifyRedeemOnly(testUsers, vault, _testParams1, deposit1Shares);
+        uint256 deposit1ExpectedYield = _verifier._expectedReturns(deposit1Shares, vault, _testParams1);
+        uint256 deposit1Assets = _verifier._verifyRedeemOnly(testUsers, vault, _testParams1, deposit1Shares);
         assertApproxEqAbs(
             _testParams1.principal + deposit1ExpectedYield,
             deposit1Assets,
@@ -91,60 +94,19 @@ abstract contract IVaultTestSuite is IVaultTestVerifier, TestUtil {
         );
 
         // verify redeem - period 2
-        uint256 deposit2Assets = _verifyRedeemOnly(testUsers, vault, _testParams2, deposit2Shares);
+        uint256 deposit2Assets = _verifier._verifyRedeemOnly(testUsers, vault, _testParams2, deposit2Shares);
         assertApproxEqAbs(
-            _testParams2.principal + _expectedReturns(deposit1Shares, vault, _testParams2),
+            _testParams2.principal + _verifier._expectedReturns(deposit1Shares, vault, _testParams2),
             deposit2Assets,
             TOLERANCE,
             "deposit2 deposit assets incorrect"
         );
 
-        verifyVaultAtOffsets(_alice, vault, _testParams1);
-        verifyVaultAtOffsets(_alice, vault, _testParams2);
+        _verifier.verifyVaultAtOffsets(_alice, vault, _testParams1);
+        _verifier.verifyVaultAtOffsets(_alice, vault, _testParams2);
     }
 
     function _vault() internal virtual returns (IVault);
 
-    // ========================= Verifier Interface =========================
-
-    function verifyVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
-        public
-        virtual
-        override
-        returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_);
-
-    /// @dev verify deposit.  updates vault assets and shares.
-    function _verifyDepositOnly(
-        TestParamSet.TestUsers memory depositUsers,
-        IVault vault,
-        TestParamSet.TestParam memory testParam
-    ) public virtual override returns (uint256 actualSharesAtPeriod_);
-
-    /// @dev verify redeem.  updates vault assets and shares.
-    function _verifyRedeemOnly(
-        TestParamSet.TestUsers memory redeemUsers,
-        IVault vault,
-        TestParamSet.TestParam memory testParam,
-        uint256 sharesToRedeemAtPeriod
-    ) public virtual override returns (uint256 actualAssetsAtPeriod_);
-
-    /// @dev expected shares.  how much in assets should this vault give for the the deposit.
-    function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
-        public
-        view
-        virtual
-        override
-        returns (uint256 expectedShares);
-
-    /// @dev expected returns.  returns is the difference between the assets deposited (i.e. the principal) and the assets redeemed.
-    function _expectedReturns(uint256 shares, IVault vault, TestParamSet.TestParam memory testParam)
-        public
-        view
-        virtual
-        override
-        returns (uint256 expectedReturns_);
-
-    /// @dev warp the vault to the given timePeriod for testing purposes
-    /// @dev this assumes timePeriod is in days
-    function _warpToPeriod(IVault vault, uint256 timePeriod) public virtual override;
+    function _vaultVerifier() internal virtual returns (IVaultVerifier verifier);
 }
