@@ -10,7 +10,9 @@ import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiToken
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+
 import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
+import { IVaultTestVerifier } from "@test/test/token/ERC4626/IVaultTestVerifier.t.sol";
 import { IVaultTestBase } from "@test/test/token/ERC4626/IVaultTestBase.t.sol";
 
 contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
@@ -435,7 +437,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
     function testVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
         internal
         virtual
-        override(IVaultTestBase, IVaultTestSuite)
+        override(IVaultTestBase, IVaultTestVerifier)
         returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_)
     {
         return IVaultTestBase.testVaultAtOffsets(account, vault, testParam);
@@ -445,7 +447,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         TestParamSet.TestUsers memory depositUsers,
         IVault vault,
         TestParamSet.TestParam memory testParam
-    ) internal virtual override(IVaultTestBase, IVaultTestSuite) returns (uint256 actualSharesAtPeriod_) {
+    ) internal virtual override(IVaultTestBase, IVaultTestVerifier) returns (uint256 actualSharesAtPeriod_) {
         return IVaultTestBase._testDepositOnly(depositUsers, vault, testParam);
     }
 
@@ -454,7 +456,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         IVault vault,
         TestParamSet.TestParam memory testParam,
         uint256 sharesToRedeemAtPeriod
-    ) internal virtual override(IVaultTestBase, IVaultTestSuite) returns (uint256 actualAssetsAtPeriod_) {
+    ) internal virtual override(IVaultTestBase, IVaultTestVerifier) returns (uint256 actualAssetsAtPeriod_) {
         return IVaultTestBase._testRedeemOnly(redeemUsers, vault, testParam, sharesToRedeemAtPeriod);
     }
 
@@ -462,7 +464,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
     function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
         internal
         view
-        override(IVaultTestBase, IVaultTestSuite)
+        override(IVaultTestBase, IVaultTestVerifier)
         returns (uint256 expectedShares)
     {
         MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
@@ -473,7 +475,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
     function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
         internal
         view
-        override(IVaultTestBase, IVaultTestSuite)
+        override(IVaultTestBase, IVaultTestVerifier)
         returns (uint256 expectedReturns_)
     {
         return MultiTokenVaultDailyPeriods(address(vault))._yieldStrategy().calcYield(
@@ -481,7 +483,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         );
     }
 
-    function _warpToPeriod(IVault vault, uint256 timePeriod) internal override(IVaultTestBase, IVaultTestSuite) {
+    function _warpToPeriod(IVault vault, uint256 timePeriod) internal override(IVaultTestBase, IVaultTestVerifier) {
         MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
 
         uint256 warpToTimeInSeconds = multiTokenVault._vaultStartTimestamp() + timePeriod * 24 hours;
