@@ -2,26 +2,21 @@
 pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
-import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
 
 import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault.s.sol";
 import { LiquidContinuousMultiTokenVaultVerifier } from "@test/test/yield/LiquidContinuousMultiTokenVaultVerifier.t.sol";
-import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
-
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
 
-// TODO - Should this extend MultiTokenVaultTest instead?
 abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
     using TestParamSet for TestParamSet.TestParam[];
 
     LiquidContinuousMultiTokenVault internal _liquidVault;
-    LiquidContinuousMultiTokenVaultVerifier internal _verifier;
+    LiquidContinuousMultiTokenVaultVerifier internal _liquidVerifier;
 
     LiquidContinuousMultiTokenVault.VaultAuth internal _vaultAuth = LiquidContinuousMultiTokenVault.VaultAuth({
         owner: makeAddr("owner"),
@@ -33,12 +28,12 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
     function setUp() public override {
         DeployLiquidMultiTokenVault _deployVault = new DeployLiquidMultiTokenVault();
         _liquidVault = _deployVault.run(_vaultAuth);
-        _verifier = new LiquidContinuousMultiTokenVaultVerifier();
+        _liquidVerifier = new LiquidContinuousMultiTokenVaultVerifier();
 
         // warp to a "real time" time rather than block.timestamp=1
         vm.warp(_liquidVault._vaultStartTimestamp() + 1);
 
-        init(_liquidVault, _verifier);
+        init(_liquidVault, _liquidVerifier);
     }
 
     function _createVaultParams(LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth)
@@ -47,12 +42,11 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
     {
         DeployLiquidMultiTokenVault deployVault = new DeployLiquidMultiTokenVault();
 
-        IERC20Metadata asset = new SimpleUSDC(vaultAuth.owner, type(uint128).max);
-        IYieldStrategy yieldStrategy = new TripleRateYieldStrategy();
         IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, 0);
 
-        LiquidContinuousMultiTokenVault.VaultParams memory vaultParams =
-            deployVault._createVaultParams(vaultAuth, asset, yieldStrategy, redeemOptimizer);
+        LiquidContinuousMultiTokenVault.VaultParams memory vaultParams = deployVault._createVaultParams(
+            vaultAuth, _createAsset(vaultAuth.owner), new TripleRateYieldStrategy(), redeemOptimizer
+        );
 
         return vaultParams;
     }

@@ -13,8 +13,8 @@ import { TestUtil } from "@test/test/util/TestUtil.t.sol";
 abstract contract IVaultTestSuite is TestUtil {
     using TestParamSet for TestParamSet.TestParam[];
 
-    IVault private _iVault;
-    IVaultVerifier private _iVerifier;
+    IVault private _vault;
+    IVaultVerifier private _verifier;
 
     IERC20Metadata internal _asset;
     uint256 internal _scale;
@@ -24,9 +24,9 @@ abstract contract IVaultTestSuite is TestUtil {
 
     // child classes should call to init in their setUp()
     function init(IVault vault, IVaultVerifier verifier) public {
-        _iVault = vault;
-        _iVerifier = verifier;
-        _asset = IERC20Metadata(_iVault.asset());
+        _vault = vault;
+        _verifier = verifier;
+        _asset = IERC20Metadata(_vault.asset());
         _scale = 10 ** _asset.decimals();
 
         _transferAndAssert(_asset, _owner, _alice, 100_000 * _scale);
@@ -37,13 +37,13 @@ abstract contract IVaultTestSuite is TestUtil {
     function test__IVaultSuite__DepositAndRedeem() public {
         TestParamSet.TestParam memory testParams =
             TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 1, redeemPeriod: 11 });
-        _iVerifier.verifyVaultAtOffsets(_charlie, _iVault, testParams);
+        _verifier.verifyVaultAtOffsets(_charlie, _vault, testParams);
     }
 
     function test__IVaultSuite__SimpleDeposit() public {
         TestParamSet.TestParam memory testParams =
             TestParamSet.TestParam({ principal: 200 * _scale, depositPeriod: 2, redeemPeriod: 22 });
-        IVault vault = _iVault;
+        IVault vault = _vault;
 
         address vaultAddress = address(vault);
 
@@ -63,7 +63,7 @@ abstract contract IVaultTestSuite is TestUtil {
         assertEq(testParams.principal, _asset.balanceOf(vaultAddress), "vault should have the asset");
         assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance after deposit");
 
-        _iVerifier.verifyVaultAtOffsets(_alice, vault, testParams);
+        _verifier.verifyVaultAtOffsets(_alice, vault, testParams);
     }
 
     function test__IVaultSuite__MultipleDepositsAndRedeem() public {
@@ -72,18 +72,18 @@ abstract contract IVaultTestSuite is TestUtil {
         TestParamSet.TestParam memory testParams2 =
             TestParamSet.TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 });
 
-        IVault vault = _iVault;
+        IVault vault = _vault;
 
         TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
 
-        uint256 deposit1Shares = _iVerifier._verifyDepositOnly(testUsers, vault, testParams1);
-        uint256 deposit2Shares = _iVerifier._verifyDepositOnly(testUsers, vault, testParams2);
+        uint256 deposit1Shares = _verifier._verifyDepositOnly(testUsers, vault, testParams1);
+        uint256 deposit2Shares = _verifier._verifyDepositOnly(testUsers, vault, testParams2);
 
-        _iVerifier._warpToPeriod(vault, testParams2.depositPeriod); // warp to deposit2Period
+        _verifier._warpToPeriod(vault, testParams2.depositPeriod); // warp to deposit2Period
 
         // verify redeem - period 1
-        uint256 deposit1ExpectedYield = _iVerifier._expectedReturns(deposit1Shares, vault, testParams1);
-        uint256 deposit1Assets = _iVerifier._verifyRedeemOnly(testUsers, vault, testParams1, deposit1Shares);
+        uint256 deposit1ExpectedYield = _verifier._expectedReturns(deposit1Shares, vault, testParams1);
+        uint256 deposit1Assets = _verifier._verifyRedeemOnly(testUsers, vault, testParams1, deposit1Shares);
         assertApproxEqAbs(
             testParams1.principal + deposit1ExpectedYield,
             deposit1Assets,
@@ -92,15 +92,15 @@ abstract contract IVaultTestSuite is TestUtil {
         );
 
         // verify redeem - period 2
-        uint256 deposit2Assets = _iVerifier._verifyRedeemOnly(testUsers, vault, testParams2, deposit2Shares);
+        uint256 deposit2Assets = _verifier._verifyRedeemOnly(testUsers, vault, testParams2, deposit2Shares);
         assertApproxEqAbs(
-            testParams2.principal + _iVerifier._expectedReturns(deposit1Shares, vault, testParams2),
+            testParams2.principal + _verifier._expectedReturns(deposit1Shares, vault, testParams2),
             deposit2Assets,
             TOLERANCE,
             "deposit2 deposit assets incorrect"
         );
 
-        _iVerifier.verifyVaultAtOffsets(_alice, vault, testParams1);
-        _iVerifier.verifyVaultAtOffsets(_alice, vault, testParams2);
+        _verifier.verifyVaultAtOffsets(_alice, vault, testParams1);
+        _verifier.verifyVaultAtOffsets(_alice, vault, testParams2);
     }
 }
