@@ -73,7 +73,6 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
                 "!!! receiver did not receive the correct vault shares - balanceOf ", vault, testParam.depositPeriod
             )
         );
-
         assertEq(
             prevVaultBalanceOf + testParam.principal,
             _asset.balanceOf(address(_liquidVault)),

@@ -10,37 +10,11 @@ import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiToken
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { IVaultTestSuite } from "./IVaultTestSuite.t.sol";
+import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
 import { IVaultTestBase } from "@test/test/token/ERC4626/IVaultTestBase.t.sol";
 
 contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
     using TestParamSet for TestParamSet.TestParam[];
-
-    function test__MultiTokenVaultTest__SimpleDeposit() public {
-        uint256 assetToSharesRatio = 2;
-
-        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-
-        address vaultAddress = address(vault);
-
-        assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance to start");
-        assertEq(0, _asset.balanceOf(vaultAddress), "vault shouldn't have a balance to start");
-
-        vm.startPrank(_alice);
-        _asset.approve(vaultAddress, _testParams1.principal);
-
-        assertEq(_testParams1.principal, _asset.allowance(_alice, vaultAddress), "vault should have allowance");
-        vm.stopPrank();
-
-        vm.startPrank(_alice);
-        vault.deposit(_testParams1.principal, _alice);
-        vm.stopPrank();
-
-        assertEq(_testParams1.principal, _asset.balanceOf(vaultAddress), "vault should have the asset");
-        assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance after deposit");
-
-        testVaultAtOffsets(_alice, vault, _testParams1);
-    }
 
     function test__MultiTokenVaultTest__RedeemBeforeDepositPeriodReverts() public {
         IMultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
@@ -101,61 +75,6 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
             )
         );
         vault.redeemForDepositPeriod(sharesToRedeem, _alice, _alice, testParam.depositPeriod, testParam.redeemPeriod);
-    }
-
-    function test__MultiTokenVaultTest__MultipleDepositsAndRedeem() public {
-        uint256 assetToSharesRatio = 4;
-
-        // setup
-        IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-
-        TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
-
-        // verify deposit - period 1
-        uint256 deposit1Shares = _testDepositOnly(testUsers, vault, _testParams1);
-        assertEq(_testParams1.principal / assetToSharesRatio, deposit1Shares, "deposit shares incorrect at period 1");
-        assertEq(
-            deposit1Shares,
-            vault.sharesAtPeriod(_alice, _testParams1.depositPeriod),
-            "getSharesAtPeriod incorrect at period 1"
-        );
-        assertEq(deposit1Shares, vault.balanceOf(_alice, _testParams1.depositPeriod), "balance incorrect at period 1");
-        assertEq(deposit1Shares, vault.balanceOf(_alice, _testParams1.depositPeriod), "balance incorrect at period 1");
-
-        // verify deposit - period 2
-        uint256 deposit2Shares = _testDepositOnly(testUsers, vault, _testParams2);
-        assertEq(_testParams2.principal / assetToSharesRatio, deposit2Shares, "deposit shares incorrect at period 2");
-        assertEq(
-            deposit2Shares,
-            vault.sharesAtPeriod(_alice, _testParams2.depositPeriod),
-            "getSharesAtPeriod incorrect at period 2"
-        );
-        assertEq(deposit2Shares, vault.balanceOf(_alice, _testParams2.depositPeriod), "balance incorrect at period 2");
-
-        // New check for sharesAtPeriods
-        _warpToPeriod(vault, _testParams2.depositPeriod); // warp to deposit2Period
-
-        // verify redeem - period 1
-        uint256 deposit1ExpectedYield = _expectedReturns(deposit1Shares, vault, _testParams1);
-        uint256 deposit1Assets = _testRedeemOnly(testUsers, vault, _testParams1, deposit1Shares);
-        assertApproxEqAbs(
-            _testParams1.principal + deposit1ExpectedYield,
-            deposit1Assets,
-            TOLERANCE,
-            "deposit1 deposit assets incorrect"
-        );
-
-        // verify redeem - period 2
-        uint256 deposit2Assets = _testRedeemOnly(testUsers, vault, _testParams2, deposit2Shares);
-        assertApproxEqAbs(
-            _testParams2.principal + _expectedReturns(deposit1Shares, vault, _testParams2),
-            deposit2Assets,
-            TOLERANCE,
-            "deposit2 deposit assets incorrect"
-        );
-
-        testVaultAtOffsets(_alice, vault, _testParams1);
-        testVaultAtOffsets(_alice, vault, _testParams2);
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__RedeemWithAllowance() public {
@@ -486,18 +405,37 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         return balances;
     }
 
-    function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
+    // ========================= Verifiers =========================
+
+    function testVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
         internal
-        view
-        override
-        returns (uint256 expectedReturns_)
+        virtual
+        override(IVaultTestBase, IVaultTestSuite)
+        returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_)
     {
-        return MultiTokenVaultDailyPeriods(address(vault))._yieldStrategy().calcYield(
-            address(vault), testParam.principal, testParam.depositPeriod, testParam.redeemPeriod
-        );
+        return IVaultTestBase.testVaultAtOffsets(account, vault, testParam);
     }
 
-    function _warpToPeriod(IVault vault, uint256 timePeriod) internal override {
+    function _testDepositOnly(
+        TestParamSet.TestUsers memory depositUsers,
+        IVault vault,
+        TestParamSet.TestParam memory testParam
+    ) internal virtual override(IVaultTestBase, IVaultTestSuite) returns (uint256 actualSharesAtPeriod_) {
+        return IVaultTestBase._testDepositOnly(depositUsers, vault, testParam);
+    }
+
+    function _testRedeemOnly(
+        TestParamSet.TestUsers memory redeemUsers,
+        IVault vault,
+        TestParamSet.TestParam memory testParam,
+        uint256 sharesToRedeemAtPeriod
+    ) internal virtual override(IVaultTestBase, IVaultTestSuite) returns (uint256 actualAssetsAtPeriod_) {
+        return IVaultTestBase._testRedeemOnly(redeemUsers, vault, testParam, sharesToRedeemAtPeriod);
+    }
+
+    // ========================= Utilities =========================
+
+    function _warpToPeriod(IVault vault, uint256 timePeriod) internal override(IVaultTestBase, IVaultTestSuite) {
         MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
 
         uint256 warpToTimeInSeconds = multiTokenVault._vaultStartTimestamp() + timePeriod * 24 hours;
@@ -505,7 +443,16 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         vm.warp(warpToTimeInSeconds);
     }
 
-    // ========================= IVaultSuite interface =========================
+    function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
+        internal
+        view
+        override(IVaultTestBase, IVaultTestSuite)
+        returns (uint256 expectedReturns_)
+    {
+        return MultiTokenVaultDailyPeriods(address(vault))._yieldStrategy().calcYield(
+            address(vault), testParam.principal, testParam.depositPeriod, testParam.redeemPeriod
+        );
+    }
 
     function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)
         internal
@@ -523,29 +470,5 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
                 )
             )
         );
-    }
-
-    function testVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
-        internal
-        virtual
-        override(IVaultTestBase, IVaultTestSuite)
-        returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_)
-    {
-        return IVaultTestBase.testVaultAtOffsets(account, vault, testParam);
-    }
-
-    /// @dev test Vault at specified redeemPeriod and other "interesting" redeem periods
-    function testVaultAtOffsets(
-        TestParamSet.TestUsers memory depositUsers,
-        TestParamSet.TestUsers memory redeemUsers,
-        IVault vault,
-        TestParamSet.TestParam memory testParam
-    )
-        internal
-        virtual
-        override(IVaultTestBase, IVaultTestSuite)
-        returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_)
-    {
-        return IVaultTestBase.testVaultAtOffsets(depositUsers, redeemUsers, vault, testParam);
     }
 }
