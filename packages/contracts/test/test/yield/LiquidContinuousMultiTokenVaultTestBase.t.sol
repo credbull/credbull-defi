@@ -50,11 +50,11 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     }
 
     // verify deposit.  updates vault assets and shares.
-    function _testDepositOnly(
+    function _verifyDepositOnly(
         TestParamSet.TestUsers memory testUsers,
         IVault vault,
         TestParamSet.TestParam memory testParam
-    ) internal virtual override returns (uint256 actualSharesAtPeriod_) {
+    ) public virtual override returns (uint256 actualSharesAtPeriod_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         uint256 prevVaultBalanceOf = _asset.balanceOf(address(_liquidVault));
@@ -64,7 +64,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         uint256 prevVaultTotalAssets = liquidVault.totalAssets();
         _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore previous period state
 
-        uint256 actualSharesAtPeriod = super._testDepositOnly(testUsers, vault, testParam);
+        uint256 actualSharesAtPeriod = super._verifyDepositOnly(testUsers, vault, testParam);
 
         assertEq(
             actualSharesAtPeriod,
@@ -110,12 +110,12 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         return vaultParams;
     }
 
-    function _testRedeemOnly(
+    function _verifyRedeemOnly(
         TestParamSet.TestUsers memory redeemUsers,
         IVault vault,
         TestParamSet.TestParam memory testParam,
         uint256 sharesToRedeemAtPeriod
-    ) internal virtual override returns (uint256 actualAssetsAtPeriod_) {
+    ) public virtual override returns (uint256 actualAssetsAtPeriod_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         uint256 prevLockedAmount = liquidVault.lockedAmount(redeemUsers.tokenOwner, testParam.depositPeriod);
@@ -140,7 +140,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
             "unlockRequest should be created"
         );
 
-        uint256 actualAssetsAtPeriod = super._testRedeemOnly(redeemUsers, vault, testParam, sharesToRedeemAtPeriod);
+        uint256 actualAssetsAtPeriod = super._verifyRedeemOnly(redeemUsers, vault, testParam, sharesToRedeemAtPeriod);
 
         // verify locks and request locks released
         assertEq(
@@ -254,7 +254,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     }
 
     function _expectedShares(IVault, /* vault */ TestParamSet.TestParam memory testParam)
-        internal
+        public
         pure
         override
         returns (uint256 expectedShares)
@@ -263,7 +263,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     }
 
     function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
-        internal
+        public
         view
         override
         returns (uint256 expectedReturns_)
@@ -279,7 +279,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     }
 
     /// @dev this assumes timePeriod is in days
-    function _warpToPeriod(IVault vault, uint256 timePeriod) internal override {
+    function _warpToPeriod(IVault vault, uint256 timePeriod) public override {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         uint256 warpToTimeInSeconds = liquidVault._vaultStartTimestamp() + timePeriod * 24 hours;

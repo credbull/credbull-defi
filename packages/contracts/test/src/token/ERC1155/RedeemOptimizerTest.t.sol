@@ -46,7 +46,7 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
             new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, multiTokenVault.currentPeriodsElapsed());
 
         uint256[] memory depositShares =
-            _testDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+            _verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
         uint256 totalDepositShares = depositShares[0] + depositShares[1] + depositShares[2];
 
         // warp vault ahead to redeemPeriod
@@ -72,7 +72,7 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         );
 
         uint256[] memory depositShares =
-            _testDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+            _verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
             depositShares, testParams.depositPeriods(), redeemPeriod
         );
@@ -100,7 +100,7 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
         uint256[] memory depositShares =
-            _testDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+            _verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
 
         uint256 sharesToWithdraw = depositShares[0] + depositShares[1] + depositShares[2] - residualShareAmount;
 
@@ -132,7 +132,7 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         );
 
         uint256[] memory depositShares =
-            _testDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+            _verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
             depositShares, testParams.depositPeriods(), redeemPeriod
         );
@@ -190,8 +190,8 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         (TestParamSet.TestUsers memory depositUsers,) = _createTestUsers(_alice);
 
         // shares to find greater than the deposits
-        uint256 deposit1Shares = _testDepositOnly(depositUsers, multiTokenVault, testParams[0]);
-        uint256 deposit2Shares = _testDepositOnly(depositUsers, multiTokenVault, testParams[1]);
+        uint256 deposit1Shares = _verifyDepositOnly(depositUsers, multiTokenVault, testParams[0]);
+        uint256 deposit2Shares = _verifyDepositOnly(depositUsers, multiTokenVault, testParams[1]);
         uint256 totalDepositShares = deposit1Shares + deposit2Shares;
 
         uint256 sharesGreaterThanDeposits = totalDepositShares + 1;
@@ -251,7 +251,7 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
     }
 
     function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
-        internal
+        public
         view
         override
         returns (uint256 expectedShares)
@@ -262,7 +262,7 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
     }
 
     function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
-        internal
+        public
         view
         override
         returns (uint256 expectedReturns_)
@@ -272,7 +272,7 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         );
     }
 
-    function _warpToPeriod(IVault vault, uint256 timePeriod) internal override {
+    function _warpToPeriod(IVault vault, uint256 timePeriod) public override {
         MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
 
         uint256 warpToTimeInSeconds = multiTokenVault._vaultStartTimestamp() + timePeriod * 24 hours;

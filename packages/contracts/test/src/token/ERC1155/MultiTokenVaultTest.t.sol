@@ -154,7 +154,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
         TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
 
-        uint256[] memory shares = _testDepositOnly(testUsers, vault, _batchTestParams);
+        uint256[] memory shares = _verifyDepositOnly(testUsers, vault, _batchTestParams);
         uint256[] memory depositPeriods = _batchTestParams.depositPeriods();
         uint256[] memory depositPeriodsToRevert = _batchTestParamsToRevert.depositPeriods();
 
@@ -434,37 +434,37 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
 
     // ========================= Verifiers =========================
 
-    function testVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
-        internal
+    function verifyVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
+        public
         virtual
-        override(IVaultTestBase, IVaultTestVerifier)
+        override(IVaultTestBase, IVaultTestSuite)
         returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_)
     {
-        return IVaultTestBase.testVaultAtOffsets(account, vault, testParam);
+        return IVaultTestBase.verifyVaultAtOffsets(account, vault, testParam);
     }
 
-    function _testDepositOnly(
+    function _verifyDepositOnly(
         TestParamSet.TestUsers memory depositUsers,
         IVault vault,
         TestParamSet.TestParam memory testParam
-    ) internal virtual override(IVaultTestBase, IVaultTestVerifier) returns (uint256 actualSharesAtPeriod_) {
-        return IVaultTestBase._testDepositOnly(depositUsers, vault, testParam);
+    ) public virtual override(IVaultTestBase, IVaultTestSuite) returns (uint256 actualSharesAtPeriod_) {
+        return IVaultTestBase._verifyDepositOnly(depositUsers, vault, testParam);
     }
 
-    function _testRedeemOnly(
+    function _verifyRedeemOnly(
         TestParamSet.TestUsers memory redeemUsers,
         IVault vault,
         TestParamSet.TestParam memory testParam,
         uint256 sharesToRedeemAtPeriod
-    ) internal virtual override(IVaultTestBase, IVaultTestVerifier) returns (uint256 actualAssetsAtPeriod_) {
-        return IVaultTestBase._testRedeemOnly(redeemUsers, vault, testParam, sharesToRedeemAtPeriod);
+    ) public virtual override(IVaultTestBase, IVaultTestSuite) returns (uint256 actualAssetsAtPeriod_) {
+        return IVaultTestBase._verifyRedeemOnly(redeemUsers, vault, testParam, sharesToRedeemAtPeriod);
     }
 
     /// @dev expected shares.  how much in assets should this vault give for the the deposit.
     function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
-        internal
+        public
         view
-        override(IVaultTestBase, IVaultTestVerifier)
+        override(IVaultTestBase, IVaultTestSuite)
         returns (uint256 expectedShares)
     {
         MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
@@ -473,9 +473,9 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
     }
 
     function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
-        internal
+        public
         view
-        override(IVaultTestBase, IVaultTestVerifier)
+        override(IVaultTestBase, IVaultTestSuite)
         returns (uint256 expectedReturns_)
     {
         return MultiTokenVaultDailyPeriods(address(vault))._yieldStrategy().calcYield(
@@ -483,7 +483,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         );
     }
 
-    function _warpToPeriod(IVault vault, uint256 timePeriod) internal override(IVaultTestBase, IVaultTestVerifier) {
+    function _warpToPeriod(IVault vault, uint256 timePeriod) public override(IVaultTestBase, IVaultTestSuite) {
         MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
 
         uint256 warpToTimeInSeconds = multiTokenVault._vaultStartTimestamp() + timePeriod * 24 hours;

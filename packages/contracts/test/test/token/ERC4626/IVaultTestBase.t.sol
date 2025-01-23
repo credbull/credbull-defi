@@ -6,14 +6,15 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 import { TestUtil } from "@test/test/util/TestUtil.t.sol";
+import { IVaultTestVerifier } from "@test/test/token/ERC4626/IVaultTestVerifier.t.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-abstract contract IVaultTestBase is Test, TestUtil {
+abstract contract IVaultTestBase is IVaultTestVerifier, Test, TestUtil {
     using TestParamSet for TestParamSet.TestParam[];
 
     /// @dev test the vault at the given test parameters
-    function testVault(
+    function verifyVault(
         TestParamSet.TestUsers memory depositUsers,
         TestParamSet.TestUsers memory redeemUsers,
         IVault vault,
@@ -24,10 +25,10 @@ abstract contract IVaultTestBase is Test, TestUtil {
 
         // ------------------- deposits w/ redeems per deposit -------------------
         // NB - test all of the deposits BEFORE redeems.  verifies no side-effects from deposits when redeeming.
-        uint256[] memory sharesAtPeriods = _testDepositOnly(depositUsers, vault, testParams);
+        uint256[] memory sharesAtPeriods = _verifyDepositOnly(depositUsers, vault, testParams);
 
         // NB - test all of the redeems AFTER deposits.  verifies no side-effects from deposits when redeeming.
-        uint256[] memory assetsAtPeriods = _testRedeemOnly(redeemUsers, vault, testParams, sharesAtPeriods);
+        uint256[] memory assetsAtPeriods = _verifyRedeemOnly(redeemUsers, vault, testParams, sharesAtPeriods);
 
         _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore previous period state
 
@@ -35,47 +36,47 @@ abstract contract IVaultTestBase is Test, TestUtil {
     }
 
     /// @dev test Vault at specified redeemPeriod and other "interesting" redeem periods
-    function testVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
-        internal
+    function verifyVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
+        public
         virtual
         returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_)
     {
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
             _createTestUsers(account);
 
-        return testVaultAtOffsets(depositUsers, redeemUsers, vault, testParam);
+        return verifyVaultAtOffsets(depositUsers, redeemUsers, vault, testParam);
     }
 
     /// @dev test Vault at specified redeemPeriod and other "interesting" redeem periods
-    function testVaultAtOffsets(
+    function verifyVaultAtOffsets(
         TestParamSet.TestUsers memory depositUsers,
         TestParamSet.TestUsers memory redeemUsers,
         IVault vault,
         TestParamSet.TestParam memory testParam
     ) internal virtual returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_) {
         TestParamSet.TestParam[] memory testParams = TestParamSet.toOffsetArray(testParam);
-        return testVault(depositUsers, redeemUsers, vault, testParams);
+        return verifyVault(depositUsers, redeemUsers, vault, testParams);
     }
 
     /// @dev verify deposit.  updates vault assets and shares.
-    function _testDepositOnly(
+    function _verifyDepositOnly(
         TestParamSet.TestUsers memory depositUsers,
         IVault vault,
         TestParamSet.TestParam[] memory testParams
     ) internal virtual returns (uint256[] memory sharesAtPeriod_) {
         uint256[] memory sharesAtPeriod = new uint256[](testParams.length);
         for (uint256 i = 0; i < testParams.length; i++) {
-            sharesAtPeriod[i] = _testDepositOnly(depositUsers, vault, testParams[i]);
+            sharesAtPeriod[i] = _verifyDepositOnly(depositUsers, vault, testParams[i]);
         }
         return sharesAtPeriod;
     }
 
     /// @dev verify deposit.  updates vault assets and shares.
-    function _testDepositOnly(
+    function _verifyDepositOnly(
         TestParamSet.TestUsers memory depositUsers,
         IVault vault,
         TestParamSet.TestParam memory testParam
-    ) internal virtual returns (uint256 actualSharesAtPeriod_) {
+    ) public virtual returns (uint256 actualSharesAtPeriod_) {
         IERC20 asset = IERC20(vault.asset());
 
         // capture state before for validations
@@ -119,7 +120,7 @@ abstract contract IVaultTestBase is Test, TestUtil {
     }
 
     /// @dev verify redeem.  updates vault assets and shares.
-    function _testRedeemOnly(
+    function _verifyRedeemOnly(
         TestParamSet.TestUsers memory redeemUsers,
         IVault vault,
         TestParamSet.TestParam[] memory testParams,
@@ -127,18 +128,18 @@ abstract contract IVaultTestBase is Test, TestUtil {
     ) internal virtual returns (uint256[] memory assetsAtPeriods_) {
         uint256[] memory assetsAtPeriods = new uint256[](testParams.length);
         for (uint256 i = 0; i < testParams.length; i++) {
-            assetsAtPeriods[i] = _testRedeemOnly(redeemUsers, vault, testParams[i], sharesAtPeriods[i]);
+            assetsAtPeriods[i] = _verifyRedeemOnly(redeemUsers, vault, testParams[i], sharesAtPeriods[i]);
         }
         return assetsAtPeriods;
     }
 
     /// @dev verify redeem.  updates vault assets and shares.
-    function _testRedeemOnly(
+    function _verifyRedeemOnly(
         TestParamSet.TestUsers memory redeemUsers,
         IVault vault,
         TestParamSet.TestParam memory testParam,
         uint256 sharesToRedeemAtPeriod
-    ) internal virtual returns (uint256 actualAssetsAtPeriod_) {
+    ) public virtual returns (uint256 actualAssetsAtPeriod_) {
         IERC20 asset = IERC20(vault.asset());
 
         uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
@@ -196,7 +197,7 @@ abstract contract IVaultTestBase is Test, TestUtil {
 
     /// @dev warp the vault to the given timePeriod for testing purposes
     /// @dev this assumes timePeriod is in days
-    function _warpToPeriod(IVault, /* vault */ uint256 timePeriod) internal virtual {
+    function _warpToPeriod(IVault, /* vault */ uint256 timePeriod) public virtual {
         vm.warp(Timer.timestamp() + timePeriod * 24 hours);
     }
 
@@ -206,14 +207,14 @@ abstract contract IVaultTestBase is Test, TestUtil {
 
     /// @dev expected shares.  how much in assets should this vault give for the the deposit.
     function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
-        internal
+        public
         view
         virtual
         returns (uint256 expectedShares);
 
     /// @dev expected returns.  returns is the difference between the assets deposited (i.e. the principal) and the assets redeemed.
     function _expectedReturns(uint256 shares, IVault vault, TestParamSet.TestParam memory testParam)
-        internal
+        public
         view
         virtual
         returns (uint256 expectedReturns_);

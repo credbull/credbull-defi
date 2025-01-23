@@ -68,7 +68,7 @@ contract LiquidStoneNinetyDayTest is LiquidContinuousMultiTokenVaultTestBase {
         testParams[0] =
             TestParamSet.TestParam({ principal: principal, depositPeriod: depositPeriod, redeemPeriod: redeemPeriod });
 
-        uint256[] memory sharesAtPeriods = _testDepositOnly(aliceTestUsers, _liquidVault, testParams);
+        uint256[] memory sharesAtPeriods = _verifyDepositOnly(aliceTestUsers, _liquidVault, testParams);
 
         uint256 expectedReturns = CalcSimpleInterest.calcInterest(
             principal, _liquidVault.rateScaled(), redeemPeriod - depositPeriod, _liquidVault.frequency(), _scale
@@ -102,7 +102,7 @@ contract LiquidStoneNinetyDayTest is LiquidContinuousMultiTokenVaultTestBase {
             redeemPeriod: earlyRedeemPeriod
         });
 
-        uint256[] memory sharesAtPeriods = _testDepositOnly(aliceTestUsers, _liquidVault, testParams);
+        uint256[] memory sharesAtPeriods = _verifyDepositOnly(aliceTestUsers, _liquidVault, testParams);
 
         // warp to the redeem period
         _warpToPeriod(_liquidVault, earlyRedeemPeriod);

@@ -47,7 +47,7 @@ contract PureStoneTest is IVaultTestBase {
 
         PureStone vault = _createPureStone(_asset, assetToSharesRatio, 10);
 
-        testVaultAtOffsets(_charlie, vault, _testParams1);
+        verifyVaultAtOffsets(_charlie, vault, _testParams1);
     }
 
     function _createPureStone(IERC20Metadata asset_, uint256, /* assetToSharesRatio */ uint256 yieldPercentage)
@@ -77,7 +77,7 @@ contract PureStoneTest is IVaultTestBase {
 
     /// @dev expected shares.  how much in assets should this vault give for the the deposit.
     function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
-        internal
+        public
         view
         override
         returns (uint256 expectedShares)
@@ -88,7 +88,7 @@ contract PureStoneTest is IVaultTestBase {
     }
 
     function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
-        internal
+        public
         view
         override
         returns (uint256 expectedReturns_)
@@ -113,7 +113,7 @@ contract PureStoneTest is IVaultTestBase {
         pureStone.approve(operator, balanceToApprove);
     }
 
-    function _warpToPeriod(IVault vault, uint256 timePeriod) internal virtual override {
+    function _warpToPeriod(IVault vault, uint256 timePeriod) public virtual override {
         DiscountVault discountVault = DiscountVault(address(vault));
 
         uint256 warpToTimeInSeconds = discountVault._vaultStartTimestamp() + timePeriod * 24 hours;
