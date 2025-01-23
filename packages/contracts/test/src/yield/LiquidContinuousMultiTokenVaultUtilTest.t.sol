@@ -36,7 +36,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         TestParamSet.TestParam memory testParams =
             TestParamSet.TestParam({ principal: 2_000 * scale, depositPeriod: 11, redeemPeriod: 71 });
 
-        _warpToPeriod(vaultProxy, testParams.depositPeriod);
+        _verifier._warpToPeriod(vaultProxy, testParams.depositPeriod);
 
         vm.startPrank(alice);
         asset.approve(address(vaultProxy), testParams.principal); // grant the vault allowance
@@ -116,7 +116,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         vm.prank(alice);
         _liquidVault.requestUnlock(alice, _asSingletonArray(testParams.depositPeriod), _asSingletonArray(shares));
 
-        _warpToPeriod(_liquidVault, testParams.redeemPeriod);
+        _verifier._warpToPeriod(_liquidVault, testParams.redeemPeriod);
 
         vm.prank(alice);
         vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
@@ -187,7 +187,7 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
     function test__LiquidContinuousMultiTokenVaultUtil__UpdateReducedRateAtCurrent() public {
         uint256 newReducedRateAtCurrent = 50;
 
-        _warpToPeriod(_liquidVault, _liquidVault.currentPeriod() + 2);
+        _verifier._warpToPeriod(_liquidVault, _liquidVault.currentPeriod() + 2);
 
         vm.prank(_vaultAuth.operator);
         _liquidVault.setReducedRateAtCurrent(newReducedRateAtCurrent);

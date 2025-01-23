@@ -125,7 +125,7 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
         IVault vault,
         TestParamSet.TestParam[] memory testParams,
         uint256[] memory sharesAtPeriods
-    ) internal virtual returns (uint256[] memory assetsAtPeriods_) {
+    ) public virtual returns (uint256[] memory assetsAtPeriods_) {
         uint256[] memory assetsAtPeriods = new uint256[](testParams.length);
         for (uint256 i = 0; i < testParams.length; i++) {
             assetsAtPeriods[i] = _verifyRedeemOnly(redeemUsers, vault, testParams[i], sharesAtPeriods[i]);
@@ -195,6 +195,38 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
 
     // ===================== Test Utilities =====================
 
+    /// @dev - creates a collection of test users to exercise access control
+    function _createTestUsers(address account)
+        public
+        virtual
+        returns (TestParamSet.TestUsers memory depositUsers_, TestParamSet.TestUsers memory redeemUsers_)
+    {
+        // Convert the address to a string and then to bytes
+        string memory accountStr = vm.toString(account);
+
+        TestParamSet.TestUsers memory depositUsers = TestParamSet.TestUsers({
+            tokenOwner: account, // owns tokens, can specify who can receive tokens
+            tokenReceiver: makeAddr(string.concat("depositTokenReceiver-", accountStr)), // receiver of tokens from the tokenOwner
+            tokenOperator: makeAddr(string.concat("depositTokenOperator-", accountStr)) // granted allowance by tokenOwner to act on their behalf
+         });
+
+        TestParamSet.TestUsers memory redeemUsers = TestParamSet.TestUsers({
+            tokenOwner: depositUsers.tokenReceiver, // on deposit, the tokenReceiver receives (owns) the tokens
+            tokenReceiver: account, // virtuous cycle, the account receives the returns in the end
+            tokenOperator: makeAddr(string.concat("redeemTokenOperator-", accountStr)) // granted allowance by tokenOwner to act on their behalf
+         });
+
+        //    return (depositUsers, redeemUsers);
+
+        TestParamSet.TestUsers memory redeemUsersOperatorIsOwner = TestParamSet.TestUsers({
+            tokenOwner: redeemUsers.tokenOwner,
+            tokenReceiver: redeemUsers.tokenReceiver,
+            tokenOperator: redeemUsers.tokenOwner
+        });
+
+        return (depositUsers, redeemUsersOperatorIsOwner);
+    }
+
     /// @dev warp the vault to the given timePeriod for testing purposes
     /// @dev this assumes timePeriod is in days
     function _warpToPeriod(IVault, /* vault */ uint256 timePeriod) public virtual {
@@ -218,8 +250,6 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
         view
         virtual
         returns (uint256 expectedReturns_);
-
-    // ===================== Test Params =====================
 
     // ===================== Other Utility =====================
 

@@ -15,10 +15,14 @@ import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-abstract contract LiquidContinuousMultiTokenVaultTestBase is LiquidContinuousMultiTokenVaultVerifier {
+import { TestUtil } from "@test/test/util/TestUtil.t.sol";
+
+// TODO - Should this extend MultiTokenVaultTest instead?
+abstract contract LiquidContinuousMultiTokenVaultTestBase is TestUtil {
     using TestParamSet for TestParamSet.TestParam[];
 
     LiquidContinuousMultiTokenVault internal _liquidVault;
+    LiquidContinuousMultiTokenVaultVerifier internal _verifier;
 
     LiquidContinuousMultiTokenVault.VaultAuth internal _vaultAuth = LiquidContinuousMultiTokenVault.VaultAuth({
         owner: makeAddr("owner"),
@@ -36,6 +40,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is LiquidContinuousMul
     function setUp() public virtual {
         DeployLiquidMultiTokenVault _deployVault = new DeployLiquidMultiTokenVault();
         _liquidVault = _deployVault.run(_vaultAuth);
+        _verifier = new LiquidContinuousMultiTokenVaultVerifier();
 
         // warp to a "real time" time rather than block.timestamp=1
         vm.warp(_liquidVault._vaultStartTimestamp() + 1);
@@ -43,6 +48,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is LiquidContinuousMul
         _asset = IERC20Metadata(_liquidVault.asset());
         _scale = 10 ** _asset.decimals();
 
+        // TODO - should be able to remove this and these users
         _transferAndAssert(_asset, _vaultAuth.owner, alice, 100_000 * _scale);
         _transferAndAssert(_asset, _vaultAuth.owner, bob, 100_000 * _scale);
     }
@@ -61,27 +67,6 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is LiquidContinuousMul
             deployVault._createVaultParams(vaultAuth, asset, yieldStrategy, redeemOptimizer);
 
         return vaultParams;
-    }
-
-    // simple scenario with only one user
-    function _createTestUsers(address account)
-        internal
-        virtual
-        override
-        returns (TestParamSet.TestUsers memory depositUsers_, TestParamSet.TestUsers memory redeemUsers_)
-    {
-        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
-            super._createTestUsers(account);
-
-        // in LiquidContinuousMultiTokenVault - tokenOwner and tokenOperator (aka controller) must be the same
-        // because IComponentToken.redeem() does not have an `owner` parameter.  // TODO - we should add this in with Plume !
-        TestParamSet.TestUsers memory redeemUsersOperatorIsOwner = TestParamSet.TestUsers({
-            tokenOwner: redeemUsers.tokenOwner,
-            tokenReceiver: redeemUsers.tokenReceiver,
-            tokenOperator: redeemUsers.tokenOwner
-        });
-
-        return (depositUsers, redeemUsersOperatorIsOwner);
     }
 
     function _setPeriod(address operator, LiquidContinuousMultiTokenVault vault, uint256 newPeriod) public {

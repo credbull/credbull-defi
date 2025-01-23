@@ -10,7 +10,7 @@ import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-abstract contract LiquidContinuousMultiTokenVaultVerifier is IMultiTokenVaultVerifierBase {
+contract LiquidContinuousMultiTokenVaultVerifier is IMultiTokenVaultVerifierBase {
     using TestParamSet for TestParamSet.TestParam[];
 
     // verify deposit.  updates vault assets and shares.
@@ -117,7 +117,7 @@ abstract contract LiquidContinuousMultiTokenVaultVerifier is IMultiTokenVaultVer
         LiquidContinuousMultiTokenVault liquidVault,
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
-    ) internal virtual {
+    ) public virtual {
         _warpToPeriod(liquidVault, redeemPeriod - liquidVault.noticePeriod());
 
         uint256 sharesToRedeem = depositTestParams.totalPrincipal();
@@ -146,7 +146,7 @@ abstract contract LiquidContinuousMultiTokenVaultVerifier is IMultiTokenVaultVer
         IMultiTokenVault vault,
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
-    ) internal virtual returns (uint256 assets_) {
+    ) public virtual returns (uint256 assets_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
         uint256 assets = super._testRedeemMultiDeposit(redeemUsers, vault, depositTestParams, redeemPeriod);
@@ -200,6 +200,27 @@ abstract contract LiquidContinuousMultiTokenVaultVerifier is IMultiTokenVaultVer
         vault.setApprovalForAll(redeemUsers.tokenOperator, false);
 
         return assets;
+    }
+
+    // simple scenario with only one user
+    function _createTestUsers(address account)
+        public
+        virtual
+        override
+        returns (TestParamSet.TestUsers memory depositUsers_, TestParamSet.TestUsers memory redeemUsers_)
+    {
+        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
+            super._createTestUsers(account);
+
+        // in LiquidContinuousMultiTokenVault - tokenOwner and tokenOperator (aka controller) must be the same
+        // because IComponentToken.redeem() does not have an `owner` parameter.  // TODO - we should add this in with Plume !
+        TestParamSet.TestUsers memory redeemUsersOperatorIsOwner = TestParamSet.TestUsers({
+            tokenOwner: redeemUsers.tokenOwner,
+            tokenReceiver: redeemUsers.tokenReceiver,
+            tokenOperator: redeemUsers.tokenOwner
+        });
+
+        return (depositUsers, redeemUsersOperatorIsOwner);
     }
 
     function _expectedShares(IVault, /* vault */ TestParamSet.TestParam memory testParam)

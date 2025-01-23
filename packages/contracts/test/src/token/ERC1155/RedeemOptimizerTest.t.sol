@@ -186,7 +186,7 @@ contract RedeemOptimizerTest is IVaultTestSuite {
         );
         redeemOptimizer.optimizeRedeemShares(multiTokenVault, _alice, oneShare, vaultCurrentPeriod);
 
-        (TestParamSet.TestUsers memory depositUsers,) = _createTestUsers(_alice);
+        (TestParamSet.TestUsers memory depositUsers,) = _verifier._createTestUsers(_alice);
 
         // shares to find greater than the deposits
         uint256 deposit1Shares = _verifier._verifyDepositOnly(depositUsers, multiTokenVault, testParams[0]);

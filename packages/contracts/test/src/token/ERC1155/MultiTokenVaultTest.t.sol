@@ -92,7 +92,7 @@ contract MultiTokenVaultTest is IVaultTestSuite {
         vault.redeemForDepositPeriod(sharesToRedeem, _alice, _alice, testParam.depositPeriod, testParam.redeemPeriod);
     }
 
-    function test__LiquidContinuousMultiTokenVaultUtil__RedeemWithAllowance() public {
+    function test__MultiTokenVaultTest__RedeemWithAllowance() public {
         uint256 assetToSharesRatio = 2;
 
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
