@@ -253,6 +253,15 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         return assets;
     }
 
+    function _expectedShares(IVault, /* vault */ TestParamSet.TestParam memory testParam)
+        internal
+        pure
+        override
+        returns (uint256 expectedShares)
+    {
+        return testParam.principal; // 1 asset gives 1 share
+    }
+
     function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
         internal
         view

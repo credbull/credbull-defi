@@ -6,6 +6,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 
 import { PureStone } from "@credbull/yield/PureStone.sol";
 import { DiscountVault } from "@credbull/token/ERC4626/DiscountVault.sol";
+import { CalcDiscounted } from "@credbull/yield/CalcDiscounted.sol";
 
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/yield/strategy/SimpleInterestYieldStrategy.sol";
@@ -74,10 +75,21 @@ contract PureStoneTest is IVaultTestBase {
         return vaultProxy;
     }
 
+    /// @dev expected shares.  how much in assets should this vault give for the the deposit.
+    function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
+        internal
+        view
+        override
+        returns (uint256 expectedShares)
+    {
+        PureStone pureStone = PureStone(address(vault));
+
+        return CalcDiscounted.calcDiscounted(testParam.principal, pureStone.price(), _scale);
+    }
+
     function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
         internal
         view
-        virtual
         override
         returns (uint256 expectedReturns_)
     {

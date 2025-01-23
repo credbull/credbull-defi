@@ -10,7 +10,7 @@ import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 
 contract MultiTokenVaultDailyPeriods is Initializable, UUPSUpgradeable, MultiTokenVault {
     IYieldStrategy public _yieldStrategy;
-    uint256 internal ASSET_TO_SHARES_RATIO;
+    uint256 public ASSET_TO_SHARES_RATIO;
     uint256 internal YIELD_PERCENTAGE;
     uint256 public _vaultStartTimestamp;
     uint256 private _maxDeposit;

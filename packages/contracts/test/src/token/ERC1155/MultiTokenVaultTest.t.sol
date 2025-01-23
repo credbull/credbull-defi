@@ -16,6 +16,16 @@ import { IVaultTestBase } from "@test/test/token/ERC4626/IVaultTestBase.t.sol";
 contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
     using TestParamSet for TestParamSet.TestParam[];
 
+    uint256 public constant TEST_ASSET_TO_SHARE_RATIO = 3;
+
+    IMultiTokenVault private _multiTokenVault;
+
+    function setUp() public virtual override {
+        super.setUp();
+
+        _multiTokenVault = _createMultiTokenVault(_asset, 3, 10);
+    }
+
     function test__MultiTokenVaultTest__RedeemBeforeDepositPeriodReverts() public {
         IMultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
 
@@ -405,6 +415,21 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         return balances;
     }
 
+    function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)
+        internal
+        returns (IMultiTokenVault)
+    {
+        MultiTokenVaultDailyPeriods vaultImpl = new MultiTokenVaultDailyPeriods();
+        return MultiTokenVaultDailyPeriods(
+            address(
+                new ERC1967Proxy(
+                    address(vaultImpl),
+                    abi.encodeWithSelector(vaultImpl.initialize.selector, asset_, assetToSharesRatio, yieldPercentage)
+                )
+            )
+        );
+    }
+
     // ========================= Verifiers =========================
 
     function testVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
@@ -433,14 +458,16 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         return IVaultTestBase._testRedeemOnly(redeemUsers, vault, testParam, sharesToRedeemAtPeriod);
     }
 
-    // ========================= Utilities =========================
-
-    function _warpToPeriod(IVault vault, uint256 timePeriod) internal override(IVaultTestBase, IVaultTestSuite) {
+    /// @dev expected shares.  how much in assets should this vault give for the the deposit.
+    function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
+        internal
+        view
+        override(IVaultTestBase, IVaultTestSuite)
+        returns (uint256 expectedShares)
+    {
         MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
 
-        uint256 warpToTimeInSeconds = multiTokenVault._vaultStartTimestamp() + timePeriod * 24 hours;
-
-        vm.warp(warpToTimeInSeconds);
+        return testParam.principal / multiTokenVault.ASSET_TO_SHARES_RATIO();
     }
 
     function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
@@ -454,21 +481,15 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
         );
     }
 
-    function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)
-        internal
-        virtual
-        override
-        returns (IMultiTokenVault)
-    {
-        MultiTokenVaultDailyPeriods _vault = new MultiTokenVaultDailyPeriods();
+    function _warpToPeriod(IVault vault, uint256 timePeriod) internal override(IVaultTestBase, IVaultTestSuite) {
+        MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
 
-        return MultiTokenVaultDailyPeriods(
-            address(
-                new ERC1967Proxy(
-                    address(_vault),
-                    abi.encodeWithSelector(_vault.initialize.selector, asset_, assetToSharesRatio, yieldPercentage)
-                )
-            )
-        );
+        uint256 warpToTimeInSeconds = multiTokenVault._vaultStartTimestamp() + timePeriod * 24 hours;
+
+        vm.warp(warpToTimeInSeconds);
+    }
+
+    function _vault() internal virtual override returns (IVault) {
+        return _multiTokenVault;
     }
 }

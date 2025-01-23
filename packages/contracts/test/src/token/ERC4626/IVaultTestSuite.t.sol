@@ -3,8 +3,6 @@ pragma solidity ^0.8.20;
 
 import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 
-// TODO - remove this dependency.  only use IVault interface.
-import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
@@ -29,8 +27,8 @@ abstract contract IVaultTestSuite is TestUtil {
     function setUp() public virtual {
         vm.prank(_owner);
         _asset = new SimpleUSDC(_owner, 1_000_000 ether);
-
         _scale = 10 ** _asset.decimals();
+
         _transferAndAssert(_asset, _owner, _alice, 100_000 * _scale);
 
         _testParams1 = TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 });
@@ -41,19 +39,13 @@ abstract contract IVaultTestSuite is TestUtil {
     // ========================= Test Suite =========================
 
     function test__IVaultSuite__DepositAndRedeem() public {
-        uint256 assetToSharesRatio = 3;
-
         _transferAndAssert(_asset, _owner, _charlie, 100_000 * _scale);
 
-        IVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-
-        testVaultAtOffsets(_charlie, vault, _testParams1);
+        testVaultAtOffsets(_charlie, _vault(), _testParams1);
     }
 
     function test__IVaultSuite__SimpleDeposit() public {
-        uint256 assetToSharesRatio = 2;
-
-        IVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+        IVault vault = _vault();
 
         address vaultAddress = address(vault);
 
@@ -77,41 +69,13 @@ abstract contract IVaultTestSuite is TestUtil {
     }
 
     function test__IVaultSuite__MultipleDepositsAndRedeem() public {
-        uint256 assetToSharesRatio = 4;
-
-        // setup
-        IVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
+        IVault vault = _vault();
 
         TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
 
-        // verify deposit - period 1
         uint256 deposit1Shares = _testDepositOnly(testUsers, vault, _testParams1);
-        assertEq(_testParams1.principal / assetToSharesRatio, deposit1Shares, "deposit shares incorrect at period 1");
-        assertEq(
-            deposit1Shares,
-            vault.sharesAtPeriod(_alice, _testParams1.depositPeriod),
-            "getSharesAtPeriod incorrect at period 1"
-        );
-        assertEq(
-            deposit1Shares, vault.sharesAtPeriod(_alice, _testParams1.depositPeriod), "balance incorrect at period 1"
-        );
-        assertEq(
-            deposit1Shares, vault.sharesAtPeriod(_alice, _testParams1.depositPeriod), "balance incorrect at period 1"
-        );
-
-        // verify deposit - period 2
         uint256 deposit2Shares = _testDepositOnly(testUsers, vault, _testParams2);
-        assertEq(_testParams2.principal / assetToSharesRatio, deposit2Shares, "deposit shares incorrect at period 2");
-        assertEq(
-            deposit2Shares,
-            vault.sharesAtPeriod(_alice, _testParams2.depositPeriod),
-            "getSharesAtPeriod incorrect at period 2"
-        );
-        assertEq(
-            deposit2Shares, vault.sharesAtPeriod(_alice, _testParams2.depositPeriod), "balance incorrect at period 2"
-        );
 
-        // New check for sharesAtPeriods
         _warpToPeriod(vault, _testParams2.depositPeriod); // warp to deposit2Period
 
         // verify redeem - period 1
@@ -159,11 +123,12 @@ abstract contract IVaultTestSuite is TestUtil {
         uint256 sharesToRedeemAtPeriod
     ) internal virtual returns (uint256 actualAssetsAtPeriod_);
 
-    // ========================= Utilities =========================
-
-    /// @dev warp the vault to the given timePeriod for testing purposes
-    /// @dev this assumes timePeriod is in days
-    function _warpToPeriod(IVault, /* vault */ uint256 timePeriod) internal virtual;
+    /// @dev expected shares.  how much in assets should this vault give for the the deposit.
+    function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
+        internal
+        view
+        virtual
+        returns (uint256 expectedShares);
 
     /// @dev expected returns.  returns is the difference between the assets deposited (i.e. the principal) and the assets redeemed.
     function _expectedReturns(uint256 shares, IVault vault, TestParamSet.TestParam memory testParam)
@@ -172,9 +137,9 @@ abstract contract IVaultTestSuite is TestUtil {
         virtual
         returns (uint256 expectedReturns_);
 
-    // TODO - change to return IVault and an IYield rather than current params.
-    function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)
-        internal
-        virtual
-        returns (IMultiTokenVault);
+    /// @dev warp the vault to the given timePeriod for testing purposes
+    /// @dev this assumes timePeriod is in days
+    function _warpToPeriod(IVault vault, uint256 timePeriod) internal virtual;
+
+    function _vault() internal virtual returns (IVault);
 }

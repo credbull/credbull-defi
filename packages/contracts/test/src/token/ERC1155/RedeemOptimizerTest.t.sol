@@ -250,6 +250,17 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         );
     }
 
+    function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
+        internal
+        view
+        override
+        returns (uint256 expectedShares)
+    {
+        MultiTokenVaultDailyPeriods multiTokenVault = MultiTokenVaultDailyPeriods(address(vault));
+
+        return testParam.principal / multiTokenVault.ASSET_TO_SHARES_RATIO();
+    }
+
     function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
         internal
         view

@@ -95,7 +95,11 @@ abstract contract IVaultTestBase is Test, TestUtil {
 
         vm.prank(depositUsers.tokenOwner); // tokenOwner here is the owner of the USDC
         uint256 actualSharesAtPeriod = vault.deposit(testParam.principal, depositUsers.tokenReceiver); // now deposit
-
+        assertEq(
+            _expectedShares(vault, testParam),
+            actualSharesAtPeriod,
+            _assertMsg("vault shares mismatch", vault, testParam.depositPeriod)
+        );
         assertEq(
             prevReceiverVaultBalance + actualSharesAtPeriod,
             vault.sharesAtPeriod(depositUsers.tokenReceiver, testParam.depositPeriod),
@@ -199,6 +203,13 @@ abstract contract IVaultTestBase is Test, TestUtil {
     /// @dev Grants or revokes permission to `operator` to transfer the caller's tokens, according to `approved`,
     // // TODO - set(remove) the max allowance for the operator
     function _approveForAll(IVault vault, address owner, address operator, bool approved) internal virtual;
+
+    /// @dev expected shares.  how much in assets should this vault give for the the deposit.
+    function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
+        internal
+        view
+        virtual
+        returns (uint256 expectedShares);
 
     /// @dev expected returns.  returns is the difference between the assets deposited (i.e. the principal) and the assets redeemed.
     function _expectedReturns(uint256 shares, IVault vault, TestParamSet.TestParam memory testParam)
