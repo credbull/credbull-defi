@@ -130,7 +130,7 @@ contract MultiTokenVaultTest is IVaultTestSuite {
     }
 
     function test__MultiTokenVaultTest__BatchFunctions() public {
-        uint256 assetToSharesRatio = 2;
+        uint256 assetToSharesRatio = TEST_ASSET_TO_SHARE_RATIO;
         uint256 redeemPeriod = 2001;
 
         TestParamSet.TestParam[] memory _batchTestParams = new TestParamSet.TestParam[](3);
@@ -148,7 +148,6 @@ contract MultiTokenVaultTest is IVaultTestSuite {
         _batchTestParamsToRevert[1] =
             TestParamSet.TestParam({ principal: 2002 * _scale, depositPeriod: 202, redeemPeriod: redeemPeriod });
 
-        IMultiTokenVault _multiTokenVault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
         TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
 
         uint256[] memory shares = _multiTokenVerifier._verifyDepositOnly(testUsers, _multiTokenVault, _batchTestParams);
@@ -201,14 +200,10 @@ contract MultiTokenVaultTest is IVaultTestSuite {
     }
 
     function test__MultiTokenVaultTest__ZeroOrOneAssetsShouldGiveZeroShares() public {
-        uint256 assetToSharesRatio = 2;
-
         TestParamSet.TestParam memory zeroPrincipal =
             TestParamSet.TestParam({ principal: 0, depositPeriod: 10, redeemPeriod: 21 });
         TestParamSet.TestParam memory onePrincipal =
             TestParamSet.TestParam({ principal: 1, depositPeriod: 10, redeemPeriod: 21 });
-
-        IMultiTokenVault _multiTokenVault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
 
         address vaultAddress = address(_multiTokenVault);
 
@@ -308,12 +303,12 @@ contract MultiTokenVaultTest is IVaultTestSuite {
 
     function _testBalanceOfBatch(
         address account,
-        IMultiTokenVault _multiTokenVault,
+        IMultiTokenVault multiTokenVault_,
         TestParamSet.TestParam[] memory testParams,
         uint256 assetToSharesRatio
     ) internal view returns (uint256[] memory balances_) {
         address[] memory accounts = testParams.accountArray(account);
-        uint256[] memory balances = _multiTokenVault.balanceOfBatch(accounts, testParams.depositPeriods());
+        uint256[] memory balances = multiTokenVault_.balanceOfBatch(accounts, testParams.depositPeriods());
         assertEq(3, balances.length, "balances size incorrect");
 
         assertEq(testParams[0].principal / assetToSharesRatio, balances[0], "balance mismatch period 0");

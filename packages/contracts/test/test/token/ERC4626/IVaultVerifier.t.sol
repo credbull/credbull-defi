@@ -13,8 +13,23 @@ interface IVaultVerifier {
     function _verifyDepositOnly(
         TestParamSet.TestUsers memory depositUsers,
         IVault vault,
+        TestParamSet.TestParam[] memory testParams
+    ) external returns (uint256[] memory sharesAtPeriod_);
+
+    /// @dev verify deposit.  updates vault assets and shares.
+    function _verifyDepositOnly(
+        TestParamSet.TestUsers memory depositUsers,
+        IVault vault,
         TestParamSet.TestParam memory testParam
     ) external returns (uint256 actualSharesAtPeriod_);
+
+    /// @dev verify redeem.  updates vault assets and shares.
+    function _verifyRedeemOnly(
+        TestParamSet.TestUsers memory redeemUsers,
+        IVault vault,
+        TestParamSet.TestParam[] memory testParams,
+        uint256[] memory sharesAtPeriods
+    ) external returns (uint256[] memory assetsAtPeriods_);
 
     /// @dev verify redeem.  updates vault assets and shares.
     function _verifyRedeemOnly(
@@ -35,6 +50,11 @@ interface IVaultVerifier {
         external
         view
         returns (uint256 expectedReturns_);
+
+    /// @dev create users for testing
+    function _createTestUsers(address account)
+        external
+        returns (TestParamSet.TestUsers memory depositUsers_, TestParamSet.TestUsers memory redeemUsers_);
 
     /// @dev warp the vault to the given timePeriod for testing purposes
     /// @dev this assumes timePeriod is in days

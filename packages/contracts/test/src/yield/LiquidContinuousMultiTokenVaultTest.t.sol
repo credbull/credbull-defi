@@ -11,16 +11,6 @@ import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultTestBase {
     using TestParamSet for TestParamSet.TestParam[];
 
-    function test__LiquidContinuousMultiTokenVault__SimpleDepositAndRedeem() public {
-        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
-            _liquidVerifier._createTestUsers(_alice);
-        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
-        testParams[0] = TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: 5 });
-
-        uint256[] memory sharesAtPeriods = _liquidVerifier._verifyDepositOnly(depositUsers, _liquidVault, testParams);
-        _liquidVerifier._verifyRedeemOnly(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
-    }
-
     function test__LiquidContinuousMultiTokenVault__SimpleDepositAndRedeemAtTenor() public {
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
             _liquidVerifier._createTestUsers(_alice);
@@ -30,26 +20,6 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         uint256[] memory sharesAtPeriods = _liquidVerifier._verifyDepositOnly(depositUsers, _liquidVault, testParams);
         _liquidVerifier._verifyRedeemOnly(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
-    }
-
-    function test__LiquidContinuousMultiTokenVault__RedeemAtTenor() public {
-        _liquidVerifier.verifyVaultAtOffsets(
-            _alice,
-            _liquidVault,
-            TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: 0, redeemPeriod: _liquidVault.TENOR() })
-        );
-    }
-
-    function test__LiquidContinuousMultiTokenVault__RedeemBeforeTenor() public {
-        _liquidVerifier.verifyVaultAtOffsets(
-            _bob,
-            _liquidVault,
-            TestParamSet.TestParam({
-                principal: 401 * _scale,
-                depositPeriod: 1,
-                redeemPeriod: (_liquidVault.TENOR() - 1)
-            })
-        );
     }
 
     // @dev [Oct 25, 2024] Succeeds with: from=1 and to=600 ; Fails with: from=1 and to=650
@@ -609,8 +579,8 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     /**
      * Scenario
      * 1. Alice deposits assets at the deposit period.
-     * 2. Alice requests redeem to withdraw his assets from the vault.
-     * 3. Alice wants to cancel his redeem request before the redeem period.
+     * 2. Alice requests redeem to withdraw assets from the vault.
+     * 3. Alice wants to cancel redeem request before the redeem period.
      */
     function test__LiquidContinuousMultiTokenVault__CancelUnlockRequest__BeforeRedeemPeriod() public {
         LiquidContinuousMultiTokenVault liquidVault = _liquidVault;

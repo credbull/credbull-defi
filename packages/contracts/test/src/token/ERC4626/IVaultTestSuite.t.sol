@@ -34,36 +34,40 @@ abstract contract IVaultTestSuite is TestUtil {
         _transferAndAssert(_asset, _owner, _charlie, 100_000 * _scale);
     }
 
+    function test__IVaultSuite__SimpleDepositAndRedeem() public {
+        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
+            _verifier._createTestUsers(_alice);
+        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
+        testParams[0] = TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: 5 });
+
+        uint256[] memory sharesAtPeriods = _verifier._verifyDepositOnly(depositUsers, _vault, testParams);
+        _verifier._verifyRedeemOnly(redeemUsers, _vault, testParams, sharesAtPeriods);
+    }
+
     function test__IVaultSuite__DepositAndRedeem() public {
         TestParamSet.TestParam memory testParams =
             TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 1, redeemPeriod: 11 });
         _verifier.verifyVaultAtOffsets(_charlie, _vault, testParams);
     }
 
-    function test__IVaultSuite__SimpleDeposit() public {
-        TestParamSet.TestParam memory testParams =
-            TestParamSet.TestParam({ principal: 200 * _scale, depositPeriod: 2, redeemPeriod: 22 });
-        IVault vault = _vault;
+    function test__IVaultSuite__SimpleDepositAndRedeemAt30Days() public {
+        uint256 tenor = 30;
 
-        address vaultAddress = address(vault);
+        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
+            _verifier._createTestUsers(_alice);
+        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
+        testParams[0] = TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: 0, redeemPeriod: tenor });
 
-        assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance to start");
-        assertEq(0, _asset.balanceOf(vaultAddress), "vault shouldn't have a balance to start");
+        uint256[] memory sharesAtPeriods = _verifier._verifyDepositOnly(depositUsers, _vault, testParams);
+        _verifier._verifyRedeemOnly(redeemUsers, _vault, testParams, sharesAtPeriods);
+    }
 
-        vm.startPrank(_alice);
-        _asset.approve(vaultAddress, testParams.principal);
+    function test__IVaultSuite__RedeemAtAndNear30Days() public {
+        uint256 tenor = 30;
 
-        assertEq(testParams.principal, _asset.allowance(_alice, vaultAddress), "vault should have allowance");
-        vm.stopPrank();
-
-        vm.startPrank(_alice);
-        vault.deposit(testParams.principal, _alice);
-        vm.stopPrank();
-
-        assertEq(testParams.principal, _asset.balanceOf(vaultAddress), "vault should have the asset");
-        assertEq(0, _asset.allowance(_alice, vaultAddress), "vault shouldn't have an allowance after deposit");
-
-        _verifier.verifyVaultAtOffsets(_alice, vault, testParams);
+        _verifier.verifyVaultAtOffsets(
+            _alice, _vault, TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: 0, redeemPeriod: tenor })
+        );
     }
 
     function test__IVaultSuite__MultipleDepositsAndRedeem() public {
