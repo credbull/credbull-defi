@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
-import { Timer } from "@credbull/timelock/Timer.sol";
 
 import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault.s.sol";
 import { LiquidContinuousMultiTokenVaultVerifier } from "@test/test/yield/LiquidContinuousMultiTokenVaultVerifier.t.sol";
@@ -15,10 +15,11 @@ import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { TestUtil } from "@test/test/util/TestUtil.t.sol";
+import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
+import { IVaultVerifier } from "@test/test/token/ERC4626/IVaultVerifier.t.sol";
 
 // TODO - Should this extend MultiTokenVaultTest instead?
-abstract contract LiquidContinuousMultiTokenVaultTestBase is TestUtil {
+abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
     using TestParamSet for TestParamSet.TestParam[];
 
     LiquidContinuousMultiTokenVault internal _liquidVault;
@@ -31,13 +32,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is TestUtil {
         assetManager: makeAddr("assetManager")
     });
 
-    IERC20Metadata internal _asset;
-    uint256 internal _scale;
-
-    address internal alice = makeAddr("alice");
-    address internal bob = makeAddr("bob");
-
-    function setUp() public virtual {
+    function setUp() public virtual override {
         DeployLiquidMultiTokenVault _deployVault = new DeployLiquidMultiTokenVault();
         _liquidVault = _deployVault.run(_vaultAuth);
         _verifier = new LiquidContinuousMultiTokenVaultVerifier();
@@ -45,12 +40,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is TestUtil {
         // warp to a "real time" time rather than block.timestamp=1
         vm.warp(_liquidVault._vaultStartTimestamp() + 1);
 
-        _asset = IERC20Metadata(_liquidVault.asset());
-        _scale = 10 ** _asset.decimals();
-
-        // TODO - should be able to remove this and these users
-        _transferAndAssert(_asset, _vaultAuth.owner, alice, 100_000 * _scale);
-        _transferAndAssert(_asset, _vaultAuth.owner, bob, 100_000 * _scale);
+        setUpAsset(IERC20Metadata(_liquidVault.asset()));
     }
 
     function _createVaultParams(LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth)
@@ -69,15 +59,12 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is TestUtil {
         return vaultParams;
     }
 
-    function _setPeriod(address operator, LiquidContinuousMultiTokenVault vault, uint256 newPeriod) public {
-        uint256 newPeriodInSeconds = newPeriod * 1 days;
-        uint256 currentTime = Timer.timestamp();
+    function _vault() internal virtual override returns (IVault) {
+        return _liquidVault;
+    }
 
-        uint256 newStartTime =
-            currentTime > newPeriodInSeconds ? (currentTime - newPeriodInSeconds) : (newPeriodInSeconds - currentTime);
-
-        vm.prank(operator);
-        vault.setVaultStartTimestamp(newStartTime);
+    function _vaultVerifier() internal virtual override returns (IVaultVerifier verifier) {
+        return _verifier;
     }
 }
 
