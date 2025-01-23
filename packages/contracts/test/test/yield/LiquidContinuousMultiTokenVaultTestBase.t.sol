@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
@@ -16,7 +15,6 @@ import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
-import { IVaultVerifier } from "@test/test/token/ERC4626/IVaultVerifier.t.sol";
 
 // TODO - Should this extend MultiTokenVaultTest instead?
 abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
@@ -32,7 +30,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
         assetManager: makeAddr("assetManager")
     });
 
-    function setUp() public virtual override {
+    function setUp() public override {
         DeployLiquidMultiTokenVault _deployVault = new DeployLiquidMultiTokenVault();
         _liquidVault = _deployVault.run(_vaultAuth);
         _verifier = new LiquidContinuousMultiTokenVaultVerifier();
@@ -40,7 +38,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
         // warp to a "real time" time rather than block.timestamp=1
         vm.warp(_liquidVault._vaultStartTimestamp() + 1);
 
-        setUpAsset(IERC20Metadata(_liquidVault.asset()));
+        init(_liquidVault, _verifier);
     }
 
     function _createVaultParams(LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth)
@@ -57,14 +55,6 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
             deployVault._createVaultParams(vaultAuth, asset, yieldStrategy, redeemOptimizer);
 
         return vaultParams;
-    }
-
-    function _vault() internal virtual override returns (IVault) {
-        return _liquidVault;
-    }
-
-    function _vaultVerifier() internal virtual override returns (IVaultVerifier verifier) {
-        return _verifier;
     }
 }
 

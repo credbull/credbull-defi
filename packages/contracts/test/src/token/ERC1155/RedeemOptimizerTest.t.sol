@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
-import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
@@ -13,7 +12,6 @@ import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiToken
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
-import { IVaultVerifier } from "@test/test/token/ERC4626/IVaultVerifier.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -23,13 +21,13 @@ contract RedeemOptimizerTest is IVaultTestSuite {
     TestParamSet.TestParam[] private testParams;
 
     IMultiTokenVault private _multiTokenVault;
-    IMultiTokenVaultVerifierBase private _verifier;
+    IMultiTokenVaultVerifierBase private _multiTokenVerifier;
 
     function setUp() public virtual override {
-        super.setUp();
+        _multiTokenVault = _createMultiTokenVault(_createAsset(_owner), 3, 10);
+        _multiTokenVerifier = new MultiTokenVaultDailyPeriodsVerifier();
 
-        _multiTokenVault = _createMultiTokenVault(_asset, 3, 10);
-        _verifier = new MultiTokenVaultDailyPeriodsVerifier();
+        init(_multiTokenVault, _multiTokenVerifier);
 
         testParams.push(TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 }));
         testParams.push(TestParamSet.TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 }));
@@ -45,12 +43,12 @@ contract RedeemOptimizerTest is IVaultTestSuite {
             new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, multiTokenVault.currentPeriodsElapsed());
 
         uint256[] memory depositShares =
-            _verifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+            _multiTokenVerifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
         uint256 totalDepositShares = depositShares[0] + depositShares[1] + depositShares[2];
 
         // warp vault ahead to redeemPeriod
         uint256 redeemPeriod = testParams[2].redeemPeriod;
-        _verifier._warpToPeriod(multiTokenVault, redeemPeriod);
+        _multiTokenVerifier._warpToPeriod(multiTokenVault, redeemPeriod);
 
         // check full redeem
         (uint256[] memory redeemDepositPeriods, uint256[] memory sharesAtPeriods) =
@@ -71,7 +69,7 @@ contract RedeemOptimizerTest is IVaultTestSuite {
         );
 
         uint256[] memory depositShares =
-            _verifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+            _multiTokenVerifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
             depositShares, testParams.depositPeriods(), redeemPeriod
         );
@@ -79,7 +77,7 @@ contract RedeemOptimizerTest is IVaultTestSuite {
         uint256 totalAssets = depositAssets[0] + depositAssets[1] + depositAssets[2];
 
         // warp vault ahead to redeemPeriod
-        _verifier._warpToPeriod(multiTokenVault, redeemPeriod);
+        _multiTokenVerifier._warpToPeriod(multiTokenVault, redeemPeriod);
 
         // check full withdraw
         (uint256[] memory withdrawDepositPeriods, uint256[] memory sharesAtPeriods) =
@@ -99,12 +97,12 @@ contract RedeemOptimizerTest is IVaultTestSuite {
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
         uint256[] memory depositShares =
-            _verifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+            _multiTokenVerifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
 
         uint256 sharesToWithdraw = depositShares[0] + depositShares[1] + depositShares[2] - residualShareAmount;
 
         // ---------------------- redeem ----------------------
-        _verifier._warpToPeriod(multiTokenVault, redeemPeriod); // warp vault ahead to redeemPeriod
+        _multiTokenVerifier._warpToPeriod(multiTokenVault, redeemPeriod); // warp vault ahead to redeemPeriod
 
         (uint256[] memory redeemDepositPeriods, uint256[] memory redeemSharesAtPeriods) =
             redeemOptimizer.optimizeRedeemShares(multiTokenVault, _alice, sharesToWithdraw, redeemPeriod);
@@ -131,7 +129,7 @@ contract RedeemOptimizerTest is IVaultTestSuite {
         );
 
         uint256[] memory depositShares =
-            _verifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+            _multiTokenVerifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
             depositShares, testParams.depositPeriods(), redeemPeriod
         );
@@ -142,7 +140,7 @@ contract RedeemOptimizerTest is IVaultTestSuite {
         uint256 assetsToWithdraw = depositAssets[0] + depositAssets[1] + depositAssets[2] - residualAssetAmount;
 
         // ---------------------- redeem ----------------------
-        _verifier._warpToPeriod(multiTokenVault, redeemPeriod); // warp vault ahead to redeemPeriod
+        _multiTokenVerifier._warpToPeriod(multiTokenVault, redeemPeriod); // warp vault ahead to redeemPeriod
 
         (uint256[] memory actualDepositPeriods, uint256[] memory actualSharesAtPeriods) =
             redeemOptimizer.optimizeWithdrawAssets(multiTokenVault, _alice, assetsToWithdraw, redeemPeriod);
@@ -186,11 +184,11 @@ contract RedeemOptimizerTest is IVaultTestSuite {
         );
         redeemOptimizer.optimizeRedeemShares(multiTokenVault, _alice, oneShare, vaultCurrentPeriod);
 
-        (TestParamSet.TestUsers memory depositUsers,) = _verifier._createTestUsers(_alice);
+        (TestParamSet.TestUsers memory depositUsers,) = _multiTokenVerifier._createTestUsers(_alice);
 
         // shares to find greater than the deposits
-        uint256 deposit1Shares = _verifier._verifyDepositOnly(depositUsers, multiTokenVault, testParams[0]);
-        uint256 deposit2Shares = _verifier._verifyDepositOnly(depositUsers, multiTokenVault, testParams[1]);
+        uint256 deposit1Shares = _multiTokenVerifier._verifyDepositOnly(depositUsers, multiTokenVault, testParams[0]);
+        uint256 deposit2Shares = _multiTokenVerifier._verifyDepositOnly(depositUsers, multiTokenVault, testParams[1]);
         uint256 totalDepositShares = deposit1Shares + deposit2Shares;
 
         uint256 sharesGreaterThanDeposits = totalDepositShares + 1;
@@ -262,14 +260,6 @@ contract RedeemOptimizerTest is IVaultTestSuite {
                 )
             )
         );
-    }
-
-    function _vault() internal virtual override returns (IVault) {
-        return _multiTokenVault;
-    }
-
-    function _vaultVerifier() internal virtual override returns (IVaultVerifier verifier) {
-        return _verifier;
     }
 }
 

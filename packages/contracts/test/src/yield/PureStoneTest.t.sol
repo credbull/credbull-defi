@@ -23,11 +23,6 @@ contract PureStoneTest is IVaultVerifierBase {
     IYieldStrategy private _yieldStrategy;
     uint256 internal _scale;
 
-    address internal _owner = makeAddr("owner");
-    address internal _alice = makeAddr("alice");
-    address internal _bob = makeAddr("bob");
-    address internal _charlie = makeAddr("charlie");
-
     TestParamSet.TestParam internal _testParams1;
 
     function setUp() public virtual {

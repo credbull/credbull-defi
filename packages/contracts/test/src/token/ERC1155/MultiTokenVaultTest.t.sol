@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
 import { IMultiTokenVaultVerifierBase } from "@test/test/token/ERC1155/IMultiTokenVaultVerifierBase.t.sol";
@@ -14,7 +13,6 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
-import { IVaultVerifier } from "@test/test/token/ERC4626/IVaultVerifier.t.sol";
 
 contract MultiTokenVaultTest is IVaultTestSuite {
     using TestParamSet for TestParamSet.TestParam[];
@@ -22,13 +20,13 @@ contract MultiTokenVaultTest is IVaultTestSuite {
     uint256 public constant TEST_ASSET_TO_SHARE_RATIO = 3;
 
     IMultiTokenVault private _multiTokenVault;
-    IMultiTokenVaultVerifierBase private _verifier;
+    IMultiTokenVaultVerifierBase private _multiTokenVerifier;
 
     function setUp() public virtual override {
-        super.setUp();
+        _multiTokenVault = _createMultiTokenVault(_createAsset(_owner), 3, 10);
+        _multiTokenVerifier = new MultiTokenVaultDailyPeriodsVerifier();
 
-        _multiTokenVault = _createMultiTokenVault(_asset, 3, 10);
-        _verifier = new MultiTokenVaultDailyPeriodsVerifier();
+        init(_multiTokenVault, _multiTokenVerifier);
     }
 
     function test__MultiTokenVaultTest__RedeemBeforeDepositPeriodReverts() public {
@@ -57,7 +55,7 @@ contract MultiTokenVaultTest is IVaultTestSuite {
 
         uint256 currentPeriod = testParam.redeemPeriod - 1;
 
-        _verifier._warpToPeriod(vault, currentPeriod);
+        _multiTokenVerifier._warpToPeriod(vault, currentPeriod);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -78,7 +76,7 @@ contract MultiTokenVaultTest is IVaultTestSuite {
 
         uint256 sharesToRedeem = 1;
 
-        _verifier._warpToPeriod(vault, testParam.redeemPeriod);
+        _multiTokenVerifier._warpToPeriod(vault, testParam.redeemPeriod);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -108,7 +106,7 @@ contract MultiTokenVaultTest is IVaultTestSuite {
         uint256 shares = vault.deposit(testParams.principal, _alice);
 
         // ------------ redeem - without allowance ------------
-        _verifier._warpToPeriod(vault, testParams.redeemPeriod);
+        _multiTokenVerifier._warpToPeriod(vault, testParams.redeemPeriod);
 
         address allowanceAccount = makeAddr("allowanceAccount");
 
@@ -157,7 +155,7 @@ contract MultiTokenVaultTest is IVaultTestSuite {
         IMultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
         TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
 
-        uint256[] memory shares = _verifier._verifyDepositOnly(testUsers, vault, _batchTestParams);
+        uint256[] memory shares = _multiTokenVerifier._verifyDepositOnly(testUsers, vault, _batchTestParams);
         uint256[] memory depositPeriods = _batchTestParams.depositPeriods();
         uint256[] memory depositPeriodsToRevert = _batchTestParamsToRevert.depositPeriods();
 
@@ -346,13 +344,5 @@ contract MultiTokenVaultTest is IVaultTestSuite {
                 )
             )
         );
-    }
-
-    function _vault() internal virtual override returns (IVault) {
-        return _multiTokenVault;
-    }
-
-    function _vaultVerifier() internal virtual override returns (IVaultVerifier verifier) {
-        return _verifier;
     }
 }
