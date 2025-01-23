@@ -10,6 +10,11 @@ import { Test } from "forge-std/Test.sol";
 abstract contract TestUtil is Test {
     uint256 public constant TOLERANCE = 5; // with 6 decimals, diff of 0.000010
 
+    function _asSingletonArray(uint256 element) public pure returns (uint256[] memory array) {
+        array = new uint256[](1);
+        array[0] = element;
+    }
+
     // simple scenario with only one user
     function _createTestUsers(address account)
         internal
