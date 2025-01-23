@@ -9,35 +9,12 @@ import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriods.t.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { IVaultTestSuite } from "./IVaultTestSuite.t.sol";
+import { IVaultTestBase } from "@test/test/token/ERC4626/IVaultTestBase.t.sol";
 
-contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
+contract MultiTokenVaultTest is IMultiTokenVaultTestBase, IVaultTestSuite {
     using TestParamSet for TestParamSet.TestParam[];
-
-    IERC20Metadata internal _asset;
-    uint256 internal _scale;
-
-    address private _owner = makeAddr("owner");
-    address private _alice = makeAddr("alice");
-    address private _bob = makeAddr("bob");
-    address private _charlie = makeAddr("charlie");
-
-    TestParamSet.TestParam internal _testParams1;
-    TestParamSet.TestParam internal _testParams2;
-    TestParamSet.TestParam internal _testParams3;
-
-    function setUp() public virtual {
-        vm.prank(_owner);
-        _asset = new SimpleUSDC(_owner, 1_000_000 ether);
-
-        _scale = 10 ** _asset.decimals();
-        _transferAndAssert(_asset, _owner, _alice, 100_000 * _scale);
-
-        _testParams1 = TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 });
-        _testParams2 = TestParamSet.TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 });
-        _testParams3 = TestParamSet.TestParam({ principal: 700 * _scale, depositPeriod: 30, redeemPeriod: 55 });
-    }
 
     function test__MultiTokenVaultTest__SimpleDeposit() public {
         uint256 assetToSharesRatio = 2;
@@ -65,18 +42,8 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         testVaultAtOffsets(_alice, vault, _testParams1);
     }
 
-    function test__MultiTokenVaultTest__DepositAndRedeem() public {
-        uint256 assetToSharesRatio = 3;
-
-        _transferAndAssert(_asset, _owner, _charlie, 100_000 * _scale);
-
-        MultiTokenVault vault = _createMultiTokenVault(_asset, assetToSharesRatio, 10);
-
-        testVaultAtOffsets(_charlie, vault, _testParams1);
-    }
-
     function test__MultiTokenVaultTest__RedeemBeforeDepositPeriodReverts() public {
-        MultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
 
         TestParamSet.TestParam memory testParam =
             TestParamSet.TestParam({ principal: 1001 * _scale, depositPeriod: 2, redeemPeriod: 1 });
@@ -94,7 +61,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     }
 
     function test__MultiTokenVaultTest__CurrentBeforeRedeemPeriodReverts() public {
-        MultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
 
         TestParamSet.TestParam memory testParam =
             TestParamSet.TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: 3 });
@@ -115,7 +82,7 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
     }
 
     function test__MultiTokenVaultTest__RedeemOverMaxSharesReverts() public {
-        MultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
+        IMultiTokenVault vault = _createMultiTokenVault(_asset, 1, 10);
 
         TestParamSet.TestParam memory testParam =
             TestParamSet.TestParam({ principal: 1001 * _scale, depositPeriod: 1, redeemPeriod: 3 });
@@ -538,10 +505,13 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
         vm.warp(warpToTimeInSeconds);
     }
 
+    // ========================= IVaultSuite interface =========================
+
     function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)
         internal
         virtual
-        returns (MultiTokenVault)
+        override
+        returns (IMultiTokenVault)
     {
         MultiTokenVaultDailyPeriods _vault = new MultiTokenVaultDailyPeriods();
 
@@ -553,5 +523,29 @@ contract MultiTokenVaultTest is IMultiTokenVaultTestBase {
                 )
             )
         );
+    }
+
+    function testVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
+        internal
+        virtual
+        override(IVaultTestBase, IVaultTestSuite)
+        returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_)
+    {
+        return IVaultTestBase.testVaultAtOffsets(account, vault, testParam);
+    }
+
+    /// @dev test Vault at specified redeemPeriod and other "interesting" redeem periods
+    function testVaultAtOffsets(
+        TestParamSet.TestUsers memory depositUsers,
+        TestParamSet.TestUsers memory redeemUsers,
+        IVault vault,
+        TestParamSet.TestParam memory testParam
+    )
+        internal
+        virtual
+        override(IVaultTestBase, IVaultTestSuite)
+        returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_)
+    {
+        return IVaultTestBase.testVaultAtOffsets(depositUsers, redeemUsers, vault, testParam);
     }
 }
