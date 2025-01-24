@@ -4,8 +4,14 @@ pragma solidity ^0.8.20;
 import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 
 import { DiscountVault } from "@credbull/token/ERC4626/DiscountVault.sol";
+import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ERC4626Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
+import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import { ERC1155SupplyUpgradeable } from
+    "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
+import { TimelockIERC1155 } from "@credbull/timelock/TimelockIERC1155.t.sol";
 
 /**
  * @title PureStone
@@ -13,13 +19,14 @@ import { ERC4626Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ER
  * - Liquid - short-term time horizon
  *
  */
-contract PureStone is DiscountVault, IVault {
+contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
     constructor() {
         _disableInitializers();
     }
 
     function initialize(DiscountVault.DiscountVaultParams memory params) public initializer {
         __DiscountVault_init(params);
+        __TimelockIERC1155_init();
     }
 
     // TODO - confirm which version here we want to use
@@ -75,6 +82,12 @@ contract PureStone is DiscountVault, IVault {
         return SCALE < 10 ? SCALE : 10;
     }
 
+    // ===================== Timelock =====================
+
+    function lockDuration() public view virtual override returns (uint256 lockDuration_) {
+        return _tenor;
+    }
+
     // ===================== Timer / IERC6372 Clock =====================
 
     /// @inheritdoc DiscountVault
@@ -82,5 +95,30 @@ contract PureStone is DiscountVault, IVault {
         return DiscountVault.currentPeriodsElapsed();
     }
 
+    function currentPeriod() public view virtual override returns (uint256 currentPeriod_) {
+        return currentPeriodsElapsed();
+    }
+
     // ===================== Utility =====================
+
+    // uses  ERC4626 - the official token
+    function totalSupply()
+        public
+        view
+        virtual
+        override(ERC20Upgradeable, IERC20, ERC1155SupplyUpgradeable)
+        returns (uint256)
+    {
+        return ERC20Upgradeable.totalSupply();
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(DiscountVault, ERC1155Upgradeable)
+        returns (bool)
+    {
+        return DiscountVault.supportsInterface(interfaceId) || ERC1155Upgradeable.supportsInterface(interfaceId);
+    }
 }
