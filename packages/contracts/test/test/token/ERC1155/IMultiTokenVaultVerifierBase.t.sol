@@ -16,7 +16,7 @@ abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
         TestParamSet.TestUsers memory redeemUsers,
         IVault vault,
         TestParamSet.TestParam[] memory testParams
-    ) internal override returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_) {
+    ) public override returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_) {
         IMultiTokenVault multiTokenVault = IMultiTokenVault(address(vault));
 
         // previews okay to test individually.  don't update vault state.
@@ -89,7 +89,7 @@ abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
         actualAssetsAtPeriod =
             vault.convertToAssetsForDepositPeriod(actualSharesAtPeriod, testParam.depositPeriod, testParam.redeemPeriod);
 
-        uint256 expectedAssetsAtRedeem = testParam.principal + _expectedReturns(actualSharesAtPeriod, vault, testParam);
+        uint256 expectedAssetsAtRedeem = testParam.principal + _expectedReturns(vault, testParam);
 
         assertApproxEqAbs(
             expectedAssetsAtRedeem,
@@ -136,7 +136,7 @@ abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
         _warpToPeriod(vault, testParam.redeemPeriod); // warp to redeem / withdraw
         actualAssetsAtPeriod = vault.previewRedeemForDepositPeriod(actualSharesAtPeriod, testParam.depositPeriod);
 
-        uint256 expectedAssetsAtRedeem = testParam.principal + _expectedReturns(actualSharesAtPeriod, vault, testParam);
+        uint256 expectedAssetsAtRedeem = testParam.principal + _expectedReturns(vault, testParam);
 
         // check previewRedeem
         assertApproxEqAbs(

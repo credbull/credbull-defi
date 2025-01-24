@@ -232,7 +232,7 @@ contract LiquidContinuousMultiTokenVaultVerifier is IMultiTokenVaultVerifierBase
         return testParam.principal; // 1 asset gives 1 share
     }
 
-    function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
+    function _expectedReturns(IVault vault, TestParamSet.TestParam memory testParam)
         public
         view
         override

@@ -70,7 +70,7 @@ abstract contract IVaultTestSuite is TestUtil {
         );
     }
 
-    function test__IVaultSuite__MultipleDepositsAndRedeem() public {
+    function test__IVaultSuite__MultipleDepositsAndRedeem() public virtual {
         TestParamSet.TestParam memory testParams1 =
             TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 });
         TestParamSet.TestParam memory testParams2 =
@@ -86,23 +86,14 @@ abstract contract IVaultTestSuite is TestUtil {
         _verifier._warpToPeriod(vault, testParams2.depositPeriod); // warp to deposit2Period
 
         // verify redeem - period 1
-        uint256 deposit1ExpectedYield = _verifier._expectedReturns(deposit1Shares, vault, testParams1);
+        uint256 deposit1ExpectedAssets = _verifier._expectedAssets(vault, testParams1);
         uint256 deposit1Assets = _verifier._verifyRedeemOnly(testUsers, vault, testParams1, deposit1Shares);
-        assertApproxEqAbs(
-            testParams1.principal + deposit1ExpectedYield,
-            deposit1Assets,
-            TOLERANCE,
-            "deposit1 deposit assets incorrect"
-        );
+        assertApproxEqAbs(deposit1ExpectedAssets, deposit1Assets, TOLERANCE, "deposit1 deposit assets incorrect");
 
         // verify redeem - period 2
+        uint256 deposit2ExpectedAssets = _verifier._expectedAssets(vault, testParams2);
         uint256 deposit2Assets = _verifier._verifyRedeemOnly(testUsers, vault, testParams2, deposit2Shares);
-        assertApproxEqAbs(
-            testParams2.principal + _verifier._expectedReturns(deposit1Shares, vault, testParams2),
-            deposit2Assets,
-            TOLERANCE,
-            "deposit2 deposit assets incorrect"
-        );
+        assertApproxEqAbs(deposit2ExpectedAssets, deposit2Assets, TOLERANCE, "deposit2 deposit assets incorrect");
 
         _verifier.verifyVaultAtOffsets(_alice, vault, testParams1);
         _verifier.verifyVaultAtOffsets(_alice, vault, testParams2);

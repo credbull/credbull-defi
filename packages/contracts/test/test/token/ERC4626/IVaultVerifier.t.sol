@@ -45,8 +45,16 @@ interface IVaultVerifier {
         view
         returns (uint256 expectedShares);
 
+    /// @dev expected assets.  returns the assets deposited (i.e. the principal) plus any returns.
+    // NB - this uses the testParam principal (rather than using the shares)
+    function _expectedAssets(IVault vault, TestParamSet.TestParam memory testParam)
+        external
+        view
+        returns (uint256 expectedAssets_);
+
     /// @dev expected returns.  returns is the difference between the assets deposited (i.e. the principal) and the assets redeemed.
-    function _expectedReturns(uint256 shares, IVault vault, TestParamSet.TestParam memory testParam)
+    // NB - this uses the testParam principal (rather than using the shares)
+    function _expectedReturns(IVault vault, TestParamSet.TestParam memory testParam)
         external
         view
         returns (uint256 expectedReturns_);

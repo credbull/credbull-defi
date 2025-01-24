@@ -19,7 +19,7 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
         TestParamSet.TestUsers memory redeemUsers,
         IVault vault,
         TestParamSet.TestParam[] memory testParams
-    ) internal virtual returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_) {
+    ) public virtual returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_) {
         // capture vault state before warping around
         uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
 
@@ -147,9 +147,9 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
         // ------------------- prep redeem -------------------
         uint256 assetBalanceBeforeRedeem = asset.balanceOf(redeemUsers.tokenReceiver);
         uint256 shareBalanceBeforeRedeem = vault.sharesAtPeriod(redeemUsers.tokenOwner, testParam.depositPeriod);
-        uint256 expectedReturns = _expectedReturns(sharesToRedeemAtPeriod, vault, testParam);
+        uint256 expectedAssets = _expectedAssets(vault, testParam);
 
-        _transferFromTokenOwner(asset, address(vault), expectedReturns);
+        _transferFromTokenOwner(asset, address(vault), expectedAssets);
 
         // ------------------- redeem -------------------
         _warpToPeriod(vault, testParam.redeemPeriod); // warp the vault to redeem period
@@ -167,7 +167,7 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
         _approveForAll(vault, redeemUsers.tokenOwner, redeemUsers.tokenOperator, false);
 
         assertApproxEqAbs(
-            testParam.principal + expectedReturns,
+            expectedAssets,
             actualAssetsAtPeriod,
             TOLERANCE,
             _assertMsg("assets does not equal principal + yield", vault, testParam.depositPeriod)
@@ -182,7 +182,7 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
 
         // verify the receiver has the USDC back
         assertApproxEqAbs(
-            assetBalanceBeforeRedeem + testParam.principal + expectedReturns,
+            assetBalanceBeforeRedeem + expectedAssets,
             asset.balanceOf(redeemUsers.tokenReceiver),
             TOLERANCE,
             _assertMsg("receiver did not receive the correct yield", vault, testParam.depositPeriod)
@@ -245,7 +245,19 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
         returns (uint256 expectedShares);
 
     /// @dev expected returns.  returns is the difference between the assets deposited (i.e. the principal) and the assets redeemed.
-    function _expectedReturns(uint256 shares, IVault vault, TestParamSet.TestParam memory testParam)
+    // NB - this uses the testParam principal (rather than using the shares)
+    function _expectedAssets(IVault vault, TestParamSet.TestParam memory testParam)
+        public
+        view
+        virtual
+        returns (uint256 expectedReturns_)
+    {
+        return testParam.principal + _expectedReturns(vault, testParam);
+    }
+
+    /// @dev expected returns.  returns is the difference between the assets deposited (i.e. the principal) and the assets redeemed.
+    // NB - this uses the testParam principal (rather than using the shares)
+    function _expectedReturns(IVault vault, TestParamSet.TestParam memory testParam)
         public
         view
         virtual

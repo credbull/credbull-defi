@@ -20,7 +20,7 @@ contract MultiTokenVaultDailyPeriodsVerifier is IMultiTokenVaultVerifierBase {
         return testParam.principal / multiTokenVault.ASSET_TO_SHARES_RATIO();
     }
 
-    function _expectedReturns(uint256, /* shares */ IVault vault, TestParamSet.TestParam memory testParam)
+    function _expectedReturns(IVault vault, TestParamSet.TestParam memory testParam)
         public
         view
         override

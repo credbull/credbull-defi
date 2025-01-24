@@ -45,6 +45,13 @@ library TestParamSet {
     }
 
     // Generate and add multiple testParams with offsets
+    function toSingletonArray(TestParam memory testParam) internal pure returns (TestParam[] memory testParamArray_) {
+        TestParam[] memory array = new TestParam[](1);
+        array[0] = testParam;
+        return array;
+    }
+
+    // Generate and add multiple testParams with offsets
     function toLoadSet(uint256 principal, uint256 fromPeriod, uint256 toPeriod)
         internal
         pure

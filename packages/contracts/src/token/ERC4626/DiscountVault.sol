@@ -75,7 +75,7 @@ contract DiscountVault is
         return calcPrice(currentPeriodsElapsed());
     }
 
-    // TODO - need to account for deposits after _tenor.  e.g. 30 day tenor, deposit on day 31 and redeem on day 32.
+    // TODO - need to account for deposits after _tenor.  e.g. 30 day tenor, deposit on day 31 and redeem on day 32.]
     // NB - this can be done by a lock outside of this contract for example
     function _impliedDepositPrice() internal view returns (uint256 priceScaled) {
         if (currentPeriodsElapsed() < _tenor) return 0;
@@ -112,6 +112,8 @@ contract DiscountVault is
     {
         uint256 depositPrice = _impliedDepositPrice();
 
+        // TODO - this is a slash on the entire shares for early redeem.
+        // TOOD - fine in "previews" but should revert for an actual redeem
         if (depositPrice == 0) return 0;
 
         uint256 _principal = CalcDiscounted.calcPrincipalFromDiscounted(shares, depositPrice, SCALE);
