@@ -19,7 +19,6 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { AccessControlEnumerableUpgradeable } from
     "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlEnumerableUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
@@ -34,7 +33,6 @@ contract PureStone is
     CalcInterestMetadata,
     ERC4626Upgradeable,
     IVault,
-    ReentrancyGuardUpgradeable,
     AccessControlEnumerableUpgradeable,
     TimelockIERC1155
 {
@@ -43,6 +41,8 @@ contract PureStone is
     uint256 public _tenor;
 
     struct PureStoneParams {
+        string name;
+        string symbol;
         IERC20Metadata asset;
         IYieldStrategy yieldStrategy;
         uint256 vaultStartTimestamp;
@@ -63,14 +63,11 @@ contract PureStone is
 
     function initialize(PureStoneParams memory params) public initializer {
         __UUPSUpgradeable_init();
-        __ReentrancyGuard_init();
         __AccessControl_init();
-        __ERC20_init("Simple Interest Rate Claim", "cSIR"); // TODO - parameterize these
+        __ERC20_init(params.name, params.symbol);
         __ERC4626_init(params.asset);
-
         __TimelockIERC1155_init();
         __CalcInterestMetadata_init(params.ratePercentageScaled, params.frequency, params.asset.decimals());
-
         _yieldStrategy = params.yieldStrategy;
         _vaultStartTimestamp = params.vaultStartTimestamp;
         _tenor = params.tenor;
@@ -85,8 +82,6 @@ contract PureStone is
         return ERC4626Upgradeable.asset();
     }
 
-    // ===================== Deposit =====================
-
     /// @inheritdoc ERC4626Upgradeable
     function convertToShares(uint256 assets)
         public
@@ -98,16 +93,7 @@ contract PureStone is
         return ERC4626Upgradeable.convertToShares(assets);
     }
 
-    /// @inheritdoc ERC4626Upgradeable
-    function _convertToShares(uint256 assets, Math.Rounding /* rounding */ )
-        internal
-        view
-        virtual
-        override
-        returns (uint256 shares)
-    {
-        return assets; // 1 asset = 1 share
-    }
+    // ===================== Deposit =====================
 
     /// @inheritdoc ERC4626Upgradeable
     function deposit(uint256 assets, address receiver)
@@ -124,20 +110,7 @@ contract PureStone is
         return shares;
     }
 
-    // ===================== Redeem =====================
-
-    /// @inheritdoc ERC4626Upgradeable
-    function _convertToAssets(uint256 shares, Math.Rounding /* rounding */ )
-        internal
-        view
-        virtual
-        override
-        returns (uint256 assets)
-    {
-        uint256 _principal = shares; // 1 asset = 1 share
-
-        return _principal + _calcFixedYield(_principal);
-    }
+    // ===================== Redeem/Withdraw =====================
 
     /// @inheritdoc IVault
     // TODO - restrict this to only owner.  callers should just use redeem()
@@ -165,6 +138,32 @@ contract PureStone is
         _unlockInternal(owner, currentPeriod(), shares);
 
         return ERC4626Upgradeable.redeem(shares, receiver, owner);
+    }
+
+    // ===================== Internal Conversions =====================
+
+    /// @inheritdoc ERC4626Upgradeable
+    function _convertToShares(uint256 assets, Math.Rounding /* rounding */ )
+        internal
+        view
+        virtual
+        override
+        returns (uint256 shares)
+    {
+        return assets; // 1 asset = 1 share
+    }
+
+    /// @inheritdoc ERC4626Upgradeable
+    function _convertToAssets(uint256 shares, Math.Rounding /* rounding */ )
+        internal
+        view
+        virtual
+        override
+        returns (uint256 assets)
+    {
+        uint256 _principal = shares; // 1 asset = 1 share
+
+        return _principal + _calcFixedYield(_principal);
     }
 
     // ===================== IYield =====================

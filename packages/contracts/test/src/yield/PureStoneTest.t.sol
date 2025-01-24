@@ -44,6 +44,8 @@ contract PureStoneTest is IVaultTestSuite {
 
     function _createPureStone(IERC20Metadata asset_, uint256 yieldPercentage) internal virtual returns (PureStone) {
         PureStone.PureStoneParams memory params = PureStone.PureStoneParams({
+            name: "TEST Credbull PureStone",
+            symbol: "TEST_CPS",
             asset: asset_,
             yieldStrategy: _yieldStrategy,
             ratePercentageScaled: yieldPercentage * _scale,

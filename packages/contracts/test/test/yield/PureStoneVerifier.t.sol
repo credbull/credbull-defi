@@ -59,7 +59,7 @@ contract PureStoneVerifier is IVaultVerifierBase {
     /// @dev expected shares.  how much in assets should this vault give for the the deposit.
     function _expectedShares(IVault, /* vault */ TestParamSet.TestParam memory testParam)
         public
-        view
+        pure
         override
         returns (uint256 expectedShares)
     {
