@@ -20,7 +20,7 @@ interface IVault {
     function sharesAtPeriod(address owner, uint256 depositPeriod) external view returns (uint256 shares);
 
     // MultiToken variant MUST redeem at the given `depositPeriod`
-    // Single Token variant MUST return the 'logical' shares for the period (e.g. considering locks)
+    // Single Token variant MUST redeem the 'logical' shares for the period (e.g. considering locks)
     function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
         external
         returns (uint256 assets);

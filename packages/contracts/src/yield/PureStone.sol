@@ -17,7 +17,7 @@ import { TimelockIERC1155 } from "@credbull/timelock/TimelockIERC1155.t.sol";
  * @title PureStone
  * Vault with the following properties:
  * - Liquid - short-term time horizon
- *
+ * TODO - what about deposits held longer than 1 tenor?  should we roll-over or grant more shares ?
  */
 contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
     constructor() {
@@ -41,6 +41,19 @@ contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
         return ERC4626Upgradeable.convertToShares(assets);
     }
 
+    /// @inheritdoc ERC4626Upgradeable
+    // TODO - use the locks here to give the true convertToAssets
+    function previewDeposit(uint256 shares)
+        public
+        view
+        virtual
+        override(ERC4626Upgradeable, IERC4626)
+        returns (uint256 assets)
+    {
+        // TODO - use the locks for the actual depositPeriods and prices
+        return super.previewDeposit(shares);
+    }
+
     // ===================== MultiTokenVault =====================
 
     /// @inheritdoc ERC4626Upgradeable
@@ -50,18 +63,18 @@ contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
 
     /// @inheritdoc IVault
     // MultiToken variant MUST redeem at the given `depositPeriod`
-    // Single Token variant MUST return the 'logical' shares for the period (e.g. considering locks)
+    // Single Token variant MUST redeem the 'logical' shares for the period (e.g. considering locks)
     function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 /* depositPeriod */ )
         external
         returns (uint256 assets)
     {
-        return redeem(shares, receiver, owner); // TODO - check timelock for shares at deposit period
+        return redeem(shares, receiver, owner);
     }
 
     // MultiToken variant MUST return the balanceOf for the `depositPeriod`
     // Single Token variant MUST return the 'logical' shares for the period (e.g. considering locks)
-    function sharesAtPeriod(address owner, uint256 /* depositPeriod */ ) external view returns (uint256 shares) {
-        return balanceOf(owner); // TODO - check timelock for shares at deposit period
+    function sharesAtPeriod(address owner, uint256 depositPeriod) external view returns (uint256 shares) {
+        return ERC1155Upgradeable.balanceOf(owner, depositPeriod + lockDuration());
     }
 
     /// @inheritdoc ERC4626Upgradeable
@@ -69,12 +82,27 @@ contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
         public
         virtual
         override(ERC4626Upgradeable, IERC4626, IVault)
-        returns (uint256 shares)
+        returns (uint256 shares_)
     {
-        // TODO - confirm if we also deposit into multi token - maybe we can just mint instead
-        // MultiTokenVault._depositForDepositPeriod(assets, receiver, currentPeriodsElapsed());
+        uint256 shares = ERC4626Upgradeable.deposit(assets, receiver);
 
-        return ERC4626Upgradeable.deposit(assets, receiver);
+        // lock the shares after depositing
+        _lockInternal(receiver, lockDuration(), shares);
+
+        return shares;
+    }
+
+    /// @inheritdoc ERC4626Upgradeable
+    function redeem(uint256 shares, address receiver, address owner)
+        public
+        virtual
+        override(ERC4626Upgradeable, IERC4626)
+        returns (uint256 assets_)
+    {
+        // unlock the shares before redeeming
+        _unlockInternal(owner, currentPeriod(), shares);
+
+        return ERC4626Upgradeable.redeem(shares, receiver, owner);
     }
 
     /// minimum shares required to convert to assets and vice-versa.

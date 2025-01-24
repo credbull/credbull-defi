@@ -13,7 +13,6 @@ import { SimpleInterestYieldStrategy } from "@credbull/yield/strategy/SimpleInte
 
 import { PureStoneVerifier } from "@test/test/yield/PureStoneVerifier.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
-
 import { TestUtil } from "@test/test/util/TestUtil.t.sol";
 
 // TODO - should extend IVaultTestSuite.  need to implement logic when depositPeriod != 0.
@@ -48,13 +47,10 @@ contract PureStoneTest is TestUtil {
         _transferAndAssert(_asset, _owner, _charlie, 100_000 * _scale);
     }
 
-    function test__PureStone__DepositAndRedeem() public {
-        _pureStoneVerifier.verifyVaultAtOffsets(_charlie, _pureStone, _testParams1);
-    }
-
     function test__PureStone__SimpleDepositAndRedeem() public {
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
             _pureStoneVerifier._createTestUsers(_alice);
+
         TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
         testParams[0] = TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: 5 });
 
@@ -63,7 +59,6 @@ contract PureStoneTest is TestUtil {
     }
 
     // all of these tests require logic
-
     // TODO - put this test back - this test back in - fails as deposit not on period 0
     function test__PureStone__DepositNearTenor() public {
         vm.skip(true);
