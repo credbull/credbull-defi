@@ -18,6 +18,8 @@ import { AccessControlEnumerableUpgradeable } from
     "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlEnumerableUpgradeable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+
 /**
  * @title DiscountVault
  * @dev A vault that uses SimpleInterest to calculate shares per asset.
@@ -29,6 +31,7 @@ contract DiscountVault is
     IDiscountVault,
     CalcInterestMetadata,
     ERC4626Upgradeable,
+    ReentrancyGuardUpgradeable,
     AccessControlEnumerableUpgradeable
 {
     using Math for uint256;
@@ -52,6 +55,7 @@ contract DiscountVault is
 
     function __DiscountVault_init(DiscountVaultParams memory params) public initializer {
         __UUPSUpgradeable_init();
+        __ReentrancyGuard_init();
         __AccessControl_init();
         __ERC20_init("Simple Interest Rate Claim", "cSIR"); // TODO - parameterize these
         __ERC4626_init(params.asset);

@@ -15,6 +15,10 @@ contract MultiTokenVaultDailyPeriods is Initializable, UUPSUpgradeable, MultiTok
     uint256 public _vaultStartTimestamp;
     uint256 private _maxDeposit;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(IERC20Metadata asset, uint256 assetToSharesRatio, uint256 yieldPercentage) public initializer {
         __MultiTokenVault_init(asset);
         ASSET_TO_SHARES_RATIO = assetToSharesRatio;

@@ -18,6 +18,9 @@ interface ITimelock {
     /// @notice Unlocks `amount` of tokens for `account` at `lockReleasePeriod`.
     function unlock(address account, uint256 lockReleasePeriod, uint256 amount) external;
 
+    /// @notice Rolls over unlocked `amount` of tokens for `account` to a new lock period.
+    function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 amount) external;
+
     /// @notice Returns the amount of tokens locked for `account` at `lockReleasePeriod`.
     function lockedAmount(address account, uint256 lockReleasePeriod) external view returns (uint256 amountLocked);
 
