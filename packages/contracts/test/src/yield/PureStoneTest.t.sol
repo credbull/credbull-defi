@@ -5,7 +5,6 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { PureStone } from "@credbull/yield/PureStone.sol";
-import { DiscountVault } from "@credbull/token/ERC4626/DiscountVault.sol";
 
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/yield/strategy/SimpleInterestYieldStrategy.sol";
@@ -44,7 +43,7 @@ contract PureStoneTest is IVaultTestSuite {
     }
 
     function _createPureStone(IERC20Metadata asset_, uint256 yieldPercentage) internal virtual returns (PureStone) {
-        DiscountVault.DiscountVaultParams memory params = DiscountVault.DiscountVaultParams({
+        PureStone.PureStoneParams memory params = PureStone.PureStoneParams({
             asset: asset_,
             yieldStrategy: _yieldStrategy,
             ratePercentageScaled: yieldPercentage * _scale,

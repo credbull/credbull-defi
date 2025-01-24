@@ -86,7 +86,7 @@ contract SimpleTimelockIERC1155 is ITimelock, Initializable, UUPSUpgradeable, Ti
         _rolloverUnlockedInternal(account, lockReleasePeriod, amount);
     }
 
-    // multi-inheritence below ...
+    // multi-inheritence below
 
     /// @inheritdoc ITimelock
     function lockedAmount(address account, uint256 lockReleasePeriod)

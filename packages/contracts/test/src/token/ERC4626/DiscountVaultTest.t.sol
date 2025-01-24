@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { IDiscountVault } from "@credbull/token/ERC4626/IDiscountVault.sol";
-import { DiscountVault } from "@credbull/token/ERC4626/DiscountVault.sol";
+import { IDiscountVault } from "./IDiscountVault.sol";
+import { DiscountVault } from "./DiscountVault.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/yield/strategy/SimpleInterestYieldStrategy.sol";
 import { Frequencies } from "@test/src/yield/Frequencies.t.sol";

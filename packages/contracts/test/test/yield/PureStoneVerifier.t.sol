@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { PureStone } from "@credbull/yield/PureStone.sol";
-import { DiscountVault } from "@credbull/token/ERC4626/DiscountVault.sol";
-import { CalcDiscounted } from "@credbull/yield/CalcDiscounted.sol";
-
 import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { IVaultVerifierBase } from "@test/test/token/ERC4626/IVaultVerifierBase.t.sol";
 
@@ -61,16 +57,13 @@ contract PureStoneVerifier is IVaultVerifierBase {
     }
 
     /// @dev expected shares.  how much in assets should this vault give for the the deposit.
-    function _expectedShares(IVault vault, TestParamSet.TestParam memory testParam)
+    function _expectedShares(IVault, /* vault */ TestParamSet.TestParam memory testParam)
         public
         view
         override
         returns (uint256 expectedShares)
     {
-        PureStone pureStone = PureStone(address(vault));
-        uint256 scale = 10 ** IERC20Metadata(pureStone.asset()).decimals();
-
-        return CalcDiscounted.calcDiscounted(testParam.principal, pureStone.price(), scale);
+        return testParam.principal; // 1 asset = 1 share
     }
 
     function _isRedeemAtTenor(PureStone pureStone, TestParamSet.TestParam memory testParam)
@@ -102,7 +95,7 @@ contract PureStoneVerifier is IVaultVerifierBase {
     {
         PureStone pureStone = PureStone(address(vault));
 
-        return _isRedeemAtTenor(pureStone, testParam) ? pureStone.calcYieldSingleTenor(testParam.principal) : 0;
+        return _isRedeemAtTenor(pureStone, testParam) ? pureStone._calcFixedYield(testParam.principal) : 0;
     }
 
     /// @dev Grants or revokes permission to `operator` to transfer the caller's tokens, according to `approved`,
@@ -116,9 +109,9 @@ contract PureStoneVerifier is IVaultVerifierBase {
     }
 
     function _warpToPeriod(IVault vault, uint256 timePeriod) public virtual override {
-        DiscountVault discountVault = DiscountVault(address(vault));
+        PureStone pureStone = PureStone(address(vault));
 
-        uint256 warpToTimeInSeconds = discountVault._vaultStartTimestamp() + timePeriod * 24 hours;
+        uint256 warpToTimeInSeconds = pureStone._vaultStartTimestamp() + timePeriod * 24 hours;
 
         vm.warp(warpToTimeInSeconds);
     }
