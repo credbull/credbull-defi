@@ -17,7 +17,7 @@ import { TimelockIERC1155 } from "@credbull/timelock/TimelockIERC1155.t.sol";
  * @title PureStone
  * Vault with the following properties:
  * - Liquid - short-term time horizon
- * TODO - what about deposits held longer than 1 tenor?  should we roll-over or grant more shares ?
+ * TODO - take care for deposits held longer than 1 tenor.  roll-over or grant more shares.
  */
 contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
     constructor() {
@@ -29,7 +29,6 @@ contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
         __TimelockIERC1155_init();
     }
 
-    // TODO - confirm which version here we want to use
     /// @inheritdoc ERC4626Upgradeable
     function convertToShares(uint256 assets)
         public
@@ -42,17 +41,17 @@ contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
     }
 
     /// @inheritdoc ERC4626Upgradeable
-    // TODO - use the locks here to give the true convertToAssets
-    function previewDeposit(uint256 shares)
-        public
-        view
-        virtual
-        override(ERC4626Upgradeable, IERC4626)
-        returns (uint256 assets)
-    {
-        // TODO - use the locks for the actual depositPeriods and prices
-        return super.previewDeposit(shares);
-    }
+    // TODO - put this logic back
+    //    function previewRedeem(uint256 shares)
+    //        public
+    //        view
+    //        virtual
+    //        override(ERC4626Upgradeable, IERC4626)
+    //        returns (uint256 assets_)
+    //    {
+    //        // no assets if redeeming more than max unlock shares
+    //        return maxUnlock(_msgSender(), currentPeriod()) >= shares ? super.previewRedeem(shares) : 0;
+    //    }
 
     // ===================== MultiTokenVault =====================
 
@@ -87,7 +86,7 @@ contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
         uint256 shares = ERC4626Upgradeable.deposit(assets, receiver);
 
         // lock the shares after depositing
-        _lockInternal(receiver, lockDuration(), shares);
+        _lockInternal(receiver, currentPeriod() + lockDuration(), shares);
 
         return shares;
     }

@@ -23,16 +23,15 @@ contract PureStoneVerifier is IVaultVerifierBase {
         PureStone pureStone = PureStone(address(vault));
 
         // check if there's sufficient shares available to redeem
-        uint256 maxUnlock = pureStone.maxUnlock(redeemUsers.tokenOperator, testParam.redeemPeriod);
+        uint256 sharesLockedAtRedeemPeriod = pureStone.lockedAmount(redeemUsers.tokenOwner, testParam.redeemPeriod);
 
         // ------------------- redeem success (enough shares to unlock)  -------------------
 
-        if (maxUnlock > sharesToRedeemAtPeriod) {
+        if (sharesLockedAtRedeemPeriod >= sharesToRedeemAtPeriod) {
             return super._verifyRedeemOnly(redeemUsers, vault, testParam, sharesToRedeemAtPeriod);
         }
 
         // ------------------- redeem failure (insufficient shares to unlock)  -------------------
-
         uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
 
         _warpToPeriod(vault, testParam.redeemPeriod); // warp the vault to redeem period
@@ -45,7 +44,7 @@ contract PureStoneVerifier is IVaultVerifierBase {
                 redeemUsers.tokenOperator,
                 testParam.redeemPeriod,
                 sharesToRedeemAtPeriod,
-                maxUnlock
+                sharesLockedAtRedeemPeriod
             )
         );
         vm.startPrank(redeemUsers.tokenOperator);
@@ -108,7 +107,6 @@ contract PureStoneVerifier is IVaultVerifierBase {
     }
 
     /// @dev Grants or revokes permission to `operator` to transfer the caller's tokens, according to `approved`,
-    // // TODO - set(remove) the max allowance for the operator
     function _approveForAll(IVault vault, address owner, address operator, bool approved) internal virtual override {
         PureStone pureStone = PureStone(address(vault));
 
