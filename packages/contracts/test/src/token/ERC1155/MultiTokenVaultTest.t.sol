@@ -23,7 +23,6 @@ contract MultiTokenVaultTest is IVaultTestSuite {
     IMultiTokenVault private _multiTokenVault;
     IMultiTokenVaultVerifierBase private _multiTokenVerifier;
 
-    // TODO - children should be able to set our init too...
     function setUp() public virtual override {
         _multiTokenVault = _createMultiTokenVault(_createAsset(_owner), TEST_ASSET_TO_SHARE_RATIO, 10);
         _multiTokenVerifier = new MultiTokenVaultDailyPeriodsVerifier();

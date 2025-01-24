@@ -29,11 +29,31 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
         DeployLiquidMultiTokenVault _deployVault = new DeployLiquidMultiTokenVault();
         _liquidVault = _deployVault.run(_vaultAuth);
         _liquidVerifier = new LiquidContinuousMultiTokenVaultVerifier();
+        _tenor = _liquidVault.TENOR();
 
         // warp to a "real time" time rather than block.timestamp=1
         vm.warp(_liquidVault._vaultStartTimestamp() + 1);
 
         init(_liquidVault, _liquidVerifier);
+    }
+
+    // LiquidStone exception case - [FAIL: RedeemOptimizer__OptimizerFailed(0, 106000000 [1.06e8])]
+    function test__IVaultSuite__DepositBeforeTenorAndRedeemBeforeTenor() public override {
+        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
+            _liquidVerifier._createTestUsers(_alice);
+
+        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
+        testParams[0] =
+            TestParamSet.TestParam({ principal: 106 * _scale, depositPeriod: _tenor - 1, redeemPeriod: _tenor - 1 });
+
+        uint256[] memory sharesAtPeriods = _liquidVerifier._verifyDepositOnly(depositUsers, _liquidVault, testParams);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RedeemOptimizerFIFO.RedeemOptimizer__OptimizerFailed.selector, 0, testParams[0].principal
+            )
+        );
+        _liquidVerifier._verifyRedeemOnly(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
     }
 
     function _createVaultParams(LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth)

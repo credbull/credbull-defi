@@ -9,12 +9,15 @@ import { DiscountVault } from "@credbull/token/ERC4626/DiscountVault.sol";
 
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/yield/strategy/SimpleInterestYieldStrategy.sol";
-import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
+// import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol"; // TODO - should extend this
 
 import { PureStoneVerifier } from "@test/test/yield/PureStoneVerifier.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
-contract PureStoneTest is IVaultTestSuite {
+import { TestUtil } from "@test/test/util/TestUtil.t.sol";
+
+// TODO - should extend IVaultTestSuite.  need to implement logic when depositPeriod != 0.
+contract PureStoneTest is TestUtil {
     using TestParamSet for TestParamSet.TestParam[];
 
     PureStone private _pureStone;
@@ -23,13 +26,26 @@ contract PureStoneTest is IVaultTestSuite {
 
     TestParamSet.TestParam internal _testParams1;
 
-    function setUp() public override {
+    IERC20Metadata internal _asset;
+    uint256 internal _scale;
+
+    function setUp() public {
         _yieldStrategy = new SimpleInterestYieldStrategy();
         _pureStone = _createPureStone(_createAsset(_owner), 10);
         _pureStoneVerifier = new PureStoneVerifier();
         _testParams1 = TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 40 });
 
         init(_pureStone, _pureStoneVerifier);
+    }
+
+    // child classes should call to init in their setUp()
+    function init(PureStone, /* vault */ PureStoneVerifier /* verifier */ ) public {
+        _asset = IERC20Metadata(_pureStone.asset());
+        _scale = 10 ** _asset.decimals();
+
+        _transferAndAssert(_asset, _owner, _alice, 100_000 * _scale);
+        _transferAndAssert(_asset, _owner, _bob, 100_000 * _scale);
+        _transferAndAssert(_asset, _owner, _charlie, 100_000 * _scale);
     }
 
     function test__PureStone__DepositAndRedeem() public {
@@ -46,6 +62,8 @@ contract PureStoneTest is IVaultTestSuite {
         _pureStoneVerifier._verifyRedeemOnly(redeemUsers, _pureStone, testParams, sharesAtPeriods);
     }
 
+    // all of these tests require logic
+
     // TODO - put this test back - this test back in - fails as deposit not on period 0
     function test__PureStone__DepositNearTenor() public {
         vm.skip(true);
@@ -58,12 +76,6 @@ contract PureStoneTest is IVaultTestSuite {
             _pureStoneVerifier._createTestUsers(_charlie);
 
         _pureStoneVerifier.verifyVault(depositUsers, redeemUsers, _pureStone, TestParamSet.toSingletonArray(testParams));
-    }
-
-    // TODO - put this test back - this test back in - fails as deposit not on period 0
-    function test__IVaultSuite__MultipleDepositsAndRedeem() public override {
-        vm.skip(true);
-        super.test__IVaultSuite__MultipleDepositsAndRedeem();
     }
 
     function _createPureStone(IERC20Metadata asset_, uint256 yieldPercentage) internal virtual returns (PureStone) {

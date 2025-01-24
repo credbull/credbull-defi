@@ -243,6 +243,8 @@ contract LiquidContinuousMultiTokenVaultVerifier is IMultiTokenVaultVerifierBase
         // LiquidStone stops accruing yield at the requestRedeem period
         uint256 requestRedeemPeriod = testParam.redeemPeriod - liquidVault.noticePeriod();
 
+        if (testParam.depositPeriod >= requestRedeemPeriod) return 0; // 0 returns if requesting redeem immediately
+
         return liquidVault._yieldStrategy().calcYield(
             address(vault), testParam.principal, testParam.depositPeriod, requestRedeemPeriod
         );

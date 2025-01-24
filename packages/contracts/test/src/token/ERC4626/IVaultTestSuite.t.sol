@@ -18,9 +18,9 @@ abstract contract IVaultTestSuite is TestUtil {
 
     IERC20Metadata internal _asset;
     uint256 internal _scale;
+    uint256 internal _tenor = 30; // common tenor for 360 day frequency
 
-    // child classes should call to init in their setUp()
-    function setUp() public virtual;
+    function setUp() public virtual; // child classes should call to init in their setUp()
 
     // child classes should call to init in their setUp()
     function init(IVault vault, IVaultVerifier verifier) public {
@@ -34,41 +34,132 @@ abstract contract IVaultTestSuite is TestUtil {
         _transferAndAssert(_asset, _owner, _charlie, 100_000 * _scale);
     }
 
-    function test__IVaultSuite__SimpleDepositAndRedeem() public {
-        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
-            _verifier._createTestUsers(_alice);
-        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
-        testParams[0] = TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: 5 });
+    // ======================================================================================
+    // separate tests to help debug any failures.  verbose but clearer test reporting.
+    // ======================================================================================
 
-        uint256[] memory sharesAtPeriods = _verifier._verifyDepositOnly(depositUsers, _vault, testParams);
-        _verifier._verifyRedeemOnly(redeemUsers, _vault, testParams, sharesAtPeriods);
+    // deposit on day 0 - trivial case as interest calcs are "easiest" at 0
+    function test__IVaultSuite__DepositDay0AndRedeemBeforeTenor() public {
+        verify(_alice, TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: _tenor - 1 }));
     }
 
-    function test__IVaultSuite__DepositAndRedeem() public {
-        TestParamSet.TestParam memory testParams =
-            TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 1, redeemPeriod: 11 });
-        _verifier.verifyVaultAtOffsets(_charlie, _vault, testParams);
+    function test__IVaultSuite__DepositDay0AndRedeemAtTenor() public {
+        verify(_alice, TestParamSet.TestParam({ principal: 101 * _scale, depositPeriod: 0, redeemPeriod: _tenor }));
     }
 
-    function test__IVaultSuite__SimpleDepositAndRedeemAt30Days() public {
-        uint256 tenor = 30;
-
-        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
-            _verifier._createTestUsers(_alice);
-        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
-        testParams[0] = TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: 0, redeemPeriod: tenor });
-
-        uint256[] memory sharesAtPeriods = _verifier._verifyDepositOnly(depositUsers, _vault, testParams);
-        _verifier._verifyRedeemOnly(redeemUsers, _vault, testParams, sharesAtPeriods);
+    function test__IVaultSuite__DepositDay0AndRedeemAfterTenor() public {
+        verify(_alice, TestParamSet.TestParam({ principal: 102 * _scale, depositPeriod: 0, redeemPeriod: _tenor + 1 }));
     }
 
-    function test__IVaultSuite__RedeemAtAndNear30Days() public {
-        uint256 tenor = 30;
+    // deposit on day 1
+    function test__IVaultSuite__DepositDay1AndRedeemBeforeTenor() public {
+        verify(_alice, TestParamSet.TestParam({ principal: 103 * _scale, depositPeriod: 1, redeemPeriod: _tenor - 1 }));
+    }
 
-        _verifier.verifyVaultAtOffsets(
-            _alice, _vault, TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: 0, redeemPeriod: tenor })
+    function test__IVaultSuite__DepositDay1AndRedeemAtTenor() public {
+        verify(_alice, TestParamSet.TestParam({ principal: 104 * _scale, depositPeriod: 1, redeemPeriod: _tenor }));
+    }
+
+    function test__IVaultSuite__DepositDay1AndRedeemAfterTenor() public {
+        verify(_alice, TestParamSet.TestParam({ principal: 105 * _scale, depositPeriod: 1, redeemPeriod: _tenor + 1 }));
+    }
+
+    // deposit tenor - 1
+    function test__IVaultSuite__DepositBeforeTenorAndRedeemBeforeTenor() public virtual {
+        verify(
+            _alice,
+            TestParamSet.TestParam({ principal: 106 * _scale, depositPeriod: _tenor - 1, redeemPeriod: _tenor - 1 })
         );
     }
+
+    function test__IVaultSuite__DepositBeforeTenorAndRedeemAtTenor() public {
+        verify(
+            _alice, TestParamSet.TestParam({ principal: 107 * _scale, depositPeriod: _tenor - 1, redeemPeriod: _tenor })
+        );
+    }
+
+    function test__IVaultSuite__DepositBeforeTenorAndRedeemAfterTenor() public {
+        verify(
+            _alice,
+            TestParamSet.TestParam({ principal: 108 * _scale, depositPeriod: _tenor - 1, redeemPeriod: _tenor + 1 })
+        );
+    }
+
+    // deposit on tenor
+    function test__IVaultSuite__DepositOnTenorAndRedeemBeforeTenor2() public {
+        verify(
+            _alice,
+            TestParamSet.TestParam({ principal: 109 * _scale, depositPeriod: _tenor, redeemPeriod: (2 * _tenor - 1) })
+        );
+    }
+
+    function test__IVaultSuite__DepositOnTenorAndRedeemAtTenor2() public {
+        verify(
+            _alice,
+            TestParamSet.TestParam({ principal: 110 * _scale, depositPeriod: _tenor, redeemPeriod: (2 * _tenor) })
+        );
+    }
+
+    function test__IVaultSuite__DepositOnTenorAndRedeemAfterTenor2() public {
+        verify(
+            _alice,
+            TestParamSet.TestParam({ principal: 111 * _scale, depositPeriod: _tenor, redeemPeriod: (2 * _tenor + 1) })
+        );
+    }
+
+    // deposit on tenor + 1
+    function test__IVaultSuite__DepositAfterTenorAndRedeemBeforeTenor2() public {
+        verify(
+            _alice,
+            TestParamSet.TestParam({ principal: 112 * _scale, depositPeriod: _tenor + 1, redeemPeriod: (2 * _tenor - 1) })
+        );
+    }
+
+    function test__IVaultSuite__DepositAfterTenorAndRedeemAtTenor2() public {
+        verify(
+            _alice,
+            TestParamSet.TestParam({ principal: 113 * _scale, depositPeriod: _tenor + 1, redeemPeriod: (2 * _tenor) })
+        );
+    }
+
+    function test__IVaultSuite__DepositAfterTenorAndRedeemAfterTenor2() public {
+        verify(
+            _alice,
+            TestParamSet.TestParam({ principal: 114 * _scale, depositPeriod: _tenor + 1, redeemPeriod: (2 * _tenor + 1) })
+        );
+    }
+
+    // ======================================================================================
+    // "brute force" tests - test at and near redeem periods
+    // ======================================================================================
+
+    function test__IVaultSuite__DepositAtTenorRedeemAfterTenorThree() public {
+        _verifier.verifyVaultAtOffsets(
+            _alice,
+            _vault,
+            TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: _tenor, redeemPeriod: 3 * _tenor })
+        );
+    }
+
+    function test__IVaultSuite__DepositBeforeTenorRedeemAfterTenorThree() public {
+        _verifier.verifyVaultAtOffsets(
+            _alice,
+            _vault,
+            TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: _tenor - 1, redeemPeriod: 3 * _tenor })
+        );
+    }
+
+    function test__IVaultSuite__DepositAfterTenorRedeemAfterTenorThree() public {
+        _verifier.verifyVaultAtOffsets(
+            _alice,
+            _vault,
+            TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: _tenor + 1, redeemPeriod: 3 * _tenor })
+        );
+    }
+
+    // ======================================================================================
+    // multiple deposit and redeem
+    // ======================================================================================
 
     function test__IVaultSuite__MultipleDepositsAndRedeem() public virtual {
         TestParamSet.TestParam memory testParams1 =
@@ -97,5 +188,16 @@ abstract contract IVaultTestSuite is TestUtil {
 
         _verifier.verifyVaultAtOffsets(_alice, vault, testParams1);
         _verifier.verifyVaultAtOffsets(_alice, vault, testParams2);
+    }
+
+    function verify(address account, TestParamSet.TestParam memory testParam) public {
+        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
+            _verifier._createTestUsers(account);
+
+        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
+        testParams[0] = testParam;
+
+        uint256[] memory sharesAtPeriods = _verifier._verifyDepositOnly(depositUsers, _vault, testParams);
+        _verifier._verifyRedeemOnly(redeemUsers, _vault, testParams, sharesAtPeriods);
     }
 }
