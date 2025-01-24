@@ -9,7 +9,7 @@ import { DiscountVault } from "@credbull/token/ERC4626/DiscountVault.sol";
 
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { SimpleInterestYieldStrategy } from "@credbull/yield/strategy/SimpleInterestYieldStrategy.sol";
-import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol"; // TODO - should extend this
+import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
 
 import { PureStoneVerifier } from "@test/test/yield/PureStoneVerifier.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";

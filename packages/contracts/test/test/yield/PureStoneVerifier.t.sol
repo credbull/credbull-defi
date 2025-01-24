@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { ITimelock } from "@credbull/timelock/ITimelock.sol";
 import { PureStone } from "@credbull/yield/PureStone.sol";
 import { DiscountVault } from "@credbull/token/ERC4626/DiscountVault.sol";
 import { CalcDiscounted } from "@credbull/yield/CalcDiscounted.sol";
@@ -40,11 +39,11 @@ contract PureStoneVerifier is IVaultVerifierBase {
         _approveForAll(vault, redeemUsers.tokenOwner, redeemUsers.tokenOperator, true);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ITimelock.ITimelock_ExceededMaxUnlock.selector,
+                PureStone.PureStone__InvalidRedeemForDepositPeriod.selector,
                 redeemUsers.tokenOperator,
-                testParam.redeemPeriod,
-                sharesToRedeemAtPeriod,
-                sharesLockedAtRedeemPeriod
+                redeemUsers.tokenOwner,
+                testParam.depositPeriod,
+                pureStone.currentPeriod()
             )
         );
         vm.startPrank(redeemUsers.tokenOperator);
@@ -80,7 +79,7 @@ contract PureStoneVerifier is IVaultVerifierBase {
         virtual
         returns (bool isRedeemAtTenor)
     {
-        return (testParam.redeemPeriod == testParam.depositPeriod + pureStone._tenor());
+        return (testParam.redeemPeriod == testParam.depositPeriod + pureStone.lockDuration());
     }
 
     function _expectedAssets(IVault vault, TestParamSet.TestParam memory testParam)
@@ -88,7 +87,7 @@ contract PureStoneVerifier is IVaultVerifierBase {
         view
         virtual
         override
-        returns (uint256 expectedReturns_)
+        returns (uint256 expectedAssets_)
     {
         PureStone pureStone = PureStone(address(vault));
 

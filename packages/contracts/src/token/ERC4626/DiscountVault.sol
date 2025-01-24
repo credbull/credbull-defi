@@ -115,9 +115,8 @@ contract DiscountVault is
         returns (uint256 assets)
     {
         uint256 depositPrice = _impliedDepositPrice();
-
         // TODO - this is a slash on the entire shares for early redeem.
-        // TOOD - fine in "previews" but should revert for an actual redeem
+        // TODO - fine in "previews" but should revert for an actual redeem
         if (depositPrice == 0) return 0;
 
         uint256 _principal = CalcDiscounted.calcPrincipalFromDiscounted(shares, depositPrice, SCALE);

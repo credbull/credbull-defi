@@ -250,7 +250,7 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
         public
         view
         virtual
-        returns (uint256 expectedReturns_)
+        returns (uint256 expectedAssets_)
     {
         return testParam.principal + _expectedReturns(vault, testParam);
     }

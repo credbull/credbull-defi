@@ -20,6 +20,10 @@ import { TimelockIERC1155 } from "@credbull/timelock/TimelockIERC1155.t.sol";
  * TODO - take care for deposits held longer than 1 tenor.  roll-over or grant more shares.
  */
 contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
+    error PureStone__InvalidRedeemForDepositPeriod(
+        address caller, address owner, uint256 depositPeriod, uint256 redeemPeriod
+    );
+
     constructor() {
         _disableInitializers();
     }
@@ -41,37 +45,26 @@ contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
     }
 
     /// @inheritdoc ERC4626Upgradeable
-    // TODO - put this logic back
-    //    function previewRedeem(uint256 shares)
-    //        public
-    //        view
-    //        virtual
-    //        override(ERC4626Upgradeable, IERC4626)
-    //        returns (uint256 assets_)
-    //    {
-    //        // no assets if redeeming more than max unlock shares
-    //        return maxUnlock(_msgSender(), currentPeriod()) >= shares ? super.previewRedeem(shares) : 0;
-    //    }
-
-    // ===================== MultiTokenVault =====================
-
-    /// @inheritdoc ERC4626Upgradeable
     function asset() public view virtual override(ERC4626Upgradeable, IERC4626, IVault) returns (address asset_) {
         return ERC4626Upgradeable.asset();
     }
 
     /// @inheritdoc IVault
-    // MultiToken variant MUST redeem at the given `depositPeriod`
-    // Single Token variant MUST redeem the 'logical' shares for the period (e.g. considering locks)
-    function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 /* depositPeriod */ )
+    // TODO - restrict this to only owner.  callers should just use redeem()
+    function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
         external
         returns (uint256 assets)
     {
+        uint256 currentPeriod_ = currentPeriod();
+
+        if (currentPeriod_ != depositPeriod + lockDuration()) {
+            revert PureStone__InvalidRedeemForDepositPeriod(_msgSender(), owner, depositPeriod, currentPeriod_);
+        }
+
         return redeem(shares, receiver, owner);
     }
 
-    // MultiToken variant MUST return the balanceOf for the `depositPeriod`
-    // Single Token variant MUST return the 'logical' shares for the period (e.g. considering locks)
+    /// @inheritdoc IVault
     function sharesAtPeriod(address owner, uint256 depositPeriod) external view returns (uint256 shares) {
         return ERC1155Upgradeable.balanceOf(owner, depositPeriod + lockDuration());
     }
@@ -104,11 +97,6 @@ contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
         return ERC4626Upgradeable.redeem(shares, receiver, owner);
     }
 
-    /// minimum shares required to convert to assets and vice-versa.
-    function _minConversionThreshold() internal view returns (uint256 minConversionThreshold) {
-        return SCALE < 10 ? SCALE : 10;
-    }
-
     // ===================== Timelock =====================
 
     function lockDuration() public view virtual override returns (uint256 lockDuration_) {
@@ -128,7 +116,6 @@ contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
 
     // ===================== Utility =====================
 
-    // uses  ERC4626 - the official token
     function totalSupply()
         public
         view
@@ -136,7 +123,7 @@ contract PureStone is DiscountVault, IVault, TimelockIERC1155 {
         override(ERC20Upgradeable, IERC20, ERC1155SupplyUpgradeable)
         returns (uint256)
     {
-        return ERC20Upgradeable.totalSupply();
+        return ERC20Upgradeable.totalSupply(); // uses  ERC4626 - the official token
     }
 
     function supportsInterface(bytes4 interfaceId)
