@@ -16,7 +16,7 @@ abstract contract IVaultTestSuite is TestUtil {
 
     IVault private _vault;
     IVaultVerifier private _verifier;
-    TestParamFactory private _testParamFactory;
+    TestParamFactory internal _testParamFactory;
 
     IERC20Metadata internal _asset;
     uint256 internal _scale;
@@ -43,68 +43,68 @@ abstract contract IVaultTestSuite is TestUtil {
     // separate tests to help debug any failures. verbose but clearer test reporting.
     // ======================================================================================
 
-    // deposit on day 0
-    function test__IVaultSuite__DepositDay0AndRedeemBeforeTenor() public {
+    // deposit on zero
+    function test__IVaultSuite__DepositOnZeroRedeemPreTenor() public {
         verify(_alice, _testParamFactory.depositOnZeroRedeemPreTenor());
     }
 
-    function test__IVaultSuite__DepositDay0AndRedeemAtTenor() public {
+    function test__IVaultSuite__DepositOnZeroRedeemOnTenor() public {
         verify(_alice, _testParamFactory.depositOnZeroRedeemOnTenor());
     }
 
-    function test__IVaultSuite__DepositDay0AndRedeemAfterTenor() public {
+    function test__IVaultSuite__DepositOnZeroRedeemPostTenor() public {
         verify(_alice, _testParamFactory.depositOnZeroRedeemPostTenor());
     }
 
-    // deposit on day 1
-    function test__IVaultSuite__DepositDay1AndRedeemBeforeTenor() public {
+    // deposit on one
+    function test__IVaultSuite__DepositOnOneRedeemPreTenor() public {
         verify(_alice, _testParamFactory.depositOnOneRedeemPreTenor());
     }
 
-    function test__IVaultSuite__DepositDay1AndRedeemAtTenor() public {
+    function test__IVaultSuite__DepositOnOneRedeemOnTenor() public {
         verify(_alice, _testParamFactory.depositOnOneRedeemOnTenor());
     }
 
-    function test__IVaultSuite__DepositDay1AndRedeemAfterTenor() public {
+    function test__IVaultSuite__DepositOnOneRedeemPostTenor() public {
         verify(_alice, _testParamFactory.depositOnOneRedeemPostTenor());
     }
 
-    // deposit tenor - 1
-    function test__IVaultSuite__DepositBeforeTenorAndRedeemBeforeTenor() public virtual {
+    // deposit before tenor
+    function test__IVaultSuite__DepositPreTenorRedeemPreTenor() public virtual {
         verify(_alice, _testParamFactory.depositPreTenorRedeemPreTenor());
     }
 
-    function test__IVaultSuite__DepositBeforeTenorAndRedeemAtTenor() public {
+    function test__IVaultSuite__DepositPreTenorRedeemOnTenor() public {
         verify(_alice, _testParamFactory.depositPreTenorRedeemOnTenor());
     }
 
-    function test__IVaultSuite__DepositBeforeTenorAndRedeemAfterTenor() public {
+    function test__IVaultSuite__DepositPreTenorRedeemPostTenor() public {
         verify(_alice, _testParamFactory.depositPreTenorRedeemPostTenor());
     }
 
     // deposit on tenor
-    function test__IVaultSuite__DepositOnTenorAndRedeemBeforeTenor2() public {
+    function test__IVaultSuite__DepositOnTenorRedeemPreTenor2() public {
         verify(_alice, _testParamFactory.depositOnTenorRedeemPreTenor2());
     }
 
-    function test__IVaultSuite__DepositOnTenorAndRedeemAtTenor2() public {
+    function test__IVaultSuite__DepositOnTenorRedeemOnTenor2() public {
         verify(_alice, _testParamFactory.depositOnTenorRedeemOnTenor2());
     }
 
-    function test__IVaultSuite__DepositOnTenorAndRedeemAfterTenor2() public {
+    function test__IVaultSuite__DepositOnTenorRedeemPostTenor2() public {
         verify(_alice, _testParamFactory.depositOnTenorRedeemPostTenor2());
     }
 
-    // deposit on tenor + 1
-    function test__IVaultSuite__DepositAfterTenorAndRedeemBeforeTenor2() public {
+    // deposit after tenor
+    function test__IVaultSuite__DepositPostTenorRedeemPreTenor2() public {
         verify(_alice, _testParamFactory.depositPostTenorRedeemPreTenor2());
     }
 
-    function test__IVaultSuite__DepositAfterTenorAndRedeemAtTenor2() public {
+    function test__IVaultSuite__DepositPostTenorRedeemOnTenor2() public {
         verify(_alice, _testParamFactory.depositPostTenorRedeemOnTenor2());
     }
 
-    function test__IVaultSuite__DepositAfterTenorAndRedeemAfterTenor2() public {
+    function test__IVaultSuite__DepositPostTenorRedeemPostTenor2() public {
         verify(_alice, _testParamFactory.depositPostTenorRedeemPostTenor2());
     }
 
@@ -112,41 +112,47 @@ abstract contract IVaultTestSuite is TestUtil {
     // multiple deposit and redeem
     // ======================================================================================
 
+    // TODO - refactor this to use the batch versions...
     function test__IVaultSuite__MultipleDepositsAndRedeem() public virtual {
-        TestParamSet.TestParam memory testParams1 =
-            TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 });
-        TestParamSet.TestParam memory testParams2 =
-            TestParamSet.TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 });
-
         IVault vault = _vault;
+
+        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](2);
+        testParams[0] = TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 });
+        testParams[1] = TestParamSet.TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 });
 
         TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
 
-        uint256 deposit1Shares = _verifier._verifyDepositOnly(testUsers, vault, testParams1);
-        uint256 deposit2Shares = _verifier._verifyDepositOnly(testUsers, vault, testParams2);
+        uint256[] memory sharesAtPeriods = _verifier._verifyDepositOnly(testUsers, vault, testParams);
+        assertEq(2, sharesAtPeriods.length, "expected two sharesAtPeriods");
 
-        _verifier._warpToPeriod(vault, testParams2.depositPeriod); // warp to deposit2Period
+        // TODO - warp probably not required here...
+        // _verifier._warpToPeriod(vault, testParams[1].depositPeriod); // warp to deposit2Period
+
+        uint256[] memory assetsAtPeriods = _verifier._verifyRedeemOnly(testUsers, vault, testParams, sharesAtPeriods);
+        assertEq(2, sharesAtPeriods.length, "expected two assetsAtPeriods");
 
         // verify redeem - period 1
-        uint256 deposit1ExpectedAssets = _verifier._expectedAssets(vault, testParams1);
-        uint256 deposit1Assets = _verifier._verifyRedeemOnly(testUsers, vault, testParams1, deposit1Shares);
-        assertApproxEqAbs(deposit1ExpectedAssets, deposit1Assets, TOLERANCE, "deposit1 deposit assets incorrect");
+        uint256 deposit1ExpectedAssets = _verifier._expectedAssets(vault, testParams[0]);
+        assertApproxEqAbs(deposit1ExpectedAssets, assetsAtPeriods[0], TOLERANCE, "deposit1 deposit assets incorrect");
 
         // verify redeem - period 2
-        uint256 deposit2ExpectedAssets = _verifier._expectedAssets(vault, testParams2);
-        uint256 deposit2Assets = _verifier._verifyRedeemOnly(testUsers, vault, testParams2, deposit2Shares);
-        assertApproxEqAbs(deposit2ExpectedAssets, deposit2Assets, TOLERANCE, "deposit2 deposit assets incorrect");
+        uint256 deposit2ExpectedAssets = _verifier._expectedAssets(vault, testParams[1]);
+        assertApproxEqAbs(deposit2ExpectedAssets, assetsAtPeriods[1], TOLERANCE, "deposit2 deposit assets incorrect");
 
-        _verifier.verifyVaultAtOffsets(_alice, vault, testParams1);
-        _verifier.verifyVaultAtOffsets(_alice, vault, testParams2);
+        _verifier.verifyVaultAtOffsets(_alice, vault, testParams[0]);
+        _verifier.verifyVaultAtOffsets(_alice, vault, testParams[1]);
     }
 
     function verify(address account, TestParamSet.TestParam memory testParam) public {
+        verify(account, TestParamSet.toSingletonArray(testParam));
+    }
+
+    function verify(address account, TestParamSet.TestParam[] memory testParams) public {
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
             _verifier._createTestUsers(account);
 
-        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
-        testParams[0] = testParam;
+        // TODO - use this version instead - but failing!
+        //_verifier.verifyVault(depositUsers, redeemUsers, _vault, testParams);
 
         uint256[] memory sharesAtPeriods = _verifier._verifyDepositOnly(depositUsers, _vault, testParams);
         _verifier._verifyRedeemOnly(redeemUsers, _vault, testParams, sharesAtPeriods);

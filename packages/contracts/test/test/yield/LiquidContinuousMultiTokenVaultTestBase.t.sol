@@ -38,7 +38,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
     }
 
     // LiquidStone exception case - [FAIL: RedeemOptimizer__OptimizerFailed(0, 106000000 [1.06e8])]
-    function test__IVaultSuite__DepositBeforeTenorAndRedeemBeforeTenor() public override {
+    function test__IVaultSuite__DepositPreTenorRedeemPreTenor() public override {
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
             _liquidVerifier._createTestUsers(_alice);
 
