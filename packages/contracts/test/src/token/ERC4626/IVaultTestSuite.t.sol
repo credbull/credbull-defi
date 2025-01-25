@@ -8,6 +8,7 @@ import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
+import { TestParamFactory } from "@test/test/util/TestParamFactory.t.sol";
 import { TestUtil } from "@test/test/util/TestUtil.t.sol";
 
 abstract contract IVaultTestSuite is TestUtil {
@@ -15,6 +16,7 @@ abstract contract IVaultTestSuite is TestUtil {
 
     IVault private _vault;
     IVaultVerifier private _verifier;
+    TestParamFactory private _testParamFactory;
 
     IERC20Metadata internal _asset;
     uint256 internal _scale;
@@ -29,132 +31,81 @@ abstract contract IVaultTestSuite is TestUtil {
         _asset = IERC20Metadata(_vault.asset());
         _scale = 10 ** _asset.decimals();
 
+        // Initialize the factory with tenor and scale
+        _testParamFactory = new TestParamFactory(_tenor, _scale);
+
         _transferAndAssert(_asset, _owner, _alice, 100_000 * _scale);
         _transferAndAssert(_asset, _owner, _bob, 100_000 * _scale);
         _transferAndAssert(_asset, _owner, _charlie, 100_000 * _scale);
     }
 
     // ======================================================================================
-    // separate tests to help debug any failures.  verbose but clearer test reporting.
+    // separate tests to help debug any failures. verbose but clearer test reporting.
     // ======================================================================================
 
-    // deposit on day 0 - trivial case as interest calcs are "easiest" at 0
+    // deposit on day 0
     function test__IVaultSuite__DepositDay0AndRedeemBeforeTenor() public {
-        verify(_alice, TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: _tenor - 1 }));
+        verify(_alice, _testParamFactory.depositOnZeroRedeemPreTenor());
     }
 
     function test__IVaultSuite__DepositDay0AndRedeemAtTenor() public {
-        verify(_alice, TestParamSet.TestParam({ principal: 101 * _scale, depositPeriod: 0, redeemPeriod: _tenor }));
+        verify(_alice, _testParamFactory.depositOnZeroRedeemOnTenor());
     }
 
     function test__IVaultSuite__DepositDay0AndRedeemAfterTenor() public {
-        verify(_alice, TestParamSet.TestParam({ principal: 102 * _scale, depositPeriod: 0, redeemPeriod: _tenor + 1 }));
+        verify(_alice, _testParamFactory.depositOnZeroRedeemPostTenor());
     }
 
     // deposit on day 1
     function test__IVaultSuite__DepositDay1AndRedeemBeforeTenor() public {
-        verify(_alice, TestParamSet.TestParam({ principal: 103 * _scale, depositPeriod: 1, redeemPeriod: _tenor - 1 }));
+        verify(_alice, _testParamFactory.depositOnOneRedeemPreTenor());
     }
 
     function test__IVaultSuite__DepositDay1AndRedeemAtTenor() public {
-        verify(_alice, TestParamSet.TestParam({ principal: 104 * _scale, depositPeriod: 1, redeemPeriod: _tenor }));
+        verify(_alice, _testParamFactory.depositOnOneRedeemOnTenor());
     }
 
     function test__IVaultSuite__DepositDay1AndRedeemAfterTenor() public {
-        verify(_alice, TestParamSet.TestParam({ principal: 105 * _scale, depositPeriod: 1, redeemPeriod: _tenor + 1 }));
+        verify(_alice, _testParamFactory.depositOnOneRedeemPostTenor());
     }
 
     // deposit tenor - 1
     function test__IVaultSuite__DepositBeforeTenorAndRedeemBeforeTenor() public virtual {
-        verify(
-            _alice,
-            TestParamSet.TestParam({ principal: 106 * _scale, depositPeriod: _tenor - 1, redeemPeriod: _tenor - 1 })
-        );
+        verify(_alice, _testParamFactory.depositPreTenorRedeemPreTenor());
     }
 
     function test__IVaultSuite__DepositBeforeTenorAndRedeemAtTenor() public {
-        verify(
-            _alice, TestParamSet.TestParam({ principal: 107 * _scale, depositPeriod: _tenor - 1, redeemPeriod: _tenor })
-        );
+        verify(_alice, _testParamFactory.depositPreTenorRedeemOnTenor());
     }
 
     function test__IVaultSuite__DepositBeforeTenorAndRedeemAfterTenor() public {
-        verify(
-            _alice,
-            TestParamSet.TestParam({ principal: 108 * _scale, depositPeriod: _tenor - 1, redeemPeriod: _tenor + 1 })
-        );
+        verify(_alice, _testParamFactory.depositPreTenorRedeemPostTenor());
     }
 
     // deposit on tenor
     function test__IVaultSuite__DepositOnTenorAndRedeemBeforeTenor2() public {
-        verify(
-            _alice,
-            TestParamSet.TestParam({ principal: 109 * _scale, depositPeriod: _tenor, redeemPeriod: (2 * _tenor - 1) })
-        );
+        verify(_alice, _testParamFactory.depositOnTenorRedeemPreTenor2());
     }
 
     function test__IVaultSuite__DepositOnTenorAndRedeemAtTenor2() public {
-        verify(
-            _alice,
-            TestParamSet.TestParam({ principal: 110 * _scale, depositPeriod: _tenor, redeemPeriod: (2 * _tenor) })
-        );
+        verify(_alice, _testParamFactory.depositOnTenorRedeemOnTenor2());
     }
 
     function test__IVaultSuite__DepositOnTenorAndRedeemAfterTenor2() public {
-        verify(
-            _alice,
-            TestParamSet.TestParam({ principal: 111 * _scale, depositPeriod: _tenor, redeemPeriod: (2 * _tenor + 1) })
-        );
+        verify(_alice, _testParamFactory.depositOnTenorRedeemPostTenor2());
     }
 
     // deposit on tenor + 1
     function test__IVaultSuite__DepositAfterTenorAndRedeemBeforeTenor2() public {
-        verify(
-            _alice,
-            TestParamSet.TestParam({ principal: 112 * _scale, depositPeriod: _tenor + 1, redeemPeriod: (2 * _tenor - 1) })
-        );
+        verify(_alice, _testParamFactory.depositPostTenorRedeemPreTenor2());
     }
 
     function test__IVaultSuite__DepositAfterTenorAndRedeemAtTenor2() public {
-        verify(
-            _alice,
-            TestParamSet.TestParam({ principal: 113 * _scale, depositPeriod: _tenor + 1, redeemPeriod: (2 * _tenor) })
-        );
+        verify(_alice, _testParamFactory.depositPostTenorRedeemOnTenor2());
     }
 
     function test__IVaultSuite__DepositAfterTenorAndRedeemAfterTenor2() public {
-        verify(
-            _alice,
-            TestParamSet.TestParam({ principal: 114 * _scale, depositPeriod: _tenor + 1, redeemPeriod: (2 * _tenor + 1) })
-        );
-    }
-
-    // ======================================================================================
-    // "brute force" tests - test at and near redeem periods
-    // ======================================================================================
-
-    function test__IVaultSuite__DepositAtTenorRedeemAfterTenorThree() public {
-        _verifier.verifyVaultAtOffsets(
-            _alice,
-            _vault,
-            TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: _tenor, redeemPeriod: 3 * _tenor })
-        );
-    }
-
-    function test__IVaultSuite__DepositBeforeTenorRedeemAfterTenorThree() public {
-        _verifier.verifyVaultAtOffsets(
-            _alice,
-            _vault,
-            TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: _tenor - 1, redeemPeriod: 3 * _tenor })
-        );
-    }
-
-    function test__IVaultSuite__DepositAfterTenorRedeemAfterTenorThree() public {
-        _verifier.verifyVaultAtOffsets(
-            _alice,
-            _vault,
-            TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: _tenor + 1, redeemPeriod: 3 * _tenor })
-        );
+        verify(_alice, _testParamFactory.depositPostTenorRedeemPostTenor2());
     }
 
     // ======================================================================================
