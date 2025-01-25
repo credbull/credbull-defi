@@ -27,6 +27,7 @@ contract PureStoneTest is IVaultTestSuite {
         _pureStone = _createPureStone(_createAsset(_owner), 10);
         _pureStoneVerifier = new PureStoneVerifier();
         _testParams1 = TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 40 });
+        _tenor = _pureStone._tenor();
 
         init(_pureStone, _pureStoneVerifier);
     }
@@ -40,6 +41,48 @@ contract PureStoneTest is IVaultTestSuite {
 
         uint256[] memory sharesAtPeriods = _pureStoneVerifier._verifyDepositOnly(depositUsers, _pureStone, testParams);
         _pureStoneVerifier._verifyRedeemOnly(redeemUsers, _pureStone, testParams, sharesAtPeriods);
+    }
+
+    // TODO - need to implement this
+    function test__PureStone__MaxUnlockTenorMods() public {
+        vm.skip(true);
+        uint256 depositPeriod = 5;
+        uint256 redeemPeriod = depositPeriod + _pureStone._tenor();
+
+        TestParamSet.TestUsers memory aliceTestUsers = TestParamSet.toSingletonUsers(_alice);
+
+        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](3);
+        testParams[0] = TestParamSet.TestParam({
+            principal: 100 * _scale,
+            depositPeriod: depositPeriod,
+            redeemPeriod: redeemPeriod
+        });
+        testParams[1] = TestParamSet.TestParam({
+            principal: 200 * _scale,
+            depositPeriod: 2 * depositPeriod,
+            redeemPeriod: 2 * redeemPeriod
+        });
+        testParams[2] = TestParamSet.TestParam({
+            principal: 200 * _scale,
+            depositPeriod: 3 * depositPeriod,
+            redeemPeriod: 3 * redeemPeriod
+        });
+
+        _pureStoneVerifier._verifyDepositOnly(aliceTestUsers, _pureStone, testParams);
+
+        _pureStoneVerifier._warpToPeriod(_pureStone, testParams[0].redeemPeriod);
+        assertEq(
+            testParams[0].principal, _pureStone.maxUnlock(_alice, _pureStone.currentPeriod()), "max unlock period 1"
+        );
+
+        // TODO - need to implement logic to either calculate previous periods or roll-over
+        // warp to period 2 - should include period 1 and 2
+        _pureStoneVerifier._warpToPeriod(_pureStone, testParams[0].redeemPeriod);
+        assertEq(
+            testParams[0].principal + testParams[1].principal,
+            _pureStone.maxUnlock(_alice, _pureStone.currentPeriod()),
+            "max unlock period 2"
+        );
     }
 
     function _createPureStone(IERC20Metadata asset_, uint256 yieldPercentage) internal virtual returns (PureStone) {

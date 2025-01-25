@@ -119,6 +119,24 @@ library TestParamSet {
         return (depositPeriods_, principals_);
     }
 
+    // Get deposit periods and principals in separate arrays
+    function redeems(TestParam[] memory self)
+        internal
+        pure
+        returns (uint256[] memory redeemPeriods_, uint256[] memory principals_)
+    {
+        uint256 length_ = self.length;
+        redeemPeriods_ = new uint256[](length_);
+        principals_ = new uint256[](length_);
+
+        for (uint256 i = 0; i < length_; i++) {
+            redeemPeriods_[i] = self[i].redeemPeriod;
+            principals_[i] = self[i].principal;
+        }
+
+        return (redeemPeriods_, principals_);
+    }
+
     // Get only the deposit periods from all TestParams
     function depositPeriods(TestParam[] memory self) internal pure returns (uint256[] memory depositPeriods_) {
         (depositPeriods_,) = self.deposits();

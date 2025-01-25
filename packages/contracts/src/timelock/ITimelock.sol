@@ -27,9 +27,9 @@ interface ITimelock {
     /// @notice Returns the max amount of tokens unlockable for `account` at `lockReleasePeriod`.
     function maxUnlock(address account, uint256 lockReleasePeriod) external view returns (uint256 amountUnlockable);
 
-    /// @notice Returns the periods with locked tokens for `account` between `fromPeriod` and `toPeriod`.
-    function lockPeriods(address account, uint256 fromPeriod, uint256 toPeriod)
+    // @notice Returns the periods with locked tokens for `account` between `fromPeriod` and `toPeriod`.
+    function lockPeriods(address account, uint256 fromPeriod, uint256 toPeriod, uint256 increment)
         external
         view
-        returns (uint256[] memory lockPeriods_);
+        returns (uint256[] memory lockPeriods_, uint256[] memory amounts_);
 }

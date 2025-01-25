@@ -12,8 +12,9 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract TimelockIERC1155Test is TimelockTest {
-    function setUp() public {
-        _timelock = _createTimelock(_owner, _lockUntilDay1.releasePeriod);
+    function setUp() public override {
+        super.setUp();
+        _timelock = _createTimelock(_owner, 1);
     }
 
     function toImpl(ITimelock timelock_) internal pure returns (SimpleTimelockIERC1155) {
@@ -109,12 +110,12 @@ contract SimpleTimelockIERC1155 is ITimelock, Initializable, UUPSUpgradeable, Ti
     }
 
     /// @inheritdoc ITimelock
-    function lockPeriods(address account, uint256 fromPeriod, uint256 toPeriod)
+    function lockPeriods(address account, uint256 fromPeriod, uint256 toPeriod, uint256 increment)
         public
         view
         override(ITimelock, TimelockIERC1155)
-        returns (uint256[] memory lockPeriods_)
+        returns (uint256[] memory lockPeriods_, uint256[] memory amounts_)
     {
-        return TimelockIERC1155.lockPeriods(account, fromPeriod, toPeriod);
+        return TimelockIERC1155.lockPeriods(account, fromPeriod, toPeriod, increment);
     }
 }

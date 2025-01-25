@@ -42,7 +42,7 @@ abstract contract TimelockIERC1155 is Initializable, ERC1155SupplyUpgradeable {
     }
 
     /// @dev Internal function to unlock `amount` of tokens for `account` at `lockReleasePeriod`.
-    function _unlockInternal(address account, uint256 lockReleasePeriod, uint256 amount) internal {
+    function _unlockInternal(address account, uint256 lockReleasePeriod, uint256 amount) internal virtual {
         uint256 currentPeriod_ = currentPeriod();
         if (currentPeriod_ < lockReleasePeriod) {
             revert ITimelock.ITimelock__LockDurationNotExpired(account, currentPeriod_, lockReleasePeriod);
@@ -84,28 +84,34 @@ abstract contract TimelockIERC1155 is Initializable, ERC1155SupplyUpgradeable {
     function currentPeriod() public view virtual returns (uint256 currentPeriod_);
 
     /// @notice Returns the periods with locked tokens for `account` between `fromPeriod` and `toPeriod`
-    function lockPeriods(address account, uint256 fromPeriod, uint256 toPeriod)
+    function lockPeriods(address account, uint256 fromPeriod, uint256 toPeriod, uint256 increment)
         public
         view
         virtual
-        returns (uint256[] memory lockPeriods_)
+        returns (uint256[] memory lockPeriods_, uint256[] memory amounts_)
     {
         uint256 maxLockPeriods = (toPeriod - fromPeriod) + 1;
         uint256[] memory tempLockPeriods = new uint256[](maxLockPeriods);
+        uint256[] memory tempAmounts = new uint256[](maxLockPeriods);
 
-        uint256 accountLockPeriodCount = 0;
-        for (uint256 i = fromPeriod; i <= toPeriod; i++) {
-            if (lockedAmount(account, i) > 0) {
-                tempLockPeriods[accountLockPeriodCount] = i;
-                accountLockPeriodCount++;
+        uint256 lockPeriodCount = 0;
+        for (uint256 i = fromPeriod; i <= toPeriod; i = i + increment) {
+            uint256 lockedAmount_ = lockedAmount(account, i);
+
+            if (lockedAmount_ > 0) {
+                tempLockPeriods[lockPeriodCount] = i;
+                tempAmounts[lockPeriodCount] = lockedAmount_;
+                lockPeriodCount++;
             }
         }
 
-        uint256[] memory finalLockPeriods = new uint256[](accountLockPeriodCount);
-        for (uint256 i = 0; i < accountLockPeriodCount; i++) {
+        uint256[] memory finalLockPeriods = new uint256[](lockPeriodCount);
+        uint256[] memory finalAmounts = new uint256[](lockPeriodCount);
+        for (uint256 i = 0; i < lockPeriodCount; ++i) {
             finalLockPeriods[i] = tempLockPeriods[i];
+            finalAmounts[i] = tempAmounts[i];
         }
 
-        return finalLockPeriods;
+        return (finalLockPeriods, finalAmounts);
     }
 }
