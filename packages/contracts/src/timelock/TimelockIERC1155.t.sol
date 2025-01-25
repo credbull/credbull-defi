@@ -10,7 +10,7 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 /**
  * @title TimelockIERC1155
  * @dev ERC1155-based token locking mechanism with defined lock and release periods.
- * NB - keeps functions internal by NOT implementing ITimelock interface.  children can implement ITimelock if desired.
+ * NB - keeps functions internal by NOT implementing ITimelock interface. children can implement ITimelock if desired.
  */
 abstract contract TimelockIERC1155 is Initializable, ERC1155SupplyUpgradeable {
     constructor() {
@@ -26,7 +26,7 @@ abstract contract TimelockIERC1155 is Initializable, ERC1155SupplyUpgradeable {
         public
         view
         virtual
-        returns (uint256 amountLocked)
+        returns (uint256 lockedAmount_)
     {
         return balanceOf(account, lockReleasePeriod);
     }
@@ -37,7 +37,12 @@ abstract contract TimelockIERC1155 is Initializable, ERC1155SupplyUpgradeable {
     }
 
     /// @notice Returns the max amount of tokens unlockable for `account` at `lockReleasePeriod`.
-    function maxUnlock(address account, uint256 lockReleasePeriod) public view virtual returns (uint256) {
+    function maxUnlock(address account, uint256 lockReleasePeriod)
+        public
+        view
+        virtual
+        returns (uint256 unlockableAmount_)
+    {
         return currentPeriod() >= lockReleasePeriod ? lockedAmount(account, lockReleasePeriod) : 0;
     }
 
@@ -48,24 +53,24 @@ abstract contract TimelockIERC1155 is Initializable, ERC1155SupplyUpgradeable {
             revert ITimelock.ITimelock__LockDurationNotExpired(account, currentPeriod_, lockReleasePeriod);
         }
 
-        uint256 maxUnlock_ = maxUnlock(account, lockReleasePeriod);
-        if (maxUnlock_ < amount) {
-            revert ITimelock.ITimelock_ExceededMaxUnlock(account, lockReleasePeriod, amount, maxUnlock_);
+        uint256 unlockableAmount_ = maxUnlock(account, lockReleasePeriod);
+        if (unlockableAmount_ < amount) {
+            revert ITimelock.ITimelock__ExceededMaxUnlock(account, lockReleasePeriod, amount, unlockableAmount_);
         }
 
         _burn(account, lockReleasePeriod, amount);
     }
 
     /// @notice Rolls over unlocked `amount` of tokens for `account` to a new lock period.
-    function _rolloverUnlockedInternal(address account, uint256 lockReleasePeriod, uint256 amount) internal {
-        uint256 maxUnlock_ = this.maxUnlock(account, lockReleasePeriod);
+    function _rolloverUnlockedInternal(address account, uint256 origLockReleasePeriod, uint256 amount) internal {
+        uint256 unlockableAmount_ = maxUnlock(account, origLockReleasePeriod);
 
-        if (amount > maxUnlock_) {
-            revert ITimelock.ITimelock_ExceededMaxUnlock(account, lockReleasePeriod, amount, maxUnlock_);
+        if (amount > unlockableAmount_) {
+            revert ITimelock.ITimelock__ExceededMaxUnlock(account, origLockReleasePeriod, amount, unlockableAmount_);
         }
 
-        _burn(account, lockReleasePeriod, amount);
-        _mint(account, lockReleasePeriod + lockDuration(), amount, "");
+        _burn(account, origLockReleasePeriod, amount);
+        _mint(account, origLockReleasePeriod + lockDuration(), amount, "");
     }
 
     /**
@@ -83,35 +88,32 @@ abstract contract TimelockIERC1155 is Initializable, ERC1155SupplyUpgradeable {
 
     function currentPeriod() public view virtual returns (uint256 currentPeriod_);
 
-    /// @notice Returns the periods with locked tokens for `account` between `fromPeriod` and `toPeriod`
+    /// @notice Returns the periods with locked tokens for `account` between `fromPeriod` and `toPeriod`.
+    /// @dev Calls balanceOf twice to avoid creation of potentially large temp arrays.
     function lockPeriods(address account, uint256 fromPeriod, uint256 toPeriod, uint256 increment)
         public
         view
         virtual
-        returns (uint256[] memory lockPeriods_, uint256[] memory amounts_)
+        returns (uint256[] memory lockedPeriods_, uint256[] memory lockedAmounts_)
     {
-        uint256 maxLockPeriods = (toPeriod - fromPeriod) + 1;
-        uint256[] memory tempLockPeriods = new uint256[](maxLockPeriods);
-        uint256[] memory tempAmounts = new uint256[](maxLockPeriods);
-
-        uint256 lockPeriodCount = 0;
-        for (uint256 i = fromPeriod; i <= toPeriod; i = i + increment) {
-            uint256 lockedAmount_ = lockedAmount(account, i);
-
-            if (lockedAmount_ > 0) {
-                tempLockPeriods[lockPeriodCount] = i;
-                tempAmounts[lockPeriodCount] = lockedAmount_;
-                lockPeriodCount++;
+        uint256 count = 0;
+        for (uint256 i = fromPeriod; i <= toPeriod; i += increment) {
+            if (balanceOf(account, i) > 0) {
+                count++;
             }
         }
 
-        uint256[] memory finalLockPeriods = new uint256[](lockPeriodCount);
-        uint256[] memory finalAmounts = new uint256[](lockPeriodCount);
-        for (uint256 i = 0; i < lockPeriodCount; ++i) {
-            finalLockPeriods[i] = tempLockPeriods[i];
-            finalAmounts[i] = tempAmounts[i];
-        }
+        lockedPeriods_ = new uint256[](count);
+        lockedAmounts_ = new uint256[](count);
 
-        return (finalLockPeriods, finalAmounts);
+        uint256 index = 0;
+        for (uint256 i = fromPeriod; i <= toPeriod; i += increment) {
+            uint256 balance = balanceOf(account, i);
+            if (balance > 0) {
+                lockedPeriods_[index] = i;
+                lockedAmounts_[index] = balance;
+                index++;
+            }
+        }
     }
 }

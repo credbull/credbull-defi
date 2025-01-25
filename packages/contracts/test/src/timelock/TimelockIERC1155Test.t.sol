@@ -12,18 +12,21 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract TimelockIERC1155Test is TimelockTest {
-    function setUp() public override {
-        super.setUp();
-        _timelock = _createTimelock(_owner, 1);
+    function setUp() public {
+        _timelock = _createTimelock(_owner, 2);
     }
 
-    function toImpl(ITimelock timelock_) internal pure returns (SimpleTimelockIERC1155) {
+    function _toImpl(ITimelock timelock_) internal pure returns (SimpleTimelockIERC1155) {
         // Simulate time passing by setting the current time periods elapsed
         return SimpleTimelockIERC1155(address(timelock_));
     }
 
-    function warpToPeriod(ITimelock timelock_, uint256 timePeriod) internal override {
-        SimpleTimelockIERC1155 timelock = toImpl(timelock_);
+    function _rolloverLockDuration(ITimelock timelock_) internal virtual override returns (uint256 lockDuration) {
+        return _toImpl(timelock_).lockDuration();
+    }
+
+    function _warpToPeriod(ITimelock timelock_, uint256 timePeriod) internal override {
+        SimpleTimelockIERC1155 timelock = _toImpl(timelock_);
 
         uint256 warpToTimeInSeconds = timelock._startTimestamp() + timePeriod * 24 hours;
 
@@ -83,8 +86,8 @@ contract SimpleTimelockIERC1155 is ITimelock, Initializable, UUPSUpgradeable, Ti
     }
 
     /// @notice Rolls over unlocked `amount` of tokens for `account` to a new lock period.
-    function rolloverUnlocked(address account, uint256 lockReleasePeriod, uint256 amount) public onlyOwner {
-        _rolloverUnlockedInternal(account, lockReleasePeriod, amount);
+    function rolloverUnlocked(address account, uint256 origLockReleasePeriod, uint256 amount) public onlyOwner {
+        _rolloverUnlockedInternal(account, origLockReleasePeriod, amount);
     }
 
     // multi-inheritence below
@@ -94,7 +97,7 @@ contract SimpleTimelockIERC1155 is ITimelock, Initializable, UUPSUpgradeable, Ti
         public
         view
         override(ITimelock, TimelockIERC1155)
-        returns (uint256 amountLocked)
+        returns (uint256 lockedAmount_)
     {
         return TimelockIERC1155.lockedAmount(account, lockReleasePeriod);
     }
@@ -104,7 +107,7 @@ contract SimpleTimelockIERC1155 is ITimelock, Initializable, UUPSUpgradeable, Ti
         public
         view
         override(ITimelock, TimelockIERC1155)
-        returns (uint256)
+        returns (uint256 unlockableAmount_)
     {
         return TimelockIERC1155.maxUnlock(account, lockReleasePeriod);
     }
@@ -114,7 +117,7 @@ contract SimpleTimelockIERC1155 is ITimelock, Initializable, UUPSUpgradeable, Ti
         public
         view
         override(ITimelock, TimelockIERC1155)
-        returns (uint256[] memory lockPeriods_, uint256[] memory amounts_)
+        returns (uint256[] memory lockedPeriods_, uint256[] memory lockedAmounts_)
     {
         return TimelockIERC1155.lockPeriods(account, fromPeriod, toPeriod, increment);
     }

@@ -27,11 +27,6 @@ abstract contract TimelockTest is Test {
 
     uint256 internal initialSupply = 1000000;
 
-    function setUp() public virtual {
-        _param1 = TestParamSet.TestParam({ principal: 101, depositPeriod: 0, redeemPeriod: 1 });
-        _param2 = TestParamSet.TestParam({ principal: 22, depositPeriod: 0, redeemPeriod: 2 });
-    }
-
     function test__Timelock__Lock() public {
         vm.prank(_owner);
         _timelock.lock(_alice, _param1.redeemPeriod, _param1.principal);
@@ -94,7 +89,7 @@ abstract contract TimelockTest is Test {
         assertEq(lockedAmount, _param1.principal, "incorrect locked amount");
 
         // attempt to unlock before the release period should fail
-        warpToPeriod(_timelock, _param1.redeemPeriod - 1); // warp forward - but to the release period
+        _warpToPeriod(_timelock, _param1.redeemPeriod - 1); // warp forward - but to the release period
 
         vm.prank(_owner);
         vm.expectRevert(
@@ -110,7 +105,7 @@ abstract contract TimelockTest is Test {
         _timelock.lock(_alice, _param1.redeemPeriod, _param1.principal);
 
         // warp to releasePeriod
-        warpToPeriod(_timelock, _param1.redeemPeriod);
+        _warpToPeriod(_timelock, _param1.redeemPeriod);
 
         assertEq(
             _param1.principal,
@@ -148,24 +143,27 @@ abstract contract TimelockTest is Test {
         _timelock.lock(_alice, _param1.redeemPeriod, _param1.principal);
 
         // warp to releasePeriod
-        warpToPeriod(_timelock, _param1.redeemPeriod);
+        _warpToPeriod(_timelock, _param1.redeemPeriod);
 
         uint256 unlockableAmount = _timelock.maxUnlock(_alice, _param1.redeemPeriod);
         assertEq(unlockableAmount, _param1.principal, "all tokens should be unlockable after the lock period");
 
+        uint256 partialRolloverAmount = _param1.principal - 10;
+        uint256 rolloverLockReleasePeriod = _param1.redeemPeriod + _rolloverLockDuration(_timelock);
+
         // rollover the unlocked tokens
         vm.prank(_owner);
-        _timelock.rolloverUnlocked(_alice, _param1.redeemPeriod, _param2.principal);
+        _timelock.rolloverUnlocked(_alice, _param1.redeemPeriod, partialRolloverAmount);
 
         // check rolled-over tokens are locked under the new period
-        uint256 lockedAmountAfterRollover = _timelock.lockedAmount(_alice, _param2.redeemPeriod);
-        assertEq(lockedAmountAfterRollover, _param2.principal, "incorrect locked amount after rollover");
+        uint256 lockedAmountAfterRollover = _timelock.lockedAmount(_alice, rolloverLockReleasePeriod);
+        assertEq(lockedAmountAfterRollover, partialRolloverAmount, "incorrect locked amount after rollover");
 
         // check remaining tokens in the original period are reduced
         uint256 remainingUnlockableAmount = _timelock.maxUnlock(_alice, _param1.redeemPeriod);
         assertEq(
             remainingUnlockableAmount,
-            _param1.principal - _param2.principal,
+            _param1.principal - partialRolloverAmount,
             "incorrect remaining unlockable amount after rollover"
         );
     }
@@ -186,5 +184,7 @@ abstract contract TimelockTest is Test {
         return evenParams;
     }
 
-    function warpToPeriod(ITimelock timelock_, uint256 timePeriod) internal virtual;
+    function _rolloverLockDuration(ITimelock /* timelock_ */ ) internal virtual returns (uint256 lockDuration);
+
+    function _warpToPeriod(ITimelock timelock_, uint256 timePeriod) internal virtual;
 }
