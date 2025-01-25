@@ -68,6 +68,10 @@ contract TestParamFactory {
         return create(_TENOR, (2 * _TENOR - 1));
     }
 
+    function depositPreTenorRedeemOnTenor2() public returns (TestParamSet.TestParam memory) {
+        return create(_TENOR - 1, (2 * _TENOR));
+    }
+
     function depositOnTenorRedeemOnTenor2() public returns (TestParamSet.TestParam memory) {
         return create(_TENOR, (2 * _TENOR));
     }

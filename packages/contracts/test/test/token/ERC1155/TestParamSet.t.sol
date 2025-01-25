@@ -4,6 +4,9 @@ pragma solidity ^0.8.20;
 library TestParamSet {
     using TestParamSet for TestParam[];
 
+    // Define a custom error for invalid split conditions
+    error TestParamSet__InvalidSplit(uint256 splitBefore, uint256 paramsLength);
+
     // params for testing deposits and redeems
     struct TestParam {
         uint256 principal;
@@ -184,8 +187,9 @@ library TestParamSet {
         pure
         returns (TestParam[] memory leftSet_, TestParam[] memory rightSet_)
     {
-        // assert we can actually split in two at the splitBefore
-        assert(splitBefore < (origTestParams.length - 1));
+        if (origTestParams.length == 0 || splitBefore > origTestParams.length - 1) {
+            revert TestParamSet__InvalidSplit(splitBefore, origTestParams.length);
+        }
 
         // Initialize leftSet and rightSet arrays with their respective sizes
         TestParam[] memory leftSet = new TestParam[](splitBefore); // Elements before splitBefore

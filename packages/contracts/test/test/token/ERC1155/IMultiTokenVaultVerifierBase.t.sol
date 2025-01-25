@@ -11,7 +11,7 @@ abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
     using TestParamSet for TestParamSet.TestParam[];
 
     /// @dev test the vault at the given test parameters
-    function verifyVault(
+    function verifyVaultBatch(
         TestParamSet.TestUsers memory depositUsers,
         TestParamSet.TestUsers memory redeemUsers,
         IVault vault,
@@ -30,10 +30,13 @@ abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
         uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
 
         // ------------------- deposits w/ redeems per deposit -------------------
-        (sharesAtPeriods_, assetsAtPeriods_) = super.verifyVault(depositUsers, redeemUsers, vault, testParams);
+        (sharesAtPeriods_, assetsAtPeriods_) = super.verifyVaultBatch(depositUsers, redeemUsers, vault, testParams);
 
         // ------------------- deposits w/ redeems across multiple deposits -------------------
-        _testVaultCombineDepositsForRedeem(depositUsers, redeemUsers, multiTokenVault, testParams, 2);
+        if (testParams.length > 1) {
+            // only makes sense if there multiple deposits to combine
+            _testVaultCombineDepositsForRedeem(depositUsers, redeemUsers, multiTokenVault, testParams, 2);
+        }
 
         _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore previous period state
     }
@@ -47,7 +50,7 @@ abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
         uint256 splitBefore
     ) internal returns (uint256[] memory sharesAtPeriods_, uint256 assetsAtPeriods1_, uint256 assetsAtPeriods2_) {
         // NB - test all of the deposits BEFORE redeems.  verifies no side-effects from deposits when redeeming.
-        uint256[] memory sharesAtPeriods = _verifyDepositOnly(depositUsers, vault, testParams);
+        uint256[] memory sharesAtPeriods = _verifyDepositOnlyBatch(depositUsers, vault, testParams);
 
         // NB - test all of the redeems AFTER deposits.  verifies no side-effects from deposits when redeeming.
         uint256 finalRedeemPeriod = testParams.latestRedeemPeriod();

@@ -14,7 +14,7 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
     using TestParamSet for TestParamSet.TestParam[];
 
     /// @dev test the vault at the given test parameters
-    function verifyVault(
+    function verifyVaultBatch(
         TestParamSet.TestUsers memory depositUsers,
         TestParamSet.TestUsers memory redeemUsers,
         IVault vault,
@@ -25,10 +25,10 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
 
         // ------------------- deposits w/ redeems per deposit -------------------
         // NB - test all of the deposits BEFORE redeems.  verifies no side-effects from deposits when redeeming.
-        uint256[] memory sharesAtPeriods = _verifyDepositOnly(depositUsers, vault, testParams);
+        uint256[] memory sharesAtPeriods = _verifyDepositOnlyBatch(depositUsers, vault, testParams);
 
         // NB - test all of the redeems AFTER deposits.  verifies no side-effects from deposits when redeeming.
-        uint256[] memory assetsAtPeriods = _verifyRedeemOnly(redeemUsers, vault, testParams, sharesAtPeriods);
+        uint256[] memory assetsAtPeriods = _verifyRedeemOnlyBatch(redeemUsers, vault, testParams, sharesAtPeriods);
 
         _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore previous period state
 
@@ -36,7 +36,7 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
     }
 
     /// @dev test Vault at specified redeemPeriod and other "interesting" redeem periods
-    function verifyVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
+    function verifyVaultAtRedeemOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
         public
         virtual
         returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_)
@@ -44,22 +44,11 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
             _createTestUsers(account);
 
-        return verifyVaultAtOffsets(depositUsers, redeemUsers, vault, testParam);
-    }
-
-    /// @dev test Vault at specified redeemPeriod and other "interesting" redeem periods
-    function verifyVaultAtOffsets(
-        TestParamSet.TestUsers memory depositUsers,
-        TestParamSet.TestUsers memory redeemUsers,
-        IVault vault,
-        TestParamSet.TestParam memory testParam
-    ) internal virtual returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_) {
-        TestParamSet.TestParam[] memory testParams = TestParamSet.toOffsetArray(testParam);
-        return verifyVault(depositUsers, redeemUsers, vault, testParams);
+        return verifyVaultBatch(depositUsers, redeemUsers, vault, TestParamSet.toOffsetArray(testParam));
     }
 
     /// @dev verify deposit.  updates vault assets and shares.
-    function _verifyDepositOnly(
+    function _verifyDepositOnlyBatch(
         TestParamSet.TestUsers memory depositUsers,
         IVault vault,
         TestParamSet.TestParam[] memory testParams
@@ -120,7 +109,7 @@ abstract contract IVaultVerifierBase is IVaultVerifier, Test, TestUtil {
     }
 
     /// @dev verify redeem.  updates vault assets and shares.
-    function _verifyRedeemOnly(
+    function _verifyRedeemOnlyBatch(
         TestParamSet.TestUsers memory redeemUsers,
         IVault vault,
         TestParamSet.TestParam[] memory testParams,

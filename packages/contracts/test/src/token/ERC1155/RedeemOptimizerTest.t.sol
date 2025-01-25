@@ -42,8 +42,9 @@ contract RedeemOptimizerTest is IVaultTestSuite {
         IRedeemOptimizer redeemOptimizer =
             new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, multiTokenVault.currentPeriodsElapsed());
 
-        uint256[] memory depositShares =
-            _multiTokenVerifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+        uint256[] memory depositShares = _multiTokenVerifier._verifyDepositOnlyBatch(
+            TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams
+        );
         uint256 totalDepositShares = depositShares[0] + depositShares[1] + depositShares[2];
 
         // warp vault ahead to redeemPeriod
@@ -68,8 +69,9 @@ contract RedeemOptimizerTest is IVaultTestSuite {
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
 
-        uint256[] memory depositShares =
-            _multiTokenVerifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+        uint256[] memory depositShares = _multiTokenVerifier._verifyDepositOnlyBatch(
+            TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams
+        );
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
             depositShares, testParams.depositPeriods(), redeemPeriod
         );
@@ -96,8 +98,9 @@ contract RedeemOptimizerTest is IVaultTestSuite {
         IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
-        uint256[] memory depositShares =
-            _multiTokenVerifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+        uint256[] memory depositShares = _multiTokenVerifier._verifyDepositOnlyBatch(
+            TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams
+        );
 
         uint256 sharesToWithdraw = depositShares[0] + depositShares[1] + depositShares[2] - residualShareAmount;
 
@@ -128,8 +131,9 @@ contract RedeemOptimizerTest is IVaultTestSuite {
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
 
-        uint256[] memory depositShares =
-            _multiTokenVerifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+        uint256[] memory depositShares = _multiTokenVerifier._verifyDepositOnlyBatch(
+            TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams
+        );
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
             depositShares, testParams.depositPeriods(), redeemPeriod
         );

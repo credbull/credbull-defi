@@ -112,49 +112,29 @@ abstract contract IVaultTestSuite is TestUtil {
     // multiple deposit and redeem
     // ======================================================================================
 
-    // TODO - refactor this to use the batch versions...
-    function test__IVaultSuite__MultipleDepositsAndRedeem() public virtual {
-        IVault vault = _vault;
+    // for MultiToken and similar will combine deposits and try to redeem together
+    // see IMultiTokenVaultVerifierBase._testVaultCombineDepositsForRedeem()
+    function test__IVaultSuite__DepositBatchRedeemOnTenor2() public virtual {
+        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](5);
+        // multi-token : deposit group 1
+        testParams[0] = _testParamFactory.depositOnZeroRedeemPostTenor();
+        testParams[1] = _testParamFactory.depositOnOneRedeemPostTenor();
+        testParams[2] = _testParamFactory.depositPreTenorRedeemPostTenor();
+        // multi-token : deposit group 2
+        testParams[3] = _testParamFactory.depositOnTenorRedeemOnTenor2();
+        testParams[4] = _testParamFactory.depositPostTenorRedeemOnTenor2();
 
-        TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](2);
-        testParams[0] = TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 });
-        testParams[1] = TestParamSet.TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 });
-
-        TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
-
-        uint256[] memory sharesAtPeriods = _verifier._verifyDepositOnly(testUsers, vault, testParams);
-        assertEq(2, sharesAtPeriods.length, "expected two sharesAtPeriods");
-
-        // TODO - warp probably not required here...
-        // _verifier._warpToPeriod(vault, testParams[1].depositPeriod); // warp to deposit2Period
-
-        uint256[] memory assetsAtPeriods = _verifier._verifyRedeemOnly(testUsers, vault, testParams, sharesAtPeriods);
-        assertEq(2, sharesAtPeriods.length, "expected two assetsAtPeriods");
-
-        // verify redeem - period 1
-        uint256 deposit1ExpectedAssets = _verifier._expectedAssets(vault, testParams[0]);
-        assertApproxEqAbs(deposit1ExpectedAssets, assetsAtPeriods[0], TOLERANCE, "deposit1 deposit assets incorrect");
-
-        // verify redeem - period 2
-        uint256 deposit2ExpectedAssets = _verifier._expectedAssets(vault, testParams[1]);
-        assertApproxEqAbs(deposit2ExpectedAssets, assetsAtPeriods[1], TOLERANCE, "deposit2 deposit assets incorrect");
-
-        _verifier.verifyVaultAtOffsets(_alice, vault, testParams[0]);
-        _verifier.verifyVaultAtOffsets(_alice, vault, testParams[1]);
+        verifyBatch(_alice, testParams);
     }
 
     function verify(address account, TestParamSet.TestParam memory testParam) public {
-        verify(account, TestParamSet.toSingletonArray(testParam));
+        verifyBatch(account, TestParamSet.toSingletonArray(testParam));
     }
 
-    function verify(address account, TestParamSet.TestParam[] memory testParams) public {
+    function verifyBatch(address account, TestParamSet.TestParam[] memory testParams) public {
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
             _verifier._createTestUsers(account);
 
-        // TODO - use this version instead - but failing!
-        //_verifier.verifyVault(depositUsers, redeemUsers, _vault, testParams);
-
-        uint256[] memory sharesAtPeriods = _verifier._verifyDepositOnly(depositUsers, _vault, testParams);
-        _verifier._verifyRedeemOnly(redeemUsers, _vault, testParams, sharesAtPeriods);
+        _verifier.verifyVaultBatch(depositUsers, redeemUsers, _vault, testParams);
     }
 }

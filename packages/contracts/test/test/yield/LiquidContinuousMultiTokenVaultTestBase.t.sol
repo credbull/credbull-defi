@@ -46,14 +46,15 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
         testParams[0] =
             TestParamSet.TestParam({ principal: 106 * _scale, depositPeriod: _tenor - 1, redeemPeriod: _tenor - 1 });
 
-        uint256[] memory sharesAtPeriods = _liquidVerifier._verifyDepositOnly(depositUsers, _liquidVault, testParams);
+        uint256[] memory sharesAtPeriods =
+            _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _liquidVault, testParams);
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 RedeemOptimizerFIFO.RedeemOptimizer__OptimizerFailed.selector, 0, testParams[0].principal
             )
         );
-        _liquidVerifier._verifyRedeemOnly(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
+        _liquidVerifier._verifyRedeemOnlyBatch(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
     }
 
     function _createVaultParams(LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth)

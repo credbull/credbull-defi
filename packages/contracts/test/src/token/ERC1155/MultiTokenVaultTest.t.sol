@@ -30,6 +30,10 @@ contract MultiTokenVaultTest is IVaultTestSuite {
         init(_multiTokenVault, _multiTokenVerifier);
     }
 
+    function test__MultiTokenVaultTest__DepositBatchRedeemOnTenor2() public {
+        test__IVaultSuite__DepositBatchRedeemOnTenor2();
+    }
+
     function test__MultiTokenVaultTest__RedeemBeforeDepositPeriodReverts() public {
         TestParamSet.TestParam memory testParam =
             TestParamSet.TestParam({ principal: 1001 * _scale, depositPeriod: 2, redeemPeriod: 1 });
@@ -149,7 +153,8 @@ contract MultiTokenVaultTest is IVaultTestSuite {
 
         TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
 
-        uint256[] memory shares = _multiTokenVerifier._verifyDepositOnly(testUsers, _multiTokenVault, _batchTestParams);
+        uint256[] memory shares =
+            _multiTokenVerifier._verifyDepositOnlyBatch(testUsers, _multiTokenVault, _batchTestParams);
         uint256[] memory depositPeriods = _batchTestParams.depositPeriods();
         uint256[] memory depositPeriodsToRevert = _batchTestParamsToRevert.depositPeriods();
 

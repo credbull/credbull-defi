@@ -18,8 +18,9 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         testParams[0] =
             TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: 0, redeemPeriod: _liquidVault.TENOR() });
 
-        uint256[] memory sharesAtPeriods = _liquidVerifier._verifyDepositOnly(depositUsers, _liquidVault, testParams);
-        _liquidVerifier._verifyRedeemOnly(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
+        uint256[] memory sharesAtPeriods =
+            _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _liquidVault, testParams);
+        _liquidVerifier._verifyRedeemOnlyBatch(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
     }
 
     // @dev [Oct 25, 2024] Succeeds with: from=1 and to=600 ; Fails with: from=1 and to=650
@@ -35,10 +36,10 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         // ------------------- deposits w/ redeems per deposit -------------------
         // NB - test all of the deposits BEFORE redeems.  verifies no side-effects from deposits when redeeming.
         uint256[] memory sharesAtPeriods =
-            _liquidVerifier._verifyDepositOnly(depositUsers1, _liquidVault, loadTestParams);
+            _liquidVerifier._verifyDepositOnlyBatch(depositUsers1, _liquidVault, loadTestParams);
 
         // NB - test all of the redeems AFTER deposits.  verifies no side-effects from deposits when redeeming.
-        _liquidVerifier._verifyRedeemOnly(redeemUsers1, _liquidVault, loadTestParams, sharesAtPeriods);
+        _liquidVerifier._verifyRedeemOnlyBatch(redeemUsers1, _liquidVault, loadTestParams, sharesAtPeriods);
     }
 
     function test__LiquidContinuousMultiTokenVault__DepositRedeem() public {
@@ -183,7 +184,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
             _liquidVerifier._createTestUsers(_alice);
 
-        _liquidVerifier._verifyDepositOnly(depositUsers, _liquidVault, depositTestParams);
+        _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _liquidVault, depositTestParams);
 
         // split our deposits into two "batches" of redeems
         (TestParamSet.TestParam[] memory redeemParams1, TestParamSet.TestParam[] memory redeemParams2) =
@@ -227,7 +228,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
             _liquidVerifier._createTestUsers(_bob);
 
-        _liquidVerifier._verifyDepositOnly(depositUsers, _liquidVault, depositTestParams);
+        _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _liquidVault, depositTestParams);
 
         uint256 partialShares = 1 * _scale;
 
@@ -303,7 +304,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         });
 
         uint256[] memory shares =
-            _liquidVerifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), _liquidVault, testParams);
+            _liquidVerifier._verifyDepositOnlyBatch(TestParamSet.toSingletonUsers(_alice), _liquidVault, testParams);
         uint256 totalShares = shares[0] + shares[1];
 
         // -------------- deposit period1  --------------

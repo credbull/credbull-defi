@@ -5,12 +5,19 @@ import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 interface IVaultVerifier {
-    function verifyVaultAtOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
+    function verifyVaultBatch(
+        TestParamSet.TestUsers memory depositUsers,
+        TestParamSet.TestUsers memory redeemUsers,
+        IVault vault,
+        TestParamSet.TestParam[] memory testParams
+    ) external returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_);
+
+    function verifyVaultAtRedeemOffsets(address account, IVault vault, TestParamSet.TestParam memory testParam)
         external
         returns (uint256[] memory sharesAtPeriods_, uint256[] memory assetsAtPeriods_);
 
     /// @dev verify deposit.  updates vault assets and shares.
-    function _verifyDepositOnly(
+    function _verifyDepositOnlyBatch(
         TestParamSet.TestUsers memory depositUsers,
         IVault vault,
         TestParamSet.TestParam[] memory testParams
@@ -24,7 +31,7 @@ interface IVaultVerifier {
     ) external returns (uint256 actualSharesAtPeriod_);
 
     /// @dev verify redeem.  updates vault assets and shares.
-    function _verifyRedeemOnly(
+    function _verifyRedeemOnlyBatch(
         TestParamSet.TestUsers memory redeemUsers,
         IVault vault,
         TestParamSet.TestParam[] memory testParams,
