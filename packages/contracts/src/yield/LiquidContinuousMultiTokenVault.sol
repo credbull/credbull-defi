@@ -66,7 +66,7 @@ contract LiquidContinuousMultiTokenVault is
     IRedeemOptimizer public _redeemOptimizer;
     uint256 public _vaultStartTimestamp;
 
-    // [Jan-2025] added - must be after previous fields
+    // [Jan-2025] added - must be after previous fields due to upgrading
     bool public _shouldCheckInvestorRole = false;
 
     uint256 private constant ZERO_REQUEST_ID = 0;
@@ -83,8 +83,7 @@ contract LiquidContinuousMultiTokenVault is
     error LiquidContinuousMultiTokenVault__UnAuthorized(address sender, address authorizedOwner);
     error LiquidContinuousMultiTokenVault__AmountMismatch(uint256 amount1, uint256 amount2);
     error LiquidContinuousMultiTokenVault__UnlockPeriodMismatch(uint256 unlockPeriod1, uint256 unlockPeriod2);
-    error LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount( // TODO - fix naming
-    uint256 componentTokenAmount, uint256 unlockRequestedAmount);
+    error LiquidContinuousMultiTokenVault__RedeemSharesMismatch(uint256 redeemShares, uint256 requestRedeemShares);
     error LiquidContinuousMultiTokenVault__InvestorOnly(address sender, address account);
 
     constructor() {
@@ -278,7 +277,7 @@ contract LiquidContinuousMultiTokenVault is
 
         uint256 unlockRequestedAmount = unlockRequestAmount(controller, requestId);
         if (shares != unlockRequestedAmount) {
-            revert LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(shares, unlockRequestedAmount);
+            revert LiquidContinuousMultiTokenVault__RedeemSharesMismatch(shares, unlockRequestedAmount);
         }
 
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) = unlock(controller, requestId); // unlockPeriod = redeemPeriod

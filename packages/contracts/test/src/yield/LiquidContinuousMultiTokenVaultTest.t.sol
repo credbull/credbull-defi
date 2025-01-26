@@ -574,7 +574,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         vm.prank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount.selector,
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__RedeemSharesMismatch.selector,
                 invalidRedeemShareAmount,
                 sharesToRedeem
             )
@@ -586,7 +586,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         vm.prank(invalidCaller);
         vm.expectRevert(
             abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount.selector,
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__RedeemSharesMismatch.selector,
                 sharesToRedeem,
                 0
             )
@@ -852,7 +852,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         // We expect revert in Alice's redeem because shares and ruquest unlocked amount for Alice are different
         vm.expectRevert(
             abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount.selector,
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__RedeemSharesMismatch.selector,
                 remainingShare_Alice,
                 liquidVault.unlockRequestAmountByDepositPeriod(alice, testParams.depositPeriod)
             )
