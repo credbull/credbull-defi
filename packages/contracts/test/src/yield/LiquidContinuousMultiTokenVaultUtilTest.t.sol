@@ -163,6 +163,12 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         vm.expectRevert(expectedError);
         _liquidVault.setReducedRateAtCurrent(newReducedRate);
 
+        vm.expectRevert(expectedError);
+        _liquidVault.setShouldCheckInvestorRole(true);
+
+        vm.expectRevert(expectedError);
+        _liquidVault.setURI("");
+
         vm.stopPrank();
 
         // ------------ operator can set ------------
@@ -180,6 +186,16 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         _liquidVault.setReducedRate(newReducedRate, newStartTimestamp);
         assertEq(newStartTimestamp, _liquidVault.currentPeriodRate().effectiveFromPeriod, "effective period not set");
         assertEq(newReducedRate, _liquidVault.currentPeriodRate().interestRate, "rate not set");
+
+        bool newShouldCheckInvestorRole = !_liquidVault._shouldCheckInvestorRole();
+        _liquidVault.setShouldCheckInvestorRole(newShouldCheckInvestorRole);
+        assertEq(
+            newShouldCheckInvestorRole, _liquidVault._shouldCheckInvestorRole(), "shouldCheckInvestor role not set"
+        );
+
+        string memory newUri = "newurl.io/liquid-stone";
+        _liquidVault.setURI(newUri);
+        assertEq(newUri, _liquidVault.uri(0), "uri not set");
 
         vm.stopPrank();
     }
@@ -236,63 +252,34 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         address zeroAddress = address(0);
 
         LiquidContinuousMultiTokenVault liquidVault = new LiquidContinuousMultiTokenVault();
-        LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroOperator = _createVaultParams(
-            LiquidContinuousMultiTokenVault.VaultAuth({
-                owner: makeAddr("owner"),
-                operator: zeroAddress,
-                upgrader: makeAddr("upgrader"),
-                assetManager: makeAddr("assetManager")
-            })
-        );
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector,
-                "operator",
-                zeroAddress
-            )
-        );
-
+        LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroOperator = _createVaultParams(_createVaultAuth());
+        paramsZeroOperator.vaultAuth.operator = zeroAddress;
+        vm.expectRevert(_createInvalidAuthError("operator", zeroAddress));
         new ERC1967Proxy(
             address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, paramsZeroOperator)
         );
 
-        LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroUpgrader = _createVaultParams(
-            LiquidContinuousMultiTokenVault.VaultAuth({
-                owner: makeAddr("owner"),
-                operator: makeAddr("operator"),
-                upgrader: zeroAddress,
-                assetManager: makeAddr("assetManager")
-            })
-        );
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector,
-                "upgrader",
-                zeroAddress
-            )
-        );
+        LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroUpgrader = _createVaultParams(_createVaultAuth());
+        paramsZeroUpgrader.vaultAuth.upgrader = zeroAddress;
+        vm.expectRevert(_createInvalidAuthError("upgrader", zeroAddress));
         new ERC1967Proxy(
             address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, paramsZeroUpgrader)
         );
 
-        LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroAssetManager = _createVaultParams(
-            LiquidContinuousMultiTokenVault.VaultAuth({
-                owner: makeAddr("owner"),
-                operator: makeAddr("operator"),
-                upgrader: makeAddr("upgrader"),
-                assetManager: zeroAddress
-            })
-        );
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector,
-                "assetManager",
-                zeroAddress
-            )
-        );
+        LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroAssetManager =
+            _createVaultParams(_createVaultAuth());
+        paramsZeroAssetManager.vaultAuth.assetManager = zeroAddress;
+        vm.expectRevert(_createInvalidAuthError("assetManager", zeroAddress));
         new ERC1967Proxy(
             address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, paramsZeroAssetManager)
+        );
+
+        LiquidContinuousMultiTokenVault.VaultParams memory paramsZeroAssetReceiver =
+            _createVaultParams(_createVaultAuth());
+        paramsZeroAssetReceiver.vaultAuth.assetReceiver = zeroAddress;
+        vm.expectRevert(_createInvalidAuthError("assetReceiver", zeroAddress));
+        new ERC1967Proxy(
+            address(liquidVault), abi.encodeWithSelector(liquidVault.initialize.selector, paramsZeroAssetReceiver)
         );
     }
 
@@ -308,6 +295,28 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
 
         assertTrue(vault.getVersion() > 0, "version should be nonzero");
         assertTrue(vault.supportsInterface(type(IMultiTokenVault).interfaceId), "should support interface");
+    }
+
+    function _createInvalidAuthError(string memory authName, address authAddress)
+        internal
+        pure
+        returns (bytes memory authError)
+    {
+        return abi.encodeWithSelector(
+            LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidAuthAddress.selector,
+            authName,
+            authAddress
+        );
+    }
+
+    function _createVaultAuth() internal returns (LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth) {
+        return LiquidContinuousMultiTokenVault.VaultAuth({
+            owner: makeAddr("owner"),
+            operator: makeAddr("operator"),
+            upgrader: makeAddr("upgrader"),
+            assetManager: makeAddr("assetManager"),
+            assetReceiver: makeAddr("assetManager")
+        });
     }
 }
 

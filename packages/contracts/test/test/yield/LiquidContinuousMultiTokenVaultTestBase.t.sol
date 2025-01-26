@@ -25,7 +25,8 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         owner: makeAddr("owner"),
         operator: makeAddr("operator"),
         upgrader: makeAddr("upgrader"),
-        assetManager: makeAddr("assetManager")
+        assetManager: makeAddr("assetManager"),
+        assetReceiver: makeAddr("assetReceiver")
     });
 
     IERC20Metadata internal _asset;

@@ -40,7 +40,8 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
             owner: _tomlConfig.readAddress(".evm.address.owner"),
             operator: _tomlConfig.readAddress(".evm.address.operator"),
             upgrader: _tomlConfig.readAddress(".evm.address.upgrader"),
-            assetManager: _tomlConfig.readAddress(".evm.address.asset_manager")
+            assetManager: _tomlConfig.readAddress(".evm.address.asset_manager"),
+            assetReceiver: _tomlConfig.readAddress(".evm.address.custodian")
         });
     }
 

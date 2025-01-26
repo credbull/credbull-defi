@@ -49,6 +49,7 @@ contract LiquidContinuousMultiTokenVault is
         address operator;
         address upgrader;
         address assetManager;
+        address assetReceiver;
     }
 
     struct VaultParams {
@@ -65,11 +66,16 @@ contract LiquidContinuousMultiTokenVault is
     IRedeemOptimizer public _redeemOptimizer;
     uint256 public _vaultStartTimestamp;
 
+    // [Jan-2025] added - must be after previous fields
+    bool public _shouldCheckInvestorRole = false;
+
     uint256 private constant ZERO_REQUEST_ID = 0;
 
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant ASSET_MANAGER_ROLE = keccak256("ASSET_MANAGER_ROLE");
+    bytes32 public constant ASSET_RECEIVER_ROLE = keccak256("ASSET_RECEIVER_ROLE");
+    bytes32 public constant INVESTOR_ROLE = keccak256("INVESTOR_ROLE"); // deposits and redeems
 
     error LiquidContinuousMultiTokenVault__InvalidFrequency(uint256 frequency);
     error LiquidContinuousMultiTokenVault__InvalidAuthAddress(string authName, address authAddress);
@@ -77,9 +83,9 @@ contract LiquidContinuousMultiTokenVault is
     error LiquidContinuousMultiTokenVault__UnAuthorized(address sender, address authorizedOwner);
     error LiquidContinuousMultiTokenVault__AmountMismatch(uint256 amount1, uint256 amount2);
     error LiquidContinuousMultiTokenVault__UnlockPeriodMismatch(uint256 unlockPeriod1, uint256 unlockPeriod2);
-    error LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount(
-        uint256 componentTokenAmount, uint256 unlockRequestedAmount
-    );
+    error LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount( // TODO - fix naming
+    uint256 componentTokenAmount, uint256 unlockRequestedAmount);
+    error LiquidContinuousMultiTokenVault__InvestorOnly(address sender, address account);
 
     constructor() {
         _disableInitializers();
@@ -96,6 +102,7 @@ contract LiquidContinuousMultiTokenVault is
         _initRole("operator", OPERATOR_ROLE, vaultParams.vaultAuth.operator);
         _initRole("upgrader", UPGRADER_ROLE, vaultParams.vaultAuth.upgrader);
         _initRole("assetManager", ASSET_MANAGER_ROLE, vaultParams.vaultAuth.assetManager);
+        _initRole("assetReceiver", ASSET_RECEIVER_ROLE, vaultParams.vaultAuth.assetReceiver);
 
         _yieldStrategy = vaultParams.yieldStrategy;
         _redeemOptimizer = vaultParams.redeemOptimizer;
@@ -120,6 +127,17 @@ contract LiquidContinuousMultiTokenVault is
     // ===================== MultiTokenVault =====================
 
     /// @inheritdoc MultiTokenVault
+    function deposit(uint256 assets, address receiver)
+        public
+        virtual
+        override
+        onlyInvestor(receiver)
+        returns (uint256 shares)
+    {
+        return super.deposit(assets, receiver);
+    }
+
+    /// @inheritdoc MultiTokenVault
     function convertToSharesForDepositPeriod(uint256 assets, uint256 /* depositPeriod */ )
         public
         view
@@ -132,13 +150,25 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     /// @inheritdoc MultiTokenVault
+    function redeemForDepositPeriod(uint256 shares, address receiver, address owner, uint256 depositPeriod)
+        public
+        virtual
+        override
+        onlyInvestor(owner)
+        onlyAuthorized(owner)
+        returns (uint256 assets)
+    {
+        return super.redeemForDepositPeriod(shares, receiver, owner, depositPeriod);
+    }
+
+    /// @inheritdoc MultiTokenVault
     function redeemForDepositPeriod(
         uint256 shares,
         address receiver,
         address owner,
         uint256 depositPeriod,
         uint256 redeemPeriod
-    ) public virtual override returns (uint256 assets) {
+    ) public virtual override onlyInvestor(owner) onlyAuthorized(owner) returns (uint256 assets) {
         _unlock(owner, depositPeriod, redeemPeriod, shares);
 
         return _redeemForDepositPeriodAfterUnlock(shares, receiver, owner, depositPeriod, redeemPeriod);
@@ -182,6 +212,7 @@ contract LiquidContinuousMultiTokenVault is
      */
     function requestDeposit(uint256 assets, address controller, address owner)
         public
+        onlyInvestor(owner)
         onlyAuthorized(owner)
         onlyController(controller)
         returns (uint256 requestId_)
@@ -200,6 +231,7 @@ contract LiquidContinuousMultiTokenVault is
      */
     function deposit(uint256 assets, address receiver, address controller)
         public
+        onlyInvestor(receiver)
         onlyController(controller)
         returns (uint256 shares_)
     {
@@ -216,6 +248,7 @@ contract LiquidContinuousMultiTokenVault is
      */
     function requestRedeem(uint256 shares, address controller, address owner)
         public
+        onlyInvestor(owner)
         onlyAuthorized(owner)
         onlyController(controller)
         returns (uint256 requestId_)
@@ -237,6 +270,7 @@ contract LiquidContinuousMultiTokenVault is
      */
     function redeem(uint256 shares, address receiver, address controller)
         public
+        onlyInvestor(controller)
         onlyController(controller)
         returns (uint256 assets)
     {
@@ -249,15 +283,14 @@ contract LiquidContinuousMultiTokenVault is
 
         (uint256[] memory depositPeriods, uint256[] memory sharesAtPeriods) = unlock(controller, requestId); // unlockPeriod = redeemPeriod
 
-        uint256 totalAssetsRedeemed = 0;
-
+        assets = 0;
         for (uint256 i = 0; i < depositPeriods.length; ++i) {
-            totalAssetsRedeemed += _redeemForDepositPeriodAfterUnlock(
+            assets += _redeemForDepositPeriodAfterUnlock(
                 sharesAtPeriods[i], receiver, controller, depositPeriods[i], requestId
             );
         }
-        emit Withdraw(_msgSender(), receiver, controller, totalAssetsRedeemed, shares);
-        return totalAssetsRedeemed;
+        emit Withdraw(_msgSender(), receiver, controller, assets, shares);
+        return assets;
     }
 
     // Getter View Functions
@@ -456,11 +489,13 @@ contract LiquidContinuousMultiTokenVault is
      * @dev Withdraws the assets from out of vault for investment, i.e. in RWA.
      * Only the Asset Manager can call this function.
      *
-     * @param to The trusted address that will receive the assets, e.g. custodian
+     * @param assetReceiver The trusted address that will receive the assets, e.g. custodian
      * @param amount The amount of the ERC-20 underlying assets to be withdrawn from the vault.
      */
-    function withdrawAsset(address to, uint256 amount) public onlyRole(ASSET_MANAGER_ROLE) {
-        _withdrawAssest(to, amount);
+    function withdrawAsset(address assetReceiver, uint256 amount) public onlyRole(ASSET_MANAGER_ROLE) {
+        _checkRole(ASSET_RECEIVER_ROLE, assetReceiver);
+
+        _withdrawAssest(assetReceiver, amount);
     }
 
     /**
@@ -506,6 +541,16 @@ contract LiquidContinuousMultiTokenVault is
 
     // ===================== Utility =====================
 
+    // @dev enable/disable investor role checking
+    function setShouldCheckInvestorRole(bool shouldCheckInvestorRole_) public virtual onlyRole(OPERATOR_ROLE) {
+        _shouldCheckInvestorRole = shouldCheckInvestorRole_;
+    }
+
+    // @@inheritdoc ERC1155Upgradeable
+    function setURI(string memory newUri) public virtual onlyRole(OPERATOR_ROLE) {
+        _setURI(newUri);
+    }
+
     /// minimum shares required to convert to assets and vice-versa.
     function _minConversionThreshold() internal view returns (uint256 minConversionThreshold) {
         return SCALE < 10 ? SCALE : 10;
@@ -514,6 +559,14 @@ contract LiquidContinuousMultiTokenVault is
     // @dev ensure caller is permitted to act on the owner's tokens
     modifier onlyAuthorized(address owner) {
         _authorizeCaller(_msgSender(), owner);
+        _;
+    }
+
+    // @dev ensure that the account has the INVESTOR_ROLE
+    modifier onlyInvestor(address account) {
+        if (_shouldCheckInvestorRole && !hasRole(INVESTOR_ROLE, account)) {
+            revert LiquidContinuousMultiTokenVault__InvestorOnly(_msgSender(), account);
+        }
         _;
     }
 
@@ -545,6 +598,6 @@ contract LiquidContinuousMultiTokenVault is
     }
 
     function getVersion() public pure returns (uint256 version) {
-        return 2;
+        return 3;
     }
 }

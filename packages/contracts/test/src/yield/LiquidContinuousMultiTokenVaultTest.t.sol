@@ -164,6 +164,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         TestParamSet.TestParam memory testParams =
             TestParamSet.TestParam({ principal: 2_000 * _scale, depositPeriod: 10, redeemPeriod: 70 });
         address assetManager = getAssetManager();
+        address assetReceiver = _vaultAuth.assetReceiver;
 
         // ---------------- deposit ----------------
         _warpToPeriod(liquidVault, testParams.depositPeriod);
@@ -173,15 +174,15 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         liquidVault.requestDeposit(testParams.principal, alice, alice);
         vm.stopPrank();
 
-        uint256 assetManagerStartBalance = _asset.balanceOf(assetManager);
+        uint256 receiverStartBalance = _asset.balanceOf(assetReceiver);
         uint256 vaultStartBalance = _asset.balanceOf(address(liquidVault));
 
-        // ---------------- WithdrawAssetFrom Vault ----------------
+        // ---------------- WithdrawAssetFrom Vault succeeds ----------------
         vm.prank(assetManager);
-        liquidVault.withdrawAsset(assetManager, vaultStartBalance);
+        liquidVault.withdrawAsset(assetReceiver, vaultStartBalance);
 
         //assert balance
-        assertEq(assetManagerStartBalance + vaultStartBalance, _asset.balanceOf(assetManager));
+        assertEq(receiverStartBalance + vaultStartBalance, _asset.balanceOf(assetReceiver));
     }
 
     function test__LiquidContinuousMultiTokenVault__RedeemMultiPeriodsAllShares() public {
@@ -269,14 +270,78 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     function test__LiquidContinuousMultiTokenVault__WithdrawAssetNotOwnerReverts() public {
         LiquidContinuousMultiTokenVault liquidVault = _liquidVault;
         address randomWallet = makeAddr("randomWallet");
+
+        // fail - wallet not the asset manager
         vm.startPrank(randomWallet);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAccessControl.AccessControlUnauthorizedAccount.selector, randomWallet, liquidVault.ASSET_MANAGER_ROLE()
             )
         );
-        liquidVault.withdrawAsset(randomWallet, 1000);
+        liquidVault.withdrawAsset(_vaultAuth.assetReceiver, 1000);
         vm.stopPrank();
+
+        // fail - wallet not the asset receiver
+        vm.startPrank(_vaultAuth.assetManager);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                randomWallet,
+                liquidVault.ASSET_RECEIVER_ROLE()
+            )
+        );
+        liquidVault.withdrawAsset(randomWallet, 1000);
+    }
+
+    function test__LiquidContinuousMultiTokenVault__AccountNotInvestorReverts() public {
+        TestParamSet.TestParam memory anyParam = TestParamSet.TestParam(100, 0, 10);
+        LiquidContinuousMultiTokenVault liquidVault = _liquidVault;
+        address investorWallet = makeAddr("investor");
+        address nonInvestorWallet = makeAddr("nonInvestorWallet");
+        address anyWallet = address(0); // any wallet is fine - not involved in validation
+
+        // enable investor checking
+        vm.prank(_vaultAuth.operator);
+        _liquidVault.setShouldCheckInvestorRole(true);
+
+        bytes memory investorOnlyError = abi.encodeWithSelector(
+            LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvestorOnly.selector,
+            investorWallet,
+            nonInvestorWallet
+        );
+
+        // ======================= deposits =======================
+        //        function deposit(uint256 assets, address receiver) external returns (uint256 shares);
+        vm.prank(investorWallet);
+        vm.expectRevert(investorOnlyError);
+        liquidVault.deposit(anyParam.principal, nonInvestorWallet); // IMultiToken
+
+        vm.prank(investorWallet);
+        vm.expectRevert(investorOnlyError);
+        liquidVault.requestDeposit(anyParam.principal, anyWallet, nonInvestorWallet); // IComponent
+
+        vm.prank(investorWallet);
+        vm.expectRevert(investorOnlyError);
+        liquidVault.deposit(anyParam.principal, nonInvestorWallet, anyWallet); // IComponent
+
+        // ======================= redeems =======================
+        vm.prank(investorWallet);
+        vm.expectRevert(investorOnlyError);
+        liquidVault.redeemForDepositPeriod(anyParam.principal, anyWallet, nonInvestorWallet, anyParam.depositPeriod);
+
+        vm.prank(investorWallet);
+        vm.expectRevert(investorOnlyError);
+        liquidVault.redeemForDepositPeriod(
+            anyParam.principal, anyWallet, nonInvestorWallet, anyParam.depositPeriod, anyParam.redeemPeriod
+        );
+
+        vm.prank(investorWallet);
+        vm.expectRevert(investorOnlyError);
+        liquidVault.requestRedeem(anyParam.principal, anyWallet, nonInvestorWallet); // IComponent
+
+        vm.prank(investorWallet);
+        vm.expectRevert(investorOnlyError);
+        liquidVault.redeem(anyParam.principal, anyWallet, nonInvestorWallet); // IComponent
     }
 
     // Scenario: Calculating returns for a standard investment
