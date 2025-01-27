@@ -391,8 +391,8 @@ contract LiquidContinuousMultiTokenVault is
      * @param requestId Discriminator between non-fungible requests
      * @return shares Amount of pending redeem shares for the given requestId and controller
      */
-    function pendingRedeemRequest(uint256 requestId, address /* controller */ ) public view returns (uint256 shares) {
-        return unlockRequestAmount(_msgSender(), requestId);
+    function pendingRedeemRequest(uint256 requestId, address controller) public view returns (uint256 shares) {
+        return unlockRequestAmount(controller, requestId);
     }
 
     /**
