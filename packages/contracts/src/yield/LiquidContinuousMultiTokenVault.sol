@@ -60,6 +60,7 @@ contract LiquidContinuousMultiTokenVault is
         uint256 vaultStartTimestamp;
         uint256 redeemNoticePeriod;
         TripleRateContext.ContextParams contextParams;
+        bool shouldCheckInvestorRole;
     }
 
     IYieldStrategy public _yieldStrategy;
@@ -67,7 +68,7 @@ contract LiquidContinuousMultiTokenVault is
     uint256 public _vaultStartTimestamp;
 
     // [Jan-2025] added - must be after previous fields due to upgrading
-    bool public _shouldCheckInvestorRole = false;
+    bool public _shouldCheckInvestorRole = true;
 
     uint256 private constant ZERO_REQUEST_ID = 0;
 
@@ -106,6 +107,7 @@ contract LiquidContinuousMultiTokenVault is
         _yieldStrategy = vaultParams.yieldStrategy;
         _redeemOptimizer = vaultParams.redeemOptimizer;
         _vaultStartTimestamp = vaultParams.vaultStartTimestamp;
+        _shouldCheckInvestorRole = vaultParams.shouldCheckInvestorRole;
 
         if (vaultParams.contextParams.frequency != 360 && vaultParams.contextParams.frequency != 365) {
             revert LiquidContinuousMultiTokenVault__InvalidFrequency(vaultParams.contextParams.frequency);

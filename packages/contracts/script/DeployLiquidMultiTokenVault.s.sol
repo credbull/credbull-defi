@@ -130,7 +130,8 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
             redeemOptimizer: redeemOptimizer,
             vaultStartTimestamp: startTimestamp,
             redeemNoticePeriod: 1,
-            contextParams: contextParams
+            contextParams: contextParams,
+            shouldCheckInvestorRole: true
         });
 
         return vaultParams;

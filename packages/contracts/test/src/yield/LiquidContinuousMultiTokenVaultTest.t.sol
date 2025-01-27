@@ -300,7 +300,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         address nonInvestorWallet = makeAddr("nonInvestorWallet");
         address anyWallet = address(0); // any wallet is fine - not involved in validation
 
-        // enable investor checking
+        // ensure the investor check is enabled
         vm.prank(_vaultAuth.operator);
         _liquidVault.setShouldCheckInvestorRole(true);
 
@@ -310,8 +310,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             nonInvestorWallet
         );
 
-        // ======================= deposits =======================
-        //        function deposit(uint256 assets, address receiver) external returns (uint256 shares);
+        // ======================= deposits fail =======================
         vm.prank(investorWallet);
         vm.expectRevert(investorOnlyError);
         liquidVault.deposit(anyParam.principal, nonInvestorWallet); // IMultiToken
@@ -324,7 +323,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         vm.expectRevert(investorOnlyError);
         liquidVault.deposit(anyParam.principal, nonInvestorWallet, anyWallet); // IComponent
 
-        // ======================= redeems =======================
+        // ======================= redeems fail =======================
         vm.prank(investorWallet);
         vm.expectRevert(investorOnlyError);
         liquidVault.redeemForDepositPeriod(anyParam.principal, anyWallet, nonInvestorWallet, anyParam.depositPeriod);
@@ -342,6 +341,16 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         vm.prank(investorWallet);
         vm.expectRevert(investorOnlyError);
         liquidVault.redeem(anyParam.principal, anyWallet, nonInvestorWallet); // IComponent
+
+        // ======================= grant access - succeeds =======================
+        // grant investor role
+        vm.startPrank(_vaultAuth.owner);
+        _liquidVault.grantRole(_liquidVault.INVESTOR_ROLE(), nonInvestorWallet);
+        vm.stopPrank();
+
+        // deposit should succeed (no revert)
+        vm.prank(investorWallet);
+        liquidVault.deposit(0, nonInvestorWallet); // IMultiToken
     }
 
     // Scenario: Calculating returns for a standard investment

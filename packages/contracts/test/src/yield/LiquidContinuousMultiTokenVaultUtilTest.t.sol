@@ -36,6 +36,11 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         TestParamSet.TestParam memory testParams =
             TestParamSet.TestParam({ principal: 2_000 * scale, depositPeriod: 11, redeemPeriod: 71 });
 
+        // whitelist alice as an investor
+        vm.startPrank(_vaultAuth.owner);
+        vaultProxy.grantRole(vaultProxy.INVESTOR_ROLE(), alice);
+        vm.stopPrank();
+
         _warpToPeriod(vaultProxy, testParams.depositPeriod);
 
         vm.startPrank(alice);
