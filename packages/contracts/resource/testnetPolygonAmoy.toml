@@ -24,17 +24,17 @@ asset_manager = "0xd097E901FB9B75C2d2f97E142d73fA79C31FcAb3"
 # USDC token address - Polygon Amoy
 usdc_token="0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582"
 # Liquid Continuous Multi Token Vault Proxy
-liquid_vault_proxy=""
+liquid_vault_proxy="0xFbE87E74028389789948Ed009296198dB686da8A"
 # Liquid Continuous Multi Token Vault Impl (v2 - latest)
-liquid_vault_impl=""
+liquid_vault_impl="0x952B1487195B976A0B4aDCbaE418402eF9830Fd7"
 
 [evm.contracts.liquid_continuous_multi_token_vault]
 # rate in basis points, e.g.  10% = 1000 bps
 full_rate_bps = 10_00
 # rate in basis points, e.g.  0% = 0 bps
 reduced_rate_bps = 0
-# January 29, 2025 4:00:00 PM UTC = 1738166400
-vault_start_timestamp = 1738166400
+# January 30, 2025 4:00:00 PM UTC = 1738252800
+vault_start_timestamp = 1738252800
 
 [services.supabase]
 url = ""
