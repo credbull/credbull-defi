@@ -1,0 +1,43 @@
+##
+# The Application Configuration for the TestNet Environment.
+##
+
+[evm]
+# blockchain id, e.g. baseSepolia=84532, arbSepolia=421614, polygonAmoy=80002
+chain_id = 80002
+deploy_mocks = false
+
+[evm.address]
+# credbull-devops wallets.  wallet numbers are 1-based (as opposed to 0-based in anvil)
+# devops admin/owner (wallet 1) - public address, okay to share
+owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
+# devops operator (wallet 2) - public address, okay to share
+operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
+# devops custodian (wallet 3) - public address, okay to share
+custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
+# devops upgrader (wallet 4) - public address, okay to share
+upgrader = "0x77f07B5d5E03e39Dc42FBCa53F122D4c1851B939"
+# devops asset manager (wallet 7) - public address, okay to share
+asset_manager = "0xd097E901FB9B75C2d2f97E142d73fA79C31FcAb3"
+# CBL token address - not on Polygon Amoy
+# cbl_token=""
+# USDC token address - Polygon Amoy
+usdc_token="0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582"
+# Liquid Continuous Multi Token Vault Proxy
+liquid_vault_proxy=""
+# Liquid Continuous Multi Token Vault Impl (v2 - latest)
+liquid_vault_impl=""
+
+[evm.contracts.liquid_continuous_multi_token_vault]
+# rate in basis points, e.g.  10% = 1000 bps
+full_rate_bps = 10_00
+# rate in basis points, e.g.  0% = 0 bps
+reduced_rate_bps = 0
+# January 29, 2025 4:00:00 PM UTC = 1738166400
+vault_start_timestamp = 1738166400
+
+[services.supabase]
+url = ""
+
+# Save the contract deployment details to the database.
+update_contract_addresses = false
