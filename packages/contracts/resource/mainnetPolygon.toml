@@ -1,0 +1,43 @@
+##
+# The Application Configuration for the TestNet Environment.
+##
+
+[evm]
+# blockchain id, e.g. arbitrumOne=42161, polygonPoS=137
+chain_id = 137
+deploy_mocks = false
+
+[evm.address]
+# PrimeVault wallets available ONLY on specific EVM chains, e.g.:  Ethereum, Arbitrum, Optimism, Polygon
+# primevault Wallet [0xFa..0519] "Credbull Eng - Owner Role v1.0"
+owner = "0xFa0C9EB3fd284a87c82b9809162DefEa36070519"
+# primevault Wallet [0x5F..bBf1] "Credbull Eng - Operator Role v1.0"
+operator = "0x5FAbE5420116E061D0711D849DAA4788F0d4bBf1"
+# primevault Wallet [0x1E..81b1] "Credbull Eng - Upgrader Role v1.0"
+upgrader = "0x1E2D099F4681394B0c130e7cCcc3F5275eCa81b1"
+# primevault Wallet [0x1D..7BFB] "Credbull Eng - Asset Manager Role v1.0"
+asset_manager = "0x1DA51e4Ab5D029034Db2caB258EC4e22Be647BFB"
+# primevault Wallet [0xce..3FB2] "Credbull DeFi Vault - Treasury v1.0"
+custodian = "0xce694E94e1Ddb734f2bD32B2511D193fF2783FB2"
+# CBL token address - not on Polygon
+# cbl_token=""
+# USDC token address - Polygon
+usdc_token="0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+# Liquid Continuous Multi Token Vault Proxy
+liquid_vault_proxy="0xb89846b74f3B190F6e00fc35B3aFfCDF5d4BB9f9"
+# Liquid Continuous Multi Token Vault Impl (v2 - latest)
+liquid_vault_impl="0x8f87E1258d645d948F270221C34202Be0583F29b"
+
+[evm.contracts.liquid_continuous_multi_token_vault]
+# rate in basis points, e.g.  10% = 1000 bps
+full_rate_bps = 10_00
+# rate in basis points, e.g.  0% = 0 bps
+reduced_rate_bps = 0
+# January 30, 2025 4:00:00 PM UTC = 1738252800
+vault_start_timestamp = 1738252800
+
+[services.supabase]
+url = ""
+
+# Save the contract deployment details to the database.
+update_contract_addresses = false
