@@ -31,6 +31,9 @@ deploy-plumeTestnet:
 resume-plumeTestnet:
 	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://test-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow --resume"
 
+deploy-polygonAmoy:
+	$(MAKE) deploy RPC_URL=polygonAmoy EXTRA_FLAGS="--verify --slow"
+
 deploy-plume:
 	$(MAKE) deploy RPC_URL=plume EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://phoenix-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow"
 
@@ -42,6 +45,9 @@ deploy-arbitrum:
 
 resume-arbitrum:
 	$(MAKE) deploy RPC_URL=arbitrum EXTRA_FLAGS="--verify --slow --resume"
+
+deploy-polygon:
+	$(MAKE) deploy RPC_URL=polygon EXTRA_FLAGS="--verify --slow"
 
 # NOTE (JL,2024-05-20): `forge` auto-includes any `.env` file in the invocation directory.
 deploy:
