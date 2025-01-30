@@ -19,6 +19,12 @@ export async function getNFTsForOwner(chainId: number, owner: string, contract: 
       case 421614:
         chain = Network.ARB_SEPOLIA;
         break;
+      case 80002:
+        chain = Network.MATIC_AMOY;
+        break;
+      case 137:
+        chain = Network.MATIC_MAINNET;
+        break;
       default:
         chain = Network.ARB_SEPOLIA;
         break;
