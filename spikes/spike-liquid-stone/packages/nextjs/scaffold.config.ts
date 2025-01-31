@@ -5,6 +5,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 console.log(`*** Config loaded, network is ${process.env.NEXT_PUBLIC_NETWORK}`);
+console.log(`*** Custodian is ${process.env.NEXT_PUBLIC_CUSTODIAN}`);
 
 const plume: Chain = {
   id: 98865,
