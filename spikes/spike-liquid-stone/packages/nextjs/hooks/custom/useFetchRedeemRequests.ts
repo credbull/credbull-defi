@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ethers } from "ethers";
+import { Contract, ethers } from "ethers";
 import { useChainId, useChains } from "wagmi";
 import { RedeemRequest } from "~~/types/vault";
 import { notification } from "~~/utils/scaffold-eth";
@@ -28,6 +28,15 @@ export const useFetchRedeemRequests = ({
   useEffect(() => {
     setRedeemRequestsFetched(false);
 
+    async function getRedeemPeriod(contract: Contract) {
+      try {
+        return contract.minUnlockPeriod();
+      } catch (error) {
+        console.error(`Unable to fetch minimum lock period, defaulting to currentPeriod + 1`, error);
+        return Promise.resolve(currentPeriod + 1);
+      }
+    }
+
     async function getRequestIds() {
       if (!address || !deployedContractAddress || !deployedContractAbi || !chain) {
         setRedeemRequestsFetched(true);
@@ -35,10 +44,9 @@ export const useFetchRedeemRequests = ({
       }
 
       const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
-      const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
+      const contract: Contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
       const requests: RedeemRequest[] = [];
-
-      const redeemPeriod = await contract.minUnlockPeriod();
+      const redeemPeriod = await getRedeemPeriod(contract);
 
       for (let i = 0; i <= redeemPeriod; i++) {
         try {
