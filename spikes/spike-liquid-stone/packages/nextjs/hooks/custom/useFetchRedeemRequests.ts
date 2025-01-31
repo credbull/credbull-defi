@@ -38,7 +38,9 @@ export const useFetchRedeemRequests = ({
       const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
       const requests: RedeemRequest[] = [];
 
-      for (let i = 0; i <= currentPeriod + 1; i++) {
+      const redeemPeriod = await contract.minUnlockPeriod();
+
+      for (let i = 0; i <= redeemPeriod; i++) {
         try {
           await createRedeemRequest(i);
         } catch (error) {
