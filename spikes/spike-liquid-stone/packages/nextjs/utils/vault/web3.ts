@@ -1,7 +1,11 @@
-import { Alchemy, AlchemySettings, Network, OwnedNft } from "alchemy-sdk";
+import { Alchemy, OwnedNft } from "alchemy-sdk";
+import { getTargetNetworkById } from "~~/utils/scaffold-eth";
 
 export async function getNFTsForOwner(chainId: number, owner: string, contract: string) {
-  if ([31337, 98864].includes(chainId)) {
+  const chainAttributes = getTargetNetworkById(chainId);
+
+  // manually handle chains not on alchemy (e.g. anvil, plume)
+  if (!chainAttributes || !chainAttributes.alchemyApiNetwork) {
     return {
       nfts: Array.from(
         { length: 101 },
@@ -13,29 +17,10 @@ export async function getNFTsForOwner(chainId: number, owner: string, contract: 
       fetchedWithAlchemy: false,
     };
   } else {
-    let chain: Network;
-
-    switch (chainId) {
-      case 421614:
-        chain = Network.ARB_SEPOLIA;
-        break;
-      case 80002:
-        chain = Network.MATIC_AMOY;
-        break;
-      case 137:
-        chain = Network.MATIC_MAINNET;
-        break;
-      default:
-        chain = Network.ARB_SEPOLIA;
-        break;
-    }
-
-    const settings: AlchemySettings = {
+    const alchemy = new Alchemy({
       apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-      network: chain,
-    };
-
-    const alchemy = new Alchemy(settings);
+      network: chainAttributes.alchemyApiNetwork,
+    });
 
     const nfts = await alchemy.nft.getNftsForOwner(owner, {
       contractAddresses: [contract],

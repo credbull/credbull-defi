@@ -1,5 +1,12 @@
+import { Network } from "alchemy-sdk";
 import * as chains from "viem/chains";
-import scaffoldConfig from "~~/scaffold.config";
+import scaffoldConfig, { plume, plumeTestnet } from "~~/scaffold.config";
+import {
+  ChainAddresses,
+  plumeMainnetSafe,
+  primvevaultCredbullDefi,
+  testnetCredbullDevops,
+} from "~~/utils/scaffold-eth/chainAddresses";
 
 type ChainAttributes = {
   // color | [lightThemeColor, darkThemeColor]
@@ -7,6 +14,12 @@ type ChainAttributes = {
   // Used to fetch price by providing mainnet token address
   // for networks having native currency other than ETH
   nativeCurrencyTokenAddress?: string;
+
+  // alchemy Api's Network
+  alchemyApiNetwork?: Network;
+
+  // Chain well-known addresses
+  addresses?: ChainAddresses;
 };
 
 export type ChainWithAttributes = chains.Chain & Partial<ChainAttributes>;
@@ -42,44 +55,47 @@ export const getAlchemyHttpUrl = (chainId: number) => {
 export const NETWORKS_EXTRA_DATA: Record<string, ChainAttributes> = {
   [chains.hardhat.id]: {
     color: "#b8af0c",
+    addresses: testnetCredbullDevops,
   },
   [chains.mainnet.id]: {
-    color: "#ff8b9e",
+    color: "#1b550a",
+    alchemyApiNetwork: Network.ETH_MAINNET,
+    addresses: primvevaultCredbullDefi,
   },
   [chains.sepolia.id]: {
-    color: ["#5f4bb6", "#87ff65"],
-  },
-  [chains.gnosis.id]: {
-    color: "#48a9a6",
+    color: "#2c910f",
+    alchemyApiNetwork: Network.ETH_SEPOLIA,
+    addresses: testnetCredbullDevops,
   },
   [chains.polygon.id]: {
-    color: "#2bbdf7",
+    color: "#762bf7",
+    alchemyApiNetwork: Network.MATIC_MAINNET,
+    addresses: primvevaultCredbullDefi,
     nativeCurrencyTokenAddress: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
   },
-  [chains.polygonMumbai.id]: {
-    color: "#92D9FA",
+  [chains.polygonAmoy.id]: {
+    color: "#9b2bf7",
+    alchemyApiNetwork: Network.MATIC_AMOY,
+    addresses: testnetCredbullDevops,
     nativeCurrencyTokenAddress: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
   },
-  [chains.optimismSepolia.id]: {
-    color: "#f01a37",
-  },
-  [chains.optimism.id]: {
-    color: "#f01a37",
+  [chains.arbitrum.id]: {
+    color: "#095077",
+    addresses: primvevaultCredbullDefi,
+    alchemyApiNetwork: Network.ARB_MAINNET,
   },
   [chains.arbitrumSepolia.id]: {
     color: "#28a0f0",
+    alchemyApiNetwork: Network.ARB_SEPOLIA,
+    addresses: testnetCredbullDevops,
   },
-  [chains.arbitrum.id]: {
-    color: "#28a0f0",
+  [plume.id]: {
+    color: "#ff6b81",
+    addresses: plumeMainnetSafe,
   },
-  [chains.fantom.id]: {
-    color: "#1969ff",
-  },
-  [chains.fantomTestnet.id]: {
-    color: "#1969ff",
-  },
-  [chains.scrollSepolia.id]: {
-    color: "#fbebd4",
+  [plumeTestnet.id]: {
+    color: "#ff94a1",
+    addresses: testnetCredbullDevops,
   },
 };
 
@@ -133,4 +149,8 @@ export function getTargetNetworks(): ChainWithAttributes[] {
     ...targetNetwork,
     ...NETWORKS_EXTRA_DATA[targetNetwork.id],
   }));
+}
+
+export function getTargetNetworkById(chainId: number | undefined): ChainWithAttributes | undefined {
+  return getTargetNetworks().find(network => network.id === chainId);
 }
