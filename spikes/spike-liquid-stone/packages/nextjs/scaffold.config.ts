@@ -6,7 +6,7 @@ dotenv.config();
 
 console.log(`*** Config loaded, network is ${process.env.NEXT_PUBLIC_NETWORK}`);
 
-const plume: Chain = {
+export const plume: Chain = {
   id: 98865,
   name: "Plume",
   nativeCurrency: { name: "Plume Ethereum", symbol: "ETH", decimals: 18 },
@@ -22,7 +22,7 @@ const plume: Chain = {
   testnet: true,
 } as Chain;
 
-const plumeTestnet: Chain = {
+export const plumeTestnet: Chain = {
   id: 98864,
   name: "Plume Testnet",
   nativeCurrency: { name: "Plume Ethereum", symbol: "ETH", decimals: 18 },

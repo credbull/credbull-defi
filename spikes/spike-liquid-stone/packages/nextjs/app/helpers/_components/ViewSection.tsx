@@ -6,7 +6,7 @@ import UserDataSection from "./UserDataSection";
 import { ethers } from "ethers";
 import { useTheme } from "next-themes";
 import { waitForTransactionReceipt } from "viem/actions";
-import { useAccount, useWalletClient, useWriteContract } from "wagmi";
+import { useAccount, useWalletClient, useWriteContract, useChainId } from "wagmi";
 import ActionCard from "~~/components/general/ActionCard";
 import Button from "~~/components/general/Button";
 import ContractValueBadge from "~~/components/general/ContractValueBadge";
@@ -20,6 +20,7 @@ import { notification } from "~~/utils/scaffold-eth";
 import { ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
 import { getAllContracts } from "~~/utils/scaffold-eth/contractsData";
 import { formatAddress, formatNumber } from "~~/utils/vault/general";
+import { getTargetNetworkById } from "~~/utils/scaffold-eth";
 
 const contractsData = getAllContracts();
 
@@ -27,6 +28,7 @@ const ViewSection = () => {
   const { resolvedTheme } = useTheme();
   const { data: client } = useWalletClient();
   const { address } = useAccount();
+  const chainId = useChainId();
 
   const [mounted, setMounted] = useState(false);
   const [refetch, setRefetch] = useState(false);
@@ -55,7 +57,13 @@ const ViewSection = () => {
   );
   const { data: proxyContractData, isLoading: proxyContractLoading } = useDeployedContractInfo(contractNames[5]);
 
-  const custodian = process.env.NEXT_PUBLIC_CUSTODIAN || "";
+  const custodian = getTargetNetworkById(chainId)?.addresses?.credbullCustody || "";
+  if (!chainId) {
+    console.error("🚨 Chain Id is undefined! Be careful operations are on the correct chain!");
+    throw new Error("Chain Id not detected. Please connect to a supported network.");
+  }
+
+  const custodianBlockExplorerUrl = `${client?.chain?.blockExplorers?.default?.url}/address/${custodian}`;
 
   const { currentPeriod, startTimestamp, previousReducedRate } = useFetchContractData({
     deployedContractAddress: proxyContractData?.address || "",
@@ -672,6 +680,12 @@ const ViewSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             <ActionCard>
               <h2 className="text-xl font-bold mb-4">Withdraw Funds</h2>
+              <span className="text-base">
+                Custodian:
+                <a href={custodianBlockExplorerUrl} className="link">
+                  {custodian}
+                </a>
+              </span>
               <Input
                 type="text"
                 value={assets}
