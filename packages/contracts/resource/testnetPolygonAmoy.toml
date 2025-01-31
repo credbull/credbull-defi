@@ -35,6 +35,8 @@ full_rate_bps = 10_00
 reduced_rate_bps = 0
 # January 30, 2025 4:00:00 PM UTC = 1738252800
 vault_start_timestamp = 1738252800
+# notice period in days
+redeem_notice_period  = 5
 
 [services.supabase]
 url = ""
