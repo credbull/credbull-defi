@@ -91,10 +91,11 @@ contract DeployAndLoadLiquidMultiTokenVault is DeployLiquidMultiTokenVault {
         IERC20 asset = IERC20(vault.asset());
         uint256 scale = 10 ** IERC20Metadata(vault.asset()).decimals();
 
-        // --------------------- gift user funds ---------------------
+        // --------------------- gift user funds & whitelist ---------------------
 
         vm.startBroadcast(_owner.key());
         asset.transfer(userWallet.addr(), 1_000_000 * scale);
+        vault.grantRole(vault.INVESTOR_ROLE(), userWallet.addr());
         vm.stopBroadcast();
 
         // --------------------- load deposits ---------------------

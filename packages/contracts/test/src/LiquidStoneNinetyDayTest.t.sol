@@ -29,6 +29,7 @@ contract DeployLiquidStoneNinetyDay is DeployLiquidMultiTokenVault {
         vaultParams.redeemNoticePeriod = 0;
         vaultParams.contextParams.fullRateScaled = 10 * scale;
         vaultParams.contextParams.initialReducedRate.interestRate = 0; // zero for less than tenor
+        vaultParams.shouldCheckInvestorRole = false;
 
         return vaultParams;
     }

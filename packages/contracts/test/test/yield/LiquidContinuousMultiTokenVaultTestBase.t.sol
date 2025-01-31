@@ -25,7 +25,8 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
         owner: makeAddr("owner"),
         operator: makeAddr("operator"),
         upgrader: makeAddr("upgrader"),
-        assetManager: makeAddr("assetManager")
+        assetManager: makeAddr("assetManager"),
+        assetReceiver: makeAddr("assetReceiver")
     });
 
     IERC20Metadata internal _asset;
@@ -37,6 +38,11 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IMultiTokenVaultTes
     function setUp() public virtual {
         DeployLiquidMultiTokenVault _deployVault = new DeployLiquidMultiTokenVault();
         _liquidVault = _deployVault.run(_vaultAuth);
+
+        // disable the investor whitelist check - test users are already complex
+        // tested instead specifically in test__LiquidContinuousMultiTokenVault__AccountNotInvestorReverts
+        vm.prank(_vaultAuth.operator);
+        _liquidVault.setShouldCheckInvestorRole(false);
 
         // warp to a "real time" time rather than block.timestamp=1
         vm.warp(_liquidVault._vaultStartTimestamp() + 1);
