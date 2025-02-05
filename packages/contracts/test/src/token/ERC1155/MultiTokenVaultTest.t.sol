@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 import { MultiTokenVault } from "@credbull/token/ERC1155/MultiTokenVault.sol";
+import { IVault } from "@test/test/token/ERC4626/IVault.sol";
 
 import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
 
@@ -27,7 +28,12 @@ contract MultiTokenVaultTest is IVaultTestSuite {
         _multiTokenVault = _createMultiTokenVault(_createAsset(_owner), TEST_ASSET_TO_SHARE_RATIO, 10);
         _multiTokenVerifier = new MultiTokenVaultDailyPeriodsVerifier();
 
-        init(_multiTokenVault, _multiTokenVerifier);
+        init(_toIVault(_multiTokenVault), _multiTokenVerifier);
+    }
+
+    /// @dev - TODO - directly inherit from IVault with next version
+    function _toIVault(IMultiTokenVault multiTokenVault) internal pure returns (IVault vault_) {
+        return IVault(address(multiTokenVault));
     }
 
     function test__MultiTokenVaultTest__DepositBatchRedeemOnTenor2() public {
@@ -56,7 +62,7 @@ contract MultiTokenVaultTest is IVaultTestSuite {
 
         uint256 currentPeriod = testParam.redeemPeriod - 1;
 
-        _multiTokenVerifier._warpToPeriod(_multiTokenVault, currentPeriod);
+        _multiTokenVerifier._warpToPeriod(_toIVault(_multiTokenVault), currentPeriod);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -75,7 +81,7 @@ contract MultiTokenVaultTest is IVaultTestSuite {
 
         uint256 sharesToRedeem = 1;
 
-        _multiTokenVerifier._warpToPeriod(_multiTokenVault, testParam.redeemPeriod);
+        _multiTokenVerifier._warpToPeriod(_toIVault(_multiTokenVault), testParam.redeemPeriod);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -103,7 +109,7 @@ contract MultiTokenVaultTest is IVaultTestSuite {
         uint256 shares = _multiTokenVault.deposit(testParams.principal, _alice);
 
         // ------------ redeem - without allowance ------------
-        _multiTokenVerifier._warpToPeriod(_multiTokenVault, testParams.redeemPeriod);
+        _multiTokenVerifier._warpToPeriod(_toIVault(_multiTokenVault), testParams.redeemPeriod);
 
         address allowanceAccount = makeAddr("allowanceAccount");
 
@@ -154,7 +160,7 @@ contract MultiTokenVaultTest is IVaultTestSuite {
         TestParamSet.TestUsers memory testUsers = TestParamSet.toSingletonUsers(_alice);
 
         uint256[] memory shares =
-            _multiTokenVerifier._verifyDepositOnlyBatch(testUsers, _multiTokenVault, _batchTestParams);
+            _multiTokenVerifier._verifyDepositOnlyBatch(testUsers, _toIVault(_multiTokenVault), _batchTestParams);
         uint256[] memory depositPeriods = _batchTestParams.depositPeriods();
         uint256[] memory depositPeriodsToRevert = _batchTestParamsToRevert.depositPeriods();
 
@@ -285,7 +291,7 @@ contract MultiTokenVaultTest is IVaultTestSuite {
         assertEq(isApproved, false, "Operator should not be approved");
     }
 
-    function test__MultiTokenVaultTest__MaxDeposit() public {
+    function test__MultiTokenVaultTest__MaxDeposit() public view {
         uint256 maxDepositValue = _multiTokenVault.maxDeposit(_alice);
         assertEq(maxDepositValue, type(uint256).max, "Max deposit should be uint256 max");
     }

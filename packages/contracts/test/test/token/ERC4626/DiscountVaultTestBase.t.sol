@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import { IDiscountVault } from "./IDiscountVault.sol";
+import { IDiscountVault } from "@test/test/token/ERC4626/IDiscountVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { Test } from "forge-std/Test.sol";
-import { DiscountVault } from "./DiscountVault.sol";
+import { DiscountVault } from "@test/test/token/ERC4626/DiscountVault.sol";
 
 abstract contract DiscountVaultTestBase is Test {
     using Math for uint256;

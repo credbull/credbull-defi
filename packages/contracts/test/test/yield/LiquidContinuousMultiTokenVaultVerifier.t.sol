@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
-import { IVault } from "@credbull/token/ERC4626/IVault.sol";
+import { IVault } from "@test/test/token/ERC4626/IVault.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
 
 import { IMultiTokenVaultVerifierBase } from "@test/test/token/ERC1155/IMultiTokenVaultVerifierBase.t.sol";
@@ -71,7 +71,7 @@ contract LiquidContinuousMultiTokenVaultVerifier is IMultiTokenVaultVerifierBase
         uint256 prevBalanceOf = liquidVault.balanceOf(redeemUsers.tokenOwner, testParam.depositPeriod);
 
         // request unlock
-        _warpToPeriod(liquidVault, testParam.redeemPeriod - liquidVault.noticePeriod());
+        _warpToPeriod(vault, testParam.redeemPeriod - liquidVault.noticePeriod());
 
         vm.prank(redeemUsers.tokenOwner);
         liquidVault.setApprovalForAll(redeemUsers.tokenOperator, true);
@@ -118,7 +118,7 @@ contract LiquidContinuousMultiTokenVaultVerifier is IMultiTokenVaultVerifierBase
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
     ) public virtual {
-        _warpToPeriod(liquidVault, redeemPeriod - liquidVault.noticePeriod());
+        _warpToPeriodLV(liquidVault, redeemPeriod - liquidVault.noticePeriod());
 
         uint256 sharesToRedeem = depositTestParams.totalPrincipal();
 
@@ -185,7 +185,7 @@ contract LiquidContinuousMultiTokenVaultVerifier is IMultiTokenVaultVerifierBase
     ) internal virtual override returns (uint256 assets_) {
         LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
 
-        _warpToPeriod(vault, redeemPeriod); // warp the vault to redeem period
+        _warpToPeriod(_toIVault(vault), redeemPeriod); // warp the vault to redeem period
 
         // authorize the tokenOperator
         vm.prank(redeemUsers.tokenOwner);
@@ -252,8 +252,11 @@ contract LiquidContinuousMultiTokenVaultVerifier is IMultiTokenVaultVerifierBase
 
     /// @dev this assumes timePeriod is in days
     function _warpToPeriod(IVault vault, uint256 timePeriod) public override {
-        LiquidContinuousMultiTokenVault liquidVault = LiquidContinuousMultiTokenVault(address(vault));
+        return _warpToPeriodLV(LiquidContinuousMultiTokenVault(address(vault)), timePeriod);
+    }
 
+    /// @dev this assumes timePeriod is in days
+    function _warpToPeriodLV(LiquidContinuousMultiTokenVault liquidVault, uint256 timePeriod) public {
         uint256 warpToTimeInSeconds = liquidVault._vaultStartTimestamp() + timePeriod * 24 hours;
 
         vm.warp(warpToTimeInSeconds);

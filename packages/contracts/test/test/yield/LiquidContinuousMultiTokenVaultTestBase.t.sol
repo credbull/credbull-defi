@@ -5,6 +5,7 @@ import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuou
 import { TripleRateYieldStrategy } from "@credbull/yield/strategy/TripleRateYieldStrategy.sol";
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
+import { IVault } from "@test/test/token/ERC4626/IVault.sol";
 
 import { DeployLiquidMultiTokenVault } from "@script/DeployLiquidMultiTokenVault.s.sol";
 import { LiquidContinuousMultiTokenVaultVerifier } from "@test/test/yield/LiquidContinuousMultiTokenVaultVerifier.t.sol";
@@ -34,7 +35,12 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
         // warp to a "real time" time rather than block.timestamp=1
         vm.warp(_liquidVault._vaultStartTimestamp() + 1);
 
-        init(_liquidVault, _liquidVerifier);
+        init(_toIVault(_liquidVault), _liquidVerifier);
+    }
+
+    /// @dev - TODO - directly inherit from IVault with next version
+    function _toIVault(LiquidContinuousMultiTokenVault liquidVault) internal pure returns (IVault vault_) {
+        return IVault(address(liquidVault));
     }
 
     // LiquidStone exception case - [FAIL: RedeemOptimizer__OptimizerFailed(0, 106000000 [1.06e8])]
@@ -47,14 +53,14 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
             TestParamSet.TestParam({ principal: 106 * _scale, depositPeriod: _tenor - 1, redeemPeriod: _tenor - 1 });
 
         uint256[] memory sharesAtPeriods =
-            _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _liquidVault, testParams);
+            _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _toIVault(_liquidVault), testParams);
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 RedeemOptimizerFIFO.RedeemOptimizer__OptimizerFailed.selector, 0, testParams[0].principal
             )
         );
-        _liquidVerifier._verifyRedeemOnlyBatch(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
+        _liquidVerifier._verifyRedeemOnlyBatch(redeemUsers, _toIVault(_liquidVault), testParams, sharesAtPeriods);
     }
 
     function _createVaultParams(LiquidContinuousMultiTokenVault.VaultAuth memory vaultAuth)

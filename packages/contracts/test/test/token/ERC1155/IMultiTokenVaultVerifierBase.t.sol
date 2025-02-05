@@ -2,13 +2,18 @@
 pragma solidity ^0.8.20;
 
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
-import { IVault } from "@credbull/token/ERC4626/IVault.sol";
+import { IVault } from "@test/test/token/ERC4626/IVault.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IVaultVerifierBase } from "@test/test/token/ERC4626/IVaultVerifierBase.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
     using TestParamSet for TestParamSet.TestParam[];
+
+    /// @dev - TODO - directly inherit from IVault with next version
+    function _toIVault(IMultiTokenVault multiTokenVault) internal pure returns (IVault vault_) {
+        return IVault(address(multiTokenVault));
+    }
 
     /// @dev test the vault at the given test parameters
     function verifyVaultBatch(
@@ -50,7 +55,7 @@ abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
         uint256 splitBefore
     ) internal returns (uint256[] memory sharesAtPeriods_, uint256 assetsAtPeriods1_, uint256 assetsAtPeriods2_) {
         // NB - test all of the deposits BEFORE redeems.  verifies no side-effects from deposits when redeeming.
-        uint256[] memory sharesAtPeriods = _verifyDepositOnlyBatch(depositUsers, vault, testParams);
+        uint256[] memory sharesAtPeriods = _verifyDepositOnlyBatch(depositUsers, _toIVault(vault), testParams);
 
         // NB - test all of the redeems AFTER deposits.  verifies no side-effects from deposits when redeeming.
         uint256 finalRedeemPeriod = testParams.latestRedeemPeriod();
@@ -76,44 +81,45 @@ abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
         virtual
         returns (uint256 actualSharesAtPeriod, uint256 actualAssetsAtPeriod)
     {
+        IVault iVault = _toIVault(vault);
         uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed(); // save previous state for later
 
         // ------------------- check toShares/toAssets - specified period -------------------
         actualSharesAtPeriod = vault.convertToSharesForDepositPeriod(testParam.principal, testParam.depositPeriod);
         assertApproxEqAbs(
-            _expectedShares(vault, testParam),
+            _expectedShares(_toIVault(vault), testParam),
             actualSharesAtPeriod,
             TOLERANCE,
             _assertMsg(
-                "convertToSharesForDepositPeriod shares don't match expected shares", vault, testParam.depositPeriod
+                "convertToSharesForDepositPeriod shares don't match expected shares", iVault, testParam.depositPeriod
             )
         );
 
         actualAssetsAtPeriod =
             vault.convertToAssetsForDepositPeriod(actualSharesAtPeriod, testParam.depositPeriod, testParam.redeemPeriod);
 
-        uint256 expectedAssetsAtRedeem = testParam.principal + _expectedReturns(vault, testParam);
+        uint256 expectedAssetsAtRedeem = testParam.principal + _expectedReturns(iVault, testParam);
 
         assertApproxEqAbs(
             expectedAssetsAtRedeem,
             actualAssetsAtPeriod,
             TOLERANCE,
-            _assertMsg("yield does not equal principal + interest", vault, testParam.depositPeriod)
+            _assertMsg("yield does not equal principal + interest", iVault, testParam.depositPeriod)
         );
 
         // ------------------- check toShares/toAssets - current period -------------------
-        _warpToPeriod(vault, testParam.depositPeriod); // warp to deposit
+        _warpToPeriod(iVault, testParam.depositPeriod); // warp to deposit
         uint256 actualShares = vault.convertToShares(testParam.principal);
 
-        _warpToPeriod(vault, testParam.redeemPeriod); // warp to redeem
+        _warpToPeriod(iVault, testParam.redeemPeriod); // warp to redeem
         assertApproxEqAbs(
             expectedAssetsAtRedeem,
             vault.convertToAssetsForDepositPeriod(actualShares, testParam.depositPeriod),
             TOLERANCE,
-            _assertMsg("toShares/toAssets yield does not equal principal + interest", vault, testParam.depositPeriod)
+            _assertMsg("toShares/toAssets yield does not equal principal + interest", iVault, testParam.depositPeriod)
         );
 
-        _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore to previous state
+        _warpToPeriod(iVault, prevVaultPeriodsElapsed); // restore to previous state
 
         return (actualAssetsAtPeriod, actualAssetsAtPeriod);
     }
@@ -124,22 +130,23 @@ abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
         virtual
         returns (uint256 actualSharesAtPeriod, uint256 actualAssetsAtPeriod)
     {
+        IVault iVault = _toIVault(vault);
         uint256 prevVaultPeriodsElapsed = vault.currentPeriodsElapsed();
 
         // ------------------- check previewDeposit/previewRedeem - current period -------------------
-        _warpToPeriod(vault, testParam.depositPeriod); // warp to deposit
+        _warpToPeriod(iVault, testParam.depositPeriod); // warp to deposit
         actualSharesAtPeriod = vault.previewDeposit(testParam.principal);
         assertApproxEqAbs(
-            _expectedShares(vault, testParam),
+            _expectedShares(iVault, testParam),
             actualSharesAtPeriod,
             TOLERANCE,
-            _assertMsg("previewDeposit shares don't match expected shares", vault, testParam.depositPeriod)
+            _assertMsg("previewDeposit shares don't match expected shares", iVault, testParam.depositPeriod)
         );
 
-        _warpToPeriod(vault, testParam.redeemPeriod); // warp to redeem / withdraw
+        _warpToPeriod(iVault, testParam.redeemPeriod); // warp to redeem / withdraw
         actualAssetsAtPeriod = vault.previewRedeemForDepositPeriod(actualSharesAtPeriod, testParam.depositPeriod);
 
-        uint256 expectedAssetsAtRedeem = testParam.principal + _expectedReturns(vault, testParam);
+        uint256 expectedAssetsAtRedeem = testParam.principal + _expectedReturns(iVault, testParam);
 
         // check previewRedeem
         assertApproxEqAbs(
@@ -147,11 +154,13 @@ abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
             actualAssetsAtPeriod,
             TOLERANCE,
             _assertMsg(
-                "previewDeposit/previewRedeem yield does not equal principal + interest", vault, testParam.depositPeriod
+                "previewDeposit/previewRedeem yield does not equal principal + interest",
+                iVault,
+                testParam.depositPeriod
             )
         );
 
-        _warpToPeriod(vault, prevVaultPeriodsElapsed); // restore previous period state
+        _warpToPeriod(iVault, prevVaultPeriodsElapsed); // restore previous period state
 
         return (actualSharesAtPeriod, actualAssetsAtPeriod);
     }
@@ -163,7 +172,7 @@ abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod // we are testing multiple deposits into one redeemPeriod
     ) internal virtual returns (uint256 assets_) {
-        _warpToPeriod(vault, redeemPeriod);
+        _warpToPeriod(_toIVault(vault), redeemPeriod);
 
         IERC20 asset = IERC20(vault.asset());
 
@@ -207,7 +216,7 @@ abstract contract IMultiTokenVaultVerifierBase is IVaultVerifierBase {
         TestParamSet.TestParam[] memory depositTestParams,
         uint256 redeemPeriod
     ) internal virtual returns (uint256 assets_) {
-        _warpToPeriod(vault, redeemPeriod); // warp the vault to redeem period
+        _warpToPeriod(_toIVault(vault), redeemPeriod); // warp the vault to redeem period
 
         // authorize the tokenOperator
         vm.prank(redeemUsers.tokenOwner);

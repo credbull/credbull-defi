@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { IVault } from "@credbull/token/ERC4626/IVault.sol";
+import { IVault } from "@test/test/token/ERC4626/IVault.sol";
 
 import { IVaultVerifier } from "@test/test/token/ERC4626/IVaultVerifier.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";

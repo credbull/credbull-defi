@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { LiquidContinuousMultiTokenVault } from "@credbull/yield/LiquidContinuousMultiTokenVault.sol";
-import { DeployAndLoadLiquidMultiTokenVault } from "./DeployAndLoadLiquidMultiTokenVault.s.sol";
+import { DeployAndLoadLiquidMultiTokenVault } from "@test/test/script/DeployAndLoadLiquidMultiTokenVault.s.sol";
 import { TestUtil } from "@test/test/util/TestUtil.t.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 

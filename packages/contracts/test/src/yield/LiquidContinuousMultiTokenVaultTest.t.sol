@@ -24,8 +24,8 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             redeemPeriod: redeemPeriod
         });
         uint256[] memory sharesAtPeriods =
-            _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _liquidVault, testParams);
-        _liquidVerifier._verifyRedeemOnlyBatch(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
+            _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _toIVault(_liquidVault), testParams);
+        _liquidVerifier._verifyRedeemOnlyBatch(redeemUsers, _toIVault(_liquidVault), testParams, sharesAtPeriods);
     }
 
     // @dev [Oct 25, 2024] Succeeds with: from=1 and to=600 ; Fails with: from=1 and to=650
@@ -41,10 +41,10 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         // ------------------- deposits w/ redeems per deposit -------------------
         // NB - test all of the deposits BEFORE redeems.  verifies no side-effects from deposits when redeeming.
         uint256[] memory sharesAtPeriods =
-            _liquidVerifier._verifyDepositOnlyBatch(depositUsers1, _liquidVault, loadTestParams);
+            _liquidVerifier._verifyDepositOnlyBatch(depositUsers1, _toIVault(_liquidVault), loadTestParams);
 
         // NB - test all of the redeems AFTER deposits.  verifies no side-effects from deposits when redeeming.
-        _liquidVerifier._verifyRedeemOnlyBatch(redeemUsers1, _liquidVault, loadTestParams, sharesAtPeriods);
+        _liquidVerifier._verifyRedeemOnlyBatch(redeemUsers1, _toIVault(_liquidVault), loadTestParams, sharesAtPeriods);
     }
 
     function test__LiquidContinuousMultiTokenVault__DepositRedeem() public {
@@ -58,7 +58,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         uint256 sharesAmount = testParams.principal; // 1 principal = 1 share
 
         // ---------------- deposit ----------------
-        _liquidVerifier._warpToPeriod(liquidVault, testParams.depositPeriod);
+        _liquidVerifier._warpToPeriod(_toIVault(_liquidVault), testParams.depositPeriod);
 
         vm.startPrank(_alice);
         _asset.approve(address(liquidVault), testParams.principal); // grant the vault allowance
@@ -101,7 +101,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         vm.stopPrank();
 
         // ---------------- requestRedeem ----------------
-        _liquidVerifier._warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+        _liquidVerifier._warpToPeriod(_toIVault(liquidVault), testParams.redeemPeriod - liquidVault.noticePeriod());
 
         // requestRedeem
         vm.prank(_alice);
@@ -122,10 +122,10 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
 
         // ---------------- sell (redeem) ----------------
-        uint256 expectedYield = _liquidVerifier._expectedReturns(liquidVault, testParams);
+        uint256 expectedYield = _liquidVerifier._expectedReturns(_toIVault(liquidVault), testParams);
         _transferFromTokenOwner(_asset, address(liquidVault), expectedYield); // fund the vault to cover redeem
 
-        _liquidVerifier._warpToPeriod(liquidVault, testParams.redeemPeriod);
+        _liquidVerifier._warpToPeriod(_toIVault(liquidVault), testParams.redeemPeriod);
 
         vm.prank(_alice);
         assertEq(
@@ -153,7 +153,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         address assetManager = _vaultAuth.assetManager;
 
         // ---------------- deposit ----------------
-        _liquidVerifier._warpToPeriod(liquidVault, testParams.depositPeriod);
+        _liquidVerifier._warpToPeriod(_toIVault(liquidVault), testParams.depositPeriod);
 
         vm.startPrank(_alice);
         _asset.approve(address(liquidVault), testParams.principal); // grant the vault allowance
@@ -188,7 +188,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
             _liquidVerifier._createTestUsers(_alice);
 
-        _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _liquidVault, depositTestParams);
+        _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _toIVault(_liquidVault), depositTestParams);
 
         // split our deposits into two "batches" of redeems
         (TestParamSet.TestParam[] memory redeemParams1, TestParamSet.TestParam[] memory redeemParams2) =
@@ -232,7 +232,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
             _liquidVerifier._createTestUsers(_bob);
 
-        _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _liquidVault, depositTestParams);
+        _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _toIVault(_liquidVault), depositTestParams);
 
         uint256 partialShares = 1 * _scale;
 
@@ -307,12 +307,13 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             redeemPeriod: redeemPeriod
         });
 
-        uint256[] memory shares =
-            _liquidVerifier._verifyDepositOnlyBatch(TestParamSet.toSingletonUsers(_alice), _liquidVault, testParams);
+        uint256[] memory shares = _liquidVerifier._verifyDepositOnlyBatch(
+            TestParamSet.toSingletonUsers(_alice), _toIVault(_liquidVault), testParams
+        );
         uint256 totalShares = shares[0] + shares[1];
 
         // -------------- deposit period1  --------------
-        _liquidVerifier._warpToPeriod(_liquidVault, depositPeriod1);
+        _liquidVerifier._warpToPeriodLV(_liquidVault, depositPeriod1);
 
         uint256 assetsAtDepositPeriod1 =
             _liquidVault.convertToAssetsForDepositPeriod(shares[0], testParams[0].depositPeriod, depositPeriod1);
@@ -321,7 +322,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         assertEq(assetsAtDepositPeriod1, _liquidVault.convertToAssets(shares[0]), "assets wrong at deposit period 1");
 
         // -------------- deposit period2 --------------
-        _liquidVerifier._warpToPeriod(_liquidVault, depositPeriod2);
+        _liquidVerifier._warpToPeriodLV(_liquidVault, depositPeriod2);
 
         uint256 assetsAtDepositPeriod2 =
             _liquidVault.convertToAssetsForDepositPeriod(shares[1], testParams[1].depositPeriod, depositPeriod2);
@@ -336,7 +337,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         // -------------- requestRedeem period --------------
         uint256 requestRedeemPeriod = redeemPeriod - _liquidVault.noticePeriod();
-        _liquidVerifier._warpToPeriod(_liquidVault, requestRedeemPeriod);
+        _liquidVerifier._warpToPeriodLV(_liquidVault, requestRedeemPeriod);
 
         uint256 assetsAtRequestRedeemPeriod = _liquidVault.convertToAssetsForDepositPeriod(
             shares[0], testParams[0].depositPeriod, requestRedeemPeriod
@@ -358,7 +359,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         assertEq(0, _liquidVault.totalAssets(_bob), "totalAssets(user) wrong at requestRedeem period");
 
         // -------------- redeem period --------------
-        _liquidVerifier._warpToPeriod(_liquidVault, redeemPeriod);
+        _liquidVerifier._warpToPeriodLV(_liquidVault, redeemPeriod);
 
         uint256 assetsAtRedeemPeriod = _liquidVault.convertToAssetsForDepositPeriod(
             shares[0], testParams[0].depositPeriod, redeemPeriod
@@ -488,11 +489,12 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         });
 
         // deposit
-        uint256 shares =
-            _liquidVerifier._verifyDepositOnly(TestParamSet.toSingletonUsers(_alice), _liquidVault, testParam);
+        uint256 shares = _liquidVerifier._verifyDepositOnly(
+            TestParamSet.toSingletonUsers(_alice), _toIVault(_liquidVault), testParam
+        );
 
         // request redeem
-        _liquidVerifier._warpToPeriod(_liquidVault, redeemPeriod - _liquidVault.noticePeriod());
+        _liquidVerifier._warpToPeriodLV(_liquidVault, redeemPeriod - _liquidVault.noticePeriod());
 
         uint256 sharesToRedeem = shares / 2; // redeem say half our shares
 
@@ -500,7 +502,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         _liquidVault.requestRedeem(sharesToRedeem, _alice, _alice);
 
         // redeem should fail - requestRedeemAmount != redeemAmount
-        _liquidVerifier._warpToPeriod(_liquidVault, redeemPeriod);
+        _liquidVerifier._warpToPeriodLV(_liquidVault, redeemPeriod);
 
         uint256 invalidRedeemShareAmount = sharesToRedeem - 1;
 
@@ -549,7 +551,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         TestParamSet.TestUsers memory aliceTestUsers = TestParamSet.toSingletonUsers(_alice);
 
         // deposit
-        uint256 shares = _liquidVerifier._verifyDepositOnly(aliceTestUsers, _liquidVault, testParam);
+        uint256 shares = _liquidVerifier._verifyDepositOnly(aliceTestUsers, _toIVault(_liquidVault), testParam);
 
         assertEq(shares, testParam.principal, "shares should be 1:1 with principal"); // liquid vault should be 1:1
 
@@ -560,8 +562,9 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             redeemPeriod: redeemPeriod
         });
 
-        uint256 assetIntegerPart =
-            _liquidVerifier._verifyRedeemOnly(aliceTestUsers, _liquidVault, integerTestParam, principalIntegerPart);
+        uint256 assetIntegerPart = _liquidVerifier._verifyRedeemOnly(
+            aliceTestUsers, _toIVault(_liquidVault), integerTestParam, principalIntegerPart
+        );
         assertLe(
             principalIntegerPart, assetIntegerPart, "principal + returns should be at least principal integer amount"
         );
@@ -573,8 +576,9 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             redeemPeriod: redeemPeriod
         });
 
-        uint256 assetDecimalPart =
-            _liquidVerifier._verifyRedeemOnly(aliceTestUsers, _liquidVault, decimalTestParam, principalDecimalPart);
+        uint256 assetDecimalPart = _liquidVerifier._verifyRedeemOnly(
+            aliceTestUsers, _toIVault(_liquidVault), decimalTestParam, principalDecimalPart
+        );
         assertLe(
             principalDecimalPart, assetDecimalPart, "principal + returns should be at least principal decimal amount"
         );
@@ -595,14 +599,14 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         uint256 sharesAmount = testParams.principal;
 
-        _liquidVerifier._warpToPeriod(liquidVault, testParams.depositPeriod);
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.depositPeriod);
 
         vm.startPrank(_alice);
         _asset.approve(address(liquidVault), testParams.principal);
         liquidVault.requestDeposit(testParams.principal, _alice, _alice);
         vm.stopPrank();
 
-        _liquidVerifier._warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
 
         // Alice requests redeem for sharesAmount
         vm.prank(_alice);
@@ -652,14 +656,14 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         uint256 sharesAmount = testParams.principal;
 
-        _liquidVerifier._warpToPeriod(liquidVault, testParams.depositPeriod);
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.depositPeriod);
 
         vm.startPrank(_alice);
         _asset.approve(address(liquidVault), testParams.principal);
         liquidVault.requestDeposit(testParams.principal, _alice, _alice);
         vm.stopPrank();
 
-        _liquidVerifier._warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
 
         vm.prank(_alice);
         uint256 requestId = liquidVault.requestRedeem(sharesAmount, _alice, _alice);
@@ -707,14 +711,14 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         uint256 sharesAmount_1_Alice = testParams.principal / 2;
 
-        _liquidVerifier._warpToPeriod(liquidVault, testParams.depositPeriod);
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.depositPeriod);
 
         vm.startPrank(_alice);
         _asset.approve(address(liquidVault), testParams.principal);
         liquidVault.requestDeposit(testParams.principal, _alice, _alice);
         vm.stopPrank();
 
-        _liquidVerifier._warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
 
         // Alice requests redeem for sharesAmount_1_Alice
         vm.prank(_alice);
@@ -784,7 +788,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
         vm.stopPrank();
 
-        _liquidVerifier._warpToPeriod(liquidVault, testParams.redeemPeriod);
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.redeemPeriod);
 
         // We expect revert in Alice's redeem because shares and ruquest unlocked amount for Alice are different
         vm.expectRevert(

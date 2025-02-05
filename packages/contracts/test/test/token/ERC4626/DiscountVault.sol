@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { CalcDiscounted } from "@credbull/yield/CalcDiscounted.sol";
-import { IDiscountVault } from "./IDiscountVault.sol";
+import { IDiscountVault } from "@test/test/token/ERC4626/IDiscountVault.sol";
 import { IYieldStrategy } from "@credbull/yield/strategy/IYieldStrategy.sol";
 import { Timer } from "@credbull/timelock/Timer.sol";
 import { CalcInterestMetadata } from "@credbull/yield/CalcInterestMetadata.sol";
