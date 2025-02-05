@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { OwnableToken } from "./OwnableToken.t.sol";
+import { OwnableToken } from "@test/test/token/OwnableToken.t.sol";
 
 /**
  * @notice A simple [ERC20] Token, used to mimic USDC in tests.

@@ -4,6 +4,9 @@ pragma solidity ^0.8.20;
 library TestParamSet {
     using TestParamSet for TestParam[];
 
+    // Define a custom error for invalid split conditions
+    error TestParamSet__InvalidSplit(uint256 splitBefore, uint256 paramsLength);
+
     // params for testing deposits and redeems
     struct TestParam {
         uint256 principal;
@@ -42,6 +45,13 @@ library TestParamSet {
         }
 
         return testParamsWithOffsets;
+    }
+
+    // Generate and add multiple testParams with offsets
+    function toSingletonArray(TestParam memory testParam) internal pure returns (TestParam[] memory testParamArray_) {
+        TestParam[] memory array = new TestParam[](1);
+        array[0] = testParam;
+        return array;
     }
 
     // Generate and add multiple testParams with offsets
@@ -112,6 +122,24 @@ library TestParamSet {
         return (depositPeriods_, principals_);
     }
 
+    // Get deposit periods and principals in separate arrays
+    function redeems(TestParam[] memory self)
+        internal
+        pure
+        returns (uint256[] memory redeemPeriods_, uint256[] memory principals_)
+    {
+        uint256 length_ = self.length;
+        redeemPeriods_ = new uint256[](length_);
+        principals_ = new uint256[](length_);
+
+        for (uint256 i = 0; i < length_; i++) {
+            redeemPeriods_[i] = self[i].redeemPeriod;
+            principals_[i] = self[i].principal;
+        }
+
+        return (redeemPeriods_, principals_);
+    }
+
     // Get only the deposit periods from all TestParams
     function depositPeriods(TestParam[] memory self) internal pure returns (uint256[] memory depositPeriods_) {
         (depositPeriods_,) = self.deposits();
@@ -159,8 +187,9 @@ library TestParamSet {
         pure
         returns (TestParam[] memory leftSet_, TestParam[] memory rightSet_)
     {
-        // assert we can actually split in two at the splitBefore
-        assert(splitBefore < (origTestParams.length - 1));
+        if (origTestParams.length == 0 || splitBefore > origTestParams.length - 1) {
+            revert TestParamSet__InvalidSplit(splitBefore, origTestParams.length);
+        }
 
         // Initialize leftSet and rightSet arrays with their respective sizes
         TestParam[] memory leftSet = new TestParam[](splitBefore); // Elements before splitBefore

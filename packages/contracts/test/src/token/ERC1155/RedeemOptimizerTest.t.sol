@@ -4,36 +4,40 @@ pragma solidity ^0.8.20;
 import { IRedeemOptimizer } from "@credbull/token/ERC1155/IRedeemOptimizer.sol";
 import { RedeemOptimizerFIFO } from "@credbull/token/ERC1155/RedeemOptimizerFIFO.sol";
 import { IMultiTokenVault } from "@credbull/token/ERC1155/IMultiTokenVault.sol";
+import { IVault } from "@test/test/token/ERC4626/IVault.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import { IMultiTokenVaultTestBase } from "@test/test/token/ERC1155/IMultiTokenVaultTestBase.t.sol";
+import { IMultiTokenVaultVerifierBase } from "@test/test/token/ERC1155/IMultiTokenVaultVerifierBase.t.sol";
+import { MultiTokenVaultDailyPeriodsVerifier } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriodsVerifier.t.sol";
 import { MultiTokenVaultDailyPeriods } from "@test/test/token/ERC1155/MultiTokenVaultDailyPeriods.t.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
-import { SimpleUSDC } from "@test/test/token/SimpleUSDC.t.sol";
+
+import { IVaultTestSuite } from "@test/src/token/ERC4626/IVaultTestSuite.t.sol";
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
+contract RedeemOptimizerTest is IVaultTestSuite {
     using TestParamSet for TestParamSet.TestParam[];
-
-    IERC20Metadata internal _asset;
-    uint256 internal _scale;
-
-    address private _owner = makeAddr("owner");
-    address private _alice = makeAddr("alice");
 
     TestParamSet.TestParam[] private testParams;
 
-    function setUp() public {
-        vm.prank(_owner);
-        _asset = new SimpleUSDC(_owner, 1_000_000 ether);
+    IMultiTokenVault private _multiTokenVault;
+    IMultiTokenVaultVerifierBase private _multiTokenVerifier;
 
-        _scale = 10 ** _asset.decimals();
-        _transferAndAssert(_asset, _owner, _alice, 100_000 * _scale);
+    function setUp() public virtual override {
+        _multiTokenVault = _createMultiTokenVault(_createAsset(_owner), 3, 10);
+        _multiTokenVerifier = new MultiTokenVaultDailyPeriodsVerifier();
+
+        init(_toIVault(_multiTokenVault), _multiTokenVerifier);
 
         testParams.push(TestParamSet.TestParam({ principal: 500 * _scale, depositPeriod: 10, redeemPeriod: 21 }));
         testParams.push(TestParamSet.TestParam({ principal: 300 * _scale, depositPeriod: 15, redeemPeriod: 17 }));
         testParams.push(TestParamSet.TestParam({ principal: 700 * _scale, depositPeriod: 30, redeemPeriod: 55 }));
+    }
+
+    /// @dev - TODO - directly inherit from IVault with next version
+    function _toIVault(IMultiTokenVault multiTokenVault) internal pure returns (IVault vault_) {
+        return IVault(address(multiTokenVault));
     }
 
     function test__RedeemOptimizerTest__RedeemAllShares() public {
@@ -44,13 +48,14 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         IRedeemOptimizer redeemOptimizer =
             new RedeemOptimizerFIFO(IRedeemOptimizer.OptimizerBasis.Shares, multiTokenVault.currentPeriodsElapsed());
 
-        uint256[] memory depositShares =
-            _testDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+        uint256[] memory depositShares = _multiTokenVerifier._verifyDepositOnlyBatch(
+            TestParamSet.toSingletonUsers(_alice), _toIVault(multiTokenVault), testParams
+        );
         uint256 totalDepositShares = depositShares[0] + depositShares[1] + depositShares[2];
 
         // warp vault ahead to redeemPeriod
         uint256 redeemPeriod = testParams[2].redeemPeriod;
-        _warpToPeriod(multiTokenVault, redeemPeriod);
+        _multiTokenVerifier._warpToPeriod(_toIVault(multiTokenVault), redeemPeriod);
 
         // check full redeem
         (uint256[] memory redeemDepositPeriods, uint256[] memory sharesAtPeriods) =
@@ -70,8 +75,9 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
 
-        uint256[] memory depositShares =
-            _testDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+        uint256[] memory depositShares = _multiTokenVerifier._verifyDepositOnlyBatch(
+            TestParamSet.toSingletonUsers(_alice), _toIVault(multiTokenVault), testParams
+        );
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
             depositShares, testParams.depositPeriods(), redeemPeriod
         );
@@ -79,7 +85,7 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         uint256 totalAssets = depositAssets[0] + depositAssets[1] + depositAssets[2];
 
         // warp vault ahead to redeemPeriod
-        _warpToPeriod(multiTokenVault, redeemPeriod);
+        _multiTokenVerifier._warpToPeriod(_toIVault(multiTokenVault), redeemPeriod);
 
         // check full withdraw
         (uint256[] memory withdrawDepositPeriods, uint256[] memory sharesAtPeriods) =
@@ -98,13 +104,14 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         IRedeemOptimizer redeemOptimizer = new RedeemOptimizerFIFO(
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
-        uint256[] memory depositShares =
-            _testDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+        uint256[] memory depositShares = _multiTokenVerifier._verifyDepositOnlyBatch(
+            TestParamSet.toSingletonUsers(_alice), _toIVault(multiTokenVault), testParams
+        );
 
         uint256 sharesToWithdraw = depositShares[0] + depositShares[1] + depositShares[2] - residualShareAmount;
 
         // ---------------------- redeem ----------------------
-        _warpToPeriod(multiTokenVault, redeemPeriod); // warp vault ahead to redeemPeriod
+        _multiTokenVerifier._warpToPeriod(_toIVault(multiTokenVault), redeemPeriod); // warp vault ahead to redeemPeriod
 
         (uint256[] memory redeemDepositPeriods, uint256[] memory redeemSharesAtPeriods) =
             redeemOptimizer.optimizeRedeemShares(multiTokenVault, _alice, sharesToWithdraw, redeemPeriod);
@@ -130,8 +137,9 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
             IRedeemOptimizer.OptimizerBasis.AssetsWithReturns, multiTokenVault.currentPeriodsElapsed()
         );
 
-        uint256[] memory depositShares =
-            _testDepositOnly(TestParamSet.toSingletonUsers(_alice), multiTokenVault, testParams);
+        uint256[] memory depositShares = _multiTokenVerifier._verifyDepositOnlyBatch(
+            TestParamSet.toSingletonUsers(_alice), _toIVault(multiTokenVault), testParams
+        );
         uint256[] memory depositAssets = multiTokenVault.convertToAssetsForDepositPeriodBatch(
             depositShares, testParams.depositPeriods(), redeemPeriod
         );
@@ -142,7 +150,7 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         uint256 assetsToWithdraw = depositAssets[0] + depositAssets[1] + depositAssets[2] - residualAssetAmount;
 
         // ---------------------- redeem ----------------------
-        _warpToPeriod(multiTokenVault, redeemPeriod); // warp vault ahead to redeemPeriod
+        _multiTokenVerifier._warpToPeriod(_toIVault(multiTokenVault), redeemPeriod); // warp vault ahead to redeemPeriod
 
         (uint256[] memory actualDepositPeriods, uint256[] memory actualSharesAtPeriods) =
             redeemOptimizer.optimizeWithdrawAssets(multiTokenVault, _alice, assetsToWithdraw, redeemPeriod);
@@ -186,11 +194,13 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         );
         redeemOptimizer.optimizeRedeemShares(multiTokenVault, _alice, oneShare, vaultCurrentPeriod);
 
-        (TestParamSet.TestUsers memory depositUsers,) = _createTestUsers(_alice);
+        (TestParamSet.TestUsers memory depositUsers,) = _multiTokenVerifier._createTestUsers(_alice);
 
         // shares to find greater than the deposits
-        uint256 deposit1Shares = _testDepositOnly(depositUsers, multiTokenVault, testParams[0]);
-        uint256 deposit2Shares = _testDepositOnly(depositUsers, multiTokenVault, testParams[1]);
+        uint256 deposit1Shares =
+            _multiTokenVerifier._verifyDepositOnly(depositUsers, _toIVault(multiTokenVault), testParams[0]);
+        uint256 deposit2Shares =
+            _multiTokenVerifier._verifyDepositOnly(depositUsers, _toIVault(multiTokenVault), testParams[1]);
         uint256 totalDepositShares = deposit1Shares + deposit2Shares;
 
         uint256 sharesGreaterThanDeposits = totalDepositShares + 1;
@@ -249,32 +259,16 @@ contract RedeemOptimizerTest is IMultiTokenVaultTestBase {
         );
     }
 
-    function _expectedReturns(uint256, /* shares */ IMultiTokenVault vault, TestParamSet.TestParam memory testParam)
-        internal
-        view
-        override
-        returns (uint256 expectedReturns_)
-    {
-        return MultiTokenVaultDailyPeriods(address(vault)).calcYield(
-            testParam.principal, testParam.depositPeriod, testParam.redeemPeriod
-        );
-    }
-
-    function _warpToPeriod(IMultiTokenVault vault, uint256 timePeriod) internal override {
-        MultiTokenVaultDailyPeriods(address(vault)).setCurrentPeriodsElapsed(timePeriod);
-    }
-
     function _createMultiTokenVault(IERC20Metadata asset_, uint256 assetToSharesRatio, uint256 yieldPercentage)
         internal
-        returns (MultiTokenVaultDailyPeriods)
+        returns (IMultiTokenVault)
     {
-        MultiTokenVaultDailyPeriods _vault = new MultiTokenVaultDailyPeriods();
-
+        MultiTokenVaultDailyPeriods vaultImpl = new MultiTokenVaultDailyPeriods();
         return MultiTokenVaultDailyPeriods(
             address(
                 new ERC1967Proxy(
-                    address(_vault),
-                    abi.encodeWithSelector(_vault.initialize.selector, asset_, assetToSharesRatio, yieldPercentage)
+                    address(vaultImpl),
+                    abi.encodeWithSelector(vaultImpl.initialize.selector, asset_, assetToSharesRatio, yieldPercentage)
                 )
             )
         );
