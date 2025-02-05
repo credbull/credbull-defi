@@ -122,7 +122,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
 
         // ---------------- sell (redeem) ----------------
-        uint256 expectedYield = _expectedReturns(sharesAmount, liquidVault, testParams);
+        uint256 expectedYield = _liquidVerifier._expectedReturns(liquidVault, testParams);
         _transferFromTokenOwner(_asset, address(liquidVault), expectedYield); // fund the vault to cover redeem
 
         _liquidVerifier._warpToPeriod(liquidVault, testParams.redeemPeriod);
