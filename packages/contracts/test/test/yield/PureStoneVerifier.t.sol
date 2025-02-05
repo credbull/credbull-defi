@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { PureStone } from "@credbull/yield/PureStone.sol";
+import { PureStone } from "./PureStone.sol";
 import { IVault } from "@credbull/token/ERC4626/IVault.sol";
 import { IVaultVerifierBase } from "@test/test/token/ERC4626/IVaultVerifierBase.t.sol";
 
