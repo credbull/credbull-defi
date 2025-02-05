@@ -8,7 +8,7 @@ pragma solidity ^0.8.20;
  */
 interface ITimelock {
     error ITimelock__LockDurationNotExpired(address account, uint256 currentPeriod, uint256 lockReleasePeriod);
-    error ITimelock_ExceededMaxUnlock(
+    error ITimelock__ExceededMaxUnlock(
         address account, uint256 lockReleasePeriod, uint256 unlockAmount, uint256 maxUnlockAmount
     );
 
@@ -18,15 +18,18 @@ interface ITimelock {
     /// @notice Unlocks `amount` of tokens for `account` at `lockReleasePeriod`.
     function unlock(address account, uint256 lockReleasePeriod, uint256 amount) external;
 
+    /// @notice Rolls over unlocked `amount` of tokens for `account` to a new lock period.
+    function rolloverUnlocked(address account, uint256 origLockReleasePeriod, uint256 amount) external;
+
     /// @notice Returns the amount of tokens locked for `account` at `lockReleasePeriod`.
-    function lockedAmount(address account, uint256 lockReleasePeriod) external view returns (uint256 amountLocked);
+    function lockedAmount(address account, uint256 lockReleasePeriod) external view returns (uint256 lockedAmount_);
 
     /// @notice Returns the max amount of tokens unlockable for `account` at `lockReleasePeriod`.
-    function maxUnlock(address account, uint256 lockReleasePeriod) external view returns (uint256 amountUnlockable);
+    function maxUnlock(address account, uint256 lockReleasePeriod) external view returns (uint256 unlockableAmount_);
 
     /// @notice Returns the periods with locked tokens for `account` between `fromPeriod` and `toPeriod`.
-    function lockPeriods(address account, uint256 fromPeriod, uint256 toPeriod)
+    function lockPeriods(address account, uint256 fromPeriod, uint256 toPeriod, uint256 increment)
         external
         view
-        returns (uint256[] memory lockPeriods_);
+        returns (uint256[] memory lockedPeriods_, uint256[] memory lockedAmounts_);
 }

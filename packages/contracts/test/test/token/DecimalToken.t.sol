@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-import { OwnableToken } from "./OwnableToken.t.sol";
+import { OwnableToken } from "@test/test/token/OwnableToken.t.sol";
 
 /**
  * @notice A simple [ERC20] Token, with configurable `decimals` value.
