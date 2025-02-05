@@ -26,7 +26,7 @@ abstract contract LiquidContinuousMultiTokenVaultTestBase is IVaultTestSuite {
         assetManager: makeAddr("assetManager")
     });
 
-    function setUp() public override {
+    function setUp() public virtual override {
         DeployLiquidMultiTokenVault _deployVault = new DeployLiquidMultiTokenVault();
         _liquidVault = _deployVault.run(_vaultAuth);
         _liquidVerifier = new LiquidContinuousMultiTokenVaultVerifier();
