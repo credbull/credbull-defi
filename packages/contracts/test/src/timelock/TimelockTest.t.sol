@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { ITimelock } from "@credbull/timelock/ITimelock.sol";
+import { ITimelock } from "@test/test/timelock/ITimelock.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
