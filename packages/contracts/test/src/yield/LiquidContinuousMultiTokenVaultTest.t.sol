@@ -11,13 +11,18 @@ import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultTestBase {
     using TestParamSet for TestParamSet.TestParam[];
 
-    function test__LiquidContinuousMultiTokenVault__SimpleDepositAndRedeemAtTenor() public {
+    function test__LiquidContinuousMultiTokenVault__SimpleDepositAndRedeem() public {
+        uint256 depositPeriod = 0;
+        uint256 redeemPeriod = depositPeriod + _liquidVault.noticePeriod() + 5;
+
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
             _liquidVerifier._createTestUsers(_alice);
         TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
-        testParams[0] =
-            TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: 0, redeemPeriod: _liquidVault.TENOR() });
-
+        testParams[0] = TestParamSet.TestParam({
+            principal: 100 * _scale,
+            depositPeriod: depositPeriod,
+            redeemPeriod: redeemPeriod
+        });
         uint256[] memory sharesAtPeriods =
             _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _liquidVault, testParams);
         _liquidVerifier._verifyRedeemOnlyBatch(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
@@ -117,8 +122,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
 
         // ---------------- sell (redeem) ----------------
-        uint256 expectedYield = _liquidVerifier._expectedReturns(liquidVault, testParams);
-        assertEq(33_333333, expectedYield, "expected returns incorrect");
+        uint256 expectedYield = _expectedReturns(sharesAmount, liquidVault, testParams);
         _transferFromTokenOwner(_asset, address(liquidVault), expectedYield); // fund the vault to cover redeem
 
         _liquidVerifier._warpToPeriod(liquidVault, testParams.redeemPeriod);
@@ -290,7 +294,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     function test__LiquidContinuousMultiTokenVault__TotalAssetsAndConvertToAssets() public {
         uint256 depositPeriod1 = 5;
         uint256 depositPeriod2 = depositPeriod1 + 1;
-        uint256 redeemPeriod = 10;
+        uint256 redeemPeriod = depositPeriod1 + _liquidVault.noticePeriod() + 7; // any redeem should be fine
         TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](2);
         testParams[0] = TestParamSet.TestParam({
             principal: 50 * _scale,
@@ -826,8 +830,8 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         deal(address(_asset), address(_liquidVault), 100e6);
 
         // ----------------- deposit ------------
-        uint256 depositAtCutoff = _liquidVault._vaultStartTimestamp() + 1 days - 1 minutes;
-        vm.warp(depositAtCutoff); // set the time very close to the cut-off
+        uint256 depositTimeBeforeCutoff = _liquidVault._vaultStartTimestamp() + 1 days - 1 minutes;
+        vm.warp(depositTimeBeforeCutoff); // set the time very close to the cut-off
 
         uint256 depositPeriod = _liquidVault.currentPeriod();
         vm.startPrank(_alice);
@@ -841,8 +845,12 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         uint256 redeemPeriod = _liquidVault.requestRedeem(shares, _alice, _alice);
 
         // ----------------- redeem  ------------
-        vm.warp(depositAtCutoff + 2 minutes); // warp to the next day
-        assertEq(redeemPeriod, _liquidVault.currentPeriod(), "didn't tick over a day");
+        uint256 redeemTimeAfterCutoff =
+            _liquidVault._vaultStartTimestamp() + (_liquidVault.noticePeriod() * 24 hours) + 2 minutes;
+        vm.warp(redeemTimeAfterCutoff); // warp to the start of the redeem day
+        assertEq(
+            depositPeriod + _liquidVault.noticePeriod(), _liquidVault.currentPeriod(), "didn't tick over to redeem day"
+        );
 
         uint256 assetPreview = _liquidVault.previewRedeemForDepositPeriod(shares, depositPeriod, redeemPeriod);
         assertEq(principal, assetPreview, "assets should be the same as principal");

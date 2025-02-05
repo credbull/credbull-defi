@@ -6,13 +6,13 @@ dotenv.config();
 
 console.log(`*** Config loaded, network is ${process.env.NEXT_PUBLIC_NETWORK}`);
 
-const plume: Chain = {
+export const plume: Chain = {
   id: 98865,
   name: "Plume",
   nativeCurrency: { name: "Plume Ethereum", symbol: "ETH", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://phoenix-rpc.plumenetwork.xyz/" + process.env.NEXT_PUBLIC_PLUME_API_KEY] },
-    public: { http: ["https://phoenix-rpc.plumenetwork.xyz/" + process.env.NEXT_PUBLIC_PLUME_API_KEY] },
+    default: { http: ["https://phoenix-rpc.plumenetwork.xyz/"] },
+    public: { http: ["https://phoenix-rpc.plumenetwork.xyz/"] },
   },
   formatters: undefined,
   fees: undefined,
@@ -22,7 +22,7 @@ const plume: Chain = {
   testnet: true,
 } as Chain;
 
-const plumeTestnet: Chain = {
+export const plumeTestnet: Chain = {
   id: 98864,
   name: "Plume Testnet",
   nativeCurrency: { name: "Plume Ethereum", symbol: "ETH", decimals: 18 },
@@ -48,7 +48,7 @@ export type ScaffoldConfig = {
 
 const scaffoldConfig = {
   // The networks on which your DApp is live
-  targetNetworks: [chains.arbitrumSepolia, plumeTestnet, plume, chains.foundry],
+  targetNetworks: [chains.arbitrumSepolia, plumeTestnet, plume, chains.polygonAmoy, chains.polygon, chains.foundry],
 
   // The interval at which your front-end polls the RPC servers for new data
   // it has no effect if you only target the local network (default is 4000)
