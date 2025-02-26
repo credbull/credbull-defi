@@ -11,13 +11,13 @@ const plume: Chain = {
   name: "Plume",
   nativeCurrency: { name: "Plume Ethereum", symbol: "ETH", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://phoenix-rpc.plumenetwork.xyz/"] },
-    public: { http: ["https://phoenix-rpc.plumenetwork.xyz/"] },
+    default: { http: ["https://rpc.plumenetwork.xyz/"] },
+    public: { http: ["https://rpc.plumenetwork.xyz/"] },
   },
   formatters: undefined,
   fees: undefined,
   blockExplorers: {
-    default: { name: "Plume Explorer", url: "https://phoenix-explorer.plumenetwork.xyz" },
+    default: { name: "Plume Explorer", url: "https://explorer.plumenetwork.xyz" },
   },
   testnet: true,
 } as Chain;
