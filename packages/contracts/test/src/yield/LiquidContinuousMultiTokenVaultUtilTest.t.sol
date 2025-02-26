@@ -12,6 +12,7 @@ import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/Liquid
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
@@ -62,6 +63,39 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
             vaultProxy.balanceOf(alice, testParams.depositPeriod),
             "user should have principal worth of vault shares"
         );
+    }
+
+    function test__LiquidContinuousMultiTokenVaultUtil__UpgradeAndUpdateFields() public {
+        LiquidContinuousMultiTokenVaultMock vaultImpl = new LiquidContinuousMultiTokenVaultMock();
+        LiquidContinuousMultiTokenVaultMock vaultProxy = LiquidContinuousMultiTokenVaultMock(
+            address(
+                new ERC1967Proxy(
+                    address(vaultImpl),
+                    abi.encodeWithSelector(vaultImpl.mockInitialize.selector, _createVaultParams(_vaultAuth))
+                )
+            )
+        );
+
+        uint256 vaultTimeStampV2 = vaultProxy._vaultStartTimestamp() + 1;
+        uint256 ratePercentScaledV2 = vaultProxy.RATE_PERCENT_SCALED() / 2;
+
+        //Upgrade contract
+        LiquidContinuousMultiTokenVaultMockV2 mockVaultV2 = new LiquidContinuousMultiTokenVaultMockV2();
+
+        vm.prank(_vaultAuth.upgrader);
+        vaultProxy.upgradeToAndCall(address(mockVaultV2), "");
+
+        // Now, explicitly call upgradeVault to update the timestamp
+        vm.prank(_vaultAuth.upgrader);
+        LiquidContinuousMultiTokenVaultMockV2(address(vaultProxy)).upgradeVault(vaultTimeStampV2, ratePercentScaledV2);
+
+        assertEq(vaultTimeStampV2, vaultProxy._vaultStartTimestamp(), "vault start timestamp should be updated");
+        assertEq(ratePercentScaledV2, vaultProxy.RATE_PERCENT_SCALED(), "vault rate should be updated");
+
+        // upgrading "2" again (i.e. reinitializer(2) modifier) should fail.  next update needs to be "3" (i.e. reinitializer(3) modifier)
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        vm.prank(_vaultAuth.upgrader);
+        LiquidContinuousMultiTokenVaultMockV2(address(vaultProxy)).upgradeVault(vaultTimeStampV2, ratePercentScaledV2);
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__Clock() public {
@@ -324,5 +358,14 @@ contract LiquidContinuousMultiTokenVaultMock is LiquidContinuousMultiTokenVault 
 contract LiquidContinuousMultiTokenVaultMockV2 is LiquidContinuousMultiTokenVaultMock {
     function version() public pure returns (string memory) {
         return "2.0.0";
+    }
+
+    function upgradeVault(uint256 newVaultStartTimeStamp, uint256 newRatePercentScaled)
+        external
+        reinitializer(2)
+        onlyRole(UPGRADER_ROLE)
+    {
+        _vaultStartTimestamp = newVaultStartTimeStamp;
+        RATE_PERCENT_SCALED = newRatePercentScaled;
     }
 }
