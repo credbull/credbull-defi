@@ -107,6 +107,8 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
         uint256 fullRateBasisPoints = _tomlConfig.readUint(string.concat(CONTRACT_TOML_KEY, ".full_rate_bps"));
         uint256 reducedRateBasisPoints = _tomlConfig.readUint(string.concat(CONTRACT_TOML_KEY, ".reduced_rate_bps"));
         uint256 startTimestamp = _startTimestamp();
+        uint256 redeemNoticePeriod =
+            _readUintWithDefault(_tomlConfig, string.concat(CONTRACT_TOML_KEY, ".redeem_notice_period"), 1);
 
         uint256 decimals = asset.decimals();
         uint256 scale = 10 ** decimals;
@@ -128,7 +130,7 @@ contract DeployLiquidMultiTokenVault is TomlConfig {
             yieldStrategy: yieldStrategy,
             redeemOptimizer: redeemOptimizer,
             vaultStartTimestamp: startTimestamp,
-            redeemNoticePeriod: 1,
+            redeemNoticePeriod: redeemNoticePeriod,
             contextParams: contextParams
         });
 

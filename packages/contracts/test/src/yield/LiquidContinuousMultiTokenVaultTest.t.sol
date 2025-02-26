@@ -12,33 +12,20 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     using TestParamSet for TestParamSet.TestParam[];
 
     function test__LiquidContinuousMultiTokenVault__SimpleDepositAndRedeem() public {
+        uint256 depositPeriod = 0;
+        uint256 redeemPeriod = depositPeriod + _liquidVault.noticePeriod() + 5;
+
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
-            _createTestUsers(alice);
+            _liquidVerifier._createTestUsers(_alice);
         TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](1);
-        testParams[0] = TestParamSet.TestParam({ principal: 100 * _scale, depositPeriod: 0, redeemPeriod: 5 });
-
-        uint256[] memory sharesAtPeriods = _testDepositOnly(depositUsers, _liquidVault, testParams);
-        _testRedeemOnly(redeemUsers, _liquidVault, testParams, sharesAtPeriods);
-    }
-
-    function test__LiquidContinuousMultiTokenVault__RedeemAtTenor() public {
-        testVaultAtOffsets(
-            alice,
-            _liquidVault,
-            TestParamSet.TestParam({ principal: 250 * _scale, depositPeriod: 0, redeemPeriod: _liquidVault.TENOR() })
-        );
-    }
-
-    function test__LiquidContinuousMultiTokenVault__RedeemBeforeTenor() public {
-        testVaultAtOffsets(
-            bob,
-            _liquidVault,
-            TestParamSet.TestParam({
-                principal: 401 * _scale,
-                depositPeriod: 1,
-                redeemPeriod: (_liquidVault.TENOR() - 1)
-            })
-        );
+        testParams[0] = TestParamSet.TestParam({
+            principal: 100 * _scale,
+            depositPeriod: depositPeriod,
+            redeemPeriod: redeemPeriod
+        });
+        uint256[] memory sharesAtPeriods =
+            _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _toIVault(_liquidVault), testParams);
+        _liquidVerifier._verifyRedeemOnlyBatch(redeemUsers, _toIVault(_liquidVault), testParams, sharesAtPeriods);
     }
 
     // @dev [Oct 25, 2024] Succeeds with: from=1 and to=600 ; Fails with: from=1 and to=650
@@ -49,14 +36,15 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         address carol = makeAddr("carol");
         _transferFromTokenOwner(_asset, carol, 1_000_000_000 * _scale);
         (TestParamSet.TestUsers memory depositUsers1, TestParamSet.TestUsers memory redeemUsers1) =
-            _createTestUsers(carol);
+            _liquidVerifier._createTestUsers(carol);
 
         // ------------------- deposits w/ redeems per deposit -------------------
         // NB - test all of the deposits BEFORE redeems.  verifies no side-effects from deposits when redeeming.
-        uint256[] memory sharesAtPeriods = _testDepositOnly(depositUsers1, _liquidVault, loadTestParams);
+        uint256[] memory sharesAtPeriods =
+            _liquidVerifier._verifyDepositOnlyBatch(depositUsers1, _toIVault(_liquidVault), loadTestParams);
 
         // NB - test all of the redeems AFTER deposits.  verifies no side-effects from deposits when redeeming.
-        _testRedeemOnly(redeemUsers1, _liquidVault, loadTestParams, sharesAtPeriods);
+        _liquidVerifier._verifyRedeemOnlyBatch(redeemUsers1, _toIVault(_liquidVault), loadTestParams, sharesAtPeriods);
     }
 
     function test__LiquidContinuousMultiTokenVault__DepositRedeem() public {
@@ -65,16 +53,16 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         TestParamSet.TestParam memory testParams =
             TestParamSet.TestParam({ principal: 2_000 * _scale, depositPeriod: 10, redeemPeriod: 71 });
 
-        uint256 assetStartBalance = _asset.balanceOf(alice);
+        uint256 assetStartBalance = _asset.balanceOf(_alice);
 
         uint256 sharesAmount = testParams.principal; // 1 principal = 1 share
 
         // ---------------- deposit ----------------
-        _warpToPeriod(liquidVault, testParams.depositPeriod);
+        _liquidVerifier._warpToPeriod(_toIVault(_liquidVault), testParams.depositPeriod);
 
-        vm.startPrank(alice);
+        vm.startPrank(_alice);
         _asset.approve(address(liquidVault), testParams.principal); // grant the vault allowance
-        liquidVault.requestDeposit(testParams.principal, alice, alice);
+        liquidVault.requestDeposit(testParams.principal, _alice, _alice);
         vm.stopPrank();
 
         assertEq(
@@ -84,76 +72,75 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
         assertEq(
             testParams.principal,
-            liquidVault.balanceOf(alice, testParams.depositPeriod),
+            liquidVault.balanceOf(_alice, testParams.depositPeriod),
             "user should have principal worth of vault shares"
         );
 
         // we process deposits immediately - therefore we don't have pending or claimable deposits
-        vm.startPrank(alice);
+        vm.startPrank(_alice);
         assertEq(
             0,
-            _liquidVault.pendingDepositRequest(testParams.depositPeriod, alice),
+            _liquidVault.pendingDepositRequest(testParams.depositPeriod, _alice),
             "deposits are processed immediately, not pending"
         );
         assertEq(
             0,
-            _liquidVault.claimableDepositRequest(testParams.depositPeriod, alice),
+            _liquidVault.claimableDepositRequest(testParams.depositPeriod, _alice),
             "deposits are processed immediately, not claimable"
         );
         assertEq(
             0,
-            _liquidVault.pendingRedeemRequest(testParams.redeemPeriod, alice),
+            _liquidVault.pendingRedeemRequest(testParams.redeemPeriod, _alice),
             "there shouldn't be any pending requestRedeems"
         );
         assertEq(
             0,
-            _liquidVault.claimableRedeemRequest(testParams.redeemPeriod, alice),
+            _liquidVault.claimableRedeemRequest(testParams.redeemPeriod, _alice),
             "there shouldn't be any claimable redeems"
         );
         vm.stopPrank();
 
         // ---------------- requestRedeem ----------------
-        _warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+        _liquidVerifier._warpToPeriod(_toIVault(liquidVault), testParams.redeemPeriod - liquidVault.noticePeriod());
 
         // requestRedeem
-        vm.prank(alice);
-        uint256 requestId = liquidVault.requestRedeem(sharesAmount, alice, alice);
+        vm.prank(_alice);
+        uint256 requestId = liquidVault.requestRedeem(sharesAmount, _alice, _alice);
         assertEq(requestId, testParams.redeemPeriod, "requestId should be the redeemPeriod");
 
-        vm.prank(alice);
+        vm.prank(_alice);
         assertEq(
             sharesAmount,
-            _liquidVault.pendingRedeemRequest(testParams.redeemPeriod, alice),
+            _liquidVault.pendingRedeemRequest(testParams.redeemPeriod, _alice),
             "pending request redeem amount not correct"
         );
 
         assertEq(
             sharesAmount,
-            liquidVault.unlockRequestAmountByDepositPeriod(alice, testParams.depositPeriod),
+            liquidVault.unlockRequestAmountByDepositPeriod(_alice, testParams.depositPeriod),
             "unlockRequest should be created"
         );
 
         // ---------------- sell (redeem) ----------------
-        uint256 expectedYield = _expectedReturns(sharesAmount, liquidVault, testParams);
-        assertEq(33_333333, expectedYield, "expected returns incorrect");
+        uint256 expectedYield = _liquidVerifier._expectedReturns(_toIVault(liquidVault), testParams);
         _transferFromTokenOwner(_asset, address(liquidVault), expectedYield); // fund the vault to cover redeem
 
-        _warpToPeriod(liquidVault, testParams.redeemPeriod);
+        _liquidVerifier._warpToPeriod(_toIVault(liquidVault), testParams.redeemPeriod);
 
-        vm.prank(alice);
+        vm.prank(_alice);
         assertEq(
             sharesAmount,
-            _liquidVault.claimableRedeemRequest(testParams.redeemPeriod, alice),
+            _liquidVault.claimableRedeemRequest(testParams.redeemPeriod, _alice),
             "claimable redeem amount not correct"
         );
 
-        vm.prank(alice);
-        liquidVault.redeem(testParams.principal, alice, alice);
+        vm.prank(_alice);
+        liquidVault.redeem(testParams.principal, _alice, _alice);
 
-        assertEq(0, liquidVault.balanceOf(alice, testParams.depositPeriod), "user should have no shares remaining");
+        assertEq(0, liquidVault.balanceOf(_alice, testParams.depositPeriod), "user should have no shares remaining");
         assertEq(
             assetStartBalance + expectedYield,
-            _asset.balanceOf(alice),
+            _asset.balanceOf(_alice),
             "user should have received principal + yield back"
         );
     }
@@ -163,14 +150,14 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         TestParamSet.TestParam memory testParams =
             TestParamSet.TestParam({ principal: 2_000 * _scale, depositPeriod: 10, redeemPeriod: 70 });
-        address assetManager = getAssetManager();
+        address assetManager = _vaultAuth.assetManager;
 
         // ---------------- deposit ----------------
-        _warpToPeriod(liquidVault, testParams.depositPeriod);
+        _liquidVerifier._warpToPeriod(_toIVault(liquidVault), testParams.depositPeriod);
 
-        vm.startPrank(alice);
+        vm.startPrank(_alice);
         _asset.approve(address(liquidVault), testParams.principal); // grant the vault allowance
-        liquidVault.requestDeposit(testParams.principal, alice, alice);
+        liquidVault.requestDeposit(testParams.principal, _alice, _alice);
         vm.stopPrank();
 
         uint256 assetManagerStartBalance = _asset.balanceOf(assetManager);
@@ -199,9 +186,9 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         }
 
         (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
-            _createTestUsers(alice);
+            _liquidVerifier._createTestUsers(_alice);
 
-        _testDepositOnly(depositUsers, _liquidVault, depositTestParams);
+        _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _toIVault(_liquidVault), depositTestParams);
 
         // split our deposits into two "batches" of redeems
         (TestParamSet.TestParam[] memory redeemParams1, TestParamSet.TestParam[] memory redeemParams2) =
@@ -211,17 +198,21 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         // ------------ requestRedeem #1 -----------
         uint256 redeemPeriod1 = 31;
-        _testRequestRedeemMultiDeposit(redeemUsers, _liquidVault, redeemParams1, 31);
+        _liquidVerifier._verifyRequestRedeemMultiDeposit(redeemUsers, _liquidVault, redeemParams1, 31);
 
         // ------------ requestRedeem #2 ------------
         uint256 redeemPeriod2 = 41;
-        _testRequestRedeemMultiDeposit(redeemUsers, _liquidVault, redeemParams2, 41);
+        _liquidVerifier._verifyRequestRedeemMultiDeposit(redeemUsers, _liquidVault, redeemParams2, 41);
 
         // ------------ redeems ------------
         // NB - call the redeem AFTER the multiple requestRedeems.  verify multiple requestRedeems work.
-        _testRedeemAfterRequestRedeemMultiDeposit(redeemUsers, _liquidVault, redeemParams1, redeemPeriod1);
+        _liquidVerifier._verifyRedeemAfterRequestRedeemMultiDeposit(
+            redeemUsers, _liquidVault, redeemParams1, redeemPeriod1
+        );
 
-        _testRedeemAfterRequestRedeemMultiDeposit(redeemUsers, _liquidVault, redeemParams2, redeemPeriod2);
+        _liquidVerifier._verifyRedeemAfterRequestRedeemMultiDeposit(
+            redeemUsers, _liquidVault, redeemParams2, redeemPeriod2
+        );
     }
 
     function test__LiquidContinuousMultiTokenVault__RedeemMultiPeriodsPartialShares() public {
@@ -238,9 +229,10 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             });
         }
 
-        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) = _createTestUsers(bob);
+        (TestParamSet.TestUsers memory depositUsers, TestParamSet.TestUsers memory redeemUsers) =
+            _liquidVerifier._createTestUsers(_bob);
 
-        _testDepositOnly(depositUsers, _liquidVault, depositTestParams);
+        _liquidVerifier._verifyDepositOnlyBatch(depositUsers, _toIVault(_liquidVault), depositTestParams);
 
         uint256 partialShares = 1 * _scale;
 
@@ -249,7 +241,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         TestParamSet.TestParam[] memory redeemParams1 = depositTestParams._subset(0, 2);
         redeemParams1[2].principal = partialShares;
 
-        _testRequestRedeemMultiDeposit(redeemUsers, _liquidVault, redeemParams1, redeemPeriod1);
+        _liquidVerifier._verifyRequestRedeemMultiDeposit(redeemUsers, _liquidVault, redeemParams1, redeemPeriod1);
 
         // ------------ requestRedeem #2 ------------
         uint256 redeemPeriod2 = 50;
@@ -257,13 +249,17 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         redeemParams2[0].principal = (depositTestParams[2].principal - partialShares);
         redeemParams2[2].principal = partialShares;
 
-        _testRequestRedeemMultiDeposit(redeemUsers, _liquidVault, redeemParams2, redeemPeriod2);
+        _liquidVerifier._verifyRequestRedeemMultiDeposit(redeemUsers, _liquidVault, redeemParams2, redeemPeriod2);
 
         // ------------ redeems ------------
         // NB - call the redeem AFTER the multiple requestRedeems.  verify multiple requestRedeems work.
-        _testRedeemAfterRequestRedeemMultiDeposit(redeemUsers, _liquidVault, redeemParams1, redeemPeriod1);
+        _liquidVerifier._verifyRedeemAfterRequestRedeemMultiDeposit(
+            redeemUsers, _liquidVault, redeemParams1, redeemPeriod1
+        );
 
-        _testRedeemAfterRequestRedeemMultiDeposit(redeemUsers, _liquidVault, redeemParams2, redeemPeriod2);
+        _liquidVerifier._verifyRedeemAfterRequestRedeemMultiDeposit(
+            redeemUsers, _liquidVault, redeemParams2, redeemPeriod2
+        );
     }
 
     function test__LiquidContinuousMultiTokenVault__WithdrawAssetNotOwnerReverts() public {
@@ -298,7 +294,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     function test__LiquidContinuousMultiTokenVault__TotalAssetsAndConvertToAssets() public {
         uint256 depositPeriod1 = 5;
         uint256 depositPeriod2 = depositPeriod1 + 1;
-        uint256 redeemPeriod = 10;
+        uint256 redeemPeriod = depositPeriod1 + _liquidVault.noticePeriod() + 7; // any redeem should be fine
         TestParamSet.TestParam[] memory testParams = new TestParamSet.TestParam[](2);
         testParams[0] = TestParamSet.TestParam({
             principal: 50 * _scale,
@@ -311,25 +307,27 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             redeemPeriod: redeemPeriod
         });
 
-        uint256[] memory shares = _testDepositOnly(TestParamSet.toSingletonUsers(alice), _liquidVault, testParams);
+        uint256[] memory shares = _liquidVerifier._verifyDepositOnlyBatch(
+            TestParamSet.toSingletonUsers(_alice), _toIVault(_liquidVault), testParams
+        );
         uint256 totalShares = shares[0] + shares[1];
 
         // -------------- deposit period1  --------------
-        _warpToPeriod(_liquidVault, depositPeriod1);
+        _liquidVerifier._warpToPeriodLV(_liquidVault, depositPeriod1);
 
         uint256 assetsAtDepositPeriod1 =
             _liquidVault.convertToAssetsForDepositPeriod(shares[0], testParams[0].depositPeriod, depositPeriod1);
 
-        vm.prank(alice);
+        vm.prank(_alice);
         assertEq(assetsAtDepositPeriod1, _liquidVault.convertToAssets(shares[0]), "assets wrong at deposit period 1");
 
         // -------------- deposit period2 --------------
-        _warpToPeriod(_liquidVault, depositPeriod2);
+        _liquidVerifier._warpToPeriodLV(_liquidVault, depositPeriod2);
 
         uint256 assetsAtDepositPeriod2 =
             _liquidVault.convertToAssetsForDepositPeriod(shares[1], testParams[1].depositPeriod, depositPeriod2);
 
-        vm.prank(alice);
+        vm.prank(_alice);
         assertEq(assetsAtDepositPeriod2, _liquidVault.convertToAssets(shares[1]), "assets wrong at deposit period 2");
         assertEq(
             assetsAtDepositPeriod1 + assetsAtDepositPeriod2,
@@ -339,13 +337,13 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         // -------------- requestRedeem period --------------
         uint256 requestRedeemPeriod = redeemPeriod - _liquidVault.noticePeriod();
-        _warpToPeriod(_liquidVault, requestRedeemPeriod);
+        _liquidVerifier._warpToPeriodLV(_liquidVault, requestRedeemPeriod);
 
         uint256 assetsAtRequestRedeemPeriod = _liquidVault.convertToAssetsForDepositPeriod(
             shares[0], testParams[0].depositPeriod, requestRedeemPeriod
         ) + _liquidVault.convertToAssetsForDepositPeriod(shares[1], testParams[1].depositPeriod, requestRedeemPeriod);
 
-        vm.prank(alice);
+        vm.prank(_alice);
         assertEq(
             assetsAtRequestRedeemPeriod,
             _liquidVault.convertToAssets(totalShares),
@@ -355,90 +353,90 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         assertEq(assetsAtRequestRedeemPeriod, _liquidVault.totalAssets(), "totalAssets wrong at requestRedeem period");
         assertEq(
             assetsAtRequestRedeemPeriod,
-            _liquidVault.totalAssets(alice),
+            _liquidVault.totalAssets(_alice),
             "totalAssets(user) wrong at requestRedeem period"
         );
-        assertEq(0, _liquidVault.totalAssets(bob), "totalAssets(user) wrong at requestRedeem period");
+        assertEq(0, _liquidVault.totalAssets(_bob), "totalAssets(user) wrong at requestRedeem period");
 
         // -------------- redeem period --------------
-        _warpToPeriod(_liquidVault, redeemPeriod);
+        _liquidVerifier._warpToPeriodLV(_liquidVault, redeemPeriod);
 
         uint256 assetsAtRedeemPeriod = _liquidVault.convertToAssetsForDepositPeriod(
             shares[0], testParams[0].depositPeriod, redeemPeriod
         ) + _liquidVault.convertToAssetsForDepositPeriod(shares[1], testParams[1].depositPeriod, redeemPeriod);
 
-        vm.prank(alice);
+        vm.prank(_alice);
         assertEq(assetsAtRedeemPeriod, _liquidVault.convertToAssets(totalShares), "assets wrong at redeem period");
 
         assertEq(assetsAtRedeemPeriod, _liquidVault.totalAssets(), "totalAssets wrong at redeem period");
-        assertEq(assetsAtRedeemPeriod, _liquidVault.totalAssets(alice), "totalAssets(alice) wrong at redeem period");
-        assertEq(0, _liquidVault.totalAssets(bob), "totalAssets(bob) wrong at redeem period");
+        assertEq(assetsAtRedeemPeriod, _liquidVault.totalAssets(_alice), "totalAssets(_alice) wrong at redeem period");
+        assertEq(0, _liquidVault.totalAssets(_bob), "totalAssets(_bob) wrong at redeem period");
     }
 
     function test__LiquidContinuousMultiTokenVault__DepositCallerValidation() public {
         address randomController = makeAddr("randomController");
 
         // ---------------- request deposit ----------------
-        vm.prank(bob);
+        vm.prank(_bob);
         vm.expectRevert(
             abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__UnAuthorized.selector, bob, alice
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__UnAuthorized.selector, _bob, _alice
             )
         );
-        _liquidVault.requestDeposit(1 * _scale, bob, alice);
+        _liquidVault.requestDeposit(1 * _scale, _bob, _alice);
 
-        vm.prank(alice);
+        vm.prank(_alice);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__ControllerNotSender.selector,
-                alice,
+                _alice,
                 randomController
             )
         );
-        _liquidVault.requestDeposit(1 * _scale, randomController, alice);
+        _liquidVault.requestDeposit(1 * _scale, randomController, _alice);
 
         // ---------------- deposit ----------------
 
-        vm.prank(alice);
+        vm.prank(_alice);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__ControllerNotSender.selector,
-                alice,
+                _alice,
                 randomController
             )
         );
-        _liquidVault.deposit(1 * _scale, alice, randomController);
+        _liquidVault.deposit(1 * _scale, _alice, randomController);
     }
 
     function test__LiquidContinuousMultiTokenVault__RedeemCallerValidation() public {
         address randomController = makeAddr("randomController");
 
         // ---------------- request redeem ----------------
-        vm.prank(bob);
+        vm.prank(_bob);
         vm.expectRevert(
             abi.encodeWithSelector(
-                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__UnAuthorized.selector, bob, alice
+                LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__UnAuthorized.selector, _bob, _alice
             )
         );
-        _liquidVault.requestRedeem(1 * _scale, bob, alice);
+        _liquidVault.requestRedeem(1 * _scale, _bob, _alice);
 
-        vm.prank(alice);
+        vm.prank(_alice);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__ControllerNotSender.selector,
-                alice,
+                _alice,
                 randomController
             )
         );
-        _liquidVault.requestRedeem(1 * _scale, randomController, alice);
+        _liquidVault.requestRedeem(1 * _scale, randomController, _alice);
 
         // ---------------- redeem ----------------
 
-        vm.prank(alice);
+        vm.prank(_alice);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__ControllerNotSender.selector,
-                alice,
+                _alice,
                 randomController
             )
         );
@@ -491,22 +489,24 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         });
 
         // deposit
-        uint256 shares = _testDepositOnly(TestParamSet.toSingletonUsers(alice), _liquidVault, testParam);
+        uint256 shares = _liquidVerifier._verifyDepositOnly(
+            TestParamSet.toSingletonUsers(_alice), _toIVault(_liquidVault), testParam
+        );
 
         // request redeem
-        _warpToPeriod(_liquidVault, redeemPeriod - _liquidVault.noticePeriod());
+        _liquidVerifier._warpToPeriodLV(_liquidVault, redeemPeriod - _liquidVault.noticePeriod());
 
         uint256 sharesToRedeem = shares / 2; // redeem say half our shares
 
-        vm.prank(alice);
-        _liquidVault.requestRedeem(sharesToRedeem, alice, alice);
+        vm.prank(_alice);
+        _liquidVault.requestRedeem(sharesToRedeem, _alice, _alice);
 
         // redeem should fail - requestRedeemAmount != redeemAmount
-        _warpToPeriod(_liquidVault, redeemPeriod);
+        _liquidVerifier._warpToPeriodLV(_liquidVault, redeemPeriod);
 
         uint256 invalidRedeemShareAmount = sharesToRedeem - 1;
 
-        vm.prank(alice);
+        vm.prank(_alice);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount.selector,
@@ -514,7 +514,7 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
                 sharesToRedeem
             )
         );
-        _liquidVault.redeem(invalidRedeemShareAmount, alice, alice);
+        _liquidVault.redeem(invalidRedeemShareAmount, _alice, _alice);
 
         // redeem should fail - caller doesn't have any tokens to redeem
         address invalidCaller = makeAddr("randomCaller");
@@ -526,12 +526,12 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
                 0
             )
         );
-        _liquidVault.redeem(sharesToRedeem, alice, invalidCaller);
+        _liquidVault.redeem(sharesToRedeem, _alice, invalidCaller);
 
         // redeem should succeed
         address receiver = makeAddr("receiver");
-        vm.prank(alice);
-        uint256 assets = _liquidVault.redeem(sharesToRedeem, receiver, alice);
+        vm.prank(_alice);
+        uint256 assets = _liquidVault.redeem(sharesToRedeem, receiver, _alice);
         assertEq(assets, _asset.balanceOf(receiver), "redeem should succeed");
     }
 
@@ -548,10 +548,10 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             redeemPeriod: redeemPeriod
         });
 
-        TestParamSet.TestUsers memory aliceTestUsers = TestParamSet.toSingletonUsers(alice);
+        TestParamSet.TestUsers memory aliceTestUsers = TestParamSet.toSingletonUsers(_alice);
 
         // deposit
-        uint256 shares = _testDepositOnly(aliceTestUsers, _liquidVault, testParam);
+        uint256 shares = _liquidVerifier._verifyDepositOnly(aliceTestUsers, _toIVault(_liquidVault), testParam);
 
         assertEq(shares, testParam.principal, "shares should be 1:1 with principal"); // liquid vault should be 1:1
 
@@ -562,7 +562,9 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             redeemPeriod: redeemPeriod
         });
 
-        uint256 assetIntegerPart = _testRedeemOnly(aliceTestUsers, _liquidVault, integerTestParam, principalIntegerPart);
+        uint256 assetIntegerPart = _liquidVerifier._verifyRedeemOnly(
+            aliceTestUsers, _toIVault(_liquidVault), integerTestParam, principalIntegerPart
+        );
         assertLe(
             principalIntegerPart, assetIntegerPart, "principal + returns should be at least principal integer amount"
         );
@@ -574,7 +576,9 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
             redeemPeriod: redeemPeriod
         });
 
-        uint256 assetDecimalPart = _testRedeemOnly(aliceTestUsers, _liquidVault, decimalTestParam, principalDecimalPart);
+        uint256 assetDecimalPart = _liquidVerifier._verifyRedeemOnly(
+            aliceTestUsers, _toIVault(_liquidVault), decimalTestParam, principalDecimalPart
+        );
         assertLe(
             principalDecimalPart, assetDecimalPart, "principal + returns should be at least principal decimal amount"
         );
@@ -584,8 +588,8 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
     /**
      * Scenario
      * 1. Alice deposits assets at the deposit period.
-     * 2. Alice requests redeem to withdraw his assets from the vault.
-     * 3. Alice wants to cancel his redeem request before the redeem period.
+     * 2. Alice requests redeem to withdraw assets from the vault.
+     * 3. Alice wants to cancel redeem request before the redeem period.
      */
     function test__LiquidContinuousMultiTokenVault__CancelUnlockRequest__BeforeRedeemPeriod() public {
         LiquidContinuousMultiTokenVault liquidVault = _liquidVault;
@@ -595,47 +599,47 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         uint256 sharesAmount = testParams.principal;
 
-        _warpToPeriod(liquidVault, testParams.depositPeriod);
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.depositPeriod);
 
-        vm.startPrank(alice);
+        vm.startPrank(_alice);
         _asset.approve(address(liquidVault), testParams.principal);
-        liquidVault.requestDeposit(testParams.principal, alice, alice);
+        liquidVault.requestDeposit(testParams.principal, _alice, _alice);
         vm.stopPrank();
 
-        _warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
 
         // Alice requests redeem for sharesAmount
-        vm.prank(alice);
-        uint256 requestId = liquidVault.requestRedeem(sharesAmount, alice, alice);
+        vm.prank(_alice);
+        uint256 requestId = liquidVault.requestRedeem(sharesAmount, _alice, _alice);
 
         assertEq(requestId, testParams.redeemPeriod, "requestId should be the redeemPeriod");
 
-        // When alice calls unlock before redeem period, it will revert
+        // When _alice calls unlock before redeem period, it will revert
         vm.expectRevert(
             abi.encodeWithSelector(
                 TimelockAsyncUnlock.TimelockAsyncUnlock__UnlockBeforeCurrentPeriod.selector,
-                alice,
-                alice,
+                _alice,
+                _alice,
                 liquidVault.currentPeriod(),
                 testParams.redeemPeriod
             )
         );
-        vm.prank(alice);
-        liquidVault.unlock(alice, requestId);
+        vm.prank(_alice);
+        liquidVault.unlock(_alice, requestId);
 
         // Alice cancels his redeem request and it works even before the redeem period.
-        vm.prank(alice);
-        liquidVault.cancelRequestUnlock(alice, requestId);
+        vm.prank(_alice);
+        liquidVault.cancelRequestUnlock(_alice, requestId);
 
         assertEq(
-            0, _liquidVault.pendingRedeemRequest(requestId, alice), "there shouldn't be any pending requestRedeems"
+            0, _liquidVault.pendingRedeemRequest(requestId, _alice), "there shouldn't be any pending requestRedeems"
         );
 
-        assertEq(0, _liquidVault.claimableRedeemRequest(requestId, alice), "there shouldn't be any claimable redeems");
+        assertEq(0, _liquidVault.claimableRedeemRequest(requestId, _alice), "there shouldn't be any claimable redeems");
 
         // Alice calls this function again, but nothing happens.
-        vm.prank(alice);
-        liquidVault.cancelRequestUnlock(alice, requestId);
+        vm.prank(_alice);
+        liquidVault.cancelRequestUnlock(_alice, requestId);
     }
 
     /**
@@ -652,36 +656,36 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         uint256 sharesAmount = testParams.principal;
 
-        _warpToPeriod(liquidVault, testParams.depositPeriod);
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.depositPeriod);
 
-        vm.startPrank(alice);
+        vm.startPrank(_alice);
         _asset.approve(address(liquidVault), testParams.principal);
-        liquidVault.requestDeposit(testParams.principal, alice, alice);
+        liquidVault.requestDeposit(testParams.principal, _alice, _alice);
         vm.stopPrank();
 
-        _warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
 
-        vm.prank(alice);
-        uint256 requestId = liquidVault.requestRedeem(sharesAmount, alice, alice);
+        vm.prank(_alice);
+        uint256 requestId = liquidVault.requestRedeem(sharesAmount, _alice, _alice);
 
         // Alice cancels his redeem request first
-        vm.startPrank(alice);
-        liquidVault.cancelRequestUnlock(alice, requestId);
+        vm.startPrank(_alice);
+        liquidVault.cancelRequestUnlock(_alice, requestId);
 
         // Alice submits a redeem request again with the amount = [sharesAmount / 2].
-        requestId = liquidVault.requestRedeem(sharesAmount / 2, alice, alice);
+        requestId = liquidVault.requestRedeem(sharesAmount / 2, _alice, _alice);
         vm.stopPrank();
 
-        vm.prank(alice);
+        vm.prank(_alice);
         assertEq(
             sharesAmount / 2,
-            _liquidVault.pendingRedeemRequest(requestId, alice),
+            _liquidVault.pendingRedeemRequest(requestId, _alice),
             "pending request redeem amount not correct"
         );
 
         assertEq(
             sharesAmount / 2,
-            liquidVault.unlockRequestAmountByDepositPeriod(alice, testParams.depositPeriod),
+            liquidVault.unlockRequestAmountByDepositPeriod(_alice, testParams.depositPeriod),
             "unlockRequest should be created"
         );
     }
@@ -707,29 +711,31 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
 
         uint256 sharesAmount_1_Alice = testParams.principal / 2;
 
-        _warpToPeriod(liquidVault, testParams.depositPeriod);
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.depositPeriod);
 
-        vm.startPrank(alice);
+        vm.startPrank(_alice);
         _asset.approve(address(liquidVault), testParams.principal);
-        liquidVault.requestDeposit(testParams.principal, alice, alice);
+        liquidVault.requestDeposit(testParams.principal, _alice, _alice);
         vm.stopPrank();
 
-        _warpToPeriod(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.redeemPeriod - liquidVault.noticePeriod());
 
         // Alice requests redeem for sharesAmount_1_Alice
-        vm.prank(alice);
-        uint256 requestId = liquidVault.requestRedeem(sharesAmount_1_Alice, alice, alice);
+        vm.prank(_alice);
+        uint256 requestId = liquidVault.requestRedeem(sharesAmount_1_Alice, _alice, _alice);
 
         address david = makeAddr("david");
 
         uint256 sharesAmount_1_David = sharesAmount_1_Alice / 2;
 
         // Alice transfers [sharesAmount_1_David] shares to David
-        vm.prank(alice);
-        liquidVault.safeTransferFrom(alice, david, testParams.depositPeriod, sharesAmount_1_David, "");
+        vm.prank(_alice);
+        liquidVault.safeTransferFrom(_alice, david, testParams.depositPeriod, sharesAmount_1_David, "");
 
         assertEq(sharesAmount_1_David, liquidVault.balanceOf(david, testParams.depositPeriod));
-        assertEq(testParams.principal - sharesAmount_1_David, liquidVault.lockedAmount(alice, testParams.depositPeriod));
+        assertEq(
+            testParams.principal - sharesAmount_1_David, liquidVault.lockedAmount(_alice, testParams.depositPeriod)
+        );
 
         // David requests reedeem for sharesAmount_1_David
         vm.startPrank(david);
@@ -745,13 +751,13 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         // Alice makes another request redeems
         uint256 sharesAmount_2_Alice = testParams.principal - sharesAmount_1_Alice - sharesAmount_1_David;
 
-        vm.startPrank(alice);
-        liquidVault.requestRedeem(sharesAmount_2_Alice, alice, alice);
+        vm.startPrank(_alice);
+        liquidVault.requestRedeem(sharesAmount_2_Alice, _alice, _alice);
 
         assertEq(
             sharesAmount_1_Alice + sharesAmount_2_Alice,
-            _liquidVault.pendingRedeemRequest(requestId, alice),
-            "alice pending request redeem amount not correct"
+            _liquidVault.pendingRedeemRequest(requestId, _alice),
+            "_alice pending request redeem amount not correct"
         );
         vm.stopPrank();
 
@@ -759,15 +765,15 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         // amount = (sharesAmount_1_Alice + sharesAmount_2_Alice) / 2
 
         uint256 sharesAmount_2_David = (sharesAmount_1_Alice + sharesAmount_2_Alice) / 2;
-        vm.prank(alice);
-        liquidVault.safeTransferFrom(alice, david, testParams.depositPeriod, sharesAmount_2_David, "");
+        vm.prank(_alice);
+        liquidVault.safeTransferFrom(_alice, david, testParams.depositPeriod, sharesAmount_2_David, "");
 
         assertEq(sharesAmount_1_David + sharesAmount_2_David, liquidVault.balanceOf(david, testParams.depositPeriod));
 
         uint256 remainingShare_Alice = testParams.principal - sharesAmount_1_David - sharesAmount_2_David;
-        assertEq(remainingShare_Alice, liquidVault.balanceOf(alice, testParams.depositPeriod));
+        assertEq(remainingShare_Alice, liquidVault.balanceOf(_alice, testParams.depositPeriod));
         assertTrue(
-            remainingShare_Alice < liquidVault.unlockRequestAmountByDepositPeriod(alice, testParams.depositPeriod),
+            remainingShare_Alice < liquidVault.unlockRequestAmountByDepositPeriod(_alice, testParams.depositPeriod),
             "Alice requested unlock amount should be bigger than locked amount"
         );
 
@@ -782,26 +788,26 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         );
         vm.stopPrank();
 
-        _warpToPeriod(liquidVault, testParams.redeemPeriod);
+        _liquidVerifier._warpToPeriodLV(liquidVault, testParams.redeemPeriod);
 
         // We expect revert in Alice's redeem because shares and ruquest unlocked amount for Alice are different
         vm.expectRevert(
             abi.encodeWithSelector(
                 LiquidContinuousMultiTokenVault.LiquidContinuousMultiTokenVault__InvalidComponentTokenAmount.selector,
                 remainingShare_Alice,
-                liquidVault.unlockRequestAmountByDepositPeriod(alice, testParams.depositPeriod)
+                liquidVault.unlockRequestAmountByDepositPeriod(_alice, testParams.depositPeriod)
             )
         );
-        vm.prank(alice);
-        liquidVault.redeem(remainingShare_Alice, alice, alice);
+        vm.prank(_alice);
+        liquidVault.redeem(remainingShare_Alice, _alice, _alice);
 
         // Alice cancels his redeem request
         // Alice can use either cancelRedeemRequest or unlock
-        vm.prank(alice);
-        liquidVault.cancelRequestUnlock(alice, requestId);
+        vm.prank(_alice);
+        liquidVault.cancelRequestUnlock(_alice, requestId);
         // Alice makes another unlock request
-        vm.prank(alice);
-        liquidVault.requestRedeem(remainingShare_Alice, alice, alice);
+        vm.prank(_alice);
+        liquidVault.requestRedeem(remainingShare_Alice, _alice, _alice);
 
         // David redeems his shares
         vm.startPrank(david);
@@ -828,29 +834,33 @@ contract LiquidContinuousMultiTokenVaultTest is LiquidContinuousMultiTokenVaultT
         deal(address(_asset), address(_liquidVault), 100e6);
 
         // ----------------- deposit ------------
-        uint256 depositAtCutoff = _liquidVault._vaultStartTimestamp() + 1 days - 1 minutes;
-        vm.warp(depositAtCutoff); // set the time very close to the cut-off
+        uint256 depositTimeBeforeCutoff = _liquidVault._vaultStartTimestamp() + 1 days - 1 minutes;
+        vm.warp(depositTimeBeforeCutoff); // set the time very close to the cut-off
 
         uint256 depositPeriod = _liquidVault.currentPeriod();
-        vm.startPrank(alice);
+        vm.startPrank(_alice);
         _asset.approve(address(_liquidVault), principal);
-        uint256 shares = _liquidVault.deposit(principal, alice);
+        uint256 shares = _liquidVault.deposit(principal, _alice);
         vm.stopPrank();
 
         // ----------------- requestRedeem ------------
         // request redeem on the deposit day
-        vm.prank(alice);
-        uint256 redeemPeriod = _liquidVault.requestRedeem(shares, alice, alice);
+        vm.prank(_alice);
+        uint256 redeemPeriod = _liquidVault.requestRedeem(shares, _alice, _alice);
 
         // ----------------- redeem  ------------
-        vm.warp(depositAtCutoff + 2 minutes); // warp to the next day
-        assertEq(redeemPeriod, _liquidVault.currentPeriod(), "didn't tick over a day");
+        uint256 redeemTimeAfterCutoff =
+            _liquidVault._vaultStartTimestamp() + (_liquidVault.noticePeriod() * 24 hours) + 2 minutes;
+        vm.warp(redeemTimeAfterCutoff); // warp to the start of the redeem day
+        assertEq(
+            depositPeriod + _liquidVault.noticePeriod(), _liquidVault.currentPeriod(), "didn't tick over to redeem day"
+        );
 
         uint256 assetPreview = _liquidVault.previewRedeemForDepositPeriod(shares, depositPeriod, redeemPeriod);
         assertEq(principal, assetPreview, "assets should be the same as principal");
 
-        vm.prank(alice);
-        uint256 assets = _liquidVault.redeem(shares, alice, alice);
+        vm.prank(_alice);
+        uint256 assets = _liquidVault.redeem(shares, _alice, _alice);
         assertEq(principal, assets, "assets should be the same as principal");
     }
 

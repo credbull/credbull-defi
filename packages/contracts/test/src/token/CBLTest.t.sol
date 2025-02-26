@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
 import { CBL } from "@credbull/token/CBL.sol";
-import { DeployCBLToken, CBLTokenParams } from "../../../script/DeployCBLToken.s.sol";
+import { DeployCBLToken, CBLTokenParams } from "@script/DeployCBLToken.s.sol";
 import { ERC20Capped } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 
 contract CBLTest is Test {

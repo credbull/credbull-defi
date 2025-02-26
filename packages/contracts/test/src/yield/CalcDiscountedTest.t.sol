@@ -9,6 +9,9 @@ contract CalcDiscountedTest is Test {
 
     uint256 public constant SCALE = 10 ** 6;
 
+    // vm.expectRevert() no longer works on internal functions by default.
+    // below config enables it.  see: https://github.com/foundry-rs/foundry/pull/9537
+    /// forge-config: default.allow_internal_expect_revert = true
     function test__CalcDiscounted__ZeroOneTwo() public {
         uint256 principal = 1234 * SCALE;
 

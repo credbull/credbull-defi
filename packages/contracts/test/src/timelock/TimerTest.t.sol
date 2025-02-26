@@ -32,6 +32,9 @@ contract TimerTest is Test {
         assertEq(offsetSeconds / (24 hours), Timer.elapsed24Hours(START_TIME), "elapsed24Hours wrong");
     }
 
+    // vm.expectRevert() no longer works on internal functions by default.
+    // below config enables it.  see: https://github.com/foundry-rs/foundry/pull/9537
+    /// forge-config: default.allow_internal_expect_revert = true
     function test__Timer__ElapsedWithFutureStartTimereverts() public {
         uint256 futureStart = block.timestamp + 50 days;
 

@@ -12,6 +12,7 @@ import { LiquidContinuousMultiTokenVaultTestBase } from "@test/test/yield/Liquid
 import { TestParamSet } from "@test/test/token/ERC1155/TestParamSet.t.sol";
 
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
@@ -31,21 +32,21 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
 
         IERC20Metadata asset = IERC20Metadata(vaultProxy.asset());
         uint256 scale = 10 ** asset.decimals();
-        _transferAndAssert(asset, _vaultAuth.owner, alice, 1_000_000_000 * scale);
+        _transferAndAssert(asset, _vaultAuth.owner, _alice, 1_000_000_000 * scale);
 
         TestParamSet.TestParam memory testParams =
             TestParamSet.TestParam({ principal: 2_000 * scale, depositPeriod: 11, redeemPeriod: 71 });
 
-        _warpToPeriod(vaultProxy, testParams.depositPeriod);
+        _liquidVerifier._warpToPeriodLV(vaultProxy, testParams.depositPeriod);
 
-        vm.startPrank(alice);
+        vm.startPrank(_alice);
         asset.approve(address(vaultProxy), testParams.principal); // grant the vault allowance
-        vaultProxy.deposit(testParams.principal, alice);
+        vaultProxy.deposit(testParams.principal, _alice);
         vm.stopPrank();
 
         assertEq(
             testParams.principal,
-            vaultProxy.balanceOf(alice, testParams.depositPeriod),
+            vaultProxy.balanceOf(_alice, testParams.depositPeriod),
             "user should have principal worth of vault shares"
         );
 
@@ -59,9 +60,42 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
 
         assertEq(
             testParams.principal,
-            vaultProxy.balanceOf(alice, testParams.depositPeriod),
+            vaultProxy.balanceOf(_alice, testParams.depositPeriod),
             "user should have principal worth of vault shares"
         );
+    }
+
+    function test__LiquidContinuousMultiTokenVaultUtil__UpgradeAndUpdateFields() public {
+        LiquidContinuousMultiTokenVaultMock vaultImpl = new LiquidContinuousMultiTokenVaultMock();
+        LiquidContinuousMultiTokenVaultMock vaultProxy = LiquidContinuousMultiTokenVaultMock(
+            address(
+                new ERC1967Proxy(
+                    address(vaultImpl),
+                    abi.encodeWithSelector(vaultImpl.mockInitialize.selector, _createVaultParams(_vaultAuth))
+                )
+            )
+        );
+
+        uint256 vaultTimeStampV2 = vaultProxy._vaultStartTimestamp() + 1;
+        uint256 ratePercentScaledV2 = vaultProxy.RATE_PERCENT_SCALED() / 2;
+
+        //Upgrade contract
+        LiquidContinuousMultiTokenVaultMockV2 mockVaultV2 = new LiquidContinuousMultiTokenVaultMockV2();
+
+        vm.prank(_vaultAuth.upgrader);
+        vaultProxy.upgradeToAndCall(address(mockVaultV2), "");
+
+        // Now, explicitly call upgradeVault to update the timestamp
+        vm.prank(_vaultAuth.upgrader);
+        LiquidContinuousMultiTokenVaultMockV2(address(vaultProxy)).upgradeVault(vaultTimeStampV2, ratePercentScaledV2);
+
+        assertEq(vaultTimeStampV2, vaultProxy._vaultStartTimestamp(), "vault start timestamp should be updated");
+        assertEq(ratePercentScaledV2, vaultProxy.RATE_PERCENT_SCALED(), "vault rate should be updated");
+
+        // upgrading "2" again (i.e. reinitializer(2) modifier) should fail.  next update needs to be "3" (i.e. reinitializer(3) modifier)
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        vm.prank(_vaultAuth.upgrader);
+        LiquidContinuousMultiTokenVaultMockV2(address(vaultProxy)).upgradeVault(vaultTimeStampV2, ratePercentScaledV2);
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__Clock() public {
@@ -88,8 +122,8 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
             redeemPeriod: _liquidVault.minUnlockPeriod()
         });
 
-        vm.prank(alice);
-        _asset.approve(address(_liquidVault), testParams.principal); // grant vault allowance on alice's principal
+        vm.prank(_alice);
+        _asset.approve(address(_liquidVault), testParams.principal); // grant vault allowance on _alice's principal
 
         vm.prank(_vaultAuth.owner);
         _transferAndAssert(_asset, _vaultAuth.owner, address(_liquidVault), testParams.principal); // transfer funds to cover redeem
@@ -98,38 +132,39 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
         vm.prank(_vaultAuth.operator);
         _liquidVault.pause();
 
-        vm.prank(alice);
+        vm.prank(_alice);
         vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
-        _liquidVault.deposit(testParams.principal, alice);
+        _liquidVault.deposit(testParams.principal, _alice);
 
         // ------------ unpaused deposit ------------
         vm.prank(_vaultAuth.operator);
         _liquidVault.unpause();
 
-        vm.prank(alice);
-        uint256 shares = _liquidVault.deposit(testParams.principal, alice);
+        vm.prank(_alice);
+        uint256 shares = _liquidVault.deposit(testParams.principal, _alice);
 
         // ------------ paused redeem ------------
         vm.prank(_vaultAuth.operator);
         _liquidVault.pause();
 
-        vm.prank(alice);
-        _liquidVault.requestUnlock(alice, _asSingletonArray(testParams.depositPeriod), _asSingletonArray(shares));
+        vm.prank(_alice);
+        _liquidVault.requestUnlock(_alice, _asSingletonArray(testParams.depositPeriod), _asSingletonArray(shares));
 
-        _warpToPeriod(_liquidVault, testParams.redeemPeriod);
+        _liquidVerifier._warpToPeriodLV(_liquidVault, testParams.redeemPeriod);
 
-        vm.prank(alice);
+        vm.prank(_alice);
         vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
-        _liquidVault.redeemForDepositPeriod(shares, alice, alice, testParams.depositPeriod, testParams.redeemPeriod);
+        _liquidVault.redeemForDepositPeriod(shares, _alice, _alice, testParams.depositPeriod, testParams.redeemPeriod);
 
         // ------------ unpaused redeem ------------
         vm.prank(_vaultAuth.operator);
         _liquidVault.unpause();
 
         address carol = makeAddr("carol"); // random address to receive redeem
-        vm.prank(alice);
-        uint256 assets =
-            _liquidVault.redeemForDepositPeriod(shares, carol, alice, testParams.depositPeriod, testParams.redeemPeriod);
+        vm.prank(_alice);
+        uint256 assets = _liquidVault.redeemForDepositPeriod(
+            shares, carol, _alice, testParams.depositPeriod, testParams.redeemPeriod
+        );
 
         assertEq(assets, _asset.balanceOf(carol), "carol did not receive assets");
     }
@@ -187,35 +222,11 @@ contract LiquidContinuousMultiTokenVaultUtilTest is LiquidContinuousMultiTokenVa
     function test__LiquidContinuousMultiTokenVaultUtil__UpdateReducedRateAtCurrent() public {
         uint256 newReducedRateAtCurrent = 50;
 
-        _warpToPeriod(_liquidVault, _liquidVault.currentPeriod() + 2);
+        _liquidVerifier._warpToPeriodLV(_liquidVault, _liquidVault.currentPeriod() + 2);
 
         vm.prank(_vaultAuth.operator);
         _liquidVault.setReducedRateAtCurrent(newReducedRateAtCurrent);
         assertEq(newReducedRateAtCurrent, _liquidVault.currentPeriodRate().interestRate, "rate not set");
-    }
-
-    /// @dev - this SHOULD work, but will have knock-off effects to yield/returns and pending requests
-    function test__LiquidContinuousMultiTokenVaultUtil__SetPeriod() public {
-        // block.timestamp starts at "1" in tests.  warp ahead so we can set time in the past relative to that.
-        vm.warp(201441601000); // 201441601000 = May 20, 1976 12:00:01 GMT (a great day!)
-
-        _setPeriodAndAssert(_liquidVault, 0);
-        _setPeriodAndAssert(_liquidVault, 30);
-        _setPeriodAndAssert(_liquidVault, 100);
-        _setPeriodAndAssert(_liquidVault, 50);
-        _setPeriodAndAssert(_liquidVault, 10);
-    }
-
-    function _setPeriodAndAssert(LiquidContinuousMultiTokenVault vault, uint256 newPeriod) internal {
-        assertTrue(
-            Timer.timestamp() >= (vault._vaultStartTimestamp() - newPeriod * 24 hours),
-            "trying to set period before block.timestamp"
-        );
-
-        _setPeriod(_vaultAuth.operator, vault, newPeriod);
-
-        assertEq(newPeriod, (block.timestamp - vault._vaultStartTimestamp()) / 24 hours, "timestamp not set correctly");
-        assertEq(newPeriod, vault.currentPeriod(), "period not set correctly");
     }
 
     function test__LiquidContinuousMultiTokenVaultUtil__InvalidFrequencyReverts() public {
@@ -324,5 +335,14 @@ contract LiquidContinuousMultiTokenVaultMock is LiquidContinuousMultiTokenVault 
 contract LiquidContinuousMultiTokenVaultMockV2 is LiquidContinuousMultiTokenVaultMock {
     function version() public pure returns (string memory) {
         return "2.0.0";
+    }
+
+    function upgradeVault(uint256 newVaultStartTimeStamp, uint256 newRatePercentScaled)
+        external
+        reinitializer(2)
+        onlyRole(UPGRADER_ROLE)
+    {
+        _vaultStartTimestamp = newVaultStartTimeStamp;
+        RATE_PERCENT_SCALED = newRatePercentScaled;
     }
 }

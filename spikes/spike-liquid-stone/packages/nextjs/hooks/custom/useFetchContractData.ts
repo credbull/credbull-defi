@@ -111,7 +111,14 @@ export const useFetchContractData = ({
       setCurrentPeriod(_currentPeriod);
 
       const assetAmountData = await refetchAssetAmount();
-      const assetAmountBigInt = BigInt(typeof assetAmountData?.data === "number" || typeof assetAmountData?.data === "string" ? assetAmountData.data : 0);
+      const assetAmountBigInt = BigInt(
+        typeof assetAmountData?.data === "number" ||
+          typeof assetAmountData?.data === "string" ||
+          typeof assetAmountData?.data === "bigint"
+          ? assetAmountData.data
+          : 0,
+      );
+
       setAssetAmount(ethers.formatUnits(assetAmountBigInt, 6));
 
       const startTimeData = await refetchStartTime();
