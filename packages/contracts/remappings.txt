@@ -6,4 +6,4 @@ openzeppelin-contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-
 @credbull/=src/
 @script/=script/
 @test/=test/
-@plume/contracts/nest/=lib/plume-contracts/nest/src/
+@plume/contracts/nest/=lib/contracts/nest/src/
