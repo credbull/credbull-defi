@@ -1,0 +1,52 @@
+node_env = "prod"
+
+[api]
+url = ""
+
+[app]
+url = ""
+
+[services.supabase]
+url = ""
+
+[services.ethers]
+# TODO - need to add API key to URL
+url = "https://polygon-mainnet.g.alchemy.com/v2/"
+
+[evm.address]
+
+# Enzyme
+# - Contract Source: https://github.com/enzymefinance/protocol/tree/dev/contracts/
+# - Deployments: https://github.com/enzymefinance/sdk/blob/main/packages/environment/src/deployments/polygon.ts
+[evm.address.enzyme]
+# Calculates Fund NAV
+fund_value_calculator="0xcdf038dd3b66506d2e5378aee185b2f0084b7a33"
+# Deploys Manual Value Oracle Proxy (see: ManualValueOracleFactory.sol)
+manual_value_oracle_factory="0x735615beb04bfd3665f06541ea00af1860c4354f"
+accounting_module="0x9301b377f646b38e31681cc5c35f364385e4121d"
+
+[[evm.address.enzyme.flexible_loans]]
+name = "BlackOpal LiquidStone x Plume 2024"
+flexible_loan="0xe53b5173e1a89e5923c96f5efb35bc292144657c"
+# Update Flexible Loan Values (see: ManualValueOracleLib.sol & ManualValueOracleProxy.sol)
+manual_value_oracle_proxy="0x79ec25cBBf6E93C5bF327100FCA4B8D8b1619481"
+# Abi-encoded Oracle address and staleness threshold of 0.  (0 meaning price never gets stale).
+accounting_module_config="0x00000000000000000000000079ec25cBBf6E93C5bF327100FCA4B8D8b16194810000000000000000000000000000000000000000000000000000000000000000"
+
+[[evm.address.enzyme.flexible_loans]]
+name = "BlackOpal PureStone 2025"
+flexible_loan="0x99185097c97f20879fded74ea65c0c71de47ca7f"
+# Update Flexible Loan Values (see: ManualValueOracleLib.sol & ManualValueOracleProxy.sol)
+manual_value_oracle_proxy="0x4627449ECCABdb8A4c72e20AED0F655C41d26ba2"
+# Abi-encoded Oracle address and staleness threshold of 0.  (0 meaning price never gets stale).
+accounting_module_config="0x0000000000000000000000004627449ECCABdb8A4c72e20AED0F655C41d26ba20000000000000000000000000000000000000000000000000000000000000000"
+
+
+[[evm.address.enzyme.flexible_loans]]
+name = "TEST - BlackOpal Test Vault Flexible Loan 20241218"
+flexible_loan="0x9144066ddff9ae04aa3ef3af766c8c774781f01b"
+# Update Flexible Loan Values (see: ManualValueOracleLib.sol & ManualValueOracleProxy.sol)
+manual_value_oracle_proxy="0x5eAe7fcA6Bb5bA22cdEAEfCB08a3d351B6DCC4C1"
+# Abi-encoded Oracle address and staleness threshold of 0.  (0 meaning price never gets stale).
+accounting_module_config="0x0000000000000000000000005eAe7fcA6Bb5bA22cdEAEfCB08a3d351B6DCC4C10000000000000000000000000000000000000000000000000000000000000000"
+
