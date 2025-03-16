@@ -23,17 +23,17 @@ export const plume: Chain = {
 } as Chain;
 
 export const plumeTestnet: Chain = {
-  id: 98864,
-  name: "Plume Testnet",
-  nativeCurrency: { name: "Plume Ethereum", symbol: "ETH", decimals: 18 },
+  id: 98867,
+  name: "Plume Testnet (New)",
+  nativeCurrency: { name: "Plume Ethereum", symbol: "$PLUME", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://test-rpc.plumenetwork.xyz"] },
-    public: { http: ["https://test-rpc.plumenetwork.xyz"] },
+    default: { http: ["https://testnet-rpc.plumenetwork.xyz"] },
+    public: { http: ["https://testnet-rpc.plumenetwork.xyz"] },
   },
   formatters: undefined,
   fees: undefined,
   blockExplorers: {
-    default: { name: "Plume Explorer", url: "https://test-explorer.plumenetwork.xyz" },
+    default: { name: "Plume Explorer", url: "https://testnet-explorer.plumenetwork.xyz" },
   },
   testnet: true,
 } as Chain;

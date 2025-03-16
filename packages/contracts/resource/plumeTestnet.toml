@@ -15,17 +15,24 @@ owner = "0xD79Be36f61fce3B8EF2FBF22b13B2b9a68eE15A2"
 operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # devops custodian (wallet 3) - public address, okay to share
 custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
-# devops upgrader (wallet 4) - public address, okay to share
-upgrader = "0x77f07B5d5E03e39Dc42FBCa53F122D4c1851B939"
+
+# devops deployer (wallet 5) - public address, okay to share
+upgrader = "0x1dC62317f7B1d981eE16618678586460635300d3"
+## devops upgrader (wallet 4) - public address, okay to share
+#upgrader = "0x77f07B5d5E03e39Dc42FBCa53F122D4c1851B939"
+
 # devops asset manager (wallet 7) - public address, okay to share
 asset_manager = "0xd097E901FB9B75C2d2f97E142d73fA79C31FcAb3"
 
 # TODO - USDC.e token address - Plume Testnet
-# usdc_token=""
-# TODO Liquid Continuous Multi Token Vault Proxy - Plume Testnet
-liquid_vault_proxy=""
-# TODO Liquid Continuous Multi Token Vault Impl - Plume Testnet
-liquid_vault_impl=""
+# usdc_token="0x816BA111c23a9b565A670736F8E14EDfb97E7548"
+
+# SimpleUSDC address - Plume Testnet
+ usdc_token="0x816BA111c23a9b565A670736F8E14EDfb97E7548"
+# Liquid Continuous Multi Token Vault Proxy - Plume Testnet (SimpleUSDC)
+liquid_vault_proxy="0x10bb81396677D8d6B9209Ec90A541621cfb9f732"
+# Liquid Continuous Multi Token Vault Impl - Plume Testnet (SimpleUSDC)
+liquid_vault_impl="0xF018EB92FB23557865D185550fa3107Ab31DD6cd"
 
 
 [evm.contracts.liquid_continuous_multi_token_vault]
@@ -33,8 +40,8 @@ liquid_vault_impl=""
 full_rate_bps = 10_00
 # rate in basis points, e.g.  3.5% = 350 bps
 reduced_rate_bps = 3_50
-# January 1, 2024 2:00:00 PM UTC = 1704117600
-vault_start_timestamp = 1704117600
+# March 16, 2024 2:00:00 PM UTC = 1742133600
+vault_start_timestamp = 1742133600
 
 
 [services.supabase]
