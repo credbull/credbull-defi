@@ -52,7 +52,6 @@ contract SimpleTimelockAsyncUnlock is Initializable, UUPSUpgradeable, TimelockAs
         return new bytes[](0);
     }
 
-    // TODO - implement this in test cases...
     // solhint-disable-next-line no-empty-blocks
     function cancelRequestUnlock(address owner, uint256 requestId) public { }
 }

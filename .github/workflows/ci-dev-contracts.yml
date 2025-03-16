@@ -27,7 +27,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: stable
 
       - name: Run tests
         run: forge test -vvv
@@ -52,7 +52,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: stable
 
       # re-run the tests here on purpose to ensure quality.
       - name: Run tests
