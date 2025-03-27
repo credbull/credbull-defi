@@ -21,9 +21,9 @@ asset_manager = "0x97BE1b79AA9dB55e7235a9dd5E686cc4A26A7959"
 # USDC.e token address - Bridged USDC (Stargate) (USDC.e)
 usdc_token="0x60219C44E146BAf36002eA73767820238Ebc1db6"
 # Liquid Continuous Multi Token Vault Proxy - Plume Mainnet
-liquid_vault_proxy=""
+liquid_vault_proxy="0xb89846b74f3B190F6e00fc35B3aFfCDF5d4BB9f9"
 # Liquid Continuous Multi Token Vault Impl - Plume Mainnet (v1 - latest)
-liquid_vault_impl=""
+liquid_vault_impl="0x8f87E1258d645d948F270221C34202Be0583F29b"
 
 
 [evm.contracts.liquid_continuous_multi_token_vault]
