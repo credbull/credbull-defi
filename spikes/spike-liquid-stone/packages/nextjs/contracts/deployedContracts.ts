@@ -23085,9 +23085,9 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
   },
-  98865: {
+  98866: {
     "SimpleUSDC#0": {
-      address: "0x3938A812c54304fEffD266C7E2E70B48F9475aD6",
+      address: "0x78adD880A697070c1e765Ac44D65323a0DcCE913",
       abi: [
         {
           type: "constructor",
@@ -23509,7 +23509,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "TripleRateYieldStrategy#0": {
-      address: "0x511A391900D2eF4bEf510C8918a7d514B71Ecd01",
+      address: "0xacE0d7a6dE1396A04Daa8aF16EC8767b07cE5516",
       abi: [
         {
           type: "function",
@@ -23599,7 +23599,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "RedeemOptimizerFIFO#0": {
-      address: "0xD6b3d81868770083307840F513A3491960b95cb6",
+      address: "0x096227660B27E612F31838645CC3AD213cc72874",
       abi: [
         {
           type: "constructor",
@@ -23822,7 +23822,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "LiquidContinuousMultiTokenVaultAsProxy#0": {
-          address: "0x2b9d2023DbF3c7473f1cec42F78713d09DdC9FBF",
+          address: "0x577349C99830D3c078034087A532581EF5381A08",
           abi: [
               {
                   type: "constructor",
@@ -26980,7 +26980,7 @@ const deployedContracts = {
           inheritedFunctions: {},
       },
     "LiquidContinuousMultiTokenVault#0": {
-          address: "0xd9991fc39980e4294f6953ab5adf514db8545658",
+          address: "0x155EF98eC2D8CeE03c4419e03024AAe7876B08A9",
           abi: [
               {
                   type: "constructor",
@@ -30138,7 +30138,7 @@ const deployedContracts = {
           inheritedFunctions: {},
       },
     "ERC1967Proxy#0": {
-      address: "0x2b9d2023DbF3c7473f1cec42F78713d09DdC9FBF",
+      address: "0x577349C99830D3c078034087A532581EF5381A08",
       abi: [
         {
           type: "constructor",
@@ -30209,7 +30209,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     "LiquidContinuousMultiTokenVault_V1#0": {
-          address: "0xe4a4d891f02DF7bFFc5ff9e691313DE8a9E76b91",
+          address: "0x155EF98eC2D8CeE03c4419e03024AAe7876B08A9",
           abi: [
               {
                   type: "constructor",

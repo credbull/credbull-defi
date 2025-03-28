@@ -19,18 +19,18 @@ upgrader = "0x3E449960Ba36cB00B728A370F991c658e7cca459"
 asset_manager = "0x97BE1b79AA9dB55e7235a9dd5E686cc4A26A7959"
 
 # USDC.e token address - Bridged USDC (Stargate) (USDC.e)
-usdc_token="0x60219C44E146BAf36002eA73767820238Ebc1db6"
+usdc_token="0x78adD880A697070c1e765Ac44D65323a0DcCE913"
 # Liquid Continuous Multi Token Vault Proxy - Plume Mainnet
-liquid_vault_proxy="0xb89846b74f3B190F6e00fc35B3aFfCDF5d4BB9f9"
+liquid_vault_proxy="0x155EF98eC2D8CeE03c4419e03024AAe7876B08A9"
 # Liquid Continuous Multi Token Vault Impl - Plume Mainnet (v1 - latest)
-liquid_vault_impl="0x8f87E1258d645d948F270221C34202Be0583F29b"
+liquid_vault_impl="0x577349C99830D3c078034087A532581EF5381A08"
 
 
 [evm.contracts.liquid_continuous_multi_token_vault]
 # rate in basis points, e.g.  10% = 1000 bps
 full_rate_bps = 10_00
 # rate in basis points, e.g.  5.5% = 550 bps
-reduced_rate_bps = 5_50
+reduced_rate_bps = 4_00
 # March 27, 2025 2:00:00 PM UTC = 1743084000
 vault_start_timestamp = 1743084000
 
