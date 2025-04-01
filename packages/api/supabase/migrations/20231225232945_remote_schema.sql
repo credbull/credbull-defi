@@ -12,7 +12,9 @@ SET row_security = off;
 
 CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
 
-CREATE EXTENSION IF NOT EXISTS "pgsodium" WITH SCHEMA "pgsodium";
+-- supabase upgraded to postgress 15.8.1.060 which removed the pgsodium schema by default.
+-- see: https://github.com/supabase/cli/issues/3358
+-- CREATE EXTENSION IF NOT EXISTS "pgsodium" WITH SCHEMA "pgsodium";
 
 CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
 
