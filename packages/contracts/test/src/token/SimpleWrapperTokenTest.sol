@@ -9,6 +9,7 @@ import { DeploySimpleWrapperToken } from "@test/test/script/DeploySimpleWrapperT
 import { CBLTokenParams } from "@script/DeployCBLToken.s.sol";
 import { ERC20Wrapper } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
+import { SimpleWrapperToken } from "@test/test/token/SimpleWrapperToken.t.sol";
 
 contract SimpleWrapperTokenTest is Test {
     IERC20 private _underlyingToken;
@@ -17,27 +18,32 @@ contract SimpleWrapperTokenTest is Test {
     DeploySimpleWrapperToken private _deployer;
     ERC20Wrapper private _wrapperToken;
 
-    CBLTokenParams private _tokenParams;
+    SimpleWrapperToken.SimpleWrapperTokenParams private _tokenParams;
 
     address private _alice = makeAddr("alice");
     address private _bob = makeAddr("bob");
 
     function setUp() public {
-        _tokenParams = CBLTokenParams({
-            owner: makeAddr("tokenOwner"),
-            minter: makeAddr("tokenMinter"),
-            maxSupply: (type(uint256).max)
-        });
+        address owner = makeAddr("tokenOwner");
 
-        SimpleToken simpleToken = new SimpleToken(_tokenParams.owner, _tokenParams.maxSupply);
+        SimpleToken simpleToken = new SimpleToken(owner, (type(uint256).max));
         _underlyingToken = simpleToken;
         _underlyingTokenScale = 10 ** simpleToken.decimals();
+
+        _tokenParams = SimpleWrapperToken.SimpleWrapperTokenParams({
+            owner: owner,
+            name: "WrapperToken-V1",
+            symbol: "wT-V1",
+            underlyingToken: _underlyingToken
+        });
 
         _deployer = new DeploySimpleWrapperToken(_underlyingToken);
         _wrapperToken = _deployer.run(_tokenParams);
 
         assertEq(
-            _tokenParams.maxSupply, _underlyingToken.balanceOf(_tokenParams.owner), "owner should start with all tokens"
+            _underlyingToken.totalSupply(),
+            _underlyingToken.balanceOf(_tokenParams.owner),
+            "owner should start with all tokens"
         );
         vm.prank(_tokenParams.owner);
         _underlyingToken.transfer(_alice, 1_000_000 * _underlyingTokenScale);
@@ -48,6 +54,9 @@ contract SimpleWrapperTokenTest is Test {
         uint256 prevUnderlyingBal = _underlyingToken.balanceOf(_alice);
 
         assertNotEq(address(0), address(_wrapperToken));
+        assertEq(_tokenParams.name, _wrapperToken.name());
+        assertEq(_tokenParams.symbol, _wrapperToken.symbol());
+
         assertEq(0, _wrapperToken.totalSupply(), "wrapper total supply should start at zero");
         assertEq(0, _wrapperToken.balanceOf(_alice), "user wrapper balance should start at zero");
 

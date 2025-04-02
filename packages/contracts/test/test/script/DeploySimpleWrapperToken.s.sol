@@ -16,18 +16,13 @@ contract DeploySimpleWrapperToken is Script {
         _underlyingToken = underlyingToken;
     }
 
-    function run() public returns (SimpleWrapperToken simpleWrapperToken) {
-        DeployCBLToken deployCBLToken = new DeployCBLToken();
-
-        CBLTokenParams memory params = deployCBLToken.createCBLTokenParamsFromConfig();
-
-        return run(params);
-    }
-
-    function run(CBLTokenParams memory params) public returns (SimpleWrapperToken simpleWrapperToken) {
+    function run(SimpleWrapperToken.SimpleWrapperTokenParams memory params)
+        public
+        returns (SimpleWrapperToken simpleWrapperToken)
+    {
         vm.startBroadcast();
 
-        simpleWrapperToken = new SimpleWrapperToken(_underlyingToken, params.owner);
+        simpleWrapperToken = new SimpleWrapperToken(params);
         console2.log(
             string.concat("!!!!! Deploying SimpleWrapperToken [", vm.toString(address(simpleWrapperToken)), "] !!!!!")
         );
