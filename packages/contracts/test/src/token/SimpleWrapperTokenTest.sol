@@ -6,7 +6,6 @@ import { Test } from "forge-std/Test.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { DeploySimpleWrapperToken } from "@test/test/script/DeploySimpleWrapperToken.s.sol";
-import { CBLTokenParams } from "@script/DeployCBLToken.s.sol";
 import { ERC20Wrapper } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 import { SimpleWrapperToken } from "@test/test/token/SimpleWrapperToken.t.sol";
