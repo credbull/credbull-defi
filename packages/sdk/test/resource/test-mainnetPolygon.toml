@@ -41,6 +41,14 @@ manual_value_oracle_proxy="0x4627449ECCABdb8A4c72e20AED0F655C41d26ba2"
 # Abi-encoded Oracle address and staleness threshold of 0.  (0 meaning price never gets stale).
 accounting_module_config="0x0000000000000000000000004627449ECCABdb8A4c72e20AED0F655C41d26ba20000000000000000000000000000000000000000000000000000000000000000"
 
+[[evm.address.enzyme.flexible_loans]]
+name = "BlackOpal PureStone USDT 2025"
+flexible_loan="0x6c1e5157c29a07d54a5caf2f1852b6890223504c"
+# Update Flexible Loan Values (see: ManualValueOracleLib.sol & ManualValueOracleProxy.sol)
+manual_value_oracle_proxy="0x974dc84299eF67282a68f4EecE8bAb7BD6646558"
+# Abi-encoded Oracle address and staleness threshold of 0.  (0 meaning price never gets stale).
+accounting_module_config="0x000000000000000000000000974dc84299eF67282a68f4EecE8bAb7BD66465580000000000000000000000000000000000000000000000000000000000000000"
+
 
 [[evm.address.enzyme.flexible_loans]]
 name = "TEST - BlackOpal Test Vault Flexible Loan 20241218"
