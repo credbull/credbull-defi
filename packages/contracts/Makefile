@@ -26,10 +26,10 @@ deploy-baseSepolia:
 # in foundry.toml set the `evm_version = "cancun"`
 # forge script includes `--legacy --skip-simulation`
 deploy-plumeTestnet:
-	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://test-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow"
+	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://testnet-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow"
 
 resume-plumeTestnet:
-	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://test-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow --resume"
+	$(MAKE) deploy RPC_URL=plumeTestnet EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://testnet-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow --resume"
 
 deploy-polygonAmoy:
 	$(MAKE) deploy RPC_URL=polygonAmoy EXTRA_FLAGS="--verify --slow"

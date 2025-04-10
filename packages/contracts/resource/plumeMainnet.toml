@@ -3,38 +3,38 @@
 ##
 
 [evm]
-# blockchain id, e.g. plumeMainnet=98865, plumeTestnet=98864, plumeTestnet_old=161221135, plumeDevnet=18230
-chain_id = 98865
+# blockchain id, e.g. plumeMainnet=98866 plumeTestnet=98864, plumeTestnet_old=161221135, plumeDevnet=18230
+chain_id = 98866
 deploy_mocks = false
 
 
 [evm.address]
-# plume safe admin/owner https://safe.onchainden.com/home?safe=plume:0x79F6c1d2909726fA888f2104F6ba2047F683B436
-owner = "0x79F6c1d2909726fA888f2104F6ba2047F683B436"
-# plume safe oper/asset-mgr https://safe.onchainden.com/home?safe=plume:0x0C645bcdf7D842195576B8ebC289f661655D4A33
-operator = "0x0C645bcdf7D842195576B8ebC289f661655D4A33"
+# plume safe admin/owner https://safe.onchainden.com/settings/setup?safe=plume:0x639514843071ecAeCaC65c3C56B2073823DeD169
+owner = "0x639514843071ecAeCaC65c3C56B2073823DeD169"
+# plume safe oper/asset-mgr https://safe.onchainden.com/home?safe=plume:0xa02de484F10eFdec5781B9479c6c83043144104c
+operator = "0xa02de484F10eFdec5781B9479c6c83043144104c"
+# plume safe relay wallet https://safe.onchainden.com/home?safe=plume:0xddB186CE04bE8BaA92dad87DD9FF267ae6BA761d
+custodian = "0xddB186CE04bE8BaA92dad87DD9FF267ae6BA761d"
 # plume safe upgrader (none assigned)
 upgrader = ""
-# plume safe oper/asset-mgr https://safe.onchainden.com/home?safe=plume:0x0C645bcdf7D842195576B8ebC289f661655D4A33
-asset_manager = "0x0C645bcdf7D842195576B8ebC289f661655D4A33"
+# plume safe oper/asset-mgr https://safe.onchainden.com/home?safe=plume:0xa02de484F10eFdec5781B9479c6c83043144104c
+asset_manager = "0xa02de484F10eFdec5781B9479c6c83043144104c"
 
 # USDC.e token address - Bridged USDC (Stargate) (USDC.e)
-usdc_token="0x3938A812c54304fEffD266C7E2E70B48F9475aD6"
+usdc_token="0x78adD880A697070c1e765Ac44D65323a0DcCE913"
 # Liquid Continuous Multi Token Vault Proxy - Plume Mainnet
-liquid_vault_proxy="0x2b9d2023DbF3c7473f1cec42F78713d09DdC9FBF"
-# Liquid Continuous Multi Token Vault Impl - Plume Mainnet (v2 - latest)
-liquid_vault_impl="0xD9991FC39980E4294F6953AB5aDf514Db8545658"
-# Liquid Continuous Multi Token Vault Impl - Plume Mainnet (v1)
-liquid_vault_impl_V1="0xe4a4d891f02DF7bFFc5ff9e691313DE8a9E76b91"
+liquid_vault_proxy="0x155EF98eC2D8CeE03c4419e03024AAe7876B08A9"
+# Liquid Continuous Multi Token Vault Impl - Plume Mainnet (v1 - latest)
+liquid_vault_impl="0x577349C99830D3c078034087A532581EF5381A08"
 
 
 [evm.contracts.liquid_continuous_multi_token_vault]
 # rate in basis points, e.g.  10% = 1000 bps
 full_rate_bps = 10_00
 # rate in basis points, e.g.  5.5% = 550 bps
-reduced_rate_bps = 5_50
-# December 4, 2024 2:00:00 PM UTC = 1733277600
-vault_start_timestamp = 1733277600
+reduced_rate_bps = 4_00
+# March 27, 2025 2:00:00 PM UTC = 1743084000
+vault_start_timestamp = 1743084000
 
 [services.supabase]
 url = ""
