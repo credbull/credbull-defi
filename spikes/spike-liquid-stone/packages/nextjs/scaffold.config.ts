@@ -7,33 +7,33 @@ dotenv.config();
 console.log(`*** Config loaded, network is ${process.env.NEXT_PUBLIC_NETWORK}`);
 
 export const plume: Chain = {
-  id: 98865,
-  name: "Plume",
-  nativeCurrency: { name: "Plume Ethereum", symbol: "ETH", decimals: 18 },
+  id: 98866,
+  name: "Plume ($PLUME)",
+  nativeCurrency: { name: "Plume", symbol: "$PLUME", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://rpc.plumenetwork.xyz/"] },
-    public: { http: ["https://rpc.plumenetwork.xyz/"] },
+    default: { http: ["https://phoenix-rpc.plumenetwork.xyz"] },
+    public: { http: ["https://phoenix-rpc.plumenetwork.xyz"] },
   },
   formatters: undefined,
   fees: undefined,
   blockExplorers: {
-    default: { name: "Plume Explorer", url: "https://explorer.plumenetwork.xyz" },
+    default: { name: "Plume Explorer", url: "https://phoenix-explorer.plumenetwork.xyz" },
   },
   testnet: true,
 } as Chain;
 
 export const plumeTestnet: Chain = {
-  id: 98864,
-  name: "Plume Testnet",
-  nativeCurrency: { name: "Plume Ethereum", symbol: "ETH", decimals: 18 },
+  id: 98867,
+  name: "Plume Testnet ($PLUME)",
+  nativeCurrency: { name: "Plume", symbol: "$PLUME", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://test-rpc.plumenetwork.xyz"] },
-    public: { http: ["https://test-rpc.plumenetwork.xyz"] },
+    default: { http: ["https://testnet-rpc.plumenetwork.xyz"] },
+    public: { http: ["https://testnet-rpc.plumenetwork.xyz"] },
   },
   formatters: undefined,
   fees: undefined,
   blockExplorers: {
-    default: { name: "Plume Explorer", url: "https://test-explorer.plumenetwork.xyz" },
+    default: { name: "Plume Explorer", url: "https://testnet-explorer.plumenetwork.xyz" },
   },
   testnet: true,
 } as Chain;
