@@ -9,7 +9,6 @@ test-reports/
 /broadcast/*/84532/
 /broadcast/*/421614/
 /broadcast/**/dry-run/
-/broadcast/**/run-latest.json
 
 # Docs
 docs/
