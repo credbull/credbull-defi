@@ -20,7 +20,13 @@ async function exportAddress(config) {
     const deployFilePath = path.resolve(folderPath, deployFile);
 
     contracts[chainDir] = contracts[chainDir] || {};
-    const runBuffer = fs.readFileSync(path.resolve(deployFilePath, chainDir, 'run-latest.json'));
+    const runLatestPath = path.resolve(deployFilePath, chainDir, 'run-latest.json');
+
+    if (!fs.existsSync(runLatestPath)) {
+      console.log(`Exporter skipping ${runLatestPath}.  File does not exist.`);
+      continue;
+    }
+    const runBuffer = fs.readFileSync(runLatestPath);
 
     const output = JSON.parse(runBuffer.toString('utf-8'));
     const transactions = output['transactions'];
