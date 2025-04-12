@@ -3,12 +3,11 @@ cache/
 out/
 test-reports/
 
-# ignore dev and testnet broadcast logs
+# Ignores development broadcast logs
 !/broadcast
 /broadcast/*/31337/
-/broadcast/*/84532/
-/broadcast/*/421614/
 /broadcast/**/dry-run/
+broadcast
 
 # Docs
 docs/
