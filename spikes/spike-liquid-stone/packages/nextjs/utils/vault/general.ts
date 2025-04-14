@@ -22,3 +22,11 @@ export const formatNumber = (value: string | number | bigint) =>
   Number(value).toLocaleString("en-US", {
     minimumFractionDigits: value.toString().split(".")[1]?.length || 0,
   });
+
+export function toStr(amount: bigint | number, decimals = 1000000) {
+  const scaledDown = Number(amount) / decimals;
+  const decimalPlaces = Math.floor(Math.log10(decimals));
+
+  // Use toFixed to preserve scale, then convert to Number and back to string
+  return Number(scaledDown.toFixed(decimalPlaces)).toLocaleString();
+}

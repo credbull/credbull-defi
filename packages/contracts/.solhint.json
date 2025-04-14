@@ -8,6 +8,7 @@
     "func-name-mixedcase": "off",
     "var-name-mixedcase": "off",
     "no-console": "off",
-    "one-contract-per-file": "off"
+    "one-contract-per-file": "off",
+    "compiler-version": ["error","^0.8.20"]
   }
 }

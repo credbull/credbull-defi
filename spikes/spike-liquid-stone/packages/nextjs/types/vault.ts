@@ -4,11 +4,11 @@ export type PeriodRate = {
 };
 
 export type DepositPool = {
-  depositId: string;
-  balance: string;
-  shares: string;
-  unlockRequestAmount: string;
-  yield: string;
+  depositId: bigint;
+  shares: bigint;
+  assets: bigint;
+  unlockRequestAmount: bigint;
+  yield: bigint;
 };
 
 export type RedeemRequest = {

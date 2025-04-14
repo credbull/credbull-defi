@@ -3,7 +3,7 @@ import { OwnedNft } from "alchemy-sdk";
 import { ethers } from "ethers";
 import { useChainId, useChains } from "wagmi";
 import { DepositPool } from "~~/types/vault";
-import { notification } from "~~/utils/scaffold-eth";
+import { getProvider } from "~~/utils/scaffold-eth";
 import { getNFTsForOwner } from "~~/utils/vault/web3";
 
 export const useFetchDepositPools = ({
@@ -67,37 +67,16 @@ export const useFetchDepositPools = ({
   useEffect(() => {
     setDepositPoolsFetched(false);
 
-    async function fetchExistingUserDepositIds() {
+    (async () => {
       if (!deployedContractAddress || !deployedContractAbi || fetchedWithAlchemy || !currentPeriod) {
         setDepositPoolsFetched(true);
         return;
       }
 
-      try {
-        const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
-        const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
-
-        const existingUserDepositIds: OwnedNft[] = [];
-
-        for (let i = 0; i <= currentPeriod; i++) {
-          const depositId = userDepositIds[i];
-
-          const exists = await contract.exists(depositId?.tokenId);
-          if (exists) {
-            existingUserDepositIds.push(depositId);
-          }
-        }
-
-        if (existingUserDepositIds?.length > 0) {
-          setExistingUserDepositIds(existingUserDepositIds as OwnedNft[]);
-        }
-      } catch (error) {
-        console.error("Error fetching existing user deposit IDs:", error);
-        setDepositPoolsFetched(true);
-      }
-    }
-
-    fetchExistingUserDepositIds();
+      // getNFTsForOwner() returns only our own tokens
+      setExistingUserDepositIds(userDepositIds);
+      setDepositPoolsFetched(true);
+    })();
   }, [
     currentPeriod,
     userDepositIds,
@@ -124,92 +103,53 @@ export const useFetchDepositPools = ({
         return;
       }
 
-      const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
+      const provider = await getProvider(chain);
+
       const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
 
-      const balancePromises = existingUserDepositIds.map(async depositId => {
-        try {
-          const balanceBigInt = await contract.balanceOf(address, depositId?.tokenId);
+      const depositIds: bigint[] = existingUserDepositIds.map(d => BigInt(d.tokenId));
+      const accounts: string[] = depositIds.map(() => address);
 
-          const balance = ethers.formatUnits(balanceBigInt, 6);
+      // clone the shares into a proper array.  ethers returns a frozen Result array.
+      const shares = [...(await contract.balanceOfBatch(accounts, depositIds))] as bigint[];
+      const assets = await contract.convertToAssetsForDepositPeriodBatch(shares, depositIds, currentPeriod);
 
-          const sharesBigInt = await contract.sharesAtPeriod(address, depositId?.tokenId);
-          const shares = ethers.formatUnits(sharesBigInt, 6);
+      const poolMap = new Map<bigint, DepositPool>();
 
-          const unlockRequestAmountBigInt = await contract.unlockRequestAmountByDepositPeriod(
-            address,
-            Number(depositId?.tokenId),
-          );
-          const unlockRequestAmount = ethers.formatUnits(unlockRequestAmountBigInt, 6);
+      for (let i = 0; i < depositIds.length; i++) {
+        const depositId = depositIds[i];
+        const sharesAtDepositId = shares[i];
+        const assetsAtDepositId = assets[i];
 
-          if (balanceBigInt > 0 && Number(depositId?.tokenId) <= currentPeriod) {
-            let yieldAmount = 0;
+        const unlockRequestAmount = await contract.unlockRequestAmountByDepositPeriod(address, depositId);
 
-            try {
-              yieldAmount =
-                currentPeriod > Number(depositId?.tokenId)
-                  ? await contract.calcYield(balanceBigInt, depositId?.tokenId, currentPeriod)
-                  : 0;
-            } catch (error) {
-              yieldAmount = 0;
-
-              notification.warning(
-                "It seems like you are testing a wrong scenario! You may set the reduced rate and get back to a period where it is not effective anymore. So you will see a wrong number regarding the `Yield Amount`.",
-              );
-            }
-
-            return {
-              depositId: depositId?.tokenId,
-              balance,
-              shares,
-              unlockRequestAmount,
-              yield: yieldAmount > 0 ? ethers.formatUnits(yieldAmount, 6) : yieldAmount,
-            };
-          }
-
-          return null;
-        } catch (error) {
-          console.error(
-            "Error fetching balance for depositId:",
-            depositId?.tokenId,
-            " and currentPeriod: ",
-            currentPeriod,
-            error,
-          );
-          return null;
+        if (sharesAtDepositId > 0n && Number(depositId) <= currentPeriod) {
+          poolMap.set(depositId, {
+            depositId,
+            shares: sharesAtDepositId,
+            assets: assetsAtDepositId,
+            unlockRequestAmount,
+            yield: assetsAtDepositId - sharesAtDepositId,
+          });
         }
-      });
+      }
+      setPools(Array.from(poolMap.values()));
 
-      const results = await Promise.all(balancePromises);
-      const validPools = results.filter(pool => pool !== null) as DepositPool[];
-
-      setPools(validPools);
       setDepositPoolsFetched(true);
     }
 
-    if (fetchedWithAlchemy) {
+    (async () => {
       if (existingUserDepositIds.length > 0 && deployedContractAddress) {
         try {
-          fetchBalances();
+          await fetchBalances();
         } catch (error) {
-          console.log(error);
+          console.error(error);
           setDepositPoolsFetched(true);
         }
       } else {
         setDepositPoolsFetched(true);
       }
-    } else {
-      if (userDepositIds.length > 0 && deployedContractAddress) {
-        try {
-          fetchBalances();
-        } catch (error) {
-          console.log(error);
-          setDepositPoolsFetched(true);
-        }
-      } else {
-        setDepositPoolsFetched(true);
-      }
-    }
+    })();
   }, [
     address,
     refetch,
