@@ -18,23 +18,23 @@
   "dependencies": {
     "@credbull/api": "workspace:^",
     "@credbull/contracts": "workspace:^",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.5.0",
     "ethers": "^5.8.0",
-    "siwe": "^2.1.4",
-    "zod": "^3.22.4"
+    "siwe": "^2.3.2",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.44.1",
+    "@playwright/test": "^1.51.1",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
-    "@types/node": "^20.11.20",
-    "@typescript-eslint/eslint-plugin": "^7.1.0",
-    "@typescript-eslint/parser": "^7.1.0",
-    "eslint": "^8.56.0",
+    "@types/node": "^20.17.30",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.1.2",
-    "js-toml": "^1.0.0",
-    "prettier": "^3.1.1",
+    "eslint-plugin-prettier": "^5.2.6",
+    "js-toml": "^1.0.1",
+    "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.8.3"
   }
 }
