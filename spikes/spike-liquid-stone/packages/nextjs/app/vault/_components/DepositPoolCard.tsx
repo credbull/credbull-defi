@@ -3,7 +3,7 @@
 import { useTheme } from "next-themes";
 import ContractValueBadge from "~~/components/general/ContractValueBadge";
 import { DepositPool } from "~~/types/vault";
-import { formatNumber } from "~~/utils/vault/general";
+import { toStr } from "~~/utils/vault/general";
 
 const DepositPoolCard = ({ pool, onClickHandler }: { pool: DepositPool; onClickHandler?: (params: any) => void }) => {
   const { resolvedTheme } = useTheme();
@@ -25,10 +25,10 @@ const DepositPoolCard = ({ pool, onClickHandler }: { pool: DepositPool; onClickH
       <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-lg rounded-lg"></div>
 
       <ContractValueBadge name="Deposit period" value={Number(pool.depositId)} />
-      <ContractValueBadge name="Balance" value={`${formatNumber(pool.balance)} USDC`} />
-      <ContractValueBadge name="Shares" value={formatNumber(pool.shares)} />
-      <ContractValueBadge name="Requested Amount" value={formatNumber(pool.unlockRequestAmount)} />
-      <ContractValueBadge name="Yield" value={`${formatNumber(pool.yield)} USDC`} />
+      <ContractValueBadge name="Shares" value={toStr(pool.shares)} />
+      <ContractValueBadge name="Assets" value={`${toStr(pool.assets)} USDC`} />
+      <ContractValueBadge name="Yield" value={`${toStr(pool.yield)} USDC`} />
+      <ContractValueBadge name="Redeem Requested Shares" value={`${toStr(pool.unlockRequestAmount)}`} />
 
       <div
         className="absolute inset-0 transition-opacity duration-700 opacity-0 hover:opacity-100"

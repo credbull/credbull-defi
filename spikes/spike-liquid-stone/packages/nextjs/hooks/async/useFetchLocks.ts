@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import { useChainId, useChains } from "wagmi";
 import { LockRow } from "~~/types/async";
 import { MAX_PERIODS } from "~~/utils/async/config";
+import { getProvider } from "~~/utils/scaffold-eth";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
 
 export const useFetchLocks = ({
@@ -29,7 +30,7 @@ export const useFetchLocks = ({
     async function fetchBalances() {
       if (!deployedContractAddress || !address || userDepositPeriods.length === 0) return;
 
-      const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
+      const provider = await getProvider(chain);
       const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
 
       const lockPromises = userDepositPeriods.map(async depositPeriod => {

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Contract, ethers } from "ethers";
 import { useChainId, useChains } from "wagmi";
 import { RedeemRequest } from "~~/types/vault";
-import { notification } from "~~/utils/scaffold-eth";
+import { getProvider, notification } from "~~/utils/scaffold-eth";
 
 export const useFetchRedeemRequests = ({
   address,
@@ -43,7 +43,7 @@ export const useFetchRedeemRequests = ({
         return;
       }
 
-      const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
+      const provider = await getProvider(chain);
       const contract: Contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
       const requests: RedeemRequest[] = [];
       const redeemPeriod = await getRedeemPeriod(contract);

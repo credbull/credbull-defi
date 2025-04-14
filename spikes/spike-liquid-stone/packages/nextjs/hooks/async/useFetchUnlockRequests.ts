@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import { useChainId, useChains } from "wagmi";
 import { UnlockRequest } from "~~/types/async";
 import { MAX_PERIODS } from "~~/utils/async/config";
+import { getProvider } from "~~/utils/scaffold-eth";
 import { ContractAbi } from "~~/utils/scaffold-eth/contract";
 
 export const useFetchUnlockRequests = ({
@@ -32,7 +33,7 @@ export const useFetchUnlockRequests = ({
       try {
         if (!address || !deployedContractAddress || deployedContractAbi || !noticePeriod) return;
 
-        const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
+        const provider = await getProvider(chain);
         const contract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
         const requests: UnlockRequest[] = [];
 

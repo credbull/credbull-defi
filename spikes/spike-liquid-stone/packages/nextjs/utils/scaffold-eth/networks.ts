@@ -7,6 +7,8 @@ import {
   primvevaultCredbullDefi,
   testnetCredbullDevops,
 } from "~~/utils/scaffold-eth/chainAddresses";
+import {Chain} from "viem";
+import {ethers} from "ethers";
 
 type ChainAttributes = {
   // color | [lightThemeColor, darkThemeColor]
@@ -153,4 +155,10 @@ export function getTargetNetworks(): ChainWithAttributes[] {
 
 export function getTargetNetworkById(chainId: number | undefined): ChainWithAttributes | undefined {
   return getTargetNetworks().find(network => network.id === chainId);
+}
+
+export async function getProvider(chain: Chain) {
+  const rpcUrl = getAlchemyHttpUrl(chain.id) || chain?.rpcUrls?.default?.http[0];
+
+  return new ethers.JsonRpcProvider(rpcUrl);
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { useChainId, useChains, useReadContract } from "wagmi";
+import { getProvider } from "~~/utils/scaffold-eth";
 import { Contract, ContractAbi, ContractName } from "~~/utils/scaffold-eth/contract";
 
 export const useFetchAdminData = ({
@@ -168,7 +169,7 @@ export const useFetchAdminData = ({
       }
 
       try {
-        const provider = new ethers.JsonRpcProvider(chain?.rpcUrls?.default?.http[0]);
+        const provider = await getProvider(chain);
         const deployedContract = new ethers.Contract(deployedContractAddress, deployedContractAbi, provider);
 
         setFetchingAdmins(true);
