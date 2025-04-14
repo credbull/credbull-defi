@@ -41,7 +41,7 @@
     "@tabler/icons": "1.119.0",
     "@tanstack/react-table": "^8.11.2",
     "date-fns": "^3.2.0",
-    "ethers": "^5.7.2",
+    "ethers": "^5.8.0",
     "lodash": "^4.17.21",
     "next": "^14.2.4",
     "react": "^18.2.0",

@@ -19,7 +19,7 @@
     "@credbull/api": "workspace:^",
     "@credbull/contracts": "workspace:^",
     "dotenv": "^16.4.5",
-    "ethers": "5.7.2",
+    "ethers": "^5.8.0",
     "siwe": "^2.1.4",
     "zod": "^3.22.4"
   },
