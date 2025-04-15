@@ -52,6 +52,8 @@
   },
   "resolutions": {
     "@babel/traverse": "^7.25.6",
+    "@rainbow-me/rainbowkit": "2.2.4",
+    "wagmi": "2.14.16",
     "cross-spawn": "^7.0.5",
     "elliptic": "^6.6.1",
     "semver": "^7.5.4",

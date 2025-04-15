@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import type { FC } from "react";
 import Link from "next/link";
-import { CopyToClipboard } from "react-copy-to-clipboard";
+import { CopyToClipboard as RawCopyToClipboard } from "react-copy-to-clipboard";
 import { CheckCircleIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
+
+const CopyToClipboard = RawCopyToClipboard as unknown as FC<any>;
 
 export const TransactionHash = ({ hash }: { hash: string }) => {
   const [addressCopied, setAddressCopied] = useState(false);

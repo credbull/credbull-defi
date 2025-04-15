@@ -1,4 +1,4 @@
-import { connectorsForWallets } from "@rainbow-me/rainbowkit";
+import {connectorsForWallets} from "@rainbow-me/rainbowkit";
 import {
   coinbaseWallet,
   ledgerWallet,
@@ -7,37 +7,33 @@ import {
   safeWallet,
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
-import { rainbowkitBurnerWallet } from "burner-connector";
+import {rainbowkitBurnerWallet} from "burner-connector";
 import * as chains from "viem/chains";
 import scaffoldConfig from "~~/scaffold.config";
 
-const { onlyLocalBurnerWallet, targetNetworks } = scaffoldConfig;
+const appName = "liquid-spike-ui";
+const { onlyLocalBurnerWallet, targetNetworks, walletConnectProjectId } = scaffoldConfig;
 
-const wallets = [
-  metaMaskWallet,
-  walletConnectWallet,
-  ledgerWallet,
-  coinbaseWallet,
-  rainbowWallet,
-  safeWallet,
-  ...(!targetNetworks.some(network => network.id !== (chains.hardhat as chains.Chain).id) || !onlyLocalBurnerWallet
-    ? [rainbowkitBurnerWallet]
-    : []),
-];
+const includeBurner =
+  !targetNetworks.some(network => network.id !== (chains.hardhat as chains.Chain).id) || !onlyLocalBurnerWallet;
 
-/**
- * wagmi connectors for the wagmi context
- */
 export const wagmiConnectors = connectorsForWallets(
   [
     {
       groupName: "Supported Wallets",
-      wallets,
+      wallets: [
+        () => metaMaskWallet({ projectId: walletConnectProjectId }),
+        () => walletConnectWallet({ projectId: walletConnectProjectId }),
+        () => ledgerWallet({ projectId: walletConnectProjectId }),
+        () => coinbaseWallet({ appName: appName }),
+        () => rainbowWallet({ projectId: walletConnectProjectId }),
+        () => safeWallet(),
+        ...(includeBurner ? [() => rainbowkitBurnerWallet() as unknown as ReturnType<typeof metaMaskWallet>] : []),
+      ],
     },
   ],
-
   {
-    appName: "scaffold-eth-2",
-    projectId: scaffoldConfig.walletConnectProjectId,
+    appName,
+    projectId: walletConnectProjectId,
   },
 );

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
+import type { FC } from "react";
 import { NetworkOptions } from "./NetworkOptions";
-import CopyToClipboard from "react-copy-to-clipboard";
+import { CopyToClipboard as RawCopyToClipboard } from "react-copy-to-clipboard";
 import { getAddress } from "viem";
 import { Address } from "viem";
 import { useDisconnect } from "wagmi";
@@ -17,6 +18,7 @@ import { BlockieAvatar, isENS } from "~~/components/scaffold-eth";
 import { useOutsideClick } from "~~/hooks/scaffold-eth";
 import { getTargetNetworks } from "~~/utils/scaffold-eth";
 
+const CopyToClipboard = RawCopyToClipboard as unknown as FC<any>;
 const allowedNetworks = getTargetNetworks();
 
 type AddressInfoDropdownProps = {

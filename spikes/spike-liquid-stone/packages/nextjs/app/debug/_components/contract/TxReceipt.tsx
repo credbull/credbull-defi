@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { CopyToClipboard } from "react-copy-to-clipboard";
+import type { FC } from "react";
+import { CopyToClipboard as RawCopyToClipboard } from "react-copy-to-clipboard";
 import { TransactionReceipt } from "viem";
 import { CheckCircleIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { ObjectFieldDisplay } from "~~/app/debug/_components/contract";
 import { replacer } from "~~/utils/scaffold-eth/common";
+
+const CopyToClipboard = RawCopyToClipboard as unknown as FC<any>;
 
 export const TxReceipt = ({ txResult }: { txResult: TransactionReceipt }) => {
   const [txResultCopied, setTxResultCopied] = useState(false);

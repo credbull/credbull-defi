@@ -25,8 +25,8 @@ export const formatNumber = (value: string | number | bigint) =>
 
 export function toStr(amount: bigint | number, decimals = 1000000) {
   const scaledDown = Number(amount) / decimals;
-  const decimalPlaces = Math.floor(Math.log10(decimals));
-
-  // Use toFixed to preserve scale, then convert to Number and back to string
-  return Number(scaledDown.toFixed(decimalPlaces)).toLocaleString();
+  return scaledDown.toLocaleString(undefined, {
+    useGrouping: true,
+    maximumFractionDigits: Math.floor(Math.log10(decimals)),
+  });
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { FC } from "react";
 import Link from "next/link";
-import { CopyToClipboard } from "react-copy-to-clipboard";
+import { CopyToClipboard as RawCopyToClipboard } from "react-copy-to-clipboard";
 import { Address as AddressType, getAddress, isAddress } from "viem";
 import { hardhat } from "viem/chains";
 import { normalize } from "viem/ens";
@@ -11,6 +12,8 @@ import { CheckCircleIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outl
 import { BlockieAvatar } from "~~/components/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 import { getBlockExplorerAddressLink } from "~~/utils/scaffold-eth";
+
+const CopyToClipboard = RawCopyToClipboard as unknown as FC<any>;
 
 type AddressProps = {
   address?: AddressType;
