@@ -55,7 +55,7 @@ contract DeployCBLToken is TomlConfig {
         return cblTokenParams;
     }
 
-    function createCBLTokenParamsFromConfig() public view returns (CBLTokenParams memory) {
+    function createCBLTokenParamsFromConfig() internal view returns (CBLTokenParams memory) {
         CBLTokenParams memory tokenParams = CBLTokenParams({
             owner: tomlConfig.readAddress(".evm.contracts.cbl.owner"),
             minter: tomlConfig.readAddress(".evm.contracts.cbl.minter"),
