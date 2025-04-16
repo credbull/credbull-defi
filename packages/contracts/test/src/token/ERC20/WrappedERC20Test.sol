@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
 import { Test } from "forge-std/Test.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { DeployWrappedERC20 } from "../../../script/DeployWrappedERC20.s.sol";
+import { DeployWrappedERC20 } from "@script/DeployWrappedERC20.s.sol";
 import { ERC20Wrapper } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
 import { WrappedERC20 } from "@credbull/token/ERC20/WrappedERC20.sol";
