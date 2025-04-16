@@ -5,19 +5,19 @@ pragma solidity ^0.8.20;
 import { Test } from "forge-std/Test.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { DeploySimpleWrapperToken } from "@test/test/script/DeploySimpleWrapperToken.s.sol";
+import { DeployCredbullERC20Wrapper } from "@test/test/script/DeployCredbullERC20Wrapper.s.sol";
 import { ERC20Wrapper } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
-import { SimpleWrapperToken } from "@test/test/token/SimpleWrapperToken.t.sol";
+import { CredbullERC20Wrapper } from "@test/test/token/CredbullERC20Wrapper.t.sol";
 
-contract SimpleWrapperTokenTest is Test {
+contract CredbullERC20WrapperTest is Test {
     IERC20 private _underlyingToken;
     uint256 private _underlyingTokenScale;
 
-    DeploySimpleWrapperToken private _deployer;
+    DeployCredbullERC20Wrapper private _deployer;
     ERC20Wrapper private _wrapperToken;
 
-    SimpleWrapperToken.SimpleWrapperTokenParams private _tokenParams;
+    CredbullERC20Wrapper.Params private _params;
 
     address private _alice = makeAddr("alice");
     address private _bob = makeAddr("bob");
@@ -29,32 +29,32 @@ contract SimpleWrapperTokenTest is Test {
         _underlyingToken = simpleToken;
         _underlyingTokenScale = 10 ** simpleToken.decimals();
 
-        _tokenParams = SimpleWrapperToken.SimpleWrapperTokenParams({
+        _params = CredbullERC20Wrapper.Params({
             owner: owner,
             name: "WrapperToken-V1",
             symbol: "wT-V1",
             underlyingToken: _underlyingToken
         });
 
-        _deployer = new DeploySimpleWrapperToken(_underlyingToken);
-        _wrapperToken = _deployer.run(_tokenParams);
+        _deployer = new DeployCredbullERC20Wrapper(_underlyingToken);
+        _wrapperToken = _deployer.run(_params);
 
         assertEq(
             _underlyingToken.totalSupply(),
-            _underlyingToken.balanceOf(_tokenParams.owner),
+            _underlyingToken.balanceOf(_params.owner),
             "owner should start with all tokens"
         );
-        vm.prank(_tokenParams.owner);
+        vm.prank(_params.owner);
         _underlyingToken.transfer(_alice, 1_000_000 * _underlyingTokenScale);
     }
 
-    function test__SimpleWrapperToken__Deploy() public {
+    function test__CredbullERC20Wrapper__Deploy() public {
         uint256 depositAmount = 250_000 * _underlyingTokenScale;
         uint256 prevUnderlyingBal = _underlyingToken.balanceOf(_alice);
 
         assertNotEq(address(0), address(_wrapperToken));
-        assertEq(_tokenParams.name, _wrapperToken.name());
-        assertEq(_tokenParams.symbol, _wrapperToken.symbol());
+        assertEq(_params.name, _wrapperToken.name());
+        assertEq(_params.symbol, _wrapperToken.symbol());
 
         assertEq(0, _wrapperToken.totalSupply(), "wrapper total supply should start at zero");
         assertEq(0, _wrapperToken.balanceOf(_alice), "user wrapper balance should start at zero");
