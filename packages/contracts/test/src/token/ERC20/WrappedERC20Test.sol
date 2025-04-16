@@ -5,19 +5,19 @@ pragma solidity ^0.8.20;
 import { Test } from "forge-std/Test.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import { DeployCredbullERC20Wrapper } from "@test/test/script/DeployCredbullERC20Wrapper.s.sol";
+import { DeployWrappedERC20 } from "../../../script/DeployWrappedERC20.s.sol";
 import { ERC20Wrapper } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
-import { CredbullERC20Wrapper } from "@test/test/token/CredbullERC20Wrapper.t.sol";
+import { WrappedERC20 } from "@credbull/token/ERC20/WrappedERC20.sol";
 
-contract CredbullERC20WrapperTest is Test {
+contract WrappedERC20Test is Test {
     IERC20 private _underlyingToken;
     uint256 private _underlyingTokenScale;
 
-    DeployCredbullERC20Wrapper private _deployer;
+    DeployWrappedERC20 private _deployer;
     ERC20Wrapper private _wrapperToken;
 
-    CredbullERC20Wrapper.Params private _params;
+    WrappedERC20.Params private _params;
 
     address private _alice = makeAddr("alice");
     address private _bob = makeAddr("bob");
@@ -29,14 +29,14 @@ contract CredbullERC20WrapperTest is Test {
         _underlyingToken = simpleToken;
         _underlyingTokenScale = 10 ** simpleToken.decimals();
 
-        _params = CredbullERC20Wrapper.Params({
+        _params = WrappedERC20.Params({
             owner: owner,
             name: "WrapperToken-V1",
             symbol: "wT-V1",
             underlyingToken: _underlyingToken
         });
 
-        _deployer = new DeployCredbullERC20Wrapper(_underlyingToken);
+        _deployer = new DeployWrappedERC20(_underlyingToken);
         _wrapperToken = _deployer.run(_params);
 
         assertEq(
@@ -48,7 +48,7 @@ contract CredbullERC20WrapperTest is Test {
         _underlyingToken.transfer(_alice, 1_000_000 * _underlyingTokenScale);
     }
 
-    function test__CredbullERC20Wrapper__Deploy() public {
+    function test__WrappedERC20__Deploy() public {
         uint256 depositAmount = 250_000 * _underlyingTokenScale;
         uint256 prevUnderlyingBal = _underlyingToken.balanceOf(_alice);
 

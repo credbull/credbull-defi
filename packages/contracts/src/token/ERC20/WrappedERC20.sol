@@ -6,10 +6,10 @@ import { ERC20Wrapper, ERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20
 import { Ownable2Step, Ownable } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 /*
- * @title ERC20 Wrapper Token Contract
+ * @title ERC20 Wrapper Contract
  */
-contract CredbullERC20Wrapper is ERC20Wrapper, Ownable2Step {
-    event CredbullERC20Wrapper__TokensRecovered(address indexed account, uint256 amount);
+contract WrappedERC20 is ERC20Wrapper, Ownable2Step {
+    event WrappedERC20__TokensRecovered(address indexed account, uint256 amount);
 
     struct Params {
         address owner;
@@ -27,6 +27,6 @@ contract CredbullERC20Wrapper is ERC20Wrapper, Ownable2Step {
     /// @dev See {ERC20Wrapper-_recover}.
     function recover(address account) public virtual onlyOwner returns (uint256 _recoveredAmount) {
         _recoveredAmount = _recover(account);
-        emit CredbullERC20Wrapper__TokensRecovered(account, _recoveredAmount);
+        emit WrappedERC20__TokensRecovered(account, _recoveredAmount);
     }
 }
