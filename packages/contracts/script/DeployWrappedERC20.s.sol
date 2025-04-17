@@ -42,7 +42,7 @@ contract DeployWrappedERC20 is TomlConfig {
     }
 
     function cblTokenFromConfig() internal view returns (IERC20Metadata underlyingToken) {
-        return IERC20Metadata(_tomlConfig.readAddress(".evm.contracts.cbl_token"));
+        return IERC20Metadata(_tomlConfig.readAddress(".evm.address.cbl_token"));
     }
 
     function createParams(address owner, IERC20Metadata underlyingToken)

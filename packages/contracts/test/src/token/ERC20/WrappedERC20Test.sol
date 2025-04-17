@@ -55,7 +55,7 @@ contract WrappedERC20Test is Test {
         uint256 prevUnderlyingBal = _underlyingToken.balanceOf(_alice);
 
         assertEq(0, _wrappedToken.totalSupply(), "wrapper total supply should start at zero");
-        assertEq(0, _wrappedToken.balanceOf(_alice), "user wrapper balance should start at zero");
+        assertEq(0, _wrappedToken.balanceOf(_alice), "alice wrapper balance should start at zero");
 
         // grant allowance
         vm.prank(_alice);
@@ -68,7 +68,7 @@ contract WrappedERC20Test is Test {
         assertEq(
             depositAmount, _wrappedToken.totalSupply(), "wrapper total supply should be deposit tokens after deposit"
         );
-        assertEq(depositAmount, _wrappedToken.balanceOf(_alice), "user should have deposit tokens after deposit");
+        assertEq(depositAmount, _wrappedToken.balanceOf(_alice), "alice should have deposit tokens after deposit");
         assertEq(
             prevUnderlyingBal - depositAmount,
             _underlyingToken.balanceOf(_alice),
@@ -81,8 +81,9 @@ contract WrappedERC20Test is Test {
         vm.prank(_alice);
         _wrappedToken.withdrawTo(recipient, depositAmount);
 
-        assertEq(depositAmount, _underlyingToken.balanceOf(recipient), "recipient should have full amount");
-        assertEq(0, _wrappedToken.totalSupply(), "wrapper supply should be zero after full withdraw");
+        assertEq(depositAmount, _underlyingToken.balanceOf(recipient), "recipient should have full deposit amount");
+        assertEq(_wrappedToken.balanceOf(_alice), 0, "alice should have zero wrapped tokens after withdrawal");
+        assertEq(0, _wrappedToken.totalSupply(), "wrapper supply should be zero after withdrawal");
     }
 
     function test__WrappedERC20__RecoverTransferredTokens() public {
@@ -92,12 +93,26 @@ contract WrappedERC20Test is Test {
         vm.prank(_alice);
         _underlyingToken.transfer(address(_wrappedToken), depositAmount);
 
-        assertEq(0, _wrappedToken.balanceOf(_alice), "user transferred tokens, receives zero wrapped tokens");
+        assertEq(0, _wrappedToken.balanceOf(_alice), "alice transferred tokens, receives zero wrapped tokens");
+
+        vm.expectEmit(true, false, false, true); // match indexed `account` and data `amount`
+        emit WrappedERC20.WrappedERC20__TokensRecovered(_alice, depositAmount); // expected event shape
 
         // owner can recover for the user
         vm.prank(_params.owner);
         _wrappedToken.recover(_alice);
 
-        assertEq(depositAmount, _wrappedToken.balanceOf(_alice), "user should have deposit after recover");
+        assertEq(depositAmount, _wrappedToken.balanceOf(_alice), "alice should have deposit after recover");
+    }
+
+    function test__WrappedERC20__RecoverRevertsForNonOwner() public {
+        uint256 depositAmount = 50_000 * _underlyingTokenScale;
+
+        vm.prank(_alice);
+        _underlyingToken.transfer(address(_wrappedToken), depositAmount);
+
+        vm.prank(_bob); // not owner
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, _bob));
+        _wrappedToken.recover(_bob);
     }
 }
