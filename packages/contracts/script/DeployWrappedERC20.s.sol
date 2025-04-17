@@ -50,7 +50,7 @@ contract DeployWrappedERC20 is TomlConfig {
         view
         returns (WrappedERC20.Params memory params_)
     {
-        string memory name = string.concat("w", underlyingToken.name(), _symbolPostfix);
+        string memory name = string.concat("Wrapped ", underlyingToken.name(), _symbolPostfix);
         string memory symbol = string.concat("w", underlyingToken.symbol(), _symbolPostfix);
 
         WrappedERC20.Params memory tokenParams =
