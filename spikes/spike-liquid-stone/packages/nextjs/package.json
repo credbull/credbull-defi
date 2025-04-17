@@ -5,6 +5,7 @@
   "scripts": {
     "build": "next build",
     "check-types": "tsc --noEmit --incremental",
+    "clean": "rm -rf .next next-env.d.ts node_modules",
     "dev": "next dev",
     "format": "prettier --write . '!(node_modules|.next|contracts)/**/*'",
     "lint": "next lint",
