@@ -4,14 +4,14 @@ pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { DeployWrappedERC20 } from "@script/DeployWrappedERC20.s.sol";
 import { ERC20Wrapper } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
-import { WrappedERC20 } from "@credbull/token/ERC20/WrappedERC20.sol";
+import { WrappedERC20, Ownable } from "@credbull/token/ERC20/WrappedERC20.sol";
 
 contract WrappedERC20Test is Test {
-    IERC20 private _underlyingToken;
+    IERC20Metadata private _underlyingToken;
     uint256 private _underlyingTokenScale;
 
     DeployWrappedERC20 private _deployer;
@@ -29,14 +29,9 @@ contract WrappedERC20Test is Test {
         _underlyingToken = simpleToken;
         _underlyingTokenScale = 10 ** simpleToken.decimals();
 
-        _params = WrappedERC20.Params({
-            owner: owner,
-            name: "WrapperToken-V1",
-            symbol: "wT-V1",
-            underlyingToken: _underlyingToken
-        });
-
-        _deployer = new DeployWrappedERC20(_underlyingToken);
+        _deployer = new DeployWrappedERC20();
+        _deployer.setPostfix("-TEST_2025");
+        _params = _deployer.createParams(owner, _underlyingToken);
         _wrapperToken = _deployer.run(_params);
 
         assertEq(
@@ -48,13 +43,17 @@ contract WrappedERC20Test is Test {
         _underlyingToken.transfer(_alice, 1_000_000 * _underlyingTokenScale);
     }
 
-    function test__WrappedERC20__Deploy() public {
+    function test__WrappedERC20__Deploy() public view {
+        assertNotEq(address(0), address(_wrapperToken));
+        assertEq(address(_underlyingToken), address(_wrapperToken.underlying()), "underlying incorrect");
+        assertEq(_params.owner, Ownable(address(_wrapperToken)).owner(), "owner incorrect");
+        assertEq(_params.name, _wrapperToken.name(), "name incorrect");
+        assertEq(_params.symbol, _wrapperToken.symbol(), "symbol incorrect");
+    }
+
+    function test__WrappedERC20__DepositAndRedeem() public {
         uint256 depositAmount = 250_000 * _underlyingTokenScale;
         uint256 prevUnderlyingBal = _underlyingToken.balanceOf(_alice);
-
-        assertNotEq(address(0), address(_wrapperToken));
-        assertEq(_params.name, _wrapperToken.name());
-        assertEq(_params.symbol, _wrapperToken.symbol());
 
         assertEq(0, _wrapperToken.totalSupply(), "wrapper total supply should start at zero");
         assertEq(0, _wrapperToken.balanceOf(_alice), "user wrapper balance should start at zero");
@@ -63,7 +62,7 @@ contract WrappedERC20Test is Test {
         vm.prank(_alice);
         _underlyingToken.approve(address(_wrapperToken), depositAmount);
 
-        // now deposit
+        // deposit
         vm.prank(_alice);
         _wrapperToken.depositFor(_alice, depositAmount);
 
@@ -76,5 +75,14 @@ contract WrappedERC20Test is Test {
             _underlyingToken.balanceOf(_alice),
             "alice should have deposit fewer underlying after deposit"
         );
+
+        // withdrawTo
+        address recipient = makeAddr("someRecipient");
+
+        vm.prank(_alice);
+        _wrapperToken.withdrawTo(recipient, depositAmount);
+
+        assertEq(depositAmount, _underlyingToken.balanceOf(recipient), "recipient should have full amount");
+        assertEq(0, _wrapperToken.totalSupply(), "wrapper supply should be zero after full withdraw");
     }
 }
