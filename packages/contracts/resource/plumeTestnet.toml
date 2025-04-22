@@ -28,11 +28,11 @@ asset_manager = "0xd097E901FB9B75C2d2f97E142d73fA79C31FcAb3"
 # usdc_token="0x816BA111c23a9b565A670736F8E14EDfb97E7548"
 
 # SimpleUSDC address - Plume Testnet
- usdc_token="0x816BA111c23a9b565A670736F8E14EDfb97E7548"
+usdc_token="0x816BA111c23a9b565A670736F8E14EDfb97E7548"
 # Liquid Continuous Multi Token Vault Proxy - Plume Testnet (SimpleUSDC)
-liquid_vault_proxy="0x10bb81396677D8d6B9209Ec90A541621cfb9f732"
+liquid_vault_proxy="0x82D7f1E6DC243Acba12B7bdAeA27d053f1799015"
 # Liquid Continuous Multi Token Vault Impl - Plume Testnet (SimpleUSDC)
-liquid_vault_impl="0xF018EB92FB23557865D185550fa3107Ab31DD6cd"
+liquid_vault_impl="0x87Bac7c1099977A9973d57927DeCa6e51145eEB4"
 
 
 [evm.contracts.liquid_continuous_multi_token_vault]
