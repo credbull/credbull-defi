@@ -7,12 +7,12 @@ import { ERC1155Holder } from "@openzeppelin/contracts/token/ERC1155/utils/ERC11
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 contract ERC1155Hashable is ERC1155, ERC1155Holder, AccessControl {
-    event ERC1155Hashable__Minted(uint256 indexed tokenId, address indexed to, string checksum_, string uri_);
+    event ERC1155Hashable__Minted(uint256 indexed tokenId, address indexed to, string hash_, string uri_);
 
     uint256 public currentId = 0;
 
     struct Metadata {
-        string checksum;
+        string hash;
         string uri;
     }
 
@@ -25,25 +25,25 @@ contract ERC1155Hashable is ERC1155, ERC1155Holder, AccessControl {
         _grantRole(MINTER_ROLE, minter);
     }
 
-    function mint(string calldata checksum_, string calldata uri_) public onlyRole(MINTER_ROLE) {
+    function mint(string calldata hash_, string calldata uri_) public onlyRole(MINTER_ROLE) {
         ++currentId; // pre-increment so currentId matches the new token being minted
         _mint(address(this), currentId, 1, "");
 
-        metadata[currentId] = Metadata({ checksum: checksum_, uri: uri_ });
+        metadata[currentId] = Metadata({ hash: hash_, uri: uri_ });
 
-        emit ERC1155Hashable__Minted(currentId, address(this), checksum_, uri_);
+        emit ERC1155Hashable__Minted(currentId, address(this), hash_, uri_);
     }
 
-    function currentChecksum() external view returns (string memory) {
-        return metadata[currentId].checksum;
+    function currentHash() external view returns (string memory) {
+        return metadata[currentId].hash;
     }
 
     function currentURI() external view returns (string memory) {
         return metadata[currentId].uri;
     }
 
-    function checksum(uint256 tokenId) public view returns (string memory) {
-        return metadata[tokenId].checksum;
+    function hash(uint256 tokenId) public view returns (string memory) {
+        return metadata[tokenId].hash;
     }
 
     function uri(uint256 tokenId) public view override returns (string memory uri_) {

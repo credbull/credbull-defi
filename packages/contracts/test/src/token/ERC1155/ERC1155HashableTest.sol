@@ -28,40 +28,40 @@ contract ERC1155HashableTest is Test {
     }
 
     function test__ERC1155Hashable__Mint() public {
-        string memory checksum = "QmHash123";
+        string memory hashValue = "QmHash123";
         string memory uriValue = "ipfs://uri123";
 
         vm.expectEmit(true, false, false, true);
-        emit ERC1155Hashable.ERC1155Hashable__Minted(1, address(_hashableToken), checksum, uriValue);
+        emit ERC1155Hashable.ERC1155Hashable__Minted(1, address(_hashableToken), hashValue, uriValue);
 
         vm.prank(_minter);
-        _hashableToken.mint(checksum, uriValue);
+        _hashableToken.mint(hashValue, uriValue);
 
         uint256 tokenId = _hashableToken.currentId();
 
         assertEq(tokenId, 1, "tokenId should be 1");
         assertEq(_hashableToken.balanceOf(address(_hashableToken), tokenId), 1, "contract should hold token");
 
-        (string memory actualChecksum, string memory actualUri) = _hashableToken.metadata(tokenId);
-        assertEq(actualChecksum, checksum, "checksum mismatch");
+        (string memory actualHash, string memory actualUri) = _hashableToken.metadata(tokenId);
+        assertEq(actualHash, hashValue, "hash mismatch");
         assertEq(actualUri, uriValue, "uri mismatch");
 
-        assertEq(_hashableToken.currentChecksum(), checksum, "currentChecksum mismatch");
+        assertEq(_hashableToken.currentHash(), hashValue, "currentHash mismatch");
         assertEq(_hashableToken.currentURI(), uriValue, "currentURI mismatch");
-        assertEq(_hashableToken.checksum(tokenId), checksum, "checksum(tokenId) mismatch");
+        assertEq(_hashableToken.hash(tokenId), hashValue, "hash(tokenId) mismatch");
         assertEq(_hashableToken.uri(tokenId), uriValue, "uri(tokenId) mismatch");
     }
 
     function test__ERC1155Hashable__MultipleMints() public {
         ERC1155Hashable.Metadata[3] memory tokens = [
-            ERC1155Hashable.Metadata("checksum1", "ipfs://uri1"),
-            ERC1155Hashable.Metadata("checksum2", "ipfs://uri2"),
-            ERC1155Hashable.Metadata("checksum3", "ipfs://uri3")
+            ERC1155Hashable.Metadata("hash1", "ipfs://uri1"),
+            ERC1155Hashable.Metadata("hash2", "ipfs://uri2"),
+            ERC1155Hashable.Metadata("hash3", "ipfs://uri3")
         ];
 
         vm.startPrank(_minter);
         for (uint256 i = 0; i < tokens.length; ++i) {
-            _hashableToken.mint(tokens[i].checksum, tokens[i].uri);
+            _hashableToken.mint(tokens[i].hash, tokens[i].uri);
         }
         vm.stopPrank();
 
@@ -70,15 +70,15 @@ contract ERC1155HashableTest is Test {
         for (uint256 i = 0; i < tokens.length; ++i) {
             uint256 tokenId = i + 1;
 
-            (string memory actualChecksum, string memory actualUri) = _hashableToken.metadata(tokenId);
-            assertEq(actualChecksum, tokens[i].checksum, "checksum mismatch at tokenId");
+            (string memory actualHash, string memory actualUri) = _hashableToken.metadata(tokenId);
+            assertEq(actualHash, tokens[i].hash, "hash mismatch at tokenId");
             assertEq(actualUri, tokens[i].uri, "uri mismatch at tokenId");
 
-            assertEq(_hashableToken.checksum(tokenId), tokens[i].checksum, "checksum(tokenId) mismatch");
+            assertEq(_hashableToken.hash(tokenId), tokens[i].hash, "hash(tokenId) mismatch");
             assertEq(_hashableToken.uri(tokenId), tokens[i].uri, "uri(tokenId) mismatch");
         }
 
-        assertEq(_hashableToken.currentChecksum(), tokens[2].checksum, "currentChecksum mismatch");
+        assertEq(_hashableToken.currentHash(), tokens[2].hash, "currentHash mismatch");
         assertEq(_hashableToken.currentURI(), tokens[2].uri, "currentURI mismatch");
     }
 
