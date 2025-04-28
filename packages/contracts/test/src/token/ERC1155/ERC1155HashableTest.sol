@@ -9,11 +9,6 @@ import { DeployERC1155Hashable } from "@script/token/ERC1155/DeployERC1155Hashab
 import { Test } from "forge-std/Test.sol";
 
 contract ERC1155HashableTest is Test {
-    struct TokenData {
-        string checksum;
-        string uri;
-    }
-
     ERC1155Hashable private _hashableToken;
     DeployERC1155Hashable private _deployer;
 
@@ -33,31 +28,35 @@ contract ERC1155HashableTest is Test {
     }
 
     function test__ERC1155Hashable__Mint() public {
-        string memory hashValue = "QmHash123";
+        string memory checksum = "QmHash123";
         string memory uriValue = "ipfs://uri123";
 
         vm.expectEmit(true, false, false, true);
-        emit ERC1155Hashable.ERC1155Hashable__Minted(1, address(_hashableToken), hashValue, uriValue);
+        emit ERC1155Hashable.ERC1155Hashable__Minted(1, address(_hashableToken), checksum, uriValue);
 
         vm.prank(_minter);
-        _hashableToken.mint(hashValue, uriValue);
+        _hashableToken.mint(checksum, uriValue);
 
         uint256 tokenId = _hashableToken.currentId();
 
-        assertEq(tokenId, 1, "token ID should be 1 after first mint");
-        assertEq(_hashableToken.balanceOf(address(_hashableToken), tokenId), 1, "contract should hold the minted token");
-        assertEq(_hashableToken.checksums(tokenId), hashValue, "stored hash should match input");
-        assertEq(_hashableToken.uris(tokenId), uriValue, "stored uri should match input");
-        assertEq(_hashableToken.currentChecksum(), hashValue, "currentChecksum() should return latest hash");
-        assertEq(_hashableToken.currentURI(), uriValue, "currentURI() should return latest uri");
-        assertEq(_hashableToken.uri(tokenId), uriValue, "uri(tokenId) should match stored uri");
+        assertEq(tokenId, 1, "tokenId should be 1");
+        assertEq(_hashableToken.balanceOf(address(_hashableToken), tokenId), 1, "contract should hold token");
+
+        (string memory actualChecksum, string memory actualUri) = _hashableToken.metadata(tokenId);
+        assertEq(actualChecksum, checksum, "checksum mismatch");
+        assertEq(actualUri, uriValue, "uri mismatch");
+
+        assertEq(_hashableToken.currentChecksum(), checksum, "currentChecksum mismatch");
+        assertEq(_hashableToken.currentURI(), uriValue, "currentURI mismatch");
+        assertEq(_hashableToken.checksum(tokenId), checksum, "checksum(tokenId) mismatch");
+        assertEq(_hashableToken.uri(tokenId), uriValue, "uri(tokenId) mismatch");
     }
 
     function test__ERC1155Hashable__MultipleMints() public {
-        TokenData[3] memory tokens = [
-            TokenData("checksum1", "ipfs://uri1"),
-            TokenData("checksum2", "ipfs://uri2"),
-            TokenData("checksum3", "ipfs://uri3")
+        ERC1155Hashable.Metadata[3] memory tokens = [
+            ERC1155Hashable.Metadata("checksum1", "ipfs://uri1"),
+            ERC1155Hashable.Metadata("checksum2", "ipfs://uri2"),
+            ERC1155Hashable.Metadata("checksum3", "ipfs://uri3")
         ];
 
         vm.startPrank(_minter);
@@ -66,18 +65,21 @@ contract ERC1155HashableTest is Test {
         }
         vm.stopPrank();
 
-        assertEq(_hashableToken.currentId(), 3, "should track last minted token id");
+        assertEq(_hashableToken.currentId(), 3, "currentId mismatch");
 
         for (uint256 i = 0; i < tokens.length; ++i) {
-            uint256 tokenId = i + 1; // token IDs start from 1 after first mint
+            uint256 tokenId = i + 1;
 
-            assertEq(_hashableToken.checksums(tokenId), tokens[i].checksum, "checksum should match for token");
-            assertEq(_hashableToken.uris(tokenId), tokens[i].uri, "uri should match for token");
-            assertEq(_hashableToken.uri(tokenId), tokens[i].uri, "ERC1155 uri(tokenId) should match stored uri");
+            (string memory actualChecksum, string memory actualUri) = _hashableToken.metadata(tokenId);
+            assertEq(actualChecksum, tokens[i].checksum, "checksum mismatch at tokenId");
+            assertEq(actualUri, tokens[i].uri, "uri mismatch at tokenId");
+
+            assertEq(_hashableToken.checksum(tokenId), tokens[i].checksum, "checksum(tokenId) mismatch");
+            assertEq(_hashableToken.uri(tokenId), tokens[i].uri, "uri(tokenId) mismatch");
         }
 
-        assertEq(_hashableToken.currentChecksum(), tokens[2].checksum, "currentChecksum() should match latest checksum");
-        assertEq(_hashableToken.currentURI(), tokens[2].uri, "currentURI() should match latest uri");
+        assertEq(_hashableToken.currentChecksum(), tokens[2].checksum, "currentChecksum mismatch");
+        assertEq(_hashableToken.currentURI(), tokens[2].uri, "currentURI mismatch");
     }
 
     function test__ERC1155Hashable__OnlyMinterCanMint() public {
