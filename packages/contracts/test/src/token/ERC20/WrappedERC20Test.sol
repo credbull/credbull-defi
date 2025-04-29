@@ -4,19 +4,18 @@ pragma solidity ^0.8.20;
 
 import { Test } from "forge-std/Test.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import { DeployWrappedERC20 } from "@script/DeployWrappedERC20.s.sol";
-import { ERC20Wrapper } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol";
 import { SimpleToken } from "@test/test/token/SimpleToken.t.sol";
-import { WrappedERC20 } from "@credbull/token/ERC20/WrappedERC20.sol";
+import { WrappedERC20, Ownable } from "@credbull/token/ERC20/WrappedERC20.sol";
 
 contract WrappedERC20Test is Test {
-    IERC20 private _underlyingToken;
+    IERC20Metadata private _underlyingToken;
     uint256 private _underlyingTokenScale;
 
     DeployWrappedERC20 private _deployer;
-    ERC20Wrapper private _wrapperToken;
 
+    WrappedERC20 private _wrappedToken;
     WrappedERC20.Params private _params;
 
     address private _alice = makeAddr("alice");
@@ -29,15 +28,10 @@ contract WrappedERC20Test is Test {
         _underlyingToken = simpleToken;
         _underlyingTokenScale = 10 ** simpleToken.decimals();
 
-        _params = WrappedERC20.Params({
-            owner: owner,
-            name: "WrapperToken-V1",
-            symbol: "wT-V1",
-            underlyingToken: _underlyingToken
-        });
-
-        _deployer = new DeployWrappedERC20(_underlyingToken);
-        _wrapperToken = _deployer.run(_params);
+        _deployer = new DeployWrappedERC20();
+        _deployer.setPostfix("-TEST_2025");
+        _params = _deployer.createParams(owner, _underlyingToken);
+        _wrappedToken = _deployer.run(_params);
 
         assertEq(
             _underlyingToken.totalSupply(),
@@ -48,33 +42,77 @@ contract WrappedERC20Test is Test {
         _underlyingToken.transfer(_alice, 1_000_000 * _underlyingTokenScale);
     }
 
-    function test__WrappedERC20__Deploy() public {
+    function test__WrappedERC20__Deploy() public view {
+        assertNotEq(address(0), address(_wrappedToken));
+        assertEq(address(_underlyingToken), address(_wrappedToken.underlying()), "underlying incorrect");
+        assertEq(_params.owner, Ownable(address(_wrappedToken)).owner(), "owner incorrect");
+        assertEq(_params.name, _wrappedToken.name(), "name incorrect");
+        assertEq(_params.symbol, _wrappedToken.symbol(), "symbol incorrect");
+    }
+
+    function test__WrappedERC20__DepositAndRedeem() public {
         uint256 depositAmount = 250_000 * _underlyingTokenScale;
         uint256 prevUnderlyingBal = _underlyingToken.balanceOf(_alice);
 
-        assertNotEq(address(0), address(_wrapperToken));
-        assertEq(_params.name, _wrapperToken.name());
-        assertEq(_params.symbol, _wrapperToken.symbol());
-
-        assertEq(0, _wrapperToken.totalSupply(), "wrapper total supply should start at zero");
-        assertEq(0, _wrapperToken.balanceOf(_alice), "user wrapper balance should start at zero");
+        assertEq(0, _wrappedToken.totalSupply(), "wrapper total supply should start at zero");
+        assertEq(0, _wrappedToken.balanceOf(_alice), "alice wrapper balance should start at zero");
 
         // grant allowance
         vm.prank(_alice);
-        _underlyingToken.approve(address(_wrapperToken), depositAmount);
+        _underlyingToken.approve(address(_wrappedToken), depositAmount);
 
-        // now deposit
+        // deposit
         vm.prank(_alice);
-        _wrapperToken.depositFor(_alice, depositAmount);
+        _wrappedToken.depositFor(_alice, depositAmount);
 
         assertEq(
-            depositAmount, _wrapperToken.totalSupply(), "wrapper total supply should be deposit tokens after deposit"
+            depositAmount, _wrappedToken.totalSupply(), "wrapper total supply should be deposit tokens after deposit"
         );
-        assertEq(depositAmount, _wrapperToken.balanceOf(_alice), "user should have deposit tokens after deposit");
+        assertEq(depositAmount, _wrappedToken.balanceOf(_alice), "alice should have deposit tokens after deposit");
         assertEq(
             prevUnderlyingBal - depositAmount,
             _underlyingToken.balanceOf(_alice),
             "alice should have deposit fewer underlying after deposit"
         );
+
+        // withdrawTo
+        address recipient = makeAddr("someRecipient");
+
+        vm.prank(_alice);
+        _wrappedToken.withdrawTo(recipient, depositAmount);
+
+        assertEq(depositAmount, _underlyingToken.balanceOf(recipient), "recipient should have full deposit amount");
+        assertEq(_wrappedToken.balanceOf(_alice), 0, "alice should have zero wrapped tokens after withdrawal");
+        assertEq(0, _wrappedToken.totalSupply(), "wrapper supply should be zero after withdrawal");
+    }
+
+    function test__WrappedERC20__RecoverTransferredTokens() public {
+        uint256 depositAmount = 75_000 * _underlyingTokenScale;
+
+        // user transfers tokens (likely a mistake - should call depositFor instead)
+        vm.prank(_alice);
+        _underlyingToken.transfer(address(_wrappedToken), depositAmount);
+
+        assertEq(0, _wrappedToken.balanceOf(_alice), "alice transferred tokens, receives zero wrapped tokens");
+
+        vm.expectEmit(true, false, false, true); // match indexed `account` and data `amount`
+        emit WrappedERC20.WrappedERC20__TokensRecovered(_alice, depositAmount); // expected event shape
+
+        // owner can recover for the user
+        vm.prank(_params.owner);
+        _wrappedToken.recover(_alice);
+
+        assertEq(depositAmount, _wrappedToken.balanceOf(_alice), "alice should have deposit after recover");
+    }
+
+    function test__WrappedERC20__RecoverRevertsForNonOwner() public {
+        uint256 depositAmount = 50_000 * _underlyingTokenScale;
+
+        vm.prank(_alice);
+        _underlyingToken.transfer(address(_wrappedToken), depositAmount);
+
+        vm.prank(_bob); // not owner
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, _bob));
+        _wrappedToken.recover(_bob);
     }
 }

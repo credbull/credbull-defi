@@ -1,6 +1,9 @@
 # dependencies
 node_modules
 
+# typescript
+next-env.d.ts
+
 # yarn
 .yarn/*
 !.yarn/patches
