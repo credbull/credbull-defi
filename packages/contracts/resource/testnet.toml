@@ -16,7 +16,7 @@ operator = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
 # devops custodian (wallet 3) - public address, okay to share
 custodian = "0x8561845F6a9511cD8e2daCae77A961e718A77cF6"
 # devops upgrader (wallet 4) - public address, okay to share
-upgrader = "0xaD3C004eE1f942BFDA2DA0D2DAaC94d6aC012F75"
+upgrader = "0x77f07B5d5E03e39Dc42FBCa53F122D4c1851B939"
 # devops asset manager (wallet 7) - public address, okay to share
 asset_manager = "0xd097E901FB9B75C2d2f97E142d73fA79C31FcAb3"
 

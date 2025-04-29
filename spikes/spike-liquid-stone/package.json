@@ -10,6 +10,7 @@
   "scripts": {
     "account": "yarn workspace @se-2/foundry account",
     "chain": "yarn workspace @se-2/foundry chain",
+    "clean": "yarn workspace @se-2/nextjs clean",
     "compile": "yarn workspace @se-2/foundry compile",
     "deploy": "yarn workspace @se-2/foundry deploy",
     "deploy:verify": "yarn workspace @se-2/foundry deploy:verify",
