@@ -11,15 +11,15 @@ export const plume: Chain = {
   name: "Plume ($PLUME)",
   nativeCurrency: { name: "Plume", symbol: "$PLUME", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://phoenix-rpc.plumenetwork.xyz"] },
-    public: { http: ["https://phoenix-rpc.plumenetwork.xyz"] },
+    default: { http: ["https://rpc.plume.org"] },
+    public: { http: ["https://rpc.plume.org"] },
   },
   formatters: undefined,
   fees: undefined,
   blockExplorers: {
-    default: { name: "Plume Explorer", url: "https://phoenix-explorer.plumenetwork.xyz" },
+    default: { name: "Plume Explorer", url: "https://explorer.plume.org" },
   },
-  testnet: true,
+  testnet: false,
 } as Chain;
 
 export const plumeTestnet: Chain = {
@@ -33,7 +33,7 @@ export const plumeTestnet: Chain = {
   formatters: undefined,
   fees: undefined,
   blockExplorers: {
-    default: { name: "Plume Explorer", url: "https://testnet-explorer.plumenetwork.xyz" },
+    default: { name: "Plume Testnet Explorer", url: "https://testnet-explorer.plumenetwork.xyz" },
   },
   testnet: true,
 } as Chain;
