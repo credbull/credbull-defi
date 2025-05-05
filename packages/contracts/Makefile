@@ -35,10 +35,10 @@ deploy-polygonAmoy:
 	$(MAKE) deploy RPC_URL=polygonAmoy EXTRA_FLAGS="--verify --slow"
 
 deploy-plume:
-	$(MAKE) deploy RPC_URL=plume EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://phoenix-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow"
+	$(MAKE) deploy RPC_URL=plume EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://explorer.plume.org/api\? --legacy --skip-simulation --slow"
 
 resume-plume:
-	$(MAKE) deploy RPC_URL=plume EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://phoenix-explorer.plumenetwork.xyz/api\? --legacy --skip-simulation --slow --resume"
+	$(MAKE) deploy RPC_URL=plume EXTRA_FLAGS="--verify --verifier blockscout --verifier-url https://explorer.plume.org/api\? --legacy --skip-simulation --slow --resume"
 
 deploy-arbitrum:
 	$(MAKE) deploy RPC_URL=arbitrum EXTRA_FLAGS="--verify --slow"
