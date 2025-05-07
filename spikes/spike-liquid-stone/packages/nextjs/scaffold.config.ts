@@ -1,42 +1,9 @@
-import { Chain } from "viem";
 import * as chains from "viem/chains";
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
 console.log(`*** Config loaded, network is ${process.env.NEXT_PUBLIC_NETWORK}`);
-
-export const plume: Chain = {
-  id: 98866,
-  name: "Plume ($PLUME)",
-  nativeCurrency: { name: "Plume", symbol: "$PLUME", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://rpc.plume.org"] },
-    public: { http: ["https://rpc.plume.org"] },
-  },
-  formatters: undefined,
-  fees: undefined,
-  blockExplorers: {
-    default: { name: "Plume Explorer", url: "https://explorer.plume.org" },
-  },
-  testnet: false,
-} as Chain;
-
-export const plumeTestnet: Chain = {
-  id: 98867,
-  name: "Plume Testnet ($PLUME)",
-  nativeCurrency: { name: "Plume", symbol: "$PLUME", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://testnet-rpc.plumenetwork.xyz"] },
-    public: { http: ["https://testnet-rpc.plumenetwork.xyz"] },
-  },
-  formatters: undefined,
-  fees: undefined,
-  blockExplorers: {
-    default: { name: "Plume Testnet Explorer", url: "https://testnet-explorer.plumenetwork.xyz" },
-  },
-  testnet: true,
-} as Chain;
 
 export type ScaffoldConfig = {
   targetNetworks: readonly chains.Chain[];
@@ -48,7 +15,14 @@ export type ScaffoldConfig = {
 
 const scaffoldConfig = {
   // The networks on which your DApp is live
-  targetNetworks: [chains.arbitrumSepolia, plumeTestnet, plume, chains.polygonAmoy, chains.polygon, chains.foundry],
+  targetNetworks: [
+    chains.arbitrumSepolia,
+    chains.plumeSepolia,
+    chains.plumeMainnet,
+    chains.polygonAmoy,
+    chains.polygon,
+    chains.foundry,
+  ],
 
   // The interval at which your front-end polls the RPC servers for new data
   // it has no effect if you only target the local network (default is 4000)

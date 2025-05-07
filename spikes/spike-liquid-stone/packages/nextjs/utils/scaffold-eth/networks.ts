@@ -1,6 +1,6 @@
 import { Network } from "alchemy-sdk";
 import * as chains from "viem/chains";
-import scaffoldConfig, { plume, plumeTestnet } from "~~/scaffold.config";
+import scaffoldConfig from "~~/scaffold.config";
 import {
   ChainAddresses,
   plumeMainnetSafe,
@@ -91,11 +91,11 @@ export const NETWORKS_EXTRA_DATA: Record<string, ChainAttributes> = {
     alchemyApiNetwork: Network.ARB_SEPOLIA,
     addresses: testnetCredbullDevops,
   },
-  [plume.id]: {
+  [chains.plumeMainnet.id]: {
     color: "#ff6b81",
     addresses: plumeMainnetSafe,
   },
-  [plumeTestnet.id]: {
+  [chains.plumeSepolia.id]: {
     color: "#ff94a1",
     addresses: testnetCredbullDevops,
   },
