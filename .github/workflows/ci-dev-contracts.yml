@@ -80,7 +80,7 @@ jobs:
           ENVIRONMENT: "testnet"
           DEPLOYER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
           ALCHEMY_API_KEY: ${{ secrets.TESTNET_ALCHEMY_API_KEY }}
-          BASE_SEPOLIA_ETHERSCAN_API_KEY: ${{ secrets.BASE_SEPOLIA_ETHERSCAN_API_KEY }}
+          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_TESTNET_API_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ""  # don't update supabase here
           DEPLOY_SCRIPT: "script/DeployLiquidMultiTokenVault.s.sol:DeployLiquidMultiTokenVault"
 
@@ -90,6 +90,6 @@ jobs:
           ENVIRONMENT: "testnet"
           DEPLOYER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
           ALCHEMY_API_KEY: ${{ secrets.TESTNET_ALCHEMY_API_KEY }}
-          BASE_SEPOLIA_ETHERSCAN_API_KEY: ${{ secrets.BASE_SEPOLIA_ETHERSCAN_API_KEY }}
+          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_TESTNET_API_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
 

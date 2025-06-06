@@ -35,16 +35,16 @@ plumeTestnet_161221135 = "https://testnet-rpc.plume.org"
 
 [etherscan]
 localhost = { key = "" , url="http://127.0.0.1:8545"}
-base = { key = "${BASE_ETHERSCAN_API_KEY}" }
-baseSepolia = { key = "${BASE_SEPOLIA_ETHERSCAN_API_KEY}" }
-arbitrum = { key = "${ARB_ETHERSCAN_API_KEY}", url = "https://api.arbiscan.io/api", chain=42161 }
-arbitrumSepolia = { key = "${ARB_SEPOLIA_ETHERSCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api", chain=421614 }
+base = { key = "${ETHERSCAN_API_KEY}" }
+baseSepolia = { key = "${ETHERSCAN_API_KEY}" }
+arbitrum = { key = "${ETHERSCAN_API_KEY}", url = "https://api.arbiscan.io/api", chain=42161 }
+arbitrumSepolia = { key = "${ETHERSCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api", chain=421614 }
 bitlayer = { key = "bitlayer", url="https://rpc.bitlayer.org" }
 bitlayerTestnet = { key = "bitlayerTestnet", url="https://testnet-scan.bitlayer.org" }
 plume = { key = "plume", url = 'https://explorer.plume.org/api\?', chain=98866 }
 plumeTestnet = { key = "plumeTestnet", url = 'https://testnet-explorer.plume.org/api\?', chain=98867 }
-polygon = { key = "${POLYGON_ETHERSCAN_API_KEY}" }
-polygonAmoy = { key = "${POLYGON_AMOY_ETHERSCAN_API_KEY}", url = "https://api-amoy.polygonscan.com/api", chain=80002 }
+polygon = { key = "${ETHERSCAN_API_KEY}" }
+polygonAmoy = { key = "${ETHERSCAN_API_KEY}", url = "https://api-amoy.polygonscan.com/api", chain=80002 }
 # deprecated chains
 plume_98865 = { key = "plume_98865", url = 'https://explorer.plumenetwork.xyz/api\?', chain=98865 }
 plumeTestnet_98864 = { key = "plumeTestnet_98864", url = 'https://test-explorer.plumenetwork.xyz/api\?', chain=98864 }
